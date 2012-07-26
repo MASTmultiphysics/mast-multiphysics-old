@@ -1,0 +1,1356 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		690240C11357C0B100C4AC26 /* Plot2DBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690240BF1357C0B100C4AC26 /* Plot2DBase.cpp */; };
+		690240C21357C0B100C4AC26 /* Plot2DBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 690240C01357C0B100C4AC26 /* Plot2DBase.h */; };
+		690240CB1357CEA100C4AC26 /* AxisBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690240C91357CEA000C4AC26 /* AxisBase.cpp */; };
+		690240CC1357CEA100C4AC26 /* AxisBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 690240CA1357CEA000C4AC26 /* AxisBase.h */; };
+		690240CF1357CFB300C4AC26 /* RealAxis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690240CD1357CFB300C4AC26 /* RealAxis.cpp */; };
+		690240D01357CFB300C4AC26 /* RealAxis.h in Headers */ = {isa = PBXBuildFile; fileRef = 690240CE1357CFB300C4AC26 /* RealAxis.h */; };
+		690A7C7D153F2F13002B955F /* GmshOutputProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690A7C7C153F2F13002B955F /* GmshOutputProcessor.cpp */; };
+		690A7C80153F5C92002B955F /* TecplotOutputProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690A7C7F153F5C92002B955F /* TecplotOutputProcessor.cpp */; };
+		690A7C88153FB0A8002B955F /* VtkOutputProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690A7C87153FB0A8002B955F /* VtkOutputProcessor.cpp */; };
+		690A7C8A153FB9ED002B955F /* VtkOutputProcessor.h in Headers */ = {isa = PBXBuildFile; fileRef = 690A7C89153FB9ED002B955F /* VtkOutputProcessor.h */; };
+		69107D221578D8CF00196B94 /* libarpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 69107D211578D8CF00196B94 /* libarpack.a */; };
+		6913F29F15657997002C72F3 /* Quad9.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6913F29E15657996002C72F3 /* Quad9.cpp */; };
+		6913F2A215657D9D002C72F3 /* Tri7.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6913F2A115657D9D002C72F3 /* Tri7.cpp */; };
+		6922BF5D153FDAA30011687C /* IdObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 6922BF5C153FDAA30011687C /* IdObject.h */; };
+		69677E3F134039EA002B32C8 /* CountedObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DB4134039EA002B32C8 /* CountedObject.cpp */; };
+		69677E40134039EA002B32C8 /* CountedObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DB5134039EA002B32C8 /* CountedObject.h */; };
+		69677E41134039EA002B32C8 /* Counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DB6134039EA002B32C8 /* Counter.cpp */; };
+		69677E42134039EA002B32C8 /* Counter.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DB7134039EA002B32C8 /* Counter.h */; };
+		69677E43134039EA002B32C8 /* FESystemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DB8134039EA002B32C8 /* FESystemBase.cpp */; };
+		69677E44134039EA002B32C8 /* FESystemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DB9134039EA002B32C8 /* FESystemBase.h */; };
+		69677E45134039EA002B32C8 /* FESystemConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DBA134039EA002B32C8 /* FESystemConfig.h */; };
+		69677E46134039EA002B32C8 /* FESystemExceptions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DBB134039EA002B32C8 /* FESystemExceptions.cpp */; };
+		69677E47134039EA002B32C8 /* FESystemExceptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DBC134039EA002B32C8 /* FESystemExceptions.h */; };
+		69677E48134039EA002B32C8 /* FESystemTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DBD134039EA002B32C8 /* FESystemTypes.h */; };
+		69677E49134039EA002B32C8 /* IteratorBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DBE134039EA002B32C8 /* IteratorBase.cpp */; };
+		69677E4A134039EA002B32C8 /* IteratorBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DBF134039EA002B32C8 /* IteratorBase.h */; };
+		69677E4B134039EA002B32C8 /* ParameterBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DC0134039EA002B32C8 /* ParameterBase.cpp */; };
+		69677E4C134039EA002B32C8 /* ParameterBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DC1134039EA002B32C8 /* ParameterBase.h */; };
+		69677E4D134039EA002B32C8 /* DataSourceBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DC3134039EA002B32C8 /* DataSourceBase.cpp */; };
+		69677E4E134039EA002B32C8 /* DataSourceBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DC4134039EA002B32C8 /* DataSourceBase.h */; };
+		69677E4F134039EA002B32C8 /* DiscretizationBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DC8134039EA002B32C8 /* DiscretizationBase.cpp */; };
+		69677E50134039EA002B32C8 /* DiscretizationBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DC9134039EA002B32C8 /* DiscretizationBase.h */; };
+		69677E51134039EA002B32C8 /* FieldBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DCC134039EA002B32C8 /* FieldBase.cpp */; };
+		69677E52134039EA002B32C8 /* FieldBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DCD134039EA002B32C8 /* FieldBase.h */; };
+		69677E53134039EA002B32C8 /* FieldPointIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DCE134039EA002B32C8 /* FieldPointIterator.cpp */; };
+		69677E54134039EA002B32C8 /* FieldPointIterator.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DCF134039EA002B32C8 /* FieldPointIterator.h */; };
+		69677E55134039EA002B32C8 /* LocalField.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DD0134039EA002B32C8 /* LocalField.cpp */; };
+		69677E56134039EA002B32C8 /* LocalField.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DD1134039EA002B32C8 /* LocalField.h */; };
+		69677E57134039EA002B32C8 /* CoordinateSystemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DD5134039EA002B32C8 /* CoordinateSystemBase.cpp */; };
+		69677E58134039EA002B32C8 /* CoordinateSystemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DD6134039EA002B32C8 /* CoordinateSystemBase.h */; };
+		69677E59134039EA002B32C8 /* CurvilinearCoordinateSystemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DD7134039EA002B32C8 /* CurvilinearCoordinateSystemBase.cpp */; };
+		69677E5A134039EA002B32C8 /* CurvilinearCoordinateSystemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DD8134039EA002B32C8 /* CurvilinearCoordinateSystemBase.h */; };
+		69677E5B134039EA002B32C8 /* CylindricalCoordinateSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DD9134039EA002B32C8 /* CylindricalCoordinateSystem.cpp */; };
+		69677E5C134039EA002B32C8 /* CylindricalCoordinateSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DDA134039EA002B32C8 /* CylindricalCoordinateSystem.h */; };
+		69677E5D134039EA002B32C8 /* PolarCoordinateSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DDB134039EA002B32C8 /* PolarCoordinateSystem.cpp */; };
+		69677E5E134039EA002B32C8 /* PolarCoordinateSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DDC134039EA002B32C8 /* PolarCoordinateSystem.h */; };
+		69677E5F134039EA002B32C8 /* RectangularCoordinateSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DDD134039EA002B32C8 /* RectangularCoordinateSystem.cpp */; };
+		69677E60134039EA002B32C8 /* RectangularCoordinateSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DDE134039EA002B32C8 /* RectangularCoordinateSystem.h */; };
+		69677E63134039EA002B32C8 /* Domain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DE1134039EA002B32C8 /* Domain.cpp */; };
+		69677E64134039EA002B32C8 /* Domain.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DE2134039EA002B32C8 /* Domain.h */; };
+		69677E65134039EA002B32C8 /* DomainBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DE3134039EA002B32C8 /* DomainBase.cpp */; };
+		69677E66134039EA002B32C8 /* DomainBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DE4134039EA002B32C8 /* DomainBase.h */; };
+		69677E69134039EA002B32C8 /* Point.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DE7134039EA002B32C8 /* Point.cpp */; };
+		69677E6A134039EA002B32C8 /* Point.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DE8134039EA002B32C8 /* Point.h */; };
+		69677E6B134039EA002B32C8 /* Edge2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DEA134039EA002B32C8 /* Edge2.cpp */; };
+		69677E6C134039EA002B32C8 /* Edge2.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DEB134039EA002B32C8 /* Edge2.h */; };
+		69677E6D134039EA002B32C8 /* EdgeElemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DEC134039EA002B32C8 /* EdgeElemBase.cpp */; };
+		69677E6E134039EA002B32C8 /* EdgeElemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DED134039EA002B32C8 /* EdgeElemBase.h */; };
+		69677E6F134039EA002B32C8 /* ElemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DEE134039EA002B32C8 /* ElemBase.cpp */; };
+		69677E70134039EA002B32C8 /* ElemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DEF134039EA002B32C8 /* ElemBase.h */; };
+		69677E71134039EA002B32C8 /* FaceElemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DF0134039EA002B32C8 /* FaceElemBase.cpp */; };
+		69677E72134039EA002B32C8 /* FaceElemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DF1134039EA002B32C8 /* FaceElemBase.h */; };
+		69677E73134039EA002B32C8 /* Hex8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DF2134039EA002B32C8 /* Hex8.cpp */; };
+		69677E74134039EA002B32C8 /* Hex8.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DF3134039EA002B32C8 /* Hex8.h */; };
+		69677E75134039EA002B32C8 /* MeshBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DF4134039EA002B32C8 /* MeshBase.cpp */; };
+		69677E76134039EA002B32C8 /* MeshBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DF5134039EA002B32C8 /* MeshBase.h */; };
+		69677E77134039EA002B32C8 /* Node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DF6134039EA002B32C8 /* Node.cpp */; };
+		69677E78134039EA002B32C8 /* Node.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DF7134039EA002B32C8 /* Node.h */; };
+		69677E79134039EA002B32C8 /* Pyramid5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DF8134039EA002B32C8 /* Pyramid5.cpp */; };
+		69677E7A134039EA002B32C8 /* Pyramid5.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DF9134039EA002B32C8 /* Pyramid5.h */; };
+		69677E7B134039EA002B32C8 /* Quad4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DFA134039EA002B32C8 /* Quad4.cpp */; };
+		69677E7C134039EA002B32C8 /* Quad4.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DFB134039EA002B32C8 /* Quad4.h */; };
+		69677E7D134039EA002B32C8 /* Tet4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DFC134039EA002B32C8 /* Tet4.cpp */; };
+		69677E7E134039EA002B32C8 /* Tet4.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DFD134039EA002B32C8 /* Tet4.h */; };
+		69677E7F134039EA002B32C8 /* Tri3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677DFE134039EA002B32C8 /* Tri3.cpp */; };
+		69677E80134039EA002B32C8 /* Tri3.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677DFF134039EA002B32C8 /* Tri3.h */; };
+		69677E81134039EA002B32C8 /* VolumeElemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E00134039EA002B32C8 /* VolumeElemBase.cpp */; };
+		69677E82134039EA002B32C8 /* VolumeElemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E01134039EA002B32C8 /* VolumeElemBase.h */; };
+		69677E83134039EA002B32C8 /* DenseMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E03134039EA002B32C8 /* DenseMatrix.cpp */; };
+		69677E84134039EA002B32C8 /* DenseMatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E04134039EA002B32C8 /* DenseMatrix.h */; };
+		69677E91134039EA002B32C8 /* LocalVector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E11134039EA002B32C8 /* LocalVector.cpp */; };
+		69677E92134039EA002B32C8 /* LocalVector.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E12134039EA002B32C8 /* LocalVector.h */; };
+		69677E93134039EA002B32C8 /* MatrixBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E13134039EA002B32C8 /* MatrixBase.cpp */; };
+		69677E94134039EA002B32C8 /* MatrixBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E14134039EA002B32C8 /* MatrixBase.h */; };
+		69677E99134039EA002B32C8 /* TensorBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E19134039EA002B32C8 /* TensorBase.cpp */; };
+		69677E9A134039EA002B32C8 /* TensorBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E1A134039EA002B32C8 /* TensorBase.h */; };
+		69677E9B134039EA002B32C8 /* TensorIndex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E1B134039EA002B32C8 /* TensorIndex.cpp */; };
+		69677E9C134039EA002B32C8 /* TensorIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E1C134039EA002B32C8 /* TensorIndex.h */; };
+		69677E9D134039EA002B32C8 /* TensorIndexBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E1D134039EA002B32C8 /* TensorIndexBase.cpp */; };
+		69677E9E134039EA002B32C8 /* TensorIndexBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E1E134039EA002B32C8 /* TensorIndexBase.h */; };
+		69677E9F134039EA002B32C8 /* VectorBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E1F134039EA002B32C8 /* VectorBase.cpp */; };
+		69677EA0134039EA002B32C8 /* VectorBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E20134039EA002B32C8 /* VectorBase.h */; };
+		69677EA1134039EA002B32C8 /* CommunicatorBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E23134039EA002B32C8 /* CommunicatorBase.cpp */; };
+		69677EA2134039EA002B32C8 /* CommunicatorBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E24134039EA002B32C8 /* CommunicatorBase.h */; };
+		69677EA3134039EA002B32C8 /* GlobalCommunicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E25134039EA002B32C8 /* GlobalCommunicator.cpp */; };
+		69677EA4134039EA002B32C8 /* GlobalCommunicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E26134039EA002B32C8 /* GlobalCommunicator.h */; };
+		69677EA5134039EA002B32C8 /* LeastSquareSurrogate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E2E134039EA002B32C8 /* LeastSquareSurrogate.cpp */; };
+		69677EA6134039EA002B32C8 /* LeastSquareSurrogate.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E2F134039EA002B32C8 /* LeastSquareSurrogate.h */; };
+		69677EA7134039EA002B32C8 /* PolynomialCoefficientList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E30134039EA002B32C8 /* PolynomialCoefficientList.cpp */; };
+		69677EA8134039EA002B32C8 /* PolynomialCoefficientList.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E31134039EA002B32C8 /* PolynomialCoefficientList.h */; };
+		69677EA9134039EA002B32C8 /* PolynomialCoefficientListIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E32134039EA002B32C8 /* PolynomialCoefficientListIterator.cpp */; };
+		69677EAA134039EA002B32C8 /* PolynomialCoefficientListIterator.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E33134039EA002B32C8 /* PolynomialCoefficientListIterator.h */; };
+		69677EAB134039EA002B32C8 /* PolynomialTerm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E34134039EA002B32C8 /* PolynomialTerm.cpp */; };
+		69677EAC134039EA002B32C8 /* PolynomialTerm.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E35134039EA002B32C8 /* PolynomialTerm.h */; };
+		69677EAD134039EA002B32C8 /* PolynomialType.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E36134039EA002B32C8 /* PolynomialType.h */; };
+		69677EAE134039EA002B32C8 /* SurrogateBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E37134039EA002B32C8 /* SurrogateBase.cpp */; };
+		69677EAF134039EA002B32C8 /* SurrogateBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E38134039EA002B32C8 /* SurrogateBase.h */; };
+		69677EB0134039EA002B32C8 /* CommandLineArguments.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E3B134039EA002B32C8 /* CommandLineArguments.cpp */; };
+		69677EB1134039EA002B32C8 /* CommandLineArguments.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E3C134039EA002B32C8 /* CommandLineArguments.h */; };
+		69677EB2134039EA002B32C8 /* EnumName.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69677E3D134039EA002B32C8 /* EnumName.cpp */; };
+		69677EB3134039EA002B32C8 /* EnumName.h in Headers */ = {isa = PBXBuildFile; fileRef = 69677E3E134039EA002B32C8 /* EnumName.h */; };
+		69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69677EB413403B06002B32C8 /* vecLib.framework */; };
+		6967BA7C156A7E0800F2FB18 /* Quad8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6967BA7B156A7E0800F2FB18 /* Quad8.cpp */; };
+		6967BA7E156A7E1100F2FB18 /* Tri6.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6967BA7D156A7E1000F2FB18 /* Tri6.cpp */; };
+		6967BA82156A80B000F2FB18 /* libplplotcxxd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */; };
+		6967BA84156A80C700F2FB18 /* libplplotd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6967BA83156A80C700F2FB18 /* libplplotd.dylib */; };
+		6973BD42135C8A4000C874AF /* LogAxis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6973BD40135C8A4000C874AF /* LogAxis.cpp */; };
+		6973BD43135C8A4000C874AF /* LogAxis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6973BD41135C8A4000C874AF /* LogAxis.h */; };
+		698CC2C915489C830072F5C4 /* InverseIterationLinearEigensolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2A315489C830072F5C4 /* InverseIterationLinearEigensolver.cpp */; };
+		698CC2CA15489C830072F5C4 /* InverseIterationLinearEigensolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2A415489C830072F5C4 /* InverseIterationLinearEigensolver.h */; };
+		698CC2CB15489C830072F5C4 /* LanczosIterationLinearEigensolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2A515489C830072F5C4 /* LanczosIterationLinearEigensolver.cpp */; };
+		698CC2CC15489C830072F5C4 /* LanczosIterationLinearEigensolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2A615489C830072F5C4 /* LanczosIterationLinearEigensolver.h */; };
+		698CC2CD15489C830072F5C4 /* LinearEigenSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2A715489C830072F5C4 /* LinearEigenSolverBase.cpp */; };
+		698CC2CE15489C830072F5C4 /* LinearEigenSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2A815489C830072F5C4 /* LinearEigenSolverBase.h */; };
+		698CC2CF15489C830072F5C4 /* PowerMethodLinearEigensolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2A915489C830072F5C4 /* PowerMethodLinearEigensolver.cpp */; };
+		698CC2D015489C830072F5C4 /* PowerMethodLinearEigensolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2AA15489C830072F5C4 /* PowerMethodLinearEigensolver.h */; };
+		698CC2D115489C830072F5C4 /* QRMethodLinearEigensolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2AB15489C830072F5C4 /* QRMethodLinearEigensolver.cpp */; };
+		698CC2D215489C830072F5C4 /* QRMethodLinearEigensolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2AC15489C830072F5C4 /* QRMethodLinearEigensolver.h */; };
+		698CC2D315489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2AD15489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.cpp */; };
+		698CC2D415489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2AE15489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.h */; };
+		698CC2D515489C830072F5C4 /* ClassicalQRFactorization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2B015489C830072F5C4 /* ClassicalQRFactorization.cpp */; };
+		698CC2D615489C830072F5C4 /* ClassicalQRFactorization.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2B115489C830072F5C4 /* ClassicalQRFactorization.h */; };
+		698CC2D715489C830072F5C4 /* HessenbergFormReduction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2B215489C830072F5C4 /* HessenbergFormReduction.cpp */; };
+		698CC2D815489C830072F5C4 /* HessenbergFormReduction.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2B315489C830072F5C4 /* HessenbergFormReduction.h */; };
+		698CC2D915489C830072F5C4 /* HouseHolderTriangulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2B415489C830072F5C4 /* HouseHolderTriangulation.cpp */; };
+		698CC2DA15489C830072F5C4 /* HouseHolderTriangulation.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2B515489C830072F5C4 /* HouseHolderTriangulation.h */; };
+		698CC2DB15489C830072F5C4 /* MatrixQRFactorizationBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2B615489C830072F5C4 /* MatrixQRFactorizationBase.cpp */; };
+		698CC2DC15489C830072F5C4 /* MatrixQRFactorizationBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2B715489C830072F5C4 /* MatrixQRFactorizationBase.h */; };
+		698CC2DD15489C830072F5C4 /* ModifiedQRFactorization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2B815489C830072F5C4 /* ModifiedQRFactorization.cpp */; };
+		698CC2DE15489C830072F5C4 /* ModifiedQRFactorization.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2B915489C830072F5C4 /* ModifiedQRFactorization.h */; };
+		698CC2DF15489C830072F5C4 /* TriangularBacksubstitution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2BA15489C830072F5C4 /* TriangularBacksubstitution.cpp */; };
+		698CC2E015489C830072F5C4 /* TriangularBacksubstitution.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2BB15489C830072F5C4 /* TriangularBacksubstitution.h */; };
+		698CC2E115489C830072F5C4 /* LapackLinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2BD15489C830072F5C4 /* LapackLinearSolver.cpp */; };
+		698CC2E215489C830072F5C4 /* LapackLinearSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2BE15489C830072F5C4 /* LapackLinearSolver.h */; };
+		698CC2E315489C830072F5C4 /* LinearLeastSquareSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2BF15489C830072F5C4 /* LinearLeastSquareSolver.cpp */; };
+		698CC2E415489C830072F5C4 /* LinearLeastSquareSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2C015489C830072F5C4 /* LinearLeastSquareSolver.h */; };
+		698CC2E515489C830072F5C4 /* LinearSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2C115489C830072F5C4 /* LinearSolverBase.cpp */; };
+		698CC2E615489C830072F5C4 /* LinearSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2C215489C830072F5C4 /* LinearSolverBase.h */; };
+		698CC2E715489C830072F5C4 /* PseudoTimeSteppingLinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2C315489C830072F5C4 /* PseudoTimeSteppingLinearSolver.cpp */; };
+		698CC2E815489C830072F5C4 /* PseudoTimeSteppingLinearSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2C415489C830072F5C4 /* PseudoTimeSteppingLinearSolver.h */; };
+		698CC2E915489C830072F5C4 /* QRFactorizationLinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698CC2C515489C830072F5C4 /* QRFactorizationLinearSolver.cpp */; };
+		698CC2EA15489C830072F5C4 /* QRFactorizationLinearSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 698CC2C615489C830072F5C4 /* QRFactorizationLinearSolver.h */; };
+		69AB771E158D6D0800D6F5DB /* DenseMatrix.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E04134039EA002B32C8 /* DenseMatrix.h */; };
+		69AB771F158D6D0800D6F5DB /* LocalMatrixBase.h in Sources */ = {isa = PBXBuildFile; fileRef = EB47563C1589727300D2D1EF /* LocalMatrixBase.h */; };
+		69AB7720158D6D0800D6F5DB /* LocalVector.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E12134039EA002B32C8 /* LocalVector.h */; };
+		69AB7721158D6D0800D6F5DB /* MatrixBase.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E14134039EA002B32C8 /* MatrixBase.h */; };
+		69AB7722158D6D0800D6F5DB /* MultiBlockMatrix.h in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E411549C083004E55AF /* MultiBlockMatrix.h */; };
+		69AB7723158D6D0800D6F5DB /* SparseMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB47563A15892A4900D2D1EF /* SparseMatrix.cpp */; };
+		69AB7724158D6D0800D6F5DB /* SparseMatrix.h in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E431549C3F6004E55AF /* SparseMatrix.h */; };
+		69AB7725158D6D0800D6F5DB /* SparsityPattern.h in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E441549C8A9004E55AF /* SparsityPattern.h */; };
+		69AB7726158D6D0800D6F5DB /* TensorBase.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E1A134039EA002B32C8 /* TensorBase.h */; };
+		69AB7727158D6D0800D6F5DB /* TensorIndex.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E1C134039EA002B32C8 /* TensorIndex.h */; };
+		69AB7728158D6D0800D6F5DB /* TensorIndexBase.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E1E134039EA002B32C8 /* TensorIndexBase.h */; };
+		69AB7729158D6D0800D6F5DB /* VectorBase.h in Sources */ = {isa = PBXBuildFile; fileRef = 69677E20134039EA002B32C8 /* VectorBase.h */; };
+		69AB772E158D98C800D6F5DB /* LUFactorization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69AB772D158D98C800D6F5DB /* LUFactorization.cpp */; };
+		69AB7731158EC75D00D6F5DB /* LUFactorizationLinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69AB7730158EC75D00D6F5DB /* LUFactorizationLinearSolver.cpp */; };
+		69AE0ED81575B45200E057E2 /* FunctionBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69AE0ED61575B45200E057E2 /* FunctionBase.h */; };
+		69AE0ED91575B45200E057E2 /* LagrangeFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 69AE0ED71575B45200E057E2 /* LagrangeFunction.h */; };
+		69AE0EDD1575BA9900E057E2 /* ExplicitRungeKuttaTransientSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69AE0EDC1575BA9900E057E2 /* ExplicitRungeKuttaTransientSolver.cpp */; };
+		69BAD1E7156588A200870025 /* Edge3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BAD1E6156588A200870025 /* Edge3.cpp */; };
+		69BAD1EA1566A45F00870025 /* PLPlot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BAD1E81566A45F00870025 /* PLPlot.cpp */; };
+		69BAD1EB1566A45F00870025 /* PLPlot.h in Headers */ = {isa = PBXBuildFile; fileRef = 69BAD1E91566A45F00870025 /* PLPlot.h */; };
+		69BC200D15780B63004B10DF /* ArpackLinearEigenSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BC200C15780B63004B10DF /* ArpackLinearEigenSolver.cpp */; };
+		69CD7B501538BF43005C59A5 /* LinearFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69CD7B4F1538BF43005C59A5 /* LinearFunctionMapping.cpp */; };
+		69CD7B521538C5D7005C59A5 /* PolarFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69CD7B511538C5D7005C59A5 /* PolarFunctionMapping.cpp */; };
+		69CD7B5415393CBC005C59A5 /* CylindricalFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69CD7B5315393CBC005C59A5 /* CylindricalFunctionMapping.cpp */; };
+		69CEDC46151B995A0094825A /* FiniteElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69CEDC45151B995A0094825A /* FiniteElementBase.cpp */; };
+		69CEDC59151D0D050094825A /* FELagrange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69CEDC58151D0D050094825A /* FELagrange.cpp */; };
+		69E12AC3153A3A440057456E /* CompositeFunctionMappingBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E12AC2153A3A430057456E /* CompositeFunctionMappingBase.cpp */; };
+		69E12AC5153A723B0057456E /* FunctionMappingBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E12AC4153A723B0057456E /* FunctionMappingBase.cpp */; };
+		69E12AC7153A77960057456E /* LagrangeFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E12AC6153A77960057456E /* LagrangeFunctionMapping.cpp */; };
+		69E95E4B1549DBEA004E55AF /* MultiBlockMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E4A1549DBEA004E55AF /* MultiBlockMatrix.cpp */; };
+		69E95E5C154B05C1004E55AF /* StructuralDiscretization.h in Headers */ = {isa = PBXBuildFile; fileRef = 69E95E5B154B05C1004E55AF /* StructuralDiscretization.h */; };
+		69E95E5E154B0776004E55AF /* StructuralDiscretization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E5D154B0776004E55AF /* StructuralDiscretization.cpp */; };
+		69E95E6F154B2A59004E55AF /* TransientSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E6E154B2A59004E55AF /* TransientSolverBase.cpp */; };
+		69E95E72154B36D3004E55AF /* NewmarkTransientSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E95E71154B36D3004E55AF /* NewmarkTransientSolver.cpp */; };
+		69EEF79615308186000F4C44 /* DegreeOfFreedomMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69EEF79515308186000F4C44 /* DegreeOfFreedomMap.cpp */; };
+		69EEF7981532A908000F4C44 /* DegreeOfFreedomObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69EEF79715329D7F000F4C44 /* DegreeOfFreedomObject.cpp */; };
+		69EEF79A15331834000F4C44 /* QuadratureBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 69EEF79915331834000F4C44 /* QuadratureBase.h */; };
+		69EEF79C1533206C000F4C44 /* QuadratureBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69EEF79B1533206C000F4C44 /* QuadratureBase.cpp */; };
+		69EEF79E15332696000F4C44 /* TrapezoidQuadrature.h in Headers */ = {isa = PBXBuildFile; fileRef = 69EEF79D15332696000F4C44 /* TrapezoidQuadrature.h */; };
+		69EEF7A01533503D000F4C44 /* TrapezoidQuadrature.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69EEF79F1533503D000F4C44 /* TrapezoidQuadrature.cpp */; };
+		69F2401E14E9609700569F6E /* macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 69F2401D14E9609700569F6E /* macros.h */; };
+		69F463BC1552BF99004B9AF8 /* LapackLinearEigenSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69F463BB1552BF99004B9AF8 /* LapackLinearEigenSolver.cpp */; };
+		EB47563815891D9000D2D1EF /* SparsityPattern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB47563715891D9000D2D1EF /* SparsityPattern.cpp */; };
+		EB47563E1589727E00D2D1EF /* LocalMatrixBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB47563D1589727E00D2D1EF /* LocalMatrixBase.cpp */; };
+		EBFD4D2715BF185C000B7F5D /* UGFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBFD4D2615BF185C000B7F5D /* UGFlutterSolver.cpp */; };
+		EBFD4D2915BF186A000B7F5D /* PKFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBFD4D2815BF186A000B7F5D /* PKFlutterSolver.cpp */; };
+		EBFD4D2B15BF1878000B7F5D /* FrequencyDomainFlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBFD4D2A15BF1878000B7F5D /* FrequencyDomainFlutterSolverBase.cpp */; };
+		EBFD4D2D15BF1887000B7F5D /* FlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBFD4D2C15BF1887000B7F5D /* FlutterSolverBase.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		690240BF1357C0B100C4AC26 /* Plot2DBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Plot2DBase.cpp; sourceTree = "<group>"; };
+		690240C01357C0B100C4AC26 /* Plot2DBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Plot2DBase.h; sourceTree = "<group>"; };
+		690240C91357CEA000C4AC26 /* AxisBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AxisBase.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		690240CA1357CEA000C4AC26 /* AxisBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AxisBase.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		690240CD1357CFB300C4AC26 /* RealAxis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RealAxis.cpp; sourceTree = "<group>"; };
+		690240CE1357CFB300C4AC26 /* RealAxis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RealAxis.h; sourceTree = "<group>"; };
+		690A7C79153F2AD8002B955F /* OutputProcessorBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OutputProcessorBase.h; sourceTree = "<group>"; };
+		690A7C7B153F2DBA002B955F /* GmshOutputProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GmshOutputProcessor.h; sourceTree = "<group>"; };
+		690A7C7C153F2F13002B955F /* GmshOutputProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GmshOutputProcessor.cpp; sourceTree = "<group>"; };
+		690A7C7E153F5C85002B955F /* TecplotOutputProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TecplotOutputProcessor.h; sourceTree = "<group>"; };
+		690A7C7F153F5C92002B955F /* TecplotOutputProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TecplotOutputProcessor.cpp; sourceTree = "<group>"; };
+		690A7C87153FB0A8002B955F /* VtkOutputProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VtkOutputProcessor.cpp; sourceTree = "<group>"; };
+		690A7C89153FB9ED002B955F /* VtkOutputProcessor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VtkOutputProcessor.h; sourceTree = "<group>"; };
+		69107D211578D8CF00196B94 /* libarpack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libarpack.a; path = ../../../../../../opt/local/lib/libarpack.a; sourceTree = "<group>"; };
+		6913F29C1565798A002C72F3 /* Quad9.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Quad9.h; sourceTree = "<group>"; };
+		6913F29E15657996002C72F3 /* Quad9.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Quad9.cpp; sourceTree = "<group>"; };
+		6913F2A015657D91002C72F3 /* Tri7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Tri7.h; sourceTree = "<group>"; };
+		6913F2A115657D9D002C72F3 /* Tri7.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tri7.cpp; sourceTree = "<group>"; };
+		6922BF5C153FDAA30011687C /* IdObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IdObject.h; sourceTree = "<group>"; };
+		6929FCA61517BF0B00D1C1F4 /* ElementType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ElementType.h; sourceTree = "<group>"; };
+		69677C9F1340386A002B32C8 /* FESystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = FESystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		69677DB4134039EA002B32C8 /* CountedObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CountedObject.cpp; sourceTree = "<group>"; };
+		69677DB5134039EA002B32C8 /* CountedObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CountedObject.h; sourceTree = "<group>"; };
+		69677DB6134039EA002B32C8 /* Counter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Counter.cpp; sourceTree = "<group>"; };
+		69677DB7134039EA002B32C8 /* Counter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Counter.h; sourceTree = "<group>"; };
+		69677DB8134039EA002B32C8 /* FESystemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FESystemBase.cpp; sourceTree = "<group>"; };
+		69677DB9134039EA002B32C8 /* FESystemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESystemBase.h; sourceTree = "<group>"; };
+		69677DBA134039EA002B32C8 /* FESystemConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESystemConfig.h; sourceTree = "<group>"; };
+		69677DBB134039EA002B32C8 /* FESystemExceptions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FESystemExceptions.cpp; sourceTree = "<group>"; };
+		69677DBC134039EA002B32C8 /* FESystemExceptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESystemExceptions.h; sourceTree = "<group>"; };
+		69677DBD134039EA002B32C8 /* FESystemTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESystemTypes.h; sourceTree = "<group>"; };
+		69677DBE134039EA002B32C8 /* IteratorBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IteratorBase.cpp; sourceTree = "<group>"; };
+		69677DBF134039EA002B32C8 /* IteratorBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IteratorBase.h; sourceTree = "<group>"; };
+		69677DC0134039EA002B32C8 /* ParameterBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParameterBase.cpp; sourceTree = "<group>"; };
+		69677DC1134039EA002B32C8 /* ParameterBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParameterBase.h; sourceTree = "<group>"; };
+		69677DC3134039EA002B32C8 /* DataSourceBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DataSourceBase.cpp; sourceTree = "<group>"; };
+		69677DC4134039EA002B32C8 /* DataSourceBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataSourceBase.h; sourceTree = "<group>"; };
+		69677DC8134039EA002B32C8 /* DiscretizationBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DiscretizationBase.cpp; sourceTree = "<group>"; };
+		69677DC9134039EA002B32C8 /* DiscretizationBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscretizationBase.h; sourceTree = "<group>"; };
+		69677DCC134039EA002B32C8 /* FieldBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FieldBase.cpp; sourceTree = "<group>"; };
+		69677DCD134039EA002B32C8 /* FieldBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FieldBase.h; sourceTree = "<group>"; };
+		69677DCE134039EA002B32C8 /* FieldPointIterator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FieldPointIterator.cpp; sourceTree = "<group>"; };
+		69677DCF134039EA002B32C8 /* FieldPointIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FieldPointIterator.h; sourceTree = "<group>"; };
+		69677DD0134039EA002B32C8 /* LocalField.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LocalField.cpp; sourceTree = "<group>"; };
+		69677DD1134039EA002B32C8 /* LocalField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalField.h; sourceTree = "<group>"; };
+		69677DD5134039EA002B32C8 /* CoordinateSystemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoordinateSystemBase.cpp; sourceTree = "<group>"; };
+		69677DD6134039EA002B32C8 /* CoordinateSystemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoordinateSystemBase.h; sourceTree = "<group>"; };
+		69677DD7134039EA002B32C8 /* CurvilinearCoordinateSystemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CurvilinearCoordinateSystemBase.cpp; sourceTree = "<group>"; };
+		69677DD8134039EA002B32C8 /* CurvilinearCoordinateSystemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CurvilinearCoordinateSystemBase.h; sourceTree = "<group>"; };
+		69677DD9134039EA002B32C8 /* CylindricalCoordinateSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CylindricalCoordinateSystem.cpp; sourceTree = "<group>"; };
+		69677DDA134039EA002B32C8 /* CylindricalCoordinateSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CylindricalCoordinateSystem.h; sourceTree = "<group>"; };
+		69677DDB134039EA002B32C8 /* PolarCoordinateSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PolarCoordinateSystem.cpp; sourceTree = "<group>"; };
+		69677DDC134039EA002B32C8 /* PolarCoordinateSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PolarCoordinateSystem.h; sourceTree = "<group>"; };
+		69677DDD134039EA002B32C8 /* RectangularCoordinateSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RectangularCoordinateSystem.cpp; sourceTree = "<group>"; };
+		69677DDE134039EA002B32C8 /* RectangularCoordinateSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RectangularCoordinateSystem.h; sourceTree = "<group>"; };
+		69677DE1134039EA002B32C8 /* Domain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Domain.cpp; sourceTree = "<group>"; };
+		69677DE2134039EA002B32C8 /* Domain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Domain.h; sourceTree = "<group>"; };
+		69677DE3134039EA002B32C8 /* DomainBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DomainBase.cpp; sourceTree = "<group>"; };
+		69677DE4134039EA002B32C8 /* DomainBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DomainBase.h; sourceTree = "<group>"; };
+		69677DE7134039EA002B32C8 /* Point.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Point.cpp; sourceTree = "<group>"; };
+		69677DE8134039EA002B32C8 /* Point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Point.h; sourceTree = "<group>"; };
+		69677DEA134039EA002B32C8 /* Edge2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Edge2.cpp; sourceTree = "<group>"; };
+		69677DEB134039EA002B32C8 /* Edge2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Edge2.h; sourceTree = "<group>"; };
+		69677DEC134039EA002B32C8 /* EdgeElemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EdgeElemBase.cpp; sourceTree = "<group>"; };
+		69677DED134039EA002B32C8 /* EdgeElemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdgeElemBase.h; sourceTree = "<group>"; };
+		69677DEE134039EA002B32C8 /* ElemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ElemBase.cpp; sourceTree = "<group>"; };
+		69677DEF134039EA002B32C8 /* ElemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ElemBase.h; sourceTree = "<group>"; };
+		69677DF0134039EA002B32C8 /* FaceElemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FaceElemBase.cpp; sourceTree = "<group>"; };
+		69677DF1134039EA002B32C8 /* FaceElemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FaceElemBase.h; sourceTree = "<group>"; };
+		69677DF2134039EA002B32C8 /* Hex8.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Hex8.cpp; sourceTree = "<group>"; };
+		69677DF3134039EA002B32C8 /* Hex8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Hex8.h; sourceTree = "<group>"; };
+		69677DF4134039EA002B32C8 /* MeshBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MeshBase.cpp; sourceTree = "<group>"; };
+		69677DF5134039EA002B32C8 /* MeshBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeshBase.h; sourceTree = "<group>"; };
+		69677DF6134039EA002B32C8 /* Node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Node.cpp; sourceTree = "<group>"; };
+		69677DF7134039EA002B32C8 /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
+		69677DF8134039EA002B32C8 /* Pyramid5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Pyramid5.cpp; sourceTree = "<group>"; };
+		69677DF9134039EA002B32C8 /* Pyramid5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Pyramid5.h; sourceTree = "<group>"; };
+		69677DFA134039EA002B32C8 /* Quad4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Quad4.cpp; sourceTree = "<group>"; };
+		69677DFB134039EA002B32C8 /* Quad4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Quad4.h; sourceTree = "<group>"; };
+		69677DFC134039EA002B32C8 /* Tet4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tet4.cpp; sourceTree = "<group>"; };
+		69677DFD134039EA002B32C8 /* Tet4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tet4.h; sourceTree = "<group>"; };
+		69677DFE134039EA002B32C8 /* Tri3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tri3.cpp; sourceTree = "<group>"; };
+		69677DFF134039EA002B32C8 /* Tri3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tri3.h; sourceTree = "<group>"; };
+		69677E00134039EA002B32C8 /* VolumeElemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VolumeElemBase.cpp; sourceTree = "<group>"; };
+		69677E01134039EA002B32C8 /* VolumeElemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VolumeElemBase.h; sourceTree = "<group>"; };
+		69677E03134039EA002B32C8 /* DenseMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DenseMatrix.cpp; sourceTree = "<group>"; };
+		69677E04134039EA002B32C8 /* DenseMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DenseMatrix.h; sourceTree = "<group>"; };
+		69677E11134039EA002B32C8 /* LocalVector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LocalVector.cpp; sourceTree = "<group>"; };
+		69677E12134039EA002B32C8 /* LocalVector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalVector.h; sourceTree = "<group>"; };
+		69677E13134039EA002B32C8 /* MatrixBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MatrixBase.cpp; sourceTree = "<group>"; };
+		69677E14134039EA002B32C8 /* MatrixBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixBase.h; sourceTree = "<group>"; };
+		69677E19134039EA002B32C8 /* TensorBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TensorBase.cpp; sourceTree = "<group>"; };
+		69677E1A134039EA002B32C8 /* TensorBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TensorBase.h; sourceTree = "<group>"; };
+		69677E1B134039EA002B32C8 /* TensorIndex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TensorIndex.cpp; sourceTree = "<group>"; };
+		69677E1C134039EA002B32C8 /* TensorIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TensorIndex.h; sourceTree = "<group>"; };
+		69677E1D134039EA002B32C8 /* TensorIndexBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TensorIndexBase.cpp; sourceTree = "<group>"; };
+		69677E1E134039EA002B32C8 /* TensorIndexBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TensorIndexBase.h; sourceTree = "<group>"; };
+		69677E1F134039EA002B32C8 /* VectorBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VectorBase.cpp; sourceTree = "<group>"; };
+		69677E20134039EA002B32C8 /* VectorBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VectorBase.h; sourceTree = "<group>"; };
+		69677E23134039EA002B32C8 /* CommunicatorBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = CommunicatorBase.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		69677E24134039EA002B32C8 /* CommunicatorBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = CommunicatorBase.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		69677E25134039EA002B32C8 /* GlobalCommunicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GlobalCommunicator.cpp; sourceTree = "<group>"; };
+		69677E26134039EA002B32C8 /* GlobalCommunicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlobalCommunicator.h; sourceTree = "<group>"; };
+		69677E2E134039EA002B32C8 /* LeastSquareSurrogate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LeastSquareSurrogate.cpp; sourceTree = "<group>"; };
+		69677E2F134039EA002B32C8 /* LeastSquareSurrogate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LeastSquareSurrogate.h; sourceTree = "<group>"; };
+		69677E30134039EA002B32C8 /* PolynomialCoefficientList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PolynomialCoefficientList.cpp; sourceTree = "<group>"; };
+		69677E31134039EA002B32C8 /* PolynomialCoefficientList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PolynomialCoefficientList.h; sourceTree = "<group>"; };
+		69677E32134039EA002B32C8 /* PolynomialCoefficientListIterator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PolynomialCoefficientListIterator.cpp; sourceTree = "<group>"; };
+		69677E33134039EA002B32C8 /* PolynomialCoefficientListIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PolynomialCoefficientListIterator.h; sourceTree = "<group>"; };
+		69677E34134039EA002B32C8 /* PolynomialTerm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PolynomialTerm.cpp; sourceTree = "<group>"; };
+		69677E35134039EA002B32C8 /* PolynomialTerm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PolynomialTerm.h; sourceTree = "<group>"; };
+		69677E36134039EA002B32C8 /* PolynomialType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PolynomialType.h; sourceTree = "<group>"; };
+		69677E37134039EA002B32C8 /* SurrogateBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SurrogateBase.cpp; sourceTree = "<group>"; };
+		69677E38134039EA002B32C8 /* SurrogateBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SurrogateBase.h; sourceTree = "<group>"; };
+		69677E3B134039EA002B32C8 /* CommandLineArguments.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = CommandLineArguments.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		69677E3C134039EA002B32C8 /* CommandLineArguments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = CommandLineArguments.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		69677E3D134039EA002B32C8 /* EnumName.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EnumName.cpp; sourceTree = "<group>"; };
+		69677E3E134039EA002B32C8 /* EnumName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnumName.h; sourceTree = "<group>"; };
+		69677EB413403B06002B32C8 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = System/Library/Frameworks/vecLib.framework; sourceTree = SDKROOT; };
+		6967BA78156A7DF300F2FB18 /* Quad8.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Quad8.h; sourceTree = "<group>"; };
+		6967BA7A156A7DFE00F2FB18 /* Tri6.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Tri6.h; sourceTree = "<group>"; };
+		6967BA7B156A7E0800F2FB18 /* Quad8.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Quad8.cpp; sourceTree = "<group>"; };
+		6967BA7D156A7E1000F2FB18 /* Tri6.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tri6.cpp; sourceTree = "<group>"; };
+		6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplplotcxxd.dylib; path = ../../../../../../opt/local/lib/libplplotcxxd.dylib; sourceTree = "<group>"; };
+		6967BA83156A80C700F2FB18 /* libplplotd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplplotd.dylib; path = ../../../../../../opt/local/lib/libplplotd.dylib; sourceTree = "<group>"; };
+		6973BD40135C8A4000C874AF /* LogAxis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LogAxis.cpp; sourceTree = "<group>"; };
+		6973BD41135C8A4000C874AF /* LogAxis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LogAxis.h; sourceTree = "<group>"; };
+		698CC2A315489C830072F5C4 /* InverseIterationLinearEigensolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InverseIterationLinearEigensolver.cpp; sourceTree = "<group>"; };
+		698CC2A415489C830072F5C4 /* InverseIterationLinearEigensolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InverseIterationLinearEigensolver.h; sourceTree = "<group>"; };
+		698CC2A515489C830072F5C4 /* LanczosIterationLinearEigensolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LanczosIterationLinearEigensolver.cpp; sourceTree = "<group>"; };
+		698CC2A615489C830072F5C4 /* LanczosIterationLinearEigensolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LanczosIterationLinearEigensolver.h; sourceTree = "<group>"; };
+		698CC2A715489C830072F5C4 /* LinearEigenSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearEigenSolverBase.cpp; sourceTree = "<group>"; };
+		698CC2A815489C830072F5C4 /* LinearEigenSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearEigenSolverBase.h; sourceTree = "<group>"; };
+		698CC2A915489C830072F5C4 /* PowerMethodLinearEigensolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PowerMethodLinearEigensolver.cpp; sourceTree = "<group>"; };
+		698CC2AA15489C830072F5C4 /* PowerMethodLinearEigensolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PowerMethodLinearEigensolver.h; sourceTree = "<group>"; };
+		698CC2AB15489C830072F5C4 /* QRMethodLinearEigensolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QRMethodLinearEigensolver.cpp; sourceTree = "<group>"; };
+		698CC2AC15489C830072F5C4 /* QRMethodLinearEigensolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QRMethodLinearEigensolver.h; sourceTree = "<group>"; };
+		698CC2AD15489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RayleighQuotientIterationLinearEigensolver.cpp; sourceTree = "<group>"; };
+		698CC2AE15489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RayleighQuotientIterationLinearEigensolver.h; sourceTree = "<group>"; };
+		698CC2B015489C830072F5C4 /* ClassicalQRFactorization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ClassicalQRFactorization.cpp; sourceTree = "<group>"; };
+		698CC2B115489C830072F5C4 /* ClassicalQRFactorization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClassicalQRFactorization.h; sourceTree = "<group>"; };
+		698CC2B215489C830072F5C4 /* HessenbergFormReduction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HessenbergFormReduction.cpp; sourceTree = "<group>"; };
+		698CC2B315489C830072F5C4 /* HessenbergFormReduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HessenbergFormReduction.h; sourceTree = "<group>"; };
+		698CC2B415489C830072F5C4 /* HouseHolderTriangulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HouseHolderTriangulation.cpp; sourceTree = "<group>"; };
+		698CC2B515489C830072F5C4 /* HouseHolderTriangulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HouseHolderTriangulation.h; sourceTree = "<group>"; };
+		698CC2B615489C830072F5C4 /* MatrixQRFactorizationBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MatrixQRFactorizationBase.cpp; sourceTree = "<group>"; };
+		698CC2B715489C830072F5C4 /* MatrixQRFactorizationBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixQRFactorizationBase.h; sourceTree = "<group>"; };
+		698CC2B815489C830072F5C4 /* ModifiedQRFactorization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ModifiedQRFactorization.cpp; sourceTree = "<group>"; };
+		698CC2B915489C830072F5C4 /* ModifiedQRFactorization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModifiedQRFactorization.h; sourceTree = "<group>"; };
+		698CC2BA15489C830072F5C4 /* TriangularBacksubstitution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TriangularBacksubstitution.cpp; sourceTree = "<group>"; };
+		698CC2BB15489C830072F5C4 /* TriangularBacksubstitution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TriangularBacksubstitution.h; sourceTree = "<group>"; };
+		698CC2BD15489C830072F5C4 /* LapackLinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LapackLinearSolver.cpp; sourceTree = "<group>"; };
+		698CC2BE15489C830072F5C4 /* LapackLinearSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LapackLinearSolver.h; sourceTree = "<group>"; };
+		698CC2BF15489C830072F5C4 /* LinearLeastSquareSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearLeastSquareSolver.cpp; sourceTree = "<group>"; };
+		698CC2C015489C830072F5C4 /* LinearLeastSquareSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearLeastSquareSolver.h; sourceTree = "<group>"; };
+		698CC2C115489C830072F5C4 /* LinearSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearSolverBase.cpp; sourceTree = "<group>"; };
+		698CC2C215489C830072F5C4 /* LinearSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearSolverBase.h; sourceTree = "<group>"; };
+		698CC2C315489C830072F5C4 /* PseudoTimeSteppingLinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PseudoTimeSteppingLinearSolver.cpp; sourceTree = "<group>"; };
+		698CC2C415489C830072F5C4 /* PseudoTimeSteppingLinearSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PseudoTimeSteppingLinearSolver.h; sourceTree = "<group>"; };
+		698CC2C515489C830072F5C4 /* QRFactorizationLinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QRFactorizationLinearSolver.cpp; sourceTree = "<group>"; };
+		698CC2C615489C830072F5C4 /* QRFactorizationLinearSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QRFactorizationLinearSolver.h; sourceTree = "<group>"; };
+		698CC2EB1548DA170072F5C4 /* TransientSolverBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransientSolverBase.h; sourceTree = "<group>"; };
+		699572D4154F21A900AE58E7 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		699572D5154F21A900AE58E7 /* modify_dep_file.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = modify_dep_file.py; sourceTree = "<group>"; };
+		699572DC154F234F00AE58E7 /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EigenTest.cpp; sourceTree = "<group>"; };
+		699572DD154F234F00AE58E7 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		699572DE154F234F00AE58E7 /* MeshTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MeshTest.cpp; sourceTree = "<group>"; };
+		69AB772C158D98BB00D6F5DB /* LUFactorization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LUFactorization.h; sourceTree = "<group>"; };
+		69AB772D158D98C800D6F5DB /* LUFactorization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LUFactorization.cpp; sourceTree = "<group>"; };
+		69AB772F158EC75200D6F5DB /* LUFactorizationLinearSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LUFactorizationLinearSolver.h; sourceTree = "<group>"; };
+		69AB7730158EC75D00D6F5DB /* LUFactorizationLinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LUFactorizationLinearSolver.cpp; sourceTree = "<group>"; };
+		69AE0ED61575B45200E057E2 /* FunctionBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunctionBase.h; sourceTree = "<group>"; };
+		69AE0ED71575B45200E057E2 /* LagrangeFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LagrangeFunction.h; sourceTree = "<group>"; };
+		69AE0EDB1575B7BB00E057E2 /* ExplicitRungeKuttaTransientSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExplicitRungeKuttaTransientSolver.h; sourceTree = "<group>"; };
+		69AE0EDC1575BA9900E057E2 /* ExplicitRungeKuttaTransientSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExplicitRungeKuttaTransientSolver.cpp; sourceTree = "<group>"; };
+		69BAD1E41565887800870025 /* Edge3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Edge3.h; sourceTree = "<group>"; };
+		69BAD1E6156588A200870025 /* Edge3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Edge3.cpp; sourceTree = "<group>"; };
+		69BAD1E81566A45F00870025 /* PLPlot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PLPlot.cpp; sourceTree = "<group>"; };
+		69BAD1E91566A45F00870025 /* PLPlot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLPlot.h; sourceTree = "<group>"; };
+		69BC200A15780B54004B10DF /* ArpackLinearEigenSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ArpackLinearEigenSolver.h; sourceTree = "<group>"; };
+		69BC200C15780B63004B10DF /* ArpackLinearEigenSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ArpackLinearEigenSolver.cpp; sourceTree = "<group>"; };
+		69C5B651152DFF6A00F0D430 /* Table.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Table.h; sourceTree = "<group>"; };
+		69CD7B461538ACC9005C59A5 /* FunctionMappingBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunctionMappingBase.h; sourceTree = "<group>"; };
+		69CD7B471538B965005C59A5 /* LinearFunctionMapping.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LinearFunctionMapping.h; sourceTree = "<group>"; };
+		69CD7B481538BD85005C59A5 /* PolarFunctionMapping.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PolarFunctionMapping.h; sourceTree = "<group>"; };
+		69CD7B491538BDA3005C59A5 /* CylindricalFunctionMapping.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CylindricalFunctionMapping.h; sourceTree = "<group>"; };
+		69CD7B4A1538BDB2005C59A5 /* SphericalFunctionMapping.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SphericalFunctionMapping.h; sourceTree = "<group>"; };
+		69CD7B4E1538BEE0005C59A5 /* LagrangeFunctionMapping.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LagrangeFunctionMapping.h; sourceTree = "<group>"; };
+		69CD7B4F1538BF43005C59A5 /* LinearFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearFunctionMapping.cpp; sourceTree = "<group>"; };
+		69CD7B511538C5D7005C59A5 /* PolarFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PolarFunctionMapping.cpp; sourceTree = "<group>"; };
+		69CD7B5315393CBC005C59A5 /* CylindricalFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CylindricalFunctionMapping.cpp; sourceTree = "<group>"; };
+		69CEDC45151B995A0094825A /* FiniteElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FiniteElementBase.cpp; sourceTree = "<group>"; };
+		69CEDC48151B99770094825A /* FiniteElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FiniteElementBase.h; sourceTree = "<group>"; };
+		69CEDC57151D09630094825A /* FELagrange.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FELagrange.h; sourceTree = "<group>"; };
+		69CEDC58151D0D050094825A /* FELagrange.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FELagrange.cpp; sourceTree = "<group>"; };
+		69E12AC1153A2CBE0057456E /* CompositeFunctionMappingBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompositeFunctionMappingBase.h; sourceTree = "<group>"; };
+		69E12AC2153A3A430057456E /* CompositeFunctionMappingBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CompositeFunctionMappingBase.cpp; sourceTree = "<group>"; };
+		69E12AC4153A723B0057456E /* FunctionMappingBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FunctionMappingBase.cpp; sourceTree = "<group>"; };
+		69E12AC6153A77960057456E /* LagrangeFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LagrangeFunctionMapping.cpp; sourceTree = "<group>"; };
+		69E95E411549C083004E55AF /* MultiBlockMatrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MultiBlockMatrix.h; sourceTree = "<group>"; };
+		69E95E431549C3F6004E55AF /* SparseMatrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparseMatrix.h; sourceTree = "<group>"; };
+		69E95E441549C8A9004E55AF /* SparsityPattern.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparsityPattern.h; sourceTree = "<group>"; };
+		69E95E4A1549DBEA004E55AF /* MultiBlockMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MultiBlockMatrix.cpp; sourceTree = "<group>"; };
+		69E95E5B154B05C1004E55AF /* StructuralDiscretization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StructuralDiscretization.h; sourceTree = "<group>"; };
+		69E95E5D154B0776004E55AF /* StructuralDiscretization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StructuralDiscretization.cpp; sourceTree = "<group>"; };
+		69E95E6E154B2A59004E55AF /* TransientSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TransientSolverBase.cpp; sourceTree = "<group>"; };
+		69E95E70154B355A004E55AF /* NewmarkTransientSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NewmarkTransientSolver.h; sourceTree = "<group>"; };
+		69E95E71154B36D3004E55AF /* NewmarkTransientSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewmarkTransientSolver.cpp; sourceTree = "<group>"; };
+		69EEF793152FD6D8000F4C44 /* DegreeOfFreedomUnit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomUnit.h; sourceTree = "<group>"; };
+		69EEF794152FD9C3000F4C44 /* DegreeOfFreedomMap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomMap.h; sourceTree = "<group>"; };
+		69EEF79515308186000F4C44 /* DegreeOfFreedomMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DegreeOfFreedomMap.cpp; sourceTree = "<group>"; };
+		69EEF79715329D7F000F4C44 /* DegreeOfFreedomObject.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DegreeOfFreedomObject.cpp; sourceTree = "<group>"; };
+		69EEF79915331834000F4C44 /* QuadratureBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QuadratureBase.h; sourceTree = "<group>"; };
+		69EEF79B1533206C000F4C44 /* QuadratureBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QuadratureBase.cpp; sourceTree = "<group>"; };
+		69EEF79D15332696000F4C44 /* TrapezoidQuadrature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrapezoidQuadrature.h; sourceTree = "<group>"; };
+		69EEF79F1533503D000F4C44 /* TrapezoidQuadrature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrapezoidQuadrature.cpp; sourceTree = "<group>"; };
+		69F2401D14E9609700569F6E /* macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = macros.h; sourceTree = "<group>"; };
+		69F2E005152EA3CC0073243C /* DegreeOfFreedomObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomObject.h; sourceTree = "<group>"; };
+		69F2E016152F861B0073243C /* AutoPtrTable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoPtrTable.h; sourceTree = "<group>"; };
+		69F463B91552BF85004B9AF8 /* LapackLinearEigenSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LapackLinearEigenSolver.h; sourceTree = "<group>"; };
+		69F463BB1552BF99004B9AF8 /* LapackLinearEigenSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LapackLinearEigenSolver.cpp; sourceTree = "<group>"; };
+		EB47563715891D9000D2D1EF /* SparsityPattern.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SparsityPattern.cpp; sourceTree = "<group>"; };
+		EB47563A15892A4900D2D1EF /* SparseMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SparseMatrix.cpp; sourceTree = "<group>"; };
+		EB47563C1589727300D2D1EF /* LocalMatrixBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LocalMatrixBase.h; sourceTree = "<group>"; };
+		EB47563D1589727E00D2D1EF /* LocalMatrixBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LocalMatrixBase.cpp; sourceTree = "<group>"; };
+		EBFD4D2115BEFD94000B7F5D /* FlutterSolverBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FlutterSolverBase.h; sourceTree = "<group>"; };
+		EBFD4D2215BEFE61000B7F5D /* FrequencyDomainFlutterSolverBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FrequencyDomainFlutterSolverBase.h; sourceTree = "<group>"; };
+		EBFD4D2315BEFE78000B7F5D /* TimeDomainFlutterSolverBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TimeDomainFlutterSolverBase.h; sourceTree = "<group>"; };
+		EBFD4D2415BEFE96000B7F5D /* UGFlutterSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UGFlutterSolver.h; sourceTree = "<group>"; };
+		EBFD4D2515BEFEA4000B7F5D /* PKFlutterSolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PKFlutterSolver.h; sourceTree = "<group>"; };
+		EBFD4D2615BF185C000B7F5D /* UGFlutterSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UGFlutterSolver.cpp; sourceTree = "<group>"; };
+		EBFD4D2815BF186A000B7F5D /* PKFlutterSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PKFlutterSolver.cpp; sourceTree = "<group>"; };
+		EBFD4D2A15BF1878000B7F5D /* FrequencyDomainFlutterSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrequencyDomainFlutterSolverBase.cpp; sourceTree = "<group>"; };
+		EBFD4D2C15BF1887000B7F5D /* FlutterSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FlutterSolverBase.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		69677C9C1340386A002B32C8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69107D221578D8CF00196B94 /* libarpack.a in Frameworks */,
+				69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */,
+				6967BA82156A80B000F2FB18 /* libplplotcxxd.dylib in Frameworks */,
+				6967BA84156A80C700F2FB18 /* libplplotd.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		690240BD1357C07D00C4AC26 /* Plotting */ = {
+			isa = PBXGroup;
+			children = (
+				690240C91357CEA000C4AC26 /* AxisBase.cpp */,
+				690240CA1357CEA000C4AC26 /* AxisBase.h */,
+				6973BD40135C8A4000C874AF /* LogAxis.cpp */,
+				6973BD41135C8A4000C874AF /* LogAxis.h */,
+				690240BF1357C0B100C4AC26 /* Plot2DBase.cpp */,
+				690240C01357C0B100C4AC26 /* Plot2DBase.h */,
+				69BAD1E81566A45F00870025 /* PLPlot.cpp */,
+				69BAD1E91566A45F00870025 /* PLPlot.h */,
+				690240CD1357CFB300C4AC26 /* RealAxis.cpp */,
+				690240CE1357CFB300C4AC26 /* RealAxis.h */,
+			);
+			path = Plotting;
+			sourceTree = "<group>";
+		};
+		69677C941340386A002B32C8 = {
+			isa = PBXGroup;
+			children = (
+				6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */,
+				6967BA83156A80C700F2FB18 /* libplplotd.dylib */,
+				69107D211578D8CF00196B94 /* libarpack.a */,
+				69677EB413403B06002B32C8 /* vecLib.framework */,
+				699572D0154F21A900AE58E7 /* build */,
+				699572DB154F234F00AE58E7 /* examples */,
+				69677DB2134039EA002B32C8 /* src */,
+				69677CA01340386A002B32C8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		69677CA01340386A002B32C8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				69677C9F1340386A002B32C8 /* FESystem.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		69677DB2134039EA002B32C8 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				69677DB3134039EA002B32C8 /* Base */,
+				69677DC2134039EA002B32C8 /* Data */,
+				69677DC5134039EA002B32C8 /* Database */,
+				69677DC6134039EA002B32C8 /* Design */,
+				69677DC7134039EA002B32C8 /* Disciplines */,
+				69677DCA134039EA002B32C8 /* Drivers */,
+				69677DCB134039EA002B32C8 /* Field */,
+				69677DD2134039EA002B32C8 /* FiniteElems */,
+				69677DD3134039EA002B32C8 /* FluidElems */,
+				69CD7B441538ACAC005C59A5 /* Functions */,
+				69677DD4134039EA002B32C8 /* Geom */,
+				69677DE9134039EA002B32C8 /* Mesh */,
+				69677E02134039EA002B32C8 /* Numerics */,
+				69677E21134039EA002B32C8 /* OutputProcessors */,
+				69677E22134039EA002B32C8 /* Parallel */,
+				690240BD1357C07D00C4AC26 /* Plotting */,
+				69677E27134039EA002B32C8 /* Properties */,
+				69677E28134039EA002B32C8 /* Quadrature */,
+				69677E29134039EA002B32C8 /* Solutions */,
+				69677E2A134039EA002B32C8 /* Solvers */,
+				69677E2B134039EA002B32C8 /* Statistics */,
+				69677E2C134039EA002B32C8 /* StructuralElems */,
+				69677E2D134039EA002B32C8 /* Surrogates */,
+				69677E39134039EA002B32C8 /* ThermalElems */,
+				69677E3A134039EA002B32C8 /* Utils */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		69677DB3134039EA002B32C8 /* Base */ = {
+			isa = PBXGroup;
+			children = (
+				69677DB4134039EA002B32C8 /* CountedObject.cpp */,
+				69677DB5134039EA002B32C8 /* CountedObject.h */,
+				69677DB6134039EA002B32C8 /* Counter.cpp */,
+				69677DB7134039EA002B32C8 /* Counter.h */,
+				69EEF79515308186000F4C44 /* DegreeOfFreedomMap.cpp */,
+				69EEF794152FD9C3000F4C44 /* DegreeOfFreedomMap.h */,
+				69EEF79715329D7F000F4C44 /* DegreeOfFreedomObject.cpp */,
+				69F2E005152EA3CC0073243C /* DegreeOfFreedomObject.h */,
+				69EEF793152FD6D8000F4C44 /* DegreeOfFreedomUnit.h */,
+				69677DB8134039EA002B32C8 /* FESystemBase.cpp */,
+				69677DB9134039EA002B32C8 /* FESystemBase.h */,
+				69677DBA134039EA002B32C8 /* FESystemConfig.h */,
+				69677DBB134039EA002B32C8 /* FESystemExceptions.cpp */,
+				69677DBC134039EA002B32C8 /* FESystemExceptions.h */,
+				69677DBD134039EA002B32C8 /* FESystemTypes.h */,
+				69677DBE134039EA002B32C8 /* IteratorBase.cpp */,
+				69677DBF134039EA002B32C8 /* IteratorBase.h */,
+				69F2401D14E9609700569F6E /* macros.h */,
+				69677DC0134039EA002B32C8 /* ParameterBase.cpp */,
+				69677DC1134039EA002B32C8 /* ParameterBase.h */,
+				6922BF5C153FDAA30011687C /* IdObject.h */,
+			);
+			path = Base;
+			sourceTree = "<group>";
+		};
+		69677DC2134039EA002B32C8 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				69677DC3134039EA002B32C8 /* DataSourceBase.cpp */,
+				69677DC4134039EA002B32C8 /* DataSourceBase.h */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		69677DC5134039EA002B32C8 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		69677DC6134039EA002B32C8 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		69677DC7134039EA002B32C8 /* Disciplines */ = {
+			isa = PBXGroup;
+			children = (
+				EBFD4D1F15BEFD6D000B7F5D /* Aeroelasticity */,
+				69677DC8134039EA002B32C8 /* DiscretizationBase.cpp */,
+				69677DC9134039EA002B32C8 /* DiscretizationBase.h */,
+				69E95E5B154B05C1004E55AF /* StructuralDiscretization.h */,
+				69E95E5D154B0776004E55AF /* StructuralDiscretization.cpp */,
+			);
+			path = Disciplines;
+			sourceTree = "<group>";
+		};
+		69677DCA134039EA002B32C8 /* Drivers */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Drivers;
+			sourceTree = "<group>";
+		};
+		69677DCB134039EA002B32C8 /* Field */ = {
+			isa = PBXGroup;
+			children = (
+				69677DCC134039EA002B32C8 /* FieldBase.cpp */,
+				69677DCD134039EA002B32C8 /* FieldBase.h */,
+				69677DCE134039EA002B32C8 /* FieldPointIterator.cpp */,
+				69677DCF134039EA002B32C8 /* FieldPointIterator.h */,
+				69677DD0134039EA002B32C8 /* LocalField.cpp */,
+				69677DD1134039EA002B32C8 /* LocalField.h */,
+			);
+			path = Field;
+			sourceTree = "<group>";
+		};
+		69677DD2134039EA002B32C8 /* FiniteElems */ = {
+			isa = PBXGroup;
+			children = (
+				69CEDC45151B995A0094825A /* FiniteElementBase.cpp */,
+				69CEDC48151B99770094825A /* FiniteElementBase.h */,
+				69CEDC57151D09630094825A /* FELagrange.h */,
+				69CEDC58151D0D050094825A /* FELagrange.cpp */,
+			);
+			path = FiniteElems;
+			sourceTree = "<group>";
+		};
+		69677DD3134039EA002B32C8 /* FluidElems */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = FluidElems;
+			sourceTree = "<group>";
+		};
+		69677DD4134039EA002B32C8 /* Geom */ = {
+			isa = PBXGroup;
+			children = (
+				69677DD5134039EA002B32C8 /* CoordinateSystemBase.cpp */,
+				69677DD6134039EA002B32C8 /* CoordinateSystemBase.h */,
+				69677DD7134039EA002B32C8 /* CurvilinearCoordinateSystemBase.cpp */,
+				69677DD8134039EA002B32C8 /* CurvilinearCoordinateSystemBase.h */,
+				69677DD9134039EA002B32C8 /* CylindricalCoordinateSystem.cpp */,
+				69677DDA134039EA002B32C8 /* CylindricalCoordinateSystem.h */,
+				69677DDB134039EA002B32C8 /* PolarCoordinateSystem.cpp */,
+				69677DDC134039EA002B32C8 /* PolarCoordinateSystem.h */,
+				69677DDD134039EA002B32C8 /* RectangularCoordinateSystem.cpp */,
+				69677DDE134039EA002B32C8 /* RectangularCoordinateSystem.h */,
+				69677DE1134039EA002B32C8 /* Domain.cpp */,
+				69677DE2134039EA002B32C8 /* Domain.h */,
+				69677DE3134039EA002B32C8 /* DomainBase.cpp */,
+				69677DE4134039EA002B32C8 /* DomainBase.h */,
+				69677DE7134039EA002B32C8 /* Point.cpp */,
+				69677DE8134039EA002B32C8 /* Point.h */,
+			);
+			path = Geom;
+			sourceTree = "<group>";
+		};
+		69677DE9134039EA002B32C8 /* Mesh */ = {
+			isa = PBXGroup;
+			children = (
+				69677DEA134039EA002B32C8 /* Edge2.cpp */,
+				69677DEB134039EA002B32C8 /* Edge2.h */,
+				69BAD1E6156588A200870025 /* Edge3.cpp */,
+				69BAD1E41565887800870025 /* Edge3.h */,
+				69677DEC134039EA002B32C8 /* EdgeElemBase.cpp */,
+				69677DED134039EA002B32C8 /* EdgeElemBase.h */,
+				69677DEE134039EA002B32C8 /* ElemBase.cpp */,
+				69677DEF134039EA002B32C8 /* ElemBase.h */,
+				6929FCA61517BF0B00D1C1F4 /* ElementType.h */,
+				69677DF0134039EA002B32C8 /* FaceElemBase.cpp */,
+				69677DF1134039EA002B32C8 /* FaceElemBase.h */,
+				69677DF2134039EA002B32C8 /* Hex8.cpp */,
+				69677DF3134039EA002B32C8 /* Hex8.h */,
+				69677DF4134039EA002B32C8 /* MeshBase.cpp */,
+				69677DF5134039EA002B32C8 /* MeshBase.h */,
+				69677DF6134039EA002B32C8 /* Node.cpp */,
+				69677DF7134039EA002B32C8 /* Node.h */,
+				69677DF8134039EA002B32C8 /* Pyramid5.cpp */,
+				69677DF9134039EA002B32C8 /* Pyramid5.h */,
+				69677DFA134039EA002B32C8 /* Quad4.cpp */,
+				69677DFB134039EA002B32C8 /* Quad4.h */,
+				6967BA7B156A7E0800F2FB18 /* Quad8.cpp */,
+				6967BA78156A7DF300F2FB18 /* Quad8.h */,
+				6913F29E15657996002C72F3 /* Quad9.cpp */,
+				6913F29C1565798A002C72F3 /* Quad9.h */,
+				69677DFC134039EA002B32C8 /* Tet4.cpp */,
+				69677DFD134039EA002B32C8 /* Tet4.h */,
+				69677DFE134039EA002B32C8 /* Tri3.cpp */,
+				69677DFF134039EA002B32C8 /* Tri3.h */,
+				6967BA7D156A7E1000F2FB18 /* Tri6.cpp */,
+				6967BA7A156A7DFE00F2FB18 /* Tri6.h */,
+				6913F2A115657D9D002C72F3 /* Tri7.cpp */,
+				6913F2A015657D91002C72F3 /* Tri7.h */,
+				69677E00134039EA002B32C8 /* VolumeElemBase.cpp */,
+				69677E01134039EA002B32C8 /* VolumeElemBase.h */,
+			);
+			path = Mesh;
+			sourceTree = "<group>";
+		};
+		69677E02134039EA002B32C8 /* Numerics */ = {
+			isa = PBXGroup;
+			children = (
+				69677E03134039EA002B32C8 /* DenseMatrix.cpp */,
+				69677E04134039EA002B32C8 /* DenseMatrix.h */,
+				EB47563D1589727E00D2D1EF /* LocalMatrixBase.cpp */,
+				EB47563C1589727300D2D1EF /* LocalMatrixBase.h */,
+				69677E11134039EA002B32C8 /* LocalVector.cpp */,
+				69677E12134039EA002B32C8 /* LocalVector.h */,
+				69677E13134039EA002B32C8 /* MatrixBase.cpp */,
+				69677E14134039EA002B32C8 /* MatrixBase.h */,
+				69E95E4A1549DBEA004E55AF /* MultiBlockMatrix.cpp */,
+				69E95E411549C083004E55AF /* MultiBlockMatrix.h */,
+				EB47563A15892A4900D2D1EF /* SparseMatrix.cpp */,
+				69E95E431549C3F6004E55AF /* SparseMatrix.h */,
+				EB47563715891D9000D2D1EF /* SparsityPattern.cpp */,
+				69E95E441549C8A9004E55AF /* SparsityPattern.h */,
+				69677E19134039EA002B32C8 /* TensorBase.cpp */,
+				69677E1A134039EA002B32C8 /* TensorBase.h */,
+				69677E1B134039EA002B32C8 /* TensorIndex.cpp */,
+				69677E1C134039EA002B32C8 /* TensorIndex.h */,
+				69677E1D134039EA002B32C8 /* TensorIndexBase.cpp */,
+				69677E1E134039EA002B32C8 /* TensorIndexBase.h */,
+				69677E1F134039EA002B32C8 /* VectorBase.cpp */,
+				69677E20134039EA002B32C8 /* VectorBase.h */,
+			);
+			path = Numerics;
+			sourceTree = "<group>";
+		};
+		69677E21134039EA002B32C8 /* OutputProcessors */ = {
+			isa = PBXGroup;
+			children = (
+				690A7C7C153F2F13002B955F /* GmshOutputProcessor.cpp */,
+				690A7C7B153F2DBA002B955F /* GmshOutputProcessor.h */,
+				690A7C79153F2AD8002B955F /* OutputProcessorBase.h */,
+				690A7C7F153F5C92002B955F /* TecplotOutputProcessor.cpp */,
+				690A7C7E153F5C85002B955F /* TecplotOutputProcessor.h */,
+				690A7C87153FB0A8002B955F /* VtkOutputProcessor.cpp */,
+				690A7C89153FB9ED002B955F /* VtkOutputProcessor.h */,
+			);
+			path = OutputProcessors;
+			sourceTree = "<group>";
+		};
+		69677E22134039EA002B32C8 /* Parallel */ = {
+			isa = PBXGroup;
+			children = (
+				69677E23134039EA002B32C8 /* CommunicatorBase.cpp */,
+				69677E24134039EA002B32C8 /* CommunicatorBase.h */,
+				69677E25134039EA002B32C8 /* GlobalCommunicator.cpp */,
+				69677E26134039EA002B32C8 /* GlobalCommunicator.h */,
+			);
+			path = Parallel;
+			sourceTree = "<group>";
+		};
+		69677E27134039EA002B32C8 /* Properties */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Properties;
+			sourceTree = "<group>";
+		};
+		69677E28134039EA002B32C8 /* Quadrature */ = {
+			isa = PBXGroup;
+			children = (
+				69EEF79915331834000F4C44 /* QuadratureBase.h */,
+				69EEF79B1533206C000F4C44 /* QuadratureBase.cpp */,
+				69EEF79D15332696000F4C44 /* TrapezoidQuadrature.h */,
+				69EEF79F1533503D000F4C44 /* TrapezoidQuadrature.cpp */,
+			);
+			path = Quadrature;
+			sourceTree = "<group>";
+		};
+		69677E29134039EA002B32C8 /* Solutions */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Solutions;
+			sourceTree = "<group>";
+		};
+		69677E2A134039EA002B32C8 /* Solvers */ = {
+			isa = PBXGroup;
+			children = (
+				698CC2A215489C830072F5C4 /* EigenSolvers */,
+				698CC2AF15489C830072F5C4 /* Factorizations */,
+				698CC2BC15489C830072F5C4 /* LinearSolvers */,
+				698CC2C715489C830072F5C4 /* NonlinearSolvers */,
+				698CC2C815489C830072F5C4 /* TransientSolvers */,
+			);
+			path = Solvers;
+			sourceTree = "<group>";
+		};
+		69677E2B134039EA002B32C8 /* Statistics */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Statistics;
+			sourceTree = "<group>";
+		};
+		69677E2C134039EA002B32C8 /* StructuralElems */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = StructuralElems;
+			sourceTree = "<group>";
+		};
+		69677E2D134039EA002B32C8 /* Surrogates */ = {
+			isa = PBXGroup;
+			children = (
+				69677E2E134039EA002B32C8 /* LeastSquareSurrogate.cpp */,
+				69677E2F134039EA002B32C8 /* LeastSquareSurrogate.h */,
+				69677E30134039EA002B32C8 /* PolynomialCoefficientList.cpp */,
+				69677E31134039EA002B32C8 /* PolynomialCoefficientList.h */,
+				69677E32134039EA002B32C8 /* PolynomialCoefficientListIterator.cpp */,
+				69677E33134039EA002B32C8 /* PolynomialCoefficientListIterator.h */,
+				69677E34134039EA002B32C8 /* PolynomialTerm.cpp */,
+				69677E35134039EA002B32C8 /* PolynomialTerm.h */,
+				69677E36134039EA002B32C8 /* PolynomialType.h */,
+				69677E37134039EA002B32C8 /* SurrogateBase.cpp */,
+				69677E38134039EA002B32C8 /* SurrogateBase.h */,
+			);
+			path = Surrogates;
+			sourceTree = "<group>";
+		};
+		69677E39134039EA002B32C8 /* ThermalElems */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ThermalElems;
+			sourceTree = "<group>";
+		};
+		69677E3A134039EA002B32C8 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				69F2E016152F861B0073243C /* AutoPtrTable.h */,
+				69677E3B134039EA002B32C8 /* CommandLineArguments.cpp */,
+				69677E3C134039EA002B32C8 /* CommandLineArguments.h */,
+				69677E3D134039EA002B32C8 /* EnumName.cpp */,
+				69677E3E134039EA002B32C8 /* EnumName.h */,
+				69C5B651152DFF6A00F0D430 /* Table.h */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		698CC2A215489C830072F5C4 /* EigenSolvers */ = {
+			isa = PBXGroup;
+			children = (
+				69BC200C15780B63004B10DF /* ArpackLinearEigenSolver.cpp */,
+				69BC200A15780B54004B10DF /* ArpackLinearEigenSolver.h */,
+				698CC2A315489C830072F5C4 /* InverseIterationLinearEigensolver.cpp */,
+				698CC2A415489C830072F5C4 /* InverseIterationLinearEigensolver.h */,
+				698CC2A515489C830072F5C4 /* LanczosIterationLinearEigensolver.cpp */,
+				698CC2A615489C830072F5C4 /* LanczosIterationLinearEigensolver.h */,
+				69F463BB1552BF99004B9AF8 /* LapackLinearEigenSolver.cpp */,
+				69F463B91552BF85004B9AF8 /* LapackLinearEigenSolver.h */,
+				698CC2A715489C830072F5C4 /* LinearEigenSolverBase.cpp */,
+				698CC2A815489C830072F5C4 /* LinearEigenSolverBase.h */,
+				698CC2A915489C830072F5C4 /* PowerMethodLinearEigensolver.cpp */,
+				698CC2AA15489C830072F5C4 /* PowerMethodLinearEigensolver.h */,
+				698CC2AB15489C830072F5C4 /* QRMethodLinearEigensolver.cpp */,
+				698CC2AC15489C830072F5C4 /* QRMethodLinearEigensolver.h */,
+				698CC2AD15489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.cpp */,
+				698CC2AE15489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.h */,
+			);
+			path = EigenSolvers;
+			sourceTree = "<group>";
+		};
+		698CC2AF15489C830072F5C4 /* Factorizations */ = {
+			isa = PBXGroup;
+			children = (
+				698CC2B015489C830072F5C4 /* ClassicalQRFactorization.cpp */,
+				698CC2B115489C830072F5C4 /* ClassicalQRFactorization.h */,
+				698CC2B215489C830072F5C4 /* HessenbergFormReduction.cpp */,
+				698CC2B315489C830072F5C4 /* HessenbergFormReduction.h */,
+				698CC2B415489C830072F5C4 /* HouseHolderTriangulation.cpp */,
+				698CC2B515489C830072F5C4 /* HouseHolderTriangulation.h */,
+				69AB772D158D98C800D6F5DB /* LUFactorization.cpp */,
+				69AB772C158D98BB00D6F5DB /* LUFactorization.h */,
+				698CC2B615489C830072F5C4 /* MatrixQRFactorizationBase.cpp */,
+				698CC2B715489C830072F5C4 /* MatrixQRFactorizationBase.h */,
+				698CC2B815489C830072F5C4 /* ModifiedQRFactorization.cpp */,
+				698CC2B915489C830072F5C4 /* ModifiedQRFactorization.h */,
+				698CC2BA15489C830072F5C4 /* TriangularBacksubstitution.cpp */,
+				698CC2BB15489C830072F5C4 /* TriangularBacksubstitution.h */,
+			);
+			path = Factorizations;
+			sourceTree = "<group>";
+		};
+		698CC2BC15489C830072F5C4 /* LinearSolvers */ = {
+			isa = PBXGroup;
+			children = (
+				698CC2BD15489C830072F5C4 /* LapackLinearSolver.cpp */,
+				698CC2BE15489C830072F5C4 /* LapackLinearSolver.h */,
+				698CC2BF15489C830072F5C4 /* LinearLeastSquareSolver.cpp */,
+				698CC2C015489C830072F5C4 /* LinearLeastSquareSolver.h */,
+				698CC2C115489C830072F5C4 /* LinearSolverBase.cpp */,
+				698CC2C215489C830072F5C4 /* LinearSolverBase.h */,
+				69AB7730158EC75D00D6F5DB /* LUFactorizationLinearSolver.cpp */,
+				69AB772F158EC75200D6F5DB /* LUFactorizationLinearSolver.h */,
+				698CC2C315489C830072F5C4 /* PseudoTimeSteppingLinearSolver.cpp */,
+				698CC2C415489C830072F5C4 /* PseudoTimeSteppingLinearSolver.h */,
+				698CC2C515489C830072F5C4 /* QRFactorizationLinearSolver.cpp */,
+				698CC2C615489C830072F5C4 /* QRFactorizationLinearSolver.h */,
+			);
+			path = LinearSolvers;
+			sourceTree = "<group>";
+		};
+		698CC2C715489C830072F5C4 /* NonlinearSolvers */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = NonlinearSolvers;
+			sourceTree = "<group>";
+		};
+		698CC2C815489C830072F5C4 /* TransientSolvers */ = {
+			isa = PBXGroup;
+			children = (
+				69AE0EDC1575BA9900E057E2 /* ExplicitRungeKuttaTransientSolver.cpp */,
+				69AE0EDB1575B7BB00E057E2 /* ExplicitRungeKuttaTransientSolver.h */,
+				69E95E71154B36D3004E55AF /* NewmarkTransientSolver.cpp */,
+				69E95E70154B355A004E55AF /* NewmarkTransientSolver.h */,
+				69E95E6E154B2A59004E55AF /* TransientSolverBase.cpp */,
+				698CC2EB1548DA170072F5C4 /* TransientSolverBase.h */,
+			);
+			path = TransientSolvers;
+			sourceTree = "<group>";
+		};
+		699572D0154F21A900AE58E7 /* build */ = {
+			isa = PBXGroup;
+			children = (
+				699572D4154F21A900AE58E7 /* makefile */,
+				699572D5154F21A900AE58E7 /* modify_dep_file.py */,
+			);
+			path = build;
+			sourceTree = "<group>";
+		};
+		699572DB154F234F00AE58E7 /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				699572DC154F234F00AE58E7 /* EigenTest.cpp */,
+				699572DD154F234F00AE58E7 /* main.cpp */,
+				699572DE154F234F00AE58E7 /* MeshTest.cpp */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		69CD7B441538ACAC005C59A5 /* Functions */ = {
+			isa = PBXGroup;
+			children = (
+				69E12AC2153A3A430057456E /* CompositeFunctionMappingBase.cpp */,
+				69E12AC1153A2CBE0057456E /* CompositeFunctionMappingBase.h */,
+				69CD7B5315393CBC005C59A5 /* CylindricalFunctionMapping.cpp */,
+				69CD7B491538BDA3005C59A5 /* CylindricalFunctionMapping.h */,
+				69AE0ED61575B45200E057E2 /* FunctionBase.h */,
+				69E12AC4153A723B0057456E /* FunctionMappingBase.cpp */,
+				69CD7B461538ACC9005C59A5 /* FunctionMappingBase.h */,
+				69AE0ED71575B45200E057E2 /* LagrangeFunction.h */,
+				69E12AC6153A77960057456E /* LagrangeFunctionMapping.cpp */,
+				69CD7B4E1538BEE0005C59A5 /* LagrangeFunctionMapping.h */,
+				69CD7B4F1538BF43005C59A5 /* LinearFunctionMapping.cpp */,
+				69CD7B471538B965005C59A5 /* LinearFunctionMapping.h */,
+				69CD7B511538C5D7005C59A5 /* PolarFunctionMapping.cpp */,
+				69CD7B481538BD85005C59A5 /* PolarFunctionMapping.h */,
+				69CD7B4A1538BDB2005C59A5 /* SphericalFunctionMapping.h */,
+			);
+			path = Functions;
+			sourceTree = "<group>";
+		};
+		EBFD4D1F15BEFD6D000B7F5D /* Aeroelasticity */ = {
+			isa = PBXGroup;
+			children = (
+				EBFD4D2C15BF1887000B7F5D /* FlutterSolverBase.cpp */,
+				EBFD4D2115BEFD94000B7F5D /* FlutterSolverBase.h */,
+				EBFD4D2A15BF1878000B7F5D /* FrequencyDomainFlutterSolverBase.cpp */,
+				EBFD4D2215BEFE61000B7F5D /* FrequencyDomainFlutterSolverBase.h */,
+				EBFD4D2815BF186A000B7F5D /* PKFlutterSolver.cpp */,
+				EBFD4D2515BEFEA4000B7F5D /* PKFlutterSolver.h */,
+				EBFD4D2315BEFE78000B7F5D /* TimeDomainFlutterSolverBase.h */,
+				EBFD4D2615BF185C000B7F5D /* UGFlutterSolver.cpp */,
+				EBFD4D2415BEFE96000B7F5D /* UGFlutterSolver.h */,
+			);
+			path = Aeroelasticity;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		69677C9D1340386A002B32C8 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69677E40134039EA002B32C8 /* CountedObject.h in Headers */,
+				69677E42134039EA002B32C8 /* Counter.h in Headers */,
+				69677E44134039EA002B32C8 /* FESystemBase.h in Headers */,
+				69677E45134039EA002B32C8 /* FESystemConfig.h in Headers */,
+				69677E47134039EA002B32C8 /* FESystemExceptions.h in Headers */,
+				69677E48134039EA002B32C8 /* FESystemTypes.h in Headers */,
+				69677E4A134039EA002B32C8 /* IteratorBase.h in Headers */,
+				69677E4C134039EA002B32C8 /* ParameterBase.h in Headers */,
+				69677E4E134039EA002B32C8 /* DataSourceBase.h in Headers */,
+				69677E50134039EA002B32C8 /* DiscretizationBase.h in Headers */,
+				69677E52134039EA002B32C8 /* FieldBase.h in Headers */,
+				69677E54134039EA002B32C8 /* FieldPointIterator.h in Headers */,
+				69677E56134039EA002B32C8 /* LocalField.h in Headers */,
+				69677E58134039EA002B32C8 /* CoordinateSystemBase.h in Headers */,
+				69677E5A134039EA002B32C8 /* CurvilinearCoordinateSystemBase.h in Headers */,
+				69677E5C134039EA002B32C8 /* CylindricalCoordinateSystem.h in Headers */,
+				69677E5E134039EA002B32C8 /* PolarCoordinateSystem.h in Headers */,
+				69677E60134039EA002B32C8 /* RectangularCoordinateSystem.h in Headers */,
+				69677E64134039EA002B32C8 /* Domain.h in Headers */,
+				69677E66134039EA002B32C8 /* DomainBase.h in Headers */,
+				69677E6A134039EA002B32C8 /* Point.h in Headers */,
+				69677E6C134039EA002B32C8 /* Edge2.h in Headers */,
+				69677E6E134039EA002B32C8 /* EdgeElemBase.h in Headers */,
+				69677E70134039EA002B32C8 /* ElemBase.h in Headers */,
+				69677E72134039EA002B32C8 /* FaceElemBase.h in Headers */,
+				69677E74134039EA002B32C8 /* Hex8.h in Headers */,
+				69677E76134039EA002B32C8 /* MeshBase.h in Headers */,
+				69677E78134039EA002B32C8 /* Node.h in Headers */,
+				69677E7A134039EA002B32C8 /* Pyramid5.h in Headers */,
+				69677E7C134039EA002B32C8 /* Quad4.h in Headers */,
+				69677E7E134039EA002B32C8 /* Tet4.h in Headers */,
+				69677E80134039EA002B32C8 /* Tri3.h in Headers */,
+				69677E82134039EA002B32C8 /* VolumeElemBase.h in Headers */,
+				69677E84134039EA002B32C8 /* DenseMatrix.h in Headers */,
+				69677E92134039EA002B32C8 /* LocalVector.h in Headers */,
+				69677E94134039EA002B32C8 /* MatrixBase.h in Headers */,
+				69677E9A134039EA002B32C8 /* TensorBase.h in Headers */,
+				69677E9C134039EA002B32C8 /* TensorIndex.h in Headers */,
+				69677E9E134039EA002B32C8 /* TensorIndexBase.h in Headers */,
+				69677EA0134039EA002B32C8 /* VectorBase.h in Headers */,
+				69677EA2134039EA002B32C8 /* CommunicatorBase.h in Headers */,
+				69677EA4134039EA002B32C8 /* GlobalCommunicator.h in Headers */,
+				69677EA6134039EA002B32C8 /* LeastSquareSurrogate.h in Headers */,
+				69677EA8134039EA002B32C8 /* PolynomialCoefficientList.h in Headers */,
+				69677EAA134039EA002B32C8 /* PolynomialCoefficientListIterator.h in Headers */,
+				69677EAC134039EA002B32C8 /* PolynomialTerm.h in Headers */,
+				69677EAD134039EA002B32C8 /* PolynomialType.h in Headers */,
+				69677EAF134039EA002B32C8 /* SurrogateBase.h in Headers */,
+				69677EB1134039EA002B32C8 /* CommandLineArguments.h in Headers */,
+				69677EB3134039EA002B32C8 /* EnumName.h in Headers */,
+				690240C21357C0B100C4AC26 /* Plot2DBase.h in Headers */,
+				690240CC1357CEA100C4AC26 /* AxisBase.h in Headers */,
+				690240D01357CFB300C4AC26 /* RealAxis.h in Headers */,
+				6973BD43135C8A4000C874AF /* LogAxis.h in Headers */,
+				69F2401E14E9609700569F6E /* macros.h in Headers */,
+				69EEF79A15331834000F4C44 /* QuadratureBase.h in Headers */,
+				69EEF79E15332696000F4C44 /* TrapezoidQuadrature.h in Headers */,
+				690A7C8A153FB9ED002B955F /* VtkOutputProcessor.h in Headers */,
+				6922BF5D153FDAA30011687C /* IdObject.h in Headers */,
+				698CC2CA15489C830072F5C4 /* InverseIterationLinearEigensolver.h in Headers */,
+				698CC2CC15489C830072F5C4 /* LanczosIterationLinearEigensolver.h in Headers */,
+				698CC2CE15489C830072F5C4 /* LinearEigenSolverBase.h in Headers */,
+				698CC2D015489C830072F5C4 /* PowerMethodLinearEigensolver.h in Headers */,
+				698CC2D215489C830072F5C4 /* QRMethodLinearEigensolver.h in Headers */,
+				698CC2D415489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.h in Headers */,
+				698CC2D615489C830072F5C4 /* ClassicalQRFactorization.h in Headers */,
+				698CC2D815489C830072F5C4 /* HessenbergFormReduction.h in Headers */,
+				698CC2DA15489C830072F5C4 /* HouseHolderTriangulation.h in Headers */,
+				698CC2DC15489C830072F5C4 /* MatrixQRFactorizationBase.h in Headers */,
+				698CC2DE15489C830072F5C4 /* ModifiedQRFactorization.h in Headers */,
+				698CC2E015489C830072F5C4 /* TriangularBacksubstitution.h in Headers */,
+				698CC2E215489C830072F5C4 /* LapackLinearSolver.h in Headers */,
+				698CC2E415489C830072F5C4 /* LinearLeastSquareSolver.h in Headers */,
+				698CC2E615489C830072F5C4 /* LinearSolverBase.h in Headers */,
+				698CC2E815489C830072F5C4 /* PseudoTimeSteppingLinearSolver.h in Headers */,
+				698CC2EA15489C830072F5C4 /* QRFactorizationLinearSolver.h in Headers */,
+				69E95E5C154B05C1004E55AF /* StructuralDiscretization.h in Headers */,
+				69BAD1EB1566A45F00870025 /* PLPlot.h in Headers */,
+				69AE0ED81575B45200E057E2 /* FunctionBase.h in Headers */,
+				69AE0ED91575B45200E057E2 /* LagrangeFunction.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		69677C9E1340386A002B32C8 /* FESystem */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 69677CAD1340386A002B32C8 /* Build configuration list for PBXNativeTarget "FESystem" */;
+			buildPhases = (
+				69677C9B1340386A002B32C8 /* Sources */,
+				69677C9C1340386A002B32C8 /* Frameworks */,
+				69677C9D1340386A002B32C8 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FESystem;
+			productName = FESystem;
+			productReference = 69677C9F1340386A002B32C8 /* FESystem.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		69677C961340386A002B32C8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0450;
+				ORGANIZATIONNAME = "Virginia Tech";
+			};
+			buildConfigurationList = 69677C991340386A002B32C8 /* Build configuration list for PBXProject "FESystem" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 69677C941340386A002B32C8;
+			productRefGroup = 69677CA01340386A002B32C8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				69677C9E1340386A002B32C8 /* FESystem */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		69677C9B1340386A002B32C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69677E3F134039EA002B32C8 /* CountedObject.cpp in Sources */,
+				69677E41134039EA002B32C8 /* Counter.cpp in Sources */,
+				69677E43134039EA002B32C8 /* FESystemBase.cpp in Sources */,
+				69677E46134039EA002B32C8 /* FESystemExceptions.cpp in Sources */,
+				69677E49134039EA002B32C8 /* IteratorBase.cpp in Sources */,
+				69677E4B134039EA002B32C8 /* ParameterBase.cpp in Sources */,
+				69677E4D134039EA002B32C8 /* DataSourceBase.cpp in Sources */,
+				69677E4F134039EA002B32C8 /* DiscretizationBase.cpp in Sources */,
+				69677E51134039EA002B32C8 /* FieldBase.cpp in Sources */,
+				69677E53134039EA002B32C8 /* FieldPointIterator.cpp in Sources */,
+				69677E55134039EA002B32C8 /* LocalField.cpp in Sources */,
+				69EEF7981532A908000F4C44 /* DegreeOfFreedomObject.cpp in Sources */,
+				69677E57134039EA002B32C8 /* CoordinateSystemBase.cpp in Sources */,
+				69677E59134039EA002B32C8 /* CurvilinearCoordinateSystemBase.cpp in Sources */,
+				69677E5B134039EA002B32C8 /* CylindricalCoordinateSystem.cpp in Sources */,
+				69677E5D134039EA002B32C8 /* PolarCoordinateSystem.cpp in Sources */,
+				69677E5F134039EA002B32C8 /* RectangularCoordinateSystem.cpp in Sources */,
+				69677E63134039EA002B32C8 /* Domain.cpp in Sources */,
+				69677E65134039EA002B32C8 /* DomainBase.cpp in Sources */,
+				69677E69134039EA002B32C8 /* Point.cpp in Sources */,
+				69677E6B134039EA002B32C8 /* Edge2.cpp in Sources */,
+				69677E6D134039EA002B32C8 /* EdgeElemBase.cpp in Sources */,
+				69677E6F134039EA002B32C8 /* ElemBase.cpp in Sources */,
+				69677E71134039EA002B32C8 /* FaceElemBase.cpp in Sources */,
+				69677E73134039EA002B32C8 /* Hex8.cpp in Sources */,
+				69677E75134039EA002B32C8 /* MeshBase.cpp in Sources */,
+				69677E77134039EA002B32C8 /* Node.cpp in Sources */,
+				69677E79134039EA002B32C8 /* Pyramid5.cpp in Sources */,
+				69677E7B134039EA002B32C8 /* Quad4.cpp in Sources */,
+				69677E7D134039EA002B32C8 /* Tet4.cpp in Sources */,
+				69677E7F134039EA002B32C8 /* Tri3.cpp in Sources */,
+				69677E81134039EA002B32C8 /* VolumeElemBase.cpp in Sources */,
+				69677EA1134039EA002B32C8 /* CommunicatorBase.cpp in Sources */,
+				69677EA3134039EA002B32C8 /* GlobalCommunicator.cpp in Sources */,
+				69677EA5134039EA002B32C8 /* LeastSquareSurrogate.cpp in Sources */,
+				69677EA7134039EA002B32C8 /* PolynomialCoefficientList.cpp in Sources */,
+				69677EA9134039EA002B32C8 /* PolynomialCoefficientListIterator.cpp in Sources */,
+				69677EAB134039EA002B32C8 /* PolynomialTerm.cpp in Sources */,
+				69677EAE134039EA002B32C8 /* SurrogateBase.cpp in Sources */,
+				69677EB0134039EA002B32C8 /* CommandLineArguments.cpp in Sources */,
+				69677EB2134039EA002B32C8 /* EnumName.cpp in Sources */,
+				690240C11357C0B100C4AC26 /* Plot2DBase.cpp in Sources */,
+				690240CB1357CEA100C4AC26 /* AxisBase.cpp in Sources */,
+				690240CF1357CFB300C4AC26 /* RealAxis.cpp in Sources */,
+				6973BD42135C8A4000C874AF /* LogAxis.cpp in Sources */,
+				69CEDC46151B995A0094825A /* FiniteElementBase.cpp in Sources */,
+				69CEDC59151D0D050094825A /* FELagrange.cpp in Sources */,
+				69EEF79615308186000F4C44 /* DegreeOfFreedomMap.cpp in Sources */,
+				69EEF79C1533206C000F4C44 /* QuadratureBase.cpp in Sources */,
+				69EEF7A01533503D000F4C44 /* TrapezoidQuadrature.cpp in Sources */,
+				69CD7B501538BF43005C59A5 /* LinearFunctionMapping.cpp in Sources */,
+				69CD7B521538C5D7005C59A5 /* PolarFunctionMapping.cpp in Sources */,
+				69CD7B5415393CBC005C59A5 /* CylindricalFunctionMapping.cpp in Sources */,
+				69E12AC3153A3A440057456E /* CompositeFunctionMappingBase.cpp in Sources */,
+				69E12AC5153A723B0057456E /* FunctionMappingBase.cpp in Sources */,
+				69E12AC7153A77960057456E /* LagrangeFunctionMapping.cpp in Sources */,
+				690A7C7D153F2F13002B955F /* GmshOutputProcessor.cpp in Sources */,
+				690A7C80153F5C92002B955F /* TecplotOutputProcessor.cpp in Sources */,
+				690A7C88153FB0A8002B955F /* VtkOutputProcessor.cpp in Sources */,
+				698CC2C915489C830072F5C4 /* InverseIterationLinearEigensolver.cpp in Sources */,
+				698CC2CB15489C830072F5C4 /* LanczosIterationLinearEigensolver.cpp in Sources */,
+				698CC2CD15489C830072F5C4 /* LinearEigenSolverBase.cpp in Sources */,
+				698CC2CF15489C830072F5C4 /* PowerMethodLinearEigensolver.cpp in Sources */,
+				698CC2D115489C830072F5C4 /* QRMethodLinearEigensolver.cpp in Sources */,
+				698CC2D315489C830072F5C4 /* RayleighQuotientIterationLinearEigensolver.cpp in Sources */,
+				698CC2D515489C830072F5C4 /* ClassicalQRFactorization.cpp in Sources */,
+				698CC2D715489C830072F5C4 /* HessenbergFormReduction.cpp in Sources */,
+				698CC2D915489C830072F5C4 /* HouseHolderTriangulation.cpp in Sources */,
+				698CC2DB15489C830072F5C4 /* MatrixQRFactorizationBase.cpp in Sources */,
+				698CC2DD15489C830072F5C4 /* ModifiedQRFactorization.cpp in Sources */,
+				698CC2DF15489C830072F5C4 /* TriangularBacksubstitution.cpp in Sources */,
+				698CC2E115489C830072F5C4 /* LapackLinearSolver.cpp in Sources */,
+				698CC2E315489C830072F5C4 /* LinearLeastSquareSolver.cpp in Sources */,
+				698CC2E515489C830072F5C4 /* LinearSolverBase.cpp in Sources */,
+				698CC2E715489C830072F5C4 /* PseudoTimeSteppingLinearSolver.cpp in Sources */,
+				698CC2E915489C830072F5C4 /* QRFactorizationLinearSolver.cpp in Sources */,
+				69E95E5E154B0776004E55AF /* StructuralDiscretization.cpp in Sources */,
+				69E95E6F154B2A59004E55AF /* TransientSolverBase.cpp in Sources */,
+				69E95E72154B36D3004E55AF /* NewmarkTransientSolver.cpp in Sources */,
+				69F463BC1552BF99004B9AF8 /* LapackLinearEigenSolver.cpp in Sources */,
+				6913F29F15657997002C72F3 /* Quad9.cpp in Sources */,
+				6913F2A215657D9D002C72F3 /* Tri7.cpp in Sources */,
+				69BAD1E7156588A200870025 /* Edge3.cpp in Sources */,
+				69BAD1EA1566A45F00870025 /* PLPlot.cpp in Sources */,
+				6967BA7C156A7E0800F2FB18 /* Quad8.cpp in Sources */,
+				6967BA7E156A7E1100F2FB18 /* Tri6.cpp in Sources */,
+				69AE0EDD1575BA9900E057E2 /* ExplicitRungeKuttaTransientSolver.cpp in Sources */,
+				69BC200D15780B63004B10DF /* ArpackLinearEigenSolver.cpp in Sources */,
+				69677E83134039EA002B32C8 /* DenseMatrix.cpp in Sources */,
+				69AB771E158D6D0800D6F5DB /* DenseMatrix.h in Sources */,
+				EB47563E1589727E00D2D1EF /* LocalMatrixBase.cpp in Sources */,
+				69AB771F158D6D0800D6F5DB /* LocalMatrixBase.h in Sources */,
+				69677E91134039EA002B32C8 /* LocalVector.cpp in Sources */,
+				69AB7720158D6D0800D6F5DB /* LocalVector.h in Sources */,
+				69677E93134039EA002B32C8 /* MatrixBase.cpp in Sources */,
+				69AB7721158D6D0800D6F5DB /* MatrixBase.h in Sources */,
+				69E95E4B1549DBEA004E55AF /* MultiBlockMatrix.cpp in Sources */,
+				69AB7722158D6D0800D6F5DB /* MultiBlockMatrix.h in Sources */,
+				69AB7723158D6D0800D6F5DB /* SparseMatrix.cpp in Sources */,
+				69AB7724158D6D0800D6F5DB /* SparseMatrix.h in Sources */,
+				EB47563815891D9000D2D1EF /* SparsityPattern.cpp in Sources */,
+				69AB7725158D6D0800D6F5DB /* SparsityPattern.h in Sources */,
+				69677E99134039EA002B32C8 /* TensorBase.cpp in Sources */,
+				69AB7726158D6D0800D6F5DB /* TensorBase.h in Sources */,
+				69677E9B134039EA002B32C8 /* TensorIndex.cpp in Sources */,
+				69AB7727158D6D0800D6F5DB /* TensorIndex.h in Sources */,
+				69677E9D134039EA002B32C8 /* TensorIndexBase.cpp in Sources */,
+				69AB7728158D6D0800D6F5DB /* TensorIndexBase.h in Sources */,
+				69677E9F134039EA002B32C8 /* VectorBase.cpp in Sources */,
+				69AB7729158D6D0800D6F5DB /* VectorBase.h in Sources */,
+				69AB772E158D98C800D6F5DB /* LUFactorization.cpp in Sources */,
+				69AB7731158EC75D00D6F5DB /* LUFactorizationLinearSolver.cpp in Sources */,
+				EBFD4D2715BF185C000B7F5D /* UGFlutterSolver.cpp in Sources */,
+				EBFD4D2915BF186A000B7F5D /* PKFlutterSolver.cpp in Sources */,
+				EBFD4D2B15BF1878000B7F5D /* FrequencyDomainFlutterSolverBase.cpp in Sources */,
+				EBFD4D2D15BF1887000B7F5D /* FlutterSolverBase.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		69677CAB1340386A002B32C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_UNROLL_LOOPS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		69677CAC1340386A002B32C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_UNROLL_LOOPS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		69677CAE1340386A002B32C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_UNROLL_LOOPS = NO;
+				HEADER_SEARCH_PATHS = (
+					/opt/local/include/,
+					/opt/local/include/openmpi,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+					"\"$(SRCROOT)/build\"",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/src\"";
+			};
+			name = Debug;
+		};
+		69677CAF1340386A002B32C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_UNROLL_LOOPS = NO;
+				HEADER_SEARCH_PATHS = (
+					/opt/local/include/,
+					/opt/local/include/openmpi,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+					"\"$(SRCROOT)/build\"",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/src\"";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		69677C991340386A002B32C8 /* Build configuration list for PBXProject "FESystem" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69677CAB1340386A002B32C8 /* Debug */,
+				69677CAC1340386A002B32C8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		69677CAD1340386A002B32C8 /* Build configuration list for PBXNativeTarget "FESystem" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69677CAE1340386A002B32C8 /* Debug */,
+				69677CAF1340386A002B32C8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 69677C961340386A002B32C8 /* Project object */;
+}

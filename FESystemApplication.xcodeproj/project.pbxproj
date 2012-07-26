@@ -1,0 +1,218 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
+		6966F184134BC48C008281CF /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6966F183134BC48C008281CF /* FESystem.dylib */; };
+		699572DA154F222A00AE58E7 /* MeshTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 699572D9154F222A00AE58E7 /* MeshTest.cpp */; };
+		69FF4D7614E41F33002AFAB3 /* EigenTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69FF4D7414E41F33002AFAB3 /* EigenTest.cpp */; };
+		69FF4D7714E41F33002AFAB3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69FF4D7514E41F33002AFAB3 /* main.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		69677EC513404448002B32C8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		6966F183134BC48C008281CF /* FESystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = FESystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
+		699572D9154F222A00AE58E7 /* MeshTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MeshTest.cpp; path = ../FESystem/examples/MeshTest.cpp; sourceTree = "<group>"; };
+		69FF4D7414E41F33002AFAB3 /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EigenTest.cpp; path = ../FESystem/examples/EigenTest.cpp; sourceTree = "<group>"; };
+		69FF4D7514E41F33002AFAB3 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../FESystem/examples/main.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		69677EC413404448002B32C8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
+				6966F184134BC48C008281CF /* FESystem.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		69677EBC13404448002B32C8 = {
+			isa = PBXGroup;
+			children = (
+				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
+				699572D9154F222A00AE58E7 /* MeshTest.cpp */,
+				69FF4D7414E41F33002AFAB3 /* EigenTest.cpp */,
+				69FF4D7514E41F33002AFAB3 /* main.cpp */,
+				6966F183134BC48C008281CF /* FESystem.dylib */,
+				69677EC813404448002B32C8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		69677EC813404448002B32C8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				69677EC713404448002B32C8 /* FESystemApplication */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		69677EC613404448002B32C8 /* FESystemApplication */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 69677ED013404448002B32C8 /* Build configuration list for PBXNativeTarget "FESystemApplication" */;
+			buildPhases = (
+				69677EC313404448002B32C8 /* Sources */,
+				69677EC413404448002B32C8 /* Frameworks */,
+				69677EC513404448002B32C8 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FESystemApplication;
+			productName = FESystemApplication;
+			productReference = 69677EC713404448002B32C8 /* FESystemApplication */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		69677EBE13404448002B32C8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = "Virginia Tech";
+			};
+			buildConfigurationList = 69677EC113404448002B32C8 /* Build configuration list for PBXProject "FESystemApplication" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 69677EBC13404448002B32C8;
+			productRefGroup = 69677EC813404448002B32C8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				69677EC613404448002B32C8 /* FESystemApplication */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		69677EC313404448002B32C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69FF4D7614E41F33002AFAB3 /* EigenTest.cpp in Sources */,
+				69FF4D7714E41F33002AFAB3 /* main.cpp in Sources */,
+				699572DA154F222A00AE58E7 /* MeshTest.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		69677ECE13404448002B32C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		69677ECF13404448002B32C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		69677ED113404448002B32C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACH_O_TYPE = mh_execute;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../FESystem/src\" /opt/local/include";
+			};
+			name = Debug;
+		};
+		69677ED213404448002B32C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACH_O_TYPE = mh_execute;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../FESystem/src\" /opt/local/include";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		69677EC113404448002B32C8 /* Build configuration list for PBXProject "FESystemApplication" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69677ECE13404448002B32C8 /* Debug */,
+				69677ECF13404448002B32C8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		69677ED013404448002B32C8 /* Build configuration list for PBXNativeTarget "FESystemApplication" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69677ED113404448002B32C8 /* Debug */,
+				69677ED213404448002B32C8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 69677EBE13404448002B32C8 /* Project object */;
+}
