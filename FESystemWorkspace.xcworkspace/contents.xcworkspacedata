@@ -2,9 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "container:FESystemApplication/FESystemApplication.xcodeproj">
+      location = "group:FESystem.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:FESystem/FESystem.xcodeproj">
+      location = "group:FESystemApplication.xcodeproj">
    </FileRef>
 </Workspace>

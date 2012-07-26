@@ -38,14 +38,10 @@
 		EBAEE0BE15C1B73B0062459D /* macros.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFC615C1B73B0062459D /* macros.h */; };
 		EBAEE0BF15C1B73B0062459D /* DataSourceBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFC815C1B73B0062459D /* DataSourceBase.cpp */; };
 		EBAEE0C015C1B73B0062459D /* DataSourceBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFC915C1B73B0062459D /* DataSourceBase.h */; };
-		EBAEE0C115C1B73B0062459D /* FlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFCC15C1B73B0062459D /* FlutterSolverBase.cpp */; };
 		EBAEE0C215C1B73B0062459D /* FlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFCD15C1B73B0062459D /* FlutterSolverBase.h */; };
-		EBAEE0C315C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFCE15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp */; };
 		EBAEE0C415C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFCF15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h */; };
-		EBAEE0C515C1B73B0062459D /* PKFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD015C1B73B0062459D /* PKFlutterSolver.cpp */; };
 		EBAEE0C615C1B73B0062459D /* PKFlutterSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD115C1B73B0062459D /* PKFlutterSolver.h */; };
 		EBAEE0C715C1B73B0062459D /* TimeDomainFlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD215C1B73B0062459D /* TimeDomainFlutterSolverBase.h */; };
-		EBAEE0C815C1B73B0062459D /* UGFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD315C1B73B0062459D /* UGFlutterSolver.cpp */; };
 		EBAEE0C915C1B73B0062459D /* UGFlutterSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD415C1B73B0062459D /* UGFlutterSolver.h */; };
 		EBAEE0CA15C1B73B0062459D /* DiscretizationBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD515C1B73B0062459D /* DiscretizationBase.cpp */; };
 		EBAEE0CB15C1B73B0062459D /* DiscretizationBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD615C1B73B0062459D /* DiscretizationBase.h */; };
@@ -1134,10 +1130,6 @@
 				EBAEE0BA15C1B73B0062459D /* IteratorBase.cpp in Sources */,
 				EBAEE0BC15C1B73B0062459D /* ParameterBase.cpp in Sources */,
 				EBAEE0BF15C1B73B0062459D /* DataSourceBase.cpp in Sources */,
-				EBAEE0C115C1B73B0062459D /* FlutterSolverBase.cpp in Sources */,
-				EBAEE0C315C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp in Sources */,
-				EBAEE0C515C1B73B0062459D /* PKFlutterSolver.cpp in Sources */,
-				EBAEE0C815C1B73B0062459D /* UGFlutterSolver.cpp in Sources */,
 				EBAEE0CA15C1B73B0062459D /* DiscretizationBase.cpp in Sources */,
 				EBAEE0CC15C1B73B0062459D /* StructuralDiscretization.cpp in Sources */,
 				EBAEE0CE15C1B73B0062459D /* FieldBase.cpp in Sources */,

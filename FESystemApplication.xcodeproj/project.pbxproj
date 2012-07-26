@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
-		6966F184134BC48C008281CF /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6966F183134BC48C008281CF /* FESystem.dylib */; };
-		699572DA154F222A00AE58E7 /* MeshTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 699572D9154F222A00AE58E7 /* MeshTest.cpp */; };
-		69FF4D7614E41F33002AFAB3 /* EigenTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69FF4D7414E41F33002AFAB3 /* EigenTest.cpp */; };
-		69FF4D7714E41F33002AFAB3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69FF4D7514E41F33002AFAB3 /* main.cpp */; };
+		EBAEE19415C1B8A90062459D /* EigenTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19115C1B8A90062459D /* EigenTest.cpp */; };
+		EBAEE19515C1B8A90062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19215C1B8A90062459D /* main.cpp */; };
+		EBAEE19615C1B8A90062459D /* MeshTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19315C1B8A90062459D /* MeshTest.cpp */; };
+		EBAEE1A115C1B8E70062459D /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBAEE1A015C1B8E70062459D /* FESystem.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,11 +28,11 @@
 
 /* Begin PBXFileReference section */
 		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		6966F183134BC48C008281CF /* FESystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = FESystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
-		699572D9154F222A00AE58E7 /* MeshTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MeshTest.cpp; path = ../FESystem/examples/MeshTest.cpp; sourceTree = "<group>"; };
-		69FF4D7414E41F33002AFAB3 /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EigenTest.cpp; path = ../FESystem/examples/EigenTest.cpp; sourceTree = "<group>"; };
-		69FF4D7514E41F33002AFAB3 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../FESystem/examples/main.cpp; sourceTree = "<group>"; };
+		EBAEE19115C1B8A90062459D /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EigenTest.cpp; path = FESystem/examples/EigenTest.cpp; sourceTree = "<group>"; };
+		EBAEE19215C1B8A90062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = FESystem/examples/main.cpp; sourceTree = "<group>"; };
+		EBAEE19315C1B8A90062459D /* MeshTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MeshTest.cpp; path = FESystem/examples/MeshTest.cpp; sourceTree = "<group>"; };
+		EBAEE1A015C1B8E70062459D /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystem-ekefbbavvptttkaipojuuqifqhgn/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,7 +41,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
-				6966F184134BC48C008281CF /* FESystem.dylib in Frameworks */,
+				EBAEE1A115C1B8E70062459D /* FESystem.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,10 +52,10 @@
 			isa = PBXGroup;
 			children = (
 				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
-				699572D9154F222A00AE58E7 /* MeshTest.cpp */,
-				69FF4D7414E41F33002AFAB3 /* EigenTest.cpp */,
-				69FF4D7514E41F33002AFAB3 /* main.cpp */,
-				6966F183134BC48C008281CF /* FESystem.dylib */,
+				EBAEE19115C1B8A90062459D /* EigenTest.cpp */,
+				EBAEE19215C1B8A90062459D /* main.cpp */,
+				EBAEE19315C1B8A90062459D /* MeshTest.cpp */,
+				EBAEE1A015C1B8E70062459D /* FESystem.dylib */,
 				69677EC813404448002B32C8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -119,9 +119,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69FF4D7614E41F33002AFAB3 /* EigenTest.cpp in Sources */,
-				69FF4D7714E41F33002AFAB3 /* main.cpp in Sources */,
-				699572DA154F222A00AE58E7 /* MeshTest.cpp in Sources */,
+				EBAEE19415C1B8A90062459D /* EigenTest.cpp in Sources */,
+				EBAEE19515C1B8A90062459D /* main.cpp in Sources */,
+				EBAEE19615C1B8A90062459D /* MeshTest.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,10 +169,13 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystem-ekefbbavvptttkaipojuuqifqhgn/Build/Products/Debug\"",
+				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../FESystem/src\" /opt/local/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/include";
 			};
 			name = Debug;
 		};
@@ -184,10 +187,13 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystem-ekefbbavvptttkaipojuuqifqhgn/Build/Products/Debug\"",
+				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../FESystem/src\" /opt/local/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/include";
 			};
 			name = Release;
 		};
