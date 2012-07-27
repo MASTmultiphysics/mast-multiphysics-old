@@ -9,6 +9,7 @@
 // C++ includes
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
 // FESystem includes
 #include "Numerics/SparseMatrix.h"

@@ -1,5 +1,5 @@
 #either mac, machome or linux
-PLATFORM=mac
+PLATFORM=linux
 
 
 SOURCE_DIR=./

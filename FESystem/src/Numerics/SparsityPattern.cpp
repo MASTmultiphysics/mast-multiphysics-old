@@ -9,6 +9,7 @@
 // C++ includes
 #include <iomanip>
 #include <map>
+#include <algorithm>
 
 // FESystem includes
 #include "Numerics/SparsityPattern.h"

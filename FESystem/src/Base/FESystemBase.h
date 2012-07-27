@@ -15,6 +15,7 @@
 // C++ includes
 #include <map>
 #include <vector>
+#include <memory>
 
 // FESystem includes
 #include "Base/FESystemExceptions.h"
