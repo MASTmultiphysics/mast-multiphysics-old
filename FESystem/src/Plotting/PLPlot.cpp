@@ -10,6 +10,8 @@
 #include <iostream>
 #include <iomanip>
 
+#ifdef HAVE_PLPLOT
+
 // FESystem includes
 #include "Plotting/PLPlot.h"
 #include "Plotting/AxisBase.h"
@@ -175,3 +177,5 @@ template class FESystem::Plotting::PLPlot<FESystemDouble>;
 
 
 /***************************************************************************************/
+
+#endif // HAVE_PLPLOT

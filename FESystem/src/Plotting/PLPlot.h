@@ -13,6 +13,7 @@
 // C++ includes
 #include <string>
 
+#ifdef HAVE_PLPLOT
 
 // PLPlot includes
 #include "plplot/plstream.h"
@@ -52,6 +53,7 @@ namespace FESystem
     }
 }
 
+#endif // HAVE_PLPLOT
 
 #endif // __fesystem_plplot_h__
 
