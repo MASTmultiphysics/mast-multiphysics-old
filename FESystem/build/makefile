@@ -58,7 +58,9 @@ SRC_SUBDIR=../src
 BUILD_DIR=${PWD}
 
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}
-EXTERNAL_INCLUDE_DIRS+=-I${PLPLOT_INCLUDE_DIR}
+ifeq (${HAVE_PLPLOT_LIBS},1)
+    EXTERNAL_INCLUDE_DIRS+=-I${PLPLOT_INCLUDE_DIR}
+endif
 
 EXTERNAL_LIB_DIRS=-L${SOURCE_DIR}
 EXTERNAL_LIB_DIRS+=-L${ARPACK_LIB_DIR}
@@ -78,6 +80,8 @@ endif
 
 ifeq (${HAVE_PLPLOT_LIBS},1)
     COMPILATION_DEFINES=-DHAVE_PLPLOT
+else
+    COMPILATION_DEFINES=
 endif
 
 
@@ -93,14 +97,14 @@ fesystem-meshtest-opt: ../examples/MeshTest.cpp  libfesystem-opt.a
 	${GCC} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
-	${GCC} -M  ${COMPILATION_DEFINES} -I${EXTERNAL_INCLUDE_DIRS} -I${SRC_SUBDIR}  $*.cpp > $@
+	${GCC} -M  ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp > $@
 	${PYTHON} ${BUILD_DIR}/modify_dep_file.py $@ ${*D}
 
 %-dbg-cpp.o: %.cpp
-	${GCC} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} -I${SRC_SUBDIR}  $*.cpp -o $@
+	${GCC} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 %-opt-cpp.o: %.cpp
-	${GCC} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} -I${SRC_SUBDIR}  $*.cpp -o $@
+	${GCC} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 
 libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES}) 
