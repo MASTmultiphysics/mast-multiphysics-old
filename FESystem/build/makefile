@@ -1,11 +1,46 @@
-PYTHON = python
-#GCC = g++-mp-4.7
-GCC = g++
+#either mac, machome or linux
+PLATFORM=mac
 
-#GCC_FLAGS_DEBUG = -g3 -O0 -Wall -fpermissive
-#GCC_FLAGS_OPT = -g0 -O3 -ftree-vectorize
-GCC_FLAGS_DEBUG = -g3 -O0 -Wall -arch i386 -fpermissive
-GCC_FLAGS_OPT = -g0 -O3 -arch i386 -ftree-vectorize
+
+SOURCE_DIR=./
+
+ifeq (${PLATFORM},mac)
+    ARPACK_LIB_DIR=/Users/bhatiam/Documents/usr/lib/
+    LAPACK_BLAS_LIB_DIR=/usr/lib
+    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
+    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
+    PLPLOT_INCLUDE_DIR=/opt/local/include
+    PLPLOT_LIB_DIR=/opt/local/lib
+    PLPLOT_LIBS=-lplplotcxxd -lplplotd
+endif
+
+ifeq (${PLATFORM},machome)
+    ARPACK_LIB_DIR=/Users/manav/Documents/codes/numerical_libs/arpack
+    LAPACK_BLAS_LIB_DIR=/usr/lib
+    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
+    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
+    PLPLOT_INCLUDE_DIR=/opt/local/include
+    PLPLOT_LIB_DIR=/opt/local/lib
+    PLPLOT_LIBS=-lplplotcxxd -lplplotd
+    PLATFORM=mac
+endif
+
+ifeq (${PLATFORM},linux)
+    ARPACK_LIB_DIR=/home/bhatiam/usr/lib/
+    LAPACK_BLAS_LIB_DIR=/home/bhatiam/usr/lib/
+    GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
+    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
+    PLPLOT_INCLUDE_DIR=/home/bhatiam/usr/plplot/include
+    PLPLOT_LIB_DIR=/home/bhatiam/usr/plplot/lib
+    PLPLOT_LIBS=-lplplotcxxd -lplplotd
+endif
+
+
+GCC = g++
+PYTHON = python
+
+GCC_FLAGS_DEBUG = -g3 -O0 -Wall -m32
+GCC_FLAGS_OPT = -g3 -O3 -m32 -ftree-vectorize 
 
 D      = cd
 ECHO    = echo
@@ -20,34 +55,28 @@ RANLIB   = ranlib
 AR = ar
 
 
+SRC_SUBDIR=../src
+BUILD_DIR=${PWD}
 
-BUILD_DIR = ${PWD}
-SRC_SUBDIR =../src
+EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}
+EXTERNAL_INCLUDE_DIRS+=-I${FESYSTEM_DIR}/src
+EXTERNAL_INCLUDE_DIRS+=-I${PLPLOT_INCLUDE_DIR}
+
+EXTERNAL_LIB_DIRS=-L${SOURCE_DIR}
+EXTERNAL_LIB_DIRS+=-L${ARPACK_LIB_DIR}
+EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
+EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
+EXTERNAL_LIB_DIRS+=-L${GFORT_SYSTEM_LIB_DIR}
+
+
+EXTERNAL_LIBS=-lfesystem-${METHOD}
+EXTERNAL_LIBS+=-larpack -llapack -lblas
+EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
+EXTERNAL_LIBS+=${PLPLOT_LIBS}
+
+
 SOURCES = $(wildcard ${SRC_SUBDIR}/*.cpp ${SRC_SUBDIR}/*/*.cpp ${SRC_SUBDIR}/*/*/*.cpp)
 DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${SOURCES})
-
-LAPACK_INCLUDE_DIR=
-LAPACK_LIBDIR=/usr/lib
-
-EXTERNAL_INCLUDE_DIRS=-I/opt/local/include
-#EXTERNAL_INCLUDE_DIRS+=-I${LAPACK_INCLUDE_DIR}
-EXTERNAL_INCLUDE_DIRS+=-I../src
-EXTERNAL_INCLUDE_DIRS+=-I/home/bhatiam/usr/plplot32/include
-EXTERNAL_INCLUDE_DIRS+=-I/opt/local/include/plplot
-EXTERNAL_LIB_DIRS=-L${LAPACK_LIBDIR}
-EXTERNAL_LIB_DIRS+=-L${BUILD_DIR}
-EXTERNAL_LIB_DIRS+=-L/home/bhatiam/usr/plplot32/lib
-EXTERNAL_LIB_DIRS+=-L/usr/lib
-EXTERNAL_LIB_DIRS+=-L/Users/bhatiam/Documents/usr/lib
-EXTERNAL_LIB_DIRS+=-L/opt/local/lib
-EXTERNAL_LIB_DIRS+=-L/opt/local/lib/gcc47/i386/
-EXTERNAL_LIBS=-larpack
-EXTERNAL_LIBS+=-llapack
-EXTERNAL_LIBS+=-lblas
-EXTERNAL_LIBS+=-lplplotcxxd
-EXTERNAL_LIBS+=-lplplotd
-EXTERNAL_LIBS+=-lgfortran
-
 
 all: fesystem-meshtest-${METHOD}
 
@@ -72,7 +101,7 @@ libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})
 	ar -rv $@ $^ 
 
 clean:
-	rm -f ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})  libfesystem-${METHOD}.a  fesystem-meshtest-${METHOD}
+	rm -rf ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})  libfesystem-${METHOD}.a  fesystem-meshtest-${METHOD}*
 
 clean-deps:
 	rm -f ${DEP_FILES}
