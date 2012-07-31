@@ -5,7 +5,27 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.toolchain.gnu.base.1605923415">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.base.1605923415" moduleId="org.eclipse.cdt.core.settings" name="Default">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Utils"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Surrogates"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Solvers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Quadrature"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Plotting"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Parallel"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/OutputProcessors"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Numerics"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Mesh"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Geom"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Functions"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/FiniteElems"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Field"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Disciplines/Aeroelasticity"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Disciplines"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Data"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="includePath" name="/FESystem/FESystem/src/Base"/>
+					</externalSetting>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -16,17 +36,47 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" id="cdt.managedbuild.toolchain.gnu.base.1605923415" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="FESystem" buildProperties="" description="" id="cdt.managedbuild.toolchain.gnu.base.1605923415" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.base.1605923415.1521471341" name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1662124700" name="cdt.managedbuild.toolchain.gnu.base" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.307700197" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder id="cdt.managedbuild.target.gnu.builder.base.1067792217" managedBuildOn="false" name="Gnu Make Builder.Default" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<builder id="cdt.managedbuild.target.gnu.builder.base.1067792217" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1409944581" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1785355521" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1837302493" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1785355521" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
+								<option id="gnu.cpp.compiler.option.include.paths.1330483254" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Base}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Data}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Disciplines}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Disciplines/Aeroelasticity}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Field}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/FiniteElems}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Functions}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Geom}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Mesh}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Numerics}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/OutputProcessors}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Parallel}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Plotting}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Quadrature}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Solvers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Surrogates}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/FESystem/FESystem/src/Utils}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1809711089" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1837302493" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1775941289" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.682862568" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.1316869653" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base"/>
-							<tool id="cdt.managedbuild.tool.gnu.assembler.base.149589885" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.1316869653" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1568236691" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.base.149589885" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1893723122" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
 						</toolChain>
 					</folderInfo>
 				</configuration>
@@ -37,7 +87,20 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="FESystem.null.480119996" name="FESystem"/>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1605923415;cdt.managedbuild.toolchain.gnu.base.1605923415.1553785336;cdt.managedbuild.tool.gnu.cpp.compiler.base.434083935;cdt.managedbuild.tool.gnu.cpp.compiler.input.1709184873">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1605923415;cdt.managedbuild.toolchain.gnu.base.1605923415.1553785336;cdt.managedbuild.tool.gnu.c.compiler.base.1077138203;cdt.managedbuild.tool.gnu.c.compiler.input.657915633">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1605923415;cdt.managedbuild.toolchain.gnu.base.1605923415.1521471341;cdt.managedbuild.tool.gnu.c.compiler.base.1837302493;cdt.managedbuild.tool.gnu.c.compiler.input.1775941289">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1605923415;cdt.managedbuild.toolchain.gnu.base.1605923415.1521471341;cdt.managedbuild.tool.gnu.cpp.compiler.base.1785355521;cdt.managedbuild.tool.gnu.cpp.compiler.input.1809711089">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>
