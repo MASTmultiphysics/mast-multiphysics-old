@@ -1,7 +1,13 @@
 #PLATFORM is either mac, machome or linux
 
-
 SOURCE_DIR=./
+
+# Binary type
+ifeq (${BUILD64},0)
+	BINTYPE=32bit
+else
+	BINTYPE=64bit
+endif
 
 ifeq (${PLATFORM},mac)
     ARPACK_LIB_DIR=/Users/bhatiam/Documents/usr/lib/
@@ -34,6 +40,14 @@ ifeq (${PLATFORM},linux)
     HAVE_PLPLOT_LIBS=0
 endif
 
+ifeq (${PLATFORM},script)
+    ARPACK_LIB_DIR=${BASEDIR}/install/${KERNEL}-${BINTYPE}/lib
+    LAPACK_BLAS_LIB_DIR=${BASEDIR}/install/${KERNEL}-${BINTYPE}/lib
+    GFORT_SYSTEM_LIB_DIR=${GCCHOME}/lib
+    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
+    HAVE_PLPLOT_LIBS=0
+    PLATFORM=linux
+endif
 
 GCC = g++
 PYTHON = python
