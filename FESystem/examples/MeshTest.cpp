@@ -88,15 +88,16 @@ namespace FEBatoz
      */
     void getEdgeNormalSineCosine(const FESystem::Mesh::ElemBase& elem, const FESystemUInt i, const FESystemUInt j, FESystemDouble& sine, FESystemDouble& cosine)
     {
-        FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2, vec3;
-        vec1.resize(3); vec2.resize(3); vec3.resize(3);
+        static FESystem::Numerics::LocalVector<FESystemDouble> vec0, vec1, vec2, vec3;
+        vec0.resize(3); vec1.resize(3); vec2.resize(3); vec3.resize(3);
         
         // calculate the normal to the element
-        const FESystem::Mesh::Node& point0 = elem.getNode(0);
-        const FESystem::Mesh::Node& point1 = elem.getNode(1);
-        const FESystem::Mesh::Node& point2 = elem.getNode(2);
-        vec1.copyVector(point1); vec1.add(-1.0, point0);
-        vec2.copyVector(point2); vec2.add(-1.0, point0);
+        elem.getNodeLocationInLocalPhysicalCoordinate(0, vec0);
+        elem.getNodeLocationInLocalPhysicalCoordinate(1, vec1);
+        elem.getNodeLocationInLocalPhysicalCoordinate(2, vec2);
+        
+        vec1.add(-1.0, vec0);
+        vec2.add(-1.0, vec0);
         vec1.crossProduct(vec2, vec3);
         // this is the unit vector normal to the plane of the triangle
         vec1.copyVector(vec3);
@@ -104,10 +105,10 @@ namespace FEBatoz
         
         // cross product of the length vector with the surface normal will 
         // give the needed vector
-        const FESystem::Mesh::Node& point_i = elem.getNode(i);
-        const FESystem::Mesh::Node& point_j = elem.getNode(j);
+        elem.getNodeLocationInLocalPhysicalCoordinate(i, vec3);
+        elem.getNodeLocationInLocalPhysicalCoordinate(j, vec2);
         
-        vec2.copyVector(point_j); vec2.add(-1.0, point_i);
+        vec2.add(-1.0, vec3);
         vec2.crossProduct(vec1, vec3);
         vec3.scaleToUnitLength();        // this is the unit vector needed
         
@@ -1785,7 +1786,7 @@ void DKT_matrices(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_dof
             T_mat.setVal(i+2*n_elem_nodes, i+2*n_elem_nodes, T_mat_sub.getVal(0,0));
         }
 
-        //T_mat.write(std::cout);
+//        T_mat.write(std::cout);
         
         // create the TRI6 element
         tri6_elem = new FESystem::Mesh::Tri6;
@@ -1803,9 +1804,15 @@ void DKT_matrices(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_dof
         tri6_elem->setNode(3, *node3);
         tri6_elem->setNode(4, *node4);
         tri6_elem->setNode(5, *node5);
+
         
-        //for (FESystemUInt i=0; i<tri6_elem->getNNodes(); i++) tri6_elem->getNode(i).write(std::cout);
+//        for (FESystemUInt i=0; i<tri6_elem->getNNodes(); i++) tri6_elem->getNode(i).write(std::cout);
+//        
+//        FESystem::Numerics::LocalVector<FESystemDouble> lvec; lvec.resize(3);
+//        std::cout << "Local coordinates" << std::endl;
+//        for (FESystemUInt i=0; i<tri6_elem->getNNodes(); i++) {lvec.zero(); tri6_elem->getNodeLocationInLocalPhysicalCoordinate(i, lvec); lvec.write(std::cout);};
         
+
         // initialize the finite element for this element
         fe.clear();
         fe.reinit(*tri6_elem); // first order function with first order derivative
@@ -1837,8 +1844,9 @@ void DKT_matrices(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_dof
             load_val += q_weight_bending[i]*jac*p_val;
         }
         
-        //el_mat_combined.write(std::cout);
-        //exit(1);
+//        std::cout << "orig" << std::endl;
+//        el_mat_combined.write(std::cout);
+//        //exit(1);
         
         el_vec.setVal(0, load_val/3.0);
         el_vec.setVal(1, load_val/3.0);
@@ -1846,14 +1854,18 @@ void DKT_matrices(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_dof
         dof_map.addToGlobalVector(**el_it, el_vec, load_vec);
                 
         el_mat2.zero();
-        el_mat_combined.matrixRightMultiplyTranspose(1.0, T_mat, el_mat2);
+//        el_mat_combined.matrixRightMultiplyTranspose(1.0, T_mat, el_mat2);
+//        el_mat_combined.zero();
+//        T_mat.matrixRightMultiply(1.0, el_mat2, el_mat_combined);
+        el_mat_combined.matrixRightMultiply(1.0, T_mat, el_mat2);
         el_mat_combined.zero();
-        T_mat.matrixRightMultiply(1.0, el_mat2, el_mat_combined);
+        T_mat.matrixTransposeRightMultiply(1.0, el_mat2, el_mat_combined);
         
         // now add this to the global matrix: stiffness matrix
         dof_map.addToGlobalMatrix(**el_it, el_mat_combined, stiffness_mat);
         
-        //el_mat_combined.write(std::cout);
+//        std::cout << "after multiplication" << std::endl;
+//        el_mat_combined.write(std::cout);
         
         // mass matrix
         jac = 0.0;
@@ -1953,14 +1965,14 @@ int test_ode_integration(int argc, char * const argv[])
 
 int plate_driver(int argc, char * const argv[]) 
 {
-    FESystem::Mesh::ElementType elem_type = FESystem::Mesh::QUAD4;
+    FESystem::Mesh::ElementType elem_type = FESystem::Mesh::QUAD9;
     
     // create the mesh object
     FESystem::Mesh::MeshBase mesh;
     
     // create a nx x ny grid of nodes
-    FESystemUInt nx=5, ny=5;
-    FESystemDouble x_length = 1, y_length = 2.5, p_val = 1.0e6;
+    FESystemUInt nx=7, ny=7;
+    FESystemDouble x_length = 2, y_length = 2, p_val = 1.0e6;
     FESystemUInt dim = 2, n_elem_nodes, n_elem_dofs;
     
     FESystem::Geometry::Point origin(3);
@@ -1997,16 +2009,16 @@ int plate_driver(int argc, char * const argv[])
     FESystemUInt id = 0;    
     // apply boundary condition and place a load on the last dof
     std::set<FESystemUInt> bc_dofs;
-//    for (FESystemUInt i=0; i<nodes.size(); i++)
-//        if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
-//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // w-displacement on the bottom edge
     for (FESystemUInt i=0; i<nodes.size(); i++)
-        if (nodes[i]->getVal(1) == 0.0)
-        {
+        if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
             bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // w-displacement on the bottom edge
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // w-displacement on the bottom edge
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
-        }
+//    for (FESystemUInt i=0; i<nodes.size(); i++)
+//        if (nodes[i]->getVal(1) == 0.0)
+//        {
+//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // w-displacement on the bottom edge
+//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // w-displacement on the bottom edge
+//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+//        }
     
     // now create the vector of ids that do not have bcs
     std::vector<FESystemUInt> nonbc_dofs; 
