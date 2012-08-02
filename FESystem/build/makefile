@@ -9,7 +9,7 @@ else
 	BINTYPE=64bit
 endif
 
-ifeq (${PLATFORM},mac)
+ifeq (${PLATFORM},Darwin)
     ARPACK_LIB_DIR=/Users/bhatiam/Documents/usr/lib/
     LAPACK_BLAS_LIB_DIR=/usr/lib
     GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
@@ -20,7 +20,7 @@ ifeq (${PLATFORM},mac)
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
 endif
 
-ifeq (${PLATFORM},machome)
+ifeq (${PLATFORM},Darwinhome)
     ARPACK_LIB_DIR=/Users/manav/Documents/codes/numerical_libs/arpack
     LAPACK_BLAS_LIB_DIR=/usr/lib
     GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
@@ -29,10 +29,10 @@ ifeq (${PLATFORM},machome)
     PLPLOT_INCLUDE_DIR=/opt/local/include
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
-    PLATFORM=mac
+    PLATFORM=Darwin
 endif
 
-ifeq (${PLATFORM},linux)
+ifeq (${PLATFORM},Linux)
     ARPACK_LIB_DIR=/home/bhatiam/usr/lib/
     LAPACK_BLAS_LIB_DIR=/home/bhatiam/usr/lib/
     GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/

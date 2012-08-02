@@ -281,7 +281,13 @@ namespace FESystem
 						  FESystemUInt, 
 						  << "Invalid ID Given : " << Arg1);
 
-		DeclareException2(IndexOutOfBound, 
+        DeclareException2(InvalidTag,
+						  std::string,
+						  std::string,
+						  << "Invalid tag found. Found: " << Arg1
+						  << "  Expected: " << Arg2 );
+
+		DeclareException2(IndexOutOfBound,
 						  FESystemUInt,
 						  FESystemUInt,
 						  << "Index out of bound. Found: " << Arg1 
@@ -298,6 +304,7 @@ namespace FESystem
 						  FESystemUInt,
 						  << "Positive difference needed between two values. Val1: " << Arg1 
 						  << "  should be less than Val2: " << Arg2 );
+
 
 	}
 }
