@@ -110,6 +110,33 @@ FESystem::Numerics::DenseMatrix<ValType>::copyMatrix(const FESystem::Numerics::M
 
 
 template <typename ValType>
+void
+FESystem::Numerics::DenseMatrix<ValType>::copyRealMatrix(const FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>& m)
+{
+    std::pair<FESystemUInt, FESystemUInt> s = m.getSize();
+    this->resize(s.first, s.second);
+    
+    switch(m.getType())
+    {
+        case FESystem::Numerics::LOCAL_DENSE_MATRIX:
+        {
+            const typename RealOperationType(ValType)* v = m.getMatrixValues();
+            
+            for (FESystemUInt i=0; i<s.first*s.second; i++)
+                this->mat_vals[i] = ValType(v[i]);
+        }
+            break;
+            
+        default:
+            for (FESystemUInt i=0; i<s.first; i++)
+                for (FESystemUInt j=0; j<s.second; j++)
+                    this->mat_vals[j*s.first + i] = m.getVal(i,j);
+    }
+}
+
+
+
+template <typename ValType>
 void 
 FESystem::Numerics::DenseMatrix<ValType>::copyMatrixTranspose(const FESystem::Numerics::MatrixBase<ValType>& m)
 {

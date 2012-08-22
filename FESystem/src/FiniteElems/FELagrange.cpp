@@ -54,6 +54,13 @@ FESystem::FiniteElement::FELagrange::clear()
 
 
 
+FESystemUInt
+FESystem::FiniteElement::FELagrange::getNShapeFunctions() const
+{
+    return this->geom_elem->getNNodes();
+}
+
+
 void 
 FESystem::FiniteElement::FELagrange::initializeMaps()
 {

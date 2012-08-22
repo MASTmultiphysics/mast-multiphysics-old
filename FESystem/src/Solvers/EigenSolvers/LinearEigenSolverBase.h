@@ -111,11 +111,11 @@ namespace FESystem
              */
             const FESystem::Numerics::MatrixBase<ValType>& getEigenVectorMatrix() const;
             
-            const FESystem::Numerics::MatrixBase<FESystemComplexDouble>& getComplexEigenVectorMatrix() const;
+            const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& getComplexEigenVectorMatrix() const;
             
             const FESystem::Numerics::VectorBase<ValType>& getEigenValues() const;
 
-            const FESystem::Numerics::VectorBase<FESystemComplexDouble>& getComplexEigenValues() const;
+            const FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)>& getComplexEigenValues() const;
 
 	    /*!
 	     *    Prepares the vector with ids of the eigenvalues in ascending magnitude. Can be used to access the 
@@ -165,7 +165,7 @@ namespace FESystem
             /*!
              *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for nonhermitian problems
              */
-            std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemComplexDouble> > eig_vec_mat_complex; 
+            std::auto_ptr<FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)> > eig_vec_mat_complex; 
 
             /*!
              *  \brief storage for the eigenvalues as they are updated during the iterations, this is used only for hermitian problems
@@ -175,7 +175,7 @@ namespace FESystem
             /*!
              *  \brief storage for the complex eigenvalues as they are updated during the iterations, this is specifically used for nonhermitian problems
              */
-            std::auto_ptr<FESystem::Numerics::VectorBase<FESystemComplexDouble> > eig_val_vec_complex;
+            std::auto_ptr<FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)> > eig_val_vec_complex;
 
         };
         

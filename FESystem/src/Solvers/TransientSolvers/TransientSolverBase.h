@@ -74,7 +74,7 @@ namespace FESystem
             /*!
              *    Initialize solution with the given initial time and step size and the initial conditions in \p vec
              */
-            void setInitialTimeData(FESystemDouble t0, FESystemDouble dt, FESystem::Numerics::VectorBase<ValType>& vec);
+            void setInitialTimeData(typename RealOperationType(ValType) t0, typename RealOperationType(ValType) dt, FESystem::Numerics::VectorBase<ValType>& vec);
 
             /*
              *   increments to the next time step
@@ -100,12 +100,12 @@ namespace FESystem
             /*
              *   Returns the current time of the solver integration
              */
-            virtual double getCurrentTime();
+            virtual typename RealOperationType(ValType) getCurrentTime();
             
             /*!
              *   Returns the current time step of the solver integration
              */
-            virtual double getCurrentStepSize();
+            virtual typename RealOperationType(ValType) getCurrentStepSize();
             
             /*!
              *  Returns the current time iteration of the solver integration
@@ -219,22 +219,22 @@ namespace FESystem
             /*!
              *    Initial time value
              */
-            FESystemDouble initial_time;
+            typename RealOperationType(ValType) initial_time;
 
             /*!
              *    Current time value
              */
-            FESystemDouble current_time;
+            typename RealOperationType(ValType) current_time;
 
             /*!
              *    current time step
              */
-            FESystemDouble current_time_step;
+            typename RealOperationType(ValType) current_time_step;
 
             /*!
              *    current iteration_number
              */
-            FESystemDouble current_iteration_number;
+            typename RealOperationType(ValType) current_iteration_number;
             
             /*!
              *    latest action requested by the solver

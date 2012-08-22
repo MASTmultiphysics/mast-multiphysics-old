@@ -17,11 +17,6 @@
 template <typename ValType>
 FESystem::Aeroelasticity::FrequencyDomainFlutterSolverBase<ValType>::FrequencyDomainFlutterSolverBase():
 FESystem::Aeroelasticity::FlutterSolverBase<ValType>(),
-if_initialized(false),
-n_basis(0),
-fluid_rho(0.0),
-aero_b_ref(0.0),
-current_k_ref(0.0),
 A_mat(NULL),
 B_mat(NULL),
 eigen_solver(NULL)
@@ -35,9 +30,6 @@ eigen_solver(NULL)
 template <typename ValType>
 FESystem::Aeroelasticity::FrequencyDomainFlutterSolverBase<ValType>::~FrequencyDomainFlutterSolverBase()
 {
-//    if (this->eigen_solver != NULL)
-//        this->eigen_solver->clear();
-    
     if (this->A_mat != NULL)
         delete this->A_mat;
 
@@ -45,36 +37,6 @@ FESystem::Aeroelasticity::FrequencyDomainFlutterSolverBase<ValType>::~FrequencyD
         delete this->B_mat;    
 }
 
-
-
-template <typename ValType>
-void
-FESystem::Aeroelasticity::FrequencyDomainFlutterSolverBase<ValType>::initialize(FESystemUInt n, 
-                                                                                typename RealOperationType(ValType) b_ref, 
-                                                                                typename RealOperationType(ValType) rho, 
-                                                                                FESystem::Solvers::LinearEigenSolverBase<ValType>& es)
-{
-    FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    this->n_basis = n;
-    this->fluid_rho = rho;
-    this->aero_b_ref = b_ref;
-    this->eigen_solver = &es;
-
-//    this->eigen_solver->clear();
-    
-    // initializes the two matrices for use as the two matrices of the generalized non-Hermitian eigensolution
-    this->initializeMatrices(n, *(this->A_mat), *(this->B_mat));
-}
-
-
-
-
-template <typename ValType>
-typename RealOperationType(ValType) 
-FESystem::Aeroelasticity::FrequencyDomainFlutterSolverBase<ValType>::getCurrentReducedFrequency()
-{
-    return this->current_k_ref;
-}
     
 
 /***************************************************************************************/

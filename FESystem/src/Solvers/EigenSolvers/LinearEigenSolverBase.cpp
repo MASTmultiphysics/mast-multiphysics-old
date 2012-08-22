@@ -195,8 +195,8 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::setMatrix
         case FESystem::Solvers::NONHERMITIAN:            
         case FESystem::Solvers::GENERALIZED_NONHERMITIAN:            
         {
-            this->eig_vec_mat_complex.reset(FESystem::Numerics::MatrixCreate<FESystemComplexDouble>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
-            this->eig_val_vec_complex.reset(FESystem::Numerics::VectorCreate<FESystemComplexDouble>(FESystem::Numerics::LOCAL_VECTOR).release()); // eigenvalue storage
+            this->eig_vec_mat_complex.reset(FESystem::Numerics::MatrixCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
+            this->eig_val_vec_complex.reset(FESystem::Numerics::VectorCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_VECTOR).release()); // eigenvalue storage
             
             
             this->eig_vec_mat_complex->resize(s.first, s.second);
@@ -281,7 +281,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenValues() const
 
 
 template <typename ValType> 
-const FESystem::Numerics::MatrixBase<FESystemComplexDouble>& 
+const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& 
 FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMatrix() const
 {
     FESystemAssert0(this->eig_vec_mat_complex.get() != NULL, FESystem::Exception::NULLQuantity);
@@ -301,7 +301,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMatrix()
 
 
 template <typename ValType> 
-const FESystem::Numerics::VectorBase<FESystemComplexDouble>& 
+const FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)>&
 FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenValues() const
 {
     FESystemAssert0(this->eig_val_vec_complex.get() != NULL, FESystem::Exception::NULLQuantity);
@@ -348,7 +348,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem
                     // for each sweep, look at the ids that have not been sorted yet (i.e., not in sorted_id_set)
                     while (sorted_id_set.size() < this->n_converged_eig_vals)
                     {
-                        minval=DBL_MAX; maxval=-DBL_MAX;
+                        minval=FESystem::Base::getMachineMax<typename RealOperationType(ValType)>(); maxval=-minval;
                         minvalid=0; maxvalid=0;
                         found = false;
                         
@@ -356,13 +356,13 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem
                             if (sorted_id_set.count(i) == 0)
                             {
                                 val = this->eig_val_vec->getVal(i);
-                                if (val < minval)
+                                if (FESystem::Base::comparisonValue<ValType, typename RealOperationType(ValType)>(val) < FESystem::Base::comparisonValue<ValType, typename RealOperationType(ValType)>(minval))
                                 {
                                     minval = val;
                                     minvalid = i;
                                     found = true;
                                 }
-                                if (val > maxval)
+                                if (FESystem::Base::comparisonValue<ValType, typename RealOperationType(ValType)>(val) > FESystem::Base::comparisonValue<ValType, typename RealOperationType(ValType)>(maxval))
                                 {
                                     maxval = val;
                                     maxvalid = i;
@@ -469,7 +469,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::completePowerIterations
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::LinearEigenSolverBase);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LinearEigenSolverBase);
 
 
 /***************************************************************************************/

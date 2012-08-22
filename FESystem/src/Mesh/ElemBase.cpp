@@ -22,6 +22,8 @@
 #include "Geom/CoordinateSystemBase.h"
 #include "Functions/FunctionMappingBase.h"
 #include "Numerics/DenseMatrix.h"
+#include "FiniteElems/FiniteElementBase.h"
+#include "Quadrature/QuadratureBase.h"
 
 FESystem::Mesh::ElemBase::ElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type):
 FESystem::Base::DegreeOfFreedomObject(),
@@ -116,7 +118,28 @@ FESystem::Mesh::ElemBase::getNodeLocationInLocalPhysicalCoordinate(FESystemUInt 
 
 
 
-const FESystem::Geometry::CoordinateSystemBase& 
+
+FESystemDouble
+FESystem::Mesh::ElemBase::getElementSize(const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule) const
+{
+    // make sure that the dimensionality of the element and quadrature rule is appropriate
+    FESystemAssert0(&(fe.getGeometricElement()) == this, FESystem::Exception::InvalidValue);
+    FESystemAssert0(q_rule.getDimention() == this->getDimension(), FESystem::Exception::InvalidValue);
+    
+    FESystemDouble val=0.0;
+        
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_rule.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_rule.getQuadraturePointWeights();
+
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+        val += fe.getJacobianValue(*(q_pts[i])) * q_weight[i];
+    
+    return val;
+}
+
+
+
+const FESystem::Geometry::CoordinateSystemBase&
 FESystem::Mesh::ElemBase::getLocalPhysicalCoordinateSystem() const
 {
     FESystemAssert0(this->local_coordinate_system != NULL, FESystem::Exception::InvalidState);

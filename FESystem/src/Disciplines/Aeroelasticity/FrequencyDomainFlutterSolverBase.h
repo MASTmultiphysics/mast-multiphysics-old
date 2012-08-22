@@ -37,26 +37,6 @@ namespace FESystem
             
             virtual ~FrequencyDomainFlutterSolverBase();
             
-            /*!
-             *    Initializes the flutter solver for the specified parameters: \p n is the number of generalized coordinates
-             *    \p b_ref reference chord, \p rho aerodynamic fluid density, \p es Complex generalized non-Hermitian eigensolver
-             */
-            void initialize(FESystemUInt n, typename RealOperationType(ValType) b_ref, typename RealOperationType(ValType) rho, 
-                            FESystem::Solvers::LinearEigenSolverBase<ValType>& es);
-            
-            /*!
-             *   Gets the current value of reduce frequency for generation of the unsteady aerodynamic matrices: k = omega b / U
-             */
-            typename RealOperationType(ValType) getCurrentReducedFrequency();
-            
-            /*!
-             *   sets the matrices for preparation of the eigensolution
-             */
-            virtual void setMatrices(FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>* mass,
-                                     FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>* damp,
-                                     FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>* stiff,
-                                     FESystem::Numerics::MatrixBase<ValType>* aero) = 0;
-            
         protected:
             
             /*!
@@ -65,31 +45,6 @@ namespace FESystem
             virtual void initializeMatrices(FESystemUInt n_basis, FESystem::Numerics::MatrixBase<ValType>& A_mat, 
                                             FESystem::Numerics::MatrixBase<ValType>& B_mat)=0;
             
-            /*!
-             *   boolean to store if this solver is initialized
-             */
-            FESystemBoolean if_initialized;
-            
-            /*!
-             *    the number of generalized coordinates
-             */
-            FESystemUInt n_basis;
-
-            /*!
-             *    aerodynamic fluid density
-             */
-            typename RealOperationType(ValType) fluid_rho;
-            
-            /*!
-             *    aerodynamic reference chord
-             */
-            typename RealOperationType(ValType) aero_b_ref;
-
-            /*!
-             *    aerodynamic reduced frequency (omega*b/U)
-             */
-            typename RealOperationType(ValType) current_k_ref;
-
             /*!
              *    complex matrices for eigensolver: A matrix
              */

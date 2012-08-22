@@ -61,12 +61,16 @@ namespace FESystem
 
         template <typename ValType> ValType getMachineMin();
         template <typename ValType> ValType getMachineMax();
+        template <typename ValType> ValType getMachineEpsilon();
         
         template <> FESystemFloat inline getMachineMin() {return FLT_MIN;}
         template <> FESystemDouble inline getMachineMin() {return DBL_MIN;}
 
         template <> FESystemFloat inline getMachineMax() {return FLT_MAX;}
         template <> FESystemDouble inline getMachineMax() {return DBL_MAX;}
+
+        template <> FESystemFloat inline getMachineEpsilon() {return FLT_EPSILON;}
+        template <> FESystemDouble inline getMachineEpsilon() {return DBL_EPSILON;}
 
 		template <typename Type1, typename Type2>
 		struct MultiTypeOperation{typedef void return_type;};

@@ -51,11 +51,19 @@ FESystem::FiniteElement::FiniteElementBase::reinit(const FESystem::Mesh::ElemBas
     this->if_initialized = true;
 
 }
-        
 
 
-void 
-FESystem::FiniteElement::FiniteElementBase::getShapeFunction(const FESystem::Numerics::VectorBase<FESystemDouble>& vin, 
+const FESystem::Mesh::ElemBase&
+FESystem::FiniteElement::FiniteElementBase::getGeometricElement() const
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    return *(this->geom_elem);
+}
+
+
+
+void
+FESystem::FiniteElement::FiniteElementBase::getShapeFunction(const FESystem::Numerics::VectorBase<FESystemDouble>& vin,
                                                              FESystem::Numerics::VectorBase<FESystemDouble>& vout) const
 {
     // make sure that the element is initialized before access to any of these data structures is requested

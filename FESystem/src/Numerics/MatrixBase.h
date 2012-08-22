@@ -74,7 +74,12 @@ namespace FESystem
              *   Resizes and copies the contents of matrix \m to this matrix. 
              */
             virtual void copyMatrix(const FESystem::Numerics::MatrixBase<ValType>& m) = 0;
-
+            
+            /*!
+             *   Resizes and copies the contents of matrix \m to this matrix.
+             */
+            virtual void copyRealMatrix(const FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>& m) = 0;
+            
             /*!
              *   Resizes and copies the contents of the transpose of matrix \m to this matrix. 
              */

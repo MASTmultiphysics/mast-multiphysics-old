@@ -32,6 +32,8 @@ namespace FESystem
     namespace Utility {template <typename ValType> class Table;}
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
+    namespace FiniteElement {class FiniteElementBase;}
+    namespace Quadrature {class QuadratureBase;}
 
 	namespace Mesh
 	{
@@ -87,7 +89,13 @@ namespace FESystem
             /*!
              *   Returns the geometry order for this element. 
              */
-            virtual FESystemUInt getGeometryOrder() const = 0; 
+            virtual FESystemUInt getGeometryOrder() const = 0;
+            
+            /*!
+             *   Returns the length of the element in the dimensionality of the element: length for 1-D element, area for 2-D and volume for 3-D. 
+             *   This requires a finite element and quadrature base initialized for this element.
+             */
+            virtual FESystemDouble getElementSize(const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule) const;
 
             /*!
              *   returns the location of the \p i_node^th node in the local physical coordinate

@@ -135,6 +135,33 @@ FESystem::Numerics::SparseMatrix<ValType>::copyMatrix(const FESystem::Numerics::
 
 
 template <typename ValType>
+void
+FESystem::Numerics::SparseMatrix<ValType>::copyRealMatrix(const FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>& m)
+{
+    switch(m.getType())
+    {
+        case FESystem::Numerics::LOCAL_SPARSE_MATRIX:
+        {
+            // make sure that the sparsity pattern for the two are same
+            const FESystem::Numerics::SparseMatrix<typename RealOperationType(ValType)>& m_sparse = dynamic_cast<const FESystem::Numerics::SparseMatrix<typename RealOperationType(ValType)>&>(m);
+            const typename RealOperationType(ValType)* m_sparse_vals = m_sparse.getMatrixValues();
+            if (this->sparsity_pattern != &(m_sparse.getSparsityPattern()))
+                this->resize(m_sparse.getSparsityPattern());
+            for (FESystemUInt i=0; i<this->n_vals; i++)
+                this->mat_vals[i] = ValType(m_sparse_vals[i]);
+        }
+            break;
+            
+            // only sparse matrix is handled for now
+        case FESystem::Numerics::LOCAL_DENSE_MATRIX:
+        default:
+            FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+    }
+}
+
+
+
+template <typename ValType>
 void 
 FESystem::Numerics::SparseMatrix<ValType>::copyMatrixTranspose(const FESystem::Numerics::MatrixBase<ValType>& m)
 {

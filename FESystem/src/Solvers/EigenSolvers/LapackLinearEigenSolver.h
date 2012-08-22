@@ -46,6 +46,8 @@ namespace FESystem
         
         template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble>::solve();
         template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemFloat>::solve();
+        template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexDouble>::solve();
+        template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexFloat>::solve();
     }
 }
 

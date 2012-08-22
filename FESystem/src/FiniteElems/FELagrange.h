@@ -42,6 +42,11 @@ namespace FESystem
              */
             virtual void clear();
 
+            /*!
+             *   Returns the number of shape functions, which for a Lagrange element is the number of nodes
+             */
+            virtual FESystemUInt getNShapeFunctions() const;
+
         protected:
             
             /*!

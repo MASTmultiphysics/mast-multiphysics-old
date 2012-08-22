@@ -92,7 +92,7 @@ FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::shiftAnd
     for (FESystemUInt i=0; i<n; i++)
         vec1->setVal(i, 1.0);
     
-    FESystemDouble conv = 1.0e6;
+    typename RealOperationType(ValType) conv = 1.0e6;
     ValType eig0 = this->solver_shift, eig1 = this->solver_shift, val;
     FESystem::Solvers::HouseholderTriangulation<ValType> qr_householder;
     FESystem::Solvers::TriangularBacksubstitution<ValType> back_substitute;

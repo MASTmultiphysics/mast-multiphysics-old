@@ -111,9 +111,9 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::solve()
             this->eig_vec_mat_complex->setToIdentity();
             this->eig_val_vec_complex->zero();
             
-            std::auto_ptr<FESystem::Numerics::VectorBase<FESystemComplexDouble> > 
-            vec1(FESystem::Numerics::VectorCreate<FESystemComplexDouble>(FESystem::Numerics::LOCAL_VECTOR)),
-            vec2(FESystem::Numerics::VectorCreate<FESystemComplexDouble>(FESystem::Numerics::LOCAL_VECTOR));
+            std::auto_ptr<FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)> > 
+            vec1(FESystem::Numerics::VectorCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_VECTOR)),
+            vec2(FESystem::Numerics::VectorCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_VECTOR));
 
             std::auto_ptr<FESystem::Numerics::VectorBase<ValType> > 
             vec3(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR));
@@ -127,7 +127,7 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::solve()
             FESystemBoolean convergence = false;
             std::pair<FESystemUInt,FESystemUInt> s = this->A_mat->getSize();
             
-            FESystemDouble threshold = this->A_mat->getFrobeniusNorm()*sqrt(MACHINE_EPSILON);
+            typename RealOperationType(ValType) threshold = this->A_mat->getFrobeniusNorm()*sqrt(FESystem::Base::getMachineEpsilon<typename RealOperationType(ValType)>());
             typename ComplexOperationType(ValType) eig1, eig2;
             
             while (!convergence)

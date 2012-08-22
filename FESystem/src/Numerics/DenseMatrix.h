@@ -41,6 +41,11 @@ namespace FESystem
 
             virtual void copyMatrix(const FESystem::Numerics::MatrixBase<ValType>& m);
             
+            /*!
+             *   Resizes and copies the contents of matrix \m to this matrix.
+             */
+            virtual void copyRealMatrix(const FESystem::Numerics::MatrixBase<typename RealOperationType(ValType)>& m);
+
             virtual void copyMatrixTranspose(const FESystem::Numerics::MatrixBase<ValType>& m);
 
             void zero();

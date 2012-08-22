@@ -63,6 +63,16 @@ namespace FESystem
             virtual void reinit(const FESystem::Mesh::ElemBase& element);
             
             /*!
+             *    Returns the element for which this element is initialized
+             */
+            const FESystem::Mesh::ElemBase& getGeometricElement() const;
+            
+            /*!
+             *    Returns the number of shape functions for the element
+             */
+            virtual FESystemUInt getNShapeFunctions() const=0;
+             
+            /*!
              *   Returns the shape function based on the finite element initialization for the local coordinate specified in vin 
              */
             void getShapeFunction(const FESystem::Numerics::VectorBase<FESystemDouble>& vin, FESystem::Numerics::VectorBase<FESystemDouble>& vout) const;

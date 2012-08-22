@@ -75,7 +75,7 @@ namespace FESystem
             /*!
              *   stores the previous time value during the sub-iterations
              */
-            FESystemDouble previous_time;
+            typename RealOperationType(ValType) previous_time;
             
             /*!
              *   Storage for state from previous time step
@@ -90,12 +90,12 @@ namespace FESystem
             /*!
              *    coefficients of each sub-iterate towards the final increment
              */
-            std::vector<FESystemDouble> sub_step_coefficients_for_final_step;
+            std::vector<typename RealOperationType(ValType)> sub_step_coefficients_for_final_step;
 
             /*!
              *    sub-step coefficients for evaluating next sub-iterate
              */
-            std::vector<FESystemDouble> sub_step_iterate_coefficients;
+            std::vector<typename RealOperationType(ValType)> sub_step_iterate_coefficients;
 
         };
     }

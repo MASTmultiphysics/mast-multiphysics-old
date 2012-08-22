@@ -104,7 +104,7 @@ FESystem::Solvers::TransientSolverBase<ValType>::clear()
 
 template <typename ValType>
 void 
-FESystem::Solvers::TransientSolverBase<ValType>::setInitialTimeData(FESystemDouble t0, FESystemDouble dt, FESystem::Numerics::VectorBase<ValType>& vec)
+FESystem::Solvers::TransientSolverBase<ValType>::setInitialTimeData(typename RealOperationType(ValType) t0, typename RealOperationType(ValType) dt, FESystem::Numerics::VectorBase<ValType>& vec)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     
@@ -143,7 +143,7 @@ FESystem::Solvers::TransientSolverBase<ValType>::getCurrentStateVelocityVector()
 
 
 template <typename ValType>
-double
+typename RealOperationType(ValType)
 FESystem::Solvers::TransientSolverBase<ValType>::getCurrentTime()
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -152,7 +152,7 @@ FESystem::Solvers::TransientSolverBase<ValType>::getCurrentTime()
 
 
 template <typename ValType>
-double 
+typename RealOperationType(ValType)
 FESystem::Solvers::TransientSolverBase<ValType>::getCurrentStepSize()
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
