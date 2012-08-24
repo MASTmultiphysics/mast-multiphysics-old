@@ -80,11 +80,20 @@ namespace FESystem
              */
             virtual void initializeLocalPhysicalCoordinateSystem();
             
-
+            /*!
+             *   clears the local coordinate system
+             */
+            virtual void clearLocalPhysicalCoordinateSystem();
+            
             /*!
              *   Dummy call, nothing to be done here
              */
             virtual void initializeParentNondegenerateElement();
+
+            /*!
+             *    clears the parent nondegenerate element before it can be updated
+             */
+            virtual void clearParentNondegenerateElement();
 
             /*!
              *   Initializes the local coordinate system

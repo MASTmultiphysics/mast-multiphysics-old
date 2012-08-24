@@ -18,7 +18,7 @@
 
 
 FESystem::Structures::ReissnerMindlinPlate::ReissnerMindlinPlate():
-FESystem::Structures::Structural2DElementBase(),
+FESystem::Structures::LinearPlateElementBase(),
 quadrature_bending(NULL),
 quadrature_shear(NULL),
 kappa(5.0/6.0)
@@ -43,13 +43,6 @@ FESystem::Structures::ReissnerMindlinPlate::clear()
 
 
 
-void
-FESystem::Structures::ReissnerMindlinPlate::transformMatrixToGlobalCoordinate(const std::vector<FESystem::Structures::StructuralVariable>& vars,
-                                                                              const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_cs_mat,
-                                                                              FESystem::Numerics::MatrixBase<FESystemDouble>& global_cs_mat)
-{
-    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
-}
 
 
 void
@@ -214,13 +207,15 @@ FESystem::Structures::ReissnerMindlinPlate::calculateBendingOperatorMatrix(const
 
     Nvec.zero();
     this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_x, pt, Nvec);
-    B_mat.setRowVals(0,   n,  2*n-1, Nvec); // epsilon-x: phix
-    B_mat.setRowVals(2, 2*n,  3*n-1, Nvec); // gamma-xy : phiy
+    B_mat.setRowVals(0, 2*n,  3*n-1, Nvec); // epsilon-x: thetay
+    Nvec.scale(-1.0);
+    B_mat.setRowVals(2,   n,  2*n-1, Nvec); // gamma-xy : thetax
     
     Nvec.zero();
     this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_y, pt, Nvec);
-    B_mat.setRowVals(1, 2*n,  3*n-1, Nvec); // epsilon-y: phiy
-    B_mat.setRowVals(2,   n,  2*n-1, Nvec); // gamma-xy : phix
+    B_mat.setRowVals(2, 2*n,  3*n-1, Nvec); // gamma-xy : thetay
+    Nvec.scale(-1.0);
+    B_mat.setRowVals(1,   n,  2*n-1, Nvec); // epsilon-y: thetax
 }
 
 
@@ -242,8 +237,9 @@ FESystem::Structures::ReissnerMindlinPlate::calculateShearOperatorMatrix(const F
     
     Nvec.zero();
     this->finite_element->getShapeFunction(pt, Nvec);
-    B_mat.setRowVals(0,   n,  2*n-1, Nvec); // gamma-xz:  phix
-    B_mat.setRowVals(1, 2*n,  3*n-1, Nvec); // gamma-yz : phiy
+    B_mat.setRowVals(0, 2*n,  3*n-1, Nvec); // gamma-xz:  thetay
+    Nvec.scale(-1.0);
+    B_mat.setRowVals(1,   n,  2*n-1, Nvec); // gamma-yz : thetax
 
     Nvec.zero();
     this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_x, pt, Nvec);

@@ -90,7 +90,12 @@ namespace FESystem
              *   Returns the geometry order for this element. 
              */
             virtual FESystemUInt getGeometryOrder() const = 0;
-            
+
+            /*!
+             *   Anytime the nodal coordinates are updated, this method should be called so that the local coordinate system can be updated
+             */
+            void updateAfterMeshDeformation();
+
             /*!
              *   Returns the length of the element in the dimensionality of the element: length for 1-D element, area for 2-D and volume for 3-D. 
              *   This requires a finite element and quadrature base initialized for this element.
@@ -204,10 +209,20 @@ namespace FESystem
         protected:
 
             /*!
+             *    clears the local coordinate system data structure before it can be updated
+             */
+            virtual void clearLocalPhysicalCoordinateSystem()=0;
+            
+            /*!
              *   Initializes the local coordinate system
              */
             virtual void initializeLocalPhysicalCoordinateSystem()=0;
                         
+            /*!
+             *    clears the parent nondegenerate element before it can be updated
+             */
+            virtual void clearParentNondegenerateElement()=0;
+
             /*!
              *   Initialize parent nondegenerate element. Is defined for each inherited element
              */

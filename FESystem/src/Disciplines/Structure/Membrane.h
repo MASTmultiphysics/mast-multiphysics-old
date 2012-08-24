@@ -26,6 +26,14 @@ namespace FESystem
             
             virtual ~Membrane();
             
+            FESystemUInt getNElemDofs() const;
+
+            /*!
+             *    Returns the indices for the matrix entries that this element will contribute to. For instance, a bar element will only have the extensional stiffness
+             *    matrix, and the indices will correspond to the location of the stiffness terms corresponding to the u-dofs.
+             */
+            virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec);
+
             virtual void calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             
             virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);

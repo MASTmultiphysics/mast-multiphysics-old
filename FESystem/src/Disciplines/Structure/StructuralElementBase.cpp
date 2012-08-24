@@ -10,6 +10,11 @@
 // FESystem includes
 #include "Disciplines/Structure/StructuralElementBase.h"
 #include "Base/FESystemExceptions.h"
+#include "Mesh/ElemBase.h"
+#include "Geom/CoordinateSystemBase.h"
+#include "Geom/Point.h"
+#include "Functions/FunctionMappingBase.h"
+#include "Numerics/DenseMatrix.h"
 
 
 FESystem::Structures::StructuralElementBase::StructuralElementBase():
@@ -128,5 +133,36 @@ FESystem::Structures::StructuralElementBase::initialize(const FESystem::Mesh::El
     this->G_val = E/2.0/(1.0+nu);
     this->rho_val = rho;
 }
+
+
+void
+FESystem::Structures::StructuralElementBase::calculateDeformationTransformationMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+{
+    static FESystem::Geometry::Point pt(3);
+    
+    // valid combinations of displacement include
+    FESystemUInt n_elem_nodes = this->geometric_elem->getNNodes();
+    
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+    
+    FESystemAssert4((s.first == n_elem_nodes*6) && (s.second == n_elem_nodes*6), FESystem::Numerics::MatrixSizeMismatch, 6*n_elem_nodes, 6*n_elem_nodes, s.first, s.second);
+    
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat_sub;
+    T_mat_sub.resize(3,3);
+    
+    this->geometric_elem->getLocalPhysicalCoordinateSystem().getFunctionMappingObject().getMappingJacobian(pt, T_mat_sub);
+    mat.zero();
+    
+    for (FESystemUInt i=0; i<n_elem_nodes; i++)
+        for (FESystemUInt j=0; j<3; j++)
+            for (FESystemUInt k=0; k<3; k++)
+            {
+                mat.setVal(    j*n_elem_nodes+i,     k*n_elem_nodes+i, T_mat_sub.getVal(j,k)); // displacement
+                mat.setVal((j+3)*n_elem_nodes+i, (k+3)*n_elem_nodes+i, T_mat_sub.getVal(j,k)); // rotations
+            }
+//    T_mat_sub.write(std::cout);
+}
+
+
 
 

@@ -86,15 +86,15 @@ int shape_function_main1D(int argc, char * const argv[])
     FESystem::FiniteElement::FELagrange fe;
     FESystem::Geometry::Point p(dim);
     
-    // now start to integrate the stiffness matrix 
+    // now start to integrate the stiffness matrix
     std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Edge3);
     std::auto_ptr<FESystem::Mesh::Node> node0(new FESystem::Mesh::Node(global_cs)), node1(new FESystem::Mesh::Node(global_cs)), node2(new FESystem::Mesh::Node(global_cs));
     dynamic_cast<FESystem::Mesh::EdgeElemBase*>(elem.get())->setVectorForXYPlane(y_unit);
     node0->setVal(0, -1); elem->setNode(0, *node0);
     node1->setVal(0,  1); elem->setNode(1, *node1);
-    node2->setVal(0,  0); elem->setNode(2, *node2);    
+    node2->setVal(0,  0); elem->setNode(2, *node2);
     
-    std::vector<FESystemUInt> derivatives(dim); 
+    std::vector<FESystemUInt> derivatives(dim);
     derivatives[0] = 1;
     
     FESystem::Numerics::DenseMatrix<FESystemDouble> jac_mat;
@@ -154,9 +154,9 @@ int shape_function_main2DQuad(int argc, char * const argv[])
     FESystem::FiniteElement::FELagrange fe;
     FESystem::Geometry::Point p(dim);
     
-    // now start to integrate the stiffness matrix 
+    // now start to integrate the stiffness matrix
     std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Quad4);
-    std::auto_ptr<FESystem::Mesh::Node> 
+    std::auto_ptr<FESystem::Mesh::Node>
     node0(new FESystem::Mesh::Node(global_cs)), node1(new FESystem::Mesh::Node(global_cs)), node2(new FESystem::Mesh::Node(global_cs)),
     node3(new FESystem::Mesh::Node(global_cs)), node4(new FESystem::Mesh::Node(global_cs)), node5(new FESystem::Mesh::Node(global_cs)),
     node6(new FESystem::Mesh::Node(global_cs)), node7(new FESystem::Mesh::Node(global_cs)), node8(new FESystem::Mesh::Node(global_cs));
@@ -166,30 +166,30 @@ int shape_function_main2DQuad(int argc, char * const argv[])
     node2->setVal(0,  1); node2->setVal(1,  1); elem->setNode(2, *node2);
     node3->setVal(0, -1); node3->setVal(1,  1); elem->setNode(3, *node3);
     
-//    node4->setVal(0,  0); node4->setVal(1, -1); elem->setNode(4, *node4);
-//    node5->setVal(0,  1); node5->setVal(1,  0); elem->setNode(5, *node5);
-//    node6->setVal(0,  0); node6->setVal(1,  1); elem->setNode(6, *node6);
-//    node7->setVal(0, -1); node7->setVal(1,  0); elem->setNode(7, *node7);
-//    
-//    node0->setVal(0, -1); node0->setVal(1, -1); elem->setNode(0, *node0);
-//    node1->setVal(0,  1); node1->setVal(1, -1); elem->setNode(1, *node1);
-//    node2->setVal(0, -1); node2->setVal(1,  1); elem->setNode(2, *node2);
-//    node3->setVal(0, -1); node3->setVal(1,  1); elem->setNode(3, *node3);
-//    
-//    node4->setVal(0,  0); node4->setVal(1, -1); elem->setNode(4, *node4);
-//    node5->setVal(0,  0); node5->setVal(1,  0); elem->setNode(5, *node5);
-//    node6->setVal(0, -1); node6->setVal(1,  1); elem->setNode(6, *node6);
-//    node7->setVal(0, -1); node7->setVal(1,  0); elem->setNode(7, *node7);
-//    
-//    node8->setVal(0,-.5); node8->setVal(1,  0); elem->setNode(8, *node8);
-
-    std::vector<FESystemUInt> derivatives(dim); 
+    //    node4->setVal(0,  0); node4->setVal(1, -1); elem->setNode(4, *node4);
+    //    node5->setVal(0,  1); node5->setVal(1,  0); elem->setNode(5, *node5);
+    //    node6->setVal(0,  0); node6->setVal(1,  1); elem->setNode(6, *node6);
+    //    node7->setVal(0, -1); node7->setVal(1,  0); elem->setNode(7, *node7);
+    //
+    //    node0->setVal(0, -1); node0->setVal(1, -1); elem->setNode(0, *node0);
+    //    node1->setVal(0,  1); node1->setVal(1, -1); elem->setNode(1, *node1);
+    //    node2->setVal(0, -1); node2->setVal(1,  1); elem->setNode(2, *node2);
+    //    node3->setVal(0, -1); node3->setVal(1,  1); elem->setNode(3, *node3);
+    //
+    //    node4->setVal(0,  0); node4->setVal(1, -1); elem->setNode(4, *node4);
+    //    node5->setVal(0,  0); node5->setVal(1,  0); elem->setNode(5, *node5);
+    //    node6->setVal(0, -1); node6->setVal(1,  1); elem->setNode(6, *node6);
+    //    node7->setVal(0, -1); node7->setVal(1,  0); elem->setNode(7, *node7);
+    //
+    //    node8->setVal(0,-.5); node8->setVal(1,  0); elem->setNode(8, *node8);
+    
+    std::vector<FESystemUInt> derivatives(dim);
     derivatives[0] = 1; derivatives[1] = 0;
     
     FESystem::Numerics::DenseMatrix<FESystemDouble> jac_mat, z_vals;
     FESystem::Numerics::LocalVector<FESystemDouble> N,dNdx, x_vals, y_vals;
     jac_mat.resize(2,2); z_vals.resize(n_point, n_point);
-    N.resize(elem->getNNodes()); dNdx.resize(elem->getNNodes());    
+    N.resize(elem->getNNodes()); dNdx.resize(elem->getNNodes());
     x_vals.resize(n_point); y_vals.resize(n_point);
     
     fe.reinit(*elem);
@@ -227,9 +227,9 @@ int shape_function_main2DTri(int argc, char * const argv[])
     FESystem::Geometry::Point p(dim);
     FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat; T_mat.resize(3, 3);
     
-    // now start to integrate the stiffness matrix 
+    // now start to integrate the stiffness matrix
     std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Tri6);
-    std::auto_ptr<FESystem::Mesh::Node> 
+    std::auto_ptr<FESystem::Mesh::Node>
     node0(new FESystem::Mesh::Node(global_cs)), node1(new FESystem::Mesh::Node(global_cs)), node2(new FESystem::Mesh::Node(global_cs)),
     node3(new FESystem::Mesh::Node(global_cs)), node4(new FESystem::Mesh::Node(global_cs)), node5(new FESystem::Mesh::Node(global_cs)),
     node6(new FESystem::Mesh::Node(global_cs));
@@ -247,13 +247,13 @@ int shape_function_main2DTri(int argc, char * const argv[])
     //    elem->getLocalPhysicalCoordinateSystem().getFunctionMappingObject().getMappingJacobian(origin, T_mat);
     //    T_mat.write(std::cout);
     
-    std::vector<FESystemUInt> derivatives(dim); 
+    std::vector<FESystemUInt> derivatives(dim);
     derivatives[0] = 1; derivatives[1] = 0;
     
     FESystem::Numerics::DenseMatrix<FESystemDouble> jac_mat, z_vals;
     FESystem::Numerics::LocalVector<FESystemDouble> N, dNdx, x_vals, y_vals;
     jac_mat.resize(2,2); z_vals.resize(n_point, n_point);
-    N.resize(elem->getNNodes()); dNdx.resize(elem->getNNodes()); 
+    N.resize(elem->getNNodes()); dNdx.resize(elem->getNNodes());
     x_vals.resize(n_point); y_vals.resize(n_point);
     
     fe.reinit(*elem);
@@ -281,7 +281,7 @@ int shape_function_main2DTri(int argc, char * const argv[])
 
 void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
                        FESystemUInt nx, FESystemUInt ny, FESystemDouble x_length, FESystemDouble y_length, FESystemUInt& n_elem_nodes,
-                       MeshType m_type=INVALID_MESH) 
+                       MeshType m_type=INVALID_MESH)
 {
     // create a nx x ny grid of nodes, and connect them by quad4 elements
     FESystemDouble dx, dy;
@@ -292,7 +292,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
     std::auto_ptr<std::vector<FESystem::Mesh::Node*> > nodes;
     std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > elems;
     
-    // set the location of individual nodes    
+    // set the location of individual nodes
     switch (elem_type)
     {
         case FESystem::Mesh::QUAD4:
@@ -326,7 +326,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                 for (FESystemUInt ix=0; ix<(nx-1); ix++)
                 {
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]); 
+                    elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]);
                     elem_p->setNode(1, *(*nodes)[(iy*nx+ix+1)]);
                     elem_p->setNode(2, *(*nodes)[((iy+1)*nx+ix+1)]);
                     elem_p->setNode(3, *(*nodes)[((iy+1)*nx+ix)]);
@@ -367,17 +367,17 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                 for (FESystemUInt ix=0; ix<(nx-1); ix++)
                 {
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*ix)]); 
+                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*ix)]);
                     elem_p->setNode(1, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]);
                     elem_p->setNode(2, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*(ix+1))]);
                     elem_p->setNode(3, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix)]);
                     
-                    elem_p->setNode(4, *(*nodes)[(2*iy*(2*nx-1)+2*ix+1)]); 
+                    elem_p->setNode(4, *(*nodes)[(2*iy*(2*nx-1)+2*ix+1)]);
                     elem_p->setNode(5, *(*nodes)[((2*iy+1)*(2*nx-1)+2*(ix+1))]);
                     elem_p->setNode(6, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix+1)]);
                     elem_p->setNode(7, *(*nodes)[((2*iy+1)*(2*nx-1)+2*ix)]);
                     
-                    elem_p->setNode(8, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]); 
+                    elem_p->setNode(8, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
                     
                     elem_p->setExternalID(id);
                     id++;
@@ -421,7 +421,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                             if (m_type == RIGHT_DIAGONAL)
                             {
                                 elem_p = (*elems)[id];
-                                elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]); 
+                                elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]);
                                 elem_p->setNode(1, *(*nodes)[(iy*nx+ix+1)]);
                                 elem_p->setNode(2, *(*nodes)[((iy+1)*nx+ix+1)]);
                                 elem_p->setExternalID(id);
@@ -430,14 +430,14 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                                 elem_p = (*elems)[id];
                                 elem_p->setNode(0, *(*nodes)[((iy+1)*nx+ix+1)]);
                                 elem_p->setNode(1, *(*nodes)[((iy+1)*nx+ix)]);
-                                elem_p->setNode(2, *(*nodes)[(iy*nx+ix)]); 
+                                elem_p->setNode(2, *(*nodes)[(iy*nx+ix)]);
                                 elem_p->setExternalID(id);
                                 id++;
                             }
                             else // LEFT_DIAGONAL
                             {
                                 elem_p = (*elems)[id];
-                                elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]); 
+                                elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]);
                                 elem_p->setNode(1, *(*nodes)[(iy*nx+ix+1)]);
                                 elem_p->setNode(2, *(*nodes)[((iy+1)*nx+ix)]);
                                 elem_p->setExternalID(id);
@@ -452,7 +452,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                             }
                 }
                     break;
-
+                    
                 case CROSS:
                 {
                     n_nodes=nx*ny + (nx-1)*(ny-1);
@@ -483,7 +483,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                             node_p->setVal(1,iy*dy+dy/2);
                             node_p->setExternalID(id);
                             id++;
-                        }            
+                        }
                     
                     // set the location of individual nodes
                     id=0;
@@ -492,14 +492,14 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                         for (FESystemUInt ix=0; ix<(nx-1); ix++)
                         {
                             elem_p = (*elems)[id];
-                            elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]); 
+                            elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]);
                             elem_p->setNode(1, *(*nodes)[(iy*nx+ix+1)]);
                             elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
                             id++;
                             
                             elem_p = (*elems)[id];
-                            elem_p->setNode(0, *(*nodes)[(iy*nx+ix+1)]); 
+                            elem_p->setNode(0, *(*nodes)[(iy*nx+ix+1)]);
                             elem_p->setNode(1, *(*nodes)[((iy+1)*nx+ix+1)]);
                             elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
@@ -514,7 +514,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                             
                             elem_p = (*elems)[id];
                             elem_p->setNode(0, *(*nodes)[((iy+1)*nx+ix)]);
-                            elem_p->setNode(1, *(*nodes)[(iy*nx+ix)]); 
+                            elem_p->setNode(1, *(*nodes)[(iy*nx+ix)]);
                             elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
                             id++;
@@ -591,11 +591,11 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                 for (FESystemUInt ix=0; ix<(nx-1); ix++)
                 {
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*ix)]); 
+                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*ix)]);
                     elem_p->setNode(1, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]); 
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[(2*iy*(2*nx-1)+2*ix+1)]); 
+                    elem_p->setNode(3, *(*nodes)[(2*iy*(2*nx-1)+2*ix+1)]);
                     elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+1)]);
                     elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+0)]);
                     
@@ -603,11 +603,11 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                     id++;
                     
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]); 
+                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]);
                     elem_p->setNode(1, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]); 
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx-1)+2*(ix+1))]); 
+                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx-1)+2*(ix+1))]);
                     elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+2)]);
                     elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+1)]);
                     
@@ -617,9 +617,9 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                     elem_p = (*elems)[id];
                     elem_p->setNode(0, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*(ix+1))]);
                     elem_p->setNode(1, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]); 
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix+1)]); 
+                    elem_p->setNode(3, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix+1)]);
                     elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+3)]);
                     elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+2)]);
                     
@@ -629,9 +629,9 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
                     elem_p = (*elems)[id];
                     elem_p->setNode(0, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix)]);
                     elem_p->setNode(1, *(*nodes)[(2*iy*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]); 
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx-1)+2*ix)]); 
+                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx-1)+2*ix)]);
                     elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+0)]);
                     elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+3)]);
                     
@@ -650,7 +650,7 @@ void create_plane_mesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Me
 }
 
 
-int linear_potential_flow_nonconservative(int argc, char * const argv[]) 
+int linear_potential_flow_nonconservative(int argc, char * const argv[])
 {
     FESystem::Mesh::ElementType elem_type = FESystem::Mesh::QUAD4;
     
@@ -665,7 +665,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     FESystem::Geometry::Point origin(3);
     
     create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes);
-    n_elem_dofs = n_elem_nodes; 
+    n_elem_dofs = n_elem_nodes;
     
     // set the location of individual nodes
     const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
@@ -679,10 +679,10 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     // create the finite element and initialize the shape functions
     FESystem::FiniteElement::FELagrange fe;
     FESystem::Quadrature::TrapezoidQuadrature q_rule, q_boundary_rule;
-    q_rule.init(dim, 5);  
-    q_boundary_rule.init(dim-1, 5);  
+    q_rule.init(dim, 5);
+    q_boundary_rule.init(dim-1, 5);
     
-    // now start to integrate the stiffness matrix 
+    // now start to integrate the stiffness matrix
     std::vector<FESystem::Mesh::ElemBase*>::const_iterator el_it=elems.begin(), el_end=elems.end();
     std::vector<FESystemUInt> derivatives(dim);
     
@@ -692,10 +692,10 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     el_mat.resize(n_elem_dofs,n_elem_dofs); el_mat2.resize(n_elem_dofs, n_elem_dofs); el_mat_combined.resize(n_elem_dofs,n_elem_dofs);  el_vec.resize(n_elem_dofs); elem_dof_vals.resize(n_elem_dofs);
     tmp_mat.resize(dof_map.getNDofs(), dof_map.getNDofs());   global_mass_mat.resize(dof_map.getNDofs(), dof_map.getNDofs());
     global_stiffness_mat.resize(dof_map.getNDofs(), dof_map.getNDofs()); global_damping_mat.resize(dof_map.getNDofs(), dof_map.getNDofs()); global_mass_mat_inv.resize(dof_map.getNDofs(), dof_map.getNDofs());
-    B_mat1.resize(1,n_elem_dofs); B_mat2.resize(1,n_elem_dofs); Nvec.resize(n_elem_nodes); 
+    B_mat1.resize(1,n_elem_dofs); B_mat2.resize(1,n_elem_dofs); Nvec.resize(n_elem_nodes);
     rhs.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs());    tmp_vec.resize(dof_map.getNDofs());
     dNdx.resize(n_elem_nodes);     dNdy.resize(n_elem_nodes);   Nfunc.resize(n_elem_nodes);
-    point.resize(3); 
+    point.resize(3);
     
     
     // get the values of shape functions and derivatives
@@ -771,7 +771,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                 if (j == 0)
                     el_mat_combined.scale(1.0-mach*mach);
                 
-                el_mat_combined.scale(-point.getVal(j)); 
+                el_mat_combined.scale(-point.getVal(j));
                 
                 // now add this to the global matrix: stiffness matrix
                 dof_map.addToGlobalMatrix(**el_it, el_mat_combined, global_stiffness_mat);
@@ -807,7 +807,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                 if (j == 0)
                     el_mat_combined.scale(1.0-mach*mach);
                 
-                el_mat_combined.scale(-point.getVal(j)); 
+                el_mat_combined.scale(-point.getVal(j));
                 
                 // now add this to the global matrix: stiffness matrix
                 dof_map.addToGlobalMatrix(**el_it, el_mat_combined, global_stiffness_mat);
@@ -842,7 +842,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                 if (j == 0)
                     el_mat_combined.scale(1.0-mach*mach);
                 
-                el_mat_combined.scale(-point.getVal(j)); 
+                el_mat_combined.scale(-point.getVal(j));
                 
                 // now add this to the global matrix: stiffness matrix
                 dof_map.addToGlobalMatrix(**el_it, el_mat_combined, global_stiffness_mat);
@@ -911,7 +911,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     transient_solver.initialize(2, dof_map.getNDofs(), int_constants);
     
     transient_solver.initializeStateVector(rhs); //  initialize the vector and apply the initial condition
-                                                 // the dofs at the left edge will have a unit value specified for them
+    // the dofs at the left edge will have a unit value specified for them
     sol.setAllVals(0.0);
     //    for (FESystemUInt i=0; i<nodes.size(); i++)
     //        if (nodes[i]->getVal(0) == 0.0)
@@ -931,7 +931,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     while (transient_solver.getCurrentTime()<final_t)
     {
         call_back = transient_solver.incrementTimeStep();
-        switch (call_back) 
+        switch (call_back)
         {
             case FESystem::Solvers::TIME_STEP_CONVERGED:
             {
@@ -971,24 +971,24 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                     // inflow on left edge
                     if ((*el_it)->getNode(0).getVal(0) == 0.0) // left edge
                     {
-                        //                        
+                        //
                         //                        for (FESystemUInt j=0; j<dim; j++) // each boundary is scaled differently with the surface normal component
                         //                        {
                         //                            el_vec.zero();
-                        //                            
+                        //
                         //                            for (FESystemUInt k=0; k<derivatives.size(); k++) derivatives[k] = 0;
                         //                            derivatives[j] = 1; // derivative of the x-coordinate
-                        //                            
+                        //
                         //                            for (FESystemUInt i=0; i<q_pts_b.size(); i++)
                         //                            {
                         //                                fe.getShapeFunctionForBoundary(3, *(q_pts_b[i]), Nvec); // bottom edge is 0 boundary
                         //                                fe.getShapeFunctionDerivativeForPhysicalCoordinatesForBoundary(3, derivatives, *(q_pts_b[i]), dNdx);
                         //                                jac = fe.getJacobianValueForBoundary(3, *(q_pts_b[i]));
-                        //                                
+                        //
                         //                                el_vec.add(mach/sound_speed * q_weight_b[i]*jac, Nvec);
                         //                            }
-                        //                            el_vec.scale(point.getVal(j)); 
-                        //                            
+                        //                            el_vec.scale(point.getVal(j));
+                        //
                         //                            // now add this to the global matrix: stiffness matrix
                         //                            dof_map.addToGlobalVector(**el_it, el_vec, tmp_vec);
                         //                        }
@@ -996,29 +996,29 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                     // non-reflecting boundary conditions at the right edge
                     else if ((*el_it)->getNode(1).getVal(0) == x_length) // right edge
                     {
-                        //                        
+                        //
                         //                        for (FESystemUInt j=0; j<dim; j++) // each boundary is scaled differently with the surface normal component
                         //                        {
                         //                            el_vec.zero();
-                        //                            
+                        //
                         //                            for (FESystemUInt k=0; k<derivatives.size(); k++) derivatives[k] = 0;
                         //                            derivatives[j] = 1; // derivative of the x-coordinate
-                        //                            
+                        //
                         //                            for (FESystemUInt i=0; i<q_pts_b.size(); i++)
                         //                            {
                         //                                fe.getShapeFunctionForBoundary(1, *(q_pts_b[i]), Nvec); // bottom edge is 0 boundary
                         //                                fe.getShapeFunctionDerivativeForPhysicalCoordinatesForBoundary(1, derivatives, *(q_pts_b[i]), dNdx);
                         //                                jac = fe.getJacobianValueForBoundary(1, *(q_pts_b[i]));
-                        //                                
+                        //
                         //                                el_vec.add(mach/sound_speed * q_weight_b[i]*jac, Nvec);
                         //                            }
-                        //                            el_vec.scale(-point.getVal(j)); 
-                        //                            
+                        //                            el_vec.scale(-point.getVal(j));
+                        //
                         //                            // now add this to the global matrix: stiffness matrix
                         //                            dof_map.addToGlobalVector(**el_it, el_vec, tmp_vec);
                         //                        }
                     }
-                    else if (((*el_it)->getNode(0).getVal(1) == 0.0) && 
+                    else if (((*el_it)->getNode(0).getVal(1) == 0.0) &&
                              ((*el_it)->getNode(0).getVal(0) > x_airfoil_begin) && ((*el_it)->getNode(0).getVal(0) < x_airfoil_begin+chord)) // bottom edge
                     {
                         x_val = (*el_it)->getNode(0).getVal(0)-x_airfoil_begin-chord/2.0;
@@ -1040,7 +1040,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                                 
                                 el_vec.add(q_weight_b[i]*jac, Nvec);
                             }
-                            el_vec.scale(mach/sound_speed*point.getVal(j)); 
+                            el_vec.scale(mach/sound_speed*point.getVal(j));
                             // now add this to the global matrix: stiffness matrix
                             dof_map.addToGlobalVector(**el_it, el_vec, tmp_vec);
                         }
@@ -1086,24 +1086,24 @@ int test_ode_integration(int argc, char * const argv[])
     transient_solver.setMassMatrix(true);
     std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=false;
     transient_solver.setActiveJacobianTerm(ode_order_include);
-
+    
     
     //    FESystem::Solvers::ExplicitRungeKuttaTransientSolver<FESystemDouble> transient_solver;
     //    transient_solver.initialize(2, 1, 4);
-
+    
     FESystem::Numerics::LocalVector<FESystemDouble> vec, x_vals, y_vals;
     FESystem::Numerics::DenseMatrix<FESystemDouble> jac, ode_jac;
     vec.resize(2); jac.resize(1, 1);
     vec.setVal(0, 1.0);
     x_vals.resize(final_t/time_step+1); y_vals.resize(final_t/time_step+1);
-        
+    
     transient_solver.setInitialTimeData(0, time_step, vec);
     
     FESystem::Solvers::LapackLinearSolver<FESystemDouble> linear_solver;
     transient_solver.setLinearSolver(linear_solver, true);
     transient_solver.resizeMatrixToJacobianTemplate(ode_jac);
     transient_solver.setJacobianMatrix(ode_jac);
-
+    
     jac.setVal(0, 0, -omega2);
     transient_solver.updateJacobianValuesForDerivativeOrder(2, 0, jac, transient_solver.getCurrentJacobianMatrix());
     
@@ -1111,7 +1111,7 @@ int test_ode_integration(int argc, char * const argv[])
     while (transient_solver.getCurrentTime()<final_t)
     {
         call_back = transient_solver.incrementTimeStep();
-        switch (call_back) 
+        switch (call_back)
         {
             case FESystem::Solvers::TIME_STEP_CONVERGED:
             {
@@ -1133,18 +1133,18 @@ int test_ode_integration(int argc, char * const argv[])
                 break;
         }
     }
-
+    
     //plot.plotData2D(x_vals, y_vals);
-
+    
     
     return 0;
 }
 
 
 
-int plate_driver(int argc, char * const argv[]) 
+int plate_driver(int argc, char * const argv[])
 {
-    FESystem::Mesh::ElementType elem_type = FESystem::Mesh::QUAD4;
+    FESystem::Mesh::ElementType elem_type = FESystem::Mesh::TRI3;
     
     // create the mesh object
     FESystem::Mesh::MeshBase mesh;
@@ -1157,7 +1157,7 @@ int plate_driver(int argc, char * const argv[])
     FESystem::Geometry::Point origin(3);
     
     create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
-    n_elem_dofs = 3*n_elem_nodes; 
+    n_elem_dofs = 6*n_elem_nodes;
     
     // set the location of individual nodes
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
@@ -1165,26 +1165,32 @@ int plate_driver(int argc, char * const argv[])
     // now add the degrees of freedom
     FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
+    name = "u"; dof_map.addVariable(name, 0);
+    name = "v"; dof_map.addVariable(name, 0);
     name = "w"; dof_map.addVariable(name, 0);
-    name = "px"; dof_map.addVariable(name, 0);
-    name = "py"; dof_map.addVariable(name, 0);
+    name = "tx"; dof_map.addVariable(name, 0);
+    name = "ty"; dof_map.addVariable(name, 0);
+    name = "tz"; dof_map.addVariable(name, 0);
     dof_map.reinit(); // distribute the dofs
-        
+    
     // create the finite element and initialize the shape functions
     FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat;
-    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol, global_mass_vec, elem_mass_vec;
-    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_stiff_mat, elem_mass_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol, global_mass_vec, elem_vec, plate_elem_vec;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat, plate_elem_mat;
+    std::vector<FESystemUInt> elem_dof_indices;
     
     global_mass_vec.resize(dof_map.getNDofs());
     rhs.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs());
     global_stiffness_mat.resize(dof_map.getSparsityPattern());
-    elem_stiff_mat.resize(n_elem_dofs, n_elem_dofs);
-    elem_mass_mat.resize(n_elem_dofs, n_elem_dofs);
-    elem_mass_vec.resize(n_elem_dofs);
-
+    elem_mat.resize(n_elem_dofs, n_elem_dofs);
+    elem_vec.resize(n_elem_dofs);
+    
+    plate_elem_mat.resize(n_elem_nodes*3, n_elem_nodes*3);
+    plate_elem_vec.resize(n_elem_nodes*3);
+    
     FESystemDouble E=72.0e9, nu=0.33, thick=0.025, rho=2700.0;
-
-    FESystemDouble if_mindlin = true;
+    
+    FESystemDouble if_mindlin = false;
     
     // prepare the quadrature rule and FE for the
     FESystem::Quadrature::TrapezoidQuadrature q_rule_shear, q_rule_bending;
@@ -1215,53 +1221,65 @@ int plate_driver(int argc, char * const argv[])
     else
     {
         q_rule_bending.init(2, 9);
-        q_rule_shear.init(2, 5);
     }
-
+    
     std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     for (FESystemUInt i=0; i<elems.size(); i++)
     {
         fe.clear();
         fe.reinit(*(elems[i]));
+        elem_mat.zero();
+        elem_vec.zero();
         
         if (if_mindlin)
         {
             mindlin_plate.clear();
             mindlin_plate.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, thick);
-            mindlin_plate.calculateStiffnessMatrix(elem_stiff_mat);
-            //mindlin_plate.calculateConsistentMassMatrix(elem_mass_mat);
-            mindlin_plate.calculateDiagonalMassMatrix(elem_mass_vec);
+            
+            // stiffness matrix
+            mindlin_plate.calculateStiffnessMatrix(plate_elem_mat);
+            mindlin_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+            
+            // mass
+            mindlin_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+            mindlin_plate.getActiveElementMatrixIndices(elem_dof_indices);
         }
         else
         {
             dkt_plate.clear();
             dkt_plate.initialize(*(elems[i]), fe, fe_tri6, q_rule_bending, q_rule_bending, E, nu, rho, thick);
-            dkt_plate.calculateStiffnessMatrix(elem_stiff_mat);
-            //dkt_plate.calculateConsistentMassMatrix(elem_mass_mat);
-            //dkt_plate.calculateDiagonalMassMatrix(elem_mass_mat);
+            
+            // stiffness matrix
+            dkt_plate.calculateStiffnessMatrix(plate_elem_mat);
+            dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+            
+            // mass
+            dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+            dkt_plate.getActiveElementMatrixIndices(elem_dof_indices);
         }
         
-        dof_map.addToGlobalMatrix(*(elems[i]), elem_stiff_mat, global_stiffness_mat);
-        dof_map.addToGlobalVector(*(elems[i]), elem_mass_vec, global_mass_vec);
+        dof_map.addToGlobalMatrix(*(elems[i]), elem_mat, global_stiffness_mat);
+        elem_vec.zero();
+        elem_vec.addVal(elem_dof_indices, plate_elem_vec);
+        dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
+
     }
-        
+    
     // apply uniformly distributed loads
-    FESystemUInt id = 0;    
+    FESystemUInt id = 0;
     // apply boundary condition and place a load on the last dof
     std::set<FESystemUInt> bc_dofs;
     for (FESystemUInt i=0; i<nodes.size(); i++)
+    {
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
         if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // w-displacement on the bottom edge
-//    for (FESystemUInt i=0; i<nodes.size(); i++)
-//        if (nodes[i]->getVal(1) == 0.0)
-//        {
-//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // w-displacement on the bottom edge
-//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // w-displacement on the bottom edge
-//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
-//        }
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+    }
     
     // now create the vector of ids that do not have bcs
-    std::vector<FESystemUInt> nonbc_dofs; 
+    std::vector<FESystemUInt> nonbc_dofs;
     for (FESystemUInt i=0; i<dof_map.getNDofs(); i++)
         if (!bc_dofs.count(i))
             nonbc_dofs.push_back(i);
@@ -1276,7 +1294,7 @@ int plate_driver(int argc, char * const argv[])
     FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
     dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
     
-    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat; 
+    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
     FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, reduced_mass_vec;
     
     reduced_load_vec.resize(nonbc_dofs.size()); reduced_sol_vec.resize(nonbc_dofs.size()); reduced_mass_vec.resize(nonbc_dofs.size());
@@ -1288,9 +1306,9 @@ int plate_driver(int argc, char * const argv[])
     
     mass_mat.setDiagonal(reduced_mass_vec);
     global_stiffness_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
-        
+    
     FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
-    linear_solver.setSystemMatrix(reduced_stiff_mat); 
+    linear_solver.setSystemMatrix(reduced_stiff_mat);
     linear_solver.solve(reduced_load_vec, reduced_sol_vec);
     sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
     // write the solution for each node
@@ -1299,7 +1317,7 @@ int plate_driver(int argc, char * const argv[])
         std::cout << "Node: " << std::setw(8) << i;
         // write location
         for (FESystemUInt j=0; j<dim; j++)
-            std::cout << std::setw(15) << nodes[i]->getVal(j); 
+            std::cout << std::setw(15) << nodes[i]->getVal(j);
         // write the forces
         for (FESystemUInt j=0; j<3; j++)
             std::cout << std::setw(15) << rhs.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
@@ -1393,7 +1411,7 @@ int plate_driver(int argc, char * const argv[])
     while (transient_solver.getCurrentTime()<final_t)
     {
         call_back = transient_solver.incrementTimeStep();
-        switch (call_back) 
+        switch (call_back)
         {
             case FESystem::Solvers::TIME_STEP_CONVERGED:
             {
@@ -1441,7 +1459,7 @@ int plate_driver(int argc, char * const argv[])
 }
 
 
-int main(int argc, char * const argv[]) 
+int main(int argc, char * const argv[])
 {
     return plate_driver(argc, argv);
 }

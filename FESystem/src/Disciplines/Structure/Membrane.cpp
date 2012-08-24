@@ -29,6 +29,23 @@ FESystem::Structures::Membrane::~Membrane()
 }
 
 
+FESystemUInt
+FESystem::Structures::Membrane::getNElemDofs() const
+{
+    return 2*this->geometric_elem->getNNodes();
+}
+
+
+void
+FESystem::Structures::Membrane::getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec)
+{
+    FESystemUInt n = this->geometric_elem->getNNodes();
+    vec.resize(2*n);
+    
+    for (FESystemUInt i=0; i<2*n; i++) vec[i] = i; // u- and v-displacement
+}
+
+
 
 void
 FESystem::Structures::Membrane::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)

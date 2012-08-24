@@ -45,6 +45,23 @@ FESystem::Structures::TorsionBar::clear()
 
 
 
+FESystemUInt
+FESystem::Structures::TorsionBar::getNElemDofs() const
+{
+    return this->geometric_elem->getNNodes();
+}
+
+
+void
+FESystem::Structures::TorsionBar::getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec)
+{
+    FESystemUInt n = this->geometric_elem->getNNodes();
+    vec.resize(n);
+    
+    for (FESystemUInt i=0; i<n; i++) vec[i] = 3*n + i; // theta-x
+}
+
+
 void
 FESystem::Structures::TorsionBar::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                              FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble polar_inertia, FESystemDouble J)

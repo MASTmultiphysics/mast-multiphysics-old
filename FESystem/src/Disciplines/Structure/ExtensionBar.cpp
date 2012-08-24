@@ -39,6 +39,23 @@ FESystem::Structures::ExtensionBar::clear()
 
 
 
+FESystemUInt
+FESystem::Structures::ExtensionBar::getNElemDofs() const
+{
+    return this->geometric_elem->getNNodes();
+}
+
+
+void
+FESystem::Structures::ExtensionBar::getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec)
+{
+    FESystemUInt n = this->geometric_elem->getNNodes();
+    vec.resize(n);
+    
+    for (FESystemUInt i=0; i<n; i++) vec[i] = i; // u-displacement
+}
+
+
 void
 FESystem::Structures::ExtensionBar::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                                FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble area)

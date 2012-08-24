@@ -8,9 +8,30 @@
 
 /* Begin PBXBuildFile section */
 		69107D221578D8CF00196B94 /* libarpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 69107D211578D8CF00196B94 /* libarpack.a */; };
+		691123A815D9E58400FDCCCD /* VonKarmanStrain1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691123A715D9E58400FDCCCD /* VonKarmanStrain1D.cpp */; };
+		6961E5CE15D8AE8500795584 /* StructuralElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5CD15D8AE8500795584 /* StructuralElementBase.cpp */; };
+		6961E5DF15D8C68500795584 /* DKTPlate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5DE15D8C68500795584 /* DKTPlate.cpp */; };
+		6961E5E115D8C6AD00795584 /* Membrane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5E015D8C6AC00795584 /* Membrane.cpp */; };
+		6961E5E315D8C6C300795584 /* ExtensionBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5E215D8C6C200795584 /* ExtensionBar.cpp */; };
+		6961E5E615D8C6FF00795584 /* EulerBernoulliBeam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5E515D8C6FE00795584 /* EulerBernoulliBeam.cpp */; };
+		6961E5E815D8C78F00795584 /* ReissnerMindlinPlate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5E715D8C78F00795584 /* ReissnerMindlinPlate.cpp */; };
+		6961E5EA15D8C7E200795584 /* VonKarmanStrain2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5E915D8C7E100795584 /* VonKarmanStrain2D.cpp */; };
 		69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69677EB413403B06002B32C8 /* vecLib.framework */; };
 		6967BA82156A80B000F2FB18 /* libplplotcxxd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */; };
 		6967BA84156A80C700F2FB18 /* libplplotd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6967BA83156A80C700F2FB18 /* libplplotd.dylib */; };
+		6985068615DC80B900CDDADF /* Structural1DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */; };
+		6985068815DC80C700CDDADF /* Structural2DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */; };
+		6985068A15DC80D900CDDADF /* Structural3DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */; };
+		EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */; };
+		EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */; };
+		EB55F83A15E68C7900D8E6B1 /* LinearBeamElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */; };
+		EB906D4915D4330B00C1F550 /* FrequencyDomainFlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFCE15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp */; };
+		EB906D4A15D4330E00C1F550 /* PKFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD015C1B73B0062459D /* PKFlutterSolver.cpp */; };
+		EB906D4B15D4330F00C1F550 /* UGFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD315C1B73B0062459D /* UGFlutterSolver.cpp */; };
+		EB906D5315D450E600C1F550 /* FlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB906D5115D450E600C1F550 /* FlutterSolverBase.cpp */; };
+		EB906D5415D450E600C1F550 /* FlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D5215D450E600C1F550 /* FlutterSolverBase.h */; };
+		EB906D6E15D9859C00C1F550 /* TorsionBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB906D6C15D9859700C1F550 /* TorsionBar.cpp */; };
+		EB906D7115D9876400C1F550 /* TorsionBar.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D7015D9875800C1F550 /* TorsionBar.h */; };
 		EBAEE0A615C1B73B0062459D /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAA15C1B73B0062459D /* makefile */; };
 		EBAEE0A715C1B73B0062459D /* EigenTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAD15C1B73B0062459D /* EigenTest.cpp */; };
 		EBAEE0A815C1B73B0062459D /* MeshTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAE15C1B73B0062459D /* MeshTest.cpp */; };
@@ -38,14 +59,10 @@
 		EBAEE0BE15C1B73B0062459D /* macros.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFC615C1B73B0062459D /* macros.h */; };
 		EBAEE0BF15C1B73B0062459D /* DataSourceBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFC815C1B73B0062459D /* DataSourceBase.cpp */; };
 		EBAEE0C015C1B73B0062459D /* DataSourceBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFC915C1B73B0062459D /* DataSourceBase.h */; };
-		EBAEE0C215C1B73B0062459D /* FlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFCD15C1B73B0062459D /* FlutterSolverBase.h */; };
 		EBAEE0C415C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFCF15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h */; };
 		EBAEE0C615C1B73B0062459D /* PKFlutterSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD115C1B73B0062459D /* PKFlutterSolver.h */; };
 		EBAEE0C715C1B73B0062459D /* TimeDomainFlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD215C1B73B0062459D /* TimeDomainFlutterSolverBase.h */; };
 		EBAEE0C915C1B73B0062459D /* UGFlutterSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD415C1B73B0062459D /* UGFlutterSolver.h */; };
-		EBAEE0CA15C1B73B0062459D /* DiscretizationBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD515C1B73B0062459D /* DiscretizationBase.cpp */; };
-		EBAEE0CB15C1B73B0062459D /* DiscretizationBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFD615C1B73B0062459D /* DiscretizationBase.h */; };
-		EBAEE0CC15C1B73B0062459D /* StructuralDiscretization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD715C1B73B0062459D /* StructuralDiscretization.cpp */; };
 		EBAEE0CE15C1B73B0062459D /* FieldBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFDA15C1B73B0062459D /* FieldBase.cpp */; };
 		EBAEE0CF15C1B73B0062459D /* FieldBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFDB15C1B73B0062459D /* FieldBase.h */; };
 		EBAEE0D015C1B73B0062459D /* FieldPointIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFDC15C1B73B0062459D /* FieldPointIterator.cpp */; };
@@ -234,15 +251,50 @@
 		EBAEE18715C1B73B0062459D /* EnumName.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE0A315C1B73B0062459D /* EnumName.cpp */; };
 		EBAEE18815C1B73B0062459D /* EnumName.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A415C1B73B0062459D /* EnumName.h */; };
 		EBAEE18915C1B73B0062459D /* Table.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A515C1B73B0062459D /* Table.h */; };
-		EBAEE18B15C1B77F0062459D /* StructuralDiscretization.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE18A15C1B77F0062459D /* StructuralDiscretization.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		69107D211578D8CF00196B94 /* libarpack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libarpack.a; path = ../../../../../../opt/local/lib/libarpack.a; sourceTree = "<group>"; };
+		691123A615D9E57700FDCCCD /* VonKarmanStrain1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VonKarmanStrain1D.h; sourceTree = "<group>"; };
+		691123A715D9E58400FDCCCD /* VonKarmanStrain1D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VonKarmanStrain1D.cpp; sourceTree = "<group>"; };
+		694DA49015E0732E004938D1 /* LinearBeamElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LinearBeamElementBase.h; sourceTree = "<group>"; };
+		6961E5CA15D8AA6500795584 /* StructuralElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StructuralElementBase.h; sourceTree = "<group>"; };
+		6961E5CC15D8ACA700795584 /* ThermalElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ThermalElementBase.h; sourceTree = "<group>"; };
+		6961E5CD15D8AE8500795584 /* StructuralElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StructuralElementBase.cpp; sourceTree = "<group>"; };
+		6961E5CF15D8B6B000795584 /* ExtensionBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtensionBar.h; sourceTree = "<group>"; };
+		6961E5D115D8B71600795584 /* Membrane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Membrane.h; sourceTree = "<group>"; };
+		6961E5D215D8B76000795584 /* EulerBernoulliBeam.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EulerBernoulliBeam.h; sourceTree = "<group>"; };
+		6961E5D315D8B76C00795584 /* TimoshenkoBeam.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TimoshenkoBeam.h; sourceTree = "<group>"; };
+		6961E5D415D8B77F00795584 /* ReissnerMindlinPlate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReissnerMindlinPlate.h; sourceTree = "<group>"; };
+		6961E5D515D8B7A000795584 /* DKTPlate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DKTPlate.h; sourceTree = "<group>"; };
+		6961E5D615D8B7C600795584 /* VonKarmanStrain2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VonKarmanStrain2D.h; sourceTree = "<group>"; };
+		6961E5D715D8B9BB00795584 /* PistonTheory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PistonTheory.h; sourceTree = "<group>"; };
+		6961E5D915D8C42F00795584 /* Solid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Solid.h; sourceTree = "<group>"; };
+		6961E5DB15D8C52600795584 /* Structural1DElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Structural1DElementBase.h; sourceTree = "<group>"; };
+		6961E5DC15D8C53900795584 /* Structural2DElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Structural2DElementBase.h; sourceTree = "<group>"; };
+		6961E5DD15D8C54900795584 /* Structural3DElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Structural3DElementBase.h; sourceTree = "<group>"; };
+		6961E5DE15D8C68500795584 /* DKTPlate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DKTPlate.cpp; sourceTree = "<group>"; };
+		6961E5E015D8C6AC00795584 /* Membrane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Membrane.cpp; sourceTree = "<group>"; };
+		6961E5E215D8C6C200795584 /* ExtensionBar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExtensionBar.cpp; sourceTree = "<group>"; };
+		6961E5E515D8C6FE00795584 /* EulerBernoulliBeam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EulerBernoulliBeam.cpp; sourceTree = "<group>"; };
+		6961E5E715D8C78F00795584 /* ReissnerMindlinPlate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReissnerMindlinPlate.cpp; sourceTree = "<group>"; };
+		6961E5E915D8C7E100795584 /* VonKarmanStrain2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VonKarmanStrain2D.cpp; sourceTree = "<group>"; };
+		6961E5FA15D8CB8000795584 /* StandardAtmosphere.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StandardAtmosphere.h; sourceTree = "<group>"; };
 		69677C9F1340386A002B32C8 /* FESystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = FESystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		69677EB413403B06002B32C8 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = System/Library/Frameworks/vecLib.framework; sourceTree = SDKROOT; };
 		6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplplotcxxd.dylib; path = ../../../../../../opt/local/lib/libplplotcxxd.dylib; sourceTree = "<group>"; };
 		6967BA83156A80C700F2FB18 /* libplplotd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplplotd.dylib; path = ../../../../../../opt/local/lib/libplplotd.dylib; sourceTree = "<group>"; };
+		6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural1DElementBase.cpp; sourceTree = "<group>"; };
+		6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural2DElementBase.cpp; sourceTree = "<group>"; };
+		6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural3DElementBase.cpp; sourceTree = "<group>"; };
+		EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearPlateElementBase.cpp; sourceTree = "<group>"; };
+		EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearPlateElementBase.h; sourceTree = "<group>"; };
+		EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearBeamElementBase.cpp; sourceTree = "<group>"; };
+		EB906D4C15D4428000C1F550 /* ParameterSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ParameterSet.h; sourceTree = "<group>"; };
+		EB906D5115D450E600C1F550 /* FlutterSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FlutterSolverBase.cpp; sourceTree = "<group>"; };
+		EB906D5215D450E600C1F550 /* FlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlutterSolverBase.h; sourceTree = "<group>"; };
+		EB906D6C15D9859700C1F550 /* TorsionBar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TorsionBar.cpp; sourceTree = "<group>"; };
+		EB906D7015D9875800C1F550 /* TorsionBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TorsionBar.h; sourceTree = "<group>"; };
 		EBAEDFAA15C1B73B0062459D /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		EBAEDFAB15C1B73B0062459D /* modify_dep_file.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = modify_dep_file.py; sourceTree = "<group>"; };
 		EBAEDFAD15C1B73B0062459D /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EigenTest.cpp; sourceTree = "<group>"; };
@@ -271,8 +323,6 @@
 		EBAEDFC615C1B73B0062459D /* macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = macros.h; sourceTree = "<group>"; };
 		EBAEDFC815C1B73B0062459D /* DataSourceBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DataSourceBase.cpp; sourceTree = "<group>"; };
 		EBAEDFC915C1B73B0062459D /* DataSourceBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataSourceBase.h; sourceTree = "<group>"; };
-		EBAEDFCC15C1B73B0062459D /* FlutterSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FlutterSolverBase.cpp; sourceTree = "<group>"; };
-		EBAEDFCD15C1B73B0062459D /* FlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlutterSolverBase.h; sourceTree = "<group>"; };
 		EBAEDFCE15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrequencyDomainFlutterSolverBase.cpp; sourceTree = "<group>"; };
 		EBAEDFCF15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrequencyDomainFlutterSolverBase.h; sourceTree = "<group>"; };
 		EBAEDFD015C1B73B0062459D /* PKFlutterSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PKFlutterSolver.cpp; sourceTree = "<group>"; };
@@ -280,9 +330,6 @@
 		EBAEDFD215C1B73B0062459D /* TimeDomainFlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeDomainFlutterSolverBase.h; sourceTree = "<group>"; };
 		EBAEDFD315C1B73B0062459D /* UGFlutterSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UGFlutterSolver.cpp; sourceTree = "<group>"; };
 		EBAEDFD415C1B73B0062459D /* UGFlutterSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UGFlutterSolver.h; sourceTree = "<group>"; };
-		EBAEDFD515C1B73B0062459D /* DiscretizationBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DiscretizationBase.cpp; sourceTree = "<group>"; };
-		EBAEDFD615C1B73B0062459D /* DiscretizationBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscretizationBase.h; sourceTree = "<group>"; };
-		EBAEDFD715C1B73B0062459D /* StructuralDiscretization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StructuralDiscretization.cpp; sourceTree = "<group>"; };
 		EBAEDFDA15C1B73B0062459D /* FieldBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FieldBase.cpp; sourceTree = "<group>"; };
 		EBAEDFDB15C1B73B0062459D /* FieldBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FieldBase.h; sourceTree = "<group>"; };
 		EBAEDFDC15C1B73B0062459D /* FieldPointIterator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FieldPointIterator.cpp; sourceTree = "<group>"; };
@@ -471,7 +518,6 @@
 		EBAEE0A315C1B73B0062459D /* EnumName.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EnumName.cpp; sourceTree = "<group>"; };
 		EBAEE0A415C1B73B0062459D /* EnumName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnumName.h; sourceTree = "<group>"; };
 		EBAEE0A515C1B73B0062459D /* Table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Table.h; sourceTree = "<group>"; };
-		EBAEE18A15C1B77F0062459D /* StructuralDiscretization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StructuralDiscretization.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -489,6 +535,66 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		691123A915D9E90F00FDCCCD /* Properties */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Properties;
+			sourceTree = "<group>";
+		};
+		6961E5C715D8A53300795584 /* Fluid */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Fluid;
+			sourceTree = "<group>";
+		};
+		6961E5C815D8A53300795584 /* Structure */ = {
+			isa = PBXGroup;
+			children = (
+				6961E5DE15D8C68500795584 /* DKTPlate.cpp */,
+				6961E5D515D8B7A000795584 /* DKTPlate.h */,
+				6961E5E515D8C6FE00795584 /* EulerBernoulliBeam.cpp */,
+				6961E5D215D8B76000795584 /* EulerBernoulliBeam.h */,
+				6961E5E215D8C6C200795584 /* ExtensionBar.cpp */,
+				6961E5CF15D8B6B000795584 /* ExtensionBar.h */,
+				EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */,
+				694DA49015E0732E004938D1 /* LinearBeamElementBase.h */,
+				EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */,
+				EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */,
+				6961E5E015D8C6AC00795584 /* Membrane.cpp */,
+				6961E5D115D8B71600795584 /* Membrane.h */,
+				6961E5D715D8B9BB00795584 /* PistonTheory.h */,
+				6961E5E715D8C78F00795584 /* ReissnerMindlinPlate.cpp */,
+				6961E5D415D8B77F00795584 /* ReissnerMindlinPlate.h */,
+				6961E5D915D8C42F00795584 /* Solid.h */,
+				6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */,
+				6961E5DB15D8C52600795584 /* Structural1DElementBase.h */,
+				6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */,
+				6961E5DC15D8C53900795584 /* Structural2DElementBase.h */,
+				6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */,
+				6961E5DD15D8C54900795584 /* Structural3DElementBase.h */,
+				6961E5CD15D8AE8500795584 /* StructuralElementBase.cpp */,
+				6961E5CA15D8AA6500795584 /* StructuralElementBase.h */,
+				6961E5D315D8B76C00795584 /* TimoshenkoBeam.h */,
+				EB906D6C15D9859700C1F550 /* TorsionBar.cpp */,
+				EB906D7015D9875800C1F550 /* TorsionBar.h */,
+				691123A715D9E58400FDCCCD /* VonKarmanStrain1D.cpp */,
+				691123A615D9E57700FDCCCD /* VonKarmanStrain1D.h */,
+				6961E5E915D8C7E100795584 /* VonKarmanStrain2D.cpp */,
+				6961E5D615D8B7C600795584 /* VonKarmanStrain2D.h */,
+			);
+			path = Structure;
+			sourceTree = "<group>";
+		};
+		6961E5C915D8A53300795584 /* Thermal */ = {
+			isa = PBXGroup;
+			children = (
+				6961E5CC15D8ACA700795584 /* ThermalElementBase.h */,
+			);
+			path = Thermal;
+			sourceTree = "<group>";
+		};
 		69677C941340386A002B32C8 = {
 			isa = PBXGroup;
 			children = (
@@ -553,6 +659,7 @@
 				EBAEE04115C1B73B0062459D /* OutputProcessors */,
 				EBAEE04915C1B73B0062459D /* Parallel */,
 				EBAEE04E15C1B73B0062459D /* Plotting */,
+				691123A915D9E90F00FDCCCD /* Properties */,
 				EBAEE05915C1B73B0062459D /* Quadrature */,
 				EBAEE05E15C1B73B0062459D /* Solvers */,
 				EBAEE09315C1B73B0062459D /* Surrogates */,
@@ -594,6 +701,7 @@
 			children = (
 				EBAEDFC815C1B73B0062459D /* DataSourceBase.cpp */,
 				EBAEDFC915C1B73B0062459D /* DataSourceBase.h */,
+				EB906D4C15D4428000C1F550 /* ParameterSet.h */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -601,11 +709,10 @@
 		EBAEDFCA15C1B73B0062459D /* Disciplines */ = {
 			isa = PBXGroup;
 			children = (
+				6961E5C715D8A53300795584 /* Fluid */,
+				6961E5C815D8A53300795584 /* Structure */,
+				6961E5C915D8A53300795584 /* Thermal */,
 				EBAEDFCB15C1B73B0062459D /* Aeroelasticity */,
-				EBAEDFD515C1B73B0062459D /* DiscretizationBase.cpp */,
-				EBAEDFD615C1B73B0062459D /* DiscretizationBase.h */,
-				EBAEDFD715C1B73B0062459D /* StructuralDiscretization.cpp */,
-				EBAEE18A15C1B77F0062459D /* StructuralDiscretization.h */,
 			);
 			path = Disciplines;
 			sourceTree = "<group>";
@@ -613,8 +720,8 @@
 		EBAEDFCB15C1B73B0062459D /* Aeroelasticity */ = {
 			isa = PBXGroup;
 			children = (
-				EBAEDFCC15C1B73B0062459D /* FlutterSolverBase.cpp */,
-				EBAEDFCD15C1B73B0062459D /* FlutterSolverBase.h */,
+				EB906D5115D450E600C1F550 /* FlutterSolverBase.cpp */,
+				EB906D5215D450E600C1F550 /* FlutterSolverBase.h */,
 				EBAEDFCE15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp */,
 				EBAEDFCF15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h */,
 				EBAEDFD015C1B73B0062459D /* PKFlutterSolver.cpp */,
@@ -933,6 +1040,7 @@
 				EBAEE0A315C1B73B0062459D /* EnumName.cpp */,
 				EBAEE0A415C1B73B0062459D /* EnumName.h */,
 				EBAEE0A515C1B73B0062459D /* Table.h */,
+				6961E5FA15D8CB8000795584 /* StandardAtmosphere.h */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -958,12 +1066,10 @@
 				EBAEE0BD15C1B73B0062459D /* ParameterBase.h in Headers */,
 				EBAEE0BE15C1B73B0062459D /* macros.h in Headers */,
 				EBAEE0C015C1B73B0062459D /* DataSourceBase.h in Headers */,
-				EBAEE0C215C1B73B0062459D /* FlutterSolverBase.h in Headers */,
 				EBAEE0C415C1B73B0062459D /* FrequencyDomainFlutterSolverBase.h in Headers */,
 				EBAEE0C615C1B73B0062459D /* PKFlutterSolver.h in Headers */,
 				EBAEE0C715C1B73B0062459D /* TimeDomainFlutterSolverBase.h in Headers */,
 				EBAEE0C915C1B73B0062459D /* UGFlutterSolver.h in Headers */,
-				EBAEE0CB15C1B73B0062459D /* DiscretizationBase.h in Headers */,
 				EBAEE0CF15C1B73B0062459D /* FieldBase.h in Headers */,
 				EBAEE0D115C1B73B0062459D /* FieldPointIterator.h in Headers */,
 				EBAEE0D315C1B73B0062459D /* LocalField.h in Headers */,
@@ -1062,7 +1168,9 @@
 				EBAEE18615C1B73B0062459D /* CommandLineArguments.h in Headers */,
 				EBAEE18815C1B73B0062459D /* EnumName.h in Headers */,
 				EBAEE18915C1B73B0062459D /* Table.h in Headers */,
-				EBAEE18B15C1B77F0062459D /* StructuralDiscretization.h in Headers */,
+				EB906D5415D450E600C1F550 /* FlutterSolverBase.h in Headers */,
+				EB906D7115D9876400C1F550 /* TorsionBar.h in Headers */,
+				EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1093,7 +1201,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0450;
-				ORGANIZATIONNAME = "Virginia Tech";
+				ORGANIZATIONNAME = "";
 			};
 			buildConfigurationList = 69677C991340386A002B32C8 /* Build configuration list for PBXProject "FESystem" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1123,15 +1231,16 @@
 				EBAEE0A915C1B73B0062459D /* main.cpp in Sources */,
 				EBAEE0AA15C1B73B0062459D /* CountedObject.cpp in Sources */,
 				EBAEE0AC15C1B73B0062459D /* Counter.cpp in Sources */,
+				EB906D4915D4330B00C1F550 /* FrequencyDomainFlutterSolverBase.cpp in Sources */,
+				EB906D4A15D4330E00C1F550 /* PKFlutterSolver.cpp in Sources */,
 				EBAEE0AE15C1B73B0062459D /* DegreeOfFreedomMap.cpp in Sources */,
+				EB906D4B15D4330F00C1F550 /* UGFlutterSolver.cpp in Sources */,
 				EBAEE0B015C1B73B0062459D /* DegreeOfFreedomObject.cpp in Sources */,
 				EBAEE0B315C1B73B0062459D /* FESystemBase.cpp in Sources */,
 				EBAEE0B615C1B73B0062459D /* FESystemExceptions.cpp in Sources */,
 				EBAEE0BA15C1B73B0062459D /* IteratorBase.cpp in Sources */,
 				EBAEE0BC15C1B73B0062459D /* ParameterBase.cpp in Sources */,
 				EBAEE0BF15C1B73B0062459D /* DataSourceBase.cpp in Sources */,
-				EBAEE0CA15C1B73B0062459D /* DiscretizationBase.cpp in Sources */,
-				EBAEE0CC15C1B73B0062459D /* StructuralDiscretization.cpp in Sources */,
 				EBAEE0CE15C1B73B0062459D /* FieldBase.cpp in Sources */,
 				EBAEE0D015C1B73B0062459D /* FieldPointIterator.cpp in Sources */,
 				EBAEE0D215C1B73B0062459D /* LocalField.cpp in Sources */,
@@ -1222,6 +1331,21 @@
 				EBAEE18215C1B73B0062459D /* SurrogateBase.cpp in Sources */,
 				EBAEE18515C1B73B0062459D /* CommandLineArguments.cpp in Sources */,
 				EBAEE18715C1B73B0062459D /* EnumName.cpp in Sources */,
+				EB906D5315D450E600C1F550 /* FlutterSolverBase.cpp in Sources */,
+				6961E5CE15D8AE8500795584 /* StructuralElementBase.cpp in Sources */,
+				6961E5DF15D8C68500795584 /* DKTPlate.cpp in Sources */,
+				6961E5E115D8C6AD00795584 /* Membrane.cpp in Sources */,
+				6961E5E315D8C6C300795584 /* ExtensionBar.cpp in Sources */,
+				6961E5E615D8C6FF00795584 /* EulerBernoulliBeam.cpp in Sources */,
+				6961E5E815D8C78F00795584 /* ReissnerMindlinPlate.cpp in Sources */,
+				6961E5EA15D8C7E200795584 /* VonKarmanStrain2D.cpp in Sources */,
+				EB906D6E15D9859C00C1F550 /* TorsionBar.cpp in Sources */,
+				691123A815D9E58400FDCCCD /* VonKarmanStrain1D.cpp in Sources */,
+				6985068615DC80B900CDDADF /* Structural1DElementBase.cpp in Sources */,
+				6985068815DC80C700CDDADF /* Structural2DElementBase.cpp in Sources */,
+				6985068A15DC80D900CDDADF /* Structural3DElementBase.cpp in Sources */,
+				EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */,
+				EB55F83A15E68C7900D8E6B1 /* LinearBeamElementBase.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

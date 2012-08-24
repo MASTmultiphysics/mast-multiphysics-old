@@ -61,6 +61,22 @@ FESystem::Mesh::ElemBase::getNNodes() const
 }
     
 
+
+void
+FESystem::Mesh::ElemBase::updateAfterMeshDeformation()
+{
+    // if all the nodes for this element have been set, initialize the local coordinate system
+    for (FESystemUInt i_node=0; i_node<this->getNNodes(); i_node++)
+        FESystemAssert0(this->physical_nodes[i_node] != NULL, FESystem::Exception::NULLQuantity);
+    
+    this->clearLocalPhysicalCoordinateSystem();
+    this->clearParentNondegenerateElement();
+    
+    this->initializeLocalPhysicalCoordinateSystem();
+    if (this->ifDegerateElement()) this->initializeParentNondegenerateElement();
+}
+
+
 void
 FESystem::Mesh::ElemBase::setNode(FESystemUInt i, FESystem::Mesh::Node& n)
 {

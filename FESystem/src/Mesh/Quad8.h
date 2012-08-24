@@ -131,6 +131,11 @@ namespace FESystem
             virtual void initializeParentNondegenerateElement();
 
             /*!
+             *    clears the parent nondegenerate element before it can be updated
+             */
+            virtual void clearParentNondegenerateElement();
+
+            /*!
              *   Center node for parent nondegenerate element
              */
             FESystem::Mesh::Node* center_node_for_parent_nondegenerate_elem;

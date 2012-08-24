@@ -92,6 +92,18 @@ FESystem::Mesh::Quad8::getParentNondegenerateElem() const
 }
 
 
+void
+FESystem::Mesh::Quad8::clearParentNondegenerateElement()
+{
+    if (this->parent_nondegenerate_elem != NULL)
+        delete this->parent_nondegenerate_elem;
+    this->parent_nondegenerate_elem = NULL;
+    
+    if (this->center_node_for_parent_nondegenerate_elem != NULL)
+        delete this->center_node_for_parent_nondegenerate_elem;
+    this->center_node_for_parent_nondegenerate_elem = NULL;
+}
+
 
 void
 FESystem::Mesh::Quad8::initializeParentNondegenerateElement()

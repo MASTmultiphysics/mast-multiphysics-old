@@ -25,8 +25,8 @@ namespace FESystem
         public:
             EulerBernoulliBeam();
             
-            virtual ~EulerBernoulliBeam();
-            
+            virtual ~EulerBernoulliBeam();            
+
             virtual void calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             
             virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);

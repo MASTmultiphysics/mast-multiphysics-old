@@ -10,7 +10,7 @@
 #define FESystem_DKTPlate_h
 
 // FESystem includes
-#include "Disciplines/Structure/Structural2DElementBase.h"
+#include "Disciplines/Structure/LinearPlateElementBase.h"
 
 
 namespace FESystem
@@ -21,7 +21,7 @@ namespace FESystem
     
     namespace Structures
     {
-        class DKTPlate: public FESystem::Structures::Structural2DElementBase
+        class DKTPlate: public FESystem::Structures::LinearPlateElementBase
         {
         public:
             DKTPlate();
@@ -30,18 +30,16 @@ namespace FESystem
             
             virtual void clear();
             
+
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe_tri3, FESystem::FiniteElement::FiniteElementBase& fe_tri6,
                                     const FESystem::Quadrature::QuadratureBase& q_tri3, const FESystem::Quadrature::QuadratureBase& q_tri6,
                                     FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble th);
 
             virtual void calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             
-            virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-
-            virtual void transformMatrixToGlobalCoordinate(const std::vector<FESystem::Structures::StructuralVariable>& vars,
-                                                           const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_cs_mat,
-                                                           FESystem::Numerics::MatrixBase<FESystemDouble>& global_cs_mat);
+            virtual void calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec);
             
+            virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);            
             
             virtual void getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                          FESystem::Numerics::MatrixBase<FESystemDouble>& mat) ;
@@ -56,6 +54,8 @@ namespace FESystem
             void calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
             
             void calculateBendingOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
+            
+            FESystemBoolean if_first_call;
             
             FESystem::FiniteElement::FiniteElementBase* finite_element_tri6;
             

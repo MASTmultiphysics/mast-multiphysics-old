@@ -42,6 +42,16 @@ FESystem::Mesh::FaceElemBase::getDimension() const
 
 
 void
+FESystem::Mesh::FaceElemBase::clearLocalPhysicalCoordinateSystem()
+{
+    if (this->local_coordinate_system != NULL)
+        delete this->local_coordinate_system;
+    
+    this->local_coordinate_system = NULL;
+}
+
+
+void
 FESystem::Mesh::FaceElemBase::initializeLocalPhysicalCoordinateSystem()
 {
     // make sure that the coordinate system has not already been set

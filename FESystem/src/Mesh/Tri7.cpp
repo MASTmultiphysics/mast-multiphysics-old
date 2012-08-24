@@ -64,6 +64,13 @@ FESystem::Mesh::Tri7::getParentToDegenerateElemMappingMatrix() const
 
 
 
+void
+FESystem::Mesh::Tri7::clearParentNondegenerateElement()
+{
+    
+}
+
+
 void 
 FESystem::Mesh::Tri7::initializeParentNondegenerateElement()
 {

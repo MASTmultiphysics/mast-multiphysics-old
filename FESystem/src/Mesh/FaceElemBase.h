@@ -21,7 +21,7 @@ namespace FESystem
 	{
         /*!
          *   This element is the base class for elements that are faces defined in a two dimensional space
-         */         
+         */
 		class FaceElemBase: public ElemBase
 		{
 		public:
@@ -35,118 +35,124 @@ namespace FESystem
             /*!
              *   Returns the number of dimensions of this element
              */
-            virtual FESystemUInt getDimension() const; 
-
+            virtual FESystemUInt getDimension() const;
+            
 		protected:
 			
             /*!
-             *   Initializes the local coordinate system: uses the nodes 0, 1 and 2 of the element. 
+             *   Initializes the local coordinate system: uses the nodes 0, 1 and 2 of the element.
              */
             virtual void initializeLocalPhysicalCoordinateSystem();
-		};
+            
+            /*!
+             *   clears the data structure for the local coordinate system
+             */
+            virtual void clearLocalPhysicalCoordinateSystem();
+            
+        };
         
         
         /*!
          *   This defines the base element for quads.
-         */         
-		class QuadElemBase: public FaceElemBase
-		{
-		public:
+         */
+        class QuadElemBase: public FaceElemBase
+        {
+        public:
             /*!
              *   The constructor takes the number of nodes in this element
              */
-			QuadElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
-			
-			virtual ~QuadElemBase();
-			                                    
+            QuadElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
+            
+            virtual ~QuadElemBase();
+            
             /*!
-             *   Each bounadry in FE is defined by one of the computational coordinates being constant. This method returns the 
-             *   number of that computational coordinate and its value for the boundary, in the provided \p coord_id and \p coord_val variables. 
+             *   Each bounadry in FE is defined by one of the computational coordinates being constant. This method returns the
+             *   number of that computational coordinate and its value for the boundary, in the provided \p coord_id and \p coord_val variables.
              *   This is useful for doing computations on the boundaries, for example, application of boundary conditions
              */
-            virtual void getConstantCoordinateIDAndValueForBoundary(const FESystemUInt b_id, FESystemUInt& coord_id, FESystemDouble& coord_val) const; 
-
+            virtual void getConstantCoordinateIDAndValueForBoundary(const FESystemUInt b_id, FESystemUInt& coord_id, FESystemDouble& coord_val) const;
+            
             /*!
              *   Returns the map of boundary id and nodes defining the boundary
              */
             virtual const std::map<FESystemUInt, std::vector<FESystemUInt> >& getBoundaryIDAndBoundaryNodeMap() const;
-
-		protected:
-			            
+            
+        protected:
+            
             /*!
              *   Map of boundary to set of nodes on the boundary
              */
             static std::auto_ptr<std::map<FESystemUInt, std::vector<FESystemUInt> > > quad_boundary_node_set;
             
-		};
-
+        };
+        
         
         /*!
          *   This defines the base element for triangles.
-         */         
-		class TriElemBase: public FaceElemBase
-		{
-		public:
+         */
+        class TriElemBase: public FaceElemBase
+        {
+        public:
             /*!
              *   The constructor takes the number of nodes in this element
              */
-			TriElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
-			
-			virtual ~TriElemBase();
-			
+            TriElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
+            
+            virtual ~TriElemBase();
+            
             /*!
              *   Dummy function call for Tri. This throws an error, since it does not exist for Tri elements
              */
             void getLocalComputationalCoordinateForLocalNodeID(FESystemUInt id, FESystem::Geometry::Point& p) const;
             
-            /*! 
+            /*!
              *   Dummy function call for Tri. This throws an error, since it does not exist for Tri elements
              */
-            virtual FESystemUInt getNNodesAlongDimension(FESystemUInt n) const;            
+            virtual FESystemUInt getNNodesAlongDimension(FESystemUInt n) const;
             
             /*!
              *   Dummy function call for Tri. This throws an error, since it does not exist for Tri elements
              */
             virtual FESystemUInt getLocalNodeIDALongDim(FESystemUInt n_id, FESystemUInt d) const;
-
+            
             /*!
              *   Dummy function call for Tri. This throws an error, since it does not exist for Tri elements
              */
             const FESystem::Utility::Table<FESystemUInt>& getPointDimensionIDTable() const;
-
+            
             /*!
-             *   Returns true if the element is a degerate element from Quad or Hex element. This is used for 
-             *   elements like Triangle, Tetrahedron, Prisms, Pyramids, etc. 
+             *   Returns true if the element is a degerate element from Quad or Hex element. This is used for
+             *   elements like Triangle, Tetrahedron, Prisms, Pyramids, etc.
              */
             virtual bool ifDegerateElement() const;
             
             /*!
-             *   Returns the parent nondegerate element from which this element is derived. 
+             *   Returns the parent nondegerate element from which this element is derived.
              */
             virtual const FESystem::Mesh::ElemBase& getParentNondegenerateElem() const;
             
             /*!
-             *   Each bounadry in FE is defined by one of the computational coordinates being constant. This method returns the 
-             *   number of that computational coordinate and its value for the boundary, in the provided \p coord_id and \p coord_val variables. 
+             *   Each bounadry in FE is defined by one of the computational coordinates being constant. This method returns the
+             *   number of that computational coordinate and its value for the boundary, in the provided \p coord_id and \p coord_val variables.
              *   This is useful for doing computations on the boundaries, for example, application of boundary conditions
              */
-            virtual void getConstantCoordinateIDAndValueForBoundary(const FESystemUInt b_id, FESystemUInt& coord_id, FESystemDouble& coord_val) const; 
-
+            virtual void getConstantCoordinateIDAndValueForBoundary(const FESystemUInt b_id, FESystemUInt& coord_id, FESystemDouble& coord_val) const;
+            
             /*!
              *   Returns the map of boundary id and nodes defining the boundary
              */
             virtual const std::map<FESystemUInt, std::vector<FESystemUInt> >& getBoundaryIDAndBoundaryNodeMap() const;
             
-		protected:
-
+        protected:
+            
             /*!
              *   Map of boundary to set of nodes on the boundary
              */
             static std::auto_ptr<std::map<FESystemUInt, std::vector<FESystemUInt> > > tri_boundary_node_set;
-			
-		};
-
-	}
+            
+        };
+        
+    }
 }
 
 

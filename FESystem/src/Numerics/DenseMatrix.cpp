@@ -997,41 +997,6 @@ FESystem::Numerics::DenseMatrix<ValType>::multiplySubVectorWithSubColumn(const F
 
 template <typename ValType>
 void 
-FESystem::Numerics::DenseMatrix<ValType>::matrixRightMultiply (ValType f, const MatrixBase<ValType>& t,
-                                                               MatrixBase<ValType>& res) const
-{
-    std::pair<FESystemUInt, FESystemUInt> m1_s = this->getSize();
-    std::pair<FESystemUInt, FESystemUInt> m2_s = t.getSize();
-    std::pair<FESystemUInt, FESystemUInt> res_s = res.getSize();
-    
-    FESystemAssert4((m1_s.second == m2_s.first), 
-                    FESystem::Numerics::MatrixMultiplicationSizeMismatch,
-                    m1_s.first, m1_s.second, m2_s.first, m2_s.second); 
-    FESystemAssert4((res_s.first == m1_s.first), 
-                    FESystem::Numerics::MatrixMultiplicationSizeMismatch,
-                    m1_s.first, m1_s.second, res_s.first, res_s.second); 
-    FESystemAssert4((res_s.second == m2_s.second), 
-                    FESystem::Numerics::MatrixMultiplicationSizeMismatch,
-                    m2_s.first, m2_s.second, res_s.first, res_s.second); 
-    
-    // get the vector components 
-    const ValType* m2_vals = t.getMatrixValues();
-    res.zero();
-    ValType* r_vals = res.getMatrixValues();
-    
-    for (FESystemUInt i=0; i< m1_s.first; i++)
-        for (FESystemUInt j=0; j < m2_s.second; j++) 
-        {
-            for (FESystemUInt k=0; k < m1_s.second; k++) 
-                r_vals[j*res_s.first + i] += this->mat_vals[k*m1_s.first + i] * 
-                m2_vals[j*m2_s.first + k];
-            r_vals[j*res_s.first + i] *= f;
-        }
-}
-
-
-template <typename ValType>
-void 
 FESystem::Numerics::DenseMatrix<ValType>::matrixRightMultiplySubMatrix(FESystemUInt row1, FESystemUInt row2, FESystemUInt col1, FESystemUInt col2,
                                                                        ValType f, const MatrixBase<ValType>& t, MatrixBase<ValType>& res) const
 {
@@ -1064,6 +1029,40 @@ FESystem::Numerics::DenseMatrix<ValType>::matrixRightMultiplySubMatrix(FESystemU
 
 
 
+template <typename ValType>
+void
+FESystem::Numerics::DenseMatrix<ValType>::matrixRightMultiply (ValType f, const MatrixBase<ValType>& t,
+                                                               MatrixBase<ValType>& res) const
+{
+    std::pair<FESystemUInt, FESystemUInt> m1_s = this->getSize();
+    std::pair<FESystemUInt, FESystemUInt> m2_s = t.getSize();
+    std::pair<FESystemUInt, FESystemUInt> res_s = res.getSize();
+    
+    FESystemAssert4((m1_s.second == m2_s.first),
+                    FESystem::Numerics::MatrixMultiplicationSizeMismatch,
+                    m1_s.first, m1_s.second, m2_s.first, m2_s.second);
+    FESystemAssert4((res_s.first == m1_s.first),
+                    FESystem::Numerics::MatrixMultiplicationSizeMismatch,
+                    m1_s.first, m1_s.second, res_s.first, res_s.second);
+    FESystemAssert4((res_s.second == m2_s.second),
+                    FESystem::Numerics::MatrixMultiplicationSizeMismatch,
+                    m2_s.first, m2_s.second, res_s.first, res_s.second);
+    
+    // get the vector components
+    const ValType* m2_vals = t.getMatrixValues();
+    res.zero();
+    ValType* r_vals = res.getMatrixValues();
+    
+    for (FESystemUInt i=0; i< m1_s.first; i++)
+        for (FESystemUInt j=0; j < m2_s.second; j++)
+        {
+            for (FESystemUInt k=0; k < m1_s.second; k++)
+                r_vals[j*res_s.first + i] += this->mat_vals[k*m1_s.first + i] * m2_vals[j*m2_s.first + k];
+            r_vals[j*res_s.first + i] *= f;
+        }
+}
+
+
 
 
 template <typename ValType>
@@ -1094,8 +1093,7 @@ FESystem::Numerics::DenseMatrix<ValType>::matrixTransposeRightMultiply (ValType 
         for (FESystemUInt j=0; j < m2_s.second; j++) 
         {
             for (FESystemUInt k=0; k < m1_s.first; k++) 
-                r_vals[j*res_s.first + i] += this->mat_vals[i*m1_s.first + k] * 
-                m2_vals[j*m2_s.first + k];
+                r_vals[j*res_s.first + i] += this->mat_vals[i*m1_s.first + k] *  m2_vals[j*m2_s.first + k];
             r_vals[j*res_s.first + i] *= f;
         }
 }
@@ -1131,8 +1129,7 @@ FESystem::Numerics::DenseMatrix<ValType>::matrixRightMultiplyTranspose (ValType 
         for (FESystemUInt j=0; j < m2_s.first; j++) 
         {
             for (FESystemUInt k=0; k < m1_s.second; k++) 
-                r_vals[j*res_s.first + i] += this->mat_vals[k*m1_s.first + i] * 
-                m2_vals[k*m2_s.first + j];
+                r_vals[j*res_s.first + i] += this->mat_vals[k*m1_s.first + i] * m2_vals[k*m2_s.first + j];
             r_vals[j*res_s.first + i] *= f;
         }
 }

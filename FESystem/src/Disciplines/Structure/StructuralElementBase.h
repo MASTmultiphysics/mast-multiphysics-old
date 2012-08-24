@@ -61,6 +61,11 @@ namespace FESystem
             virtual ~StructuralElementBase();
             
             /*!
+             *   Returns the number of active degrees of freedom for this element
+             */
+            virtual FESystemUInt getNElemDofs() const=0;
+            
+            /*!
              *   returns the name of the variable as a character
              */
             static std::string getVariableName(FESystem::Structures::StructuralVariable var);
@@ -71,14 +76,20 @@ namespace FESystem
             static FESystem::Structures::StructuralVariable getVariableEnum(const std::string& var);
             
             
-            virtual void transformMatrixToGlobalCoordinate(const std::vector<FESystem::Structures::StructuralVariable>& vars,
-                                                           const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_cs_mat,
-                                                           FESystem::Numerics::MatrixBase<FESystemDouble>& global_cs_mat) = 0;
+            /*!
+             *    Returns the indices for the matrix entries that this element will contribute to. For instance, a bar element will only have the extensional stiffness
+             *    matrix, and the indices will correspond to the location of the stiffness terms corresponding to the u-dofs.
+             */
+            virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec) = 0;
             
             
             virtual void getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                          FESystem::Numerics::MatrixBase<FESystemDouble>& mat) = 0;
             
+            virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat) = 0;
+
+            virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec, FESystem::Numerics::VectorBase<FESystemDouble>& global_vec) = 0;
+
         protected:
             
             virtual void clear();
@@ -87,6 +98,8 @@ namespace FESystem
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                     FESystemDouble E, FESystemDouble nu, FESystemDouble rho);
 
+            void calculateDeformationTransformationMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+            
             FESystemBoolean if_initialized;
             
             const FESystem::Mesh::ElemBase* geometric_elem;

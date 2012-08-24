@@ -21,33 +21,26 @@ namespace FESystem
         {
         public:
             
-            LinearBeamElementBase():
-            if_include_chordwise_stiffness(false),
-            I_tr_val(0.0),
-            I_ch_val(0.0)
-            { }
+            LinearBeamElementBase();
             
-            ~LinearBeamElementBase() {}
+            ~LinearBeamElementBase();
             
-            FESystemBoolean ifIncludeChordwiseStiffness() {return this->if_include_chordwise_stiffness;}
+            FESystemBoolean ifIncludeChordwiseStiffness();
+
+            virtual FESystemUInt getNElemDofs() const;
             
+            /*!
+             *    Returns the indices for the matrix entries that this element will contribute to. For instance, a bar element will only have the extensional stiffness
+             *    matrix, and the indices will correspond to the location of the stiffness terms corresponding to the u-dofs.
+             */
+            virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec);
+
         protected:
             
-            virtual void clear()
-            {
-                this->if_include_chordwise_stiffness = false;
-                this->I_tr_val = 0.0;
-                this->I_ch_val = 0.0;
-            }
+            virtual void clear();
             
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                    FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemBoolean if_chordwise)
-            {
-                FESystem::Structures::StructuralElementBase::initialize(elem,fe,q_rule,E,nu,rho);
-                this->if_include_chordwise_stiffness = if_include_chordwise_stiffness;
-                this->I_tr_val = I_tr;
-                this->I_ch_val = I_ch;
-            }
+                                    FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemBoolean if_chordwise);
             
             FESystemBoolean if_include_chordwise_stiffness;
             

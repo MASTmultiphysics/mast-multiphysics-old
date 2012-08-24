@@ -99,6 +99,13 @@ FESystem::Mesh::Quad9::getParentNondegenerateElem() const
 
 
 void
+FESystem::Mesh::Quad9::clearParentNondegenerateElement()
+{
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+}
+
+
+void
 FESystem::Mesh::Quad9::initializeParentNondegenerateElement()
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);

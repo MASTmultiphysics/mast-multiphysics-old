@@ -79,6 +79,10 @@ namespace FESystem
              */
             virtual void initializeParentNondegenerateElement();
 
+            /*!
+             *    clears the parent nondegenerate element before it can be updated
+             */
+            virtual void clearParentNondegenerateElement();
 		};
 	}
 }

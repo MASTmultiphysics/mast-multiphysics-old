@@ -55,7 +55,7 @@ namespace FESystem
             /*!
              *   Clears all the data structures of the object, before initializing it
              */
-            void clear();
+            virtual void clear();
 
             /*!
              *   This will initialize the data structures so that the shape functions, and the required derivatives can be calculated

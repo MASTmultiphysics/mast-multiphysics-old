@@ -97,6 +97,13 @@ FESystem::Mesh::EdgeElemBase::getConstantCoordinateIDAndValueForBoundary(const F
 }
 
 
+void
+FESystem::Mesh::EdgeElemBase::clearParentNondegenerateElement()
+{
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+}
+
+
 void 
 FESystem::Mesh::EdgeElemBase::initializeParentNondegenerateElement()
 {
@@ -108,6 +115,16 @@ const std::map<FESystemUInt, std::vector<FESystemUInt> >&
 FESystem::Mesh::EdgeElemBase::getBoundaryIDAndBoundaryNodeMap() const
 {
     return *FESystem::Mesh::EdgeElemBase::edge_boundary_node_set;
+}
+
+
+
+void
+FESystem::Mesh::EdgeElemBase::clearLocalPhysicalCoordinateSystem()
+{
+    if (this->local_coordinate_system != NULL)
+        delete this->local_coordinate_system;
+    this->local_coordinate_system = NULL;
 }
 
 

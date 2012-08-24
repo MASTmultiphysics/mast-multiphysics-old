@@ -135,7 +135,12 @@ namespace FESystem
              *   Dummy function call for Quad. This throws an error, since it does not exist for Quad elements
              */
             virtual void initializeParentNondegenerateElement();
-		};
+
+            /*!
+             *    clears the parent nondegenerate element before it can be updated
+             */
+            virtual void clearParentNondegenerateElement();
+        };
         
 	}
 }

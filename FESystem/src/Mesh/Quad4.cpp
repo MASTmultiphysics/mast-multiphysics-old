@@ -102,6 +102,13 @@ FESystem::Mesh::Quad4::getParentNondegenerateElem() const
 
 
 void
+FESystem::Mesh::Quad4::clearParentNondegenerateElement()
+{
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+}
+
+
+void
 FESystem::Mesh::Quad4::initializeParentNondegenerateElement()
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);

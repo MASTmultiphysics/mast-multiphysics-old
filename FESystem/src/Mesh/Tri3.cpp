@@ -58,6 +58,15 @@ FESystem::Mesh::Tri3::getParentToDegenerateElemMappingMatrix() const
 
 
 
+void
+FESystem::Mesh::Tri3::clearParentNondegenerateElement()
+{
+    if (this->parent_nondegenerate_elem != NULL)
+        delete this->parent_nondegenerate_elem;
+    this->parent_nondegenerate_elem = NULL;
+}
+
+
 void 
 FESystem::Mesh::Tri3::initializeParentNondegenerateElement()
 {

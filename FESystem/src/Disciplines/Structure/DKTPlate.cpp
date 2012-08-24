@@ -145,11 +145,12 @@ namespace FESystem
 
 
 FESystem::Structures::DKTPlate::DKTPlate():
-FESystem::Structures::Structural2DElementBase(),
+FESystem::Structures::LinearPlateElementBase(),
+if_first_call(true),
 finite_element_tri6(NULL),
 quadrature_tri6(NULL)
 {
-    this->origin = new FESystem::Geometry::Point(2);
+    this->origin = new FESystem::Geometry::Point(3);
     this->tri6_elem = new FESystem::Mesh::Tri6;
     this->node0 = new FESystem::Mesh::Node(this->origin->getCoordinateSystem());
     this->node1 = new FESystem::Mesh::Node(this->origin->getCoordinateSystem());
@@ -188,14 +189,6 @@ FESystem::Structures::DKTPlate::clear()
 
 
 
-void
-FESystem::Structures::DKTPlate::transformMatrixToGlobalCoordinate(const std::vector<FESystem::Structures::StructuralVariable>& vars,
-                                                                  const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_cs_mat,
-                                                                  FESystem::Numerics::MatrixBase<FESystemDouble>& global_cs_mat)
-{
-    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
-}
-
 
 void
 FESystem::Structures::DKTPlate::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
@@ -206,11 +199,15 @@ FESystem::Structures::DKTPlate::getStressTensor(const FESystem::Numerics::Vector
 
 
 
+
+
 void
 FESystem::Structures::DKTPlate::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe_tri3, FESystem::FiniteElement::FiniteElementBase& fe_tri6,
                                            const FESystem::Quadrature::QuadratureBase& q_tri3, const FESystem::Quadrature::QuadratureBase& q_tri6,
                                            FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble th)
 {
+    FESystemAssert0(elem.getElementType() == FESystem::Mesh::TRI3, FESystem::Exception::InvalidValue);
+    
     FESystem::Structures::Structural2DElementBase::initialize(elem, fe_tri3, q_tri3, E, nu, rho, th);
     
     this->finite_element_tri6 = &fe_tri6;
@@ -224,12 +221,22 @@ FESystem::Structures::DKTPlate::initialize(const FESystem::Mesh::ElemBase& elem,
     this->node4->copyVector(elem.getNode(1)); this->node4->add(1.0, elem.getNode(2)); this->node4->scale(0.5);
     this->node5->copyVector(elem.getNode(2)); this->node5->add(1.0, elem.getNode(0)); this->node5->scale(0.5);
     
-    this->tri6_elem->setNode(0, *(this->node0));
-    this->tri6_elem->setNode(1, *(this->node1));
-    this->tri6_elem->setNode(2, *(this->node2));
-    this->tri6_elem->setNode(3, *(this->node3));
-    this->tri6_elem->setNode(4, *(this->node4));
-    this->tri6_elem->setNode(5, *(this->node5));
+    
+    if (if_first_call)
+    {
+        this->tri6_elem->setNode(0, *(this->node0));
+        this->tri6_elem->setNode(1, *(this->node1));
+        this->tri6_elem->setNode(2, *(this->node2));
+        this->tri6_elem->setNode(3, *(this->node3));
+        this->tri6_elem->setNode(4, *(this->node4));
+        this->tri6_elem->setNode(5, *(this->node5));
+        if_first_call = false;
+    }
+    else
+        this->tri6_elem->updateAfterMeshDeformation();
+
+    this->finite_element_tri6->clear();
+    this->finite_element_tri6->reinit(*(this->tri6_elem));
 }
 
 
@@ -237,6 +244,9 @@ void
 FESystem::Structures::DKTPlate::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+    
+    FESystemAssert4(((s.first == 3*n) && (s.second == 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(3,3); B_mat.resize(3, 3*n); tmp_mat1.resize(3, 3*n), tmp_mat2.resize(3*n, 3*n);
@@ -259,6 +269,25 @@ FESystem::Structures::DKTPlate::calculateConsistentMassMatrix(FESystem::Numerics
         
         mat.add(q_weight[i]*jac, tmp_mat2);
     }
+    
+}
+
+
+
+void
+FESystem::Structures::DKTPlate::calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec)
+{
+    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    
+    FESystemAssert2(vec.getSize() == 3*n, FESystem::Exception::DimensionsDoNotMatch, 3*n, vec.getSize());
+    
+    vec.zero();
+    FESystemDouble wt = this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature)) * this->th_val * this->rho_val;
+    
+    wt /= (1.0*n);
+    vec.setAllVals(wt*10e-4);
+    for (FESystemUInt i=0; i<n; i++)
+        vec.setVal(i, wt);
 }
 
 
@@ -314,7 +343,7 @@ FESystem::Structures::DKTPlate::calculateInertiaOperatorMatrix(const FESystem::G
 void
 FESystem::Structures::DKTPlate::calculateBendingOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->finite_element_tri6->getNShapeFunctions();
     
     static std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
     derivatives_x[0] = 1; derivatives_x[1] = 0;

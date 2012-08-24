@@ -567,17 +567,35 @@ FESystem::Numerics::LocalVector<ValType>::crossProduct(const FESystem::Numerics:
 
 
 template <typename ValType>
-void 
-FESystem::Numerics::LocalVector<ValType>::add(ValType f, const VectorBase<ValType>& t)
+void
+FESystem::Numerics::LocalVector<ValType>::add(ValType f, const FESystem::Numerics::VectorBase<ValType>& t)
 {
-    FESystemAssert2(t.getSize() == this->getSize(), 
+    FESystemAssert2(t.getSize() == this->getSize(),
                     FESystem::Numerics::VectorSizeMismatch,
-                    this->getSize(), t.getSize()); 
+                    this->getSize(), t.getSize());
     
     const ValType* val = t.getVectorValues();
     
-    for (unsigned int i=0; i < this->getSize(); i++) 
+    for (unsigned int i=0; i < this->getSize(); i++)
         this->vec_vals[i] += f * val[i];
+}
+
+
+
+template <typename ValType>
+void 
+FESystem::Numerics::LocalVector<ValType>::addVal(const std::vector<FESystemUInt>& indices, const FESystem::Numerics::VectorBase<ValType>& t)
+{
+    FESystemAssert2(t.getSize() == indices.size(), FESystem::Numerics::VectorSizeMismatch, indices.size(), t.getSize());
+    
+    const ValType* val = t.getVectorValues();
+    FESystemUInt n = this->getSize();
+    
+    for (unsigned int i=0; i < indices.size(); i++)
+    {
+        FESystemAssert2(indices[i] < n, FESystem::Exception::IndexOutOfBound, indices[i], n);
+        this->vec_vals[indices[i]] += val[i];
+    }
 }
 
 

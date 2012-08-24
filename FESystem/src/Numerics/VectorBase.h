@@ -99,6 +99,11 @@ namespace FESystem
 			virtual void addVal(const FESystemUInt i, const ValType& val) = 0; 
 
             /*!
+             *     Adds the elements of \p val to the elements of this vector identified by the indices in \p indices.
+             */
+			virtual void addVal(const std::vector<FESystemUInt>& indices, const FESystem::Numerics::VectorBase<ValType>& val) = 0;
+
+            /*!
              *     Sets all elements of this vector to \p val
              */
 			virtual void setAllVals(const ValType& val) = 0; 
