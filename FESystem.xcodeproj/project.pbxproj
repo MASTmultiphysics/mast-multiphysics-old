@@ -19,6 +19,7 @@
 		69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69677EB413403B06002B32C8 /* vecLib.framework */; };
 		6967BA82156A80B000F2FB18 /* libplplotcxxd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */; };
 		6967BA84156A80C700F2FB18 /* libplplotd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6967BA83156A80C700F2FB18 /* libplplotd.dylib */; };
+		6979EF9915EAC34A0060C0EC /* TimoshenkoBeam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6979EF9815EAC34A0060C0EC /* TimoshenkoBeam.cpp */; };
 		6985068615DC80B900CDDADF /* Structural1DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */; };
 		6985068815DC80C700CDDADF /* Structural2DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */; };
 		6985068A15DC80D900CDDADF /* Structural3DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */; };
@@ -284,6 +285,7 @@
 		69677EB413403B06002B32C8 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = System/Library/Frameworks/vecLib.framework; sourceTree = SDKROOT; };
 		6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplplotcxxd.dylib; path = ../../../../../../opt/local/lib/libplplotcxxd.dylib; sourceTree = "<group>"; };
 		6967BA83156A80C700F2FB18 /* libplplotd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libplplotd.dylib; path = ../../../../../../opt/local/lib/libplplotd.dylib; sourceTree = "<group>"; };
+		6979EF9815EAC34A0060C0EC /* TimoshenkoBeam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TimoshenkoBeam.cpp; sourceTree = "<group>"; };
 		6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural1DElementBase.cpp; sourceTree = "<group>"; };
 		6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural2DElementBase.cpp; sourceTree = "<group>"; };
 		6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural3DElementBase.cpp; sourceTree = "<group>"; };
@@ -576,6 +578,7 @@
 				6961E5DD15D8C54900795584 /* Structural3DElementBase.h */,
 				6961E5CD15D8AE8500795584 /* StructuralElementBase.cpp */,
 				6961E5CA15D8AA6500795584 /* StructuralElementBase.h */,
+				6979EF9815EAC34A0060C0EC /* TimoshenkoBeam.cpp */,
 				6961E5D315D8B76C00795584 /* TimoshenkoBeam.h */,
 				EB906D6C15D9859700C1F550 /* TorsionBar.cpp */,
 				EB906D7015D9875800C1F550 /* TorsionBar.h */,
@@ -1346,6 +1349,7 @@
 				6985068A15DC80D900CDDADF /* Structural3DElementBase.cpp in Sources */,
 				EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */,
 				EB55F83A15E68C7900D8E6B1 /* LinearBeamElementBase.cpp in Sources */,
+				6979EF9915EAC34A0060C0EC /* TimoshenkoBeam.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

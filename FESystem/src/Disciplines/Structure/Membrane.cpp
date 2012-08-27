@@ -50,7 +50,7 @@ FESystem::Structures::Membrane::getActiveElementMatrixIndices(std::vector<FESyst
 void
 FESystem::Structures::Membrane::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == 2*n) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
@@ -83,7 +83,7 @@ FESystem::Structures::Membrane::calculateConsistentMassMatrix(FESystem::Numerics
 void
 FESystem::Structures::Membrane::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == 2*n) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
@@ -116,7 +116,7 @@ FESystem::Structures::Membrane::calculateStiffnessMatrix(FESystem::Numerics::Mat
 void
 FESystem::Structures::Membrane::calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
     FESystemAssert4(((s.first == 3) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 2*n, s.first, s.second);
@@ -165,7 +165,7 @@ FESystem::Structures::Membrane::getMaterialMassMatrix(FESystem::Numerics::Matrix
 void
 FESystem::Structures::Membrane::getMaterialComplianceMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == 3) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 2*n, s.first, s.second);

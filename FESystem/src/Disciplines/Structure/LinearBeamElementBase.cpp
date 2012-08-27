@@ -14,9 +14,10 @@
 
 FESystem::Structures::LinearBeamElementBase::LinearBeamElementBase():
 FESystem::Structures::Structural1DElementBase(),
-if_include_chordwise_stiffness(false),
+if_include_lateral_stiffness(false),
 I_tr_val(0.0),
-I_ch_val(0.0)
+I_ch_val(0.0),
+area_val(0.0)
 {
     
 }
@@ -32,7 +33,7 @@ FESystem::Structures::LinearBeamElementBase::~LinearBeamElementBase()
 FESystemUInt
 FESystem::Structures::LinearBeamElementBase::getNElemDofs() const
 {
-    if (this->if_include_chordwise_stiffness)
+    if (this->if_include_lateral_stiffness)
         return 4*this->geometric_elem->getNNodes();
     else
         return 2*this->geometric_elem->getNNodes();
@@ -43,7 +44,7 @@ FESystem::Structures::LinearBeamElementBase::getNElemDofs() const
 FESystemBoolean
 FESystem::Structures::LinearBeamElementBase::ifIncludeChordwiseStiffness()
 {
-    return this->if_include_chordwise_stiffness;
+    return this->if_include_lateral_stiffness;
 }
             
 
@@ -54,7 +55,7 @@ FESystem::Structures::LinearBeamElementBase::getActiveElementMatrixIndices(std::
 {
     FESystemUInt n = this->geometric_elem->getNNodes();
     
-    if (this->if_include_chordwise_stiffness)
+    if (this->if_include_lateral_stiffness)
     {
         vec.resize(4*n);
         for (FESystemUInt i=0; i<4*n; i++) vec[i] = n + i; // v-, w-displacement, theta-x and theta-y
@@ -72,7 +73,7 @@ FESystem::Structures::LinearBeamElementBase::getActiveElementMatrixIndices(std::
 void
 FESystem::Structures::LinearBeamElementBase::clear()
 {
-    this->if_include_chordwise_stiffness = false;
+    this->if_include_lateral_stiffness = false;
     this->I_tr_val = 0.0;
     this->I_ch_val = 0.0;
 }
@@ -80,11 +81,12 @@ FESystem::Structures::LinearBeamElementBase::clear()
 
 void
 FESystem::Structures::LinearBeamElementBase::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                        FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemBoolean if_chordwise)
+                                                        FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch,  FESystemDouble A, FESystemBoolean if_lateral)
 {
     FESystem::Structures::StructuralElementBase::initialize(elem,fe,q_rule,E,nu,rho);
-    this->if_include_chordwise_stiffness = if_include_chordwise_stiffness;
+    this->if_include_lateral_stiffness = if_lateral;
     this->I_tr_val = I_tr;
     this->I_ch_val = I_ch;
+    this->area_val = A;
 }
             

@@ -69,7 +69,7 @@ FESystem::Structures::ReissnerMindlinPlate::initialize(const FESystem::Mesh::Ele
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == 3*n) && (s.second == 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
@@ -103,7 +103,7 @@ FESystem::Structures::ReissnerMindlinPlate::calculateConsistentMassMatrix(FESyst
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     
     FESystemAssert2(vec.getSize() == 3*n, FESystem::Exception::DimensionsDoNotMatch, 3*n, vec.getSize());
     
@@ -121,7 +121,7 @@ FESystem::Structures::ReissnerMindlinPlate::calculateDiagonalMassMatrix(FESystem
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == 3*n) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
@@ -172,7 +172,7 @@ FESystem::Structures::ReissnerMindlinPlate::calculateStiffnessMatrix(FESystem::N
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
     FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);
@@ -193,7 +193,7 @@ FESystem::Structures::ReissnerMindlinPlate::calculateInertiaOperatorMatrix(const
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateBendingOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
     FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);
@@ -223,7 +223,7 @@ FESystem::Structures::ReissnerMindlinPlate::calculateBendingOperatorMatrix(const
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateShearOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
     FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);

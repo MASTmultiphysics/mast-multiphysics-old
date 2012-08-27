@@ -243,7 +243,7 @@ FESystem::Structures::DKTPlate::initialize(const FESystem::Mesh::ElemBase& elem,
 void
 FESystem::Structures::DKTPlate::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == 3*n) && (s.second == 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
@@ -277,7 +277,7 @@ FESystem::Structures::DKTPlate::calculateConsistentMassMatrix(FESystem::Numerics
 void
 FESystem::Structures::DKTPlate::calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     
     FESystemAssert2(vec.getSize() == 3*n, FESystem::Exception::DimensionsDoNotMatch, 3*n, vec.getSize());
     
@@ -295,7 +295,7 @@ FESystem::Structures::DKTPlate::calculateDiagonalMassMatrix(FESystem::Numerics::
 void
 FESystem::Structures::DKTPlate::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(3,3); B_mat.resize(3, 3*n); tmp_mat1.resize(3, 3*n), tmp_mat2.resize(3*n, 3*n);
@@ -326,7 +326,7 @@ FESystem::Structures::DKTPlate::calculateStiffnessMatrix(FESystem::Numerics::Mat
 void
 FESystem::Structures::DKTPlate::calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n);
     B_mat.zero();

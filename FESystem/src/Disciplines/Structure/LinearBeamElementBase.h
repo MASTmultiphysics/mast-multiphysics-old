@@ -40,13 +40,15 @@ namespace FESystem
             virtual void clear();
             
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                    FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemBoolean if_chordwise);
+                                    FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch,  FESystemDouble A, FESystemBoolean if_lateral);
             
-            FESystemBoolean if_include_chordwise_stiffness;
+            FESystemBoolean if_include_lateral_stiffness;
             
             FESystemDouble I_tr_val;
             
             FESystemDouble I_ch_val;
+            
+            FESystemDouble area_val;
         };
     
     }

@@ -70,7 +70,7 @@ FESystem::Structures::ExtensionBar::initialize(const FESystem::Mesh::ElemBase& e
 void
 FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
@@ -103,7 +103,7 @@ FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Nume
 void
 FESystem::Structures::ExtensionBar::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
@@ -158,7 +158,7 @@ FESystem::Structures::ExtensionBar::getMaterialComplianceMatrix(FESystem::Numeri
 void
 FESystem::Structures::ExtensionBar::calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain)
 {
-    const FESystemUInt n = this->finite_element->getNShapeFunctions();
+    const FESystemUInt n = this->geometric_elem->getNNodes();;
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     FESystemAssert4(((s.first == 1) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, 1, n, s.first, s.second);
     

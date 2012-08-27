@@ -1142,6 +1142,225 @@ int test_ode_integration(int argc, char * const argv[])
 
 
 
+
+void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                    const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
+                    const FESystem::Numerics::VectorBase<FESystemDouble>& rhs, FESystem::Numerics::VectorBase<FESystemDouble>& sol)
+{
+    const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+    
+    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec;
+    
+    reduced_stiff_mat.resize(nonbc_sparsity_pattern);
+    reduced_load_vec.resize(nonbc_sparsity_pattern.getNDOFs()); reduced_sol_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    rhs.getSubVectorValsFromIndices(nonbc_dofs, reduced_load_vec);
+    
+    stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
+    
+    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    linear_solver.setSystemMatrix(reduced_stiff_mat);
+    linear_solver.solve(reduced_load_vec, reduced_sol_vec);
+    sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
+    // write the solution for each node
+    for (FESystemUInt i=0; i<nodes.size(); i++)
+    {
+        std::cout << "Node: " << std::setw(8) << i;
+        // write location
+        for (FESystemUInt j=0; j<dim; j++)
+            std::cout << std::setw(15) << nodes[i]->getVal(j);
+        // write the forces
+        for (FESystemUInt j=0; j<3; j++)
+            std::cout << std::setw(15) << rhs.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
+        for (FESystemUInt j=0; j<3; j++)
+            std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
+        std::cout << std::endl;
+    }
+    
+    // write a gmsh format file
+    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    FESystem::OutputProcessor::GmshOutputProcessor gmsh_output;
+    
+    std::fstream output_file;
+    output_file.open("gmsh_output.gmsh", std::fstream::out);
+    gmsh_output.writeMesh(output_file, mesh, dof_map);
+    output_file.close();
+    
+    
+    output_file.open("vtk_output.vtk", std::fstream::out);
+    output.writeMesh(output_file, mesh, dof_map);
+    output.writeSolution(output_file, "Solution", mesh, dof_map, vars, sol);
+    output_file.close();
+}
+ 
+
+
+
+void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                   const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
+                   const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
+                   FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec)
+{
+    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, sol, reduced_mass_vec;
+
+    reduced_stiff_mat.resize(nonbc_sparsity_pattern); mass_mat.resize(nonbc_sparsity_pattern);
+    reduced_sol_vec.resize(nonbc_sparsity_pattern.getNDOFs()); reduced_mass_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    sol.resize(dof_map.getNDofs());
+
+    stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
+    
+    mass_vec.getSubVectorValsFromIndices(nonbc_dofs, reduced_mass_vec);
+    mass_mat.setDiagonal(reduced_mass_vec);
+    
+    // modal eigensolution
+    FESystem::Solvers::ArpackLinearEigenSolver<FESystemDouble> eigen_solver;
+    //FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble> eigen_solver;
+    eigen_solver.setEigenProblemType(FESystem::Solvers::GENERALIZED_HERMITIAN);
+    eigen_solver.setMatrix(&reduced_stiff_mat, &mass_mat);
+    eigen_solver.setEigenShiftType(FESystem::Solvers::SHIFT_AND_INVERT); eigen_solver.setEigenShiftValue(0.0);
+    linear_solver.clear(); eigen_solver.setLinearSolver(linear_solver);
+    eigen_solver.setEigenSpectrumType(FESystem::Solvers::LARGEST_MAGNITUDE);
+    eigen_solver.init(20, true);
+    eigen_solver.solve();
+    eig_vals.copyVector(eigen_solver.getEigenValues());
+    eig_vec.copyMatrix(eigen_solver.getEigenVectorMatrix());
+    eigen_solver.prepareSortingVector(FESystem::Solvers::VALUE, sorted_ids);
+    
+    FESystemUInt id = 0;
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    std::fstream output_file;
+    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
+
+    std::cout << "EigenValues:" << std::endl;
+    output_file.open("vtk_modes.vtk", std::fstream::out);
+    output.writeMesh(output_file, mesh, dof_map);
+    std::pair<FESystemUInt, FESystemUInt> s_global = eig_vec.getSize();
+    for (FESystemUInt i=0; i<20; i++)
+    {
+        id = sorted_ids[i];
+        std::cout << id << "  " << std::setw(15) << eig_vals.getVal(id) << std::endl;
+        std::stringstream oss;
+        oss << "Sol_" << i;
+        eig_vec.getColumnVals(id, 0, s_global.first-1, reduced_sol_vec);
+        sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
+        output.writeSolution(output_file, oss.str(), mesh, dof_map, vars, sol);
+    }
+    output_file.close();
+}
+
+
+
+
+void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                       const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
+                       const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const std::vector<FESystemUInt>& sorted_ids, const FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
+                       const FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec)
+{
+    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, rhs, sol, reduced_mass_vec;
+    
+    reduced_stiff_mat.resize(nonbc_sparsity_pattern); mass_mat.resize(nonbc_sparsity_pattern);
+    reduced_sol_vec.resize(nonbc_sparsity_pattern.getNDOFs()); reduced_load_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    reduced_mass_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    sol.resize(dof_map.getNDofs());
+    
+    stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
+    mass_vec.getSubVectorValsFromIndices(nonbc_dofs, reduced_mass_vec);
+
+    FESystemUInt id= 0;
+    
+    // transient solution
+    // initial condition is the first mode
+    // scale the stiffness matrix with the mass matrix
+    for (FESystemUInt i=0; i<reduced_mass_vec.getSize(); i++)
+        reduced_stiff_mat.scaleRow(i, -1.0/reduced_mass_vec.getVal(i));
+    
+    id = sorted_ids[0];
+    eig_vec.getColumnVals(id, 0, nonbc_dofs.size()-1, reduced_sol_vec);
+    FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*4, time_step=final_t*1.0e-3;
+    
+    // initialize the solver
+    FESystem::Solvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::Numerics::SparsityPattern ode_sparsity;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
+    std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=false;
+    std::vector<FESystemDouble> int_constants(2); int_constants[0]=1.0/4.0; int_constants[1]=1.0/2.0;
+    transient_solver.initialize(2, nonbc_dofs.size(), int_constants);
+    transient_solver.setActiveJacobianTerm(ode_order_include);
+    transient_solver.setMassMatrix(true);
+    
+    //    FESystem::Solvers::ExplicitRungeKuttaTransientSolver<FESystemDouble> transient_solver;
+    //    transient_solver.initialize(2, nonbc_dofs.size(), 4);
+    
+    transient_solver.initializeStateVector(rhs); //  initialize the vector and apply the initial condition
+    transient_solver.updateVectorValuesForDerivativeOrder(0, reduced_sol_vec, rhs);
+    transient_solver.setInitialTimeData(0, time_step, rhs);
+    
+    transient_solver.initializeMatrixSparsityPatterForSystem(nonbc_sparsity_pattern, ode_sparsity);
+    ode_jac.resize(ode_sparsity);
+    transient_solver.setJacobianMatrix(ode_jac);
+    transient_solver.setLinearSolver(linear_solver, true);
+    transient_solver.updateJacobianValuesForDerivativeOrder(2, 0, reduced_stiff_mat, transient_solver.getCurrentJacobianMatrix());
+    
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    std::fstream output_file;
+    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
+    
+    FESystemUInt n_skip=20, n_count=0, n_write=0;
+    FESystem::Solvers::TransientSolverCallBack call_back;
+    while (transient_solver.getCurrentTime()<final_t)
+    {
+        call_back = transient_solver.incrementTimeStep();
+        switch (call_back)
+        {
+            case FESystem::Solvers::TIME_STEP_CONVERGED:
+            {
+                if (n_count == n_skip)
+                {
+                    std::stringstream oss;
+                    oss << "sol_" << n_write << ".vtk";
+                    output_file.open(oss.str().c_str(),std::fstream::out);
+                    output.writeMesh(output_file, mesh, dof_map);
+                    transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
+                    sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
+                    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, sol);
+                    output_file.close();
+                    
+                    n_write++;
+                    n_count=0;
+                }
+                else
+                    n_count++;
+            }
+                break;
+                
+            case FESystem::Solvers::EVALUATE_X_DOT:
+            case FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+                // the Jacobian is not updated since it is constant with respect to time
+            {
+                transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
+                reduced_stiff_mat.rightVectorMultiply(reduced_sol_vec, reduced_load_vec);
+                
+                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getCurrentStateVelocityVector()); // set the acceleration
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
+            }
+                break;
+                
+            default:
+                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+                break;
+        }
+    }
+}
+
+
+
+
+
 int plate_driver(int argc, char * const argv[])
 {
     FESystem::Mesh::ElementType elem_type = FESystem::Mesh::TRI3;
@@ -1262,11 +1481,9 @@ int plate_driver(int argc, char * const argv[])
         elem_vec.zero();
         elem_vec.addVal(elem_dof_indices, plate_elem_vec);
         dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
-
+        
     }
     
-    // apply uniformly distributed loads
-    FESystemUInt id = 0;
     // apply boundary condition and place a load on the last dof
     std::set<FESystemUInt> bc_dofs;
     for (FESystemUInt i=0; i<nodes.size(); i++)
@@ -1294,169 +1511,20 @@ int plate_driver(int argc, char * const argv[])
     FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
     dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
     
-    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
-    FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, reduced_mass_vec;
+    std::vector<FESystemUInt> sorted_ids;
+    FESystem::Numerics::LocalVector<FESystemDouble> eig_vals;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> eig_vecs;
     
-    reduced_load_vec.resize(nonbc_dofs.size()); reduced_sol_vec.resize(nonbc_dofs.size()); reduced_mass_vec.resize(nonbc_dofs.size());
-    rhs.getSubVectorValsFromIndices(nonbc_dofs, reduced_load_vec);
-    global_mass_vec.getSubVectorValsFromIndices(nonbc_dofs, reduced_mass_vec);
+    staticAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol);
     
-    mass_mat.resize(nonbc_sparsity_pattern);
-    reduced_stiff_mat.resize(nonbc_sparsity_pattern);
+    modalAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
     
-    mass_mat.setDiagonal(reduced_mass_vec);
-    global_stiffness_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
-    
-    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
-    linear_solver.setSystemMatrix(reduced_stiff_mat);
-    linear_solver.solve(reduced_load_vec, reduced_sol_vec);
-    sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
-    // write the solution for each node
-    for (FESystemUInt i=0; i<nodes.size(); i++)
-    {
-        std::cout << "Node: " << std::setw(8) << i;
-        // write location
-        for (FESystemUInt j=0; j<dim; j++)
-            std::cout << std::setw(15) << nodes[i]->getVal(j);
-        // write the forces
-        for (FESystemUInt j=0; j<3; j++)
-            std::cout << std::setw(15) << rhs.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
-        for (FESystemUInt j=0; j<3; j++)
-            std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
-        std::cout << std::endl;
-    }
-    
-    // write a gmsh format file
-    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
-    FESystem::OutputProcessor::VtkOutputProcessor output;
-    FESystem::OutputProcessor::GmshOutputProcessor gmsh_output;
-    
-    std::fstream output_file;
-    output_file.open("gmsh_output.gmsh", std::fstream::out);
-    gmsh_output.writeMesh(output_file, mesh, dof_map);
-    output_file.close();
-    
-    
-    output_file.open("vtk_output.vtk", std::fstream::out);
-    output.writeMesh(output_file, mesh, dof_map);
-    output.writeSolution(output_file, "Solution", mesh, dof_map, vars, sol);
-    output_file.close();
-        
-    // modal eigensolution
-    FESystem::Solvers::ArpackLinearEigenSolver<FESystemDouble> eigen_solver;
-    //FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble> eigen_solver;
-    eigen_solver.setEigenProblemType(FESystem::Solvers::GENERALIZED_HERMITIAN);
-    eigen_solver.setMatrix(&reduced_stiff_mat, &mass_mat);
-    eigen_solver.setEigenShiftType(FESystem::Solvers::SHIFT_AND_INVERT); eigen_solver.setEigenShiftValue(0.0);
-    linear_solver.clear(); eigen_solver.setLinearSolver(linear_solver);
-    eigen_solver.setEigenSpectrumType(FESystem::Solvers::LARGEST_MAGNITUDE);
-    eigen_solver.init(20, true);
-    eigen_solver.solve();
-    const FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals = eigen_solver.getEigenValues();
-    const FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec = eigen_solver.getEigenVectorMatrix();
-    std::vector<FESystemUInt> sorted_ids; eigen_solver.prepareSortingVector(FESystem::Solvers::VALUE, sorted_ids);
-    
-    std::cout << "EigenValues:" << std::endl;
-    output_file.open("vtk_modes.vtk", std::fstream::out);
-    output.writeMesh(output_file, mesh, dof_map);
-    std::pair<FESystemUInt, FESystemUInt> s_global = eig_vec.getSize();
-    for (FESystemUInt i=0; i<20; i++)
-    {
-        id = sorted_ids[i];
-        std::cout << id << "  " << std::setw(15) << eig_vals.getVal(id) << std::endl;
-        std::stringstream oss;
-        oss << "Sol_" << i;
-        eig_vec.getColumnVals(id, 0, s_global.first-1, reduced_sol_vec);
-        sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
-        output.writeSolution(output_file, oss.str(), mesh, dof_map, vars, sol);
-    }
-    output_file.close();
-    //exit(1);
-    
-    // transient solution
-    // initial condition is the first mode
-    // scale the stiffness matrix with the mass matrix
-    for (FESystemUInt i=0; i<reduced_mass_vec.getSize(); i++)
-        reduced_stiff_mat.scaleRow(i, -1.0/reduced_mass_vec.getVal(i));
-    
-    id = sorted_ids[0];
-    eig_vec.getColumnVals(id, 0, s_global.first-1, reduced_sol_vec);
-    FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*4, time_step=final_t*1.0e-3;
-    
-    // initialize the solver
-    FESystem::Solvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
-    FESystem::Numerics::SparsityPattern ode_sparsity;
-    FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
-    std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=false;
-    std::vector<FESystemDouble> int_constants(2); int_constants[0]=1.0/4.0; int_constants[1]=1.0/2.0;
-    transient_solver.initialize(2, nonbc_dofs.size(), int_constants);
-    transient_solver.setActiveJacobianTerm(ode_order_include);
-    transient_solver.setMassMatrix(true);
-    
-    //    FESystem::Solvers::ExplicitRungeKuttaTransientSolver<FESystemDouble> transient_solver;
-    //    transient_solver.initialize(2, nonbc_dofs.size(), 4);
-    
-    transient_solver.initializeStateVector(rhs); //  initialize the vector and apply the initial condition
-    transient_solver.updateVectorValuesForDerivativeOrder(0, reduced_sol_vec, rhs);
-    transient_solver.setInitialTimeData(0, time_step, rhs);
-    
-    transient_solver.initializeMatrixSparsityPatterForSystem(nonbc_sparsity_pattern, ode_sparsity);
-    ode_jac.resize(ode_sparsity);
-    transient_solver.setJacobianMatrix(ode_jac);
-    transient_solver.setLinearSolver(linear_solver, true);
-    transient_solver.updateJacobianValuesForDerivativeOrder(2, 0, reduced_stiff_mat, transient_solver.getCurrentJacobianMatrix());
-    
-    FESystemUInt n_skip=20, n_count=0, n_write=0;
-    FESystem::Solvers::TransientSolverCallBack call_back;
-    while (transient_solver.getCurrentTime()<final_t)
-    {
-        call_back = transient_solver.incrementTimeStep();
-        switch (call_back)
-        {
-            case FESystem::Solvers::TIME_STEP_CONVERGED:
-            {
-                if (n_count == n_skip)
-                {
-                    std::stringstream oss;
-                    oss << "sol_" << n_write << ".vtk";
-                    output_file.open(oss.str().c_str(),std::fstream::out);
-                    output.writeMesh(output_file, mesh, dof_map);
-                    transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
-                    sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
-                    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, sol);
-                    output_file.close();
-                    
-                    n_write++;
-                    n_count=0;
-                }
-                else
-                    n_count++;
-            }
-                break;
-                
-            case FESystem::Solvers::EVALUATE_X_DOT:
-            case FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
-                // the Jacobian is not updated since it is constant with respect to time
-            {
-                transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
-                reduced_stiff_mat.rightVectorMultiply(reduced_sol_vec, reduced_load_vec);
-                
-                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getCurrentStateVelocityVector()); // set the acceleration
-                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
-                //                std::cout << transient_solver.getCurrentTime() << std::endl;
-                //                std::cout << "State" << std::endl; transient_solver.getCurrentStateVector().write(std::cout);
-                //                std::cout << "Velocity" << std::endl; transient_solver.getCurrentStateVelocityVector().write(std::cout);
-            }
-                break;
-                
-            default:
-                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
-                break;
-        }
-    }
-    
+    transientAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
+ 
     return 0;
 }
+
+
 
 
 int main(int argc, char * const argv[])
