@@ -194,6 +194,8 @@ FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numeric
         jac = this->finite_element->getJacobianValue(*(q_pts_shear[i]));
         this->calculateShearOperatorMatrix(*(q_pts_shear[i]), B_mat);
         
+        
+        
         C_mat_shear.matrixRightMultiply(1.0, B_mat, tmp_mat1);
         B_mat.matrixTransposeRightMultiply(1.0, tmp_mat1, tmp_mat2);
         
@@ -361,7 +363,7 @@ FESystem::Structures::TimoshenkoBeam::getMaterialComplianceMatrix(FESystem::Nume
     }
 
     bend_mat.setVal(0, 0, this->E_val * this->I_tr_val);
-        
+    
     shear_mat.scale(this->kappa*this->area_val);
 }
 
