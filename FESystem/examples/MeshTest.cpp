@@ -1477,7 +1477,7 @@ int analysis_driver(int argc, char * const argv[])
     FESystemDouble x_length, y_length, I_ch, I_tr, area, p_val = 1.0e6;
     FESystem::Geometry::Point origin(3);
     
-    FESystemBoolean if_plate = false, if_timoshenko_beam = true, if_include_lateral = false, if_mindlin = false;
+    FESystemBoolean if_plate = false, if_timoshenko_beam = false, if_include_lateral = false, if_mindlin = false;
     
     if (if_plate)
     {
@@ -1492,7 +1492,7 @@ int analysis_driver(int argc, char * const argv[])
         nx=15; x_length = 2; dim = 1; n_modes = 5;
         elem_type = FESystem::Mesh::EDGE2;
         createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
-        I_ch = 1.5; I_tr = 0.5; area = 0.25;
+        I_tr = 6.667e-9; I_ch = 1.6667e-9; area = 2.0e-4;
         if (if_include_lateral)
             n_beam_dofs = 4*n_elem_nodes;
         else
@@ -1565,9 +1565,7 @@ int analysis_driver(int argc, char * const argv[])
             }
         }
         else
-        {
             q_rule_bending.init(2, 9);
-        }
     }
     else
     {
@@ -1576,21 +1574,15 @@ int analysis_driver(int argc, char * const argv[])
             switch (elem_type)
             {
                 case FESystem::Mesh::EDGE2:
-                    if (if_timoshenko_beam)
-                    {
-                        q_rule_bending.init(1, 3);
-                        q_rule_shear.init(1, 0);
-                    }
-                    else
-                        q_rule_bending.init(1, 5);
+                    q_rule_bending.init(1, 3);
+                    q_rule_shear.init(1, 0);
                     break;
                     
                 case FESystem::Mesh::EDGE3:
-                    if (if_timoshenko_beam)
-                    {
-                        q_rule_bending.init(1, 5);
-                        q_rule_shear.init(1, 5);
-                    }
+                {
+                    q_rule_bending.init(1, 5);
+                    q_rule_shear.init(1, 5);
+                }
                     break;
                     
                 default:
@@ -1598,9 +1590,7 @@ int analysis_driver(int argc, char * const argv[])
             }
         }
         else
-        {
-            q_rule_bending.init(2, 9);
-        }
+            q_rule_bending.init(1, 9);
     }
     
     
