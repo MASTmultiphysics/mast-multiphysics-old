@@ -260,7 +260,7 @@ FESystem::Structures::TimoshenkoBeam::calculateBendingOperatorMatrix(const FESys
     }
     else
     {
-        FESystemAssert4(((s.first == 1) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
+        FESystemAssert4(((s.first == 1) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 2*n, s.first, s.second);
         
         Nvec.scale(-1.0);
         B_mat.setRowVals(0, n,  2*n-1, Nvec); // epsilon-x: thetay
@@ -275,7 +275,7 @@ FESystem::Structures::TimoshenkoBeam::calculateShearOperatorMatrix(const FESyste
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
-    static std::vector<FESystemUInt> derivatives_x(2);
+    static std::vector<FESystemUInt> derivatives_x(1);
     derivatives_x[0] = 1;
     
     static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
@@ -299,7 +299,7 @@ FESystem::Structures::TimoshenkoBeam::calculateShearOperatorMatrix(const FESyste
     }
     else
     {
-        FESystemAssert4(((s.first == 1) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
+        FESystemAssert4(((s.first == 1) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 2*n, s.first, s.second);
         
         Nvec.zero();
         this->finite_element->getShapeFunction(pt, Nvec);

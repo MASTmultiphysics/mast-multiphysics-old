@@ -34,6 +34,10 @@ namespace FESystem
              *    matrix, and the indices will correspond to the location of the stiffness terms corresponding to the u-dofs.
              */
             virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec);
+            
+            virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);
+            
+            virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble> &elem_vec, FESystem::Numerics::VectorBase<FESystemDouble> &global_vec);
 
         protected:
             

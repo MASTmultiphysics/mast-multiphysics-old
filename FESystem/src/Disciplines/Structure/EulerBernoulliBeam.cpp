@@ -56,6 +56,8 @@ void
 FESystem::Structures::EulerBernoulliBeam::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                                  FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemDouble A, FESystemBoolean if_lateral)
 {
+    FESystemAssert0(elem.getElementType() == FESystem::Mesh::EDGE2, FESystem::Exception::InvalidValue);
+
     FESystem::Structures::LinearBeamElementBase::initialize(elem, fe, q_rule, E, nu, rho, I_tr, I_ch, A, if_lateral);
 }
 

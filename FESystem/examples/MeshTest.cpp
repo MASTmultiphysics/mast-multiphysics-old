@@ -63,6 +63,8 @@
 // Structural elements
 #include "Disciplines/Structure/ReissnerMindlinPlate.h"
 #include "Disciplines/Structure/DKTPlate.h"
+#include "Disciplines/Structure/EulerBernoulliBeam.h"
+#include "Disciplines/Structure/TimoshenkoBeam.h"
 
 
 enum MeshType{RIGHT_DIAGONAL, LEFT_DIAGONAL, CROSS, INVALID_MESH};
@@ -275,6 +277,108 @@ int shape_function_main2DTri(int argc, char * const argv[])
 }
 
 
+
+
+
+
+
+void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
+                    FESystemUInt nx, FESystemDouble x_length, FESystemUInt& n_elem_nodes, MeshType m_type=INVALID_MESH)
+{
+    // create a nx x ny grid of nodes, and connect them by quad4 elements
+    FESystemDouble dx;
+    FESystemUInt n_nodes, n_elems;
+    
+    const FESystem::Geometry::CoordinateSystemBase& global_cs = origin.getCoordinateSystem();
+    FESystem::Numerics::LocalVector<FESystemDouble> vec;
+    vec.resize(3); vec.zero(); vec.setVal(1, 1.0);
+    
+    std::auto_ptr<std::vector<FESystem::Mesh::Node*> > nodes;
+    std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > elems;
+    
+    // set the location of individual nodes
+    switch (elem_type)
+    {
+        case FESystem::Mesh::EDGE2:
+        {
+            n_nodes=nx;
+            n_elems=(nx-1);
+            n_elem_nodes = 2;
+            dx=x_length/(nx-1);
+            
+            nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
+            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            
+            FESystemUInt id=0;
+            FESystem::Mesh::Node* node_p;
+            for (FESystemUInt ix=0; ix<nx; ix++)
+            {
+                node_p = (*nodes)[id];
+                node_p->setVal(0,ix*dx);
+                node_p->setExternalID(id);
+                id++;
+            }
+            
+            
+            // set the location of individual nodes
+            id=0;
+            FESystem::Mesh::ElemBase* elem_p;
+            for (FESystemUInt ix=0; ix<(nx-1); ix++)
+            {
+                elem_p = (*elems)[id];
+                dynamic_cast<FESystem::Mesh::EdgeElemBase*>(elem_p)->setVectorForXYPlane(vec);
+                elem_p->setNode(0, *(*nodes)[ix]);
+                elem_p->setNode(1, *(*nodes)[ix+1]);
+                elem_p->setExternalID(id);
+                id++;
+            }
+        }
+            break;
+            
+        case FESystem::Mesh::EDGE3:
+        {
+            n_nodes=(2*nx-1);
+            n_elems=(nx-1);
+            n_elem_nodes = 3;
+            dx=x_length/(2*(nx-1));
+            
+            nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
+            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            
+            FESystemUInt id=0;
+            FESystem::Mesh::Node* node_p;
+            for (FESystemUInt ix=0; ix<(2*nx-1); ix++)
+            {
+                node_p = (*nodes)[id];
+                node_p->setVal(0,ix*dx);
+                node_p->setExternalID(id);
+                id++;
+            }
+            
+            
+            // set the location of individual nodes
+            id=0;
+            FESystem::Mesh::ElemBase* elem_p;
+            for (FESystemUInt ix=0; ix<(nx-1); ix++)
+            {
+                elem_p = (*elems)[id];
+                dynamic_cast<FESystem::Mesh::EdgeElemBase*>(elem_p)->setVectorForXYPlane(vec);
+                elem_p->setNode(0, *(*nodes)[2*ix]);
+                elem_p->setNode(1, *(*nodes)[2*(ix+1)]);
+                elem_p->setNode(2, *(*nodes)[2*ix+1]);
+                elem_p->setExternalID(id);
+                id++;
+            }
+        }
+            break;
+            
+        default:
+            FESystemAssert0(false, FESystem::Exception::InvalidValue);
+            break;
+    }
+    mesh.reinit();
+    
+}
 
 
 
@@ -1199,7 +1303,7 @@ void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, cons
 
 void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                    const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
-                   const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
+                   const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
                    FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec)
 {
     FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
@@ -1223,7 +1327,7 @@ void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const
     eigen_solver.setEigenShiftType(FESystem::Solvers::SHIFT_AND_INVERT); eigen_solver.setEigenShiftValue(0.0);
     linear_solver.clear(); eigen_solver.setLinearSolver(linear_solver);
     eigen_solver.setEigenSpectrumType(FESystem::Solvers::LARGEST_MAGNITUDE);
-    eigen_solver.init(20, true);
+    eigen_solver.init(n_modes, true);
     eigen_solver.solve();
     eig_vals.copyVector(eigen_solver.getEigenValues());
     eig_vec.copyMatrix(eigen_solver.getEigenVectorMatrix());
@@ -1238,7 +1342,7 @@ void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const
     output_file.open("vtk_modes.vtk", std::fstream::out);
     output.writeMesh(output_file, mesh, dof_map);
     std::pair<FESystemUInt, FESystemUInt> s_global = eig_vec.getSize();
-    for (FESystemUInt i=0; i<20; i++)
+    for (FESystemUInt i=0; i<n_modes; i++)
     {
         id = sorted_ids[i];
         std::cout << id << "  " << std::setw(15) << eig_vals.getVal(id) << std::endl;
@@ -1361,21 +1465,40 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
 
 
 
-int plate_driver(int argc, char * const argv[])
+int analysis_driver(int argc, char * const argv[])
 {
-    FESystem::Mesh::ElementType elem_type = FESystem::Mesh::TRI3;
+    FESystem::Mesh::ElementType elem_type;
     
     // create the mesh object
     FESystem::Mesh::MeshBase mesh;
     
     // create a nx x ny grid of nodes
-    FESystemUInt nx=7, ny=7;
-    FESystemDouble x_length = 2, y_length = 2, p_val = 1.0e6;
-    FESystemUInt dim = 2, n_elem_nodes, n_elem_dofs;
-    
+    FESystemUInt nx, ny, dim, n_elem_nodes, n_elem_dofs, n_beam_dofs, n_modes;
+    FESystemDouble x_length, y_length, I_ch, I_tr, area, p_val = 1.0e6;
     FESystem::Geometry::Point origin(3);
     
-    create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
+    FESystemBoolean if_plate = false, if_timoshenko_beam = true, if_include_lateral = false, if_mindlin = false;
+    
+    if (if_plate)
+    {
+        nx=7; ny=7;
+        x_length = 2; y_length = 2;
+        dim = 2; n_modes = 20;
+        elem_type = FESystem::Mesh::TRI3;
+        create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
+    }
+    else
+    {
+        nx=15; x_length = 2; dim = 1; n_modes = 5;
+        elem_type = FESystem::Mesh::EDGE2;
+        createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
+        I_ch = 1.5; I_tr = 0.5; area = 0.25;
+        if (if_include_lateral)
+            n_beam_dofs = 4*n_elem_nodes;
+        else
+            n_beam_dofs = 2*n_elem_nodes;
+    }
+    
     n_elem_dofs = 6*n_elem_nodes;
     
     // set the location of individual nodes
@@ -1394,8 +1517,8 @@ int plate_driver(int argc, char * const argv[])
     
     // create the finite element and initialize the shape functions
     FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat;
-    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol, global_mass_vec, elem_vec, plate_elem_vec;
-    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat, plate_elem_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol, global_mass_vec, elem_vec, plate_elem_vec, beam_elem_vec;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat, plate_elem_mat, beam_elem_mat;
     std::vector<FESystemUInt> elem_dof_indices;
     
     global_mass_vec.resize(dof_map.getNDofs());
@@ -1404,43 +1527,82 @@ int plate_driver(int argc, char * const argv[])
     elem_mat.resize(n_elem_dofs, n_elem_dofs);
     elem_vec.resize(n_elem_dofs);
     
-    plate_elem_mat.resize(n_elem_nodes*3, n_elem_nodes*3);
-    plate_elem_vec.resize(n_elem_nodes*3);
+    plate_elem_mat.resize(n_elem_nodes*3, n_elem_nodes*3); beam_elem_mat.resize(n_beam_dofs, n_beam_dofs);
+    plate_elem_vec.resize(n_elem_nodes*3); beam_elem_vec.resize(n_beam_dofs);
     
     FESystemDouble E=72.0e9, nu=0.33, thick=0.025, rho=2700.0;
     
-    FESystemDouble if_mindlin = false;
+    
     
     // prepare the quadrature rule and FE for the
     FESystem::Quadrature::TrapezoidQuadrature q_rule_shear, q_rule_bending;
     FESystem::FiniteElement::FELagrange fe, fe_tri6;
     FESystem::Structures::ReissnerMindlinPlate mindlin_plate;
     FESystem::Structures::DKTPlate dkt_plate;
+    FESystem::Structures::TimoshenkoBeam timoshenko_beam;
+    FESystem::Structures::EulerBernoulliBeam euler_beam;
     
-    if (if_mindlin)
+    if (if_plate)
     {
-        switch (elem_type)
+        if (if_mindlin)
         {
-            case FESystem::Mesh::QUAD4:
-            case FESystem::Mesh::TRI3:
-                q_rule_bending.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
-                q_rule_shear.init(2, 0);
-                break;
-                
-            case FESystem::Mesh::QUAD9:
-            case FESystem::Mesh::TRI6:
-                q_rule_bending.init(2, 5);
-                q_rule_shear.init(2, 5);
-                break;
-                
-            default:
-                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+            switch (elem_type)
+            {
+                case FESystem::Mesh::QUAD4:
+                case FESystem::Mesh::TRI3:
+                    q_rule_bending.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
+                    q_rule_shear.init(2, 0);
+                    break;
+                    
+                case FESystem::Mesh::QUAD9:
+                case FESystem::Mesh::TRI6:
+                    q_rule_bending.init(2, 5);
+                    q_rule_shear.init(2, 5);
+                    break;
+                    
+                default:
+                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+            }
+        }
+        else
+        {
+            q_rule_bending.init(2, 9);
         }
     }
     else
     {
-        q_rule_bending.init(2, 9);
+        if (if_timoshenko_beam)
+        {
+            switch (elem_type)
+            {
+                case FESystem::Mesh::EDGE2:
+                    if (if_timoshenko_beam)
+                    {
+                        q_rule_bending.init(1, 3);
+                        q_rule_shear.init(1, 0);
+                    }
+                    else
+                        q_rule_bending.init(1, 5);
+                    break;
+                    
+                case FESystem::Mesh::EDGE3:
+                    if (if_timoshenko_beam)
+                    {
+                        q_rule_bending.init(1, 5);
+                        q_rule_shear.init(1, 5);
+                    }
+                    break;
+                    
+                default:
+                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+            }
+        }
+        else
+        {
+            q_rule_bending.init(2, 9);
+        }
     }
+    
     
     std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     for (FESystemUInt i=0; i<elems.size(); i++)
@@ -1450,36 +1612,70 @@ int plate_driver(int argc, char * const argv[])
         elem_mat.zero();
         elem_vec.zero();
         
-        if (if_mindlin)
+        if (if_plate)
         {
-            mindlin_plate.clear();
-            mindlin_plate.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, thick);
-            
-            // stiffness matrix
-            mindlin_plate.calculateStiffnessMatrix(plate_elem_mat);
-            mindlin_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
-            
-            // mass
-            mindlin_plate.calculateDiagonalMassMatrix(plate_elem_vec);
-            mindlin_plate.getActiveElementMatrixIndices(elem_dof_indices);
+            if (if_mindlin)
+            {
+                mindlin_plate.clear();
+                mindlin_plate.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, thick);
+                
+                // stiffness matrix
+                mindlin_plate.calculateStiffnessMatrix(plate_elem_mat);
+                mindlin_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+                
+                // mass
+                mindlin_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+                mindlin_plate.getActiveElementMatrixIndices(elem_dof_indices);
+            }
+            else
+            {
+                dkt_plate.clear();
+                dkt_plate.initialize(*(elems[i]), fe, fe_tri6, q_rule_bending, q_rule_bending, E, nu, rho, thick);
+                
+                // stiffness matrix
+                dkt_plate.calculateStiffnessMatrix(plate_elem_mat);
+                dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+                
+                // mass
+                dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+                dkt_plate.getActiveElementMatrixIndices(elem_dof_indices);
+            }
+            elem_vec.zero();
+            elem_vec.addVal(elem_dof_indices, plate_elem_vec);
         }
         else
         {
-            dkt_plate.clear();
-            dkt_plate.initialize(*(elems[i]), fe, fe_tri6, q_rule_bending, q_rule_bending, E, nu, rho, thick);
-            
-            // stiffness matrix
-            dkt_plate.calculateStiffnessMatrix(plate_elem_mat);
-            dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
-            
-            // mass
-            dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
-            dkt_plate.getActiveElementMatrixIndices(elem_dof_indices);
+            if (if_timoshenko_beam)
+            {
+                timoshenko_beam.clear();
+                timoshenko_beam.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, I_tr, I_ch, area, if_include_lateral);
+                
+                // stiffness matrix
+                timoshenko_beam.calculateStiffnessMatrix(beam_elem_mat);
+                timoshenko_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+                
+                // mass
+                timoshenko_beam.calculateDiagonalMassMatrix(beam_elem_vec);
+                timoshenko_beam.getActiveElementMatrixIndices(elem_dof_indices);
+            }
+            else
+            {
+                euler_beam.clear();
+                euler_beam.initialize(*(elems[i]), fe, q_rule_bending, E, nu, rho, I_tr, I_ch, area, if_include_lateral);
+                
+                // stiffness matrix
+                euler_beam.calculateStiffnessMatrix(beam_elem_mat);
+                euler_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+                
+                // mass
+                euler_beam.calculateDiagonalMassMatrix(beam_elem_vec);
+                euler_beam.getActiveElementMatrixIndices(elem_dof_indices);
+            }
+            elem_vec.zero();
+            elem_vec.addVal(elem_dof_indices, beam_elem_vec);
         }
         
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat, global_stiffness_mat);
-        elem_vec.zero();
-        elem_vec.addVal(elem_dof_indices, plate_elem_vec);
         dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
         
     }
@@ -1488,11 +1684,23 @@ int plate_driver(int argc, char * const argv[])
     std::set<FESystemUInt> bc_dofs;
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
-        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
-        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
-        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
-        if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+        if (if_plate)
+        {
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
+            if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
+                bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+        }
+        else
+        {
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // theta-x
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
+            if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(0) == x_length)) // boundary nodes
+                bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+        }
     }
     
     // now create the vector of ids that do not have bcs
@@ -1517,7 +1725,7 @@ int plate_driver(int argc, char * const argv[])
     
     staticAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol);
     
-    modalAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
+    modalAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs);
     
     transientAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
  
@@ -1529,6 +1737,6 @@ int plate_driver(int argc, char * const argv[])
 
 int main(int argc, char * const argv[])
 {
-    return plate_driver(argc, argv);
+    return analysis_driver(argc, argv);
 }
 
