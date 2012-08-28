@@ -233,21 +233,27 @@ FESystem::Structures::EulerBernoulliBeam::calculateBendingOperatorMatrix(const F
     // N4 = (length/8.0) * (-1.0 - xi + pow(xi,2) + pow(xi,3));  // needs a -1.0 factor for theta_y
     
     // shape function derivative
-    N1 = (1.0/4.0) * (0.0 -  6.0/length + 0.0     +  6.0/length*pow(xi,2));
-    N2 = (1.0/4.0) * (0.0 +  6.0/length + 0.0     -  6.0/length*pow(xi,2));
-    N3 = (1.0/4.0) * (0.0 -  1.0        - 2.0*xi  +         3.0*pow(xi,2));  // needs a -1.0 factor for theta_y
-    N4 = (1.0/4.0) * (0.0 -  1.0        + 2.0*xi  +         3.0*pow(xi,2));  // needs a -1.0 factor for theta_y
+    // N1 = (1.0/4.0) * (0.0 -  6.0/length + 0.0     +  6.0/length*pow(xi,2));
+    // N2 = (1.0/4.0) * (0.0 +  6.0/length + 0.0     -  6.0/length*pow(xi,2));
+    // N3 = (1.0/4.0) * (0.0 -  1.0        - 2.0*xi  +         3.0*pow(xi,2));  // needs a -1.0 factor for theta_y
+    // N4 = (1.0/4.0) * (0.0 -  1.0        + 2.0*xi  +         3.0*pow(xi,2));  // needs a -1.0 factor for theta_y
 
+    // second order shape function derivative
+    N1 = (0.5/length) * (  0.0     +  12.0/length*xi);
+    N2 = (0.5/length) * (  0.0     -  12.0/length*xi);
+    N3 = (0.5/length) * (- 2.0     +          6.0*xi);  // needs a -1.0 factor for theta_y
+    N4 = (0.5/length) * (  2.0     +          6.0*xi);  // needs a -1.0 factor for theta_y
+    
     
     B_mat.zero();
     if (this->if_include_lateral_stiffness)
     {
         FESystemAssert4(((s.first == 1) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
-        B_mat.setVal(0, 0, N1); B_mat.setVal(0, 1, N2); // v-disp
+        B_mat.setVal(0, 0, N1*(this->I_ch_val/this->I_tr_val)); B_mat.setVal(0, 1, N2*(this->I_ch_val/this->I_tr_val)); // v-disp
         B_mat.setVal(0, 2, N1); B_mat.setVal(0, 3, N2); // w-disp
 
         B_mat.setVal(0, 4,-N3); B_mat.setVal(0, 5,-N4); // theta-y
-        B_mat.setVal(0, 6, N3); B_mat.setVal(0, 7, N4); // theta-z
+        B_mat.setVal(0, 6, N3*(this->I_ch_val/this->I_tr_val)); B_mat.setVal(0, 7, N4*(this->I_ch_val/this->I_tr_val)); // theta-z
     }
     else
     {
@@ -295,69 +301,5 @@ FESystem::Structures::EulerBernoulliBeam::getMaterialComplianceMatrix(FESystem::
     bend_mat.setVal(0, 0, this->E_val * this->I_tr_val);
 }
 
-
-
-
-//
-//void
-//FESystem::Structures::EulerBernoulliBeam::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
-//{
-//    
-//    FESystemDouble length=this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature)), EI_trans = 0.0, EI_chord = 0.0,
-//    EIl_term_trans = EI_trans / pow(length,3), EIl_term_chord = EI_chord / pow(length,3);
-//    
-//    //     v1 : lateral bending
-//    mat.setVal(2,2, EIl_term_chord * 12.0);
-//    mat.setVal(2,6, EIl_term_chord * 6.0 * length);
-//    mat.setVal(2,8, EIl_term_chord * (-12.0));
-//    mat.setVal(2,12, EIl_term_chord * 6.0 * length);
-//    
-//    //     w1 : spanwise bending
-//    mat.setVal(3,3, EIl_term_trans * 12.0);
-//    mat.setVal(3,5, EIl_term_trans * (-6.0) * length);
-//    mat.setVal(3,9, EIl_term_trans * (-12.0));
-//    mat.setVal(3,11, EIl_term_trans * (-6.0) * length);
-//    
-//    
-//    //     thetay1 : spanwise bending
-//    mat.setVal(5,3, EIl_term_trans * (-6.0) * length);
-//    mat.setVal(5,5, EIl_term_trans * 4.0 * pow(length,2));
-//    mat.setVal(5,9, EIl_term_trans * 6.0 * length);
-//    mat.setVal(5,11, EIl_term_trans * 2.0 * pow(length,2));
-//    
-//    //     thetaz1 : lateral bending
-//    mat.setVal(6,2, EIl_term_chord * 6.0 * length);
-//    mat.setVal(6,6, EIl_term_chord * 4.0 * pow(length,2));
-//    mat.setVal(6,8, EIl_term_chord * (-6.0) * length);
-//    mat.setVal(6,12, EIl_term_chord * 2.0 * pow(length,2));
-//    
-//    
-//    //     v2 :  lateral bending
-//    mat.setVal(8,2, EIl_term_chord * (-12.0));
-//    mat.setVal(8,6, EIl_term_chord * (-6.0) * length);
-//    mat.setVal(8,8, EIl_term_chord * 12.0);
-//    mat.setVal(8,12, EIl_term_chord * (-6.0) * length);
-//    
-//    //     w2 :  spanwise bending
-//    mat.setVal(9,3, EIl_term_trans * (-12.0));
-//    mat.setVal(9,5, EIl_term_trans * 6.0 * length);
-//    mat.setVal(9,9, EIl_term_trans * 12.0);
-//    mat.setVal(9,11, EIl_term_trans * 6.0 * length);
-//    
-//    
-//    //     thetay2 : spanwise bending
-//    mat.setVal(11,3, EIl_term_trans * (-6.0) * length);
-//    mat.setVal(11,5, EIl_term_trans * 2.0 * pow(length,2));
-//    mat.setVal(11,9, EIl_term_trans * 6.0 * length);
-//    mat.setVal(11,11, EIl_term_trans * 4.0 * pow(length,2));
-//    
-//    //     thetaz2 : lateral bending
-//    mat.setVal(12,2, EIl_term_chord * 6.0 * length);
-//    mat.setVal(12,6, EIl_term_chord * 2.0 * pow(length,2));
-//    mat.setVal(12,8, EIl_term_chord * (-6.0) * length);
-//    mat.setVal(12,12, EIl_term_chord * 4.0 * pow(length,2));
-//}
-//
-//
 
 
