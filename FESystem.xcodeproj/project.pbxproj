@@ -34,9 +34,6 @@
 		EB906D6E15D9859C00C1F550 /* TorsionBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB906D6C15D9859700C1F550 /* TorsionBar.cpp */; };
 		EB906D7115D9876400C1F550 /* TorsionBar.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D7015D9875800C1F550 /* TorsionBar.h */; };
 		EBAEE0A615C1B73B0062459D /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAA15C1B73B0062459D /* makefile */; };
-		EBAEE0A715C1B73B0062459D /* EigenTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAD15C1B73B0062459D /* EigenTest.cpp */; };
-		EBAEE0A815C1B73B0062459D /* MeshTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAE15C1B73B0062459D /* MeshTest.cpp */; };
-		EBAEE0A915C1B73B0062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAF15C1B73B0062459D /* main.cpp */; };
 		EBAEE0AA15C1B73B0062459D /* CountedObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFB215C1B73B0062459D /* CountedObject.cpp */; };
 		EBAEE0AB15C1B73B0062459D /* CountedObject.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFB315C1B73B0062459D /* CountedObject.h */; };
 		EBAEE0AC15C1B73B0062459D /* Counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFB415C1B73B0062459D /* Counter.cpp */; };
@@ -1251,9 +1248,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBAEE0A615C1B73B0062459D /* makefile in Sources */,
-				EBAEE0A715C1B73B0062459D /* EigenTest.cpp in Sources */,
-				EBAEE0A815C1B73B0062459D /* MeshTest.cpp in Sources */,
-				EBAEE0A915C1B73B0062459D /* main.cpp in Sources */,
 				EBAEE0AA15C1B73B0062459D /* CountedObject.cpp in Sources */,
 				EBAEE0AC15C1B73B0062459D /* Counter.cpp in Sources */,
 				EB906D4915D4330B00C1F550 /* FrequencyDomainFlutterSolverBase.cpp in Sources */,
