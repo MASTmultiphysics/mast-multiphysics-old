@@ -17,10 +17,10 @@
 #include "Base/macros.h"
 
 
-template <typename ValType> 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::LinearEigenSolverBase():
+template <typename ValType>
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::LinearEigenSolverBase():
 n_max_iterations(1000),
-shift_type(FESystem::Solvers::NO_SHIFT),
+shift_type(FESystem::EigenSolvers::NO_SHIFT),
 shift_value(0),
 matrices_are_set(false),
 n_converged_eig_vals(0),
@@ -32,135 +32,135 @@ B_mat(NULL)
 }
 
 
-template <typename ValType> 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::~LinearEigenSolverBase()
+template <typename ValType>
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::~LinearEigenSolverBase()
 {
     
 }
 
 
-template <typename ValType> 
+template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setEigenProblemType
-(FESystem::Solvers::LinearEigenProblemType p)
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setEigenProblemType
+(FESystem::EigenSolvers::LinearEigenProblemType p)
 {
     this->problem_type = p;
 }
 
 
-template <typename ValType> 
-FESystem::Solvers::LinearEigenProblemType
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenProblemType() const
+template <typename ValType>
+FESystem::EigenSolvers::LinearEigenProblemType
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenProblemType() const
 {
     return this->problem_type;
 }
 
 
-template <typename ValType> 
-void 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setEigenSpectrumType
-(FESystem::Solvers::EigenSpectrumType s)
+template <typename ValType>
+void
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setEigenSpectrumType
+(FESystem::EigenSolvers::EigenSpectrumType s)
 {
     this->spectrum = s;
 }
 
 
-template <typename ValType> 
-FESystem::Solvers::EigenSpectrumType 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenSpectrumType() const
+template <typename ValType>
+FESystem::EigenSolvers::EigenSpectrumType
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenSpectrumType() const
 {
     return this->spectrum;
 }
 
 
-template <typename ValType> 
+template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setEigenShiftType
-(FESystem::Solvers::EigenShiftType p)
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setEigenShiftType
+(FESystem::EigenSolvers::EigenShiftType p)
 {
     this->shift_type = p;
 }
 
 
-template <typename ValType> 
-FESystem::Solvers::EigenShiftType
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenShiftType() const
+template <typename ValType>
+FESystem::EigenSolvers::EigenShiftType
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenShiftType() const
 {
     return this->shift_type;
 }
 
 
 
-template <typename ValType> 
+template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setEigenShiftValue(ValType s)
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setEigenShiftValue(ValType s)
 {
     this->shift_value = s;
 }
 
 
-template <typename ValType> 
+template <typename ValType>
 ValType
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenShiftValue() const
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenShiftValue() const
 {
     return this->shift_value;
 }
 
 
-template <typename ValType> 
+template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setMaxIterations
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setMaxIterations
 (FESystemUInt n)
 {
     this->n_max_iterations = n;
 }
 
 
-template <typename ValType> 
+template <typename ValType>
 FESystemUInt
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getMaxIterations() const
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getMaxIterations() const
 {
     return this->n_max_iterations;
 }
 
 
 
-template <typename ValType> 
+template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setConvergenceTolerance(FESystemDouble& val)
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setConvergenceTolerance(FESystemDouble& val)
 {
     this->convergence_tolerance = val;
 }
 
-template <typename ValType> 
+template <typename ValType>
 FESystemDouble
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getConvergenceTolerance() const
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getConvergenceTolerance() const
 {
     return this->convergence_tolerance;
 }
 
 
 
-template <typename ValType> 
-void 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::setMatrix
-(FESystem::Numerics::MatrixBase<ValType>* lhs, 
+template <typename ValType>
+void
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setMatrix
+(FESystem::Numerics::MatrixBase<ValType>* lhs,
  FESystem::Numerics::MatrixBase<ValType>* rhs)
 {
-    switch (this->problem_type) 
+    switch (this->problem_type)
     {
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::NONHERMITIAN:            
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:
         {
             FESystemAssert0(lhs != NULL, FESystem::Exception::NULLQuantity);
-            FESystemAssert0(rhs == NULL, FESystem::Solvers::GeneralizedEigenproblemDoesNotHaveRHSMatrix);
+            FESystemAssert0(rhs == NULL, FESystem::EigenSolvers::GeneralizedEigenproblemDoesNotHaveRHSMatrix);
             
             this->A_mat = lhs;
         }
             break;
             
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
-        case FESystem::Solvers::GENERALIZED_NONHERMITIAN:            
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
         {
             FESystemAssert0(lhs != NULL, FESystem::Exception::NULLQuantity);
             FESystemAssert0(rhs != NULL, FESystem::Exception::NULLQuantity);
@@ -178,29 +178,29 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::setMatrix
     std::pair<FESystemUInt, FESystemUInt> s = this->getAMatrix().getSize();
     
     // now initialize the matrix and vector to store the eigenvectors and eigenvalues
-    switch (this->problem_type) 
+    switch (this->problem_type)
     {
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
         {
             this->eig_vec_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
             this->eig_val_vec.reset(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR).release()); // eigenvalue storage
             
             
             this->eig_vec_mat->resize(s.first, s.second);
-            this->eig_val_vec->resize(s.first);    
+            this->eig_val_vec->resize(s.first);
         }
             break;
             
-        case FESystem::Solvers::NONHERMITIAN:            
-        case FESystem::Solvers::GENERALIZED_NONHERMITIAN:            
+        case FESystem::EigenSolvers::NONHERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
         {
             this->eig_vec_mat_complex.reset(FESystem::Numerics::MatrixCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
             this->eig_val_vec_complex.reset(FESystem::Numerics::VectorCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_VECTOR).release()); // eigenvalue storage
             
             
             this->eig_vec_mat_complex->resize(s.first, s.second);
-            this->eig_val_vec_complex->resize(s.first);    
+            this->eig_val_vec_complex->resize(s.first);
         }
             break;
             
@@ -215,23 +215,23 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::setMatrix
 
 
 
-template <typename ValType> 
-FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getAMatrix()
+template <typename ValType>
+FESystem::Numerics::MatrixBase<ValType>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getAMatrix()
 {
     FESystemAssert0(this->A_mat != NULL, FESystem::Exception::NULLQuantity);
     return *(this->A_mat);
 }
 
 
-template <typename ValType> 
-FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getBMatrix()
+template <typename ValType>
+FESystem::Numerics::MatrixBase<ValType>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getBMatrix()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
-    FESystemAssert0((this->getEigenProblemType() == FESystem::Solvers::GENERALIZED_HERMITIAN) || 
-                    (this->getEigenProblemType() == FESystem::Solvers::GENERALIZED_NONHERMITIAN),
-                    FESystem::Solvers::GeneralizedEigenproblemDoesNotHaveRHSMatrix);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
+    FESystemAssert0((this->getEigenProblemType() == FESystem::EigenSolvers::GENERALIZED_HERMITIAN) ||
+                    (this->getEigenProblemType() == FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN),
+                    FESystem::EigenSolvers::GeneralizedEigenproblemDoesNotHaveRHSMatrix);
     
     FESystemAssert0(this->B_mat != NULL, FESystem::Exception::NULLQuantity);
     
@@ -240,15 +240,15 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getBMatrix()
 
 
 
-template <typename ValType> 
-const FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenVectorMatrix() const
+template <typename ValType>
+const FESystem::Numerics::MatrixBase<ValType>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenVectorMatrix() const
 {
     FESystemAssert0(this->eig_vec_mat.get() != NULL, FESystem::Exception::NULLQuantity);
     
     switch (this->getEigenProblemType()){
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
             return *(this->eig_vec_mat);
             break;
             
@@ -260,15 +260,15 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenVectorMatrix() const
 }
 
 
-template <typename ValType> 
-const FESystem::Numerics::VectorBase<ValType>& 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenValues() const
+template <typename ValType>
+const FESystem::Numerics::VectorBase<ValType>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenValues() const
 {
     FESystemAssert0(this->eig_val_vec.get() != NULL, FESystem::Exception::NULLQuantity);
     
     switch (this->getEigenProblemType()){
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
             return *(this->eig_val_vec);
             break;
             
@@ -280,15 +280,15 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getEigenValues() const
 
 
 
-template <typename ValType> 
-const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& 
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMatrix() const
+template <typename ValType>
+const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMatrix() const
 {
     FESystemAssert0(this->eig_vec_mat_complex.get() != NULL, FESystem::Exception::NULLQuantity);
     
     switch (this->getEigenProblemType()){
-        case FESystem::Solvers::NONHERMITIAN:
-        case FESystem::Solvers::GENERALIZED_NONHERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
             return *(this->eig_vec_mat_complex);
             break;
             
@@ -300,15 +300,15 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMatrix()
 }
 
 
-template <typename ValType> 
+template <typename ValType>
 const FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)>&
-FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenValues() const
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getComplexEigenValues() const
 {
     FESystemAssert0(this->eig_val_vec_complex.get() != NULL, FESystem::Exception::NULLQuantity);
     
     switch (this->getEigenProblemType()){
-        case FESystem::Solvers::NONHERMITIAN:
-        case FESystem::Solvers::GENERALIZED_NONHERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
             return *(this->eig_val_vec_complex);
             break;
             
@@ -320,7 +320,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::getComplexEigenValues() const
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem::Solvers::EigenValueSortingCriteria sort, 
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem::EigenSolvers::EigenValueSortingCriteria sort,
                                                                         std::vector<FESystemUInt>& sorted_ids) const
 {
     FESystemAssert0(this->n_converged_eig_vals>0 , FESystem::Exception::InvalidState);
@@ -329,8 +329,8 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem
     
     switch (this->getEigenProblemType())
     {
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
         {
             FESystemAssert0(this->eig_val_vec.get() != NULL, FESystem::Exception::NULLQuantity);
             FESystemAssert2(this->eig_val_vec->getSize() == this->n_converged_eig_vals, FESystem::Exception::DimensionsDoNotMatch, this->eig_val_vec->getSize(), this->n_converged_eig_vals);
@@ -340,7 +340,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem
             
             switch (sort)
             {
-                case FESystem::Solvers::VALUE:
+                case FESystem::EigenSolvers::VALUE:
                 {
                     FESystemBoolean found;
                     ValType minval, maxval, val=0.0;
@@ -394,7 +394,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem
                     
                 default:
                     // only the magnitude sorting is available for Herminitian problems
-                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);		
+                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
             }
         }
             break;
@@ -408,16 +408,16 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::prepareSortingVector(FESystem
 
 
 
-template <typename ValType> 
+template <typename ValType>
 void
-FESystem::Solvers::LinearEigenSolverBase<ValType>::completePowerIterations
-(FESystem::Numerics::MatrixBase<ValType>& mat, 
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::completePowerIterations
+(FESystem::Numerics::MatrixBase<ValType>& mat,
  FESystem::Numerics::VectorBase<ValType>& eig_vals,
  FESystem::Numerics::MatrixBase<ValType>& eig_vecs)
 {
     FESystemUInt n = mat.getSize().second;
     
-    std::auto_ptr<FESystem::Numerics::VectorBase<ValType> > 
+    std::auto_ptr<FESystem::Numerics::VectorBase<ValType> >
     vec1(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR).release()),
     vec2(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR).release());
     
@@ -425,7 +425,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::completePowerIterations
     vec2->resize(n);
     
     // only the first eigenvalue is calculated
-    // assuem an initial unit vector 
+    // assuem an initial unit vector
     for (FESystemUInt i=0; i<n; i++)
         vec1->setVal(i, 1.0);
     
@@ -442,7 +442,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::completePowerIterations
             eig0 = vec2->dotProduct(*vec1); // (v1' A v1)
             v1_to_v2 = false;
         }
-        else 
+        else
         {
             vec2->scaleToUnitLength();
             mat.rightVectorMultiply(*vec2, *vec1);  // v1 = A v2
@@ -452,7 +452,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::completePowerIterations
         
         // convergence metric
         conv = FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(eig0 - eig1);
-        eig1 = eig0; // eig = v2' A v1 / (v2' v2)        
+        eig1 = eig0; // eig = v2' A v1 / (v2' v2)
     }
     
     eig_vals.setVal(0, eig1); // copy the eigenvalue
@@ -469,7 +469,7 @@ FESystem::Solvers::LinearEigenSolverBase<ValType>::completePowerIterations
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LinearEigenSolverBase);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::EigenSolvers::LinearEigenSolverBase);
 
 
 /***************************************************************************************/

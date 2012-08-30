@@ -802,7 +802,7 @@ FESystem::Numerics::SparseMatrix<ValType>::getSubMatrixValsFromRowAndColumnIndic
     // iterators for row and colums
     std::vector<FESystemUInt>::const_iterator row_it=rows.begin(), row_end=rows.end(), col_it, col_it2, col_end;
     std::map<FESystemUInt, FESystemUInt>::const_iterator map_row_it, map_col_it, map_end = old_to_new_id_map.end();
-    std::vector<std::pair<FESystemUInt, FESystemUInt> >::const_iterator source_c_it, source_c_end, sink_c_it, sink_c_end;;
+    std::vector<std::pair<FESystemUInt, FESystemUInt> >::const_iterator source_c_it, source_c_end, sink_c_it, sink_c_end;
         
     // copy the values from the submatrix to the present matrix
     for ( ; row_it!=row_end; row_it++)

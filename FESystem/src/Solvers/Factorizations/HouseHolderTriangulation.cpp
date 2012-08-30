@@ -16,15 +16,15 @@
 
 
 template <typename ValType>
-FESystem::Solvers::HouseholderTriangulation<ValType>::HouseholderTriangulation():
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>()
+FESystem::FactorizationSolvers::HouseholderTriangulation<ValType>::HouseholderTriangulation():
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>()
 {
     
 }
 
 
 template <typename ValType>
-FESystem::Solvers::HouseholderTriangulation<ValType>::~HouseholderTriangulation()
+FESystem::FactorizationSolvers::HouseholderTriangulation<ValType>::~HouseholderTriangulation()
 {
     
 }
@@ -33,7 +33,7 @@ FESystem::Solvers::HouseholderTriangulation<ValType>::~HouseholderTriangulation(
 
 template <typename ValType>
 void 
-FESystem::Solvers::HouseholderTriangulation<ValType>::factorize()
+FESystem::FactorizationSolvers::HouseholderTriangulation<ValType>::factorize()
 {
     FESystemAssert0(!this->factorization_complete, FESystem::Exception::InvalidState);
     
@@ -92,7 +92,7 @@ FESystem::Solvers::HouseholderTriangulation<ValType>::factorize()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::HouseholderTriangulation);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::FactorizationSolvers::HouseholderTriangulation);
 
 
 /***************************************************************************************/

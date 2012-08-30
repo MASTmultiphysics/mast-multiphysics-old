@@ -26,7 +26,7 @@ extern int sgetrs_(char*, int*, int*, float*, int*, int*, float*, int*, int*);
 
 
 template <typename ValType>
-FESystem::Solvers::LapackLinearSolver<ValType>::LapackLinearSolver():
+FESystem::LinearSolvers::LapackLinearSolver<ValType>::LapackLinearSolver():
 LinearSolverBase<ValType>(),
 system_matrix_work_copy(NULL)
 {
@@ -35,7 +35,7 @@ system_matrix_work_copy(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::LapackLinearSolver<ValType>::~LapackLinearSolver()
+FESystem::LinearSolvers::LapackLinearSolver<ValType>::~LapackLinearSolver()
 {
     
 }
@@ -43,12 +43,12 @@ FESystem::Solvers::LapackLinearSolver<ValType>::~LapackLinearSolver()
 
 template <typename ValType>
 void 
-FESystem::Solvers::LapackLinearSolver<ValType>::clear()
+FESystem::LinearSolvers::LapackLinearSolver<ValType>::clear()
 {
     this->system_matrix_work_copy.clear();
     this->ipiv.clear();
     // call the parent's method too
-    FESystem::Solvers::LinearSolverBase<ValType>::clear();
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::clear();
 }
 
 
@@ -56,10 +56,10 @@ FESystem::Solvers::LapackLinearSolver<ValType>::clear()
 
 template <>
 void 
-FESystem::Solvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    FESystem::Solvers::LinearSolverBase<FESystemDouble>::setSystemMatrix(mat); 
+    FESystem::LinearSolvers::LinearSolverBase<FESystemDouble>::setSystemMatrix(mat); 
 
     // and initialize the rest of the data structures
     std::pair<FESystemUInt, FESystemUInt> s = this->getSystemMatrix().getSize();
@@ -82,10 +82,10 @@ FESystem::Solvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FES
 
 template <>
 void 
-FESystem::Solvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemFloat>& mat)
+FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemFloat>& mat)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    FESystem::Solvers::LinearSolverBase<FESystemFloat>::setSystemMatrix(mat); 
+    FESystem::LinearSolvers::LinearSolverBase<FESystemFloat>::setSystemMatrix(mat); 
     
     // and initialize the rest of the data structures
     std::pair<FESystemUInt, FESystemUInt> s = this->getSystemMatrix().getSize();
@@ -110,7 +110,7 @@ FESystem::Solvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESy
 
 template <>
 void
-FESystem::Solvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::VectorBase<FESystemDouble>& rhs,
+FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::VectorBase<FESystemDouble>& rhs,
                                                              FESystem::Numerics::VectorBase<FESystemDouble>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -142,7 +142,7 @@ FESystem::Solvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Num
 
 template <>
 void
-FESystem::Solvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::VectorBase<FESystemFloat>& rhs,
+FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::VectorBase<FESystemFloat>& rhs,
                                                              FESystem::Numerics::VectorBase<FESystemFloat>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -174,7 +174,7 @@ FESystem::Solvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Nume
 
 template <>
 void
-FESystem::Solvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::MatrixBase<FESystemDouble>& rhs,
+FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::MatrixBase<FESystemDouble>& rhs,
                                                        FESystem::Numerics::MatrixBase<FESystemDouble>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -216,7 +216,7 @@ FESystem::Solvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Num
 
 template <>
 void
-FESystem::Solvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::MatrixBase<FESystemFloat>& rhs,
+FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::MatrixBase<FESystemFloat>& rhs,
                                                              FESystem::Numerics::MatrixBase<FESystemFloat>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -257,7 +257,7 @@ FESystem::Solvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Nume
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::LapackLinearSolver);
+INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::LinearSolvers::LapackLinearSolver);
 
 
 /***************************************************************************************/

@@ -20,11 +20,11 @@ namespace FESystem
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
 
-    namespace Solvers
+    namespace FactorizationSolvers
     {
         
         template <typename ValType> 
-        class ModifiedQRFactorization: public FESystem::Solvers::MatrixQRFactorizationBase<ValType>
+        class ModifiedQRFactorization: public FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>
         {
         public:
             

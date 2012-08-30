@@ -75,7 +75,6 @@ namespace FESystem
              */
             static FESystem::Structures::StructuralVariable getVariableEnum(const std::string& var);
             
-            
             /*!
              *    Returns the indices for the matrix entries that this element will contribute to. For instance, a bar element will only have the extensional stiffness
              *    matrix, and the indices will correspond to the location of the stiffness terms corresponding to the u-dofs.
@@ -86,9 +85,9 @@ namespace FESystem
             virtual void getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                          FESystem::Numerics::MatrixBase<FESystemDouble>& mat) = 0;
             
-            virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat) = 0;
+            virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);
 
-            virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec, FESystem::Numerics::VectorBase<FESystemDouble>& global_vec) = 0;
+            virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec, FESystem::Numerics::VectorBase<FESystemDouble>& global_vec);
 
         protected:
             

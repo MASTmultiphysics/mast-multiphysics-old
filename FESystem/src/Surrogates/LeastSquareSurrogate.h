@@ -21,8 +21,8 @@
 
 namespace FESystem
 {
-  namespace Solvers { template <typename ValType>  class LinearLeastSquareSolver; }
-  namespace Solvers { template <typename ValType>  class LinearSolverBase; }
+  namespace LinearSolvers { template <typename ValType>  class LinearLeastSquareSolver; }
+  namespace LinearSolvers { template <typename ValType>  class LinearSolverBase; }
   namespace Numerics { template <typename ValType>  class MatrixBase; }
   
   namespace Surrogates 
@@ -49,9 +49,9 @@ namespace FESystem
       
     protected:
       
-      std::auto_ptr<FESystem::Solvers::LinearLeastSquareSolver<ValType> > least_square_solver;
+      std::auto_ptr<FESystem::LinearSolvers::LinearLeastSquareSolver<ValType> > least_square_solver;
 
-      std::auto_ptr<FESystem::Solvers::LinearSolverBase<ValType> > linear_solver;
+      std::auto_ptr<FESystem::LinearSolvers::LinearSolverBase<ValType> > linear_solver;
 
       std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > ls_matrix;
 

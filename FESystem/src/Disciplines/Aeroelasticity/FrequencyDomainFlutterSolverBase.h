@@ -17,7 +17,7 @@
 
 namespace FESystem
 {    
-    namespace Solvers {template <typename ValType> class LinearEigenSolverBase;}
+    namespace EigenSolvers {template <typename ValType> class LinearEigenSolverBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
     namespace Numerics {template <typename ValType> class VectorBase;}
     
@@ -58,7 +58,7 @@ namespace FESystem
             /*!
              *    complex eigensolver
              */
-            FESystem::Solvers::LinearEigenSolverBase<ValType>* eigen_solver; 
+            FESystem::EigenSolvers::LinearEigenSolverBase<ValType>* eigen_solver;
         };
     }
 }

@@ -20,16 +20,14 @@
 namespace FESystem 
 {
     // Forward declerations
+    namespace LinearSolvers {template <typename  ValType> class LinearSolverBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {class SparsityPattern;}
     namespace Base {class DegreeOfFreedomMap;}
     
-    namespace Solvers
+    namespace TransientSolvers
     {
-        // Forward declerations
-        template <typename  ValType> class LinearSolverBase;
-        
         
         /*!
          *   enumeration defines the action required by the solver
@@ -79,7 +77,7 @@ namespace FESystem
             /*
              *   increments to the next time step
              */
-            virtual FESystem::Solvers::TransientSolverCallBack incrementTimeStep() = 0;
+            virtual FESystem::TransientSolvers::TransientSolverCallBack incrementTimeStep() = 0;
             
 //            /*!
 //             *   Rewinds the time step to the beginning of the previous time iteration. This may be necessary for cases where the same time 
@@ -110,7 +108,7 @@ namespace FESystem
             /*!
              *  Returns the current time iteration of the solver integration
              */
-            virtual unsigned int getCurrentIterationNumber();
+            virtual FESystemUInt getCurrentIterationNumber();
             
             /*!
              *   Initializes the state vector to the appropriate dimension for this transient solver. The
@@ -234,12 +232,12 @@ namespace FESystem
             /*!
              *    current iteration_number
              */
-            typename RealOperationType(ValType) current_iteration_number;
+            FESystemUInt current_iteration_number;
             
             /*!
              *    latest action requested by the solver
              */
-            FESystem::Solvers::TransientSolverCallBack latest_call_back;
+            FESystem::TransientSolvers::TransientSolverCallBack latest_call_back;
 
             /*!
              *    Stores the solution at the last solved time step, used to store the initial conditions at the beginning of solution. 
@@ -257,7 +255,7 @@ namespace FESystem
          *   Transient solver class for linear systems. It requires a linear solver, which should be provided by the user. 
          */
         template <typename ValType> 
-        class LinearTransientSolverBase: public FESystem::Solvers::TransientSolverBase<ValType>
+        class LinearTransientSolverBase: public FESystem::TransientSolvers::TransientSolverBase<ValType>
         {
         public:
             /*!
@@ -276,14 +274,14 @@ namespace FESystem
              *    provides the linear solver object for this transient solver. The boolean flag should be set to true if the system matrices
              *    are constant with respect to time. 
              */
-            void setLinearSolver(FESystem::Solvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices);
+            void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices);
             
         protected:
             
             /*!
              *    Pointer to linear sovler
              */
-            FESystem::Solvers::LinearSolverBase<ValType>* linear_solver;
+            FESystem::LinearSolvers::LinearSolverBase<ValType>* linear_solver;
             
             
             /*!

@@ -26,8 +26,18 @@ namespace FESystem
             
             virtual ~Structural1DElementBase();
             
+            FESystemDouble getArea() const;
+            
         protected:
 
+            virtual void clear();
+
+            virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
+                                    FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble area);
+            
+            
+            FESystemDouble area_val;
+            
         };
     }
 }

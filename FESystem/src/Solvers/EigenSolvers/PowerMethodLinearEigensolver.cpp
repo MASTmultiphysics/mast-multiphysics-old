@@ -12,15 +12,15 @@
 #include "Base/macros.h"
 
 template <typename ValType> 
-FESystem::Solvers::PowerMethodLinearEigenSolver<ValType>::PowerMethodLinearEigenSolver():
-FESystem::Solvers::LinearEigenSolverBase<ValType>()
+FESystem::EigenSolvers::PowerMethodLinearEigenSolver<ValType>::PowerMethodLinearEigenSolver():
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>()
 {
     
 }
 
 
 template <typename ValType> 
-FESystem::Solvers::PowerMethodLinearEigenSolver<ValType>::~PowerMethodLinearEigenSolver()
+FESystem::EigenSolvers::PowerMethodLinearEigenSolver<ValType>::~PowerMethodLinearEigenSolver()
 {
     
 }
@@ -29,13 +29,13 @@ FESystem::Solvers::PowerMethodLinearEigenSolver<ValType>::~PowerMethodLinearEige
 
 template <typename ValType> 
 void
-FESystem::Solvers::PowerMethodLinearEigenSolver<ValType>::solve()
+FESystem::EigenSolvers::PowerMethodLinearEigenSolver<ValType>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
     
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::NONHERMITIAN:    
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:    
             this->completePowerIterations(this->getAMatrix(), *(this->eig_val_vec), *(this->eig_vec_mat));
             break;
             
@@ -52,7 +52,7 @@ FESystem::Solvers::PowerMethodLinearEigenSolver<ValType>::solve()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::PowerMethodLinearEigenSolver);
+INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::EigenSolvers::PowerMethodLinearEigenSolver);
 
 
 /***************************************************************************************/

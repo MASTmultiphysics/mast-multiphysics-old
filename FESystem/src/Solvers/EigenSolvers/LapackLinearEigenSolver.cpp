@@ -35,15 +35,15 @@ extern "C"
 }
 
 template <typename ValType>
-FESystem::Solvers::LapackLinearEigenSolver<ValType>::LapackLinearEigenSolver():
-FESystem::Solvers::LinearEigenSolverBase<ValType>()
+FESystem::EigenSolvers::LapackLinearEigenSolver<ValType>::LapackLinearEigenSolver():
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>()
 {
     
 }
 
 
 template <typename ValType>
-FESystem::Solvers::LapackLinearEigenSolver<ValType>::~LapackLinearEigenSolver()
+FESystem::EigenSolvers::LapackLinearEigenSolver<ValType>::~LapackLinearEigenSolver()
 {
     
 }
@@ -52,9 +52,9 @@ FESystem::Solvers::LapackLinearEigenSolver<ValType>::~LapackLinearEigenSolver()
 
 template <>
 void
-FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble>::solve()
+FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemDouble>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
     
     // LAPACK solver is only for local dense matrices
     std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> >
@@ -68,7 +68,7 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble>::solve()
     FESystemDouble* a_vals=tmatA->getMatrixValues();
     
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
         {
             FESystemInt lwork=16*s.second, info=0;
             std::vector<FESystemDouble> alpha_r(s.first), alpha_i(s.second), beta(s.second), work(lwork);
@@ -113,7 +113,7 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble>::solve()
         }
             break;
             
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
         {
             tmatB->resize(s.first, s.second);
             tmatB->copyMatrix(*(this->B_mat));
@@ -176,9 +176,9 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble>::solve()
 
 template <>
 void
-FESystem::Solvers::LapackLinearEigenSolver<FESystemFloat>::solve()
+FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemFloat>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
     
     std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemFloat> >
     tmatA(FESystem::Numerics::MatrixCreate<FESystemFloat>(this->A_mat->getType())),
@@ -191,7 +191,7 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemFloat>::solve()
     FESystemFloat* a_vals=tmatA->getMatrixValues();
     
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
         {
             FESystemInt lwork=16*s.second, info=0;
             std::vector<FESystemFloat> alpha_r(s.first), alpha_i(s.second), beta(s.second), work(lwork);
@@ -236,7 +236,7 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemFloat>::solve()
         }
             break;
             
-        case FESystem::Solvers::GENERALIZED_HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
         {
             tmatB->resize(s.first, s.second);
             tmatB->copyMatrix(*(this->B_mat));
@@ -298,7 +298,7 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemFloat>::solve()
 
 template <>
 void
-FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexDouble>::solve()
+FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemComplexDouble>::solve()
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
 }
@@ -307,7 +307,7 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexDouble>::solve()
 
 template <>
 void
-FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexFloat>::solve()
+FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemComplexFloat>::solve()
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
 }
@@ -316,6 +316,6 @@ FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexFloat>::solve()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LapackLinearEigenSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::EigenSolvers::LapackLinearEigenSolver);
 
 /***************************************************************************************/

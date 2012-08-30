@@ -19,13 +19,13 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace TransientSolvers
     {
         /*!
          *   provides the implementation of Newmark transient solver
          */
         template <typename ValType>
-        class ExplicitRungeKuttaTransientSolver: public FESystem::Solvers::LinearTransientSolverBase<ValType>
+        class ExplicitRungeKuttaTransientSolver: public FESystem::TransientSolvers::LinearTransientSolverBase<ValType>
         {
         public:
             /*!
@@ -52,7 +52,7 @@ namespace FESystem
             /*
              *   increments to the next time step
              */
-            virtual FESystem::Solvers::TransientSolverCallBack incrementTimeStep();
+            virtual FESystem::TransientSolvers::TransientSolverCallBack incrementTimeStep();
                         
 //            /*!
 //             *   Rewinds the time step to the beginning of the previous time iteration. This may be necessary for cases where the same time 

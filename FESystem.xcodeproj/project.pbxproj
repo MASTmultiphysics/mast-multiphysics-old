@@ -252,6 +252,10 @@
 		EBAEE18715C1B73B0062459D /* EnumName.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE0A315C1B73B0062459D /* EnumName.cpp */; };
 		EBAEE18815C1B73B0062459D /* EnumName.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A415C1B73B0062459D /* EnumName.h */; };
 		EBAEE18915C1B73B0062459D /* Table.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A515C1B73B0062459D /* Table.h */; };
+		EBF47F1C15EFD38C00640485 /* NonlinearSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF47F1A15EFD38C00640485 /* NonlinearSolverBase.cpp */; };
+		EBF47F1D15EFD38C00640485 /* NonlinearSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */; };
+		EBF47F2015EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */; };
+		EBF47F2115EFDB4600640485 /* NewtonIterationNonlinearSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF47F1F15EFDB4600640485 /* NewtonIterationNonlinearSolver.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -520,6 +524,10 @@
 		EBAEE0A315C1B73B0062459D /* EnumName.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EnumName.cpp; sourceTree = "<group>"; };
 		EBAEE0A415C1B73B0062459D /* EnumName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnumName.h; sourceTree = "<group>"; };
 		EBAEE0A515C1B73B0062459D /* Table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Table.h; sourceTree = "<group>"; };
+		EBF47F1A15EFD38C00640485 /* NonlinearSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NonlinearSolverBase.cpp; sourceTree = "<group>"; };
+		EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NonlinearSolverBase.h; sourceTree = "<group>"; };
+		EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewtonIterationNonlinearSolver.cpp; sourceTree = "<group>"; };
+		EBF47F1F15EFDB4600640485 /* NewtonIterationNonlinearSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewtonIterationNonlinearSolver.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -935,6 +943,7 @@
 				EBAEE05F15C1B73B0062459D /* EigenSolvers */,
 				EBAEE07015C1B73B0062459D /* Factorizations */,
 				EBAEE07F15C1B73B0062459D /* LinearSolvers */,
+				EBF47F1815EFD36700640485 /* NonlinearSolvers */,
 				EBAEE08C15C1B73B0062459D /* TransientSolvers */,
 			);
 			path = Solvers;
@@ -1046,6 +1055,17 @@
 				6961E5FA15D8CB8000795584 /* StandardAtmosphere.h */,
 			);
 			path = Utils;
+			sourceTree = "<group>";
+		};
+		EBF47F1815EFD36700640485 /* NonlinearSolvers */ = {
+			isa = PBXGroup;
+			children = (
+				EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */,
+				EBF47F1F15EFDB4600640485 /* NewtonIterationNonlinearSolver.h */,
+				EBF47F1A15EFD38C00640485 /* NonlinearSolverBase.cpp */,
+				EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */,
+			);
+			path = NonlinearSolvers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1174,6 +1194,8 @@
 				EB906D5415D450E600C1F550 /* FlutterSolverBase.h in Headers */,
 				EB906D7115D9876400C1F550 /* TorsionBar.h in Headers */,
 				EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */,
+				EBF47F1D15EFD38C00640485 /* NonlinearSolverBase.h in Headers */,
+				EBF47F2115EFDB4600640485 /* NewtonIterationNonlinearSolver.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1350,6 +1372,8 @@
 				EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */,
 				EB55F83A15E68C7900D8E6B1 /* LinearBeamElementBase.cpp in Sources */,
 				6979EF9915EAC34A0060C0EC /* TimoshenkoBeam.cpp in Sources */,
+				EBF47F1C15EFD38C00640485 /* NonlinearSolverBase.cpp in Sources */,
+				EBF47F2015EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

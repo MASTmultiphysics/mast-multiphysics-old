@@ -160,7 +160,64 @@ FESystem::Structures::StructuralElementBase::calculateDeformationTransformationM
                 mat.setVal(    j*n_elem_nodes+i,     k*n_elem_nodes+i, T_mat_sub.getVal(j,k)); // displacement
                 mat.setVal((j+3)*n_elem_nodes+i, (k+3)*n_elem_nodes+i, T_mat_sub.getVal(j,k)); // rotations
             }
-//    T_mat_sub.write(std::cout);
+}
+
+
+
+void
+FESystem::Structures::StructuralElementBase::transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble> &elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble> &global_mat)
+{
+    FESystemUInt n = this->geometric_elem->getNNodes(), ndof_elem=this->getNElemDofs();
+    const std::pair<FESystemUInt, FESystemUInt> s = elem_mat.getSize(), s_g = global_mat.getSize();
+    
+    FESystemAssert4((s.first == ndof_elem) && (s.second == ndof_elem), FESystem::Numerics::MatrixSizeMismatch, ndof_elem, ndof_elem, s.first, s.second);
+    FESystemAssert4((s_g.first == n*6) && (s_g.second == n*6), FESystem::Numerics::MatrixSizeMismatch, n*6, n*6, s_g.first, s_g.second);
+    
+    static std::vector<FESystemUInt> indices;
+    
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat, tmp_mat;
+    T_mat.resize(n*6, n*6); T_mat.zero();
+    tmp_mat.resize(n*6, n*6); tmp_mat.zero();
+    
+    this->calculateDeformationTransformationMatrix(T_mat);
+    
+    this->getActiveElementMatrixIndices(indices);
+    
+    global_mat.zero();
+    global_mat.addVal(indices, indices, elem_mat);
+    
+    // the transformation matrix as returned by the coordinate system is actually T^T. Hence, instead of
+    // T^T K T, the operation performed here is T K T^T
+    global_mat.matrixRightMultiplyTranspose(1.0, T_mat, tmp_mat);
+    global_mat.zero();
+    T_mat.matrixRightMultiply(1.0, tmp_mat, global_mat);
+    
+    //    global_mat.write(std::cout);
+}
+
+
+
+void
+FESystem::Structures::StructuralElementBase::transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble> &elem_vec, FESystem::Numerics::VectorBase<FESystemDouble> &global_vec)
+{
+    FESystemUInt n = this->geometric_elem->getNNodes();
+    
+    static std::vector<FESystemUInt> indices;
+    
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat;
+    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec;
+    T_mat.resize(n*6, n*6); T_mat.zero();
+    tmp_vec.resize(n*6); tmp_vec.zero();
+    
+    this->calculateDeformationTransformationMatrix(T_mat);
+    
+    this->getActiveElementMatrixIndices(indices);
+    
+    tmp_vec.zero();
+    tmp_vec.addVal(indices, elem_vec);
+    
+    T_mat.rightVectorMultiply(tmp_vec, global_vec);
+    
 }
 
 

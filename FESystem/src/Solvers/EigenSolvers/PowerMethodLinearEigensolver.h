@@ -14,14 +14,13 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace EigenSolvers
     {
         // Forward declerations
         namespace Numerics {template <typename ValType> class MatrixBase;}
         
         template <typename ValType> 
-        class PowerMethodLinearEigenSolver: 
-        public FESystem::Solvers::LinearEigenSolverBase<ValType>
+        class PowerMethodLinearEigenSolver: public FESystem::EigenSolvers::LinearEigenSolverBase<ValType>
         {
         public:
             

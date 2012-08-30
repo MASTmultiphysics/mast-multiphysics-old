@@ -15,6 +15,9 @@
 
 namespace FESystem
 {
+    // Forward declerations
+    namespace Geometry {class Point;}
+    
     namespace Structures
     {
         class LinearPlateElementBase: public FESystem::Structures::Structural2DElementBase
@@ -32,11 +35,15 @@ namespace FESystem
              */
             virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec);
             
-            virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);
-
-            virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble> &elem_vec, FESystem::Numerics::VectorBase<FESystemDouble> &global_vec);
-
+            void calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+            
+            void calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec);
+            
         protected:
+            
+            void calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
+
+            void getMaterialMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             
         };
     }

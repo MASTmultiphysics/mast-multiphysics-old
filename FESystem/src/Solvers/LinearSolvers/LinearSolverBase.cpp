@@ -12,7 +12,7 @@
 #include "Base/macros.h"
 
 template <typename ValType>
-FESystem::Solvers::LinearSolverBase<ValType>::LinearSolverBase():
+FESystem::LinearSolvers::LinearSolverBase<ValType>::LinearSolverBase():
 if_initialized(false),
 system_matrix(NULL)
 {
@@ -21,7 +21,7 @@ system_matrix(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::LinearSolverBase<ValType>::~LinearSolverBase()
+FESystem::LinearSolvers::LinearSolverBase<ValType>::~LinearSolverBase()
 {
     this->system_matrix = NULL;
 }
@@ -29,7 +29,7 @@ FESystem::Solvers::LinearSolverBase<ValType>::~LinearSolverBase()
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearSolverBase<ValType>::clear()
+FESystem::LinearSolvers::LinearSolverBase<ValType>::clear()
 {
     this->system_matrix = NULL;
     this->if_initialized = false;
@@ -38,7 +38,7 @@ FESystem::Solvers::LinearSolverBase<ValType>::clear()
 
 template <typename ValType>
 void 
-FESystem::Solvers::LinearSolverBase<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
     
@@ -51,10 +51,10 @@ FESystem::Solvers::LinearSolverBase<ValType>::setSystemMatrix(const FESystem::Nu
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::LinearSolverBase<ValType>::getSystemMatrix() const
+FESystem::LinearSolvers::LinearSolverBase<ValType>::getSystemMatrix() const
 {
     FESystemAssert0( this->system_matrix != NULL ,
-                    FESystem::Solvers::SystemMatrixNotInitialized);
+                    FESystem::LinearSolvers::SystemMatrixNotInitialized);
     
     return *(this->system_matrix);
 }
@@ -63,7 +63,7 @@ FESystem::Solvers::LinearSolverBase<ValType>::getSystemMatrix() const
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LinearSolverBase);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::LinearSolvers::LinearSolverBase);
 
 
 /***************************************************************************************/

@@ -1163,6 +1163,8 @@ template <typename ValType>
 void 
 FESystem::Numerics::DenseMatrix<ValType>::initializeLUFactoredMatrices(FESystem::Numerics::MatrixBase<ValType>& l_mat, FESystem::Numerics::MatrixBase<ValType>& u_mat) const
 {
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+    
 //    const std::pair<FESystemUInt, FESystemUInt> s = this->getSize();
 //    const std::pair<FESystemUInt, FESystemUInt> s_l = l_mat.getSize();
 //    const std::pair<FESystemUInt, FESystemUInt> s_u = u_mat.getSize();

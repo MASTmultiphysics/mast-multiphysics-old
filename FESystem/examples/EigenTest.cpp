@@ -65,9 +65,9 @@ int eigen_main (int argc, char * const argv[]) {
     std::cout << "Inverse: " << std::endl;
     tmat1->write(std::cout);
     
-//    FESystem::Solvers::QRMethodLinearEigenSolver<FESystemDouble> eig;
+//    FESystem::EigenSolvers::QRMethodLinearEigenSolver<FESystemDouble> eig;
 //    //eig.setShift(.000);
-//    eig.setEigenProblemType(FESystem::Solvers::NONHERMITIAN);
+//    eig.setEigenProblemType(FESystem::EigenSolvers::NONHERMITIAN);
 //    eig.setMatrix(m.get());
 //    
 //    eig.solve();

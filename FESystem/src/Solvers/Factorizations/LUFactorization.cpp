@@ -19,7 +19,7 @@
 
 
 template <typename ValType>
-FESystem::Solvers::LUFactorization<ValType>::LUFactorization():
+FESystem::FactorizationSolvers::LUFactorization<ValType>::LUFactorization():
 factorization_complete(false),
 mat(NULL)
 {
@@ -28,7 +28,7 @@ mat(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::LUFactorization<ValType>::~LUFactorization()
+FESystem::FactorizationSolvers::LUFactorization<ValType>::~LUFactorization()
 {
     
 }
@@ -37,7 +37,7 @@ FESystem::Solvers::LUFactorization<ValType>::~LUFactorization()
 
 template <typename ValType>
 void
-FESystem::Solvers::LUFactorization<ValType>::clear()
+FESystem::FactorizationSolvers::LUFactorization<ValType>::clear()
 {
     this->mat = NULL;
     
@@ -53,7 +53,7 @@ FESystem::Solvers::LUFactorization<ValType>::clear()
 
 template <typename ValType>
 void
-FESystem::Solvers::LUFactorization<ValType>::initializeMatrices()
+FESystem::FactorizationSolvers::LUFactorization<ValType>::initializeMatrices()
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::InvalidState);
     
@@ -99,7 +99,7 @@ FESystem::Solvers::LUFactorization<ValType>::initializeMatrices()
 
 template <typename ValType>
 void
-FESystem::Solvers::LUFactorization<ValType>::setMatrix(const FESystem::Numerics::MatrixBase<ValType>* m)
+FESystem::FactorizationSolvers::LUFactorization<ValType>::setMatrix(const FESystem::Numerics::MatrixBase<ValType>* m)
 {
     FESystemAssert0(m != NULL, FESystem::Exception::NULLQuantity);
     FESystemAssert0(this->mat == NULL, FESystem::Exception::InvalidState);
@@ -113,7 +113,7 @@ FESystem::Solvers::LUFactorization<ValType>::setMatrix(const FESystem::Numerics:
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::LUFactorization<ValType>::getMatrix() const
+FESystem::FactorizationSolvers::LUFactorization<ValType>::getMatrix() const
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
     
@@ -123,7 +123,7 @@ FESystem::Solvers::LUFactorization<ValType>::getMatrix() const
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::LUFactorization<ValType>::getLMatrix() const
+FESystem::FactorizationSolvers::LUFactorization<ValType>::getLMatrix() const
 {
     FESystemAssert0(this->factorization_complete, FESystem::Exception::InvalidState);
     FESystemAssert0(this->l_mat.get() != NULL, FESystem::Exception::NULLQuantity);
@@ -134,7 +134,7 @@ FESystem::Solvers::LUFactorization<ValType>::getLMatrix() const
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::LUFactorization<ValType>::getUMatrix() const
+FESystem::FactorizationSolvers::LUFactorization<ValType>::getUMatrix() const
 {
     FESystemAssert0(this->factorization_complete, FESystem::Exception::InvalidState);
     FESystemAssert0(this->u_mat.get() != NULL, FESystem::Exception::NULLQuantity);
@@ -146,7 +146,7 @@ FESystem::Solvers::LUFactorization<ValType>::getUMatrix() const
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LUFactorization);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::FactorizationSolvers::LUFactorization);
 
 
 /***************************************************************************************/

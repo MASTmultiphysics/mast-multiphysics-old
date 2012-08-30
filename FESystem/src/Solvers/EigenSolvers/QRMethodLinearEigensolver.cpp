@@ -17,15 +17,15 @@
 
 
 template <typename ValType> 
-FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::QRMethodLinearEigenSolver():
-FESystem::Solvers::LinearEigenSolverBase<ValType>()
+FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::QRMethodLinearEigenSolver():
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>()
 {
     
 }
 
 
 template <typename ValType> 
-FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::~QRMethodLinearEigenSolver()
+FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::~QRMethodLinearEigenSolver()
 {
     
 }
@@ -34,7 +34,7 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::~QRMethodLinearEigenSolve
 
 //template <typename ValType> 
 //void
-//FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::setShift(ValType v)
+//FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::setShift(ValType v)
 //{
 //    this->solver_shift = v;
 //}
@@ -43,9 +43,9 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::~QRMethodLinearEigenSolve
 
 template <typename ValType> 
 void
-FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::solve()
+FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
     
     std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > 
     tmat1(FESystem::Numerics::MatrixCreate<ValType>(this->A_mat->getType())),
@@ -56,11 +56,11 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::solve()
     tmat1->resize(s.first, s.second);
     tmat2->resize(s.first, s.second);
     
-    std::auto_ptr<FESystem::Solvers::MatrixQRFactorizationBase<ValType> > 
-    qr_factorization(new FESystem::Solvers::HouseholderTriangulation<ValType>());
+    std::auto_ptr<FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType> >
+    qr_factorization(new FESystem::FactorizationSolvers::HouseholderTriangulation<ValType>());
     
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
         {    
             std::auto_ptr<FESystem::Numerics::VectorBase<ValType> > 
             vec1(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR)),
@@ -106,7 +106,7 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::solve()
         }
             break;
             
-        case FESystem::Solvers::NONHERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:
         {    
             this->eig_vec_mat_complex->setToIdentity();
             this->eig_val_vec_complex->zero();
@@ -205,6 +205,6 @@ FESystem::Solvers::QRMethodLinearEigenSolver<ValType>::solve()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::QRMethodLinearEigenSolver);
+INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::EigenSolvers::QRMethodLinearEigenSolver);
 
 /***************************************************************************************/

@@ -414,7 +414,7 @@ FESystem::Numerics::LocalMatrixBase<ValType>::getInverse(FESystem::Numerics::Mat
     else
     {        
         // calculate the QR Factorization of this matrix, and used that during the inversion operations
-        FESystem::Solvers::HouseholderTriangulation<ValType> qr_householder;
+        FESystem::FactorizationSolvers::HouseholderTriangulation<ValType> qr_householder;
         qr_householder.setMatrix(this);
         qr_householder.factorize();  // A = QR
         
@@ -424,8 +424,8 @@ FESystem::Numerics::LocalMatrixBase<ValType>::getInverse(FESystem::Numerics::Mat
         q_mat_tr->resize(q_mat.getSize().first, q_mat.getSize().second);
         q_mat_tr->copyMatrixTranspose(q_mat);
         
-        FESystem::Solvers::TriangularBacksubstitution<ValType> back_substitute;
-        back_substitute.setTriangularMatrixType(FESystem::Solvers::UPPER_TRIANGULAR);
+        FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> back_substitute;
+        back_substitute.setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
         back_substitute.setMatrix(r_mat);    
         back_substitute.backSubstitute(*q_mat_tr,mat); // A^{-1} = R^{-1} Q^T 
     }

@@ -17,7 +17,7 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace EigenSolvers
     {
         // Forward declerations
         namespace Numerics {template <typename ValType> class MatrixBase;}
@@ -28,8 +28,7 @@ namespace FESystem
          */
         
         template <typename ValType> 
-        class LanczosIterationLinearEigenSolver: 
-        public FESystem::Solvers::LinearEigenSolverBase<ValType>
+        class LanczosIterationLinearEigenSolver: public FESystem::EigenSolvers::LinearEigenSolverBase<ValType>
         {
         public:
             

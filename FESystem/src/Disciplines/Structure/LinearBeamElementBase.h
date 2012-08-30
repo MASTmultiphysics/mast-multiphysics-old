@@ -15,6 +15,10 @@
 
 namespace FESystem
 {
+    
+    // Forward declerations
+    namespace  Geometry {class Point;}
+    
     namespace Structures
     {
         class LinearBeamElementBase: public FESystem::Structures::Structural1DElementBase
@@ -35,9 +39,11 @@ namespace FESystem
              */
             virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec);
             
-            virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);
+            virtual void calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             
-            virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble> &elem_vec, FESystem::Numerics::VectorBase<FESystemDouble> &global_vec);
+            virtual void calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec);
+            
+            virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat) = 0;
 
         protected:
             
@@ -46,13 +52,15 @@ namespace FESystem
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                     FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch,  FESystemDouble A, FESystemBoolean if_lateral);
             
+            void getMaterialMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+            
+            void calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
+            
             FESystemBoolean if_include_lateral_stiffness;
             
             FESystemDouble I_tr_val;
             
             FESystemDouble I_ch_val;
-            
-            FESystemDouble area_val;
         };
     
     }

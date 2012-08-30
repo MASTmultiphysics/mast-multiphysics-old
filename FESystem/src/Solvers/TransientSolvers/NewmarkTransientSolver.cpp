@@ -16,8 +16,8 @@
 
 
 template <typename ValType>
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::LinearNewmarkTransientSolver():
-FESystem::Solvers::LinearTransientSolverBase<ValType>(),
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::LinearNewmarkTransientSolver():
+FESystem::TransientSolvers::LinearTransientSolverBase<ValType>(),
 if_explicit(false),
 jacobian(NULL),
 temp_vec(NULL)
@@ -27,7 +27,7 @@ temp_vec(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::~LinearNewmarkTransientSolver()
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::~LinearNewmarkTransientSolver()
 {
     
 }
@@ -38,10 +38,10 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::~LinearNewmarkTransien
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<FESystemDouble>& int_constants)
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<FESystemDouble>& int_constants)
 {
     // TODO: revisit for parallel and sparse
-    FESystem::Solvers::TransientSolverBase<ValType>::initialize(o,n_dofs);
+    FESystem::TransientSolvers::TransientSolverBase<ValType>::initialize(o,n_dofs);
     this->integration_constants = int_constants;
     
     // if all int_constants are zero, the integration is explicit
@@ -67,7 +67,7 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::initialize(FESystemUIn
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::clear()
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::clear()
 {
     if (this->temp_vec != NULL)
         delete this->temp_vec;
@@ -77,14 +77,14 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::clear()
     
     this->jacobian = NULL;
     this->temp_vec = NULL;
-    FESystem::Solvers::TransientSolverBase<ValType>::clear();
+    FESystem::TransientSolvers::TransientSolverBase<ValType>::clear();
 }
 
 
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::setJacobianMatrix(FESystem::Numerics::MatrixBase<ValType>& jac)
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::setJacobianMatrix(FESystem::Numerics::MatrixBase<ValType>& jac)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemAssert0(!this->if_explicit, FESystem::Exception::InvalidState);
@@ -98,7 +98,7 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::setJacobianMatrix(FESy
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::getCurrentJacobianMatrix()
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::getCurrentJacobianMatrix()
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemAssert0(!this->if_explicit, FESystem::Exception::InvalidState);
@@ -110,7 +110,7 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::getCurrentJacobianMatr
 
 template <typename ValType>
 void 
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::initializeMatrixSparsityPatterForSystem(const FESystem::Numerics::SparsityPattern& spatial_sparsity_pattern, 
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initializeMatrixSparsityPatterForSystem(const FESystem::Numerics::SparsityPattern& spatial_sparsity_pattern, 
                                                                                                   FESystem::Numerics::SparsityPattern& system_pattern) const
 {
     // TODO: revisit for parallel 
@@ -167,8 +167,8 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::initializeMatrixSparsi
 
 
 template <typename ValType>
-FESystem::Solvers::TransientSolverCallBack 
-FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
+FESystem::TransientSolvers::TransientSolverCallBack 
+FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
 {
     // make sure this is initialized
     FESystemAssert0(this->ifInitialized(), FESystem::Exception::InvalidState);
@@ -176,8 +176,8 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
     // process based on the previous call back and status of solver
     switch (this->latest_call_back) 
     {
-        case FESystem::Solvers::TIME_STEP_CONVERGED:
-        case FESystem::Solvers::WAITING_TO_START:
+        case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
+        case FESystem::TransientSolvers::WAITING_TO_START:
             // first time step, setup the matrices
         {
             if (this->if_explicit) 
@@ -185,20 +185,20 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
                 // if max of A is zero, then this is an explicit intergration scheme, and get the x_dot only
                 // x_dot_n+1 = -r = f_n+1
                 // x_n+1 = x_n + dt x_dot_n+1
-                this->latest_call_back = FESystem::Solvers::EVALUATE_X_DOT;
-                return FESystem::Solvers::EVALUATE_X_DOT;
+                this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
+                return FESystem::TransientSolvers::EVALUATE_X_DOT;
             }
             else
             {
                 FESystemAssert0(this->linear_solver != NULL, FESystem::Exception::InvalidState); 
                 // otherwise, an implicit scheme, and get both x_dot and x_dot_jacobian 
-                this->latest_call_back = FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
-                return FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
+                this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
+                return FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
             }
         }
             break;
             
-        case FESystem::Solvers::EVALUATE_X_DOT:
+        case FESystem::TransientSolvers::EVALUATE_X_DOT:
         {
             if (this->if_explicit) 
                 // if max of A is zero, then this is an explicit intergration scheme, and get the x_dot only
@@ -214,13 +214,13 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
             this->current_time += this->current_time_step;
             this->current_iteration_number++;
             
-            this->latest_call_back = FESystem::Solvers::TIME_STEP_CONVERGED;
-            return FESystem::Solvers::TIME_STEP_CONVERGED;
+            this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
+            return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
 
         }
             break;
             
-        case FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+        case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
         {
             // only for implicit scheme, where both x_dot and x_dot_jacobian are used here
             
@@ -299,8 +299,8 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
                     this->state_vec->add(1.0, *this->temp_vec);
 
                     // now, evaluate the exact time step
-                    this->latest_call_back = FESystem::Solvers::EVALUATE_X_DOT;
-                    return FESystem::Solvers::EVALUATE_X_DOT;
+                    this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
+                    return FESystem::TransientSolvers::EVALUATE_X_DOT;
                 }
                     break;
                     
@@ -313,8 +313,8 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
             this->current_time += this->current_time_step;
             this->current_iteration_number++;
             
-            this->latest_call_back = FESystem::Solvers::TIME_STEP_CONVERGED;
-            return FESystem::Solvers::TIME_STEP_CONVERGED;
+            this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
+            return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
         }
             break;
             
@@ -329,7 +329,7 @@ FESystem::Solvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LinearNewmarkTransientSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::TransientSolvers::LinearNewmarkTransientSolver);
 
 
 /***************************************************************************************/

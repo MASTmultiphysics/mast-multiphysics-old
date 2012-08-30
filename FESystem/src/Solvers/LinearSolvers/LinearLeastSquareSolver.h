@@ -23,7 +23,7 @@ namespace FESystem
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
 
-    namespace Solvers
+    namespace LinearSolvers
     {
         
         /*!
@@ -56,12 +56,12 @@ namespace FESystem
             /*!
              *   Sets the linear solver to be used by the equation. 
              */
-            virtual void setLinearSolver(FESystem::Solvers::LinearSolverBase<ValType>& solver);
+            virtual void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver);
             
             /*!
              *   Returns a reference to the linear solver object
              */
-            FESystem::Solvers::LinearSolverBase<ValType>& getLinearSolver();
+            FESystem::LinearSolvers::LinearSolverBase<ValType>& getLinearSolver();
 
             /*!
              *   Sets the system matrix \f$ A \f$ in the system of equation through parameter \p mat and
@@ -100,7 +100,7 @@ namespace FESystem
             /*!
              *    A pointer to the linear solver object, which is set using the setLinearSolver method. 
              */
-            FESystem::Solvers::LinearSolverBase<ValType>* linear_solver;
+            FESystem::LinearSolvers::LinearSolverBase<ValType>* linear_solver;
             
             /*!
              *    A smart pointer to the least square system matrix \f$ A1 = A^T A \f$.

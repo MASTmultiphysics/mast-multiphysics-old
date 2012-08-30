@@ -22,7 +22,7 @@ namespace FESystem
     namespace Numerics {template <typename ValType> class MatrixBase;}
     namespace Numerics {class SparsityPattern;}
     
-    namespace Solvers
+    namespace FactorizationSolvers
     {
         
         template <typename ValType> 

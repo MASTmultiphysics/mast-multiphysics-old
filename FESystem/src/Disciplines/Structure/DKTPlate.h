@@ -35,10 +35,6 @@ namespace FESystem
                                     const FESystem::Quadrature::QuadratureBase& q_tri3, const FESystem::Quadrature::QuadratureBase& q_tri6,
                                     FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble th);
 
-            virtual void calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-            
-            virtual void calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec);
-            
             virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);            
             
             virtual void getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
@@ -47,12 +43,8 @@ namespace FESystem
             
         protected:
             
-            void getMaterialMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-            
             void getMaterialComplianceMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-            
-            void calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
-            
+                        
             void calculateBendingOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
             
             FESystemBoolean if_first_call;

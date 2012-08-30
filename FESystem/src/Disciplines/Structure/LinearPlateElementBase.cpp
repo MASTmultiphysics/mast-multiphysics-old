@@ -15,6 +15,7 @@
 #include "Numerics/DenseMatrix.h"
 #include "Numerics/LocalVector.h"
 #include "Base/FESystemExceptions.h"
+#include "Geom/Point.h"
 
 
 
@@ -34,6 +35,8 @@ FESystem::Structures::LinearPlateElementBase::~LinearPlateElementBase()
 FESystemUInt
 FESystem::Structures::LinearPlateElementBase::getNElemDofs() const
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     return 3*this->geometric_elem->getNNodes();
 }
 
@@ -49,69 +52,90 @@ FESystem::Structures::LinearPlateElementBase::getActiveElementMatrixIndices(std:
     for (FESystemUInt i=0; i<n; i++) vec[i+2*n] = 4*n + i; // theta-y
 }
 
-
-
-
 void
-FESystem::Structures::LinearPlateElementBase::transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble> &elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble> &global_mat)
+FESystem::Structures::LinearPlateElementBase::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    FESystemUInt n = this->geometric_elem->getNNodes(), ndof_elem=this->getNElemDofs();
-    const std::pair<FESystemUInt, FESystemUInt> s = elem_mat.getSize(), s_g = global_mat.getSize();
+    const FESystemUInt n = this->geometric_elem->getNNodes();
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
-    FESystemAssert4((s.first == ndof_elem) && (s.second == ndof_elem), FESystem::Numerics::MatrixSizeMismatch, ndof_elem, ndof_elem, s.first, s.second);
-    FESystemAssert4((s_g.first == n*6) && (s_g.second == n*6), FESystem::Numerics::MatrixSizeMismatch, n*6, n*6, s_g.first, s_g.second);
+    FESystemAssert4(((s.first == 3*n) && (s.second == 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
     
-    static std::vector<FESystemUInt> indices;
-
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat, tmp_mat;
-    T_mat.resize(n*6, n*6); T_mat.zero();
-    tmp_mat.resize(n*6, n*6); tmp_mat.zero();
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    C_mat.resize(3,3); B_mat.resize(3, 3*n); tmp_mat1.resize(3, 3*n), tmp_mat2.resize(3*n, 3*n);
+    C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
-    this->calculateDeformationTransformationMatrix(T_mat);
+    const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
     
-    this->getActiveElementMatrixIndices(indices);
+    FESystemDouble jac=0.0;
+    mat.zero();
+    this->getMaterialMassMatrix(C_mat);
     
-    global_mat.zero();
-    global_mat.addVal(indices, indices, elem_mat);
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValue(*(q_pts[i]));
+        this->calculateInertiaOperatorMatrix(*(q_pts[i]), B_mat);
+        
+        C_mat.matrixRightMultiply(1.0, B_mat, tmp_mat1);
+        B_mat.matrixTransposeRightMultiply(1.0, tmp_mat1, tmp_mat2);
+        
+        mat.add(q_weight[i]*jac, tmp_mat2);
+    }
     
-//    T_mat.write(std::cout);
-//    elem_mat.write(std::cout);
-//    global_mat.write(std::cout);
-    
-    // the transformation matrix as returned by the coordinate system is actually T^T. Hence, instead of
-    // T^T K T, the operation performed here is T K T^T
-    global_mat.matrixRightMultiplyTranspose(1.0, T_mat, tmp_mat);
-    global_mat.zero();
-    T_mat.matrixRightMultiply(1.0, tmp_mat, global_mat);
-
-//    global_mat.write(std::cout);
 }
 
 
 
 void
-FESystem::Structures::LinearPlateElementBase::transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble> &elem_vec, FESystem::Numerics::VectorBase<FESystemDouble> &global_vec)
+FESystem::Structures::LinearPlateElementBase::calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {
-    FESystemUInt n = this->geometric_elem->getNNodes();
+    const FESystemUInt n = this->geometric_elem->getNNodes();
     
-    static std::vector<FESystemUInt> indices;
+    FESystemAssert2(vec.getSize() == 3*n, FESystem::Exception::DimensionsDoNotMatch, 3*n, vec.getSize());
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat;
-    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec;
-    T_mat.resize(n*6, n*6); T_mat.zero();
-    tmp_vec.resize(n*6); tmp_vec.zero();
+    vec.zero();
+    FESystemDouble wt = this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature)) * this->th_val * this->rho_val;
     
-    this->calculateDeformationTransformationMatrix(T_mat);
-    
-    this->getActiveElementMatrixIndices(indices);
-    
-    tmp_vec.zero();
-    tmp_vec.addVal(indices, elem_vec);
-    
-    T_mat.rightVectorMultiply(tmp_vec, global_vec);
-    
-//    elem_vec.write(std::cout);
-//    global_vec.write(std::cout);
+    wt /= (1.0*n);
+    vec.setAllVals(wt*10e-4);
+    for (FESystemUInt i=0; i<n; i++)
+        vec.setVal(i, wt);
 }
+
+
+
+void
+FESystem::Structures::LinearPlateElementBase::calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
+{
+    const FESystemUInt n = this->geometric_elem->getNNodes();
+    const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
+    
+    FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);
+    
+    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    Nvec.resize(n);
+    B_mat.zero();
+    
+    Nvec.zero();
+    this->finite_element->getShapeFunction(pt, Nvec);
+    B_mat.setRowVals(0,   0,   n-1, Nvec); // w
+    B_mat.setRowVals(1,   n, 2*n-1, Nvec); // theta_x
+    B_mat.setRowVals(2, 2*n, 3*n-1, Nvec); // theta_y
+}
+
+
+
+void
+FESystem::Structures::LinearPlateElementBase::getMaterialMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+{
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+    
+    FESystemAssert4(((s.first == 3) && (s.second== 3)), FESystem::Numerics::MatrixSizeMismatch, 3, 3, s.first, s.second);
+    
+    mat.setVal(0, 0, this->rho_val * this->th_val);
+    mat.setVal(1, 1, 1.0e-12 * this->rho_val * this->th_val);
+    mat.setVal(2, 2, 1.0e-12 * this->rho_val * this->th_val);
+}
+
 
 

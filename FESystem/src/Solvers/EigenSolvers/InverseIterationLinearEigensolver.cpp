@@ -17,8 +17,8 @@
 
 
 template <typename ValType> 
-FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::InverseIterationLinearEigenSolver():
-FESystem::Solvers::LinearEigenSolverBase<ValType>(),
+FESystem::EigenSolvers::InverseIterationLinearEigenSolver<ValType>::InverseIterationLinearEigenSolver():
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>(),
 solver_shift(0.0)
 {
 
@@ -26,7 +26,7 @@ solver_shift(0.0)
 
 
 template <typename ValType> 
-FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::~InverseIterationLinearEigenSolver()
+FESystem::EigenSolvers::InverseIterationLinearEigenSolver<ValType>::~InverseIterationLinearEigenSolver()
 {
     
 }
@@ -35,7 +35,7 @@ FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::~InverseIteration
 
 template <typename ValType> 
 void
-FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::setShift(ValType v)
+FESystem::EigenSolvers::InverseIterationLinearEigenSolver<ValType>::setShift(ValType v)
 {
     this->solver_shift = v;
 }
@@ -43,9 +43,9 @@ FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::setShift(ValType 
     
 template <typename ValType> 
 void
-FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::solve()
+FESystem::EigenSolvers::InverseIterationLinearEigenSolver<ValType>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
 
     std::pair<FESystemUInt, FESystemUInt> s = this->getAMatrix().getSize();
 
@@ -53,8 +53,8 @@ FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::solve()
     this->shifted_mat->resize(s.first, s.second);
     
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::NONHERMITIAN:    
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:    
         {    
             this->shifted_mat->copyMatrix(this->getAMatrix());
             this->shifted_mat->shiftDiagonal(-this->solver_shift);
@@ -73,7 +73,7 @@ FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::solve()
 
 template <typename ValType> 
 void
-FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::shiftAndInvertPowerIterations
+FESystem::EigenSolvers::InverseIterationLinearEigenSolver<ValType>::shiftAndInvertPowerIterations
 (FESystem::Numerics::MatrixBase<ValType>& mat)
 {
     FESystemUInt n = mat.getSize().second;
@@ -89,15 +89,15 @@ FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::shiftAndInvertPow
     this->eig_val_vec->zero();
 
     // calculate the QR Factorization of this matrix, and used that during the inversion operations
-    FESystem::Solvers::HouseholderTriangulation<ValType> qr_householder;
+    FESystem::FactorizationSolvers::HouseholderTriangulation<ValType> qr_householder;
     qr_householder.setMatrix(&mat);
     qr_householder.factorize();
     
     FESystem::Numerics::MatrixBase<ValType>& q_mat = qr_householder.getQMatrix();
     FESystem::Numerics::MatrixBase<ValType>& r_mat = qr_householder.getRMatrix();
 
-    FESystem::Solvers::TriangularBacksubstitution<ValType> back_substitute;
-    back_substitute.setTriangularMatrixType(FESystem::Solvers::UPPER_TRIANGULAR);
+    FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> back_substitute;
+    back_substitute.setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
     back_substitute.setMatrix(r_mat);
     
     
@@ -136,7 +136,7 @@ FESystem::Solvers::InverseIterationLinearEigenSolver<ValType>::shiftAndInvertPow
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::InverseIterationLinearEigenSolver);
+INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::EigenSolvers::InverseIterationLinearEigenSolver);
 
 
 /***************************************************************************************/

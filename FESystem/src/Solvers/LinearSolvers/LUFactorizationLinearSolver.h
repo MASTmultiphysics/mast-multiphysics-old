@@ -20,12 +20,13 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    // Forward declerations
+    namespace FactorizationSolvers {template <typename ValType> class LUFactorization;}
+    namespace FactorizationSolvers {template <typename ValType> class TriangularBacksubstitution;}
+    
+
+    namespace LinearSolvers
     {
-        // Forward declerations
-        template <typename ValType> class LUFactorization;
-        template <typename ValType> class TriangularBacksubstitution;
-        
         /*!
          *    Provides LU factorization based linear solver for system of equations \f$ A x= b \f$. The method first 
          *    creates a factorization \f$ A = LU \f$ where \f$ L \f$ is a lower triangular matrix, and then solves for each 
@@ -33,7 +34,7 @@ namespace FESystem
          *    back substitution. 
          */
         template <typename ValType> 
-        class LUFactorizationLinearSolver: public FESystem::Solvers::LinearSolverBase<ValType>
+        class LUFactorizationLinearSolver: public FESystem::LinearSolvers::LinearSolverBase<ValType>
         {
         public:
             /*!
@@ -86,13 +87,13 @@ namespace FESystem
             /*!
              *    A smart pointer to the QR factorization object
              */
-            std::auto_ptr<FESystem::Solvers::LUFactorization<ValType> >  lu_factorization;
+            std::auto_ptr<FESystem::FactorizationSolvers::LUFactorization<ValType> >  lu_factorization;
             
             /*!
              *    A smart pointer to the triangular backsubsitution object
              */
-            std::auto_ptr<FESystem::Solvers::TriangularBacksubstitution<ValType> >  l_triangular_backsubstitute;
-            std::auto_ptr<FESystem::Solvers::TriangularBacksubstitution<ValType> >  u_triangular_backsubstitute;
+            std::auto_ptr<FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> >  l_triangular_backsubstitute;
+            std::auto_ptr<FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> >  u_triangular_backsubstitute;
             
         };
     }

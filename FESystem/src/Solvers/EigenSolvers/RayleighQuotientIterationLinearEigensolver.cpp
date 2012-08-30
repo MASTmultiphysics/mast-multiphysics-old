@@ -19,8 +19,8 @@
 
 
 template <typename ValType> 
-FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::RayleighQuotientIterationLinearEigenSolver():
-FESystem::Solvers::LinearEigenSolverBase<ValType>(),
+FESystem::EigenSolvers::RayleighQuotientIterationLinearEigenSolver<ValType>::RayleighQuotientIterationLinearEigenSolver():
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>(),
 solver_shift(0.0)
 {
     
@@ -28,7 +28,7 @@ solver_shift(0.0)
 
 
 template <typename ValType> 
-FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::~RayleighQuotientIterationLinearEigenSolver()
+FESystem::EigenSolvers::RayleighQuotientIterationLinearEigenSolver<ValType>::~RayleighQuotientIterationLinearEigenSolver()
 {
     
 }
@@ -37,7 +37,7 @@ FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::~Rayleig
 
 template <typename ValType> 
 void
-FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::setShift(ValType v)
+FESystem::EigenSolvers::RayleighQuotientIterationLinearEigenSolver<ValType>::setShift(ValType v)
 {
     this->solver_shift = v;
 }
@@ -45,14 +45,14 @@ FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::setShift
 
 template <typename ValType> 
 void
-FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::solve()
+FESystem::EigenSolvers::RayleighQuotientIterationLinearEigenSolver<ValType>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
     
     
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
-        case FESystem::Solvers::NONHERMITIAN:    
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::NONHERMITIAN:    
         {    
             
             this->shiftAndInvertPowerIterations();
@@ -69,7 +69,7 @@ FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::solve()
 
 template <typename ValType> 
 void
-FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::shiftAndInvertPowerIterations
+FESystem::EigenSolvers::RayleighQuotientIterationLinearEigenSolver<ValType>::shiftAndInvertPowerIterations
 ()
 {
     this->shifted_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->getAMatrix().getType()).release());
@@ -94,10 +94,10 @@ FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::shiftAnd
     
     typename RealOperationType(ValType) conv = 1.0e6;
     ValType eig0 = this->solver_shift, eig1 = this->solver_shift, val;
-    FESystem::Solvers::HouseholderTriangulation<ValType> qr_householder;
-    FESystem::Solvers::TriangularBacksubstitution<ValType> back_substitute;
+    FESystem::FactorizationSolvers::HouseholderTriangulation<ValType> qr_householder;
+    FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> back_substitute;
 
-    back_substitute.setTriangularMatrixType(FESystem::Solvers::UPPER_TRIANGULAR);
+    back_substitute.setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
     qr_householder.setMatrix(this->shifted_mat.get());
     
     while (fabs(conv) >= this->getConvergenceTolerance())
@@ -140,6 +140,6 @@ FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver<ValType>::shiftAnd
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::RayleighQuotientIterationLinearEigenSolver);
+INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::EigenSolvers::RayleighQuotientIterationLinearEigenSolver);
 
 /***************************************************************************************/

@@ -16,7 +16,7 @@
 
 
 template <typename ValType>
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::LinearLeastSquareSolver():
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::LinearLeastSquareSolver():
 LinearSolverBase<ValType>(),
 linear_solver(NULL),
 least_square_system_matrix(NULL)
@@ -26,7 +26,7 @@ least_square_system_matrix(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::~LinearLeastSquareSolver()
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::~LinearLeastSquareSolver()
 {
     
 }
@@ -36,7 +36,7 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::~LinearLeastSquareSolver()
 
 template <typename ValType>
 void 
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::clear()
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::clear()
 {
     this->linear_solver = NULL;
     this->least_square_system_matrix.reset();
@@ -44,13 +44,13 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::clear()
     this->mat.reset();
 
     // call the parent's clear routine
-    FESystem::Solvers::LinearSolverBase<ValType>::clear();
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::clear();
 }
 
 
 template <typename ValType>
 void 
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::setLinearSolver(FESystem::Solvers::LinearSolverBase<ValType>& solver)
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver)
 {
     FESystemAssert0(this->linear_solver == NULL, FESystem::Exception::InvalidState);
     
@@ -59,11 +59,11 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::setLinearSolver(FESystem::S
 
 
 template <typename ValType>
-FESystem::Solvers::LinearSolverBase<ValType>& 
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::getLinearSolver()
+FESystem::LinearSolvers::LinearSolverBase<ValType>& 
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::getLinearSolver()
 {
     FESystemAssert0( this->linear_solver != NULL ,
-                    FESystem::Solvers::LinearSolverNotInitialized);
+                    FESystem::LinearSolvers::LinearSolverNotInitialized);
     return *(this->linear_solver);
 }
 
@@ -71,9 +71,9 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::getLinearSolver()
 
 template <typename ValType>
 void 
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
 {
-    FESystemAssert0( this->linear_solver != NULL, FESystem::Solvers::LinearSolverNotInitialized);
+    FESystemAssert0( this->linear_solver != NULL, FESystem::LinearSolvers::LinearSolverNotInitialized);
         
     std::pair<FESystemUInt, FESystemUInt> s = this->getSystemMatrix().getSize();
     const FESystem::Numerics::MatrixBase<ValType>& m_val = this->getSystemMatrix();
@@ -84,7 +84,7 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::setSystemMatrix(const FESys
     
     this->getLinearSolver().setSystemMatrix(*(this->least_square_system_matrix));
     
-    FESystem::Solvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
 }
 
 
@@ -93,7 +93,7 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::setSystemMatrix(const FESys
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
                                                             FESystem::Numerics::VectorBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -124,7 +124,7 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::solve(const FESystem::Numer
 
 template <typename ValType>
 void
-FESystem::Solvers::LinearLeastSquareSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
                                                             FESystem::Numerics::MatrixBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -158,7 +158,7 @@ FESystem::Solvers::LinearLeastSquareSolver<ValType>::solve(const FESystem::Numer
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LinearLeastSquareSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::LinearSolvers::LinearLeastSquareSolver);
 
 
 /***************************************************************************************/

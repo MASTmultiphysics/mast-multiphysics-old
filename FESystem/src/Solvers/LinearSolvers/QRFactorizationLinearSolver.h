@@ -19,11 +19,12 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    // Forward declerations
+    namespace FactorizationSolvers { template <typename ValType> class HouseholderTriangulation;}
+    namespace FactorizationSolvers { template <typename ValType> class TriangularBacksubstitution;}
+
+    namespace LinearSolvers
     {
-        // Forward declerations
-        template <typename ValType> class HouseholderTriangulation;
-        template <typename ValType> class TriangularBacksubstitution;
         
         /*!
          *    Provides QR factorization based linear solver for system of equations \f$ A x= b \f$. The method first 
@@ -32,7 +33,7 @@ namespace FESystem
          *    back substitution. 
          */
         template <typename ValType> 
-        class QRFactorizationLinearSolver: public FESystem::Solvers::LinearSolverBase<ValType>
+        class QRFactorizationLinearSolver: public FESystem::LinearSolvers::LinearSolverBase<ValType>
         {
         public:
             /*!
@@ -85,12 +86,12 @@ namespace FESystem
             /*!
              *    A smart pointer to the QR factorization object
              */
-            std::auto_ptr<FESystem::Solvers::HouseholderTriangulation<ValType> >  qr_factorization;
+            std::auto_ptr<FESystem::FactorizationSolvers::HouseholderTriangulation<ValType> >  qr_factorization;
             
             /*!
              *    A smart pointer to the triangular backsubsitution object
              */
-            std::auto_ptr<FESystem::Solvers::TriangularBacksubstitution<ValType> >  triangular_backsubstitute;
+            std::auto_ptr<FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> >  triangular_backsubstitute;
             
         };
     }

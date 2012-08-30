@@ -66,8 +66,8 @@ FESystem::Surrogates::LeastSquareSurrogate<ValType>::initialize()
                                coeff_it.getCurrentValue(point_it.getCurrentParameter()));
   
   // create the solver
-  this->least_square_solver.reset(new FESystem::Solvers::LinearLeastSquareSolver<ValType>());
-  this->linear_solver.reset(new FESystem::Solvers::LapackLinearSolver<ValType>());
+  this->least_square_solver.reset(new FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>());
+  this->linear_solver.reset(new FESystem::LinearSolvers::LapackLinearSolver<ValType>());
   this->ls_solved_polynomial_coefficient.resize(n_resps);
   for (FESystemUInt i=0; i<n_resps; i++)
   {

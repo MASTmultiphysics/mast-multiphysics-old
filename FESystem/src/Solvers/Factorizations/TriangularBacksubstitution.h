@@ -15,7 +15,7 @@ namespace FESystem
     namespace Numerics {template <typename ValType> class MatrixBase;}
     namespace Numerics {template <typename ValType> class VectorBase;}
 
-    namespace Solvers
+    namespace FactorizationSolvers
     {
         
         /*!
@@ -50,9 +50,9 @@ namespace FESystem
              */
             void clear();
             
-            void setTriangularMatrixType(FESystem::Solvers::TriangularType t);
+            void setTriangularMatrixType(FESystem::FactorizationSolvers::TriangularType t);
 
-            FESystem::Solvers::TriangularType getTriangularMatrixType();
+            FESystem::FactorizationSolvers::TriangularType getTriangularMatrixType();
             
             void setMatrix(const FESystem::Numerics::MatrixBase<ValType>& m);
 
@@ -66,7 +66,7 @@ namespace FESystem
             
         protected:
             
-            FESystem::Solvers::TriangularType tri_type;
+            FESystem::FactorizationSolvers::TriangularType tri_type;
                         
             const FESystem::Numerics::MatrixBase<ValType>* mat;            
         };

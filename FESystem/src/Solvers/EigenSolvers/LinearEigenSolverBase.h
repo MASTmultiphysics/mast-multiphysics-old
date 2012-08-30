@@ -23,29 +23,29 @@ namespace FESystem
     // Forward declerations
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
-
-    namespace Solvers
+    
+    namespace EigenSolvers
     {
-
+        
         enum LinearEigenProblemType
         {
             HERMITIAN,
-            GENERALIZED_HERMITIAN, 
+            GENERALIZED_HERMITIAN,
             NONHERMITIAN,
-            GENERALIZED_NONHERMITIAN 
+            GENERALIZED_NONHERMITIAN
         };
-
+        
         
         enum EigenSpectrumType
         {
             SMALLEST_MAGNITUDE,
-            LARGEST_MAGNITUDE, 
+            LARGEST_MAGNITUDE,
             SMALLEST_REAL,
             LARGEST_REAL,
             SMALLEST_IMAGINARY,
             LARGEST_IMAGINARY
         };
-
+        
         enum EigenShiftType
         {
             NO_SHIFT,
@@ -54,17 +54,17 @@ namespace FESystem
             SPECTRUM_FOLD,
             ORIGIN_SHIFT
         };
-
-	enum EigenValueSortingCriteria
-	{
-	  VALUE,
-	  MAGNITUDE,
-	  REAL_PART,
-	  IMAGINARY_PART
-	};
-
         
-        template <typename ValType> 
+        enum EigenValueSortingCriteria
+        {
+            VALUE,
+            MAGNITUDE,
+            REAL_PART,
+            IMAGINARY_PART
+        };
+        
+        
+        template <typename ValType>
         class LinearEigenSolverBase
         {
         public:
@@ -73,39 +73,39 @@ namespace FESystem
             
             virtual ~LinearEigenSolverBase();
             
-            void setEigenProblemType(FESystem::Solvers::LinearEigenProblemType p);
+            void setEigenProblemType(FESystem::EigenSolvers::LinearEigenProblemType p);
             
-            FESystem::Solvers::LinearEigenProblemType getEigenProblemType() const;
-
-            void setEigenSpectrumType(FESystem::Solvers::EigenSpectrumType p);
+            FESystem::EigenSolvers::LinearEigenProblemType getEigenProblemType() const;
             
-            FESystem::Solvers::EigenSpectrumType getEigenSpectrumType() const;
-
-            void setEigenShiftType(FESystem::Solvers::EigenShiftType p);
+            void setEigenSpectrumType(FESystem::EigenSolvers::EigenSpectrumType p);
             
-            FESystem::Solvers::EigenShiftType getEigenShiftType() const;
-
+            FESystem::EigenSolvers::EigenSpectrumType getEigenSpectrumType() const;
+            
+            void setEigenShiftType(FESystem::EigenSolvers::EigenShiftType p);
+            
+            FESystem::EigenSolvers::EigenShiftType getEigenShiftType() const;
+            
             void setEigenShiftValue(ValType v);
             
             ValType getEigenShiftValue() const;
-
+            
             void setMaxIterations(FESystemUInt n);
             
             FESystemUInt getMaxIterations() const;
-
-            void setMatrix(FESystem::Numerics::MatrixBase<ValType>* lhs, 
+            
+            void setMatrix(FESystem::Numerics::MatrixBase<ValType>* lhs,
                            FESystem::Numerics::MatrixBase<ValType>* rhs = NULL);
-
+            
             FESystem::Numerics::MatrixBase<ValType>& getAMatrix();
-
+            
             FESystem::Numerics::MatrixBase<ValType>& getBMatrix();
-
+            
             FESystemUInt getNConvergedEigenValues() const;
             
             void setConvergenceTolerance(FESystemDouble& val);
-
+            
             FESystemDouble getConvergenceTolerance() const;
-
+            
             /*!
              *  \brief returns the real valued eigenvector matrix for Hermitian problem
              */
@@ -114,32 +114,32 @@ namespace FESystem
             const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& getComplexEigenVectorMatrix() const;
             
             const FESystem::Numerics::VectorBase<ValType>& getEigenValues() const;
-
+            
             const FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)>& getComplexEigenValues() const;
-
-	    /*!
-	     *    Prepares the vector with ids of the eigenvalues in ascending magnitude. Can be used to access the 
-	     *    lowest or highest eigenvalues in the spectrum
-	     */
-	    void  prepareSortingVector(FESystem::Solvers::EigenValueSortingCriteria sort, std::vector<FESystemUInt>& sorted_ids) const;
-
+            
+            /*!
+             *    Prepares the vector with ids of the eigenvalues in ascending magnitude. Can be used to access the
+             *    lowest or highest eigenvalues in the spectrum
+             */
+            void  prepareSortingVector(FESystem::EigenSolvers::EigenValueSortingCriteria sort, std::vector<FESystemUInt>& sorted_ids) const;
+            
             virtual void solve() = 0;
             
         protected:
-
+            
             void completePowerIterations(FESystem::Numerics::MatrixBase<ValType>& mat,
                                          FESystem::Numerics::VectorBase<ValType>& eig_vals,
                                          FESystem::Numerics::MatrixBase<ValType>& eig_vecs);
-
+            
             FESystemUInt n_max_iterations;
             
-            FESystem::Solvers::LinearEigenProblemType problem_type;
-
-            FESystem::Solvers::EigenShiftType shift_type;
+            FESystem::EigenSolvers::LinearEigenProblemType problem_type;
+            
+            FESystem::EigenSolvers::EigenShiftType shift_type;
             
             ValType shift_value;
-
-            FESystem::Solvers::EigenSpectrumType spectrum;
+            
+            FESystem::EigenSolvers::EigenSpectrumType spectrum;
             
             FESystemBoolean matrices_are_set;
             
@@ -151,8 +151,8 @@ namespace FESystem
             /*!
              *  \brief required convergence tolerance, default value is 1.0e-12;
              */
-            FESystemDouble convergence_tolerance; 
-
+            FESystemDouble convergence_tolerance;
+            
             FESystem::Numerics::MatrixBase<ValType>* A_mat;
             
             FESystem::Numerics::MatrixBase<ValType>* B_mat;
@@ -160,13 +160,13 @@ namespace FESystem
             /*!
              *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for hermitian problems
              */
-            std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > eig_vec_mat; 
-
+            std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > eig_vec_mat;
+            
             /*!
              *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for nonhermitian problems
              */
-            std::auto_ptr<FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)> > eig_vec_mat_complex; 
-
+            std::auto_ptr<FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)> > eig_vec_mat_complex;
+            
             /*!
              *  \brief storage for the eigenvalues as they are updated during the iterations, this is used only for hermitian problems
              */
@@ -176,15 +176,15 @@ namespace FESystem
              *  \brief storage for the complex eigenvalues as they are updated during the iterations, this is specifically used for nonhermitian problems
              */
             std::auto_ptr<FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)> > eig_val_vec_complex;
-
+            
         };
         
         DeclareException0(GeneralizedEigenproblemDoesNotHaveRHSMatrix, 
                           << "RHS matrix does not exist for Hermitian and NonHermitian Problems\n");
-
+        
         DeclareException0(MatrixNotSet, 
                           << "Matrices not set for eigensolver before use.\n");
-
+        
     }
 }
 

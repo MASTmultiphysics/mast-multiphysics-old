@@ -15,8 +15,8 @@
 
 
 template <typename ValType> 
-FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::PseudoTimeSteppingLinearSolver():
-FESystem::Solvers::LinearSolverBase<ValType>(),
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::PseudoTimeSteppingLinearSolver():
+FESystem::LinearSolvers::LinearSolverBase<ValType>(),
 tolerance(1.0e-6),
 max_iters(100)
 {
@@ -24,7 +24,7 @@ max_iters(100)
 }
 
 template <typename ValType> 
-FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::~PseudoTimeSteppingLinearSolver()
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::~PseudoTimeSteppingLinearSolver()
 {
     
 }
@@ -32,17 +32,17 @@ FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::~PseudoTimeSteppingL
 
 template <typename ValType> 
 void 
-FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::clear()
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::clear()
 {
     this->residual_vec.reset();
     // call the parent's method too
-    FESystem::Solvers::LinearSolverBase<ValType>::clear();
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::clear();
 }
             
 
 template <typename ValType> 
 void 
-FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
 
@@ -50,12 +50,12 @@ FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::setSystemMatrix(cons
     
     this->residual_vec->resize(mat.getSize().first);
     
-    FESystem::Solvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
 }
 
 template <typename ValType> 
 void
-FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
                                                                    FESystem::Numerics::VectorBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -96,7 +96,7 @@ FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem
 
 template <typename ValType> 
 void 
-FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
                                                                    FESystem::Numerics::MatrixBase<ValType>& sol)
 {
     
@@ -106,7 +106,7 @@ FESystem::Solvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::PseudoTimeSteppingLinearSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver);
 
 
 /***************************************************************************************/

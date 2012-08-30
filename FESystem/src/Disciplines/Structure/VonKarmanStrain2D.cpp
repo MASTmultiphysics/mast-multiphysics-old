@@ -56,7 +56,7 @@ FESystem::Structures::VonKarmanStrain2D::initialize(const FESystem::Mesh::ElemBa
 void
 FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const FESystem::Numerics::VectorBase<FESystemDouble>& membrane_sol, FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    const FESystemUInt n = this->geometric_elem->getNNodes();;
+    const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
@@ -91,7 +91,7 @@ FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const F
 void
 FESystem::Structures::VonKarmanStrain2D::calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
-    const FESystemUInt n = this->geometric_elem->getNNodes();;
+    const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     FESystemAssert4(((s.first == 2) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, 2, n, s.first, s.second);
     

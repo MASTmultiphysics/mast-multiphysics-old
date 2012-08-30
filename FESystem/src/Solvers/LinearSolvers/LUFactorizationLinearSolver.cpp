@@ -17,11 +17,11 @@
 
 
 template <typename ValType>
-FESystem::Solvers::LUFactorizationLinearSolver<ValType>::LUFactorizationLinearSolver():
-FESystem::Solvers::LinearSolverBase<ValType>(),
-lu_factorization(new FESystem::Solvers::LUFactorization<ValType>),
-l_triangular_backsubstitute(new FESystem::Solvers::TriangularBacksubstitution<ValType>),
-u_triangular_backsubstitute(new FESystem::Solvers::TriangularBacksubstitution<ValType>)
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::LUFactorizationLinearSolver():
+FESystem::LinearSolvers::LinearSolverBase<ValType>(),
+lu_factorization(new FESystem::FactorizationSolvers::LUFactorization<ValType>),
+l_triangular_backsubstitute(new FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>),
+u_triangular_backsubstitute(new FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>)
 {
     
 }
@@ -29,7 +29,7 @@ u_triangular_backsubstitute(new FESystem::Solvers::TriangularBacksubstitution<Va
 
 
 template <typename ValType>
-FESystem::Solvers::LUFactorizationLinearSolver<ValType>::~LUFactorizationLinearSolver()
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::~LUFactorizationLinearSolver()
 {
     
 }
@@ -37,7 +37,7 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::~LUFactorizationLinearS
 
 template <typename ValType>
 void 
-FESystem::Solvers::LUFactorizationLinearSolver<ValType>::clear()
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::clear()
 {
     this->lu_factorization->clear();
     this->l_triangular_backsubstitute->clear();
@@ -45,7 +45,7 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::clear()
     this->vec.reset();
     this->mat.reset();
     // call the parent's method too
-    FESystem::Solvers::LinearSolverBase<ValType>::clear();
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::clear();
 }
 
 
@@ -53,7 +53,7 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::clear()
 
 template <typename ValType>
 void 
-FESystem::Solvers::LUFactorizationLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
     
@@ -62,10 +62,10 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::setSystemMatrix(const F
     this->l_triangular_backsubstitute->setMatrix(this->lu_factorization->getLMatrix());
     this->u_triangular_backsubstitute->setMatrix(this->lu_factorization->getUMatrix());
 
-    this->l_triangular_backsubstitute->setTriangularMatrixType(FESystem::Solvers::LOWER_TRIANGULAR);
-    this->u_triangular_backsubstitute->setTriangularMatrixType(FESystem::Solvers::UPPER_TRIANGULAR);
+    this->l_triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::LOWER_TRIANGULAR);
+    this->u_triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
     
-    FESystem::Solvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
 }
 
 
@@ -74,7 +74,7 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::setSystemMatrix(const F
 
 template <typename ValType>
 void
-FESystem::Solvers::LUFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
                                                                FESystem::Numerics::VectorBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -109,7 +109,7 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::solve(const FESystem::N
 
 template <typename ValType>
 void
-FESystem::Solvers::LUFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
                                                                FESystem::Numerics::MatrixBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -136,7 +136,7 @@ FESystem::Solvers::LUFactorizationLinearSolver<ValType>::solve(const FESystem::N
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::LUFactorizationLinearSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::LinearSolvers::LUFactorizationLinearSolver);
 
 
 /***************************************************************************************/

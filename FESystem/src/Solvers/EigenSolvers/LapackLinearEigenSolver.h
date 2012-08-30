@@ -17,7 +17,7 @@ namespace FESystem
     // Forward declerations
     namespace Numerics {template <typename ValType> class MatrixBase;}
     
-    namespace Solvers
+    namespace EigenSolvers
     {
         /*!
          *    This class uses the QR algorithm for solution of given eigenproblems. The algorithm 
@@ -28,7 +28,7 @@ namespace FESystem
          */
         
         template <typename ValType> 
-        class LapackLinearEigenSolver: public FESystem::Solvers::LinearEigenSolverBase<ValType>
+        class LapackLinearEigenSolver: public FESystem::EigenSolvers::LinearEigenSolverBase<ValType>
         {
         public:
             
@@ -44,10 +44,10 @@ namespace FESystem
             
         };
         
-        template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble>::solve();
-        template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemFloat>::solve();
-        template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexDouble>::solve();
-        template <> void FESystem::Solvers::LapackLinearEigenSolver<FESystemComplexFloat>::solve();
+        template <> void FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemDouble>::solve();
+        template <> void FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemFloat>::solve();
+        template <> void FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemComplexDouble>::solve();
+        template <> void FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemComplexFloat>::solve();
     }
 }
 

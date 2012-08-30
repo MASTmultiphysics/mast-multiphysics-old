@@ -16,8 +16,8 @@
 
 
 template <typename ValType> 
-FESystem::Solvers::TriangularBacksubstitution<ValType>::TriangularBacksubstitution():
-tri_type(FESystem::Solvers::INVALID_TRIANGULAR_PART),
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::TriangularBacksubstitution():
+tri_type(FESystem::FactorizationSolvers::INVALID_TRIANGULAR_PART),
 mat(NULL)
 {
     
@@ -26,7 +26,7 @@ mat(NULL)
 
 
 template <typename ValType> 
-FESystem::Solvers::TriangularBacksubstitution<ValType>::~TriangularBacksubstitution()
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::~TriangularBacksubstitution()
 {
     
 }
@@ -35,18 +35,18 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::~TriangularBacksubstitut
 
 template <typename ValType> 
 void
-FESystem::Solvers::TriangularBacksubstitution<ValType>::clear()
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::clear()
 {
     this->mat = NULL;
-    this->tri_type = FESystem::Solvers::INVALID_TRIANGULAR_PART;
+    this->tri_type = FESystem::FactorizationSolvers::INVALID_TRIANGULAR_PART;
 }
 
 
 
 
 template <typename ValType> 
-FESystem::Solvers::TriangularType
-FESystem::Solvers::TriangularBacksubstitution<ValType>::getTriangularMatrixType()
+FESystem::FactorizationSolvers::TriangularType
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::getTriangularMatrixType()
 {
     return this->tri_type;
 }
@@ -55,9 +55,9 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::getTriangularMatrixType(
 
 template <typename ValType> 
 void 
-FESystem::Solvers::TriangularBacksubstitution<ValType>::setTriangularMatrixType(FESystem::Solvers::TriangularType t)
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::setTriangularMatrixType(FESystem::FactorizationSolvers::TriangularType t)
 {
-    FESystemAssert0(t != FESystem::Solvers::INVALID_TRIANGULAR_PART,
+    FESystemAssert0(t != FESystem::FactorizationSolvers::INVALID_TRIANGULAR_PART,
                     FESystem::Exception::InvalidValue);
     
     this->tri_type = t;
@@ -67,7 +67,7 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::setTriangularMatrixType(
 
 template <typename ValType> 
 void 
-FESystem::Solvers::TriangularBacksubstitution<ValType>::setMatrix(const FESystem::Numerics::MatrixBase<ValType>& m)
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::setMatrix(const FESystem::Numerics::MatrixBase<ValType>& m)
 {
     this->mat = &m;
 }
@@ -75,7 +75,7 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::setMatrix(const FESystem
 
 template <typename ValType> 
 const FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::TriangularBacksubstitution<ValType>::getMatrix() const
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::getMatrix() const
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
     return *(this->mat);
@@ -85,11 +85,11 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::getMatrix() const
 
 template <typename ValType> 
 void 
-FESystem::Solvers::TriangularBacksubstitution<ValType>::backSubstitute(const FESystem::Numerics::VectorBase<ValType>& v1,
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::backSubstitute(const FESystem::Numerics::VectorBase<ValType>& v1,
                                                                         FESystem::Numerics::VectorBase<ValType>& res) 
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
-    FESystemAssert0(this->tri_type != FESystem::Solvers::INVALID_TRIANGULAR_PART, FESystem::Exception::InvalidValue);
+    FESystemAssert0(this->tri_type != FESystem::FactorizationSolvers::INVALID_TRIANGULAR_PART, FESystem::Exception::InvalidValue);
     
     std::pair<FESystemUInt, FESystemUInt> s = this->getMatrix().getSize();
     res.zero();
@@ -98,7 +98,7 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::backSubstitute(const FES
     
     switch (this->getTriangularMatrixType())
     {
-        case FESystem::Solvers::UPPER_TRIANGULAR:
+        case FESystem::FactorizationSolvers::UPPER_TRIANGULAR:
         {
             for (FESystemUInt i=0; i < s.first; i++)
             {
@@ -111,7 +111,7 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::backSubstitute(const FES
         }
             break;
             
-        case FESystem::Solvers::LOWER_TRIANGULAR:
+        case FESystem::FactorizationSolvers::LOWER_TRIANGULAR:
         {
             for (FESystemUInt row=0; row < s.first; row++)
             {
@@ -132,11 +132,11 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::backSubstitute(const FES
 
 template <typename ValType> 
 void 
-FESystem::Solvers::TriangularBacksubstitution<ValType>::backSubstitute(const FESystem::Numerics::MatrixBase<ValType>& m1,
+FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>::backSubstitute(const FESystem::Numerics::MatrixBase<ValType>& m1,
                                                                         FESystem::Numerics::MatrixBase<ValType>& res) 
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
-    FESystemAssert0(this->tri_type != FESystem::Solvers::INVALID_TRIANGULAR_PART, FESystem::Exception::InvalidValue);
+    FESystemAssert0(this->tri_type != FESystem::FactorizationSolvers::INVALID_TRIANGULAR_PART, FESystem::Exception::InvalidValue);
     
     std::pair<FESystemUInt, FESystemUInt> s = this->getMatrix().getSize();
     res.zero();
@@ -158,7 +158,7 @@ FESystem::Solvers::TriangularBacksubstitution<ValType>::backSubstitute(const FES
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::TriangularBacksubstitution);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::FactorizationSolvers::TriangularBacksubstitution);
 
 /***************************************************************************************/
 

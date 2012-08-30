@@ -18,7 +18,7 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace LinearSolvers
     {
         /*!
          *    Solves the system \f$ A x = b \f$ using pseudo-time stepping where the equation is solved as 
@@ -29,7 +29,7 @@ namespace FESystem
          *    that the system matrix is appropriately conditioned. 
          */
         template <typename ValType> 
-        class PseudoTimeSteppingLinearSolver: public FESystem::Solvers::LinearSolverBase<ValType>
+        class PseudoTimeSteppingLinearSolver: public FESystem::LinearSolvers::LinearSolverBase<ValType>
         {
         public:
             /*!

@@ -20,11 +20,10 @@ namespace FESystem
     // Forward declerations
     namespace Numerics {template <typename ValType> class MatrixBase;}
 
-    namespace Solvers
+    namespace EigenSolvers
     {
         template <typename ValType> 
-        class InverseIterationLinearEigenSolver: 
-        public FESystem::Solvers::LinearEigenSolverBase<ValType>
+        class InverseIterationLinearEigenSolver:  public FESystem::EigenSolvers::LinearEigenSolverBase<ValType>
         {
         public:
             

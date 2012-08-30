@@ -17,10 +17,10 @@
 
 
 template <typename ValType>
-FESystem::Solvers::QRFactorizationLinearSolver<ValType>::QRFactorizationLinearSolver():
-FESystem::Solvers::LinearSolverBase<ValType>(),
-qr_factorization(new FESystem::Solvers::HouseholderTriangulation<ValType>),
-triangular_backsubstitute(new FESystem::Solvers::TriangularBacksubstitution<ValType>)
+FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::QRFactorizationLinearSolver():
+FESystem::LinearSolvers::LinearSolverBase<ValType>(),
+qr_factorization(new FESystem::FactorizationSolvers::HouseholderTriangulation<ValType>),
+triangular_backsubstitute(new FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType>)
 {
     
 }
@@ -28,7 +28,7 @@ triangular_backsubstitute(new FESystem::Solvers::TriangularBacksubstitution<ValT
 
 
 template <typename ValType>
-FESystem::Solvers::QRFactorizationLinearSolver<ValType>::~QRFactorizationLinearSolver()
+FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::~QRFactorizationLinearSolver()
 {
     
 }
@@ -36,14 +36,14 @@ FESystem::Solvers::QRFactorizationLinearSolver<ValType>::~QRFactorizationLinearS
 
 template <typename ValType>
 void 
-FESystem::Solvers::QRFactorizationLinearSolver<ValType>::clear()
+FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::clear()
 {
     this->qr_factorization->clear();
     this->triangular_backsubstitute->clear();
     this->vec.reset();
     this->mat.reset();
     // call the parent's method too
-    FESystem::Solvers::LinearSolverBase<ValType>::clear();
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::clear();
 }
 
 
@@ -51,7 +51,7 @@ FESystem::Solvers::QRFactorizationLinearSolver<ValType>::clear()
 
 template <typename ValType>
 void 
-FESystem::Solvers::QRFactorizationLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
     
@@ -59,9 +59,9 @@ FESystem::Solvers::QRFactorizationLinearSolver<ValType>::setSystemMatrix(const F
     this->qr_factorization->setMatrix(&mat);
     this->qr_factorization->factorize();
     this->triangular_backsubstitute->setMatrix(this->qr_factorization->getRMatrix());
-    this->triangular_backsubstitute->setTriangularMatrixType(FESystem::Solvers::UPPER_TRIANGULAR);
+    this->triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
     
-    FESystem::Solvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
 }
 
 
@@ -70,7 +70,7 @@ FESystem::Solvers::QRFactorizationLinearSolver<ValType>::setSystemMatrix(const F
 
 template <typename ValType>
 void
-FESystem::Solvers::QRFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
+FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::VectorBase<ValType>& rhs,
                                                        FESystem::Numerics::VectorBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -104,7 +104,7 @@ FESystem::Solvers::QRFactorizationLinearSolver<ValType>::solve(const FESystem::N
 
 template <typename ValType>
 void
-FESystem::Solvers::QRFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
+FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
                                                                 FESystem::Numerics::MatrixBase<ValType>& sol)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
@@ -138,7 +138,7 @@ FESystem::Solvers::QRFactorizationLinearSolver<ValType>::solve(const FESystem::N
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::QRFactorizationLinearSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::LinearSolvers::QRFactorizationLinearSolver);
 
 
 /***************************************************************************************/

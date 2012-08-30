@@ -16,7 +16,7 @@
 
 
 template <typename ValType>
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::MatrixQRFactorizationBase():
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::MatrixQRFactorizationBase():
 factorization_complete(false),
 mat(NULL)
 {
@@ -25,7 +25,7 @@ mat(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::~MatrixQRFactorizationBase()
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::~MatrixQRFactorizationBase()
 {
     
 }
@@ -34,7 +34,7 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::~MatrixQRFactorizationBas
 
 template <typename ValType>
 void
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::clear()
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::clear()
 {
     this->mat = NULL;
     
@@ -48,9 +48,9 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::clear()
 
 template <typename ValType>
 void
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::initializeMatrices()
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::initializeMatrices()
 {
-    FESystemAssert0(this->mat != NULL, FESystem::Solvers::MatrixNotSetBeforeFactorization);
+    FESystemAssert0(this->mat != NULL, FESystem::FactorizationSolvers::MatrixNotSetBeforeFactorization);
     
     this->Q_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
     this->R_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
@@ -66,7 +66,7 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::initializeMatrices()
 
 template <typename ValType>
 void
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::setMatrix(const FESystem::Numerics::MatrixBase<ValType>* m)
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::setMatrix(const FESystem::Numerics::MatrixBase<ValType>* m)
 {
     FESystemAssert0(m != NULL, FESystem::Exception::NULLQuantity);
     FESystemAssert0(this->mat == NULL, FESystem::Exception::InvalidState);
@@ -78,7 +78,7 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::setMatrix(const FESystem:
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::getMatrix() const
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::getMatrix() const
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
     
@@ -88,9 +88,9 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::getMatrix() const
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::getQMatrix()
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::getQMatrix()
 {
-    FESystemAssert0(this->factorization_complete, FESystem::Solvers::FactorizationNotComplete);
+    FESystemAssert0(this->factorization_complete, FESystem::FactorizationSolvers::FactorizationNotComplete);
     FESystemAssert0(this->Q_mat.get() != NULL, FESystem::Exception::NULLQuantity);
     
     return *(this->Q_mat);
@@ -99,9 +99,9 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::getQMatrix()
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>&
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>::getRMatrix()
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>::getRMatrix()
 {
-    FESystemAssert0(this->factorization_complete, FESystem::Solvers::FactorizationNotComplete);
+    FESystemAssert0(this->factorization_complete, FESystem::FactorizationSolvers::FactorizationNotComplete);
     FESystemAssert0(this->R_mat.get() != NULL, FESystem::Exception::NULLQuantity);
     
     return *(this->R_mat);
@@ -111,7 +111,7 @@ FESystem::Solvers::MatrixQRFactorizationBase<ValType>::getRMatrix()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::MatrixQRFactorizationBase);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::FactorizationSolvers::MatrixQRFactorizationBase);
 
 
 /***************************************************************************************/

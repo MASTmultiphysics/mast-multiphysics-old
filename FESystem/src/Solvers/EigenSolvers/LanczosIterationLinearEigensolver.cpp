@@ -21,15 +21,15 @@
 
 
 template <typename ValType> 
-FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::LanczosIterationLinearEigenSolver():
-FESystem::Solvers::LinearEigenSolverBase<ValType>()
+FESystem::EigenSolvers::LanczosIterationLinearEigenSolver<ValType>::LanczosIterationLinearEigenSolver():
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>()
 {
     
 }
 
 
 template <typename ValType> 
-FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::~LanczosIterationLinearEigenSolver()
+FESystem::EigenSolvers::LanczosIterationLinearEigenSolver<ValType>::~LanczosIterationLinearEigenSolver()
 {
     
 }
@@ -38,7 +38,7 @@ FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::~LanczosIteration
 
 //template <typename ValType> 
 //void
-//FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::setShift(ValType v)
+//FESystem::EigenSolvers::LanczosIterationLinearEigenSolver<ValType>::setShift(ValType v)
 //{
 //    this->solver_shift = v;
 //}
@@ -46,7 +46,7 @@ FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::~LanczosIteration
 
 template <typename ValType>
 void
-FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::initializeMatrices()
+FESystem::EigenSolvers::LanczosIterationLinearEigenSolver<ValType>::initializeMatrices()
 {
     
     FESystemAssert0(this->A_mat != NULL, FESystem::Exception::NULLQuantity);
@@ -64,9 +64,9 @@ FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::initializeMatrice
 
 template <typename ValType> 
 void
-FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::solve()
+FESystem::EigenSolvers::LanczosIterationLinearEigenSolver<ValType>::solve()
 {
-    FESystemAssert0(this->matrices_are_set, FESystem::Solvers::MatrixNotSet);
+    FESystemAssert0(this->matrices_are_set, FESystem::EigenSolvers::MatrixNotSet);
     
     this->initializeMatrices();
         
@@ -98,11 +98,11 @@ FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::solve()
     q_vec->initializeToRandomUnitVector(0.0, 1.0);
     q_vec_old->zero();
 
-    FESystem::Solvers::QRMethodLinearEigenSolver<ValType> qr_eigen_solver;
+    FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType> qr_eigen_solver;
     qr_eigen_solver.setEigenProblemType(this->getEigenProblemType());
 
     switch (this->getEigenProblemType()) {
-        case FESystem::Solvers::HERMITIAN:
+        case FESystem::EigenSolvers::HERMITIAN:
         {    
                         
             FESystemBoolean convergence = false;
@@ -114,7 +114,7 @@ FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::solve()
                 this->krylov_basis_mat->setColumnVals(n_iters, 0, s.first-1, *q_vec);
 //                if (n_iters > 1)
 //                {
-//                    FESystem::Solvers::ModifiedQRFactorization<FESystemDouble> mqr;
+//                    FESystem::EigenSolvers::ModifiedQRFactorization<FESystemDouble> mqr;
 //                    mqr.setMatrix(this->krylov_basis_mat.get());
 //                    mqr.factorize();
 //                    this->krylov_basis_mat->copyMatrix(mqr.getQMatrix());
@@ -242,7 +242,7 @@ FESystem::Solvers::LanczosIterationLinearEigenSolver<ValType>::solve()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::Solvers::LanczosIterationLinearEigenSolver);
+INSTANTIATE_CLASS_FOR_ONLY_REAL_DATA_TYPES(FESystem::EigenSolvers::LanczosIterationLinearEigenSolver);
 
 /***************************************************************************************/
 

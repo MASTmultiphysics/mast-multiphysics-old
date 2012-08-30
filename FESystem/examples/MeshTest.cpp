@@ -56,6 +56,7 @@
 #include "Solvers/EigenSolvers/ArpackLinearEigenSolver.h"
 #include "Solvers/TransientSolvers/NewmarkTransientSolver.h"
 #include "Solvers/TransientSolvers/ExplicitRungeKuttaTransientSolver.h"
+#include "Solvers/NonlinearSolvers/NewtonIterationNonlinearSolver.h"
 // output processors
 #include "OutputProcessors/GmshOutputProcessor.h"
 #include "OutputProcessors/VtkOutputProcessor.h"
@@ -65,6 +66,7 @@
 #include "Disciplines/Structure/DKTPlate.h"
 #include "Disciplines/Structure/EulerBernoulliBeam.h"
 #include "Disciplines/Structure/TimoshenkoBeam.h"
+#include "Disciplines/Structure/VonKarmanStrain1D.h"
 
 
 enum MeshType{RIGHT_DIAGONAL, LEFT_DIAGONAL, CROSS, INVALID_MESH};
@@ -1001,7 +1003,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     }
     
     
-    FESystem::Solvers::LapackLinearSolver<FESystemDouble> linear_solver;
+    FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble> linear_solver;
     std::fstream output_file;
     FESystem::OutputProcessor::VtkOutputProcessor output;
     
@@ -1010,7 +1012,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     FESystemDouble final_t=.01, time_step=1.0e-5;
     
     // initialize the solver
-    FESystem::Solvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
     std::vector<FESystemDouble> int_constants(2); int_constants[0]=0.5; int_constants[1]=0.5;
     transient_solver.initialize(2, dof_map.getNDofs(), int_constants);
     
@@ -1031,13 +1033,13 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     transient_solver.updateJacobianValuesForDerivativeOrder(2, 1, global_damping_mat, transient_solver.getCurrentJacobianMatrix());
     
     FESystemUInt n_skip=5, n_count=0, n_write=0;
-    FESystem::Solvers::TransientSolverCallBack call_back;
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
     while (transient_solver.getCurrentTime()<final_t)
     {
         call_back = transient_solver.incrementTimeStep();
         switch (call_back)
         {
-            case FESystem::Solvers::TIME_STEP_CONVERGED:
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
             {
                 if (n_count == n_skip)
                 {
@@ -1057,8 +1059,8 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
             }
                 break;
                 
-            case FESystem::Solvers::EVALUATE_X_DOT:
-            case FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
                 // the Jacobian is not updated since it is constant with respect to time
             {
                 transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), sol);
@@ -1184,7 +1186,7 @@ int test_ode_integration(int argc, char * const argv[])
     FESystemDouble omega2=250.0, final_t=1.0/(sqrt(omega2)/2.0/3.141)*10, time_step=final_t*1.0e-4;
     
     // initialize the solver
-    FESystem::Solvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
     std::vector<FESystemDouble> int_constants(2); int_constants[0]=1.0/4.0; int_constants[1]=1.0/1.5;
     transient_solver.initialize(2, 1, int_constants);
     transient_solver.setMassMatrix(true);
@@ -1203,7 +1205,7 @@ int test_ode_integration(int argc, char * const argv[])
     
     transient_solver.setInitialTimeData(0, time_step, vec);
     
-    FESystem::Solvers::LapackLinearSolver<FESystemDouble> linear_solver;
+    FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble> linear_solver;
     transient_solver.setLinearSolver(linear_solver, true);
     transient_solver.resizeMatrixToJacobianTemplate(ode_jac);
     transient_solver.setJacobianMatrix(ode_jac);
@@ -1211,21 +1213,21 @@ int test_ode_integration(int argc, char * const argv[])
     jac.setVal(0, 0, -omega2);
     transient_solver.updateJacobianValuesForDerivativeOrder(2, 0, jac, transient_solver.getCurrentJacobianMatrix());
     
-    FESystem::Solvers::TransientSolverCallBack call_back;
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
     while (transient_solver.getCurrentTime()<final_t)
     {
         call_back = transient_solver.incrementTimeStep();
         switch (call_back)
         {
-            case FESystem::Solvers::TIME_STEP_CONVERGED:
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
             {
                 x_vals.setVal(transient_solver.getCurrentIterationNumber()-1, transient_solver.getCurrentTime());
                 y_vals.setVal(transient_solver.getCurrentIterationNumber()-1, transient_solver.getCurrentStateVector().getVal(0));
             }
                 break;
                 
-            case FESystem::Solvers::EVALUATE_X_DOT:
-            case FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
                 // the Jacobian is not updated since it is constant with respect to time
             {
                 transient_solver.getCurrentStateVelocityVector().setVal(1, -omega2*transient_solver.getCurrentStateVector().getVal(0));
@@ -1262,7 +1264,7 @@ void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, cons
     
     stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
     
-    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
     linear_solver.setSystemMatrix(reduced_stiff_mat);
     linear_solver.solve(reduced_load_vec, reduced_sol_vec);
     sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
@@ -1300,13 +1302,103 @@ void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, cons
  
 
 
+void nonlinearSolution(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                       const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
+                       const FESystem::Numerics::VectorBase<FESystemDouble>& rhs, FESystem::Numerics::VectorBase<FESystemDouble>& sol)
+{
+    const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+    
+    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec;
+    
+    reduced_stiff_mat.resize(nonbc_sparsity_pattern);
+    reduced_load_vec.resize(nonbc_sparsity_pattern.getNDOFs()); reduced_sol_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    rhs.getSubVectorValsFromIndices(nonbc_dofs, reduced_load_vec);
+    
+    stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
+    
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<FESystemDouble> nonlinear_solver;
+    
+    nonlinear_solver.initialize(reduced_stiff_mat);
+    
+    FESystem::NonlinearSolvers::NonlinearSolverCallBack call_back = nonlinear_solver.getCurrentCallBack();
+    
+    while (call_back != FESystem::NonlinearSolvers::SOLUTION_CONVERGED)
+    {
+        call_back = nonlinear_solver.incrementSolution();
+        
+        switch (call_back)
+        {
+            case FESystem::NonlinearSolvers::WAITING_TO_START:
+                // nothing to be done
+                break;
+
+            case FESystem::NonlinearSolvers::SET_INITIAL_GUESS:
+                nonlinear_solver.getCurrentSolution().zero();
+                break;
+
+            case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL:
+                reduced_stiff_mat.rightVectorMultiply(nonlinear_solver.getCurrentSolution(), nonlinear_solver.getResidualVector());
+                break;
+
+            case FESystem::NonlinearSolvers::EVALUATE_JACOBIAN:
+                // curretly nothing to be done, but nonlinear solver would look to update tangent stiffness matrix
+                break;
+                
+            case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL_AND_JACOBIAN:
+                reduced_stiff_mat.rightVectorMultiply(nonlinear_solver.getCurrentSolution(), nonlinear_solver.getResidualVector());
+                // add update for Tangent stiffness matrix. 
+                break;
+
+            default:
+                break;
+        }
+    }
+    
+    linear_solver.setSystemMatrix(reduced_stiff_mat);
+    linear_solver.solve(reduced_load_vec, reduced_sol_vec);
+    sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
+    // write the solution for each node
+    for (FESystemUInt i=0; i<nodes.size(); i++)
+    {
+        std::cout << "Node: " << std::setw(8) << i;
+        // write location
+        for (FESystemUInt j=0; j<dim; j++)
+            std::cout << std::setw(15) << nodes[i]->getVal(j);
+        // write the forces
+        for (FESystemUInt j=0; j<3; j++)
+            std::cout << std::setw(15) << rhs.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
+        for (FESystemUInt j=0; j<3; j++)
+            std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
+        std::cout << std::endl;
+    }
+    
+    // write a gmsh format file
+    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    FESystem::OutputProcessor::GmshOutputProcessor gmsh_output;
+    
+    std::fstream output_file;
+    output_file.open("gmsh_output.gmsh", std::fstream::out);
+    gmsh_output.writeMesh(output_file, mesh, dof_map);
+    output_file.close();
+    
+    
+    output_file.open("vtk_output.vtk", std::fstream::out);
+    output.writeMesh(output_file, mesh, dof_map);
+    output.writeSolution(output_file, "Solution", mesh, dof_map, vars, sol);
+    output_file.close();
+}
+
+
 
 void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                    const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                    const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
                    FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec)
 {
-    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
     FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
     FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, sol, reduced_mass_vec;
 
@@ -1320,18 +1412,18 @@ void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const
     mass_mat.setDiagonal(reduced_mass_vec);
     
     // modal eigensolution
-    FESystem::Solvers::ArpackLinearEigenSolver<FESystemDouble> eigen_solver;
-    //FESystem::Solvers::LapackLinearEigenSolver<FESystemDouble> eigen_solver;
-    eigen_solver.setEigenProblemType(FESystem::Solvers::GENERALIZED_HERMITIAN);
+    FESystem::EigenSolvers::ArpackLinearEigenSolver<FESystemDouble> eigen_solver;
+    //FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemDouble> eigen_solver;
+    eigen_solver.setEigenProblemType(FESystem::EigenSolvers::GENERALIZED_HERMITIAN);
     eigen_solver.setMatrix(&reduced_stiff_mat, &mass_mat);
-    eigen_solver.setEigenShiftType(FESystem::Solvers::SHIFT_AND_INVERT); eigen_solver.setEigenShiftValue(0.0);
+    eigen_solver.setEigenShiftType(FESystem::EigenSolvers::SHIFT_AND_INVERT); eigen_solver.setEigenShiftValue(0.0);
     linear_solver.clear(); eigen_solver.setLinearSolver(linear_solver);
-    eigen_solver.setEigenSpectrumType(FESystem::Solvers::LARGEST_MAGNITUDE);
+    eigen_solver.setEigenSpectrumType(FESystem::EigenSolvers::LARGEST_MAGNITUDE);
     eigen_solver.init(n_modes, true);
     eigen_solver.solve();
     eig_vals.copyVector(eigen_solver.getEigenValues());
     eig_vec.copyMatrix(eigen_solver.getEigenVectorMatrix());
-    eigen_solver.prepareSortingVector(FESystem::Solvers::VALUE, sorted_ids);
+    eigen_solver.prepareSortingVector(FESystem::EigenSolvers::VALUE, sorted_ids);
     
     FESystemUInt id = 0;
     FESystem::OutputProcessor::VtkOutputProcessor output;
@@ -1358,12 +1450,13 @@ void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const
 
 
 
+
 void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                        const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                        const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const std::vector<FESystemUInt>& sorted_ids, const FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
                        const FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec)
 {
-    FESystem::Solvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
     FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
     FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, rhs, sol, reduced_mass_vec;
     
@@ -1388,7 +1481,7 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
     FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*4, time_step=final_t*1.0e-3;
     
     // initialize the solver
-    FESystem::Solvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
     FESystem::Numerics::SparsityPattern ode_sparsity;
     FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
     std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=false;
@@ -1415,13 +1508,13 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
     std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
     
     FESystemUInt n_skip=20, n_count=0, n_write=0;
-    FESystem::Solvers::TransientSolverCallBack call_back;
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
     while (transient_solver.getCurrentTime()<final_t)
     {
         call_back = transient_solver.incrementTimeStep();
         switch (call_back)
         {
-            case FESystem::Solvers::TIME_STEP_CONVERGED:
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
             {
                 if (n_count == n_skip)
                 {
@@ -1442,8 +1535,8 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
             }
                 break;
                 
-            case FESystem::Solvers::EVALUATE_X_DOT:
-            case FESystem::Solvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
                 // the Jacobian is not updated since it is constant with respect to time
             {
                 transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
@@ -1465,7 +1558,7 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
 
 
 
-int analysis_driver(int argc, char * const argv[])
+int plate_analysis_driver(int argc, char * const argv[])
 {
     FESystem::Mesh::ElementType elem_type;
     
@@ -1474,30 +1567,16 @@ int analysis_driver(int argc, char * const argv[])
     
     // create a nx x ny grid of nodes
     FESystemUInt nx, ny, dim, n_elem_nodes, n_elem_dofs, n_beam_dofs, n_modes;
-    FESystemDouble x_length, y_length, I_ch, I_tr, area, p_val = 1.0e6;
+    FESystemDouble x_length, y_length, p_val = 1.0e6;
     FESystem::Geometry::Point origin(3);
     
-    FESystemBoolean if_plate = false, if_timoshenko_beam = false, if_include_lateral = false, if_mindlin = false;
+    FESystemBoolean if_mindlin = false;
     
-    if (if_plate)
-    {
-        nx=7; ny=7;
-        x_length = 2; y_length = 2;
-        dim = 2; n_modes = 20;
-        elem_type = FESystem::Mesh::TRI3;
-        create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
-    }
-    else
-    {
-        nx=15; x_length = 2; dim = 1; n_modes = 5;
-        elem_type = FESystem::Mesh::EDGE2;
-        createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
-        I_tr = 6.667e-9; I_ch = 1.6667e-9; area = 2.0e-4;
-        if (if_include_lateral)
-            n_beam_dofs = 4*n_elem_nodes;
-        else
-            n_beam_dofs = 2*n_elem_nodes;
-    }
+    nx=7; ny=7;
+    x_length = 2; y_length = 2;
+    dim = 2; n_modes = 20;
+    elem_type = FESystem::Mesh::TRI3;
+    create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
     
     n_elem_dofs = 6*n_elem_nodes;
     
@@ -1541,59 +1620,32 @@ int analysis_driver(int argc, char * const argv[])
     FESystem::Structures::DKTPlate dkt_plate;
     FESystem::Structures::TimoshenkoBeam timoshenko_beam;
     FESystem::Structures::EulerBernoulliBeam euler_beam;
+    FESystem::Structures::VonKarmanStrain1D vk_beam;
     
-    if (if_plate)
+    if (if_mindlin)
     {
-        if (if_mindlin)
+        switch (elem_type)
         {
-            switch (elem_type)
-            {
-                case FESystem::Mesh::QUAD4:
-                case FESystem::Mesh::TRI3:
-                    q_rule_bending.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
-                    q_rule_shear.init(2, 0);
-                    break;
-                    
-                case FESystem::Mesh::QUAD9:
-                case FESystem::Mesh::TRI6:
-                    q_rule_bending.init(2, 5);
-                    q_rule_shear.init(2, 5);
-                    break;
-                    
-                default:
-                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
-            }
+            case FESystem::Mesh::QUAD4:
+            case FESystem::Mesh::TRI3:
+                q_rule_bending.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
+                q_rule_shear.init(2, 0);
+                break;
+                
+            case FESystem::Mesh::QUAD9:
+            case FESystem::Mesh::TRI6:
+                q_rule_bending.init(2, 5);
+                q_rule_shear.init(2, 5);
+                break;
+                
+            default:
+                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
         }
-        else
-            q_rule_bending.init(2, 9);
     }
     else
-    {
-        if (if_timoshenko_beam)
-        {
-            switch (elem_type)
-            {
-                case FESystem::Mesh::EDGE2:
-                    q_rule_bending.init(1, 3);
-                    q_rule_shear.init(1, 0);
-                    break;
-                    
-                case FESystem::Mesh::EDGE3:
-                {
-                    q_rule_bending.init(1, 5);
-                    q_rule_shear.init(1, 5);
-                }
-                    break;
-                    
-                default:
-                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
-            }
-        }
-        else
-            q_rule_bending.init(1, 9);
-    }
+        q_rule_bending.init(2, 9);
     
-    
+
     std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     for (FESystemUInt i=0; i<elems.size(); i++)
     {
@@ -1602,68 +1654,34 @@ int analysis_driver(int argc, char * const argv[])
         elem_mat.zero();
         elem_vec.zero();
         
-        if (if_plate)
+        if (if_mindlin)
         {
-            if (if_mindlin)
-            {
-                mindlin_plate.clear();
-                mindlin_plate.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, thick);
-                
-                // stiffness matrix
-                mindlin_plate.calculateStiffnessMatrix(plate_elem_mat);
-                mindlin_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
-                
-                // mass
-                mindlin_plate.calculateDiagonalMassMatrix(plate_elem_vec);
-                mindlin_plate.getActiveElementMatrixIndices(elem_dof_indices);
-            }
-            else
-            {
-                dkt_plate.clear();
-                dkt_plate.initialize(*(elems[i]), fe, fe_tri6, q_rule_bending, q_rule_bending, E, nu, rho, thick);
-                
-                // stiffness matrix
-                dkt_plate.calculateStiffnessMatrix(plate_elem_mat);
-                dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
-                
-                // mass
-                dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
-                dkt_plate.getActiveElementMatrixIndices(elem_dof_indices);
-            }
-            elem_vec.zero();
-            elem_vec.addVal(elem_dof_indices, plate_elem_vec);
+            mindlin_plate.clear();
+            mindlin_plate.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, thick);
+            
+            // stiffness matrix
+            mindlin_plate.calculateStiffnessMatrix(plate_elem_mat);
+            mindlin_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+            
+            // mass
+            mindlin_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+            mindlin_plate.getActiveElementMatrixIndices(elem_dof_indices);
         }
         else
         {
-            if (if_timoshenko_beam)
-            {
-                timoshenko_beam.clear();
-                timoshenko_beam.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, I_tr, I_ch, area, if_include_lateral);
-                
-                // stiffness matrix
-                timoshenko_beam.calculateStiffnessMatrix(beam_elem_mat);
-                timoshenko_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
-                
-                // mass
-                timoshenko_beam.calculateDiagonalMassMatrix(beam_elem_vec);
-                timoshenko_beam.getActiveElementMatrixIndices(elem_dof_indices);
-            }
-            else
-            {
-                euler_beam.clear();
-                euler_beam.initialize(*(elems[i]), fe, q_rule_bending, E, nu, rho, I_tr, I_ch, area, if_include_lateral);
-                
-                // stiffness matrix
-                euler_beam.calculateStiffnessMatrix(beam_elem_mat);
-                euler_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
-                
-                // mass
-                euler_beam.calculateDiagonalMassMatrix(beam_elem_vec);
-                euler_beam.getActiveElementMatrixIndices(elem_dof_indices);
-            }
-            elem_vec.zero();
-            elem_vec.addVal(elem_dof_indices, beam_elem_vec);
+            dkt_plate.clear();
+            dkt_plate.initialize(*(elems[i]), fe, fe_tri6, q_rule_bending, q_rule_bending, E, nu, rho, thick);
+            
+            // stiffness matrix
+            dkt_plate.calculateStiffnessMatrix(plate_elem_mat);
+            dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+            
+            // mass
+            dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+            dkt_plate.getActiveElementMatrixIndices(elem_dof_indices);
         }
+        elem_vec.zero();
+        elem_vec.addVal(elem_dof_indices, plate_elem_vec);
         
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat, global_stiffness_mat);
         dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
@@ -1674,23 +1692,11 @@ int analysis_driver(int argc, char * const argv[])
     std::set<FESystemUInt> bc_dofs;
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
-        if (if_plate)
-        {
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
-            if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
-                bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
-        }
-        else
-        {
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // theta-x
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
-            if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(0) == x_length)) // boundary nodes
-                bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
-        }
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
+        if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
     }
     
     // now create the vector of ids that do not have bcs
@@ -1725,8 +1731,185 @@ int analysis_driver(int argc, char * const argv[])
 
 
 
+int beam_analysis_driver(int argc, char * const argv[])
+{
+    FESystem::Mesh::ElementType elem_type;
+    
+    // create the mesh object
+    FESystem::Mesh::MeshBase mesh;
+    
+    // create a nx x ny grid of nodes
+    FESystemUInt nx, dim, n_elem_nodes, n_elem_dofs, n_beam_dofs, n_modes;
+    FESystemDouble x_length, I_ch, I_tr, area, p_val = 1.0e6;
+    FESystem::Geometry::Point origin(3);
+    
+    FESystemBoolean if_timoshenko_beam = true, if_include_lateral = false;
+    
+    nx=15; x_length = 2; dim = 1; n_modes = 5;
+    elem_type = FESystem::Mesh::EDGE3;
+    createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
+    I_tr = 6.667e-9; I_ch = 1.6667e-9; area = 2.0e-4;
+    if (if_include_lateral)
+        n_beam_dofs = 4*n_elem_nodes;
+    else
+        n_beam_dofs = 2*n_elem_nodes;
+    n_elem_dofs = 6*n_elem_nodes;
+    
+    // set the location of individual nodes
+    const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+    
+    // now add the degrees of freedom
+    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    std::string name;
+    name = "u"; dof_map.addVariable(name, 0);
+    name = "v"; dof_map.addVariable(name, 0);
+    name = "w"; dof_map.addVariable(name, 0);
+    name = "tx"; dof_map.addVariable(name, 0);
+    name = "ty"; dof_map.addVariable(name, 0);
+    name = "tz"; dof_map.addVariable(name, 0);
+    dof_map.reinit(); // distribute the dofs
+    
+    // create the finite element and initialize the shape functions
+    FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol, global_mass_vec, elem_vec, plate_elem_vec, beam_elem_vec;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat, plate_elem_mat, beam_elem_mat;
+    std::vector<FESystemUInt> elem_dof_indices;
+    
+    global_mass_vec.resize(dof_map.getNDofs());
+    rhs.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs());
+    global_stiffness_mat.resize(dof_map.getSparsityPattern());
+    elem_mat.resize(n_elem_dofs, n_elem_dofs);
+    elem_vec.resize(n_elem_dofs);
+    
+    plate_elem_mat.resize(n_elem_nodes*3, n_elem_nodes*3); beam_elem_mat.resize(n_beam_dofs, n_beam_dofs);
+    plate_elem_vec.resize(n_elem_nodes*3); beam_elem_vec.resize(n_beam_dofs);
+    
+    FESystemDouble E=72.0e9, nu=0.33, thick=0.025, rho=2700.0;
+    
+    
+    
+    // prepare the quadrature rule and FE for the
+    FESystem::Quadrature::TrapezoidQuadrature q_rule_shear, q_rule_bending;
+    FESystem::FiniteElement::FELagrange fe, fe_tri6;
+    FESystem::Structures::ReissnerMindlinPlate mindlin_plate;
+    FESystem::Structures::DKTPlate dkt_plate;
+    FESystem::Structures::TimoshenkoBeam timoshenko_beam;
+    FESystem::Structures::EulerBernoulliBeam euler_beam;
+    FESystem::Structures::VonKarmanStrain1D vk_beam;
+    
+    if (if_timoshenko_beam)
+    {
+        switch (elem_type)
+        {
+            case FESystem::Mesh::EDGE2:
+                q_rule_bending.init(1, 3);
+                q_rule_shear.init(1, 0);
+                break;
+                
+            case FESystem::Mesh::EDGE3:
+            {
+                q_rule_bending.init(1, 5);
+                q_rule_shear.init(1, 5);
+            }
+                break;
+                
+            default:
+                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+        }
+    }
+    else
+        q_rule_bending.init(1, 9);
+    
+    
+    std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
+    for (FESystemUInt i=0; i<elems.size(); i++)
+    {
+        fe.clear();
+        fe.reinit(*(elems[i]));
+        elem_mat.zero();
+        elem_vec.zero();
+        
+        if (if_timoshenko_beam)
+        {
+            timoshenko_beam.clear();
+            timoshenko_beam.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, I_tr, I_ch, area, if_include_lateral);
+            
+            // stiffness matrix
+            timoshenko_beam.calculateStiffnessMatrix(beam_elem_mat);
+            timoshenko_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+            
+            // mass
+            timoshenko_beam.calculateDiagonalMassMatrix(beam_elem_vec);
+            timoshenko_beam.getActiveElementMatrixIndices(elem_dof_indices);
+        }
+        else
+        {
+            euler_beam.clear();
+            euler_beam.initialize(*(elems[i]), fe, q_rule_bending, E, nu, rho, I_tr, I_ch, area, if_include_lateral);
+            
+            // stiffness matrix
+            euler_beam.calculateStiffnessMatrix(beam_elem_mat);
+            euler_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+            
+            // mass
+            euler_beam.calculateDiagonalMassMatrix(beam_elem_vec);
+            euler_beam.getActiveElementMatrixIndices(elem_dof_indices);
+        }
+        elem_vec.zero();
+        elem_vec.addVal(elem_dof_indices, beam_elem_vec);
+        
+        dof_map.addToGlobalMatrix(*(elems[i]), elem_mat, global_stiffness_mat);
+        dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
+        
+    }
+    
+    // apply boundary condition and place a load on the last dof
+    std::set<FESystemUInt> bc_dofs;
+    for (FESystemUInt i=0; i<nodes.size(); i++)
+    {
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // theta-x
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
+        if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(0) == x_length)) // boundary nodes
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+    }
+    
+    // now create the vector of ids that do not have bcs
+    std::vector<FESystemUInt> nonbc_dofs;
+    for (FESystemUInt i=0; i<dof_map.getNDofs(); i++)
+        if (!bc_dofs.count(i))
+            nonbc_dofs.push_back(i);
+    
+    // prepare a map of the old to new ID
+    std::vector<FESystemUInt>::const_iterator dof_it=nonbc_dofs.begin(), dof_end=nonbc_dofs.end();
+    std::map<FESystemUInt, FESystemUInt> old_to_new_id_map;
+    FESystemUInt n=0;
+    for ( ; dof_it!=dof_end; dof_it++)
+        old_to_new_id_map.insert(std::map<FESystemUInt, FESystemUInt>::value_type(*dof_it, n++));
+    
+    FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
+    dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
+    
+    std::vector<FESystemUInt> sorted_ids;
+    FESystem::Numerics::LocalVector<FESystemDouble> eig_vals;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> eig_vecs;
+    
+    nonlinearSolution(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol);
+    
+    staticAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol);
+    
+    modalAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs);
+    
+    transientAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
+    
+    return 0;
+}
+
+
+
 int main(int argc, char * const argv[])
 {
-    return analysis_driver(argc, argv);
+    return beam_analysis_driver(argc, argv);
 }
 

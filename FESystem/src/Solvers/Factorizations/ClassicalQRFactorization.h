@@ -16,14 +16,14 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace FactorizationSolvers
     {
         // Forward declerations
         template <typename ValType> class VectorBase;
         template <typename ValType> class MatrixBase;
         
         template <typename ValType> 
-        class ClassicalQRFactorization: public FESystem::Solvers::MatrixQRFactorizationBase<ValType>
+        class ClassicalQRFactorization: public FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>
         {
         public:
             

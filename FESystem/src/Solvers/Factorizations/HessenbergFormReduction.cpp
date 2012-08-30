@@ -19,7 +19,7 @@
 
 
 template <typename ValType>
-FESystem::Solvers::HessenbergFormReduction<ValType>::HessenbergFormReduction():
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::HessenbergFormReduction():
 mat(NULL),
 factorization_complete(false)
 {
@@ -27,7 +27,7 @@ factorization_complete(false)
 }
 
 template <typename ValType>
-FESystem::Solvers::HessenbergFormReduction<ValType>::~HessenbergFormReduction()
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::~HessenbergFormReduction()
 {
     
 }
@@ -36,7 +36,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::~HessenbergFormReduction()
 
 template <typename ValType>
 void
-FESystem::Solvers::HessenbergFormReduction<ValType>::initializeMatrices()
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::initializeMatrices()
 {
     
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
@@ -55,7 +55,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::initializeMatrices()
 
 template <typename ValType>
 void
-FESystem::Solvers::HessenbergFormReduction<ValType>::setMatrix(FESystem::Numerics::MatrixBase<ValType>* m)
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::setMatrix(FESystem::Numerics::MatrixBase<ValType>* m)
 {
     FESystemAssert0(m != NULL, FESystem::Exception::NULLQuantity);
     FESystemAssert0(this->mat == NULL, FESystem::Exception::InvalidState);
@@ -67,7 +67,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::setMatrix(FESystem::Numeric
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::HessenbergFormReduction<ValType>::getMatrix()
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::getMatrix()
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::NULLQuantity);
     
@@ -77,7 +77,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::getMatrix()
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::HessenbergFormReduction<ValType>::getQMatrix()
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::getQMatrix()
 {
     FESystemAssert0(this->Q_mat.get() != NULL, FESystem::Exception::NULLQuantity);
     FESystemAssert0(this->factorization_complete, FESystem::Exception::InvalidState);
@@ -89,7 +89,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::getQMatrix()
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>& 
-FESystem::Solvers::HessenbergFormReduction<ValType>::getHMatrix()
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::getHMatrix()
 {
     FESystemAssert0(this->H_mat.get() != NULL, FESystem::Exception::NULLQuantity);
     FESystemAssert0(this->factorization_complete, FESystem::Exception::InvalidState);
@@ -101,7 +101,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::getHMatrix()
 
 template <typename ValType>
 void 
-FESystem::Solvers::HessenbergFormReduction<ValType>::factorize()
+FESystem::FactorizationSolvers::HessenbergFormReduction<ValType>::factorize()
 {
     FESystemAssert0(!this->factorization_complete, FESystem::Exception::InvalidState);
         
@@ -117,8 +117,8 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::factorize()
     tmat2->resize(s.first, s.second);
     tmat3->resize(s.first, s.second);
         
-    std::auto_ptr<FESystem::Solvers::MatrixQRFactorizationBase<ValType> > 
-    qr_factorization(new FESystem::Solvers::HouseholderTriangulation<ValType>());
+    std::auto_ptr<FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType> > 
+    qr_factorization(new FESystem::FactorizationSolvers::HouseholderTriangulation<ValType>());
 
     this->Q_mat->setToIdentity();
     this->H_mat->copyMatrix(*(this->mat));
@@ -161,7 +161,7 @@ FESystem::Solvers::HessenbergFormReduction<ValType>::factorize()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::HessenbergFormReduction);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::FactorizationSolvers::HessenbergFormReduction);
 
 /***************************************************************************************/
 

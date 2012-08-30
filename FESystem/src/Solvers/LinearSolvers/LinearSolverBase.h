@@ -21,7 +21,7 @@ namespace FESystem
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {template <typename ValType> class MatrixBase;}
     
-    namespace Solvers
+    namespace LinearSolvers
     {
         /*!
          *    Provides a base class to define the interface for linear solver of system of equations \f$Ax= b\f$.

@@ -15,8 +15,8 @@
 
 
 template <typename ValType>
-FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::ExplicitRungeKuttaTransientSolver():
-FESystem::Solvers::LinearTransientSolverBase<ValType>(),
+FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::ExplicitRungeKuttaTransientSolver():
+FESystem::TransientSolvers::LinearTransientSolverBase<ValType>(),
 n_rk_steps_per_time_increment(0),
 n_rk_steps_completed(0),
 previous_time(0),
@@ -28,7 +28,7 @@ new_state_estimate(NULL)
 
 
 template <typename ValType>
-FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::~ExplicitRungeKuttaTransientSolver()
+FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::~ExplicitRungeKuttaTransientSolver()
 {
     
 }
@@ -36,10 +36,10 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::~ExplicitRungeKut
 
 template <typename ValType>
 void
-FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, FESystemUInt n_rk_steps)
+FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, FESystemUInt n_rk_steps)
 {
     // TODO: revisit for parallel and sparse
-    FESystem::Solvers::TransientSolverBase<ValType>::initialize(o,n_dofs);
+    FESystem::TransientSolvers::TransientSolverBase<ValType>::initialize(o,n_dofs);
     this->n_rk_steps_per_time_increment = n_rk_steps;
     this->n_rk_steps_completed = 0;
     this->previous_time = 0.0;
@@ -78,7 +78,7 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::initialize(FESyst
 
 template <typename ValType>
 void
-FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::clear()
+FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::clear()
 {
     if (this->previous_state != NULL)
         delete this->previous_state;
@@ -94,14 +94,14 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::clear()
     
     this->previous_state = NULL;
     this->new_state_estimate = NULL;
-    FESystem::Solvers::TransientSolverBase<ValType>::clear();
+    FESystem::TransientSolvers::TransientSolverBase<ValType>::clear();
 }
 
 
 
 template <typename ValType>
-FESystem::Solvers::TransientSolverCallBack 
-FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep()
+FESystem::TransientSolvers::TransientSolverCallBack 
+FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep()
 {
     // make sure this is initialized
     FESystemAssert0(this->ifInitialized(), FESystem::Exception::InvalidState);
@@ -109,8 +109,8 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep
     // process based on the previous call back and status of solver
     switch (this->latest_call_back) 
     {
-        case FESystem::Solvers::TIME_STEP_CONVERGED:
-        case FESystem::Solvers::WAITING_TO_START:
+        case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
+        case FESystem::TransientSolvers::WAITING_TO_START:
             // first time step, setup the matrices
         {
             this->previous_state->copyVector(*this->state_vec);
@@ -118,12 +118,12 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep
             
             this->state_velocity->zero();
             this->n_rk_steps_completed = 0;
-            this->latest_call_back = FESystem::Solvers::EVALUATE_X_DOT;
-            return FESystem::Solvers::EVALUATE_X_DOT;
+            this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
+            return FESystem::TransientSolvers::EVALUATE_X_DOT;
         }
             break;
             
-        case FESystem::Solvers::EVALUATE_X_DOT:
+        case FESystem::TransientSolvers::EVALUATE_X_DOT:
         {
             // use the sub-iteration data to calculate the next step
             this->new_state_estimate->add(this->current_time_step*sub_step_coefficients_for_final_step[this->n_rk_steps_completed], *this->state_velocity);
@@ -138,8 +138,8 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep
                 this->current_time = this->previous_time + this->current_time_step * this->sub_step_iterate_coefficients[this->n_rk_steps_completed];
                 this->n_rk_steps_completed++;
 
-                this->latest_call_back = FESystem::Solvers::EVALUATE_X_DOT;
-                return FESystem::Solvers::EVALUATE_X_DOT;                
+                this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
+                return FESystem::TransientSolvers::EVALUATE_X_DOT;                
             }
             else  // increment to the next time step
             {
@@ -149,8 +149,8 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep
                 this->previous_time = this->current_time;
                 this->current_iteration_number++;
 
-                this->latest_call_back = FESystem::Solvers::TIME_STEP_CONVERGED;
-                return FESystem::Solvers::TIME_STEP_CONVERGED;
+                this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
+                return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
             }
         }
             break;
@@ -166,7 +166,7 @@ FESystem::Solvers::ExplicitRungeKuttaTransientSolver<ValType>::incrementTimeStep
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::ExplicitRungeKuttaTransientSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver);
 
 
 /***************************************************************************************/

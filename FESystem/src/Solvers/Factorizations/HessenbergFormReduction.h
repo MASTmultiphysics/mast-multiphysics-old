@@ -21,7 +21,7 @@ namespace FESystem
     // Forward declerations
     namespace Numerics {template <typename ValType> class MatrixBase;}
 
-    namespace Solvers
+    namespace FactorizationSolvers
     {
         
         /*! 

@@ -19,7 +19,7 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace LinearSolvers
     {        
         /*!
          *   This is a template class that uses the Lapack solver to solve a linear system of equations
@@ -28,7 +28,7 @@ namespace FESystem
          *   times with multiple RHS. This class inherits from the base class LinearSolverBase<ValType>
          */
         template <typename ValType>
-        class LapackLinearSolver: public FESystem::Solvers::LinearSolverBase<ValType>
+        class LapackLinearSolver: public FESystem::LinearSolvers::LinearSolverBase<ValType>
         {
         public:
             /*!
@@ -83,18 +83,18 @@ namespace FESystem
 
         // template specialization
         template <>
-        void FESystem::Solvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemDouble> &mat);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemDouble> &mat);
         template <>
-        void FESystem::Solvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::VectorBase<FESystemDouble> &rhs, FESystem::Numerics::VectorBase<FESystemDouble> &sol);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::VectorBase<FESystemDouble> &rhs, FESystem::Numerics::VectorBase<FESystemDouble> &sol);
         template <>
-        void FESystem::Solvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::MatrixBase<FESystemDouble> &rhs, FESystem::Numerics::MatrixBase<FESystemDouble> &sol);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::MatrixBase<FESystemDouble> &rhs, FESystem::Numerics::MatrixBase<FESystemDouble> &sol);
 
         template <>
-        void FESystem::Solvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemFloat> &mat);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemFloat> &mat);
         template <>
-        void FESystem::Solvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::VectorBase<FESystemFloat> &rhs, FESystem::Numerics::VectorBase<FESystemFloat> &sol);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::VectorBase<FESystemFloat> &rhs, FESystem::Numerics::VectorBase<FESystemFloat> &sol);
         template <>
-        void FESystem::Solvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::MatrixBase<FESystemFloat> &rhs, FESystem::Numerics::MatrixBase<FESystemFloat> &sol);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::MatrixBase<FESystemFloat> &rhs, FESystem::Numerics::MatrixBase<FESystemFloat> &sol);
     }
 }
 

@@ -1145,12 +1145,12 @@ extern "C"
 
 namespace FESystem
 {
-    namespace Solvers
+    // Forward declerations
+    namespace LinearSolvers {template <typename ValType> class LinearSolverBase;}
+
+    namespace EigenSolvers
     {
-        // Forward declerations
-        template <typename ValType> class LinearSolverBase;
-                
-        
+
         /*!
          *   this class provides an interface to a solver for the solution of 
          *   eigensystem. This inherits from the FESystemSolverBase
@@ -1158,7 +1158,7 @@ namespace FESystem
          *   an instantiation of this class
          */
         template <typename ValType> 
-        class ArpackLinearEigenSolver : public FESystem::Solvers::LinearEigenSolverBase<ValType>
+        class ArpackLinearEigenSolver : public FESystem::EigenSolvers::LinearEigenSolverBase<ValType>
         {
         public:
             
@@ -1169,7 +1169,7 @@ namespace FESystem
             /*
              *   method to solve the eigen system
              */
-            void setLinearSolver(FESystem::Solvers::LinearSolverBase<ValType>& solver);
+            void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver);
 
             /*!
              *   initializes the data structures
@@ -1198,7 +1198,7 @@ namespace FESystem
             /*!
              *  linear solver used by this eigen solver
              */
-            FESystem::Solvers::LinearSolverBase<ValType>* linear_solver;
+            FESystem::LinearSolvers::LinearSolverBase<ValType>* linear_solver;
             
             /*!
              *   if the solver has been initialized
@@ -1245,8 +1245,8 @@ namespace FESystem
             std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > operator_matrix;
         };
         
-        template <> void FESystem::Solvers::ArpackLinearEigenSolver<FESystemDouble>::solve();
-        //template <> void FESystem::Solvers::ArpackLinearEigenSolver<FESystemFloat>::solve();
+        template <> void FESystem::EigenSolvers::ArpackLinearEigenSolver<FESystemDouble>::solve();
+        //template <> void FESystem::EigenSolvers::ArpackLinearEigenSolver<FESystemFloat>::solve();
     }
 }
 

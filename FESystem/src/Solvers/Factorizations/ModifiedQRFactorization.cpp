@@ -19,15 +19,15 @@
 
 
 template <typename ValType>
-FESystem::Solvers::ModifiedQRFactorization<ValType>::ModifiedQRFactorization():
-FESystem::Solvers::MatrixQRFactorizationBase<ValType>()
+FESystem::FactorizationSolvers::ModifiedQRFactorization<ValType>::ModifiedQRFactorization():
+FESystem::FactorizationSolvers::MatrixQRFactorizationBase<ValType>()
 {
     
 }
 
 
 template <typename ValType>
-FESystem::Solvers::ModifiedQRFactorization<ValType>::~ModifiedQRFactorization()
+FESystem::FactorizationSolvers::ModifiedQRFactorization<ValType>::~ModifiedQRFactorization()
 {
     
 }
@@ -36,7 +36,7 @@ FESystem::Solvers::ModifiedQRFactorization<ValType>::~ModifiedQRFactorization()
 
 template <typename ValType>
 void 
-FESystem::Solvers::ModifiedQRFactorization<ValType>::factorize()
+FESystem::FactorizationSolvers::ModifiedQRFactorization<ValType>::factorize()
 {
     FESystemAssert0(!this->factorization_complete, FESystem::Exception::InvalidState);
     
@@ -127,8 +127,8 @@ FESystem::Solvers::ModifiedQRFactorization<ValType>::factorize()
     }
     
     // invert the R factor matrix to get the R matrix for QR factorization
-    FESystem::Solvers::TriangularBacksubstitution<ValType> tri_bs;
-    tri_bs.setTriangularMatrixType(FESystem::Solvers::UPPER_TRIANGULAR);
+    FESystem::FactorizationSolvers::TriangularBacksubstitution<ValType> tri_bs;
+    tri_bs.setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
     tri_bs.setMatrix(*(this->R_mat));
     
     tmat1->setToIdentity();
@@ -152,7 +152,7 @@ FESystem::Solvers::ModifiedQRFactorization<ValType>::factorize()
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::Solvers::ModifiedQRFactorization);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::FactorizationSolvers::ModifiedQRFactorization);
 
 /***************************************************************************************/
 

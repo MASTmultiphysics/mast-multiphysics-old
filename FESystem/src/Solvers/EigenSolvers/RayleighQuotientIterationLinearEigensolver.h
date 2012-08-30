@@ -17,14 +17,13 @@
 
 namespace FESystem
 {
-    namespace Solvers
+    namespace EigenSolvers
     {
         // Forward declerations
         namespace Numerics {template <typename ValType> class MatrixBase;}
         
         template <typename ValType> 
-        class RayleighQuotientIterationLinearEigenSolver: 
-        public FESystem::Solvers::LinearEigenSolverBase<ValType>
+        class RayleighQuotientIterationLinearEigenSolver: public FESystem::EigenSolvers::LinearEigenSolverBase<ValType>
         {
         public:
             
