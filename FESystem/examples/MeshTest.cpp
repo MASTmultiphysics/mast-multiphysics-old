@@ -1332,6 +1332,7 @@ void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, 
     FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<FESystemDouble> nonlinear_solver;
     
     nonlinear_solver.initialize(reduced_stiff_mat, linear_solver);
+    nonlinear_solver.setConvergenceLimits(20, 1.0e-10);
     
     FESystem::NonlinearSolvers::NonlinearSolverCallBack call_back = nonlinear_solver.getCurrentCallBack();
     
@@ -1389,8 +1390,15 @@ void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, 
                 break;
         }
         call_back = nonlinear_solver.incrementSolution();
+        if (call_back == FESystem::NonlinearSolvers::MAXIMUM_ITERATIONS_REACHED)
+        {
+            std::cout << "Maximum iterations reached" << std::endl;
+            break;
+        }
     }
-    
+
+    // copy the last solution and output
+    reduced_sol_vec.copyVector(nonlinear_solver.getCurrentSolution());
     sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
     // write the solution for each node
     for (FESystemUInt i=0; i<nodes.size(); i++)
@@ -1768,7 +1776,7 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
                            FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec)
 {
     
-    FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 1.0e3, I_tr = 6.667e-9, I_ch = 1.6667e-9, area = 2.0e-4;
+    FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 1.0e0, I_tr = 6.667e-9, I_ch = 1.6667e-9, area = 2.0e-4;
     FESystemBoolean if_timoshenko_beam = true;
     FESystemUInt n_beam_dofs, n_elem_dofs;
     
@@ -1930,7 +1938,7 @@ int beam_analysis_driver(int argc, char * const argv[])
     FESystem::Geometry::Point origin(3);
         
     nx=15; x_length = 2; dim = 1; n_modes = 8;
-    elem_type = FESystem::Mesh::EDGE3;
+    elem_type = FESystem::Mesh::EDGE2;
     createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
         
     // set the location of individual nodes

@@ -116,12 +116,6 @@ FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numeric
         
         mat.add(q_weight_shear[i]*jac, tmp_mat2);
     }
-    
-//    C_mat_bend.write(std::cout);
-//    C_mat_shear.write(std::cout);
-//    B_mat.write(std::cout);
-//    B_mat_shear.write(std::cout);
-//    mat.write(std::cout);
 }
 
 

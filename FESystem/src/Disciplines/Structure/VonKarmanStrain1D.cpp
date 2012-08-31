@@ -104,7 +104,7 @@ FESystem::Structures::VonKarmanStrain1D::initialize(const FESystem::Mesh::ElemBa
     FESystemAssert0(bar.getArea() == beam.getArea(), FESystem::Exception::InvalidValue);
     FESystemAssert0(bar.rho_val == beam.rho_val, FESystem::Exception::InvalidValue);
     
-    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.nu_val, beam.nu_val, beam.rho_val, beam.getArea());
+    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.E_val, beam.nu_val, beam.rho_val, beam.getArea());
     this->if_constant_extension_stress = false;
     this->area_val = beam.getArea();
     this->bar_elem = &bar;
@@ -117,7 +117,7 @@ void
 FESystem::Structures::VonKarmanStrain1D::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                                     FESystemDouble stress, FESystem::Structures::LinearBeamElementBase& beam)
 {
-    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.nu_val, beam.nu_val, beam.rho_val, beam.getArea());
+    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.E_val, beam.nu_val, beam.rho_val, beam.getArea());
     this->if_constant_extension_stress = true;
     this->extension_stress = stress;
     this->area_val = beam.getArea();
@@ -182,7 +182,7 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
     
     // resize the quantities, and get the stress values
-    FESystemDouble u_stress = 0.0, v_nonlinear_stress = 0.0, w_nonlinear_stress = 0.0, jac=0.0;
+    FESystemDouble u_stress = 0.0, v_nonlinear_stress = 0.0, w_nonlinear_stress = 0.0, jac=0.0, dv_dx = 0.0, dw_dx = 0.0;
     vec.zero();
     
     // bending contribution
@@ -200,15 +200,17 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
         }
         
         // calculate the extension
-        this->calculateTransverseDisplacementOperatorMatrix((*(q_pts[i])), B_beam_mat);
+        this->calculateTransverseDisplacementOperatorMatrix(*(q_pts[i]), B_beam_mat);
         // nonlinear strain due to v and w displacement
         strain.zero();
         B_beam_mat.rightVectorMultiply(v_dof, strain);
-        v_nonlinear_stress = 0.5 * this->E_val * pow(strain.getVal(0),2); // strain due to v-displacement
+        dv_dx = strain.getVal(0);
+        v_nonlinear_stress = 0.5 * this->E_val * pow(dv_dx,2); // strain due to v-displacement
         
         strain.zero();
         B_beam_mat.rightVectorMultiply(w_dof, strain);
-        w_nonlinear_stress = 0.5 * this->E_val * pow(strain.getVal(0),2); // strain due to w-displacement
+        dw_dx = strain.getVal(0);
+        w_nonlinear_stress = 0.5 * this->E_val * pow(dw_dx,2); // strain due to w-displacement
         
         // this is the total stress (linear + nonlinear)
         tmp_vec1.setVal(0, (u_stress + v_nonlinear_stress + w_nonlinear_stress)*this->area_val);
@@ -228,12 +230,17 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
         // contribution from v-displacement
         tmp_vec2.zero();
         B_beam_mat.leftVectorMultiply(tmp_vec1, tmp_vec2);
-        tmp_vec2.scale(q_weight[i]*jac);
+        tmp_vec2.scale(q_weight[i]*jac*dv_dx);
         vec.addVal(v_dof_indices, tmp_vec2); // B_v^T sigma
+        
+        tmp_vec2.zero();
+        B_beam_mat.leftVectorMultiply(tmp_vec1, tmp_vec2);
+        tmp_vec2.scale(q_weight[i]*jac*dw_dx);
         vec.addVal(w_dof_indices, tmp_vec2); // B_w^T sigma
     }
 
     // beam strain contribution
+    sol.getSubVectorValsFromIndices(beam_dof_indices, beam_sol);
     this->beam_elem->calculateStiffnessMatrix(beam_stiff_mat);
     beam_stiff_mat.rightVectorMultiply(beam_sol, beam_internal_force);
     vec.addVal(beam_dof_indices, beam_internal_force);
@@ -253,11 +260,11 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
     FESystemAssert4((s.first == this->getNElemDofs()) && (s.second == this->getNElemDofs()), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, this->getNElemDofs(), this->getNElemDofs());
     
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> u_dofs, v_dof, w_dof, strain, tmp_vec1, tmp_vec2;
+    static FESystem::Numerics::LocalVector<FESystemDouble> u_dofs, v_dof, w_dof, strain, tmp_vec2;
     static FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_beam_mat, B_bar_mat, beam_stiff_mat, tmp_mat1, tmp_mat2;
     static std::vector<FESystemUInt> u_dof_indices, beam_dof_indices, v_dof_indices, w_dof_indices;
     B_bar_mat.resize(1, n); B_beam_mat.resize(1, n); strain.resize(1);
-    tmp_mat1.resize(1, n); tmp_mat2.resize(n,n); tmp_vec1.resize(n); tmp_vec2.resize(n);
+    tmp_mat1.resize(1, n); tmp_mat2.resize(n,n); tmp_vec2.resize(n);
     beam_stiff_mat.resize(this->beam_elem->getNElemDofs(), this->beam_elem->getNElemDofs()); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
     beam_dof_indices.resize(this->beam_elem->getNElemDofs());
 
@@ -290,7 +297,6 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
     
     sol.getSubVectorValsFromIndices(v_dof_indices, v_dof);
     sol.getSubVectorValsFromIndices(w_dof_indices, w_dof);
-    
 
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
@@ -315,22 +321,18 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
         }
         
         // calculate the extension
-        this->calculateTransverseDisplacementOperatorMatrix((*(q_pts[i])), B_beam_mat);
+        this->calculateTransverseDisplacementOperatorMatrix(*(q_pts[i]), B_beam_mat);
         // nonlinear strain due to v and w displacement
         strain.zero();
         B_beam_mat.rightVectorMultiply(v_dof, strain);
         dv_dx = strain.getVal(0);
-        v_nonlinear_stress = 0.5 * this->E_val * pow(strain.getVal(0),2); // strain due to v-displacement
+        v_nonlinear_stress = 0.5 * this->E_val * pow(dv_dx,2); // strain due to v-displacement
         
         strain.zero();
         B_beam_mat.rightVectorMultiply(w_dof, strain);
         dw_dx = strain.getVal(0);
-        w_nonlinear_stress = 0.5 * this->E_val * pow(strain.getVal(0),2); // strain due to w-displacement
-        
-        // this is the total stress (linear + nonlinear)
-        tmp_vec1.setVal(0, (u_stress + v_nonlinear_stress + w_nonlinear_stress)*this->area_val);
-        
-        
+        w_nonlinear_stress = 0.5 * this->E_val * pow(dw_dx,2); // strain due to w-displacement
+                        
         // contribution from bar strain
         if (!this->if_constant_extension_stress)
         {
@@ -372,7 +374,7 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
         tmp_mat2.zero();
         B_beam_mat.matrixTransposeRightMultiply(pow(dv_dx,2)*this->area_val*this->E_val*q_weight[i]*jac, B_beam_mat, tmp_mat2);
         mat.addVal(v_dof_indices, v_dof_indices, tmp_mat2); // add contribution from v
-        
+                
         // B_w^T E A (dw/dx) (dv/dx) B_v
         tmp_mat2.zero();
         B_beam_mat.matrixTransposeRightMultiply(dw_dx*dv_dx*this->area_val*this->E_val*q_weight[i]*jac, B_beam_mat, tmp_mat2);
@@ -403,7 +405,6 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
     // beam stiffness matrix contribution
     this->beam_elem->calculateStiffnessMatrix(beam_stiff_mat);
     mat.addVal(beam_dof_indices, beam_dof_indices, beam_stiff_mat);
-
 }
 
 

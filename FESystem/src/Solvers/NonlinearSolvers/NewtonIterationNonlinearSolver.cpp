@@ -101,10 +101,10 @@ FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::incrementSo
             this->linear_solver->clear();
             this->linear_solver->setSystemMatrix(*(this->jacobian));
             this->linear_solver->solve(*(this->residual), *(this->sol_increment_vec));
-            
+                        
             // update the solution
             this->sol_vec->add(-1.0, *(this->sol_increment_vec));
-            
+
             // increment iteration number
             this->current_iteration_number++;
             
