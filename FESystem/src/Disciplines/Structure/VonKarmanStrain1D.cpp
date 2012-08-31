@@ -134,42 +134,49 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
     
     const FESystemUInt n = this->geometric_elem->getNNodes();
 
-    FESystemAssert2(sol.getSize() == n*6, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), n*6);
-    
+    FESystemAssert2(sol.getSize() == this->getNElemDofs(), FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), this->getNElemDofs());
+    FESystemAssert2(vec.getSize() == this->getNElemDofs(), FESystem::Exception::DimensionsDoNotMatch, vec.getSize(), this->getNElemDofs());
 
     static FESystem::Numerics::LocalVector<FESystemDouble> u_dofs, v_dof, w_dof, strain, tmp_vec1, tmp_vec2, beam_sol, beam_internal_force;
     static FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_beam_mat, B_bar_mat, beam_stiff_mat;
     static std::vector<FESystemUInt> u_dof_indices, beam_dof_indices, v_dof_indices, w_dof_indices;
-    FESystemUInt n_bar_dofs = 0, n_beam_dofs = 0, n_elem_dofs = 0;
-    B_bar_mat.resize(1, n); B_beam_mat.resize(1, n); strain.resize(1); tmp_vec1.resize(1); tmp_vec1.resize(n);
+    B_bar_mat.resize(1, n); B_beam_mat.resize(1, n); strain.resize(1); tmp_vec1.resize(1); tmp_vec2.resize(n);
+    beam_stiff_mat.resize(this->beam_elem->getNElemDofs(), this->beam_elem->getNElemDofs()); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
+    beam_sol.resize(this->beam_elem->getNElemDofs()); beam_internal_force.resize(this->beam_elem->getNElemDofs());
+    beam_dof_indices.resize(4*n);
 
-    // get the number of degrees of freedom in the bar element
-    if (!this->if_constant_extension_stress)
+    
+    // get the degree of freedom indices in the element
+    if (this->if_constant_extension_stress)
     {
-        n_bar_dofs = this->bar_elem->getNElemDofs();
-        this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
-        u_dofs.resize(n_bar_dofs); stress_tensor.resize(1, 1);
-        sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
+        for (FESystemUInt i=0; i<n; i++)
+        {
+            v_dof_indices[i] =   i;
+            w_dof_indices[i] = n+i;
+            
+        }
+        for (FESystemUInt i=0; i<4*n; i++)
+            beam_dof_indices[i] = i;
     }
-
-    // get the number of degrees of freedom in the beam element
-    n_beam_dofs = this->beam_elem->getNElemDofs();
-    this->beam_elem->getActiveElementMatrixIndices(beam_dof_indices);
-    beam_stiff_mat.resize(n_beam_dofs, n_beam_dofs); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
-    beam_sol.resize(n_beam_dofs); beam_internal_force.resize(n_beam_dofs);
-    for (FESystemUInt i=0; i<n; i++)
+    else
     {
-        v_dof_indices[i] =   n+i;
-        w_dof_indices[i] = 2*n+i;
+        this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
+        u_dofs.resize(this->bar_elem->getNElemDofs()); stress_tensor.resize(1, 1);
+        sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
+
+        for (FESystemUInt i=0; i<n; i++)
+        {
+            v_dof_indices[i] =   n+i;
+            w_dof_indices[i] = 2*n+i;
+        }
+        for (FESystemUInt i=0; i<4*n; i++)
+            beam_dof_indices[i] = n+i; // offset by the u-dofs
     }
     
     sol.getSubVectorValsFromIndices(v_dof_indices, v_dof);
     sol.getSubVectorValsFromIndices(w_dof_indices, w_dof);
-
-    // the total number of element active dofs
-    n_elem_dofs = n_beam_dofs + n_bar_dofs;
-
-    FESystemAssert2(vec.getSize() == n_elem_dofs, FESystem::Exception::DimensionsDoNotMatch, vec.getSize(), n_elem_dofs);
+    
+    
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
@@ -242,42 +249,48 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
-    FESystemAssert2(sol.getSize() == n*6, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), n*6);
+    FESystemAssert2(sol.getSize() == this->getNElemDofs(), FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), this->getNElemDofs());
+    FESystemAssert4((s.first == this->getNElemDofs()) && (s.second == this->getNElemDofs()), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, this->getNElemDofs(), this->getNElemDofs());
     
     
     static FESystem::Numerics::LocalVector<FESystemDouble> u_dofs, v_dof, w_dof, strain, tmp_vec1, tmp_vec2;
     static FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_beam_mat, B_bar_mat, beam_stiff_mat, tmp_mat1, tmp_mat2;
     static std::vector<FESystemUInt> u_dof_indices, beam_dof_indices, v_dof_indices, w_dof_indices;
-    FESystemUInt n_bar_dofs = 0, n_beam_dofs = 0, n_elem_dofs = 0;
     B_bar_mat.resize(1, n); B_beam_mat.resize(1, n); strain.resize(1);
     tmp_mat1.resize(1, n); tmp_mat1.resize(n,n); tmp_vec1.resize(n); tmp_vec2.resize(n);
+    beam_stiff_mat.resize(this->beam_elem->getNElemDofs(), this->beam_elem->getNElemDofs()); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
     
-    // get the number of degrees of freedom in the bar element
-    if (!this->if_constant_extension_stress)
+    // get the degrees of freedom indices in the element
+    if (this->if_constant_extension_stress)
     {
-        n_bar_dofs = this->bar_elem->getNElemDofs();
-        this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
-        u_dofs.resize(n_bar_dofs); stress_tensor.resize(1, 1);
-        sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
+        for (FESystemUInt i=0; i<n; i++)
+        {
+            v_dof_indices[i] =   i;
+            w_dof_indices[i] = n+i;
+            
+        }
+        for (FESystemUInt i=0; i<4*n; i++)
+            beam_dof_indices[i] = i;
     }
-    
-    // get the number of degrees of freedom in the beam element
-    n_beam_dofs = this->beam_elem->getNElemDofs();
-    this->beam_elem->getActiveElementMatrixIndices(beam_dof_indices);
-    beam_stiff_mat.resize(n_beam_dofs, n_beam_dofs); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
-    for (FESystemUInt i=0; i<n; i++)
+    else
     {
-        v_dof_indices[i] =   n+i;
-        w_dof_indices[i] = 2*n+i;
+        this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
+        u_dofs.resize(this->bar_elem->getNElemDofs()); stress_tensor.resize(1, 1);
+        sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
+
+        for (FESystemUInt i=0; i<n; i++)
+        {
+            v_dof_indices[i] =   n+i;
+            w_dof_indices[i] = 2*n+i;
+        }
+        for (FESystemUInt i=0; i<4*n; i++)
+            beam_dof_indices[i] = n+i; // offset by the u-dofs
     }
     
     sol.getSubVectorValsFromIndices(v_dof_indices, v_dof);
     sol.getSubVectorValsFromIndices(w_dof_indices, w_dof);
     
-    // the total number of element active dofs
-    n_elem_dofs = n_beam_dofs + n_bar_dofs;
-    
-    FESystemAssert4((s.first == n_elem_dofs) && (s.second == n_elem_dofs), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n_elem_dofs, n_beam_dofs);
+
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();

@@ -45,7 +45,10 @@ namespace FESystem
             
             void calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain);
 
-        protected:          
+            virtual void getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+                                         FESystem::Numerics::MatrixBase<FESystemDouble>& mat) ;
+
+        protected:
 
             void getMaterialMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             

@@ -41,20 +41,14 @@ namespace FESystem
             /*!
              *    initializes the solver and associated data structures with the Jacobian matrix specified
              */
-            virtual void initialize(FESystem::Numerics::MatrixBase<ValType>& mat);
+            virtual void initialize(FESystem::Numerics::MatrixBase<ValType>& mat, FESystem::LinearSolvers::LinearSolverBase<ValType>& solver);
                         
             
             /*!
              *   Returns a reference to the Jacobian matrix
              */
             FESystem::Numerics::MatrixBase<ValType>& getJacobianMatrix();
-            
-            /*!
-             *    provides the linear solver object for this transient solver. The boolean flag should be set to true if the system matrices
-             *    are constant with respect to time.
-             */
-            void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver);
-            
+                        
             /*
              *   increments to the next time step
              */

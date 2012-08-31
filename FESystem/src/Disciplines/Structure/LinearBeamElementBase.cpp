@@ -19,7 +19,6 @@
 
 FESystem::Structures::LinearBeamElementBase::LinearBeamElementBase():
 FESystem::Structures::Structural1DElementBase(),
-if_include_lateral_stiffness(false),
 I_tr_val(0.0),
 I_ch_val(0.0)
 {
@@ -39,20 +38,9 @@ FESystem::Structures::LinearBeamElementBase::getNElemDofs() const
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
 
-    if (this->if_include_lateral_stiffness)
-        return 4*this->geometric_elem->getNNodes();
-    else
-        return 2*this->geometric_elem->getNNodes();
+    return 4*this->geometric_elem->getNNodes();
 }
 
-
-
-FESystemBoolean
-FESystem::Structures::LinearBeamElementBase::ifIncludeChordwiseStiffness()
-{
-    return this->if_include_lateral_stiffness;
-}
-            
 
 
 
@@ -61,7 +49,6 @@ void
 FESystem::Structures::LinearBeamElementBase::clear()
 {
     FESystem::Structures::Structural1DElementBase::clear();
-    this->if_include_lateral_stiffness = false;
     this->I_tr_val = 0.0;
     this->I_ch_val = 0.0;
 }
@@ -69,10 +56,9 @@ FESystem::Structures::LinearBeamElementBase::clear()
 
 void
 FESystem::Structures::LinearBeamElementBase::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                        FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch,  FESystemDouble A, FESystemBoolean if_lateral)
+                                                        FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch,  FESystemDouble A)
 {
     FESystem::Structures::Structural1DElementBase::initialize(elem,fe,q_rule,E,nu,rho,A);
-    this->if_include_lateral_stiffness = if_lateral;
     this->I_tr_val = I_tr;
     this->I_ch_val = I_ch;
 }
@@ -85,18 +71,9 @@ FESystem::Structures::LinearBeamElementBase::getActiveElementMatrixIndices(std::
 {
     FESystemUInt n = this->geometric_elem->getNNodes();
     
-    if (this->if_include_lateral_stiffness)
-    {
-        vec.resize(4*n);
-        for (FESystemUInt i=0; i<4*n; i++) vec[i] = n + i; // v-, w-displacement, theta-x and theta-y
-    }
-    else
-    {
-        vec.resize(2*n);
-        for (FESystemUInt i=0; i<n; i++) vec[i] = 2*n + i; // w-displacement
-        for (FESystemUInt i=0; i<n; i++) vec[i+n] = 4*n + i; // theta-y
-    }
-    
+    vec.resize(4*n);
+    for (FESystemUInt i=0; i<2*n; i++) vec[i] = n + i; // v-, w-displacement
+    for (FESystemUInt i=0; i<2*n; i++) vec[2*n+i] = 4*n + i; // theta-y and theta-z
 }
 
 
@@ -109,16 +86,8 @@ FESystem::Structures::LinearBeamElementBase::calculateConsistentMassMatrix(FESys
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
-        C_mat.resize(4,4); B_mat.resize(4, 4*n); tmp_mat1.resize(4, 4*n), tmp_mat2.resize(4*n, 4*n);
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 2*n) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
-        C_mat.resize(2,2); B_mat.resize(2, 2*n); tmp_mat1.resize(2, 2*n), tmp_mat2.resize(2*n, 2*n);
-    }
+    FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
+    C_mat.resize(4,4); B_mat.resize(4, 4*n); tmp_mat1.resize(4, 4*n), tmp_mat2.resize(4*n, 4*n);
     
     
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
@@ -151,14 +120,7 @@ FESystem::Structures::LinearBeamElementBase::calculateDiagonalMassMatrix(FESyste
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const FESystemUInt s = vec.getSize();
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert2(s == 4*n, FESystem::Exception::DimensionsDoNotMatch, s, 4*n);
-    }
-    else
-    {
-        FESystemAssert2(s == 2*n, FESystem::Exception::DimensionsDoNotMatch, s, 2*n);
-    }
+    FESystemAssert2(s == 4*n, FESystem::Exception::DimensionsDoNotMatch, s, 4*n);
     
     vec.zero();
     FESystemDouble wt = this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature)) * this->area_val * this->rho_val;
@@ -166,13 +128,8 @@ FESystem::Structures::LinearBeamElementBase::calculateDiagonalMassMatrix(FESyste
     wt /= (1.0*n);
     vec.setAllVals(wt*10e-4);
     
-    if (this->if_include_lateral_stiffness)
-        for (FESystemUInt i=0; i<2*n; i++)
-            vec.setVal(i, wt);
-    else
-        for (FESystemUInt i=0; i<n; i++)
-            vec.setVal(i, wt);
-    
+    for (FESystemUInt i=0; i<2*n; i++)
+        vec.setVal(i, wt);
 }
 
 
@@ -188,23 +145,12 @@ FESystem::Structures::LinearBeamElementBase::calculateInertiaOperatorMatrix(cons
     Nvec.zero(); B_mat.zero();
     this->finite_element->getShapeFunction(pt, Nvec);
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 4) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
-        
-        B_mat.setRowVals(0,   0,   n-1, Nvec); // v
-        B_mat.setRowVals(1,   n, 2*n-1, Nvec); // w
-        B_mat.setRowVals(2, 2*n, 3*n-1, Nvec); // theta_y
-        B_mat.setRowVals(3, 3*n, 4*n-1, Nvec); // theta_z
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 4) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 2*n, s.first, s.second);
-        B_mat.resize(1, 2*n);
-        
-        B_mat.setRowVals(0,   0,   n-1, Nvec); // w
-        B_mat.setRowVals(1,   n, 2*n-1, Nvec); // theta_y
-    }
+    FESystemAssert4(((s.first == 4) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
+    
+    B_mat.setRowVals(0,   0,   n-1, Nvec); // v
+    B_mat.setRowVals(1,   n, 2*n-1, Nvec); // w
+    B_mat.setRowVals(2, 2*n, 3*n-1, Nvec); // theta_y
+    B_mat.setRowVals(3, 3*n, 4*n-1, Nvec); // theta_z
 }
 
 
@@ -215,21 +161,11 @@ FESystem::Structures::LinearBeamElementBase::getMaterialMassMatrix(FESystem::Num
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 4) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4, 4*n, s.first, s.second);
-        mat.setVal(0, 0, this->rho_val * this->area_val);
-        mat.setVal(1, 1, this->rho_val * this->area_val);
-        mat.setVal(3, 3, 1.0e-12 * this->rho_val * this->area_val);
-        mat.setVal(4, 4, 1.0e-12 * this->rho_val * this->area_val);
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 2) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 2, 4*n, s.first, s.second);
-        mat.setVal(0, 0, this->rho_val * this->area_val);
-        mat.setVal(2, 2, 1.0e-12 * this->rho_val * this->area_val);
-    }
-    
+    FESystemAssert4(((s.first == 4) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4, 4*n, s.first, s.second);
+    mat.setVal(0, 0, this->rho_val * this->area_val);
+    mat.setVal(1, 1, this->rho_val * this->area_val);
+    mat.setVal(3, 3, 1.0e-12 * this->rho_val * this->area_val);
+    mat.setVal(4, 4, 1.0e-12 * this->rho_val * this->area_val);
 }
 
 

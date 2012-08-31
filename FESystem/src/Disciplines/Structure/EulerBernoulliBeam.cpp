@@ -54,11 +54,11 @@ FESystem::Structures::EulerBernoulliBeam::getStressTensor(const FESystem::Numeri
 
 void
 FESystem::Structures::EulerBernoulliBeam::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                 FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemDouble A, FESystemBoolean if_lateral)
+                                                 FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch, FESystemDouble A)
 {
     FESystemAssert0(elem.getElementType() == FESystem::Mesh::EDGE2, FESystem::Exception::InvalidValue);
 
-    FESystem::Structures::LinearBeamElementBase::initialize(elem, fe, q_rule, E, nu, rho, I_tr, I_ch, A, if_lateral);
+    FESystem::Structures::LinearBeamElementBase::initialize(elem, fe, q_rule, E, nu, rho, I_tr, I_ch, A);
 }
 
 
@@ -70,19 +70,10 @@ FESystem::Structures::EulerBernoulliBeam::calculateStiffnessMatrix(FESystem::Num
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     FESystemDouble length=this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature));
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_mat_shear, C_mat_bend, tmp_mat1, tmp_mat2;
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat_bend, tmp_mat1, tmp_mat2;
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
-        C_mat_bend.resize(1,1); B_mat.resize(1, 4*n); B_mat_shear.resize(2, 4*n); tmp_mat1.resize(1, 4*n), tmp_mat2.resize(4*n, 4*n);
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 2*n) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
-        C_mat_bend.resize(1,1); B_mat.resize(1, 2*n); B_mat_shear.resize(1, 2*n); tmp_mat1.resize(1, 2*n), tmp_mat2.resize(2*n, 2*n);
-    }
-    
+    FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
+    C_mat_bend.resize(2,2); B_mat.resize(2, 4*n); tmp_mat1.resize(2, 4*n), tmp_mat2.resize(4*n, 4*n);
     C_mat_bend.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
     
@@ -101,7 +92,7 @@ FESystem::Structures::EulerBernoulliBeam::calculateStiffnessMatrix(FESystem::Num
         
         C_mat_bend.matrixRightMultiply(1.0, B_mat, tmp_mat1);
         B_mat.matrixTransposeRightMultiply(1.0, tmp_mat1, tmp_mat2);
-        
+
         mat.add(q_weight_bend[i]*jac, tmp_mat2);
     }
 }
@@ -138,22 +129,12 @@ FESystem::Structures::EulerBernoulliBeam::calculateBendingOperatorMatrix(const F
     
     
     B_mat.zero();
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 1) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
-        B_mat.setVal(0, 0, N1*(this->I_ch_val/this->I_tr_val)); B_mat.setVal(0, 1, N2*(this->I_ch_val/this->I_tr_val)); // v-disp
-        B_mat.setVal(0, 2, N1); B_mat.setVal(0, 3, N2); // w-disp
-
-        B_mat.setVal(0, 4,-N3); B_mat.setVal(0, 5,-N4); // theta-y
-        B_mat.setVal(0, 6, N3*(this->I_ch_val/this->I_tr_val)); B_mat.setVal(0, 7, N4*(this->I_ch_val/this->I_tr_val)); // theta-z
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 1) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 2*n, s.first, s.second);
-        B_mat.setVal(0, 0, N1); B_mat.setVal(0, 1, N2); // w-disp
-        B_mat.setVal(0, 2,-N3); B_mat.setVal(0, 3,-N4); // theta-y
-    }
-
+    FESystemAssert4(((s.first == 2) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 2, 4*n, s.first, s.second);
+    B_mat.setVal(0, 0, N1); B_mat.setVal(0, 1, N2); // v-disp
+    B_mat.setVal(1, 2, N1); B_mat.setVal(1, 3, N2); // w-disp
+    
+    B_mat.setVal(1, 4,-N3); B_mat.setVal(1, 5,-N4); // theta-y
+    B_mat.setVal(0, 6, N3); B_mat.setVal(0, 7, N4); // theta-z
 }
 
 
@@ -163,8 +144,9 @@ FESystem::Structures::EulerBernoulliBeam::getMaterialComplianceMatrix(FESystem::
 {
     const std::pair<FESystemUInt, FESystemUInt> s_b = bend_mat.getSize();
     
-    FESystemAssert4(((s_b.first == 1) && (s_b.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s_b.first, s_b.second);
-    bend_mat.setVal(0, 0, this->E_val * this->I_tr_val);
+    FESystemAssert4(((s_b.first == 2) && (s_b.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_b.first, s_b.second);
+    bend_mat.setVal(0, 0, this->E_val * this->I_ch_val);
+    bend_mat.setVal(1, 1, this->E_val * this->I_tr_val);
 }
 
 

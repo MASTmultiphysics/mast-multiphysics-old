@@ -50,27 +50,17 @@ FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::clear()
 
 template <typename ValType>
 void
-FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::initialize(FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::initialize(FESystem::Numerics::MatrixBase<ValType>& mat, FESystem::LinearSolvers::LinearSolverBase<ValType>& solver)
 {
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     FESystemAssert0(s.first == s.second, FESystem::Numerics::MatrixMustBeSquareForOperation);
     
     FESystem::NonlinearSolvers::NonlinearSolverBase<ValType>::initialize(s.first);
     this->jacobian = &mat;
-}
-            
-
-
-template <typename ValType>
-void
-FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver)
-{
-    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    FESystemAssert0(this->linear_solver == NULL, FESystem::Exception::InvalidState);
-    
     this->linear_solver = &solver;
     this->linear_solver->setSystemMatrix(*(this->jacobian));
 }
+            
             
 
 
@@ -123,8 +113,8 @@ FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::incrementSo
             dx = this->sol_increment_vec->getL2Norm();
             
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
-            << "Residual Norm: " << std::setw(15) << res
-            << "dX Norm: " << std::setw(15) << dx << std::endl;
+            << "   Residual Norm: " << std::setw(15) << res
+            << "   dX Norm: " << std::setw(15) << dx << std::endl;
             
             if ((res <= this->convergence_tolerance) || (dx <= this->convergence_tolerance))
                 this->latest_call_back = FESystem::NonlinearSolvers::SOLUTION_CONVERGED;

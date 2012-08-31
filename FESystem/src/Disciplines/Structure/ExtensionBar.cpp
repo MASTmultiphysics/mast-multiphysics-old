@@ -64,6 +64,12 @@ FESystem::Structures::ExtensionBar::initialize(const FESystem::Mesh::ElemBase& e
 }
 
 
+void
+FESystem::Structures::ExtensionBar::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+                                                    FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+{
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+}
 
 void
 FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)

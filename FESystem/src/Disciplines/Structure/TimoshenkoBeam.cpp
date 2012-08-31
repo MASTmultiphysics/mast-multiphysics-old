@@ -58,9 +58,9 @@ FESystem::Structures::TimoshenkoBeam::getStressTensor(const FESystem::Numerics::
 void
 FESystem::Structures::TimoshenkoBeam::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_bend,
                                                  const FESystem::Quadrature::QuadratureBase& q_shear, FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble I_tr, FESystemDouble I_ch,
-                                                 FESystemDouble A, FESystemBoolean if_lateral)
+                                                 FESystemDouble A)
 {
-    FESystem::Structures::LinearBeamElementBase::initialize(elem, fe, q_bend, E, nu, rho, I_tr, I_ch, A, if_lateral);
+    FESystem::Structures::LinearBeamElementBase::initialize(elem, fe, q_bend, E, nu, rho, I_tr, I_ch, A);
     this->quadrature_bending = &q_bend;
     this->quadrature_shear = &q_shear;
 }
@@ -76,16 +76,8 @@ FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numeric
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_mat_shear, C_mat_bend, C_mat_shear, tmp_mat1, tmp_mat2;
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
-        C_mat_bend.resize(1,1); C_mat_shear.resize(2,2); B_mat.resize(1, 4*n); B_mat_shear.resize(2, 4*n); tmp_mat1.resize(1, 4*n), tmp_mat2.resize(4*n, 4*n);
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 2*n) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
-        C_mat_bend.resize(1,1); C_mat_shear.resize(1,1); B_mat.resize(1, 2*n); B_mat_shear.resize(1, 2*n); tmp_mat1.resize(1, 2*n), tmp_mat2.resize(2*n, 2*n);
-    }
+    FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
+    C_mat_bend.resize(2,2); C_mat_shear.resize(2,2); B_mat.resize(2, 4*n); B_mat_shear.resize(2, 4*n); tmp_mat1.resize(2, 4*n); tmp_mat2.resize(4*n, 4*n);
     
     C_mat_bend.zero(); C_mat_shear.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -113,19 +105,23 @@ FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numeric
     }
     
     // transverse shear contribution
-    B_mat.zero();
+    B_mat_shear.zero();
     for (FESystemUInt i=0; i<q_pts_shear.size(); i++)
     {
         jac = this->finite_element->getJacobianValue(*(q_pts_shear[i]));
-        this->calculateShearOperatorMatrix(*(q_pts_shear[i]), B_mat);
+        this->calculateShearOperatorMatrix(*(q_pts_shear[i]), B_mat_shear);
         
-        
-        
-        C_mat_shear.matrixRightMultiply(1.0, B_mat, tmp_mat1);
-        B_mat.matrixTransposeRightMultiply(1.0, tmp_mat1, tmp_mat2);
+        C_mat_shear.matrixRightMultiply(1.0, B_mat_shear, tmp_mat1);
+        B_mat_shear.matrixTransposeRightMultiply(1.0, tmp_mat1, tmp_mat2);
         
         mat.add(q_weight_shear[i]*jac, tmp_mat2);
     }
+    
+//    C_mat_bend.write(std::cout);
+//    C_mat_shear.write(std::cout);
+//    B_mat.write(std::cout);
+//    B_mat_shear.write(std::cout);
+//    mat.write(std::cout);
 }
 
 
@@ -146,21 +142,11 @@ FESystem::Structures::TimoshenkoBeam::calculateBendingOperatorMatrix(const FESys
     Nvec.zero();
     this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_x, pt, Nvec);
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 1) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 4*n, s.first, s.second);
-
-        B_mat.setRowVals(0, 2*n,  3*n-1, Nvec); // epsilon-x: thetay
-        Nvec.scale(-1.0 * this->I_ch_val/this->I_tr_val);
-        B_mat.setRowVals(0, 3*n,  4*n-1, Nvec); // epsilon-x: thetaz
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 1) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 2*n, s.first, s.second);
-        
-        Nvec.scale(-1.0);
-        B_mat.setRowVals(0, n,  2*n-1, Nvec); // epsilon-x: thetay
-    }
+    FESystemAssert4(((s.first == 2) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 2, 4*n, s.first, s.second);
+    
+    B_mat.setRowVals(0, 3*n,  4*n-1, Nvec); // epsilon-x: thetaz
+    Nvec.scale(-1.0);
+    B_mat.setRowVals(1, 2*n,  3*n-1, Nvec); // epsilon-x: thetay
 }
 
 
@@ -178,33 +164,18 @@ FESystem::Structures::TimoshenkoBeam::calculateShearOperatorMatrix(const FESyste
     Nvec.resize(n);
     B_mat.zero();
 
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s.first == 2) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 2, 4*n, s.first, s.second);
-        
-        Nvec.zero();
-        this->finite_element->getShapeFunction(pt, Nvec);
-        B_mat.setRowVals(0, 2*n,  3*n-1, Nvec); // gamma-xz:  thetay
-        Nvec.scale(-1.0);
-        B_mat.setRowVals(1, 3*n,  4*n-1, Nvec); // gamma-xy : thetaz
-        
-        Nvec.zero();
-        this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_x, pt, Nvec);
-        B_mat.setRowVals(0,   n,  2*n-1, Nvec); // gamma-xz:  w
-        B_mat.setRowVals(1,   0,    n-1, Nvec); // gamma-xy:  v
-    }
-    else
-    {
-        FESystemAssert4(((s.first == 1) && (s.second == 2*n)), FESystem::Numerics::MatrixSizeMismatch, 1, 2*n, s.first, s.second);
-        
-        Nvec.zero();
-        this->finite_element->getShapeFunction(pt, Nvec);
-        B_mat.setRowVals(0,   n,  2*n-1, Nvec); // gamma-xz:  thetay
-        
-        Nvec.zero();
-        this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_x, pt, Nvec);
-        B_mat.setRowVals(0,   0,    n-1, Nvec); // gamma-xz:  w
-    }
+    FESystemAssert4(((s.first == 2) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 2, 4*n, s.first, s.second);
+    
+    Nvec.zero();
+    this->finite_element->getShapeFunction(pt, Nvec);
+    B_mat.setRowVals(0, 2*n,  3*n-1, Nvec); // gamma-xz:  thetay
+    Nvec.scale(-1.0);
+    B_mat.setRowVals(1, 3*n,  4*n-1, Nvec); // gamma-xy : thetaz
+    
+    Nvec.zero();
+    this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(derivatives_x, pt, Nvec);
+    B_mat.setRowVals(0,   n,  2*n-1, Nvec); // gamma-xz:  w
+    B_mat.setRowVals(1,   0,    n-1, Nvec); // gamma-xy:  v
 }
 
 
@@ -215,23 +186,14 @@ FESystem::Structures::TimoshenkoBeam::getMaterialComplianceMatrix(FESystem::Nume
     const std::pair<FESystemUInt, FESystemUInt> s_b = bend_mat.getSize();
     const std::pair<FESystemUInt, FESystemUInt> s_s = shear_mat.getSize();
     
-    if (this->if_include_lateral_stiffness)
-    {
-        FESystemAssert4(((s_b.first == 1) && (s_b.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s_b.first, s_b.second);
-        FESystemAssert4(((s_s.first == 2) && (s_s.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_s.first, s_s.second);
+    FESystemAssert4(((s_b.first == 2) && (s_b.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_b.first, s_b.second);
+    FESystemAssert4(((s_s.first == 2) && (s_s.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_s.first, s_s.second);
+    
+    shear_mat.setVal(0, 0, this->G_val);
+    shear_mat.setVal(1, 1, this->G_val);
 
-        shear_mat.setVal(0, 0, this->G_val);
-        shear_mat.setVal(1, 1, this->G_val);
-    }
-    else
-    {
-        FESystemAssert4(((s_b.first == 1) && (s_b.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s_b.first, s_b.second);
-        FESystemAssert4(((s_s.first == 1) && (s_s.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s_s.first, s_s.second);
-        
-        shear_mat.setVal(0, 0, this->G_val);
-    }
-
-    bend_mat.setVal(0, 0, this->E_val * this->I_tr_val);
+    bend_mat.setVal(0, 0, this->E_val * this->I_ch_val);
+    bend_mat.setVal(1, 1, this->E_val * this->I_tr_val);
     
     shear_mat.scale(this->kappa*this->area_val);
 }
