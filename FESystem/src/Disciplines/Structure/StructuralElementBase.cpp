@@ -213,6 +213,7 @@ FESystem::Structures::StructuralElementBase::transformVectorToGlobalSystem(const
     
     this->getActiveElementMatrixIndices(indices);
     
+    global_vec.zero();
     tmp_vec.zero();
     tmp_vec.addVal(indices, elem_vec);
     

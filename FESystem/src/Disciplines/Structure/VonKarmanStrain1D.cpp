@@ -143,7 +143,7 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
     B_bar_mat.resize(1, n); B_beam_mat.resize(1, n); strain.resize(1); tmp_vec1.resize(1); tmp_vec2.resize(n);
     beam_stiff_mat.resize(this->beam_elem->getNElemDofs(), this->beam_elem->getNElemDofs()); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
     beam_sol.resize(this->beam_elem->getNElemDofs()); beam_internal_force.resize(this->beam_elem->getNElemDofs());
-    beam_dof_indices.resize(4*n);
+    beam_dof_indices.resize(this->beam_elem->getNElemDofs());
 
     
     // get the degree of freedom indices in the element
@@ -257,9 +257,10 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
     static FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_beam_mat, B_bar_mat, beam_stiff_mat, tmp_mat1, tmp_mat2;
     static std::vector<FESystemUInt> u_dof_indices, beam_dof_indices, v_dof_indices, w_dof_indices;
     B_bar_mat.resize(1, n); B_beam_mat.resize(1, n); strain.resize(1);
-    tmp_mat1.resize(1, n); tmp_mat1.resize(n,n); tmp_vec1.resize(n); tmp_vec2.resize(n);
+    tmp_mat1.resize(1, n); tmp_mat2.resize(n,n); tmp_vec1.resize(n); tmp_vec2.resize(n);
     beam_stiff_mat.resize(this->beam_elem->getNElemDofs(), this->beam_elem->getNElemDofs()); v_dof.resize(n); w_dof.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
-    
+    beam_dof_indices.resize(this->beam_elem->getNElemDofs());
+
     // get the degrees of freedom indices in the element
     if (this->if_constant_extension_stress)
     {

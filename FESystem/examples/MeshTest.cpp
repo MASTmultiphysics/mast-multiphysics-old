@@ -1768,8 +1768,8 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
                            FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec)
 {
     
-    FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, p_val = 1.0e6, I_tr = 6.667e-9, I_ch = 1.6667e-9, area = 2.0e-4;
-    FESystemBoolean if_timoshenko_beam = false;
+    FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 1.0e3, I_tr = 6.667e-9, I_ch = 1.6667e-9, area = 2.0e-4;
+    FESystemBoolean if_timoshenko_beam = true;
     FESystemUInt n_beam_dofs, n_elem_dofs;
     
     n_beam_dofs = 4*n_elem_nodes;
@@ -1815,6 +1815,7 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
     else
         q_rule_bending.init(1, 9);
     
+    internal_force.zero(); external_force.zero(); global_stiffness_mat.zero(); global_mass_vec.zero();
     
     const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     
@@ -1832,6 +1833,12 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
             {
                 timoshenko_beam.clear();
                 timoshenko_beam.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, I_tr, I_ch, area);
+
+                // force
+                timoshenko_beam.calculateDistributedLoad(v_p_val, w_p_val, beam_elem_vec);
+                timoshenko_beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+                dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
+
                 vk_beam.clear();
                 vk_beam.initialize(*(elems[i]), fe, q_rule_bending, 0.0, timoshenko_beam);
             }
@@ -1839,15 +1846,25 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
             {
                 euler_beam.clear();
                 euler_beam.initialize(*(elems[i]), fe, q_rule_bending, E, nu, rho, I_tr, I_ch, area);
+
+                // force
+                euler_beam.calculateDistributedLoad(v_p_val, w_p_val, beam_elem_vec);
+                euler_beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+                dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
+
                 vk_beam.clear();
                 vk_beam.initialize(*(elems[i]), fe, q_rule_bending, 0.0, euler_beam);
             }
             vk_beam.getActiveElementMatrixIndices(elem_dof_indices);
             elem_sol.getSubVectorValsFromIndices(elem_dof_indices, elem_local_sol);
+
             vk_beam.calculateInternalForceVector(elem_local_sol, beam_elem_vec);
             vk_beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+            dof_map.addToGlobalVector(*(elems[i]), elem_vec, internal_force);
+
             vk_beam.calculateTangentStiffnessMatrix(elem_local_sol, beam_elem_mat);
             vk_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+            
         }
         else
         {
@@ -1859,6 +1876,11 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
                 // stiffness matrix
                 timoshenko_beam.calculateStiffnessMatrix(beam_elem_mat);
                 timoshenko_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+                
+                // force
+                timoshenko_beam.calculateDistributedLoad(v_p_val, w_p_val, beam_elem_vec);
+                timoshenko_beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+                dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
                 
                 // mass
                 timoshenko_beam.calculateDiagonalMassMatrix(beam_elem_vec);
@@ -1873,17 +1895,22 @@ void calculateBeamMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::Element
                 euler_beam.calculateStiffnessMatrix(beam_elem_mat);
                 euler_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
                 
+                // force
+                euler_beam.calculateDistributedLoad(v_p_val, w_p_val, beam_elem_vec);
+                euler_beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+                dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
+
                 // mass
                 euler_beam.calculateDiagonalMassMatrix(beam_elem_vec);
                 euler_beam.getActiveElementMatrixIndices(elem_dof_indices);
             }
+
+            elem_vec.zero();
+            elem_vec.addVal(elem_dof_indices, beam_elem_vec);
+            dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
         }
-        elem_vec.zero();
-        elem_vec.addVal(elem_dof_indices, beam_elem_vec);
         
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat, global_stiffness_mat);
-        dof_map.addToGlobalVector(*(elems[i]), elem_vec, global_mass_vec);
-        
     }
 }
 
@@ -1903,7 +1930,7 @@ int beam_analysis_driver(int argc, char * const argv[])
     FESystem::Geometry::Point origin(3);
         
     nx=15; x_length = 2; dim = 1; n_modes = 8;
-    elem_type = FESystem::Mesh::EDGE2;
+    elem_type = FESystem::Mesh::EDGE3;
     createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
         
     // set the location of individual nodes
@@ -1935,12 +1962,12 @@ int beam_analysis_driver(int argc, char * const argv[])
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
         bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
-        //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
         bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // theta-x
-        //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
+        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
         if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(0) == x_length)) // boundary nodes
         {
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-displacement on the bottom edge
+            //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-displacement on the bottom edge
             bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
         }
     }
@@ -1962,8 +1989,8 @@ int beam_analysis_driver(int argc, char * const argv[])
     dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
 
     
-//    nonlinearSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol, calculateBeamMatrices);
-//    exit(1);
+    //nonlinearSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol, calculateBeamMatrices);
+    //exit(1);
     
     // calculate the stiffness quantities for the linearized analyses
     calculateBeamMatrices(false, elem_type, n_elem_nodes, dof_map, mesh, sol, rhs, rhs, global_stiffness_mat, global_mass_vec);

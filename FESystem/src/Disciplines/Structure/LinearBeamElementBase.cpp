@@ -134,6 +134,48 @@ FESystem::Structures::LinearBeamElementBase::calculateDiagonalMassMatrix(FESyste
 
 
 
+
+void
+FESystem::Structures::LinearBeamElementBase::calculateDistributedLoad(FESystemDouble v_val, FESystemDouble w_val, FESystem::Numerics::VectorBase<FESystemDouble>& vec)
+{
+    const FESystemUInt n = this->geometric_elem->getNNodes();
+    const FESystemUInt s = vec.getSize();
+    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    static std::vector<FESystemUInt> v_dof_indices, w_dof_indices;
+    Nvec.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
+    Nvec.zero(); vec.zero();
+    
+    for (FESystemUInt i=0; i<n; i++)
+    {
+        v_dof_indices[i] =   i;
+        w_dof_indices[i] = n+i;
+    }
+    
+    FESystemAssert2(s == 4*n, FESystem::Exception::DimensionsDoNotMatch, s, 4*n);
+    
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
+    
+    FESystemDouble jac=0.0;
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValue(*(q_pts[i]));
+
+        this->finite_element->getShapeFunction(*(q_pts[i]), Nvec);
+        Nvec.scale(q_weight[i]*jac*v_val);
+        vec.addVal(v_dof_indices, Nvec); // add to the v-forces
+        
+        this->finite_element->getShapeFunction(*(q_pts[i]), Nvec);
+        Nvec.scale(q_weight[i]*jac*w_val);
+        vec.addVal(w_dof_indices, Nvec); // add to the v-forces
+    }
+}
+
+
+
+
 void
 FESystem::Structures::LinearBeamElementBase::calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat)
 {
