@@ -81,6 +81,8 @@ FESystem::Structures::LinearBeamElementBase::getActiveElementMatrixIndices(std::
 void
 FESystem::Structures::LinearBeamElementBase::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
@@ -117,6 +119,8 @@ FESystem::Structures::LinearBeamElementBase::calculateConsistentMassMatrix(FESys
 void
 FESystem::Structures::LinearBeamElementBase::calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const FESystemUInt s = vec.getSize();
     
@@ -138,6 +142,8 @@ FESystem::Structures::LinearBeamElementBase::calculateDiagonalMassMatrix(FESyste
 void
 FESystem::Structures::LinearBeamElementBase::calculateDistributedLoad(FESystemDouble v_val, FESystemDouble w_val, FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const FESystemUInt s = vec.getSize();
     static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;

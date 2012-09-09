@@ -71,6 +71,8 @@ FESystem::Structures::TimoshenkoBeam::initialize(const FESystem::Mesh::ElemBase&
 void
 FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     

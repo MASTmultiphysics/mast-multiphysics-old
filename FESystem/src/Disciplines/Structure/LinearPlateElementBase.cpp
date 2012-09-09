@@ -55,6 +55,8 @@ FESystem::Structures::LinearPlateElementBase::getActiveElementMatrixIndices(std:
 void
 FESystem::Structures::LinearPlateElementBase::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
@@ -89,6 +91,8 @@ FESystem::Structures::LinearPlateElementBase::calculateConsistentMassMatrix(FESy
 void
 FESystem::Structures::LinearPlateElementBase::calculateDiagonalMassMatrix(FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     
     FESystemAssert2(vec.getSize() == 3*n, FESystem::Exception::DimensionsDoNotMatch, 3*n, vec.getSize());

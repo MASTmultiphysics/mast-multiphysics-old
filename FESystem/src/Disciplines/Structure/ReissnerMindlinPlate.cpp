@@ -71,6 +71,8 @@ FESystem::Structures::ReissnerMindlinPlate::initialize(const FESystem::Mesh::Ele
 void
 FESystem::Structures::ReissnerMindlinPlate::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     

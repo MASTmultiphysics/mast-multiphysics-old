@@ -79,6 +79,8 @@ FESystem::Structures::TorsionBar::initialize(const FESystem::Mesh::ElemBase& ele
 void
 FESystem::Structures::TorsionBar::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
 
@@ -112,6 +114,8 @@ FESystem::Structures::TorsionBar::calculateConsistentMassMatrix(FESystem::Numeri
 void
 FESystem::Structures::TorsionBar::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     

@@ -23,6 +23,7 @@
 		6985068615DC80B900CDDADF /* Structural1DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */; };
 		6985068815DC80C700CDDADF /* Structural2DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */; };
 		6985068A15DC80D900CDDADF /* Structural3DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */; };
+		69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */; };
 		EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */; };
 		EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */; };
 		EB55F83A15E68C7900D8E6B1 /* LinearBeamElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */; };
@@ -290,6 +291,7 @@
 		6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural1DElementBase.cpp; sourceTree = "<group>"; };
 		6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural2DElementBase.cpp; sourceTree = "<group>"; };
 		6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural3DElementBase.cpp; sourceTree = "<group>"; };
+		69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThermalElementBase.cpp; sourceTree = "<group>"; };
 		EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearPlateElementBase.cpp; sourceTree = "<group>"; };
 		EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearPlateElementBase.h; sourceTree = "<group>"; };
 		EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearBeamElementBase.cpp; sourceTree = "<group>"; };
@@ -599,6 +601,7 @@
 			isa = PBXGroup;
 			children = (
 				6961E5CC15D8ACA700795584 /* ThermalElementBase.h */,
+				69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */,
 			);
 			path = Thermal;
 			sourceTree = "<group>";
@@ -1368,6 +1371,7 @@
 				6979EF9915EAC34A0060C0EC /* TimoshenkoBeam.cpp in Sources */,
 				EBF47F1C15EFD38C00640485 /* NonlinearSolverBase.cpp in Sources */,
 				EBF47F2015EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp in Sources */,
+				69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

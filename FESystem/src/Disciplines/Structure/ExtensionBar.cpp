@@ -74,6 +74,8 @@ FESystem::Structures::ExtensionBar::getStressTensor(const FESystem::Numerics::Ve
 void
 FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
@@ -107,6 +109,8 @@ FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Nume
 void
 FESystem::Structures::ExtensionBar::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     

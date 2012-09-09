@@ -66,6 +66,8 @@ FESystem::Structures::EulerBernoulliBeam::initialize(const FESystem::Mesh::ElemB
 void
 FESystem::Structures::EulerBernoulliBeam::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     FESystemDouble length=this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature));

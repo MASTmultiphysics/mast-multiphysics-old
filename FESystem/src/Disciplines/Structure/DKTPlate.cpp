@@ -245,6 +245,8 @@ FESystem::Structures::DKTPlate::initialize(const FESystem::Mesh::ElemBase& elem,
 void
 FESystem::Structures::DKTPlate::calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
     const FESystemUInt n = this->geometric_elem->getNNodes();
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
