@@ -65,11 +65,30 @@ FESystem::Structures::ExtensionBar::initialize(const FESystem::Mesh::ElemBase& e
 
 
 void
-FESystem::Structures::ExtensionBar::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+FESystem::Structures::ExtensionBar::getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                                     FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+
+    FESystemUInt n = this->geometric_elem->getNNodes();
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+
+    FESystemAssert2(sol.getSize() == n, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), n);
+    FESystemAssert4(((s.first == 1) && (s.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s.first, s.second);
+
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat;
+    static FESystem::Numerics::LocalVector<FESystemDouble> strain;
+    B_mat.resize(1, n);
+    strain.resize(1);
+    
+    // get the operator matrix
+    this->calculateOperatorMatrix(pt, B_mat, true);
+    // calculate strain
+    B_mat.rightVectorMultiply(sol, strain);
+    mat.setVal(0, 0, strain.getVal(0)*this->E_val);
 }
+
+
 
 void
 FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)

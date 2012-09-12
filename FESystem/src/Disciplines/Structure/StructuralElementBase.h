@@ -25,7 +25,7 @@ namespace FESystem
     namespace Quadrature {class QuadratureBase;}
     namespace FiniteElement {class FiniteElementBase;}
     namespace Mesh {class ElemBase;}
-    namespace Geom {class Section;}
+    namespace Geometry {class Point;}
 
     
     namespace Structures
@@ -82,7 +82,7 @@ namespace FESystem
             virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec) = 0;
             
             
-            virtual void getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+            virtual void getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                          FESystem::Numerics::MatrixBase<FESystemDouble>& mat) = 0;
             
             virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);

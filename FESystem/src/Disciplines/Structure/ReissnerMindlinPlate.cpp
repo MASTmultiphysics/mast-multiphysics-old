@@ -46,7 +46,7 @@ FESystem::Structures::ReissnerMindlinPlate::clear()
 
 
 void
-FESystem::Structures::ReissnerMindlinPlate::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+FESystem::Structures::ReissnerMindlinPlate::getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                                             FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);

@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
-		69EB866A15F15E8D007C27FD /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69EB866915F15E8D007C27FD /* FESystem.dylib */; };
 		EBAEE19415C1B8A90062459D /* EigenTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19115C1B8A90062459D /* EigenTest.cpp */; };
 		EBAEE19515C1B8A90062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19215C1B8A90062459D /* main.cpp */; };
 		EBAEE19615C1B8A90062459D /* MeshTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19315C1B8A90062459D /* MeshTest.cpp */; };
+		EBB75C2615FE4A9F00C8A517 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB75C2515FE4A9F00C8A517 /* FESystem.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,10 +29,10 @@
 /* Begin PBXFileReference section */
 		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
-		69EB866915F15E8D007C27FD /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-dnngzprkwoyuvxdbkrjlfrgzblqx/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBAEE19115C1B8A90062459D /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EigenTest.cpp; path = FESystem/examples/EigenTest.cpp; sourceTree = "<group>"; };
 		EBAEE19215C1B8A90062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = FESystem/examples/main.cpp; sourceTree = "<group>"; };
 		EBAEE19315C1B8A90062459D /* MeshTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MeshTest.cpp; path = FESystem/examples/MeshTest.cpp; sourceTree = "<group>"; };
+		EBB75C2515FE4A9F00C8A517 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,7 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69EB866A15F15E8D007C27FD /* FESystem.dylib in Frameworks */,
+				EBB75C2615FE4A9F00C8A517 /* FESystem.dylib in Frameworks */,
 				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -51,7 +51,7 @@
 		69677EBC13404448002B32C8 = {
 			isa = PBXGroup;
 			children = (
-				69EB866915F15E8D007C27FD /* FESystem.dylib */,
+				EBB75C2515FE4A9F00C8A517 /* FESystem.dylib */,
 				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
 				EBAEE19115C1B8A90062459D /* EigenTest.cpp */,
 				EBAEE19215C1B8A90062459D /* main.cpp */,

@@ -30,6 +30,9 @@ namespace FESystem
             
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                     FESystemDouble E, FESystemDouble nu, FESystemDouble rho, FESystemDouble th);
+
+            FESystemDouble getThickness() const;
+            
             
         protected:
             

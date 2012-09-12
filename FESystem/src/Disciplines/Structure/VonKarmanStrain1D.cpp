@@ -57,7 +57,6 @@ FESystem::Structures::VonKarmanStrain1D::clear()
     FESystem::Structures::Structural1DElementBase::clear();
     this->if_constant_extension_stress = false;
     this->extension_stress = 0.0;
-    this->area_val = 0.0;
     this->bar_elem = NULL;
     this->beam_elem = NULL;
 }
@@ -87,7 +86,7 @@ FESystem::Structures::VonKarmanStrain1D::getActiveElementMatrixIndices(std::vect
 
 
 void
-FESystem::Structures::VonKarmanStrain1D::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+FESystem::Structures::VonKarmanStrain1D::getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                                       FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
@@ -175,7 +174,8 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
     
     sol.getSubVectorValsFromIndices(v_dof_indices, v_dof);
     sol.getSubVectorValsFromIndices(w_dof_indices, w_dof);
-    
+    sol.getSubVectorValsFromIndices(beam_dof_indices, beam_sol);
+
     
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
@@ -240,7 +240,6 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
     }
 
     // beam strain contribution
-    sol.getSubVectorValsFromIndices(beam_dof_indices, beam_sol);
     this->beam_elem->calculateStiffnessMatrix(beam_stiff_mat);
     beam_stiff_mat.rightVectorMultiply(beam_sol, beam_internal_force);
     vec.addVal(beam_dof_indices, beam_internal_force);

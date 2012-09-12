@@ -43,7 +43,7 @@ FESystem::Structures::EulerBernoulliBeam::clear()
 
 
 void
-FESystem::Structures::EulerBernoulliBeam::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+FESystem::Structures::EulerBernoulliBeam::getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                                       FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);

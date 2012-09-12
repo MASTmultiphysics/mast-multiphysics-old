@@ -8,6 +8,7 @@
 
 // FESystem includes
 #include "Disciplines/Structure/Structural2DElementBase.h"
+#include "Base/FESystemExceptions.h"
 
 
 FESystem::Structures::Structural2DElementBase::Structural2DElementBase():
@@ -39,3 +40,10 @@ FESystem::Structures::Structural2DElementBase::initialize(const FESystem::Mesh::
     this->th_val = th;
 }
 
+
+FESystemDouble
+FESystem::Structures::Structural2DElementBase::getThickness() const
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    return this->th_val;
+}

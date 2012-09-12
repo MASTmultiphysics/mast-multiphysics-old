@@ -191,7 +191,7 @@ FESystem::Structures::DKTPlate::clear()
 
 
 void
-FESystem::Structures::DKTPlate::getStressTensor(const FESystem::Numerics::VectorBase<FESystemDouble>& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+FESystem::Structures::DKTPlate::getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                                 FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);

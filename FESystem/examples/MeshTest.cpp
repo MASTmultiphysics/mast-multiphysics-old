@@ -1776,22 +1776,22 @@ void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mes
                            FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec)
 {
     
-    //FESystemDouble E=30.0e6, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 10.0e0, I_tr = 0.08333, I_ch = 0.08333, area = 1.0; (Reddy's parameters)
-    FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 1.0e0, I_tr = 6.667e-9, I_ch = 1.6667e-9, area = 2.0e-4;
-    FESystemBoolean if_timoshenko_beam = false;
+    FESystemDouble E=30.0e6, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 9.0e0, I_tr = 1.0/12.0, I_ch = 1.0/12.0, area = 1.0; // (Reddy's parameters)
+    //FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, v_p_val = 0.0, w_p_val = 1.0e0, I_tr = 6.667e-9, I_ch = 1.6667e-9, area = 2.0e-4;
+    FESystemBoolean if_timoshenko_beam = true;
     FESystemUInt n_beam_dofs, n_elem_dofs;
     
     n_beam_dofs = 4*n_elem_nodes;
     n_elem_dofs = 6*n_elem_nodes;
 
     
-    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat, beam_elem_mat;
-    FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, beam_elem_vec, elem_sol, elem_local_sol;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat, beam_elem_mat, vk_elem_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, beam_elem_vec, elem_sol, elem_local_sol, vk_elem_vec;
     std::vector<FESystemUInt> elem_dof_indices;
-    elem_mat.resize(n_elem_dofs, n_elem_dofs);
-    elem_vec.resize(n_elem_dofs); elem_sol.resize(n_elem_dofs); elem_local_sol.resize(4*n_elem_nodes);
+    elem_mat.resize(n_elem_dofs, n_elem_dofs); vk_elem_mat.resize(5*n_elem_nodes, 5*n_elem_nodes);
+    elem_vec.resize(n_elem_dofs); elem_sol.resize(n_elem_dofs); elem_local_sol.resize(5*n_elem_nodes);
     
-    beam_elem_mat.resize(n_beam_dofs, n_beam_dofs); beam_elem_vec.resize(n_beam_dofs);
+    beam_elem_mat.resize(n_beam_dofs, n_beam_dofs); beam_elem_vec.resize(n_beam_dofs); vk_elem_vec.resize(5*n_elem_nodes);
 
     // prepare the quadrature rule and FE for the
     FESystem::Quadrature::TrapezoidQuadrature q_rule_shear, q_rule_bending;
@@ -1840,6 +1840,9 @@ void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mes
             dof_map.getFromGlobalVector(*(elems[i]), global_sol, elem_sol);
             if (if_timoshenko_beam)
             {
+                bar.clear();
+                bar.initialize(*(elems[i]), fe, q_rule_bending, E, nu, rho, area);
+                
                 timoshenko_beam.clear();
                 timoshenko_beam.initialize(*(elems[i]), fe, q_rule_bending, q_rule_shear, E, nu, rho, I_tr, I_ch, area);
 
@@ -1849,7 +1852,7 @@ void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mes
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
 
                 vk_beam.clear();
-                vk_beam.initialize(*(elems[i]), fe, q_rule_bending, 0.0, timoshenko_beam);
+                vk_beam.initialize(*(elems[i]), fe, q_rule_bending, bar, timoshenko_beam);
             }
             else
             {
@@ -1867,12 +1870,12 @@ void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mes
             vk_beam.getActiveElementMatrixIndices(elem_dof_indices);
             elem_sol.getSubVectorValsFromIndices(elem_dof_indices, elem_local_sol);
 
-            vk_beam.calculateInternalForceVector(elem_local_sol, beam_elem_vec);
-            vk_beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+            vk_beam.calculateInternalForceVector(elem_local_sol, vk_elem_vec);
+            vk_beam.transformVectorToGlobalSystem(vk_elem_vec, elem_vec);
             dof_map.addToGlobalVector(*(elems[i]), elem_vec, internal_force);
 
-            vk_beam.calculateTangentStiffnessMatrix(elem_local_sol, beam_elem_mat);
-            vk_beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
+            vk_beam.calculateTangentStiffnessMatrix(elem_local_sol, vk_elem_mat);
+            vk_beam.transformMatrixToGlobalSystem(vk_elem_mat, elem_mat);
             
         }
         else
@@ -1938,7 +1941,7 @@ int beam_analysis_driver(int argc, char * const argv[])
     FESystemDouble x_length;
     FESystem::Geometry::Point origin(3);
         
-    nx=15; x_length = 2; dim = 1; n_modes = 8;
+    nx=15; x_length = 100; dim = 1; n_modes = 8;
     elem_type = FESystem::Mesh::EDGE2;
     createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
         
@@ -1970,14 +1973,15 @@ int beam_analysis_driver(int argc, char * const argv[])
     std::set<FESystemUInt> bc_dofs;
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
-        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
+        //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-disp
         bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-disp
         bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // theta-x
         bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
         if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(0) == x_length)) // boundary nodes
         {
-            //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-displacement on the bottom edge
-            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the bottom edge
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-displacement on the edges
+            //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-displacement on the edges
+            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on the edges
         }
     }
     
