@@ -21,8 +21,7 @@
 
 FESystem::Structures::VonKarmanStrain1D::VonKarmanStrain1D():
 FESystem::Structures::Structural1DElementBase(),
-if_constant_extension_stress(false),
-extension_stress(0.0),
+extension_pre_stress(0.0),
 bar_elem(NULL),
 beam_elem(NULL)
 {
@@ -42,11 +41,7 @@ FESystem::Structures::VonKarmanStrain1D::getNElemDofs() const
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
 
-    // get the number of degrees of freedom in the bar element
-    if (this->if_constant_extension_stress)
-        return this->beam_elem->getNElemDofs();
-    else
-        return this->beam_elem->getNElemDofs() + this->bar_elem->getNElemDofs();
+    return this->beam_elem->getNElemDofs() + this->bar_elem->getNElemDofs();
 }
 
 
@@ -55,8 +50,7 @@ void
 FESystem::Structures::VonKarmanStrain1D::clear()
 {
     FESystem::Structures::Structural1DElementBase::clear();
-    this->if_constant_extension_stress = false;
-    this->extension_stress = 0.0;
+    this->extension_pre_stress = 0.0;
     this->bar_elem = NULL;
     this->beam_elem = NULL;
 }
@@ -67,20 +61,15 @@ void
 FESystem::Structures::VonKarmanStrain1D::getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec)
 {
     static std::vector<FESystemUInt> beam_vec, bar_vec;
-
-    if (if_constant_extension_stress)
-        this->beam_elem->getActiveElementMatrixIndices(vec);
-    else
-    {
-        this->bar_elem->getActiveElementMatrixIndices(bar_vec);
-        this->beam_elem->getActiveElementMatrixIndices(beam_vec);
-
-        vec.resize(beam_vec.size() + bar_vec.size());
-        for (FESystemUInt i=0; i<bar_vec.size(); i++)
-            vec[i] = bar_vec[i];
-        for (FESystemUInt i=0; i<beam_vec.size(); i++)
-            vec[i+bar_vec.size()] = beam_vec[i];
-    }
+    
+    this->bar_elem->getActiveElementMatrixIndices(bar_vec);
+    this->beam_elem->getActiveElementMatrixIndices(beam_vec);
+    
+    vec.resize(beam_vec.size() + bar_vec.size());
+    for (FESystemUInt i=0; i<bar_vec.size(); i++)
+        vec[i] = bar_vec[i];
+    for (FESystemUInt i=0; i<beam_vec.size(); i++)
+        vec[i+bar_vec.size()] = beam_vec[i];
 }
 
 
@@ -97,32 +86,19 @@ FESystem::Structures::VonKarmanStrain1D::getStressTensor(const FESystem::Geometr
 
 void
 FESystem::Structures::VonKarmanStrain1D::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                    FESystem::Structures::ExtensionBar& bar, FESystem::Structures::LinearBeamElementBase& beam)
+                                                    FESystemDouble pre_stress, FESystem::Structures::ExtensionBar& bar, FESystem::Structures::LinearBeamElementBase& beam)
 {
     FESystemAssert0(bar.E_val == beam.E_val, FESystem::Exception::InvalidValue);
     FESystemAssert0(bar.getArea() == beam.getArea(), FESystem::Exception::InvalidValue);
     FESystemAssert0(bar.rho_val == beam.rho_val, FESystem::Exception::InvalidValue);
     
     FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.E_val, beam.nu_val, beam.rho_val, beam.getArea());
-    this->if_constant_extension_stress = false;
     this->area_val = beam.getArea();
+    this->extension_pre_stress = pre_stress;
     this->bar_elem = &bar;
     this->beam_elem = &beam;
 }
 
-
-
-void
-FESystem::Structures::VonKarmanStrain1D::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                    FESystemDouble stress, FESystem::Structures::LinearBeamElementBase& beam)
-{
-    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.E_val, beam.nu_val, beam.rho_val, beam.getArea());
-    this->if_constant_extension_stress = true;
-    this->extension_stress = stress;
-    this->area_val = beam.getArea();
-    this->bar_elem = NULL;
-    this->beam_elem = &beam;
-}
 
 
 
@@ -146,31 +122,17 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
 
     
     // get the degree of freedom indices in the element
-    if (this->if_constant_extension_stress)
+    this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
+    u_dofs.resize(this->bar_elem->getNElemDofs()); stress_tensor.resize(1, 1);
+    sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
+    
+    for (FESystemUInt i=0; i<n; i++)
     {
-        for (FESystemUInt i=0; i<n; i++)
-        {
-            v_dof_indices[i] =   i;
-            w_dof_indices[i] = n+i;
-            
-        }
-        for (FESystemUInt i=0; i<4*n; i++)
-            beam_dof_indices[i] = i;
+        v_dof_indices[i] =   n+i;
+        w_dof_indices[i] = 2*n+i;
     }
-    else
-    {
-        this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
-        u_dofs.resize(this->bar_elem->getNElemDofs()); stress_tensor.resize(1, 1);
-        sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
-
-        for (FESystemUInt i=0; i<n; i++)
-        {
-            v_dof_indices[i] =   n+i;
-            w_dof_indices[i] = 2*n+i;
-        }
-        for (FESystemUInt i=0; i<4*n; i++)
-            beam_dof_indices[i] = n+i; // offset by the u-dofs
-    }
+    for (FESystemUInt i=0; i<4*n; i++)
+        beam_dof_indices[i] = n+i; // offset by the u-dofs
     
     sol.getSubVectorValsFromIndices(v_dof_indices, v_dof);
     sol.getSubVectorValsFromIndices(w_dof_indices, w_dof);
@@ -191,13 +153,8 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
         jac = this->finite_element->getJacobianValue(*(q_pts[i]));
 
         // get the bar stress
-        if (this->if_constant_extension_stress)
-            u_stress = this->extension_stress;
-        else
-        {
-            this->bar_elem->getStressTensor(*(q_pts[i]), u_dofs, stress_tensor);
-            u_stress = stress_tensor.getVal(0, 0);
-        }
+        this->bar_elem->getStressTensor(*(q_pts[i]), u_dofs, stress_tensor);
+        u_stress = this->extension_pre_stress + stress_tensor.getVal(0, 0);
         
         // calculate the extension
         this->calculateTransverseDisplacementOperatorMatrix(*(q_pts[i]), B_beam_mat);
@@ -217,14 +174,11 @@ FESystem::Structures::VonKarmanStrain1D::calculateInternalForceVector(const FESy
         
 
         // contribution from bar strain
-        if (!this->if_constant_extension_stress)
-        {
-            tmp_vec2.zero();
-            this->bar_elem->calculateOperatorMatrix(*(q_pts[i]), B_bar_mat, true);
-            B_bar_mat.leftVectorMultiply(tmp_vec1, tmp_vec2);
-            tmp_vec2.scale(q_weight[i]*jac);
-            vec.addVal(u_dof_indices, tmp_vec2); // B_m^T sigma
-        }
+        tmp_vec2.zero();
+        this->bar_elem->calculateOperatorMatrix(*(q_pts[i]), B_bar_mat, true);
+        B_bar_mat.leftVectorMultiply(tmp_vec1, tmp_vec2);
+        tmp_vec2.scale(q_weight[i]*jac);
+        vec.addVal(u_dof_indices, tmp_vec2); // B_m^T sigma
         
         
         // contribution from v-displacement
@@ -268,31 +222,17 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
     beam_dof_indices.resize(this->beam_elem->getNElemDofs());
 
     // get the degrees of freedom indices in the element
-    if (this->if_constant_extension_stress)
+    this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
+    u_dofs.resize(this->bar_elem->getNElemDofs()); stress_tensor.resize(1, 1);
+    sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
+    
+    for (FESystemUInt i=0; i<n; i++)
     {
-        for (FESystemUInt i=0; i<n; i++)
-        {
-            v_dof_indices[i] =   i;
-            w_dof_indices[i] = n+i;
-            
-        }
-        for (FESystemUInt i=0; i<4*n; i++)
-            beam_dof_indices[i] = i;
+        v_dof_indices[i] =   n+i;
+        w_dof_indices[i] = 2*n+i;
     }
-    else
-    {
-        this->bar_elem->getActiveElementMatrixIndices(u_dof_indices);
-        u_dofs.resize(this->bar_elem->getNElemDofs()); stress_tensor.resize(1, 1);
-        sol.getSubVectorValsFromIndices(u_dof_indices, u_dofs);
-
-        for (FESystemUInt i=0; i<n; i++)
-        {
-            v_dof_indices[i] =   n+i;
-            w_dof_indices[i] = 2*n+i;
-        }
-        for (FESystemUInt i=0; i<4*n; i++)
-            beam_dof_indices[i] = n+i; // offset by the u-dofs
-    }
+    for (FESystemUInt i=0; i<4*n; i++)
+        beam_dof_indices[i] = n+i; // offset by the u-dofs
     
     sol.getSubVectorValsFromIndices(v_dof_indices, v_dof);
     sol.getSubVectorValsFromIndices(w_dof_indices, w_dof);
@@ -311,13 +251,8 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
         jac = this->finite_element->getJacobianValue(*(q_pts[i]));
         
         // get the bar stress
-        if (this->if_constant_extension_stress)
-            u_stress = this->extension_stress;
-        else
-        {
-            this->bar_elem->getStressTensor(*(q_pts[i]), u_dofs, stress_tensor);
-            u_stress = stress_tensor.getVal(0, 0);
-        }
+        this->bar_elem->getStressTensor(*(q_pts[i]), u_dofs, stress_tensor);
+        u_stress = this->extension_pre_stress + stress_tensor.getVal(0, 0);
         
         // calculate the extension
         this->calculateTransverseDisplacementOperatorMatrix(*(q_pts[i]), B_beam_mat);
@@ -333,39 +268,36 @@ FESystem::Structures::VonKarmanStrain1D::calculateTangentStiffnessMatrix(const F
         w_nonlinear_stress = 0.5 * this->E_val * pow(dw_dx,2); // strain due to w-displacement
                         
         // contribution from bar strain
-        if (!this->if_constant_extension_stress)
-        {
-            // B_m^T sigma
-            tmp_vec2.zero();
-            this->bar_elem->calculateOperatorMatrix(*(q_pts[i]), B_bar_mat, true);
-            // add sensitivity due to bar dofs: same as bar stiffness matrix
-            // B_m^T A E B_m
-            tmp_mat2.zero();
-            B_bar_mat.matrixTransposeRightMultiply(this->area_val*this->E_val*q_weight[i]*jac, B_bar_mat, tmp_mat2);
-            mat.addVal(u_dof_indices, u_dof_indices, tmp_mat2); // add contribution from u
-            // add sensitivity due to beam dofs: first v
-            // B_m^T A E B_v
-            tmp_mat2.zero();
-            B_bar_mat.matrixTransposeRightMultiply(dv_dx*this->area_val*this->E_val*q_weight[i]*jac, B_beam_mat, tmp_mat2);
-            mat.addVal(u_dof_indices, v_dof_indices, tmp_mat2); // add contribution from v
-            // add sensitivity due to beam dofs: now w
-            // B_m^T A E B_w
-            tmp_mat2.zero();
-            B_bar_mat.matrixTransposeRightMultiply(dw_dx*this->area_val*this->E_val*q_weight[i]*jac, B_beam_mat, tmp_mat2);
-            mat.addVal(u_dof_indices, w_dof_indices, tmp_mat2); // add contribution from w
-            
-            // now the dsigma_du term for the beam dofs: first v
-            // B_v^T E A dv/dx B_m
-            tmp_mat2.zero();
-            B_beam_mat.matrixTransposeRightMultiply(dv_dx*this->area_val*this->E_val*q_weight[i]*jac, B_bar_mat, tmp_mat2);
-            mat.addVal(v_dof_indices, u_dof_indices, tmp_mat2); // add contribution from u
-            
-            // the dsigma_du term for the beam dofs: now w
-            // B_w^T E A dw/dx B_m
-            tmp_mat2.zero();
-            B_beam_mat.matrixTransposeRightMultiply(dw_dx*this->area_val*this->E_val*q_weight[i]*jac, B_bar_mat, tmp_mat2);
-            mat.addVal(w_dof_indices, u_dof_indices, tmp_mat2); // add contribution from u
-        }
+        // B_m^T sigma
+        tmp_vec2.zero();
+        this->bar_elem->calculateOperatorMatrix(*(q_pts[i]), B_bar_mat, true);
+        // add sensitivity due to bar dofs: same as bar stiffness matrix
+        // B_m^T A E B_m
+        tmp_mat2.zero();
+        B_bar_mat.matrixTransposeRightMultiply(this->area_val*this->E_val*q_weight[i]*jac, B_bar_mat, tmp_mat2);
+        mat.addVal(u_dof_indices, u_dof_indices, tmp_mat2); // add contribution from u
+        // add sensitivity due to beam dofs: first v
+        // B_m^T A E B_v
+        tmp_mat2.zero();
+        B_bar_mat.matrixTransposeRightMultiply(dv_dx*this->area_val*this->E_val*q_weight[i]*jac, B_beam_mat, tmp_mat2);
+        mat.addVal(u_dof_indices, v_dof_indices, tmp_mat2); // add contribution from v
+        // add sensitivity due to beam dofs: now w
+        // B_m^T A E B_w
+        tmp_mat2.zero();
+        B_bar_mat.matrixTransposeRightMultiply(dw_dx*this->area_val*this->E_val*q_weight[i]*jac, B_beam_mat, tmp_mat2);
+        mat.addVal(u_dof_indices, w_dof_indices, tmp_mat2); // add contribution from w
+        
+        // now the dsigma_du term for the beam dofs: first v
+        // B_v^T E A dv/dx B_m
+        tmp_mat2.zero();
+        B_beam_mat.matrixTransposeRightMultiply(dv_dx*this->area_val*this->E_val*q_weight[i]*jac, B_bar_mat, tmp_mat2);
+        mat.addVal(v_dof_indices, u_dof_indices, tmp_mat2); // add contribution from u
+        
+        // the dsigma_du term for the beam dofs: now w
+        // B_w^T E A dw/dx B_m
+        tmp_mat2.zero();
+        B_beam_mat.matrixTransposeRightMultiply(dw_dx*this->area_val*this->E_val*q_weight[i]*jac, B_bar_mat, tmp_mat2);
+        mat.addVal(w_dof_indices, u_dof_indices, tmp_mat2); // add contribution from u
         
         
         // contribution from v-displacement

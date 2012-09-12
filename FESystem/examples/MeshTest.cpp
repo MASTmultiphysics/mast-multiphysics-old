@@ -1852,7 +1852,7 @@ void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mes
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
 
                 vk_beam.clear();
-                vk_beam.initialize(*(elems[i]), fe, q_rule_bending, bar, timoshenko_beam);
+                vk_beam.initialize(*(elems[i]), fe, q_rule_bending, 0.0, bar, timoshenko_beam);
             }
             else
             {
@@ -1865,7 +1865,7 @@ void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mes
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
 
                 vk_beam.clear();
-                vk_beam.initialize(*(elems[i]), fe, q_rule_bending, 0.0, euler_beam);
+                vk_beam.initialize(*(elems[i]), fe, q_rule_bending, 0.0, bar, euler_beam);
             }
             vk_beam.getActiveElementMatrixIndices(elem_dof_indices);
             elem_sol.getSubVectorValsFromIndices(elem_dof_indices, elem_local_sol);
