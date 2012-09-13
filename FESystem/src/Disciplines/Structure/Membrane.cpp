@@ -48,6 +48,37 @@ FESystem::Structures::Membrane::getActiveElementMatrixIndices(std::vector<FESyst
 }
 
 
+void
+FESystem::Structures::Membrane::getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+                                                FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    
+    const FESystemUInt n = this->geometric_elem->getNNodes();
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+    
+    FESystemAssert4(((s.first == 2) && (s.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s.first, s.second);
+    FESystemAssert2(sol.getSize() == 2*n, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), 2*n);
+    
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat;
+    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, tmp_vec2;
+    
+    C_mat.resize(3,3); B_mat.resize(3, 2*n); tmp_vec1.resize(3); tmp_vec2.resize(3);
+    C_mat.zero(); B_mat.zero(); tmp_vec1.zero(); tmp_vec2.zero();
+    
+    this->getMaterialComplianceMatrix(C_mat);
+    
+    this->calculateOperatorMatrix(pt, B_mat, true);
+    B_mat.rightVectorMultiply(sol, tmp_vec1);
+    C_mat.rightVectorMultiply(tmp_vec1, tmp_vec2);
+    
+    // now set the stress in the matrix
+    mat.setVal(0, 0, tmp_vec2.getVal(0));
+    mat.setVal(0, 1, tmp_vec2.getVal(2));
+    mat.setVal(1, 0, tmp_vec2.getVal(2));
+    mat.setVal(1, 1, tmp_vec2.getVal(1));
+}
+
 
 void
 FESystem::Structures::Membrane::calculateConsistentMassMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)

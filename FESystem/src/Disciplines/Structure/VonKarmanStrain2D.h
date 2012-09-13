@@ -46,14 +46,7 @@ namespace FESystem
              *    associated with the longitudinal degree of freedom as well.
              */
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                    FESystem::Structures::Membrane& mem, FESystem::Structures::LinearPlateElementBase& plt);
-            
-            /*!
-             *    Method to initialize the vector when the element has a given constant extensional stress. In this case, the element does not have stiffness components
-             *    associated with the longitudinal degree of freedom as well.
-             */
-            virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                    FESystem::Numerics::MatrixBase<FESystemDouble>& stress, FESystem::Structures::LinearPlateElementBase& plt);
+                                    const FESystem::Numerics::MatrixBase<FESystemDouble>& pre_stress, FESystem::Structures::Membrane& mem, FESystem::Structures::LinearPlateElementBase& plt);
             
             virtual void calculateInternalForceVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& vec);
             
@@ -67,10 +60,8 @@ namespace FESystem
             void getMaterialComplianceMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& C_mat);
             
             void calculateTransverseDisplacementOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
-            
-            FESystemBoolean if_constant_extension_stress;
-            
-            FESystem::Numerics::MatrixBase<FESystemDouble>* inplane_stress;
+                        
+            FESystem::Numerics::MatrixBase<FESystemDouble>* inplane_pre_stress;
             
             FESystem::Structures::Membrane* membrane_elem;
             

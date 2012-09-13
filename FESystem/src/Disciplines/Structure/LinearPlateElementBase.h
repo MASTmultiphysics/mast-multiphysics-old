@@ -41,6 +41,9 @@ namespace FESystem
             
             virtual void calculateStiffnessMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat) = 0;
 
+            virtual void calculateDistributedLoad(FESystemDouble p_val, FESystem::Numerics::VectorBase<FESystemDouble>& vec);
+            
+            
         protected:
             
             void calculateInertiaOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat);
