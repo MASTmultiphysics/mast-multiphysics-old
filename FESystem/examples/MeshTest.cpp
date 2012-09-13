@@ -1335,6 +1335,12 @@ void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, 
     
     nonlinear_solver.initialize(reduced_stiff_mat, linear_solver);
     nonlinear_solver.setConvergenceLimits(20, 1.0e-10);
+
+    // for output
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    std::fstream output_file;
+    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
+
     
     FESystem::NonlinearSolvers::NonlinearSolverCallBack call_back = nonlinear_solver.getCurrentCallBack();
     
@@ -1360,6 +1366,14 @@ void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, 
                 internal_force.getSubVectorValsFromIndices(nonbc_dofs, nonlinear_solver.getResidualVector());
                 rhs.getSubVectorValsFromIndices(nonbc_dofs, reduced_load_vec);
                 nonlinear_solver.getResidualVector().add(-1.0, reduced_load_vec);
+                
+                // write the solution
+                std::stringstream oss;
+                oss << "sol_" << nonlinear_solver.getCurrentIterationNumber() << ".vtk";
+                output_file.open(oss.str().c_str(),std::fstream::out);
+                output.writeMesh(output_file, mesh, dof_map);
+                output.writeSolution(output_file, "Sol", mesh, dof_map, vars, sol);
+                output_file.close();
             }
                 break;
 
@@ -1416,22 +1430,6 @@ void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, 
             std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
         std::cout << std::endl;
     }
-    
-    // write a gmsh format file
-    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
-    FESystem::OutputProcessor::VtkOutputProcessor output;
-    FESystem::OutputProcessor::GmshOutputProcessor gmsh_output;
-    
-    std::fstream output_file;
-    output_file.open("gmsh_output.gmsh", std::fstream::out);
-    gmsh_output.writeMesh(output_file, mesh, dof_map);
-    output_file.close();
-    
-    
-    output_file.open("vtk_output.vtk", std::fstream::out);
-    output.writeMesh(output_file, mesh, dof_map);
-    output.writeSolution(output_file, "Solution", mesh, dof_map, vars, sol);
-    output_file.close();
 }
 
 
@@ -1607,7 +1605,7 @@ void calculatePlateStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Me
                                      FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec)
 {
-    FESystemDouble E=30.0e6, nu=0.3, rho=2700.0, p_val = 25.0, thick = 0.1; // (Reddy's parameters)
+    FESystemDouble E=30.0e6, nu=0.3, rho=2700.0, p_val = 225, thick = 0.1; // (Reddy's parameters)
     //FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, p_val = 1.0e2, thick = 0.002;
     FESystemBoolean if_mindlin = true;
     FESystemUInt n_plate_dofs, n_elem_dofs;
@@ -1684,7 +1682,7 @@ void calculatePlateStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Me
                 mindlin_plate.calculateDistributedLoad(p_val, plate_elem_vec);
                 mindlin_plate.transformVectorToGlobalSystem(plate_elem_vec, elem_vec);
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, external_force);
-                
+
                 vk_plate.clear();
                 vk_plate.initialize(*(elems[i]), fe, q_rule_bending, pre_stress, membrane, mindlin_plate);
             }
@@ -2032,7 +2030,7 @@ int plate_analysis_driver(int argc, char * const argv[])
     FESystem::Geometry::Point origin(3);
     
     nx=7; ny=7; x_length = 10; y_length = 10; dim = 2; n_modes = 20;
-    elem_type = FESystem::Mesh::QUAD4;
+    elem_type = FESystem::Mesh::QUAD9;
     create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
     
     n_elem_dofs = 6*n_elem_nodes;

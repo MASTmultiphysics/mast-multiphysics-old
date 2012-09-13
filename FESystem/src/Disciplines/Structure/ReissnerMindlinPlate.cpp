@@ -91,7 +91,10 @@ FESystem::Structures::ReissnerMindlinPlate::calculateStiffnessMatrix(FESystem::N
     FESystemDouble jac=0.0;
     mat.zero();
     this->getMaterialComplianceMatrix(C_mat_bend, C_mat_shear);
-        
+    C_mat_bend.scale(pow(this->th_val,3)/12.0);
+    C_mat_shear.scale(this->th_val);
+    
+
     // bending contribution
     for (FESystemUInt i=0; i<q_pts_bend.size(); i++)
     {
@@ -200,12 +203,9 @@ FESystem::Structures::ReissnerMindlinPlate::getMaterialComplianceMatrix(FESystem
     bend_mat.setVal(1, 0, this->nu_val*val);
     bend_mat.setVal(1, 1, val);
     bend_mat.setVal(2, 2, this->G_val);
-    bend_mat.scale(pow(this->th_val,3)/12.0);
     
-    shear_mat.setVal(0, 0, this->G_val);
-    shear_mat.setVal(1, 1, this->G_val);
-    shear_mat.scale(this->kappa*this->th_val);
-
+    shear_mat.setVal(0, 0, this->G_val*this->kappa);
+    shear_mat.setVal(1, 1, this->G_val*this->kappa);
 }
 
 

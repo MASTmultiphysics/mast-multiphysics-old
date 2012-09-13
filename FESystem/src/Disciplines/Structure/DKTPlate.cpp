@@ -259,6 +259,7 @@ FESystem::Structures::DKTPlate::calculateStiffnessMatrix(FESystem::Numerics::Mat
     FESystemDouble jac=0.0;
     mat.zero();
     this->getMaterialComplianceMatrix(C_mat);
+    C_mat.scale(pow(this->th_val,3)/12.0);
     
     for (FESystemUInt i=0; i<q_pts.size(); i++)
     {
@@ -320,7 +321,6 @@ FESystem::Structures::DKTPlate::getMaterialComplianceMatrix(FESystem::Numerics::
     mat.setVal(1, 0, this->nu_val*val);
     mat.setVal(1, 1, val);
     mat.setVal(2, 2, this->G_val);
-    mat.scale(pow(this->th_val,3)/12.0);
 }
 
 

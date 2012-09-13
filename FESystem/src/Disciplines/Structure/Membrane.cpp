@@ -135,6 +135,7 @@ FESystem::Structures::Membrane::calculateStiffnessMatrix(FESystem::Numerics::Mat
     FESystemDouble jac=0.0;
     mat.zero();
     this->getMaterialComplianceMatrix(C_mat);
+    C_mat.scale(this->th_val);
 
     for (FESystemUInt i=0; i<q_pts.size(); i++)
     {
@@ -215,6 +216,5 @@ FESystem::Structures::Membrane::getMaterialComplianceMatrix(FESystem::Numerics::
     mat.setVal(1, 0, this->nu_val*val);
     mat.setVal(1, 1, val);
     mat.setVal(2, 2, this->G_val);
-    mat.scale(this->th_val);
 }
 

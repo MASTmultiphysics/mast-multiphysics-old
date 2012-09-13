@@ -266,6 +266,7 @@ FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const F
         stress_tensor.zero();
         this->membrane_elem->getStressTensor(*(q_pts[i]), membrane_dof, stress_tensor);
                 
+        // stress = pre_stress + membrane_stress
         stress_vec.setVal(0, this->inplane_pre_stress->getVal(0,0) + stress_tensor.getVal(0,0)); // sigma_xx
         stress_vec.setVal(2, this->inplane_pre_stress->getVal(0,1) + stress_tensor.getVal(0,1)); // sigma_xy
         stress_vec.setVal(1, this->inplane_pre_stress->getVal(1,1) + stress_tensor.getVal(1,1)); // sigma_yy
@@ -280,8 +281,10 @@ FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const F
         strain_vec.setVal(0,       0.5*pow(tmp_vk.getVal(0),2)); // 1/2  (dw/dx)^2
         strain_vec.setVal(1,       0.5*pow(tmp_vk.getVal(1),2)); // 1/2  (dw/dy)^2
         strain_vec.setVal(2, tmp_vk.getVal(0)*tmp_vk.getVal(1)); // (dw/dx)(dw/dy)
-        C_mat.rightVectorMultiply(strain_vec, tmp_vec1); // von Karman strain
-        stress_vec.add(1.0, tmp_vec1); // membrane + von Karman strain
+        C_mat.rightVectorMultiply(strain_vec, tmp_vec1); // von Karman stress
+
+        // stress = pre_stress + membrane_stress + von Karman stress
+        stress_vec.add(1.0, tmp_vec1);
         
         // set values in the stress tensor
         stress_tensor.setVal(0, 0, stress_vec.getVal(0)); // sigma_xx
@@ -296,7 +299,7 @@ FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const F
         B_vk_mat.setVal(2, 0, tmp_vk.getVal(1)); // dw/dy
         B_vk_mat.setVal(2, 1, tmp_vk.getVal(0)); // dw/dx
         
-        // calculate stiffness matrix contribution due to dsigma_vk / dw : both membrane and von Karman stresses will be needed
+        // calculate stiffness matrix contribution due to dsigma_vk / dw : both membrane and von Karman tangent matrix contributions will be needed
         // first calculate the matrix dsigma_vk / dw
         C_mat.matrixRightMultiply(1.0, B_vk_mat, tmp_mat_32); // C B_vk
         tmp_mat_32.matrixRightMultiply(1.0, B_plate_mat, dsigma_dw_3n); // C B_vk B_w
@@ -314,19 +317,18 @@ FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const F
         mat.addVal(w_dof_indices, w_dof_indices, tmp_mat_nn); // B_w^T sigma B_w
         
         // contribution from membrane strain
-        // and the stiffness contribution from membrane due to dsigma_vk / dw (u,w) 
+        // and the stiffness contribution from membrane due to dsigma_vk / dw (uv,w) 
         B_membrane_mat.matrixTransposeRightMultiply(1.0, dsigma_dw_3n, tmp_mat_2nn); // B_m^T dsigma/dw
         tmp_mat_2nn.scale(q_weight[i]*jac*this->th_val);
         mat.addVal(membrane_dof_indices, w_dof_indices, tmp_mat_2nn); // B_w^T B_vk^T dsigma/dw
         
-        // finally, the stiffness coupling of von Karman and membrane dofs (w,u)
+        // finally, the stiffness coupling of von Karman and membrane dofs (w,uv)
         C_mat.matrixRightMultiply(1.0, B_membrane_mat, tmp_mat_32n);
         B_vk_mat.matrixTransposeRightMultiply(1.0, tmp_mat_32n, tmp_mat_22n);
         B_plate_mat.matrixTransposeRightMultiply(1.0, tmp_mat_22n, tmp_mat_n2n);
         tmp_mat_n2n.scale(q_weight[i]*jac*this->th_val);
         mat.addVal(w_dof_indices, membrane_dof_indices, tmp_mat_n2n); // B_w^T B_vk^T C B_m
     }
-
     
     // contribution from membrane stiffness matrix
     this->membrane_elem->calculateStiffnessMatrix(membrane_stiff_mat);
@@ -373,13 +375,13 @@ FESystem::Structures::VonKarmanStrain2D::getMaterialComplianceMatrix(FESystem::N
     FESystemAssert4(((s.first == 3) && (s.second== 3)), FESystem::Numerics::MatrixSizeMismatch, 3, 3, s.first, s.second);
     
     FESystemDouble val = this->E_val/(1.0-this->nu_val*this->nu_val);
-    
+
+    mat.zero();
     mat.setVal(0, 0, val);
     mat.setVal(0, 1, this->nu_val*val);
     mat.setVal(1, 0, this->nu_val*val);
     mat.setVal(1, 1, val);
     mat.setVal(2, 2, this->G_val);
-    mat.scale(pow(this->th_val,3)/12.0);
 }
 
 

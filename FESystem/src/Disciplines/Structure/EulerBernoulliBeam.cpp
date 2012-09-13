@@ -85,6 +85,8 @@ FESystem::Structures::EulerBernoulliBeam::calculateStiffnessMatrix(FESystem::Num
     FESystemDouble jac=0.0;
     mat.zero();
     this->getMaterialComplianceMatrix(C_mat_bend);
+    C_mat_bend.setVal(0, 0, C_mat_bend.getVal(0, 0)*this->I_ch_val);
+    C_mat_bend.setVal(1, 1, C_mat_bend.getVal(1, 1)*this->I_tr_val);
     
     // bending contribution
     for (FESystemUInt i=0; i<q_pts_bend.size(); i++)
@@ -147,8 +149,8 @@ FESystem::Structures::EulerBernoulliBeam::getMaterialComplianceMatrix(FESystem::
     const std::pair<FESystemUInt, FESystemUInt> s_b = bend_mat.getSize();
     
     FESystemAssert4(((s_b.first == 2) && (s_b.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_b.first, s_b.second);
-    bend_mat.setVal(0, 0, this->E_val * this->I_ch_val);
-    bend_mat.setVal(1, 1, this->E_val * this->I_tr_val);
+    bend_mat.setVal(0, 0, this->E_val);
+    bend_mat.setVal(1, 1, this->E_val);
 }
 
 

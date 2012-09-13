@@ -93,7 +93,10 @@ FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numeric
     FESystemDouble jac=0.0;
     mat.zero();
     this->getMaterialComplianceMatrix(C_mat_bend, C_mat_shear);
-    
+    C_mat_bend.setVal(0, 0, C_mat_bend.getVal(0, 0) * this->I_ch_val);
+    C_mat_bend.setVal(1, 1, C_mat_bend.getVal(1, 1) * this->I_tr_val);
+    C_mat_shear.scale(this->area_val);
+
     // bending contribution
     for (FESystemUInt i=0; i<q_pts_bend.size(); i++)
     {
@@ -185,13 +188,11 @@ FESystem::Structures::TimoshenkoBeam::getMaterialComplianceMatrix(FESystem::Nume
     FESystemAssert4(((s_b.first == 2) && (s_b.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_b.first, s_b.second);
     FESystemAssert4(((s_s.first == 2) && (s_s.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s_s.first, s_s.second);
     
-    shear_mat.setVal(0, 0, this->G_val);
-    shear_mat.setVal(1, 1, this->G_val);
+    shear_mat.setVal(0, 0, this->G_val*this->kappa);
+    shear_mat.setVal(1, 1, this->G_val*this->kappa);
 
-    bend_mat.setVal(0, 0, this->E_val * this->I_ch_val);
-    bend_mat.setVal(1, 1, this->E_val * this->I_tr_val);
-    
-    shear_mat.scale(this->kappa*this->area_val);
+    bend_mat.setVal(0, 0, this->E_val);
+    bend_mat.setVal(1, 1, this->E_val);
 }
 
 

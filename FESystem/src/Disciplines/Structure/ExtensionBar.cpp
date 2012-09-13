@@ -145,6 +145,7 @@ FESystem::Structures::ExtensionBar::calculateStiffnessMatrix(FESystem::Numerics:
     FESystemDouble jac=0.0;
     mat.zero();
     this->getMaterialComplianceMatrix(C_mat);
+    C_mat.scale(this->area_val);
     
     for (FESystemUInt i=0; i<q_pts.size(); i++)
     {
@@ -178,7 +179,7 @@ FESystem::Structures::ExtensionBar::getMaterialComplianceMatrix(FESystem::Numeri
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     FESystemAssert4(((s.first == 1) && (s.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s.first, s.second);
     
-    mat.setVal(0, 0, this->E_val*this->area_val);
+    mat.setVal(0, 0, this->E_val);
 }
 
 
