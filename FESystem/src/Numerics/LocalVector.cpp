@@ -631,6 +631,43 @@ FESystem::Numerics::LocalVector<ValType>::write(std::ostream& out) const
 
 
 
+template <>
+void
+FESystem::Numerics::LocalVector<FESystemDouble>::complexConjugate()
+{
+    // no such operation exists for complex
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+}
+
+
+template <>
+void
+FESystem::Numerics::LocalVector<FESystemFloat>::complexConjugate()
+{
+    // no such operation exists for complex
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+}
+
+
+template <>
+void
+FESystem::Numerics::LocalVector<FESystemComplexDouble>::complexConjugate()
+{
+    for (unsigned int i=0; i< this->getSize(); i++)
+        this->vec_vals[i] = std::conj(this->vec_vals[i]);
+}
+
+
+
+template <>
+void
+FESystem::Numerics::LocalVector<FESystemComplexFloat>::complexConjugate()
+{
+    for (unsigned int i=0; i< this->getSize(); i++)
+        this->vec_vals[i] = std::conj(this->vec_vals[i]);
+}
+
+
 
 /***************************************************************************************/
 // Template instantiations for some generic classes

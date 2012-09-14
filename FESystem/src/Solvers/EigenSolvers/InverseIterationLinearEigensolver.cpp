@@ -126,7 +126,7 @@ FESystem::EigenSolvers::InverseIterationLinearEigenSolver<ValType>::shiftAndInve
     
     this->eig_val_vec->setVal(this->n_converged_eig_vals, eig1); // copy the eigenvalue
     vec1->scaleToUnitLength(); // scale the eigenvector to unit length before copying
-    this->eig_vec_mat->setColumnVals(this->n_converged_eig_vals, 0, n-1, *vec1); // copy the eigenvector
+    this->eig_vec_mat_right->setColumnVals(this->n_converged_eig_vals, 0, n-1, *vec1); // copy the eigenvector
 
     this->n_converged_eig_vals++; // increment the counter for the converged eigenvalue    
 }

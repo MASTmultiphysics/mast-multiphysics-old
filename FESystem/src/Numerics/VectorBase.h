@@ -114,6 +114,11 @@ namespace FESystem
 			virtual  void scale(const ValType& t)=0;
 
             /*!
+             *    scales all values with the factor t.
+             */
+			virtual  void complexConjugate()=0;
+
+            /*!
              *    scales elements n1 to n2 with factor t.
              */
             virtual  void scaleSubVector(FESystemUInt n1, FESystemUInt n2, const ValType& t)=0;

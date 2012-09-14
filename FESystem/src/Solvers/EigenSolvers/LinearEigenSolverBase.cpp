@@ -183,11 +183,13 @@ FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setMatrix
         case FESystem::EigenSolvers::HERMITIAN:
         case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
         {
-            this->eig_vec_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
+            this->eig_vec_mat_right.reset(FESystem::Numerics::MatrixCreate<ValType>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
+            this->eig_vec_mat_left.reset(FESystem::Numerics::MatrixCreate<ValType>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
             this->eig_val_vec.reset(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR).release()); // eigenvalue storage
             
             
-            this->eig_vec_mat->resize(s.first, s.second);
+            this->eig_vec_mat_right->resize(s.first, s.second);
+            this->eig_vec_mat_left->resize(s.first, s.second);
             this->eig_val_vec->resize(s.first);
         }
             break;
@@ -195,11 +197,13 @@ FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::setMatrix
         case FESystem::EigenSolvers::NONHERMITIAN:
         case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
         {
-            this->eig_vec_mat_complex.reset(FESystem::Numerics::MatrixCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
+            this->eig_vec_mat_right_complex.reset(FESystem::Numerics::MatrixCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
+            this->eig_vec_mat_left_complex.reset(FESystem::Numerics::MatrixCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_DENSE_MATRIX).release()); // eigenvector storage
             this->eig_val_vec_complex.reset(FESystem::Numerics::VectorCreate<typename ComplexOperationType(ValType)>(FESystem::Numerics::LOCAL_VECTOR).release()); // eigenvalue storage
             
             
-            this->eig_vec_mat_complex->resize(s.first, s.second);
+            this->eig_vec_mat_right_complex->resize(s.first, s.second);
+            this->eig_vec_mat_left_complex->resize(s.first, s.second);
             this->eig_val_vec_complex->resize(s.first);
         }
             break;
@@ -242,22 +246,40 @@ FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getBMatrix()
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<ValType>&
-FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenVectorMatrix() const
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getRightEigenVectorMatrix() const
 {
-    FESystemAssert0(this->eig_vec_mat.get() != NULL, FESystem::Exception::NULLQuantity);
+    FESystemAssert0(this->eig_vec_mat_right.get() != NULL, FESystem::Exception::NULLQuantity);
     
     switch (this->getEigenProblemType()){
         case FESystem::EigenSolvers::HERMITIAN:
         case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
-            return *(this->eig_vec_mat);
+            return *(this->eig_vec_mat_right);
             break;
             
         default:
             FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
     }
-    
-    
 }
+
+
+
+template <typename ValType>
+const FESystem::Numerics::MatrixBase<ValType>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getLeftEigenVectorMatrix() const
+{
+    FESystemAssert0(this->eig_vec_mat_left.get() != NULL, FESystem::Exception::NULLQuantity);
+    
+    switch (this->getEigenProblemType()){
+        case FESystem::EigenSolvers::HERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_HERMITIAN:
+            return *(this->eig_vec_mat_left);
+            break;
+            
+        default:
+            FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+    }
+}
+
 
 
 template <typename ValType>
@@ -282,14 +304,14 @@ FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getEigenValues() const
 
 template <typename ValType>
 const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>&
-FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMatrix() const
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getRightComplexEigenVectorMatrix() const
 {
-    FESystemAssert0(this->eig_vec_mat_complex.get() != NULL, FESystem::Exception::NULLQuantity);
+    FESystemAssert0(this->eig_vec_mat_right_complex.get() != NULL, FESystem::Exception::NULLQuantity);
     
     switch (this->getEigenProblemType()){
         case FESystem::EigenSolvers::NONHERMITIAN:
         case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
-            return *(this->eig_vec_mat_complex);
+            return *(this->eig_vec_mat_right_complex);
             break;
             
         default:
@@ -298,6 +320,28 @@ FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getComplexEigenVectorMat
     
     
 }
+
+
+
+template <typename ValType>
+const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>&
+FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::getLeftComplexEigenVectorMatrix() const
+{
+    FESystemAssert0(this->eig_vec_mat_left_complex.get() != NULL, FESystem::Exception::NULLQuantity);
+    
+    switch (this->getEigenProblemType()){
+        case FESystem::EigenSolvers::NONHERMITIAN:
+        case FESystem::EigenSolvers::GENERALIZED_NONHERMITIAN:
+            return *(this->eig_vec_mat_left_complex);
+            break;
+            
+        default:
+            FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+    }
+    
+    
+}
+
 
 
 template <typename ValType>

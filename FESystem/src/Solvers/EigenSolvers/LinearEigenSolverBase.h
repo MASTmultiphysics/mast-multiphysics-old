@@ -93,8 +93,7 @@ namespace FESystem
             
             FESystemUInt getMaxIterations() const;
             
-            void setMatrix(FESystem::Numerics::MatrixBase<ValType>* lhs,
-                           FESystem::Numerics::MatrixBase<ValType>* rhs = NULL);
+            void setMatrix(FESystem::Numerics::MatrixBase<ValType>* lhs, FESystem::Numerics::MatrixBase<ValType>* rhs = NULL);
             
             FESystem::Numerics::MatrixBase<ValType>& getAMatrix();
             
@@ -109,10 +108,14 @@ namespace FESystem
             /*!
              *  \brief returns the real valued eigenvector matrix for Hermitian problem
              */
-            const FESystem::Numerics::MatrixBase<ValType>& getEigenVectorMatrix() const;
-            
-            const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& getComplexEigenVectorMatrix() const;
-            
+            const FESystem::Numerics::MatrixBase<ValType>& getRightEigenVectorMatrix() const;
+
+            const FESystem::Numerics::MatrixBase<ValType>& getLeftEigenVectorMatrix() const;
+
+            const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& getRightComplexEigenVectorMatrix() const;
+
+            const FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)>& getLeftComplexEigenVectorMatrix() const;
+
             const FESystem::Numerics::VectorBase<ValType>& getEigenValues() const;
             
             const FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)>& getComplexEigenValues() const;
@@ -160,13 +163,23 @@ namespace FESystem
             /*!
              *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for hermitian problems
              */
-            std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > eig_vec_mat;
+            std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > eig_vec_mat_right;
             
+            /*!
+             *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for hermitian problems
+             */
+            std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > eig_vec_mat_left;
+
             /*!
              *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for nonhermitian problems
              */
-            std::auto_ptr<FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)> > eig_vec_mat_complex;
-            
+            std::auto_ptr<FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)> > eig_vec_mat_right_complex;
+
+            /*!
+             *  \brief storage for the eigenvectors once they are calculated after the iterations, this is used only for nonhermitian problems
+             */
+            std::auto_ptr<FESystem::Numerics::MatrixBase<typename ComplexOperationType(ValType)> > eig_vec_mat_left_complex;
+
             /*!
              *  \brief storage for the eigenvalues as they are updated during the iterations, this is used only for hermitian problems
              */
@@ -190,4 +203,5 @@ namespace FESystem
 
 
 #endif // __fesystem_linear_eigen_solver_base_h__
+
 

@@ -66,7 +66,7 @@ FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::solve()
             vec1(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR)),
             vec2(FESystem::Numerics::VectorCreate<ValType>(FESystem::Numerics::LOCAL_VECTOR));
             
-            this->eig_vec_mat->setToIdentity();
+            this->eig_vec_mat_right->setToIdentity();
             this->eig_val_vec->zero();
 
             vec1->resize(s.first);
@@ -85,9 +85,9 @@ FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::solve()
                 qr_factorization->getRMatrix().matrixRightMultiply(1.0, qr_factorization->getQMatrix(),
                                                                    *tmat1); // tmat1 = R Q 
                 
-                this->eig_vec_mat->matrixRightMultiply(1.0, qr_factorization->getQMatrix(),
+                this->eig_vec_mat_right->matrixRightMultiply(1.0, qr_factorization->getQMatrix(),
                                                        *tmat2);  // H = T3  Q 
-                this->eig_vec_mat->copyMatrix(*tmat2);
+                this->eig_vec_mat_right->copyMatrix(*tmat2);
                 
                 // check for convergence
 //                std::cout << "**** RQ mat ****" << std::endl; tmat1->write(std::cout);
@@ -108,7 +108,7 @@ FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::solve()
             
         case FESystem::EigenSolvers::NONHERMITIAN:
         {    
-            this->eig_vec_mat_complex->setToIdentity();
+            this->eig_vec_mat_right_complex->setToIdentity();
             this->eig_val_vec_complex->zero();
             
             std::auto_ptr<FESystem::Numerics::VectorBase<typename ComplexOperationType(ValType)> > 
@@ -139,9 +139,9 @@ FESystem::EigenSolvers::QRMethodLinearEigenSolver<ValType>::solve()
                 qr_factorization->getRMatrix().matrixRightMultiply(1.0, qr_factorization->getQMatrix(),
                                                                    *tmat1); // T1 = R Q 
                 
-//                this->eig_vec_mat->matrixRightMultiply(1.0, qr_factorization->getQMatrix(),
+//                this->eig_vec_mat_right->matrixRightMultiply(1.0, qr_factorization->getQMatrix(),
 //                                                       *tmat2);  // T3 = T3  Q 
-//                this->eig_vec_mat->copyMatrix(*tmat2);
+//                this->eig_vec_mat_right->copyMatrix(*tmat2);
                 
                 // check for convergence
                 std::cout << "**** RQ mat ****" << std::endl; tmat1->write(std::cout);

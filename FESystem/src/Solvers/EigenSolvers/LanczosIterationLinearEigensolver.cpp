@@ -224,7 +224,7 @@ FESystem::EigenSolvers::LanczosIterationLinearEigenSolver<ValType>::solve()
                 
             }
             
-            this->krylov_basis_mat->matrixRightMultiply(1.0,qr_eigen_solver.getEigenVectorMatrix(), *(this->eig_vec_mat));
+            this->krylov_basis_mat->matrixRightMultiply(1.0,qr_eigen_solver.getRightEigenVectorMatrix(), *(this->eig_vec_mat_right));
             this->n_krylov_basis = n_iters; 
         }
             break;

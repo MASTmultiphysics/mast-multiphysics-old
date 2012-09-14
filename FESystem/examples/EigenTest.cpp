@@ -76,7 +76,7 @@ int eigen_main (int argc, char * const argv[]) {
 //    eig.getEigenValues().write(std::cout);
 //
 //    std::cout << "****  Eigenvectors: ****" << std::endl;
-//    eig.getEigenVectorMatrix().write(std::cout);
+//    eig.getRightEigenVectorMatrix().write(std::cout);
 
     
     return 0;

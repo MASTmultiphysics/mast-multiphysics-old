@@ -1463,7 +1463,7 @@ void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const
     eigen_solver.init(n_modes, true);
     eigen_solver.solve();
     eig_vals.copyVector(eigen_solver.getEigenValues());
-    eig_vec.copyMatrix(eigen_solver.getEigenVectorMatrix());
+    eig_vec.copyMatrix(eigen_solver.getRightEigenVectorMatrix());
     eigen_solver.prepareSortingVector(FESystem::EigenSolvers::VALUE, sorted_ids);
     
     FESystemUInt id = 0;
@@ -1605,7 +1605,7 @@ void calculatePlateStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Me
                                      FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec)
 {
-    FESystemDouble E=30.0e6, nu=0.3, rho=2700.0, p_val = 225, thick = 0.1; // (Reddy's parameters)
+    FESystemDouble E=30.0e6, nu=0.3, rho=2700.0, p_val = 67.5, thick = 0.1; // (Reddy's parameters)
     //FESystemDouble E=72.0e9, nu=0.33, rho=2700.0, p_val = 1.0e2, thick = 0.002;
     FESystemBoolean if_mindlin = true;
     FESystemUInt n_plate_dofs, n_elem_dofs;
@@ -2029,8 +2029,8 @@ int plate_analysis_driver(int argc, char * const argv[])
     FESystemDouble x_length, y_length;
     FESystem::Geometry::Point origin(3);
     
-    nx=7; ny=7; x_length = 10; y_length = 10; dim = 2; n_modes = 20;
-    elem_type = FESystem::Mesh::QUAD9;
+    nx=9; ny=9; x_length = 10; y_length = 10; dim = 2; n_modes = 20;
+    elem_type = FESystem::Mesh::QUAD4;
     create_plane_mesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
     
     n_elem_dofs = 6*n_elem_nodes;
@@ -2208,9 +2208,36 @@ int thermal_1D_analysis_driver(int argc, char * const argv[])
 
 
 
+int testCode(int argc, char * const argv[])
+{
+    FESystem::Numerics::DenseMatrix<FESystemDouble> mat;
+    FESystem::Numerics::DenseMatrix<FESystemComplexDouble> tmat;
+    tmat.resize(2, 2); mat.resize(2, 2);
+    
+    mat.setVal(0, 0, 0);
+    mat.setVal(0, 1, 1);
+    mat.setVal(1, 0, -3);
+    mat.setVal(1, 1, -2);
+    
+    FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemDouble> eigen_solver;
+    eigen_solver.setEigenProblemType(FESystem::EigenSolvers::NONHERMITIAN);
+    eigen_solver.setMatrix(&mat, NULL);
+    //eigen_solver.setEigenShiftType(FESystem::EigenSolvers::NO_SHIFT);// eigen_solver.setEigenShiftValue(0.0);
+    //eigen_solver.setEigenSpectrumType(FESystem::EigenSolvers::LARGEST_MAGNITUDE);
+    eigen_solver.solve();
+    eigen_solver.getComplexEigenValues().write(std::cout);
+    eigen_solver.getRightComplexEigenVectorMatrix().write(std::cout);
+    eigen_solver.getLeftComplexEigenVectorMatrix().write(std::cout);
+    
+    return 0;
+}
+
+
 
 int main(int argc, char * const argv[])
 {
-    return plate_analysis_driver(argc, argv);
+    // return plate_analysis_driver(argc, argv);
+    return testCode(argc, argv);
 }
+
 

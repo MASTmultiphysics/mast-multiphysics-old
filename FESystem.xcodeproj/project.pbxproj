@@ -23,6 +23,10 @@
 		6985068615DC80B900CDDADF /* Structural1DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */; };
 		6985068815DC80C700CDDADF /* Structural2DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */; };
 		6985068A15DC80D900CDDADF /* Structural3DElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */; };
+		6998A4DA1602C0DB005F754E /* PistonTheory1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6998A4D81602C0DB005F754E /* PistonTheory1D.cpp */; };
+		6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4D91602C0DB005F754E /* PistonTheory1D.h */; };
+		6998A4DE1602C170005F754E /* PistonTheory2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6998A4DC1602C170005F754E /* PistonTheory2D.cpp */; };
+		6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4DD1602C170005F754E /* PistonTheory2D.h */; };
 		69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */; };
 		EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */; };
 		EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */; };
@@ -271,7 +275,6 @@
 		6961E5D415D8B77F00795584 /* ReissnerMindlinPlate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReissnerMindlinPlate.h; sourceTree = "<group>"; };
 		6961E5D515D8B7A000795584 /* DKTPlate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DKTPlate.h; sourceTree = "<group>"; };
 		6961E5D615D8B7C600795584 /* VonKarmanStrain2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VonKarmanStrain2D.h; sourceTree = "<group>"; };
-		6961E5D715D8B9BB00795584 /* PistonTheory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PistonTheory.h; sourceTree = "<group>"; };
 		6961E5D915D8C42F00795584 /* Solid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Solid.h; sourceTree = "<group>"; };
 		6961E5DB15D8C52600795584 /* Structural1DElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Structural1DElementBase.h; sourceTree = "<group>"; };
 		6961E5DC15D8C53900795584 /* Structural2DElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Structural2DElementBase.h; sourceTree = "<group>"; };
@@ -291,6 +294,10 @@
 		6985068515DC80B900CDDADF /* Structural1DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural1DElementBase.cpp; sourceTree = "<group>"; };
 		6985068715DC80C700CDDADF /* Structural2DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural2DElementBase.cpp; sourceTree = "<group>"; };
 		6985068915DC80D900CDDADF /* Structural3DElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Structural3DElementBase.cpp; sourceTree = "<group>"; };
+		6998A4D81602C0DB005F754E /* PistonTheory1D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PistonTheory1D.cpp; sourceTree = "<group>"; };
+		6998A4D91602C0DB005F754E /* PistonTheory1D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory1D.h; sourceTree = "<group>"; };
+		6998A4DC1602C170005F754E /* PistonTheory2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PistonTheory2D.cpp; sourceTree = "<group>"; };
+		6998A4DD1602C170005F754E /* PistonTheory2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory2D.h; sourceTree = "<group>"; };
 		69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThermalElementBase.cpp; sourceTree = "<group>"; };
 		EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearPlateElementBase.cpp; sourceTree = "<group>"; };
 		EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearPlateElementBase.h; sourceTree = "<group>"; };
@@ -573,7 +580,10 @@
 				EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */,
 				6961E5E015D8C6AC00795584 /* Membrane.cpp */,
 				6961E5D115D8B71600795584 /* Membrane.h */,
-				6961E5D715D8B9BB00795584 /* PistonTheory.h */,
+				6998A4D81602C0DB005F754E /* PistonTheory1D.cpp */,
+				6998A4D91602C0DB005F754E /* PistonTheory1D.h */,
+				6998A4DC1602C170005F754E /* PistonTheory2D.cpp */,
+				6998A4DD1602C170005F754E /* PistonTheory2D.h */,
 				6961E5E715D8C78F00795584 /* ReissnerMindlinPlate.cpp */,
 				6961E5D415D8B77F00795584 /* ReissnerMindlinPlate.h */,
 				6961E5D915D8C42F00795584 /* Solid.h */,
@@ -1196,6 +1206,8 @@
 				EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */,
 				EBF47F1D15EFD38C00640485 /* NonlinearSolverBase.h in Headers */,
 				EBF47F2115EFDB4600640485 /* NewtonIterationNonlinearSolver.h in Headers */,
+				6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */,
+				6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1372,6 +1384,8 @@
 				EBF47F1C15EFD38C00640485 /* NonlinearSolverBase.cpp in Sources */,
 				EBF47F2015EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp in Sources */,
 				69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */,
+				6998A4DA1602C0DB005F754E /* PistonTheory1D.cpp in Sources */,
+				6998A4DE1602C170005F754E /* PistonTheory2D.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

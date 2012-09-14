@@ -36,7 +36,7 @@ FESystem::EigenSolvers::PowerMethodLinearEigenSolver<ValType>::solve()
     switch (this->getEigenProblemType()) {
         case FESystem::EigenSolvers::HERMITIAN:
         case FESystem::EigenSolvers::NONHERMITIAN:    
-            this->completePowerIterations(this->getAMatrix(), *(this->eig_val_vec), *(this->eig_vec_mat));
+            this->completePowerIterations(this->getAMatrix(), *(this->eig_val_vec), *(this->eig_vec_mat_right));
             break;
             
         default:

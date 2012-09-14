@@ -646,13 +646,13 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::checkError(const unsig
                     case GENERALIZED_HERMITIAN:
                     {
                         this->eig_val_vec->resize(this->n_converged_eig_vals);
-                        this->eig_vec_mat->resize(this->n , this->n_converged_eig_vals);
+                        this->eig_vec_mat_right->resize(this->n , this->n_converged_eig_vals);
                         
                         for (FESystemUInt i=0; i<this->n_converged_eig_vals; i++)
                         {
                             this->eig_val_vec->setVal(i, dr[i+1]);
                             for (FESystemUInt j=0; j < this->n; j++)
-                                this->eig_vec_mat->setVal(j, i, this->Z[(i)*this->n+j+1]);
+                                this->eig_vec_mat_right->setVal(j, i, this->Z[(i)*this->n+j+1]);
                         }
                     }
                         break;
@@ -662,7 +662,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::checkError(const unsig
                     case GENERALIZED_NONHERMITIAN:
                     {
                         this->eig_val_vec_complex->resize(this->n_converged_eig_vals);
-                        this->eig_vec_mat_complex->resize(this->n , this->n_converged_eig_vals);
+                        this->eig_vec_mat_right_complex->resize(this->n , this->n_converged_eig_vals);
                         
                         FESystemUInt index = 0;
                         for (FESystemUInt i=0; i<this->n_converged_eig_vals; i++)
@@ -675,7 +675,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::checkError(const unsig
                                 index = (i-1) / 2;
                             
                             for (int j=0; j < this->n; j++)
-                                this->eig_vec_mat_complex->setVal(i, j, std::complex<ValType>(this->V[(2*index) * this->n+j+1], this->V[(2*index+1) * this->n+j+1]));
+                                this->eig_vec_mat_right_complex->setVal(i, j, std::complex<ValType>(this->V[(2*index) * this->n+j+1], this->V[(2*index+1) * this->n+j+1]));
                         }
                     }
                         break;

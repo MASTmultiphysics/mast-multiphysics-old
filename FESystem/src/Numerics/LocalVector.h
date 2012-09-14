@@ -127,6 +127,8 @@ namespace FESystem
 			virtual void setAllVals(const ValType& val); 
 
 			virtual void scale(const ValType& t);
+
+            virtual void complexConjugate();
             
             /*!
              *    scales elements n1 to n2 with factor t.
@@ -178,6 +180,14 @@ namespace FESystem
             FESystemBoolean if_owns_pointer;
             
 		};
+        
+        
+        // Specialization of complex conjugate method
+        template <> void FESystem::Numerics::LocalVector<FESystemDouble>::complexConjugate();
+        template <> void FESystem::Numerics::LocalVector<FESystemFloat>::complexConjugate();
+        template <> void FESystem::Numerics::LocalVector<FESystemComplexDouble>::complexConjugate();
+        template <> void FESystem::Numerics::LocalVector<FESystemComplexFloat>::complexConjugate();
+
         
         DeclareException0(VectorNotInitialized, 
                           << "Vector Not Initialized Before Usage\n");
