@@ -37,7 +37,7 @@ namespace FESystem
             virtual void getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec);
             
             virtual void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                    FESystemUInt order, FESystemDouble m, FESystemDouble a, FESystemDouble g);
+                                    FESystemUInt order, FESystemDouble m, FESystemDouble a, FESystemDouble u, FESystemDouble g);
             
             virtual void calculateForceVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel, FESystem::Numerics::VectorBase<FESystemDouble>& force);
             

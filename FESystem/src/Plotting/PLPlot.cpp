@@ -28,6 +28,7 @@ FESystem::Plotting::Plot2DBase<ValType>(a1, a2)
     this->pl_stream->scolbg(255,255,255); // set background to white
     this->pl_stream->scol0(1,0,0,0); // set axis colors to black
     this->pl_stream->start("aqt",1,1);
+    this->pl_stream->env(-20, 20, -20, 20, 0, 2);
     //this->pl_stream->fontld( 1 );
     //this->pl_stream->init();
 }
@@ -61,7 +62,7 @@ FESystem::Plotting::PLPlot<ValType>::plotData2D(const FESystem::Numerics::Vector
         ymax = ymax+0.5;
     
     this->pl_stream->col0(1);
-    this->pl_stream->env(xmin, xmax, ymin, ymax, 0, 2);
+//    this->pl_stream->env(xmin, xmax, ymin, ymax, 0, 2);
 //    this->pl_stream->adv(0);
 //    this->pl_stream->vsta();
 //    this->pl_stream->col0(2);

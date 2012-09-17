@@ -191,8 +191,6 @@ FESystem::Structures::StructuralElementBase::transformMatrixToGlobalSystem(const
     global_mat.matrixRightMultiplyTranspose(1.0, T_mat, tmp_mat);
     global_mat.zero();
     T_mat.matrixRightMultiply(1.0, tmp_mat, global_mat);
-    
-    //    global_mat.write(std::cout);
 }
 
 
@@ -218,7 +216,6 @@ FESystem::Structures::StructuralElementBase::transformVectorToGlobalSystem(const
     tmp_vec.addVal(indices, elem_vec);
     
     T_mat.rightVectorMultiply(tmp_vec, global_vec);
-    
 }
 
 

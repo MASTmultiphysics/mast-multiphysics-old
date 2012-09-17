@@ -522,7 +522,7 @@ FESystem::Numerics::LocalMatrixBase<FESystemComplexDouble>::write(std::ostream& 
 {
     unsigned int m = this->getSize().first;
     unsigned int n = this->getSize().second;
-    FESystemUInt width = 25, precision = 6;
+    FESystemUInt width = 25, precision = 4;
     
     out << "Size: " << m << ",  " << n << std::endl;
     for (unsigned int i=0; i<m; i++)

@@ -68,7 +68,7 @@ FESystem::Structures::PistonTheory1D::getActiveElementMatrixIndices(std::vector<
 
 void
 FESystem::Structures::PistonTheory1D::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                 FESystemUInt order, FESystemDouble m, FESystemDouble a, FESystemDouble g)
+                                                 FESystemUInt order, FESystemDouble m, FESystemDouble a, FESystemDouble u, FESystemDouble g)
 {
     FESystemAssert0((order >= 1) && (order <= 3), FESystem::Exception::InvalidFunctionCall);
     
@@ -77,7 +77,7 @@ FESystem::Structures::PistonTheory1D::initialize(const FESystem::Mesh::ElemBase&
     this->mach = m;
     this->a_inf = a;
     this->gamma = g;
-    this->u_inf = m * a;
+    this->u_inf = u;
 }
 
 
@@ -135,7 +135,7 @@ FESystem::Structures::PistonTheory1D::calculateForceVector(const FESystem::Numer
                 cp += (gamma+1.0)/4.0*pow(wdot,2);
             case 1:
                 cp += wdot;
-                cp *= 2.0/pow(this->mach,2);
+                cp *= -2.0/pow(this->mach,2); // multiply by -1 since +ve Cp implies -ve force
                 break;
 
             default:
@@ -201,7 +201,7 @@ FESystem::Structures::PistonTheory1D::calculateTangentMatrix(const FESystem::Num
                 cp += (gamma+1.0)/2.0*wdot;
             case 1:
                 cp += 1.0;
-                cp *= 2.0/pow(this->mach,2);
+                cp *= -2.0/pow(this->mach,2); // multiply by -1 since +ve Cp implies -ve force
                 break;
                 
             default:
@@ -215,7 +215,7 @@ FESystem::Structures::PistonTheory1D::calculateTangentMatrix(const FESystem::Num
         
         // calculate the stiffness term
         tmp_mat1.zero();
-        Bmat.matrixTransposeRightMultiply(q_weight[i]*jac*cp*this->mach, Bmatdx, tmp_mat1);
+        Bmat.matrixTransposeRightMultiply(q_weight[i]*jac*cp*this->u_inf/this->a_inf, Bmatdx, tmp_mat1);
         dfdw.add(1.0, tmp_mat1);
     }
 }
