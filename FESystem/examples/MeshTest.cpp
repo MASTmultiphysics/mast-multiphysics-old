@@ -2047,7 +2047,8 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
     
     id = sorted_ids[0];
     eig_vec.getColumnVals(id, 0, nonbc_dofs.size()-1, reduced_sol_vec);
-    FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*4, time_step=final_t*1.0e-3;
+    FESystemUInt n_cycles = 10;
+    FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*n_cycles, time_step=final_t/n_cycles*1.0e-3;
     
     // initialize the solver
     FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
@@ -2123,6 +2124,161 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
     }
 }
 
+
+
+
+
+void transientFlutterSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes,
+                              const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                              const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
+                              const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
+                              FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec,
+                              void (*calculatePistonTheoryMatrices)(FESystemDouble mach, FESystemDouble rho, FESystemDouble gamma, FESystemDouble a_inf, FESystemDouble u_inf,
+                                                                    FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                                                    const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Mesh::MeshBase& mesh,
+                                                                    FESystem::Numerics::VectorBase<FESystemDouble>& global_sol, FESystem::Numerics::VectorBase<FESystemDouble>& global_vel,
+                                                                    FESystem::Numerics::VectorBase<FESystemDouble>& force, FESystem::Numerics::VectorBase<FESystemDouble>& generalized_force,
+                                                                    FESystem::Numerics::MatrixBase<FESystemDouble>& aero_stiffness_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& reduced_stiffness_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& generalized_stiffness_mat,
+                                                                    FESystem::Numerics::MatrixBase<FESystemDouble>& aero_damp_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& reduced_damp_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& generalized_damp_mat,
+                                                                    const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals, FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec))
+{
+    FESystem::Numerics::SparseMatrix<FESystemDouble> aero_stiff, aero_damp, reduced_aero_stiff, reduced_aero_damp;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> aero_force, generalized_aero_stiff, generalized_aero_damp, elem_mat, eig_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> dummy_vec, real_val, imag_val;
+    real_val.resize(n_modes); imag_val.resize(n_modes);
+    aero_damp.resize(dof_map.getSparsityPattern()); aero_stiff.resize(dof_map.getSparsityPattern());
+    reduced_aero_damp.resize(nonbc_sparsity_pattern); reduced_aero_stiff.resize(nonbc_sparsity_pattern);
+    generalized_aero_damp.resize(n_modes, n_modes); generalized_aero_stiff.resize(n_modes, n_modes);
+    aero_force.resize(dof_map.getNDofs(), dof_map.getNDofs()); elem_mat.resize(n_elem_nodes, n_elem_nodes); eig_mat.resize(2*n_modes, 2*n_modes);
+    
+    FESystem::EigenSolvers::LapackLinearEigenSolver<FESystemDouble> eigen_solver;
+    
+    FESystemDouble mass_prop_damp_coeff = 0.0, stiff_prop_damp_coeff = 0.0, q_dyn = 0.0, mach = 2.00, rho = 0.05, gamma = 1.4, a_inf = 0, u_inf = 29;
+    
+    //FESystem::Plotting::PLPlot<FESystemDouble> plot(FESystem::Plotting::REAL_AXIS, FESystem::Plotting::REAL_AXIS);
+    FESystemComplexDouble val;
+    
+    // set the values in the first order matrix
+    q_dyn = 0.5 * rho * u_inf * u_inf;
+    
+    // calculate the aeroelastic quantities
+    calculatePistonTheoryMatrices(mach, rho, gamma, a_inf, u_inf, false, elem_type, n_elem_nodes, dof_map, old_to_new_id_map, nonbc_dofs, mesh, dummy_vec, dummy_vec, dummy_vec, dummy_vec,
+                                  aero_stiff, reduced_aero_stiff, generalized_aero_stiff, aero_damp, reduced_aero_damp, generalized_aero_damp,
+                                  n_modes, sorted_ids, eig_vals, eig_vec);
+    
+    // add to the eigenvalue matrix: scale with the dynamic pressure
+    eig_mat.addSubMatrixVals(n_modes, 2*n_modes-1, 0, n_modes-1, 0, n_modes-1, 0, n_modes-1, q_dyn, generalized_aero_stiff);
+    eig_mat.addSubMatrixVals(n_modes, 2*n_modes-1, n_modes, 2*n_modes-1, 0, n_modes-1, 0, n_modes-1, q_dyn, generalized_aero_damp);
+    
+    
+
+    
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> reduced_stiff_mat, mass_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> reduced_load_vec, reduced_sol_vec, rhs, sol, reduced_mass_vec;
+    
+    reduced_stiff_mat.resize(nonbc_sparsity_pattern); mass_mat.resize(nonbc_sparsity_pattern);
+    reduced_sol_vec.resize(nonbc_sparsity_pattern.getNDOFs()); reduced_load_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    reduced_mass_vec.resize(nonbc_sparsity_pattern.getNDOFs());
+    sol.resize(dof_map.getNDofs());
+    
+    stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
+    mass_vec.getSubVectorValsFromIndices(nonbc_dofs, reduced_mass_vec);
+    
+    FESystemUInt id= 0;
+    
+    // transient solution
+    // initial condition is the first mode
+    // scale the stiffness matrix with the mass matrix
+    reduced_stiff_mat.scale(-1.0);
+    reduced_stiff_mat.add(q_dyn, reduced_aero_stiff);
+    reduced_aero_stiff.scale(q_dyn);
+    for (FESystemUInt i=0; i<reduced_mass_vec.getSize(); i++)
+    {
+        reduced_stiff_mat.scaleRow(i, 1.0/reduced_mass_vec.getVal(i));
+        reduced_aero_damp.scaleRow(i, 1.0/reduced_mass_vec.getVal(i));
+    }
+    
+    id = sorted_ids[0];
+    eig_vec.getColumnVals(id, 0, nonbc_dofs.size()-1, reduced_sol_vec);
+    FESystemUInt n_cycles = 300;
+    FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*n_cycles, time_step=final_t/n_cycles*1.0e-3;
+    
+    // initialize the solver
+    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::Numerics::SparsityPattern ode_sparsity;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
+    std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=true;
+    std::vector<FESystemDouble> int_constants(2); int_constants[0]=1.0/4.0; int_constants[1]=1.0/2.0;
+    transient_solver.initialize(2, nonbc_dofs.size(), int_constants);
+    transient_solver.setActiveJacobianTerm(ode_order_include);
+    transient_solver.setMassMatrix(true);
+   
+    transient_solver.initializeStateVector(rhs); //  initialize the vector and apply the initial condition
+    transient_solver.updateVectorValuesForDerivativeOrder(0, reduced_sol_vec, rhs);
+    transient_solver.setInitialTimeData(0, time_step, rhs);
+    
+    transient_solver.initializeMatrixSparsityPatterForSystem(nonbc_sparsity_pattern, ode_sparsity);
+    ode_jac.resize(ode_sparsity);
+    transient_solver.setJacobianMatrix(ode_jac);
+    transient_solver.setLinearSolver(linear_solver, true);
+    transient_solver.updateJacobianValuesForDerivativeOrder(2, 0, reduced_stiff_mat, transient_solver.getCurrentJacobianMatrix());
+    transient_solver.updateJacobianValuesForDerivativeOrder(2, 1, reduced_aero_damp, transient_solver.getCurrentJacobianMatrix());
+    
+    
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    std::fstream output_file;
+    std::vector<FESystemUInt> vars(3); vars[0]=0; vars[1]=1; vars[2]=2; // write all solutions
+    
+    FESystemUInt n_skip=20, n_count=0, n_write=0;
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
+    while (transient_solver.getCurrentTime()<final_t)
+    {
+        call_back = transient_solver.incrementTimeStep();
+        switch (call_back)
+        {
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
+            {
+                if (n_count == n_skip)
+                {
+                    std::stringstream oss;
+                    oss << "sol_" << n_write << ".vtk";
+                    output_file.open(oss.str().c_str(),std::fstream::out);
+                    output.writeMesh(output_file, mesh, dof_map);
+                    transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
+                    sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
+                    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, sol);
+                    output_file.close();
+                    
+                    n_write++;
+                    n_count=0;
+                }
+                else
+                    n_count++;
+            }
+                break;
+                
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+            {
+                // the Jacobian is not updated since it is constant with respect to time
+                transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
+                reduced_stiff_mat.rightVectorMultiply(reduced_sol_vec, reduced_load_vec);
+                transient_solver.extractVectorValuesForDerivativeOrder(1, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
+                reduced_aero_damp.rightVectorMultiply(reduced_sol_vec, reduced_mass_vec);
+                reduced_load_vec.add(1.0, reduced_mass_vec);
+                
+                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getCurrentStateVelocityVector()); // set the acceleration
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
+            }
+                break;
+                
+            default:
+                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+                break;
+        }
+    }
+}
 
 
 
@@ -2294,7 +2450,9 @@ int beam_analysis_driver(int argc, char * const argv[])
     
     //transientAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
     
-    flutterSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs, calculateBeamPistonTheoryMatrices);
+    //flutterSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs, calculateBeamPistonTheoryMatrices);
+    
+    //transientFlutterSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs, calculateBeamPistonTheoryMatrices);
 
     return 0;
 }
@@ -2385,14 +2543,15 @@ int plate_analysis_driver(int argc, char * const argv[])
     FESystem::Numerics::DenseMatrix<FESystemDouble> eig_vecs;
     
     
-//    staticAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol);
+    //staticAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, rhs, sol);
 
     modalAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs);
 
-//    transientAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
+    //transientAnalysis(dim, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, sorted_ids, eig_vals, eig_vecs);
     
-    flutterSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs, calculatePlatePistonTheoryMatrices);
-
+    //flutterSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs, calculatePlatePistonTheoryMatrices);
+    
+    transientFlutterSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs, global_stiffness_mat, global_mass_vec, n_modes, sorted_ids, eig_vals, eig_vecs, calculatePlatePistonTheoryMatrices);
     
     return 0;
 }
