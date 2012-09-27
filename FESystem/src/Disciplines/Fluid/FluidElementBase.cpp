@@ -217,7 +217,9 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
 
         this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat);
         this->calculateArtificialDiffusionOperator(diff1, diff2);
-        
+        diff1.matrixTransposeRightMultiply(1.0, LS_mat, B_matdx); // LS^T tau
+        LS_mat.copyMatrix(B_matdx);
+
         // contribution from unsteady term
         // interpolate velocity for current point
         B_mat.rightVectorMultiply(vel, tmp_vec1_n1); // interpolated velocity
@@ -229,8 +231,7 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
         res.add(q_weight[i]*jac, tmp_vec3_n2); // Bw^T u_dot
         
         // LS contribution of velocity
-        diff1.rightVectorMultiply(tmp_vec2_n1, tmp_vec1_n1); // tau A U_dot
-        LS_mat.leftVectorMultiply(tmp_vec1_n1, tmp_vec3_n2); // LS^T tau A U_dot
+        LS_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2); // LS^T tau A U_dot
         res.add(q_weight[i]*jac, tmp_vec3_n2);
         
         for (FESystemUInt i=0; i<dim; i++)
@@ -240,11 +241,11 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
             // Galerkin contribution from the advection flux terms
             this->calculateAdvectionFlux(i, flux); // F^adv_i
             B_matdx.leftVectorMultiply(flux, tmp_vec3_n2); // dBw/dx_i F^adv_i
-            res.add(q_weight[i]*jac, tmp_vec3_n2);
+            res.add(-q_weight[i]*jac, tmp_vec3_n2);
             
             // Least square contribution from flux
             this->calculateAdvectionFluxSpatialDerivative(i, B_matdx, &flux, NULL); // d F^adv_i / dxi
-            LS_mat.leftVectorMultiply(flux, tmp_vec3_n2); // LS F^adv_i
+            LS_mat.leftVectorMultiply(flux, tmp_vec3_n2); // LS^T tau F^adv_i
             res.add(q_weight[i]*jac, tmp_vec3_n2);
         }
     }
@@ -271,7 +272,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
     static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, B_matdx, LS_mat, diff1, diff2, tmp_mat1_n2n2, tmp_mat2_n1n2, tmp_mat3_n1n1;
     static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1;
     B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff1.resize(n1, n1); diff2.resize(n1, n1);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2); tmp_mat3_n1n1.resize(n1, n1); A.resize(n1, n1);
+    A.resize(n1, n1); flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2); tmp_mat3_n1n1.resize(n1, n1); A.resize(n1, n1);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
@@ -293,6 +294,8 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
         // get the other matrices of interest
         this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat);
         this->calculateArtificialDiffusionOperator(diff1, diff2);
+        diff1.matrixTransposeRightMultiply(1.0, LS_mat, tmp_mat2_n1n2); // LS^T tau
+        LS_mat.copyMatrix(tmp_mat2_n1n2);
         
         // contribution from unsteady term
         // Galerkin contribution of velocity
@@ -302,9 +305,8 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
         dres_dxdot.add(q_weight[i]*jac, tmp_mat1_n2n2);
         
         // LS contribution of velocity
-        diff1.matrixRightMultiply(1.0, A, tmp_mat3_n1n1);
-        tmp_mat3_n1n1.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2);
-        LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2);
+        A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2); // A Bmat
+        LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau A Bmat
         dres_dxdot.add(q_weight[i]*jac, tmp_mat1_n2n2);
         
         for (FESystemUInt i=0; i<dim; i++)
@@ -314,12 +316,12 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
             // Galerkin contribution from the advection flux terms
             this->calculateAdvectionFluxJacobian(i, A); // TODO: Generalize this to group FEM
             A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2);
-            B_matdx.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // dBw/dx_i  dF^adv_i/ dU
-            dres_dx.add(q_weight[i]*jac, tmp_mat1_n2n2);
+            B_matdx.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // dBw/dx_i^T  dF^adv_i/ dU
+            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
             
             // Least square contribution from flux
             this->calculateAdvectionFluxSpatialDerivative(i, B_matdx, NULL, &tmp_mat2_n1n2); // d^2 F^adv_i / dxi dU
-            LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T d^2F^adv_i / dx dU
+            LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau d^2F^adv_i / dx dU
             dres_dx.add(q_weight[i]*jac, tmp_mat1_n2n2);
         }
     }
