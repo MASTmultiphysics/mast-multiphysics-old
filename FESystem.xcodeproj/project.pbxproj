@@ -38,6 +38,15 @@
 		EB906D5415D450E600C1F550 /* FlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D5215D450E600C1F550 /* FlutterSolverBase.h */; };
 		EB906D6E15D9859C00C1F550 /* TorsionBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB906D6C15D9859700C1F550 /* TorsionBar.cpp */; };
 		EB906D7115D9876400C1F550 /* TorsionBar.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D7015D9875800C1F550 /* TorsionBar.h */; };
+		EBAAB6C2161361670030FCEB /* Euler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6C0161361670030FCEB /* Euler.cpp */; };
+		EBAAB6C7161361940030FCEB /* PistonTheory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6C5161361940030FCEB /* PistonTheory.cpp */; };
+		EBAAB6CB161361AF0030FCEB /* Plate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6C9161361AF0030FCEB /* Plate.cpp */; };
+		EBAAB6CF161361CA0030FCEB /* Beam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6CD161361CA0030FCEB /* Beam.cpp */; };
+		EBAAB6D3161362370030FCEB /* PotentialFlow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6D1161362370030FCEB /* PotentialFlow.cpp */; };
+		EBAAB6D7161362C90030FCEB /* SolutionDrivers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6D5161362C90030FCEB /* SolutionDrivers.cpp */; };
+		EBAAB6DB161363340030FCEB /* Thermal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6D9161363340030FCEB /* Thermal.cpp */; };
+		EBAAB6DF1613639F0030FCEB /* ShapeFunction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6DD1613639F0030FCEB /* ShapeFunction.cpp */; };
+		EBAAB6E31613666E0030FCEB /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAE15C1B73B0062459D /* Mesh.cpp */; };
 		EBAEE0A615C1B73B0062459D /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFAA15C1B73B0062459D /* makefile */; };
 		EBAEE0AA15C1B73B0062459D /* CountedObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFB215C1B73B0062459D /* CountedObject.cpp */; };
 		EBAEE0AB15C1B73B0062459D /* CountedObject.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFB315C1B73B0062459D /* CountedObject.h */; };
@@ -254,6 +263,8 @@
 		EBAEE18715C1B73B0062459D /* EnumName.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE0A315C1B73B0062459D /* EnumName.cpp */; };
 		EBAEE18815C1B73B0062459D /* EnumName.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A415C1B73B0062459D /* EnumName.h */; };
 		EBAEE18915C1B73B0062459D /* Table.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A515C1B73B0062459D /* Table.h */; };
+		EBF0C618160A3E6200B963A8 /* FluidElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF0C616160A3E6200B963A8 /* FluidElementBase.cpp */; };
+		EBF0C619160A3E6200B963A8 /* FluidElementBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF0C617160A3E6200B963A8 /* FluidElementBase.h */; };
 		EBF47F1C15EFD38C00640485 /* NonlinearSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF47F1A15EFD38C00640485 /* NonlinearSolverBase.cpp */; };
 		EBF47F1D15EFD38C00640485 /* NonlinearSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */; };
 		EBF47F2015EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */; };
@@ -307,10 +318,18 @@
 		EB906D5215D450E600C1F550 /* FlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlutterSolverBase.h; sourceTree = "<group>"; };
 		EB906D6C15D9859700C1F550 /* TorsionBar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TorsionBar.cpp; sourceTree = "<group>"; };
 		EB906D7015D9875800C1F550 /* TorsionBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TorsionBar.h; sourceTree = "<group>"; };
+		EBAAB6C0161361670030FCEB /* Euler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Euler.cpp; sourceTree = "<group>"; };
+		EBAAB6C5161361940030FCEB /* PistonTheory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PistonTheory.cpp; sourceTree = "<group>"; };
+		EBAAB6C9161361AF0030FCEB /* Plate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Plate.cpp; sourceTree = "<group>"; };
+		EBAAB6CD161361CA0030FCEB /* Beam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Beam.cpp; sourceTree = "<group>"; };
+		EBAAB6D1161362370030FCEB /* PotentialFlow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PotentialFlow.cpp; sourceTree = "<group>"; };
+		EBAAB6D5161362C90030FCEB /* SolutionDrivers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolutionDrivers.cpp; sourceTree = "<group>"; };
+		EBAAB6D9161363340030FCEB /* Thermal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thermal.cpp; sourceTree = "<group>"; };
+		EBAAB6DD1613639F0030FCEB /* ShapeFunction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShapeFunction.cpp; sourceTree = "<group>"; };
+		EBAAB6E2161364860030FCEB /* TestingIncludes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestingIncludes.h; sourceTree = "<group>"; };
 		EBAEDFAA15C1B73B0062459D /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		EBAEDFAB15C1B73B0062459D /* modify_dep_file.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = modify_dep_file.py; sourceTree = "<group>"; };
-		EBAEDFAD15C1B73B0062459D /* EigenTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EigenTest.cpp; sourceTree = "<group>"; };
-		EBAEDFAE15C1B73B0062459D /* MeshTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MeshTest.cpp; sourceTree = "<group>"; };
+		EBAEDFAE15C1B73B0062459D /* Mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mesh.cpp; sourceTree = "<group>"; };
 		EBAEDFAF15C1B73B0062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBAEDFB215C1B73B0062459D /* CountedObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CountedObject.cpp; sourceTree = "<group>"; };
 		EBAEDFB315C1B73B0062459D /* CountedObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CountedObject.h; sourceTree = "<group>"; };
@@ -530,6 +549,8 @@
 		EBAEE0A315C1B73B0062459D /* EnumName.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EnumName.cpp; sourceTree = "<group>"; };
 		EBAEE0A415C1B73B0062459D /* EnumName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnumName.h; sourceTree = "<group>"; };
 		EBAEE0A515C1B73B0062459D /* Table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Table.h; sourceTree = "<group>"; };
+		EBF0C616160A3E6200B963A8 /* FluidElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FluidElementBase.cpp; sourceTree = "<group>"; };
+		EBF0C617160A3E6200B963A8 /* FluidElementBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FluidElementBase.h; sourceTree = "<group>"; };
 		EBF47F1A15EFD38C00640485 /* NonlinearSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NonlinearSolverBase.cpp; sourceTree = "<group>"; };
 		EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NonlinearSolverBase.h; sourceTree = "<group>"; };
 		EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewtonIterationNonlinearSolver.cpp; sourceTree = "<group>"; };
@@ -561,6 +582,8 @@
 		6961E5C715D8A53300795584 /* Fluid */ = {
 			isa = PBXGroup;
 			children = (
+				EBF0C616160A3E6200B963A8 /* FluidElementBase.cpp */,
+				EBF0C617160A3E6200B963A8 /* FluidElementBase.h */,
 			);
 			path = Fluid;
 			sourceTree = "<group>";
@@ -658,9 +681,17 @@
 		EBAEDFAC15C1B73B0062459D /* examples */ = {
 			isa = PBXGroup;
 			children = (
-				EBAEDFAD15C1B73B0062459D /* EigenTest.cpp */,
-				EBAEDFAE15C1B73B0062459D /* MeshTest.cpp */,
+				EBAAB6CD161361CA0030FCEB /* Beam.cpp */,
+				EBAAB6C0161361670030FCEB /* Euler.cpp */,
 				EBAEDFAF15C1B73B0062459D /* main.cpp */,
+				EBAEDFAE15C1B73B0062459D /* Mesh.cpp */,
+				EBAAB6C5161361940030FCEB /* PistonTheory.cpp */,
+				EBAAB6C9161361AF0030FCEB /* Plate.cpp */,
+				EBAAB6D1161362370030FCEB /* PotentialFlow.cpp */,
+				EBAAB6D5161362C90030FCEB /* SolutionDrivers.cpp */,
+				EBAAB6D9161363340030FCEB /* Thermal.cpp */,
+				EBAAB6DD1613639F0030FCEB /* ShapeFunction.cpp */,
+				EBAAB6E2161364860030FCEB /* TestingIncludes.h */,
 			);
 			path = examples;
 			sourceTree = "<group>";
@@ -1208,6 +1239,7 @@
 				EBF47F2115EFDB4600640485 /* NewtonIterationNonlinearSolver.h in Headers */,
 				6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */,
 				6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */,
+				EBF0C619160A3E6200B963A8 /* FluidElementBase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1263,6 +1295,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBAEE0A615C1B73B0062459D /* makefile in Sources */,
+				EBAAB6E31613666E0030FCEB /* Mesh.cpp in Sources */,
 				EBAEE0AA15C1B73B0062459D /* CountedObject.cpp in Sources */,
 				EBAEE0AC15C1B73B0062459D /* Counter.cpp in Sources */,
 				EB906D4915D4330B00C1F550 /* FrequencyDomainFlutterSolverBase.cpp in Sources */,
@@ -1386,6 +1419,15 @@
 				69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */,
 				6998A4DA1602C0DB005F754E /* PistonTheory1D.cpp in Sources */,
 				6998A4DE1602C170005F754E /* PistonTheory2D.cpp in Sources */,
+				EBF0C618160A3E6200B963A8 /* FluidElementBase.cpp in Sources */,
+				EBAAB6C2161361670030FCEB /* Euler.cpp in Sources */,
+				EBAAB6C7161361940030FCEB /* PistonTheory.cpp in Sources */,
+				EBAAB6CB161361AF0030FCEB /* Plate.cpp in Sources */,
+				EBAAB6CF161361CA0030FCEB /* Beam.cpp in Sources */,
+				EBAAB6D3161362370030FCEB /* PotentialFlow.cpp in Sources */,
+				EBAAB6D7161362C90030FCEB /* SolutionDrivers.cpp in Sources */,
+				EBAAB6DB161363340030FCEB /* Thermal.cpp in Sources */,
+				EBAAB6DF1613639F0030FCEB /* ShapeFunction.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

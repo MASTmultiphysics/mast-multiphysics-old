@@ -63,6 +63,14 @@ FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::initialize(
             
             
 
+template <typename ValType>
+FESystem::Numerics::MatrixBase<ValType>&
+FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::getJacobianMatrix()
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    return *(this->jacobian);
+}
+
 
 template <typename ValType>
 FESystem::NonlinearSolvers::NonlinearSolverCallBack
