@@ -25,7 +25,7 @@ namespace FESystem
          *   provides the implementation of Newmark transient solver
          */
         template <typename ValType>
-        class ExplicitRungeKuttaTransientSolver: public FESystem::TransientSolvers::LinearTransientSolverBase<ValType>
+        class ExplicitRungeKuttaTransientSolver: public FESystem::TransientSolvers::TransientSolverBase<ValType>
         {
         public:
             /*!

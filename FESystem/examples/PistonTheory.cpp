@@ -90,7 +90,7 @@ void transientFlutterSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem
     FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*n_cycles, time_step=final_t/n_cycles*1.0e-3;
     
     // initialize the solver
-    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
     FESystem::Numerics::SparsityPattern ode_sparsity;
     FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
     std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=true;

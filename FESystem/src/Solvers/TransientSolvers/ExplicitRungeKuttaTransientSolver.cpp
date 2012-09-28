@@ -16,7 +16,7 @@
 
 template <typename ValType>
 FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::ExplicitRungeKuttaTransientSolver():
-FESystem::TransientSolvers::LinearTransientSolverBase<ValType>(),
+FESystem::TransientSolvers::TransientSolverBase<ValType>(),
 n_rk_steps_per_time_increment(0),
 n_rk_steps_completed(0),
 previous_time(0),
@@ -113,10 +113,10 @@ FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incremen
         case FESystem::TransientSolvers::WAITING_TO_START:
             // first time step, setup the matrices
         {
-            this->previous_state->copyVector(*this->state_vec);
-            this->new_state_estimate->copyVector(*this->state_vec);
+            this->previous_state->copyVector(*this->current_state);
+            this->new_state_estimate->copyVector(*this->current_state);
             
-            this->state_velocity->zero();
+            this->current_velocity->zero();
             this->n_rk_steps_completed = 0;
             this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
             return FESystem::TransientSolvers::EVALUATE_X_DOT;
@@ -126,13 +126,13 @@ FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incremen
         case FESystem::TransientSolvers::EVALUATE_X_DOT:
         {
             // use the sub-iteration data to calculate the next step
-            this->new_state_estimate->add(this->current_time_step*sub_step_coefficients_for_final_step[this->n_rk_steps_completed], *this->state_velocity);
+            this->new_state_estimate->add(this->current_time_step*sub_step_coefficients_for_final_step[this->n_rk_steps_completed], *this->current_velocity);
                         
             if (this->n_rk_steps_completed < (this->n_rk_steps_per_time_increment-1)) // still in the current time step
             {
-                this->state_vec->copyVector(*this->previous_state);
-                this->state_vec->add(this->current_time_step*this->sub_step_iterate_coefficients[this->n_rk_steps_completed], *this->state_velocity);
-                this->state_velocity->zero();
+                this->current_state->copyVector(*this->previous_state);
+                this->current_state->add(this->current_time_step*this->sub_step_iterate_coefficients[this->n_rk_steps_completed], *this->current_velocity);
+                this->current_velocity->zero();
 
                 // increment the number of time steps 
                 this->current_time = this->previous_time + this->current_time_step * this->sub_step_iterate_coefficients[this->n_rk_steps_completed];
@@ -143,7 +143,7 @@ FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incremen
             }
             else  // increment to the next time step
             {
-                this->state_vec->copyVector(*this->new_state_estimate);
+                this->current_state->copyVector(*this->new_state_estimate);
 
                 this->current_time = this->previous_time + this->current_time_step;
                 this->previous_time = this->current_time;

@@ -287,7 +287,7 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
     FESystemDouble final_t=1.0/(sqrt(eig_vals.getVal(id))/2.0/3.141)*n_cycles, time_step=final_t/n_cycles*1.0e-3;
     
     // initialize the solver
-    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
     FESystem::Numerics::SparsityPattern ode_sparsity;
     FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
     std::vector<FESystemBoolean> ode_order_include(2); ode_order_include[0] = true; ode_order_include[1]=false;
@@ -371,7 +371,7 @@ int test_ode_integration(int argc, char * const argv[])
     FESystemDouble omega2=250.0, final_t=1.0/(sqrt(omega2)/2.0/3.141)*10, time_step=final_t*1.0e-4;
     
     // initialize the solver
-    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
     std::vector<FESystemDouble> int_constants(2); int_constants[0]=1.0/4.0; int_constants[1]=1.0/1.5;
     transient_solver.initialize(2, 1, int_constants);
     transient_solver.setMassMatrix(true);

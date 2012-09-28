@@ -170,6 +170,12 @@ namespace FESystem
              */
             virtual void copyDerivativeValuesFromStateToVelocityVector(const FESystem::Numerics::VectorBase<ValType>& state, FESystem::Numerics::VectorBase<ValType>& velocity) const;
             
+            /*!
+             *    provides the linear solver object for this transient solver. The boolean flag should be set to true if the system matrices
+             *    are constant with respect to time.
+             */
+            void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices);
+
         protected:
 
             /*!
@@ -242,41 +248,12 @@ namespace FESystem
             /*!
              *    Stores the solution at the last solved time step, used to store the initial conditions at the beginning of solution. 
              */
-            FESystem::Numerics::VectorBase<ValType>* state_vec;
+            FESystem::Numerics::VectorBase<ValType>* current_state;
 
             /*!
              *    Stores the solution at the last solved time step, used to store the initial conditions at the beginning of solution. 
              */
-            FESystem::Numerics::VectorBase<ValType>* state_velocity;
-        };
-        
-        
-        /*!
-         *   Transient solver class for linear systems. It requires a linear solver, which should be provided by the user. 
-         */
-        template <typename ValType> 
-        class LinearTransientSolverBase: public FESystem::TransientSolvers::TransientSolverBase<ValType>
-        {
-        public:
-            /*!
-             *    constructor
-             */
-            LinearTransientSolverBase();
-            
-            ~LinearTransientSolverBase();
-            
-            /*!
-             *    method to clear the data structure
-             */
-            void  clear();
-            
-            /*!
-             *    provides the linear solver object for this transient solver. The boolean flag should be set to true if the system matrices
-             *    are constant with respect to time. 
-             */
-            void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices);
-            
-        protected:
+            FESystem::Numerics::VectorBase<ValType>* current_velocity;
             
             /*!
              *    Pointer to linear sovler
@@ -285,9 +262,10 @@ namespace FESystem
             
             
             /*!
-             *    In case the system matrices are constant with respect to time, the linear solver will be initialized only once for the first time step. 
+             *    In case the system matrices are constant with respect to time, the linear solver will be initialized only once for the first time step.
              */
             FESystemBoolean if_constant_system_matrices;
+
         };
     }
 }

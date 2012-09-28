@@ -16,18 +16,25 @@
 
 
 template <typename ValType>
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::LinearNewmarkTransientSolver():
-FESystem::TransientSolvers::LinearTransientSolverBase<ValType>(),
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::NewmarkTransientSolver():
+FESystem::TransientSolvers::TransientSolverBase<ValType>(),
+convergence_tolerance(1.0e-12),
+max_nonlinear_iterations(20),
+nonlinear_iteration_number(0),
 if_explicit(false),
 jacobian(NULL),
-temp_vec(NULL)
+previous_state(NULL),
+previous_velocity(NULL),
+residual(NULL),
+temp_vec(NULL),
+temp_vec2(NULL)
 {
     
 }
 
 
 template <typename ValType>
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::~LinearNewmarkTransientSolver()
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::~NewmarkTransientSolver()
 {
     
 }
@@ -38,7 +45,7 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::~LinearNewmar
 
 template <typename ValType>
 void
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<FESystemDouble>& int_constants)
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<FESystemDouble>& int_constants)
 {
     // TODO: revisit for parallel and sparse
     FESystem::TransientSolvers::TransientSolverBase<ValType>::initialize(o,n_dofs);
@@ -54,12 +61,16 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initialize(FE
     else
     {
         this->if_explicit = false;
-        this->temp_vec = new FESystem::Numerics::LocalVector<ValType>;
-        this->temp_vec2 = new FESystem::Numerics::LocalVector<ValType>;
-        this->temp_vec->resize(this->order*this->n_dofs);
-        this->temp_vec2->resize(this->order*this->n_dofs);
+        this->previous_state = new FESystem::Numerics::LocalVector<ValType>; this->previous_state->resize(this->order*this->n_dofs);
+        this->previous_velocity = new FESystem::Numerics::LocalVector<ValType>; this->previous_velocity->resize(this->order*this->n_dofs);
+        this->residual = new FESystem::Numerics::LocalVector<ValType>; this->residual->resize(this->order*this->n_dofs);
+        this->temp_vec = new FESystem::Numerics::LocalVector<ValType>; this->temp_vec->resize(this->order*this->n_dofs);
+        this->temp_vec2 = new FESystem::Numerics::LocalVector<ValType>; this->temp_vec2->resize(this->order*this->n_dofs);
     }
     
+    this->max_nonlinear_iterations = 20;
+    this->convergence_tolerance = 1.0e-12;
+    this->nonlinear_iteration_number = 0;
 }
 
 
@@ -67,16 +78,29 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initialize(FE
 
 template <typename ValType>
 void
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::clear()
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::clear()
 {
-    if (this->temp_vec != NULL)
-        delete this->temp_vec;
+    if (this->temp_vec != NULL) delete this->temp_vec;
+    if (this->temp_vec2 != NULL) delete this->temp_vec2;
+    if (this->previous_state != NULL) delete this->previous_state;
+    if (this->previous_velocity != NULL) delete this->previous_velocity;
+    if (this->residual != NULL) delete this->residual;
 
+    
     this->integration_constants.clear();
     this->if_explicit = false;    
     
     this->jacobian = NULL;
+    this->previous_state = NULL;
+    this->previous_velocity = NULL;
+    this->residual = NULL;
     this->temp_vec = NULL;
+    this->temp_vec2 = NULL;
+
+    this->max_nonlinear_iterations = 20;
+    this->convergence_tolerance = 1.0e-12;
+    this->nonlinear_iteration_number = 0;
+
     FESystem::TransientSolvers::TransientSolverBase<ValType>::clear();
 }
 
@@ -84,7 +108,7 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::clear()
 
 template <typename ValType>
 void
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::setJacobianMatrix(FESystem::Numerics::MatrixBase<ValType>& jac)
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::setJacobianMatrix(FESystem::Numerics::MatrixBase<ValType>& jac)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemAssert0(!this->if_explicit, FESystem::Exception::InvalidState);
@@ -98,7 +122,7 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::setJacobianMa
 
 template <typename ValType>
 FESystem::Numerics::MatrixBase<ValType>&
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::getCurrentJacobianMatrix()
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::getCurrentJacobianMatrix()
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemAssert0(!this->if_explicit, FESystem::Exception::InvalidState);
@@ -110,7 +134,7 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::getCurrentJac
 
 template <typename ValType>
 void 
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initializeMatrixSparsityPatterForSystem(const FESystem::Numerics::SparsityPattern& spatial_sparsity_pattern, 
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initializeMatrixSparsityPatterForSystem(const FESystem::Numerics::SparsityPattern& spatial_sparsity_pattern, 
                                                                                                   FESystem::Numerics::SparsityPattern& system_pattern) const
 {
     // TODO: revisit for parallel 
@@ -168,7 +192,7 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::initializeMat
 
 template <typename ValType>
 FESystem::TransientSolvers::TransientSolverCallBack 
-FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::incrementTimeStep()
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
 {
     // make sure this is initialized
     FESystemAssert0(this->ifInitialized(), FESystem::Exception::InvalidState);
@@ -204,19 +228,27 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::incrementTime
                 // if max of A is zero, then this is an explicit intergration scheme, and get the x_dot only
                 // x_dot_n+1 = -r = f_n+1
                 // x_n+1 = x_n + dt x_dot_n+1
-                this->state_vec->add(this->current_time_step, *this->state_velocity);
+                this->current_state->add(this->current_time_step, *this->current_velocity);
+            
+            // calculate residual to identify convergence
+            this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->current_velocity), *(this->residual));
+            
+            // if converged, increment the time step
+            if ((this->residual->getL2Norm() < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
+            {
+                this->current_time += this->current_time_step;
+                this->current_iteration_number++;
+                this->nonlinear_iteration_number = 0;
+                
+                this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
+                return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
+            }
             else
-                // this is the exact x_dot at the end of a time step, with the updated state vector for the time step
-                // copy the current state velocity to the temporary vector for use in the solution
-                this->temp_vec->copyVector(*this->state_velocity);
-            
-            // now increment the time step
-            this->current_time += this->current_time_step;
-            this->current_iteration_number++;
-            
-            this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
-            return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
-
+            {
+                this->nonlinear_iteration_number++;
+                this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
+                return FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
+            }
         }
             break;
             
@@ -229,6 +261,19 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::incrementTime
                 // copy the jacobian terms from 1st row to the 0th row
                 switch (this->order) 
                 {
+                    case 1:
+                    {
+                        // scale the jacobian terms
+                        this->jacobian->scale(-this->current_time_step*this->integration_constants[0]);
+                        
+                        // now add the mass term, if present, else shift the diagonal
+                        if (this->if_identity_mass_matrix)
+                            this->jacobian->shiftDiagonal(1.0);
+                        else
+                            this->jacobian->add(1.0, *(this->mass_matrix));
+                    }
+                        break;
+
                     case 2:
                     {
                         for (FESystemUInt i=0; i<this->order; i++)
@@ -267,54 +312,102 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::incrementTime
                 this->linear_solver->clear();
                 this->linear_solver->setSystemMatrix(*this->jacobian);
             }
-                        
-            switch (this->order) 
+            
+            this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->current_velocity), *(this->residual));
+            
+            this->linear_solver->solve(*(this->residual), *(this->temp_vec));
+            this->current_state->add(-1.0, *(this->temp_vec));
+            
+            // now, evaluate the exact time step
+            this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
+            return FESystem::TransientSolvers::EVALUATE_X_DOT;
+        }
+            break;
+            
+        default:
+            FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+            break;
+    }
+}
+
+
+
+
+
+
+template <typename ValType>
+void
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::evaluateResidual(const FESystem::Numerics::VectorBase<ValType>& prev_state, const FESystem::Numerics::VectorBase<ValType>& prev_velocity,
+                                                                              const FESystem::Numerics::VectorBase<ValType>& curr_state, const FESystem::Numerics::VectorBase<ValType>& curr_velocity,
+                                                                              FESystem::Numerics::VectorBase<ValType>& res)
+{
+    switch (this->order)
+    {
+        case 1:
+        {
+            // velocity
+            if (!this->if_identity_mass_matrix)
+                this->mass_matrix->rightVectorMultiply(prev_velocity, res); // M x_dot_n
+            
+            res.scale(-this->current_time_step* (1.0 - this->integration_constants[0])); // -dt (1-gamma) M x_dot_n
+            res.add(-this->current_time_step*this->integration_constants[0], curr_velocity); // -dt (1-gamma) M x_dot_n - dt gamma x_dot_n+1
+            
+            // now the states
+            this->temp_vec->copyVector(curr_state); // x_n+1
+            this->temp_vec->add(-1.0, prev_state); //  x_n+1 - x_n
+            
+            if (this->if_identity_mass_matrix)
+                res.add(1.0, *(this->temp_vec)); // x_n+1 - x_n - dt (1-gamma) M x_dot_n - dt gamma x_dot_n+1;  (with M = 1)
+            else
             {
-                case 2:
-                {
-                    // prepare the RHS forcing function
-                    if (this->if_identity_mass_matrix)
-                        this->temp_vec->scaleSubVector(0, this->n_dofs-1, this->current_time_step);
-                    else
-                    {
-                        this->temp_vec2->zero();
-                        this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1, 
-                                                                  0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec), *(this->temp_vec2));
-                        this->temp_vec2->scale(this->current_time_step);
-                        
-                        this->temp_vec->setSubVectorVals(0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec2));
-                    }
-
-                    this->temp_vec->addSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, 0.5*pow(this->current_time_step,2)*(1.0-2.0*this->integration_constants[0]), *(this->temp_vec));
-                    this->temp_vec->scaleSubVector(this->n_dofs, 2*this->n_dofs-1, this->current_time_step*(1.0-this->integration_constants[1]));
-
-                    this->state_velocity->setSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->state_velocity));
-                    this->state_velocity->scaleSubVector(0, this->n_dofs-1, pow(this->current_time_step,2) * this->integration_constants[0]);
-                    this->state_velocity->scaleSubVector(this->n_dofs, 2*this->n_dofs-1, this->current_time_step * this->integration_constants[1]); 
-                    
-                    this->state_velocity->add(1.0, *(this->temp_vec));
-                    this->temp_vec->zero();
-                    
-                    this->linear_solver->solve(*this->state_velocity, *this->temp_vec);
-                    this->state_vec->add(1.0, *this->temp_vec);
-
-                    // now, evaluate the exact time step
-                    this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
-                    return FESystem::TransientSolvers::EVALUATE_X_DOT;
-                }
-                    break;
-                    
-                default:
-                    FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
-                    break;
+                this->mass_matrix->rightVectorMultiply(*(this->temp_vec), *(this->temp_vec2)); // M_n+1 (x_n+1 - x_n)
+                res.add(1.0, *(this->temp_vec2)); // M_n+1 (x_n+1 - x_n) - dt (1-gamma) M x_dot_n - dt gamma x_dot_n+1
+            }
+        }
+            break;
+            
+        case 2:
+        {
+            res.copyVector(prev_velocity);
+            
+            // prepare the RHS forcing function
+            if (this->if_identity_mass_matrix)
+                res.scaleSubVector(0, this->n_dofs-1, -this->current_time_step); // [-dt  0; 0  1] {x_dot_n; x_ddot_n}
+            else
+            {
+                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1,
+                                                          0, this->n_dofs-1, 0, this->n_dofs-1, res, *(this->temp_vec)); // [M  0; 0  1] {x_dot_n; x_ddot_n}
+                this->temp_vec->scale(-this->current_time_step); // [-dt M  0; 0  1] {x_dot_n; x_ddot_n}
+                
+                res.setSubVectorVals(0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec)); // copy to the res vector
             }
             
-            // now increment the time step
-            this->current_time += this->current_time_step;
-            this->current_iteration_number++;
+            res.addSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1,
+                                 -0.5*pow(this->current_time_step,2)*(1.0-2.0*this->integration_constants[0]), res); // [-dt M   -.5 dt^2 (1-2beta); 0  1] {x_dot_n; x_ddot_n}
+            res.scaleSubVector(this->n_dofs, 2*this->n_dofs-1, -this->current_time_step*(1.0-this->integration_constants[1])); // [-dt M   -.5 dt^2 (1-2beta); 0  -dt(1-gamma)] {x_dot_n; x_ddot_n}
             
-            this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
-            return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
+            // now the current velocity term
+            this->temp_vec->copyVector(curr_velocity); // x_dot_n+1
+            this->temp_vec->setSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->temp_vec)); // [0 1; 0 1] {x_dot_n+1; x_ddot_n+1}
+            this->temp_vec->scaleSubVector(0, this->n_dofs-1, pow(this->current_time_step,2) * this->integration_constants[0]);  // [0 dt^2 beta; 0 1] {x_dot_n+1; x_ddot_n+1}
+            this->temp_vec->scaleSubVector(this->n_dofs, 2*this->n_dofs-1, this->current_time_step * this->integration_constants[1]); // [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
+            
+            res.add(-1.0, *(this->temp_vec)); // -[dt M   .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
+            
+            // now the states
+            this->temp_vec->copyVector(curr_state); // {x_n+1; x_dot_n+1}
+            this->temp_vec->add(-1.0, prev_state); // {x_n+1; x_dot_n+1} - {x_n; x_dot_n}
+            
+            if (this->if_identity_mass_matrix)
+                res.add(1.0, *(this->temp_vec)); // {x_n+1; x_dot_n+1} - {x_n; x_dot_n} - [dt M  .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1} ; with M = 1
+            else
+            {
+                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1,
+                                                          0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec), *(this->temp_vec2)); // [M 0; 0 1] ({x_n+1; x_dot_n+1} - {x_n; x_dot_n})
+                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1,
+                                                          this->n_dofs, 2*this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->temp_vec), *(this->temp_vec2));// [M 0; 0 M] ({x_n+1; x_dot_n+1} - {x_n; x_dot_n})
+                res.add(1.0, *(this->temp_vec2)); // [M 0; 0 M] ({x_n+1; x_dot_n+1} - {x_n; x_dot_n}) - [dt M   .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
+            }
         }
             break;
             
@@ -329,7 +422,7 @@ FESystem::TransientSolvers::LinearNewmarkTransientSolver<ValType>::incrementTime
 /***************************************************************************************/
 // Template instantiations for some generic classes
 
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::TransientSolvers::LinearNewmarkTransientSolver);
+INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::TransientSolvers::NewmarkTransientSolver);
 
 
 /***************************************************************************************/

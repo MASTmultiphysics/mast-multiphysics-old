@@ -30,8 +30,10 @@ current_time(0.0),
 current_time_step(0.0),
 current_iteration_number(0),
 latest_call_back(FESystem::TransientSolvers::WAITING_TO_START),
-state_vec(NULL),
-state_velocity(NULL)
+current_state(NULL),
+current_velocity(NULL),
+linear_solver(NULL),
+if_constant_system_matrices(false)
 {
     
 }
@@ -54,10 +56,8 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::initialize(FESystemUIn
     this->order = o;
     this->n_dofs = n_dofs;
     
-    this->state_vec = new FESystem::Numerics::LocalVector<ValType>;
-    this->state_velocity = new FESystem::Numerics::LocalVector<ValType>;
-    this->state_vec->resize(this->order*this->n_dofs);
-    this->state_velocity->resize(this->order*this->n_dofs);
+    this->current_state = new FESystem::Numerics::LocalVector<ValType>; this->current_state->resize(this->order*this->n_dofs);
+    this->current_velocity = new FESystem::Numerics::LocalVector<ValType>; this->current_velocity->resize(this->order*this->n_dofs);
     
     this->active_jacobian_terms.resize(o);
     for (FESystemUInt i=0; i<o; i++) this->active_jacobian_terms[i] = false;
@@ -92,13 +92,13 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::clear()
     this->latest_call_back = FESystem::TransientSolvers::WAITING_TO_START;
     
     // delete the vectors if they have been initialized
-    if (this->state_vec != NULL)
-        delete this->state_vec;
-    if (this->state_velocity != NULL)
-        delete this->state_velocity;
+    if (this->current_state != NULL) delete this->current_state;
+    if (this->current_velocity != NULL) delete this->current_velocity;
     
-    this->state_vec = NULL;
-    this->state_velocity = NULL;
+    this->current_state = NULL;
+    this->current_velocity = NULL;
+    this->linear_solver = NULL;
+    this->if_constant_system_matrices = false;
 }
 
 
@@ -116,7 +116,7 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::setInitialTimeData(typ
     this->current_iteration_number = 0;
     this->latest_call_back = FESystem::TransientSolvers::WAITING_TO_START;
     
-    this->state_vec->copyVector(vec);
+    this->current_state->copyVector(vec);
     
     this->if_initialized_initial_time_data = true;
 }
@@ -128,7 +128,7 @@ FESystem::Numerics::VectorBase<ValType>&
 FESystem::TransientSolvers::TransientSolverBase<ValType>::getCurrentStateVector()
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    return *(this->state_vec);
+    return *(this->current_state);
 }
 
 
@@ -138,7 +138,7 @@ FESystem::Numerics::VectorBase<ValType>&
 FESystem::TransientSolvers::TransientSolverBase<ValType>::getCurrentStateVelocityVector()
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    return *(this->state_velocity);
+    return *(this->current_velocity);
 }
 
 
@@ -178,7 +178,7 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::initializeStateVector(
     // TODO: revisit for parallel and sparsity
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     
-    vec.resize(this->state_vec->getSize());
+    vec.resize(this->current_state->getSize());
 }
 
 
@@ -355,37 +355,10 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::copyDerivativeValuesFr
 
 
 
-template <typename ValType> 
-FESystem::TransientSolvers::LinearTransientSolverBase<ValType>::LinearTransientSolverBase():
-FESystem::TransientSolvers::TransientSolverBase<ValType>(),
-linear_solver(NULL),
-if_constant_system_matrices(false)
-{
-    
-}
-
-
-
-template <typename ValType> 
-FESystem::TransientSolvers::LinearTransientSolverBase<ValType>::~LinearTransientSolverBase()
-{
-    
-}
-
-
-template <typename ValType> 
-void
-FESystem::TransientSolvers::LinearTransientSolverBase<ValType>::clear()
-{
-    this->linear_solver = NULL;
-    this->if_constant_system_matrices = false;
-    FESystem::TransientSolvers::TransientSolverBase<ValType>::clear();
-}
-
 
 template <typename ValType> 
 void 
-FESystem::TransientSolvers::LinearTransientSolverBase<ValType>::setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices)
+FESystem::TransientSolvers::TransientSolverBase<ValType>::setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices)
 {
     this->linear_solver = &solver;
     this->if_constant_system_matrices = if_constant_matrices;
@@ -397,7 +370,6 @@ FESystem::TransientSolvers::LinearTransientSolverBase<ValType>::setLinearSolver(
 // Template instantiations for some generic classes
 
 INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::TransientSolvers::TransientSolverBase);
-INSTANTIATE_CLASS_FOR_ALL_DATA_TYPES(FESystem::TransientSolvers::LinearTransientSolverBase);
 
 
 /***************************************************************************************/

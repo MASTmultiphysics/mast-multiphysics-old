@@ -266,7 +266,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     FESystemDouble final_t=.01, time_step=1.0e-5;
     
     // initialize the solver
-    FESystem::TransientSolvers::LinearNewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
     std::vector<FESystemDouble> int_constants(2); int_constants[0]=0.5; int_constants[1]=0.5;
     transient_solver.initialize(2, dof_map.getNDofs(), int_constants);
     

@@ -24,15 +24,15 @@ namespace FESystem
          *   provides the implementation of Newmark transient solver
          */
         template <typename ValType>
-        class LinearNewmarkTransientSolver: public FESystem::TransientSolvers::LinearTransientSolverBase<ValType>
+        class NewmarkTransientSolver: public FESystem::TransientSolvers::TransientSolverBase<ValType>
         {
         public:
             /*!
              *   Constructor
              */
-            LinearNewmarkTransientSolver();
+            NewmarkTransientSolver();
             
-            ~LinearNewmarkTransientSolver();
+            ~NewmarkTransientSolver();
             
             /*!
              *   initializes the solver to a system with n_dofs unknowns and highest order of derivative \p o. This 
@@ -77,7 +77,20 @@ namespace FESystem
             
         protected:
  
+            void evaluateResidual(const FESystem::Numerics::VectorBase<ValType>& prev_state, const FESystem::Numerics::VectorBase<ValType>&  prev_velocity,
+                                  const FESystem::Numerics::VectorBase<ValType>&  curr_state, const FESystem::Numerics::VectorBase<ValType>&  curr_velocity,
+                                  FESystem::Numerics::VectorBase<ValType>&  res);
 
+            /*!
+             *   convergence tolerance
+             */
+            FESystemDouble convergence_tolerance;
+            
+            /*!
+             *   Maximum allowable iterations
+             */
+            FESystemUInt  nonlinear_iteration_number, max_nonlinear_iterations;
+            
             /*!
              *    whether the integration is explicit or implicit, which depends on the integration_constant values
              */
@@ -96,7 +109,7 @@ namespace FESystem
             /*!
              *   temporary storage vector
              */
-            FESystem::Numerics::VectorBase<ValType>* temp_vec, *temp_vec2;
+            FESystem::Numerics::VectorBase<ValType> *previous_state, *previous_velocity, *residual, *temp_vec, *temp_vec2;
 
         };
     }
