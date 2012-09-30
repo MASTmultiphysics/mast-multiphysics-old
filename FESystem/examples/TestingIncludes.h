@@ -157,6 +157,8 @@ void calculateBeamPistonTheoryMatrices(FESystemDouble mach, FESystemDouble rho, 
                                        FESystem::Numerics::MatrixBase<FESystemDouble>& aero_damp_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& reduced_damp_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& generalized_damp_mat,
                                        const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals, FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec);
 
+int test_ode_integration(int argc, char * const argv[]);
+
 int plate_analysis_driver(int argc, char * const argv[]);
 
 int beam_analysis_driver(int argc, char * const argv[]);

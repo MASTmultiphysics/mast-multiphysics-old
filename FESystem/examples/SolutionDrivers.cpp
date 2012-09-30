@@ -367,7 +367,7 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
 int test_ode_integration(int argc, char * const argv[])
 {
     
-    //FESystem::Plotting::PLPlot<FESystemDouble> plot(FESystem::Plotting::REAL_AXIS, FESystem::Plotting::REAL_AXIS);
+    FESystem::Plotting::PLPlot<FESystemDouble> plot(FESystem::Plotting::REAL_AXIS, FESystem::Plotting::REAL_AXIS);
     FESystemDouble omega2=250.0, final_t=1.0/(sqrt(omega2)/2.0/3.141)*10, time_step=final_t*1.0e-4;
     
     // initialize the solver
@@ -425,7 +425,7 @@ int test_ode_integration(int argc, char * const argv[])
         }
     }
     
-    //plot.plotData2D(x_vals, y_vals);
+    plot.plotData2D(x_vals, y_vals);
     
     
     return 0;

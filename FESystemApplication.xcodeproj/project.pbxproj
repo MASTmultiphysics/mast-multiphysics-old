@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
+		69C5B64616173FED00BDC74C /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69C5B64516173FED00BDC74C /* FESystem.dylib */; };
 		EBAEE19515C1B8A90062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19215C1B8A90062459D /* main.cpp */; };
-		EBF0C60B1607524300B963A8 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF0C60A1607524300B963A8 /* FESystem.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,8 +27,8 @@
 /* Begin PBXFileReference section */
 		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
+		69C5B64516173FED00BDC74C /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-dnngzprkwoyuvxdbkrjlfrgzblqx/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBAEE19215C1B8A90062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = FESystem/examples/main.cpp; sourceTree = "<group>"; };
-		EBF0C60A1607524300B963A8 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,7 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBF0C60B1607524300B963A8 /* FESystem.dylib in Frameworks */,
+				69C5B64616173FED00BDC74C /* FESystem.dylib in Frameworks */,
 				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -47,7 +47,7 @@
 		69677EBC13404448002B32C8 = {
 			isa = PBXGroup;
 			children = (
-				EBF0C60A1607524300B963A8 /* FESystem.dylib */,
+				69C5B64516173FED00BDC74C /* FESystem.dylib */,
 				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
 				EBAEE19215C1B8A90062459D /* main.cpp */,
 				69677EC813404448002B32C8 /* Products */,

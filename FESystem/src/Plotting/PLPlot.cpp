@@ -27,7 +27,7 @@ FESystem::Plotting::Plot2DBase<ValType>(a1, a2)
     this->pl_stream = new plstream();
     this->pl_stream->scolbg(255,255,255); // set background to white
     this->pl_stream->scol0(1,0,0,0); // set axis colors to black
-    this->pl_stream->start("aqt",1,1);
+    this->pl_stream->start("xwin",1,1);
     this->pl_stream->env(-20, 20, -20, 20, 0, 2);
     //this->pl_stream->fontld( 1 );
     //this->pl_stream->init();

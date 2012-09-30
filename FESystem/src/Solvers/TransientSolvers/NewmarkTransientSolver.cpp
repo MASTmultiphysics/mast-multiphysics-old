@@ -6,6 +6,10 @@
 //  Copyright (c) 2012 . All rights reserved.
 //
 
+// C++ includes
+#include <iomanip>
+
+
 // FESystem includes
 #include "Solvers/TransientSolvers/NewmarkTransientSolver.h"
 #include "Solvers/LinearSolvers/LinearSolverBase.h"
@@ -200,8 +204,13 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
     // process based on the previous call back and status of solver
     switch (this->latest_call_back) 
     {
-        case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
         case FESystem::TransientSolvers::WAITING_TO_START:
+        {
+            // for beginning the set of iterations, copy the current state as the previous state
+            this->previous_state->copyVector(*(this->current_state));
+        }
+            
+        case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
             // first time step, setup the matrices
         {
             if (this->if_explicit) 
@@ -233,9 +242,21 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             // calculate residual to identify convergence
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->current_velocity), *(this->residual));
             
+            FESystemDouble l2 = this->residual->getL2Norm();
+            
+            std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
+            <<  "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number << "  Residual: " << std::setw(15) << l2  << std::endl;
+            
+            
             // if converged, increment the time step
-            if ((this->residual->getL2Norm() < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
+            if ((l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
             {
+                std::cout << "Convergence Achieved" << std::endl;
+                
+                // copy the current state and velocity to the previous state and velocity
+                this->previous_state->copyVector(*(this->current_state));
+                this->previous_velocity->copyVector(*(this->current_velocity));
+
                 this->current_time += this->current_time_step;
                 this->current_iteration_number++;
                 this->nonlinear_iteration_number = 0;
@@ -340,7 +361,7 @@ void
 FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::evaluateResidual(const FESystem::Numerics::VectorBase<ValType>& prev_state, const FESystem::Numerics::VectorBase<ValType>& prev_velocity,
                                                                               const FESystem::Numerics::VectorBase<ValType>& curr_state, const FESystem::Numerics::VectorBase<ValType>& curr_velocity,
                                                                               FESystem::Numerics::VectorBase<ValType>& res)
-{
+{    
     switch (this->order)
     {
         case 1:
@@ -369,7 +390,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::evaluateResidual(co
         case 2:
         {
             res.copyVector(prev_velocity);
-            
+
             // prepare the RHS forcing function
             if (this->if_identity_mass_matrix)
                 res.scaleSubVector(0, this->n_dofs-1, -this->current_time_step); // [-dt  0; 0  1] {x_dot_n; x_ddot_n}
@@ -391,9 +412,9 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::evaluateResidual(co
             this->temp_vec->setSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->temp_vec)); // [0 1; 0 1] {x_dot_n+1; x_ddot_n+1}
             this->temp_vec->scaleSubVector(0, this->n_dofs-1, pow(this->current_time_step,2) * this->integration_constants[0]);  // [0 dt^2 beta; 0 1] {x_dot_n+1; x_ddot_n+1}
             this->temp_vec->scaleSubVector(this->n_dofs, 2*this->n_dofs-1, this->current_time_step * this->integration_constants[1]); // [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
-            
+
             res.add(-1.0, *(this->temp_vec)); // -[dt M   .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
-            
+
             // now the states
             this->temp_vec->copyVector(curr_state); // {x_n+1; x_dot_n+1}
             this->temp_vec->add(-1.0, prev_state); // {x_n+1; x_dot_n+1} - {x_n; x_dot_n}
