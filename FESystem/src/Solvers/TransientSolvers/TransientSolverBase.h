@@ -95,6 +95,21 @@ namespace FESystem
              */
             FESystem::Numerics::VectorBase<ValType>& getCurrentStateVelocityVector();
 
+            /*!
+             *   Returns a reference to the previous state vector
+             */
+            FESystem::Numerics::VectorBase<ValType>& getPreviousStateVector();
+            
+            /*!
+             *   Returns a reference to the previous state velocity (or x dot) vector
+             */
+            FESystem::Numerics::VectorBase<ValType>& getPreviousStateVelocityVector();
+
+            /*!
+             *   Returns a reference to the previous state velocity (or x dot) vector
+             */
+            FESystem::Numerics::VectorBase<ValType>& getVelocityFunction();
+
             /*
              *   Returns the current time of the solver integration
              */
@@ -248,12 +263,7 @@ namespace FESystem
             /*!
              *    Stores the solution at the last solved time step, used to store the initial conditions at the beginning of solution. 
              */
-            FESystem::Numerics::VectorBase<ValType>* current_state;
-
-            /*!
-             *    Stores the solution at the last solved time step, used to store the initial conditions at the beginning of solution. 
-             */
-            FESystem::Numerics::VectorBase<ValType>* current_velocity;
+            FESystem::Numerics::VectorBase<ValType> *current_state, *current_velocity, *previous_state, *previous_velocity, *velocity_function;
             
             /*!
              *    Pointer to linear sovler

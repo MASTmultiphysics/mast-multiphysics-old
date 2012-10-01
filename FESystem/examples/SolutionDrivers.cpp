@@ -348,8 +348,8 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
                 transient_solver.extractVectorValuesForDerivativeOrder(0, transient_solver.getCurrentStateVector(), reduced_sol_vec); // get the current X
                 reduced_stiff_mat.rightVectorMultiply(reduced_sol_vec, reduced_load_vec);
                 
-                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getCurrentStateVelocityVector()); // set the acceleration
-                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
+                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getVelocityFunction()); // set the acceleration
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getVelocityFunction());
             }
                 break;
                 
@@ -415,8 +415,8 @@ int test_ode_integration(int argc, char * const argv[])
             case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
                 // the Jacobian is not updated since it is constant with respect to time
             {
-                transient_solver.getCurrentStateVelocityVector().setVal(1, -omega2*transient_solver.getCurrentStateVector().getVal(0));
-                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
+                transient_solver.getVelocityFunction().setVal(1, -omega2*transient_solver.getCurrentStateVector().getVal(0));
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getVelocityFunction());
             }
                 break;
                 

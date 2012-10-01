@@ -109,7 +109,7 @@ namespace FESystem
             /*!
              *   temporary storage vector
              */
-            FESystem::Numerics::VectorBase<ValType> *previous_state, *previous_velocity, *residual, *temp_vec, *temp_vec2;
+            FESystem::Numerics::VectorBase<ValType> *residual, *temp_vec, *temp_vec2;
 
         };
     }

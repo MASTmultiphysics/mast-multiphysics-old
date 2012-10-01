@@ -22,7 +22,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
                               const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                               FESystem::Numerics::VectorBase<FESystemDouble>& residual,
                               FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
-                              FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec)
+                              FESystem::Numerics::MatrixBase<FESystemDouble>& global_mass_mat)
 {
     //FESystemDouble E=30.0e6, nu=0.3, rho=2700.0, p_val = 67.5, thick = 0.1; // (Reddy's parameters)
     FESystemDouble cp= 1.003e3, cv = 0.716e3, R=cp-cv, gamma=cp/cv; // (R should be 287.04)
@@ -57,7 +57,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
             FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
     }
     
-    residual.zero(); global_stiffness_mat.zero(); global_mass_vec.zero();
+    residual.zero(); global_stiffness_mat.zero(); global_mass_mat.zero();
     
     const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     
@@ -81,6 +81,97 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
         
         dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+    }
+}
+
+
+
+void eulerTransientAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                            const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs)
+{
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
+    const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+    
+    FESystem::Numerics::SparseMatrix<FESystemDouble> stiff_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> residual, sol, vel, mass;
+    
+    residual.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs()); vel.resize(dof_map.getNDofs()); mass.resize(dof_map.getNDofs());
+    stiff_mat.resize(dof_map.getSparsityPattern());
+    
+    FESystemUInt id= 0;
+    
+    FESystemDouble final_t=10.0, time_step=1.0e-3;
+    
+    // initialize the solver
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::Numerics::SparsityPattern ode_sparsity;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
+    std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
+    std::vector<FESystemDouble> int_constants(1); int_constants[0]=1.0/2.0;
+    transient_solver.initialize(1, nonbc_dofs.size(), int_constants);
+    transient_solver.setActiveJacobianTerm(ode_order_include);
+    transient_solver.setMassMatrix(true);
+    
+    transient_solver.initializeStateVector(sol); //  initialize the vector and apply the initial condition
+    // set the initial condition
+    sol.zero();
+    for (FESystemUInt i=0; i<nodes.size(); i++)
+    {
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], 1.05); // rho
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], 1.05 * 300.0); // rho u
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], 1.05 * (300.0*716.0 + 300.0*300.0*0.5)); // rho * (cv * T + u^2/2)
+    }
+    
+    transient_solver.setInitialTimeData(0, time_step, sol);
+    
+    transient_solver.initializeMatrixSparsityPatterForSystem(nonbc_sparsity_pattern, ode_sparsity);
+    ode_jac.resize(ode_sparsity);
+    transient_solver.setJacobianMatrix(ode_jac);
+    transient_solver.setLinearSolver(linear_solver, false);
+    
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    std::fstream output_file;
+    std::vector<FESystemUInt> vars(5); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; vars[4] = 4; // write all solutions
+    
+    FESystemUInt n_skip=0, n_count=0, n_write=0;
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
+    while (transient_solver.getCurrentTime()<final_t)
+    {
+        call_back = transient_solver.incrementTimeStep();
+        switch (call_back)
+        {
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
+            {
+                if (n_count == n_skip)
+                {
+                    std::stringstream oss;
+                    oss << "sol_" << n_write << ".vtk";
+                    output_file.open(oss.str().c_str(),std::fstream::out);
+                    output.writeMesh(output_file, mesh, dof_map);
+                    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, transient_solver.getCurrentStateVector());
+                    output_file.close();
+                    
+                    n_write++;
+                    n_count=0;
+                }
+                else
+                    n_count++;
+            }
+                break;
+                
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+                // the Jacobian is not updated since it is constant with respect to time
+            {
+//                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStateVector(), transient_solver.getPreviousStateVelocityVector(),
+//                                         transient_solver.getVelocityFunction(), transient_solver.getCurrentJacobianMatrix(), mass);
+            }
+                break;
+                
+            default:
+                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+                break;
+        }
     }
 }
 
@@ -137,8 +228,8 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 
             case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL:
             {
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), nonlinear_solver.getCurrentSolution(), // the last arg is actually supposed to be velocity
-                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass);
+//                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), nonlinear_solver.getCurrentSolution(), // the last arg is actually supposed to be velocity
+//                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass);
                 
                 // write the solution
                 std::stringstream oss;
@@ -153,16 +244,16 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
             case FESystem::NonlinearSolvers::EVALUATE_JACOBIAN:
             {
                 // zero the solution vectors
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), nonlinear_solver.getCurrentSolution(), // the last arg is actually supposed to be velocity
-                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass);
+//                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), nonlinear_solver.getCurrentSolution(), // the last arg is actually supposed to be velocity
+//                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass);
             }
                 break;
                 
             case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL_AND_JACOBIAN:
             {
                 // zero the solution vectors
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), nonlinear_solver.getCurrentSolution(), // the last arg is actually supposed to be velocity
-                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass);
+//                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), nonlinear_solver.getCurrentSolution(), // the last arg is actually supposed to be velocity
+//                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass);
             }
                 break;
                 
@@ -230,12 +321,12 @@ int euler_analysis_driver(int argc, char * const argv[])
     dof_map.reinit(); // distribute the dofs
     
     // create the finite element and initialize the shape functions
-    FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat;
-    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol, global_mass_vec;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat, global_mass_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol;
     std::vector<FESystemUInt> elem_dof_indices;
     
-    global_mass_vec.resize(dof_map.getNDofs());
     rhs.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs());
+    global_mass_mat.resize(dof_map.getSparsityPattern());
     global_stiffness_mat.resize(dof_map.getSparsityPattern());
     
     // apply boundary condition and place a load on the last dof
@@ -269,7 +360,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
     dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
     
-    nonlinearEulerSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs);
+    eulerTransientAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs);
     
     exit(1);
     

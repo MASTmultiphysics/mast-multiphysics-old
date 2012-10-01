@@ -27,8 +27,6 @@ max_nonlinear_iterations(20),
 nonlinear_iteration_number(0),
 if_explicit(false),
 jacobian(NULL),
-previous_state(NULL),
-previous_velocity(NULL),
 residual(NULL),
 temp_vec(NULL),
 temp_vec2(NULL)
@@ -65,8 +63,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initialize(FESystem
     else
     {
         this->if_explicit = false;
-        this->previous_state = new FESystem::Numerics::LocalVector<ValType>; this->previous_state->resize(this->order*this->n_dofs);
-        this->previous_velocity = new FESystem::Numerics::LocalVector<ValType>; this->previous_velocity->resize(this->order*this->n_dofs);
         this->residual = new FESystem::Numerics::LocalVector<ValType>; this->residual->resize(this->order*this->n_dofs);
         this->temp_vec = new FESystem::Numerics::LocalVector<ValType>; this->temp_vec->resize(this->order*this->n_dofs);
         this->temp_vec2 = new FESystem::Numerics::LocalVector<ValType>; this->temp_vec2->resize(this->order*this->n_dofs);
@@ -86,8 +82,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::clear()
 {
     if (this->temp_vec != NULL) delete this->temp_vec;
     if (this->temp_vec2 != NULL) delete this->temp_vec2;
-    if (this->previous_state != NULL) delete this->previous_state;
-    if (this->previous_velocity != NULL) delete this->previous_velocity;
     if (this->residual != NULL) delete this->residual;
 
     
@@ -95,8 +89,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::clear()
     this->if_explicit = false;    
     
     this->jacobian = NULL;
-    this->previous_state = NULL;
-    this->previous_velocity = NULL;
     this->residual = NULL;
     this->temp_vec = NULL;
     this->temp_vec2 = NULL;
@@ -237,10 +229,10 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
                 // if max of A is zero, then this is an explicit intergration scheme, and get the x_dot only
                 // x_dot_n+1 = -r = f_n+1
                 // x_n+1 = x_n + dt x_dot_n+1
-                this->current_state->add(this->current_time_step, *this->current_velocity);
+                this->current_state->add(this->current_time_step, *this->velocity_function);
             
             // calculate residual to identify convergence
-            this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->current_velocity), *(this->residual));
+            this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->velocity_function), *(this->residual));
             
             FESystemDouble l2 = this->residual->getL2Norm();
             
@@ -334,10 +326,22 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
                 this->linear_solver->setSystemMatrix(*this->jacobian);
             }
             
-            this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->current_velocity), *(this->residual));
+            this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->velocity_function), *(this->residual));
             
             this->linear_solver->solve(*(this->residual), *(this->temp_vec));
-            this->current_state->add(-1.0, *(this->temp_vec));
+            this->current_state->add(-1.0, *(this->temp_vec)); // this updates the current state
+            
+            // now use the current state to update the current velocity
+            // first copy the velocity from current state to the velocity
+            this->copyDerivativeValuesFromStateToVelocityVector(*(this->current_state), *(this->current_velocity));
+            
+            // now update the highest order derivative using the Newmark scheme evaluation
+            this->current_velocity->setSubVectorVals((this->order-1)*this->n_dofs, this->order*this->n_dofs-1, (this->order-1)*this->n_dofs, this->order*this->n_dofs-1, *(this->current_state)); // x_n+1
+            this->current_velocity->addSubVectorVals((this->order-1)*this->n_dofs, this->order*this->n_dofs-1, (this->order-1)*this->n_dofs, this->order*this->n_dofs-1, -1.0, *(this->previous_state)); // x_n+1 - x_n
+            this->current_velocity->addSubVectorVals((this->order-1)*this->n_dofs, this->order*this->n_dofs-1, (this->order-1)*this->n_dofs, this->order*this->n_dofs-1,
+                                                     -this->current_time_step*(1.0-this->integration_constants[this->order-1]), *(this->previous_velocity)); // (x_n+1 - x_n) - dt (1-gamma) x_dot_n
+            this->current_velocity->scaleSubVector((this->order-1)*this->n_dofs, this->order*this->n_dofs-1,
+                                                   1.0/this->current_time_step/this->integration_constants[this->order-1]); // (1/dt/gamma) * ((x_n+1 - x_n) - dt (1-gamma) x_dot_n)
             
             // now, evaluate the exact time step
             this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
@@ -359,7 +363,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
 template <typename ValType>
 void
 FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::evaluateResidual(const FESystem::Numerics::VectorBase<ValType>& prev_state, const FESystem::Numerics::VectorBase<ValType>& prev_velocity,
-                                                                              const FESystem::Numerics::VectorBase<ValType>& curr_state, const FESystem::Numerics::VectorBase<ValType>& curr_velocity,
+                                                                              const FESystem::Numerics::VectorBase<ValType>& curr_state, const FESystem::Numerics::VectorBase<ValType>& velocity_func,
                                                                               FESystem::Numerics::VectorBase<ValType>& res)
 {    
     switch (this->order)
@@ -367,68 +371,41 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::evaluateResidual(co
         case 1:
         {
             // velocity
-            if (!this->if_identity_mass_matrix)
-                this->mass_matrix->rightVectorMultiply(prev_velocity, res); // M x_dot_n
-            
-            res.scale(-this->current_time_step* (1.0 - this->integration_constants[0])); // -dt (1-gamma) M x_dot_n
-            res.add(-this->current_time_step*this->integration_constants[0], curr_velocity); // -dt (1-gamma) M x_dot_n - dt gamma x_dot_n+1
-            
-            // now the states
             this->temp_vec->copyVector(curr_state); // x_n+1
-            this->temp_vec->add(-1.0, prev_state); //  x_n+1 - x_n
+            this->temp_vec->add(-1.0, prev_state); // x_n+1 - x_n
+            this->temp_vec->add(-this->current_time_step* (1.0 - this->integration_constants[0]), prev_velocity); // (x_n+1 - x_n) - dt (1-gamma) x_dot_n
             
-            if (this->if_identity_mass_matrix)
-                res.add(1.0, *(this->temp_vec)); // x_n+1 - x_n - dt (1-gamma) M x_dot_n - dt gamma x_dot_n+1;  (with M = 1)
+            if (!this->if_identity_mass_matrix)
+                this->mass_matrix->rightVectorMultiply(*(this->temp_vec), res); // M ((x_n+1 - x_n) - dt (1-gamma) x_dot_n)
             else
-            {
-                this->mass_matrix->rightVectorMultiply(*(this->temp_vec), *(this->temp_vec2)); // M_n+1 (x_n+1 - x_n)
-                res.add(1.0, *(this->temp_vec2)); // M_n+1 (x_n+1 - x_n) - dt (1-gamma) M x_dot_n - dt gamma x_dot_n+1
-            }
+                res.copyVector(*(this->temp_vec));
+            
+            res.add(-this->current_time_step*this->integration_constants[0], velocity_func); // M( (x_n+1 - x_n) - dt (1-gamma) x_dot_n) - dt gamma x_dot_n+1
         }
             break;
             
         case 2:
         {
-            res.copyVector(prev_velocity);
-
-            // prepare the RHS forcing function
-            if (this->if_identity_mass_matrix)
-                res.scaleSubVector(0, this->n_dofs-1, -this->current_time_step); // [-dt  0; 0  1] {x_dot_n; x_ddot_n}
-            else
+            // velocity
+            this->temp_vec->copyVector(curr_state); // x_n+1
+            this->temp_vec->add(-1.0, prev_state); // x_n+1 - x_n
+            
+            this->temp_vec->addSubVectorVals(0, this->n_dofs-1, 0, this->n_dofs-1, -this->current_time_step, prev_velocity); // (x_n+1 - x_n) - [dt 0; 0 I] x_dot_n
+            this->temp_vec->addSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, -0.5*pow(this->current_time_step,2)*(1.0-2.0*this->integration_constants[0]), prev_velocity); // (x_n+1 - x_n) - [dt   .5dt^2(1-2beta); 0  I] x_dot_n
+            
+            this->temp_vec->addSubVectorVals(this->n_dofs, 2*this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, -this->current_time_step*(1.0-this->integration_constants[1]), prev_velocity); // (x_n+1 - x_n) - [dt   .5dt^2(1-2beta); 0   dt (1-gamma)] x_dot_n
+            
+            
+            if (!this->if_identity_mass_matrix)
             {
-                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1,
-                                                          0, this->n_dofs-1, 0, this->n_dofs-1, res, *(this->temp_vec)); // [M  0; 0  1] {x_dot_n; x_ddot_n}
-                this->temp_vec->scale(-this->current_time_step); // [-dt M  0; 0  1] {x_dot_n; x_ddot_n}
-                
-                res.setSubVectorVals(0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec)); // copy to the res vector
+                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1, 0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec), res); // [M 0; 0 I] (x_n+1 - x_n) - [dt   .5dt^2(1-2beta); 0   dt (1-gamma)] x_dot_n
+                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->temp_vec), res);// [M 0; 0 M] (x_n+1 - x_n) - [dt   .5dt^2(1-2beta); 0   dt (1-gamma)] x_dot_n
             }
-            
-            res.addSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1,
-                                 -0.5*pow(this->current_time_step,2)*(1.0-2.0*this->integration_constants[0]), res); // [-dt M   -.5 dt^2 (1-2beta); 0  1] {x_dot_n; x_ddot_n}
-            res.scaleSubVector(this->n_dofs, 2*this->n_dofs-1, -this->current_time_step*(1.0-this->integration_constants[1])); // [-dt M   -.5 dt^2 (1-2beta); 0  -dt(1-gamma)] {x_dot_n; x_ddot_n}
-            
-            // now the current velocity term
-            this->temp_vec->copyVector(curr_velocity); // x_dot_n+1
-            this->temp_vec->setSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->temp_vec)); // [0 1; 0 1] {x_dot_n+1; x_ddot_n+1}
-            this->temp_vec->scaleSubVector(0, this->n_dofs-1, pow(this->current_time_step,2) * this->integration_constants[0]);  // [0 dt^2 beta; 0 1] {x_dot_n+1; x_ddot_n+1}
-            this->temp_vec->scaleSubVector(this->n_dofs, 2*this->n_dofs-1, this->current_time_step * this->integration_constants[1]); // [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
-
-            res.add(-1.0, *(this->temp_vec)); // -[dt M   .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
-
-            // now the states
-            this->temp_vec->copyVector(curr_state); // {x_n+1; x_dot_n+1}
-            this->temp_vec->add(-1.0, prev_state); // {x_n+1; x_dot_n+1} - {x_n; x_dot_n}
-            
-            if (this->if_identity_mass_matrix)
-                res.add(1.0, *(this->temp_vec)); // {x_n+1; x_dot_n+1} - {x_n; x_dot_n} - [dt M  .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1} ; with M = 1
             else
-            {
-                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1,
-                                                          0, this->n_dofs-1, 0, this->n_dofs-1, *(this->temp_vec), *(this->temp_vec2)); // [M 0; 0 1] ({x_n+1; x_dot_n+1} - {x_n; x_dot_n})
-                this->mass_matrix->rightSubVectorMultiply(0, this->n_dofs-1, 0, this->n_dofs-1,
-                                                          this->n_dofs, 2*this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, *(this->temp_vec), *(this->temp_vec2));// [M 0; 0 M] ({x_n+1; x_dot_n+1} - {x_n; x_dot_n})
-                res.add(1.0, *(this->temp_vec2)); // [M 0; 0 M] ({x_n+1; x_dot_n+1} - {x_n; x_dot_n}) - [dt M   .5 dt^2 (1-2beta); 0  dt(1-gamma)] {x_dot_n; x_ddot_n} - [0 dt^2 beta; 0 dt gamma] {x_dot_n+1; x_ddot_n+1}
-            }
+                res.copyVector(*(this->temp_vec));
+
+            res.addSubVectorVals(0, this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, -pow(this->current_time_step, 2)*this->integration_constants[0], velocity_func); // [M 0; 0 M] (x_n+1 - x_n) - [dt   .5dt^2(1-2beta); 0   dt (1-gamma)] x_dot_n + [0    dt^2 beta; 0 I] f_n+1
+            res.addSubVectorVals(this->n_dofs, 2*this->n_dofs-1, this->n_dofs, 2*this->n_dofs-1, -this->current_time_step*this->integration_constants[1], velocity_func); // [M 0; 0 M] (x_n+1 - x_n) - [dt   .5dt^2(1-2beta); 0   dt (1-gamma)] x_dot_n + [0    dt^2 beta; 0    dt gamma] {0  f_n+1}
         }
             break;
             
