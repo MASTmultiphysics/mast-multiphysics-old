@@ -187,7 +187,7 @@ int plate_analysis_driver(int argc, char * const argv[])
     
     nx=11; ny=11; x_length = 10.8; y_length = 10.8; dim = 2; n_modes = 10;
     elem_type = FESystem::Mesh::QUAD4;
-    createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS);
+    createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, false);
     
     n_elem_dofs = 6*n_elem_nodes;
     

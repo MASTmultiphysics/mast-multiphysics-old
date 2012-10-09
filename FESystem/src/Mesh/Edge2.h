@@ -41,7 +41,7 @@ namespace FESystem
             /*!
              *   Constructor takes the mesh as input. 
              */
-			Edge2();
+			Edge2(FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~Edge2();
 			            

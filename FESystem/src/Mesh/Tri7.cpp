@@ -18,8 +18,8 @@
 std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > FESystem::Mesh::Tri7::tri7_nondegenerate_to_degenerate_element_mapping(NULL);
 
 
-FESystem::Mesh::Tri7::Tri7():
-FESystem::Mesh::TriElemBase(7, FESystem::Mesh::TRI7)
+FESystem::Mesh::Tri7::Tri7(FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::TriElemBase(7, FESystem::Mesh::TRI7, local_cs_same_as_global)
 {    
     // initialize the mapping matrix
     if (FESystem::Mesh::Tri7::tri7_nondegenerate_to_degenerate_element_mapping.get() == NULL)
@@ -75,7 +75,8 @@ void
 FESystem::Mesh::Tri7::initializeParentNondegenerateElement()
 {
     FESystemAssert0(this->parent_nondegenerate_elem == NULL, FESystem::Exception::InvalidState);
-    this->parent_nondegenerate_elem = new FESystem::Mesh::Quad9();
+
+    this->parent_nondegenerate_elem = new FESystem::Mesh::Quad9(this->if_local_physical_cs_same_as_global);
     this->parent_nondegenerate_elem->setNode(0, this->getNode(0));
     this->parent_nondegenerate_elem->setNode(1, this->getNode(1));
     this->parent_nondegenerate_elem->setNode(2, this->getNode(2));

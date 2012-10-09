@@ -28,7 +28,7 @@ namespace FESystem
             /*!
              *   Constructor takes the mesh and number of nodes as input. 
              */
-			EdgeElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type);
+			EdgeElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~EdgeElemBase();
 

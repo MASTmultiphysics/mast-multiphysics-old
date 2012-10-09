@@ -28,7 +28,7 @@ namespace FESystem
             /*!
              *   The constructor takes the number of nodes in this element
              */
-			FaceElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
+			FaceElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~FaceElemBase();
 			
@@ -61,7 +61,7 @@ namespace FESystem
             /*!
              *   The constructor takes the number of nodes in this element
              */
-            QuadElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
+            QuadElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global);
             
             virtual ~QuadElemBase();
             
@@ -96,7 +96,7 @@ namespace FESystem
             /*!
              *   The constructor takes the number of nodes in this element
              */
-            TriElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type);
+            TriElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global);
             
             virtual ~TriElemBase();
             

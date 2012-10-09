@@ -25,9 +25,10 @@
 #include "FiniteElems/FiniteElementBase.h"
 #include "Quadrature/QuadratureBase.h"
 
-FESystem::Mesh::ElemBase::ElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type):
+FESystem::Mesh::ElemBase::ElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global):
 FESystem::Base::DegreeOfFreedomObject(),
 element_type(type),
+if_local_physical_cs_same_as_global(local_cs_same_as_global),
 physical_nodes(n_nodes),
 local_coordinate_system(NULL),
 parent_nondegenerate_elem(NULL)
@@ -41,7 +42,7 @@ parent_nondegenerate_elem(NULL)
 
 FESystem::Mesh::ElemBase::~ElemBase()
 {
-    if (this->local_coordinate_system != NULL)
+    if ((!this->if_local_physical_cs_same_as_global) && (this->local_coordinate_system != NULL))
         delete this->local_coordinate_system;
 }
     
@@ -96,7 +97,10 @@ FESystem::Mesh::ElemBase::setNode(FESystemUInt i, FESystem::Mesh::Node& n)
             counter++;
     if (counter == this->getNNodes())
     {
-        this->initializeLocalPhysicalCoordinateSystem();
+        if (!this->if_local_physical_cs_same_as_global)
+            this->initializeLocalPhysicalCoordinateSystem();
+        else
+            this->local_coordinate_system = &this->getNode(0).getCoordinateSystem();
         if (this->ifDegerateElement()) this->initializeParentNondegenerateElement();
     }
 }
@@ -129,7 +133,10 @@ FESystem::Mesh::ElemBase::getNodeLocationInLocalPhysicalCoordinate(FESystemUInt 
     // make sure that the dimensions of the vector are accurate
     FESystemAssert2(vec.getSize() == this->getNode(i_node).getSize(), FESystem::Exception::DimensionsDoNotMatch, vec.getSize(), this->getNode(i_node).getSize());
     
-    this->local_coordinate_system->mapPointInSelf(this->getNode(i_node), vec);
+    if (!this->if_local_physical_cs_same_as_global)
+        this->local_coordinate_system->mapPointInSelf(this->getNode(i_node), vec);
+    else
+        vec.copyVector(this->getNode(i_node));
 }
 
 
@@ -347,42 +354,42 @@ FESystem::Mesh::ElemBase::calculateBoundaryNormal(const FESystemUInt b_id, FESys
 
 
 std::auto_ptr<FESystem::Mesh::ElemBase> 
-FESystem::Mesh::ElementCreate(FESystem::Mesh::MeshBase& mesh, FESystem::Mesh::ElementType elem_type)
+FESystem::Mesh::ElementCreate(FESystem::Mesh::MeshBase& mesh, FESystem::Mesh::ElementType elem_type, FESystemBoolean if_local_physical_cs_same_as_global)
 {
     std::auto_ptr<FESystem::Mesh::ElemBase> elem;
     
     switch (elem_type)
     {
         case FESystem::Mesh::EDGE2:
-            elem.reset(new FESystem::Mesh::Edge2);
+            elem.reset(new FESystem::Mesh::Edge2(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::EDGE3:
-            elem.reset(new FESystem::Mesh::Edge3);
+            elem.reset(new FESystem::Mesh::Edge3(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::TRI3:
-            elem.reset(new FESystem::Mesh::Tri3);
+            elem.reset(new FESystem::Mesh::Tri3(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::TRI6:
-            elem.reset(new FESystem::Mesh::Tri6);
+            elem.reset(new FESystem::Mesh::Tri6(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::TRI7:
-            elem.reset(new FESystem::Mesh::Tri7);
+            elem.reset(new FESystem::Mesh::Tri7(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::QUAD4:
-            elem.reset(new FESystem::Mesh::Quad4);
+            elem.reset(new FESystem::Mesh::Quad4(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::QUAD8:
-            elem.reset(new FESystem::Mesh::Quad8);
+            elem.reset(new FESystem::Mesh::Quad8(if_local_physical_cs_same_as_global));
             break;
 
         case FESystem::Mesh::QUAD9:
-            elem.reset(new FESystem::Mesh::Quad9);
+            elem.reset(new FESystem::Mesh::Quad9(if_local_physical_cs_same_as_global));
             break;
 
         default:

@@ -10,6 +10,7 @@
 
 // FESystem includes
 #include "Mesh/Node.h"
+#include "Mesh/ElemBase.h"
 
 
 FESystem::Mesh::Node::Node(const FESystem::Geometry::CoordinateSystemBase& cs):
@@ -50,5 +51,26 @@ const std::set<FESystem::Mesh::ElemBase*>&
 FESystem::Mesh::Node::getElementConnectivitySet() const
 {
     return this->element_connections;
+}
+
+
+FESystemUInt
+FESystem::Mesh::Node::getNConnectedElements() const
+{
+    return this->element_connections.size();
+}
+
+
+FESystemUInt
+FESystem::Mesh::Node::getNConnectedElementsOfDim(FESystemUInt dim) const
+{
+    std::set<FESystem::Mesh::ElemBase*>::const_iterator el_it = this->element_connections.begin(), el_end = this->element_connections.end();
+    
+    FESystemUInt n = 0;
+    for ( ; el_it != el_end; el_it++)
+        if ((*el_it)->getDimension() == dim)
+            n++;
+
+    return n;
 }
 

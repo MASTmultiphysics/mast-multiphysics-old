@@ -21,8 +21,8 @@ std::auto_ptr<std::map<FESystemUInt, std::vector<FESystemUInt> > > FESystem::Mes
 
 
 
-FESystem::Mesh::FaceElemBase::FaceElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type):
-FESystem::Mesh::ElemBase(nnodes, type)
+FESystem::Mesh::FaceElemBase::FaceElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::ElemBase(nnodes, type, local_cs_same_as_global)
 {
     
 }
@@ -87,8 +87,8 @@ FESystem::Mesh::FaceElemBase::initializeLocalPhysicalCoordinateSystem()
 }
 
 
-FESystem::Mesh::QuadElemBase::QuadElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type):
-FESystem::Mesh::FaceElemBase(nnodes, type)
+FESystem::Mesh::QuadElemBase::QuadElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::FaceElemBase(nnodes, type, local_cs_same_as_global)
 {
     // initialize the boundary ID map
     if (FESystem::Mesh::QuadElemBase::quad_boundary_node_set.get() == NULL)
@@ -176,8 +176,8 @@ FESystem::Mesh::QuadElemBase::getConstantCoordinateIDAndValueForBoundary(const F
 
 
 
-FESystem::Mesh::TriElemBase::TriElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type):
-FESystem::Mesh::FaceElemBase(nnodes, type)
+FESystem::Mesh::TriElemBase::TriElemBase(FESystemUInt nnodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::FaceElemBase(nnodes, type, local_cs_same_as_global)
 {
     // initialize the boundary ID map
     if (FESystem::Mesh::TriElemBase::tri_boundary_node_set.get() == NULL)

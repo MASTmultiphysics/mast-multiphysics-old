@@ -182,6 +182,55 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
 
 
 
+
+void
+FESystem::Fluid::FluidElementBase::calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
+                                                                  const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
+                                                                  FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    std::pair<FESystemUInt, FESystemUInt> s1 = momentum_flux_tensor.getSize();
+    
+    FESystemAssert2(mass_flux.getSize() == dim, FESystem::Exception::DimensionsDoNotMatch, mass_flux.getSize(), dim);
+    FESystemAssert2(energy_flux.getSize() == dim, FESystem::Exception::DimensionsDoNotMatch, energy_flux.getSize(), dim);
+    FESystemAssert4((s1.first == dim) && (s1.second == dim), FESystem::Numerics::MatrixSizeMismatch, s1.first, s1.second, dim, dim);
+    
+    FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
+    
+    
+    static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1;
+    Nvec.resize(n1); normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(dim);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    FESystemDouble jac=0.0;
+    bc_vec.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValueForBoundary(1, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+        this->finite_element->getShapeFunctionForBoundary(1, *(q_pts[i]), Nvec);
+        
+        // add the mass flux
+        bc_vec.addSubVectorVals(0, n-1, 0, n-1, -q_weight[i]*jac*mass_flux.dotProduct(normal_local), Nvec);
+        
+        // next, add the momentum flux
+        momentum_flux_tensor.rightVectorMultiply(normal_local, tmp_vec1);
+        for (FESystemUInt ii = 0; ii<dim; ii++)
+            bc_vec.addSubVectorVals(n*(ii+1), n*(ii+2)-1, 0, n-1, -q_weight[i]*jac*tmp_vec1.getVal(ii), Nvec);
+        
+        // next, add the energy flux
+        bc_vec.addSubVectorVals(n*(dim+1), n2-1, 0, n-1, -q_weight[i]*jac*energy_flux.dotProduct(normal_local), Nvec);
+    }
+}
+
+
+
 void
 FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                                                            FESystem::Numerics::VectorBase<FESystemDouble>& res)
@@ -223,16 +272,16 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
         // contribution from unsteady term
         // interpolate velocity for current point
         B_mat.rightVectorMultiply(vel, tmp_vec1_n1); // interpolated velocity
-        this->calculateConservationVariableJacobian(A);
-        A.rightVectorMultiply(tmp_vec1_n1, tmp_vec2_n1);
-        
-        // Galerkin contribution of velocity
-        B_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2);
-        res.add(q_weight[i]*jac, tmp_vec3_n2); // Bw^T u_dot
-        
-        // LS contribution of velocity
-        LS_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2); // LS^T tau A U_dot
-        res.add(q_weight[i]*jac, tmp_vec3_n2);
+//        this->calculateConservationVariableJacobian(A);
+//        A.rightVectorMultiply(tmp_vec1_n1, tmp_vec2_n1);
+//        
+//        // Galerkin contribution of velocity
+//        B_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2);
+//        res.add(q_weight[i]*jac, tmp_vec3_n2); // Bw^T u_dot
+//        
+//        // LS contribution of velocity
+//        LS_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2); // LS^T tau A U_dot
+//        res.add(q_weight[i]*jac, tmp_vec3_n2);
         
         for (FESystemUInt i=0; i<dim; i++)
         {
@@ -241,12 +290,12 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
             // Galerkin contribution from the advection flux terms
             this->calculateAdvectionFlux(i, flux); // F^adv_i
             B_matdx.leftVectorMultiply(flux, tmp_vec3_n2); // dBw/dx_i F^adv_i
-            res.add(-q_weight[i]*jac, tmp_vec3_n2);
+            res.add(q_weight[i]*jac, tmp_vec3_n2);
             
             // Least square contribution from flux
             this->calculateAdvectionFluxSpatialDerivative(i, B_matdx, &flux, NULL); // d F^adv_i / dxi
             LS_mat.leftVectorMultiply(flux, tmp_vec3_n2); // LS^T tau F^adv_i
-            res.add(q_weight[i]*jac, tmp_vec3_n2);
+            res.add(-q_weight[i]*jac, tmp_vec3_n2);
         }
     }
 }
@@ -317,12 +366,12 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
             this->calculateAdvectionFluxJacobian(i, A); // TODO: Generalize this to group FEM
             A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2);
             B_matdx.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // dBw/dx_i^T  dF^adv_i/ dU
-            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
+            dres_dx.add(q_weight[i]*jac, tmp_mat1_n2n2);
             
             // Least square contribution from flux
             this->calculateAdvectionFluxSpatialDerivative(i, B_matdx, NULL, &tmp_mat2_n1n2); // d^2 F^adv_i / dxi dU
             LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau d^2F^adv_i / dx dU
-            dres_dx.add(q_weight[i]*jac, tmp_mat1_n2n2);
+            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
         }
     }
 }

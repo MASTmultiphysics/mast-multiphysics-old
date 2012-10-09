@@ -189,7 +189,7 @@ int beam_analysis_driver(int argc, char * const argv[])
     
     nx=15; x_length = 10.8; dim = 1; n_modes = 5;
     elem_type = FESystem::Mesh::EDGE2;
-    createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes);
+    createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes, INVALID_MESH, false);
     
     // set the location of individual nodes
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();

@@ -68,7 +68,7 @@ namespace FESystem
             /*!
              *   Constructor takes the mesh as input. 
              */
-			Quad9();
+			Quad9(FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~Quad9();
 			

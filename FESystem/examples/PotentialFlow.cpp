@@ -24,7 +24,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     
     FESystem::Geometry::Point origin(3);
     
-    createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes);
+    createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     n_elem_dofs = n_elem_nodes;
     
     // set the location of individual nodes

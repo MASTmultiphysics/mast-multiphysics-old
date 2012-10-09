@@ -42,6 +42,10 @@ namespace FESystem
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                             FESystemDouble cp_val, FESystemDouble cv_val);
             
+            void calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
+                                                const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
+                                                FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec);
+            
             void calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                                          FESystem::Numerics::VectorBase<FESystemDouble>& res);
             

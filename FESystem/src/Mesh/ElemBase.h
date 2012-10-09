@@ -52,7 +52,7 @@ namespace FESystem
             /**
              *   The constructor takes the \t MeshBase class to which this element is associated. 
              */ 
-			ElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type);
+			ElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~ElemBase();
             
@@ -204,6 +204,11 @@ namespace FESystem
             // void calculateBoundaryNormal(const FESystemUInt b_id, const FESystem::Functions::FunctionMappingBase<FESystemDouble>& geom_mapping_func, 
             //                             const FESystem::Numerics::VectorBase<FESystemDouble>& b_pt, FESystem::Numerics::VectorBase<FESystemDouble>& n_vec ) const;
             
+
+            /*!
+             *    Initialize the boundary data for the element. This identifies the element has any boundary, and if so, marks them
+             */
+            virtual void initBoundaryData();
             
 
         protected:
@@ -233,6 +238,11 @@ namespace FESystem
              */
             FESystem::Mesh::ElementType element_type;
             
+            /*!
+             *   Boolean to identify if the local coordinate system is same as global
+             */
+            FESystemBoolean if_local_physical_cs_same_as_global;
+            
  			/*!
              *  This vector container stores the nodes that comprise this element. This stores the physical coordinates of the nodes
              */
@@ -241,7 +251,7 @@ namespace FESystem
             /*!
              *   Coordinate system in the element plane: this is to calculate the physical coordinates and not computational coordinates
              */
-            FESystem::Geometry::CoordinateSystemBase* local_coordinate_system;                        
+            const FESystem::Geometry::CoordinateSystemBase* local_coordinate_system;
 
             /*!
              *  parent nondegenrate element
@@ -267,7 +277,7 @@ namespace FESystem
          *   Function to create elements of a given type \p elem_type, associated with the given \p mesh.
          */
         std::auto_ptr<FESystem::Mesh::ElemBase> 
-        ElementCreate(FESystem::Mesh::MeshBase& mesh, FESystem::Mesh::ElementType elem_type);
+        ElementCreate(FESystem::Mesh::MeshBase& mesh, FESystem::Mesh::ElementType elem_type, FESystemBoolean if_local_physical_cs_same_as_global);
 
 	}
 }

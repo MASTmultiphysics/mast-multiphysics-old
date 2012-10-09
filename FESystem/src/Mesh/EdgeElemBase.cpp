@@ -21,8 +21,8 @@ std::auto_ptr<std::map<FESystemUInt, std::vector<FESystemUInt> > > FESystem::Mes
 
 
 
-FESystem::Mesh::EdgeElemBase::EdgeElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type):
-FESystem::Mesh::ElemBase(n_nodes, type)
+FESystem::Mesh::EdgeElemBase::EdgeElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::ElemBase(n_nodes, type, local_cs_same_as_global)
 {
     this->y_unit_vec = new FESystem::Numerics::LocalVector<FESystemDouble>;
     this->y_unit_vec->resize(3);

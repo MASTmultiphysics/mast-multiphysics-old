@@ -153,11 +153,11 @@ namespace FESystem
              *   Creates \p n_elems new elements of type \p elem_type in this mesh and returns the pointers to them through the smart pointer array. 
              *   The element node definitions can be defined using these pointers
              */ 
-            std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > createElements(FESystemUInt n_elems, FESystem::Mesh::ElementType elem_type);
+            std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > createElements(FESystemUInt n_elems, FESystem::Mesh::ElementType elem_type, FESystemBoolean if_local_physical_cs_same_as_global);
 
             
         protected:
-            
+                        
             /*!
              *   Stores if the mesh is initialized
              */

@@ -20,8 +20,8 @@ std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > FESystem::Mesh::E
 
 
 
-FESystem::Mesh::Edge3::Edge3():
-FESystem::Mesh::EdgeElemBase(3, FESystem::Mesh::EDGE3) // specify that two nodes are used to define this element
+FESystem::Mesh::Edge3::Edge3(FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::EdgeElemBase(3, FESystem::Mesh::EDGE3, local_cs_same_as_global) // specify that two nodes are used to define this element
 {
     this->y_unit_vec = new FESystem::Numerics::LocalVector<FESystemDouble>;
     this->y_unit_vec->resize(3);

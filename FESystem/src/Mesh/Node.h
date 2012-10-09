@@ -63,6 +63,17 @@ namespace FESystem
              */
             const std::set<FESystem::Mesh::ElemBase*>& getElementConnectivitySet() const;
 
+            /*!
+             *   Returns the number of elements that share this node
+             */
+            FESystemUInt getNConnectedElements() const;
+            
+            /*!
+             *   Returns the number of elements of specified dimension connected to this node
+             */
+            FESystemUInt getNConnectedElementsOfDim(FESystemUInt dim) const;
+            
+            
 		protected:
 			
             /*!

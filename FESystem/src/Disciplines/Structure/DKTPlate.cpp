@@ -151,7 +151,7 @@ finite_element_tri6(NULL),
 quadrature_tri6(NULL)
 {
     this->origin = new FESystem::Geometry::Point(3);
-    this->tri6_elem = new FESystem::Mesh::Tri6;
+    this->tri6_elem = new FESystem::Mesh::Tri6(false);
     this->node0 = new FESystem::Mesh::Node(this->origin->getCoordinateSystem());
     this->node1 = new FESystem::Mesh::Node(this->origin->getCoordinateSystem());
     this->node2 = new FESystem::Mesh::Node(this->origin->getCoordinateSystem());

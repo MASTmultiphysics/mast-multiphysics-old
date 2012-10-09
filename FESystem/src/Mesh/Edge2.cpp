@@ -22,8 +22,8 @@ std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > FESystem::Mesh::E
 
 
 
-FESystem::Mesh::Edge2::Edge2():
-FESystem::Mesh::EdgeElemBase(2, FESystem::Mesh::EDGE2) // specify that two nodes are used to define this element
+FESystem::Mesh::Edge2::Edge2(FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::EdgeElemBase(2, FESystem::Mesh::EDGE2, local_cs_same_as_global) // specify that two nodes are used to define this element
 {
     // if the table has not been initialized, do that here. 
     if (FESystem::Mesh::Edge2::edge2_node_dim_ID_table.get() == NULL)

@@ -53,7 +53,7 @@ namespace FESystem
             /*!
              *   Constructor takes the mesh as input. 
              */
-			Tri3();
+			Tri3(FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~Tri3();
 			

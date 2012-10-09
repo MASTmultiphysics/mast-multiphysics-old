@@ -27,7 +27,7 @@ int shape_function_main1D(int argc, char * const argv[])
     FESystem::Geometry::Point p(dim);
     
     // now start to integrate the stiffness matrix
-    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Edge3);
+    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Edge3(false));
     std::auto_ptr<FESystem::Mesh::Node> node0(new FESystem::Mesh::Node(global_cs)), node1(new FESystem::Mesh::Node(global_cs)), node2(new FESystem::Mesh::Node(global_cs));
     dynamic_cast<FESystem::Mesh::EdgeElemBase*>(elem.get())->setVectorForXYPlane(y_unit);
     node0->setVal(0, -1); elem->setNode(0, *node0);
@@ -95,7 +95,7 @@ int shape_function_main2DQuad(int argc, char * const argv[])
     FESystem::Geometry::Point p(dim);
     
     // now start to integrate the stiffness matrix
-    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Quad4);
+    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Quad4(false));
     std::auto_ptr<FESystem::Mesh::Node>
     node0(new FESystem::Mesh::Node(global_cs)), node1(new FESystem::Mesh::Node(global_cs)), node2(new FESystem::Mesh::Node(global_cs)),
     node3(new FESystem::Mesh::Node(global_cs)), node4(new FESystem::Mesh::Node(global_cs)), node5(new FESystem::Mesh::Node(global_cs)),
@@ -168,7 +168,7 @@ int shape_function_main2DTri(int argc, char * const argv[])
     FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat; T_mat.resize(3, 3);
     
     // now start to integrate the stiffness matrix
-    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Tri6);
+    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Tri6(false));
     std::auto_ptr<FESystem::Mesh::Node>
     node0(new FESystem::Mesh::Node(global_cs)), node1(new FESystem::Mesh::Node(global_cs)), node2(new FESystem::Mesh::Node(global_cs)),
     node3(new FESystem::Mesh::Node(global_cs)), node4(new FESystem::Mesh::Node(global_cs)), node5(new FESystem::Mesh::Node(global_cs)),

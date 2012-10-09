@@ -55,7 +55,7 @@ namespace FESystem
             /*!
              *   Constructor takes the mesh as input. 
              */
-			Tri6();
+			Tri6(FESystemBoolean local_cs_same_as_global);
 			
 			virtual ~Tri6();
 			

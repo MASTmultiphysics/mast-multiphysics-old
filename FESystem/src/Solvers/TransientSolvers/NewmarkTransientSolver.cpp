@@ -158,27 +158,28 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initializeMatrixSpa
     std::vector<std::pair<FESystemUInt, FESystemUInt> >::const_iterator it, end;
     FESystemUInt col_offset=0, row_offset=0;
     
-    for (FESystemUInt j=0; j<this->order; j++)
-        if (this->active_jacobian_terms[j])
-        {
-            col_offset = j*this->n_dofs;
-            row_offset = (this->order-1)*this->n_dofs;
-            for (FESystemUInt i=0; i<this->n_dofs; i++)
+    if (!this->if_explicit)
+    {
+        for (FESystemUInt j=0; j<this->order; j++)
+            if (this->active_jacobian_terms[j])
             {
-                nonzeros.clear();
-                
-                it = spatial_sparsity_pattern.getAllNonzeroColumnsInRow(i).begin();
-                end = spatial_sparsity_pattern.getAllNonzeroColumnsInRow(i).end(); 
-                
-                for ( ; it != end; it++)
-                    nonzeros.insert(it->first+col_offset);
-                
-                nonzeros.insert((this->order-1)*this->n_dofs+i);// also add a diagonal term
-                system_pattern.addNonZeroColumnsForRow(row_offset+i, nonzeros);
-                if (!this->if_explicit)
-                    system_pattern.addNonZeroColumnsForRow(row_offset+i-this->n_dofs, nonzeros);
+                col_offset = j*this->n_dofs;
+                row_offset = (this->order-1)*this->n_dofs;
+                for (FESystemUInt i=0; i<this->n_dofs; i++)
+                {
+                    nonzeros.clear();
+                    
+                    it = spatial_sparsity_pattern.getAllNonzeroColumnsInRow(i).begin();
+                    end = spatial_sparsity_pattern.getAllNonzeroColumnsInRow(i).end();
+                    
+                    for ( ; it != end; it++)
+                        nonzeros.insert(it->first+col_offset);
+                    
+                    nonzeros.insert((this->order-1)*this->n_dofs+i);// also add a diagonal term
+                    system_pattern.addNonZeroColumnsForRow(row_offset+i, nonzeros);
+                }
             }
-        }
+    }
     
     // finally, reinitialize the sparsity pattern
     system_pattern.reinit();
@@ -239,7 +240,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
             <<  "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number << "  Residual: " << std::setw(15) << l2  << std::endl;
             
-            
             // if converged, increment the time step
             if ((l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
             {
@@ -283,7 +283,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
                         if (this->if_identity_mass_matrix)
                             this->jacobian->shiftDiagonal(1.0);
                         else
-                            this->jacobian->add(1.0, *(this->mass_matrix));
+                            this->jacobian->addSubMatrixVals(0, this->n_dofs-1, 0, this->n_dofs-1, 0, this->n_dofs-1, 0, this->n_dofs-1, 1.0, *(this->mass_matrix));
                     }
                         break;
 

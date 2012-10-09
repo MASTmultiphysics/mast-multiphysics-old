@@ -63,7 +63,7 @@ namespace FESystem
              *    and this coordinate system share some common parent basis. If this is true, then the transformation is performed, 
              *    otherwise, it is an error to call this method for two unrelated coordinate systems. 
              */
-            void mapPointInSelf(const FESystem::Geometry::Point& p, FESystem::Numerics::VectorBase<FESystemDouble>& vec);
+            void mapPointInSelf(const FESystem::Geometry::Point& p, FESystem::Numerics::VectorBase<FESystemDouble>& vec) const;
 
             /*!
              *   returns the function mapping object used for transformation of coordinate system

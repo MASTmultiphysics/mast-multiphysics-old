@@ -46,11 +46,10 @@ namespace FESystem
 			virtual ~Point();
             
             /*!
-             *   Returns the coordinate system in which this point is defined
+             *   Returns a constant reference to the coordinate system in which this point is defined
              */
             const FESystem::Geometry::CoordinateSystemBase& getCoordinateSystem() const;
-        
-            
+                    
 		protected:
             
             /*!

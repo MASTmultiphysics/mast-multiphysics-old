@@ -19,8 +19,8 @@
 std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > FESystem::Mesh::Quad8::quad8_nondegenerate_to_degenerate_element_mapping(NULL);
 
 
-FESystem::Mesh::Quad8::Quad8():
-FESystem::Mesh::QuadElemBase(8, FESystem::Mesh::QUAD8),
+FESystem::Mesh::Quad8::Quad8(FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::QuadElemBase(8, FESystem::Mesh::QUAD8, local_cs_same_as_global),
 center_node_for_parent_nondegenerate_elem(NULL)
 {
     // initialize the mapping matrix
@@ -109,7 +109,7 @@ void
 FESystem::Mesh::Quad8::initializeParentNondegenerateElement()
 {
     FESystemAssert0(this->parent_nondegenerate_elem == NULL, FESystem::Exception::InvalidState);
-    this->parent_nondegenerate_elem = new FESystem::Mesh::Quad9();
+    this->parent_nondegenerate_elem = new FESystem::Mesh::Quad9(this->if_local_physical_cs_same_as_global);
     FESystemAssert0(this->center_node_for_parent_nondegenerate_elem == NULL, FESystem::Exception::InvalidState);
  
     // create the center node for the parent element; use the same coordinate system as the first node    

@@ -21,8 +21,8 @@ std::auto_ptr<FESystem::Utility::Table<FESystemUInt> > FESystem::Mesh::Quad4::qu
 std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > FESystem::Mesh::Quad4::quad4_nondegenerate_to_degenerate_element_mapping(NULL);
 
 
-FESystem::Mesh::Quad4::Quad4():
-FESystem::Mesh::QuadElemBase(4, FESystem::Mesh::QUAD4)
+FESystem::Mesh::Quad4::Quad4(FESystemBoolean local_cs_same_as_global):
+FESystem::Mesh::QuadElemBase(4, FESystem::Mesh::QUAD4, local_cs_same_as_global)
 {
     // if the table has not been initialized, do that here. 
     if (FESystem::Mesh::Quad4::quad4_node_dim_ID_table.get() == NULL)

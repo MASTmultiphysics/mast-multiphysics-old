@@ -234,7 +234,7 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::setMassMatrix(FESystem
     this->if_identity_mass_matrix = if_identity;
     if (!if_identity)
     {
-        FESystemAssert0(mass_mat_ptr == NULL, FESystem::Exception::InvalidValue);
+        FESystemAssert0(mass_mat_ptr != NULL, FESystem::Exception::InvalidValue);
         const std::pair<FESystemUInt, FESystemUInt> s = mass_mat_ptr->getSize();
         FESystemAssert4((s.first == this->n_dofs) && (s.second == this->n_dofs), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, this->n_dofs, this->n_dofs);
     }

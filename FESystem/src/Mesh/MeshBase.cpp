@@ -110,6 +110,7 @@ FESystem::Mesh::MeshBase::reinit()
 
 
 
+
 FESystem::Mesh::Node& 
 FESystem::Mesh::MeshBase::getNodeFromInternalID(FESystemUInt i)
 {
@@ -300,12 +301,12 @@ FESystem::Mesh::MeshBase::createNodes(FESystemUInt n_nodes, const FESystem::Geom
 
 
 std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > 
-FESystem::Mesh::MeshBase::createElements(FESystemUInt n_elems, FESystem::Mesh::ElementType elem_type)
+FESystem::Mesh::MeshBase::createElements(FESystemUInt n_elems, FESystem::Mesh::ElementType elem_type, FESystemBoolean if_local_physical_cs_same_as_global)
 {
     std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > rval(new std::vector<FESystem::Mesh::ElemBase*>(n_elems));
     for (FESystemUInt i=0; i<n_elems; i++)
     {
-        this->elements.push_back(FESystem::Mesh::ElementCreate(*this, elem_type).release());
+        this->elements.push_back(FESystem::Mesh::ElementCreate(*this, elem_type, if_local_physical_cs_same_as_global).release());
         (*rval)[i] = *(this->elements.rbegin());
     }
     

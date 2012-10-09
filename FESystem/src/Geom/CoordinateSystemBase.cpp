@@ -45,7 +45,7 @@ FESystem::Geometry::CoordinateSystemBase::getDimension() const
 }
 
 void
-FESystem::Geometry::CoordinateSystemBase::mapPointInSelf(const FESystem::Geometry::Point& p, FESystem::Numerics::VectorBase<FESystemDouble>& vec)
+FESystem::Geometry::CoordinateSystemBase::mapPointInSelf(const FESystem::Geometry::Point& p, FESystem::Numerics::VectorBase<FESystemDouble>& vec) const
 {
     // TODO: revisit for ensuring hierarchy of coordinate systems
 

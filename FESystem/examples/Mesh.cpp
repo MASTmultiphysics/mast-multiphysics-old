@@ -15,7 +15,7 @@
 
 
 void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
-                    FESystemUInt nx, FESystemDouble x_length, FESystemUInt& n_elem_nodes, MeshType m_type)
+                    FESystemUInt nx, FESystemDouble x_length, FESystemUInt& n_elem_nodes, MeshType m_type, FESystemBoolean local_cs_same_as_global)
 {
     // create a nx x ny grid of nodes, and connect them by quad4 elements
     FESystemDouble dx;
@@ -39,7 +39,7 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
             dx=x_length/(nx-1);
             
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
@@ -75,7 +75,7 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
             dx=x_length/(2*(nx-1));
             
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
@@ -117,7 +117,7 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
 
 void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
                        FESystemUInt nx, FESystemUInt ny, FESystemDouble x_length, FESystemDouble y_length, FESystemUInt& n_elem_nodes,
-                       MeshType m_type)
+                       MeshType m_type, FESystemBoolean local_cs_same_as_global)
 {
     // create a nx x ny grid of nodes, and connect them by quad4 elements
     FESystemDouble dx, dy;
@@ -140,7 +140,7 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
             dy=y_length/(ny-1);
             
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
@@ -181,7 +181,7 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
             dy=y_length/(2*(ny-1));
             
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
@@ -235,7 +235,7 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                     dy=y_length/(ny-1);
                     
                     nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-                    elems.reset(mesh.createElements(n_elems, elem_type).release());
+                    elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
                     
                     FESystemUInt id=0;
                     FESystem::Mesh::Node* node_p;
@@ -298,7 +298,7 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                     dy=y_length/(ny-1);
                     
                     nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-                    elems.reset(mesh.createElements(n_elems, elem_type).release());
+                    elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
                     
                     FESystemUInt id=0;
                     FESystem::Mesh::Node* node_p;
@@ -377,7 +377,7 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
             dy=y_length/(2*(ny-1));
             
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
-            elems.reset(mesh.createElements(n_elems, elem_type).release());
+            elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
