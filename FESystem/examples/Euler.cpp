@@ -115,11 +115,14 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
 
-        std::cout <<  i << std::endl;
-        elem_sol.write(std::cout);
-        elem_vec.write(std::cout);
-        elem_mat1.write(std::cout);
-        elem_mat2.write(std::cout);
+//        std::cout << "Elem num: " << i << std::endl;
+//        for (FESystemUInt i_node=0; i_node<elems[i]->getNNodes(); i_node++)
+//            elems[i]->getNode(i_node).write(std::cout);
+//        std::cout << "Sol: " ; elem_sol.write(std::cout);
+//        std::cout << "Vel: " ; elem_vec.write(std::cout);
+//        std::cout << "BC: " ; bc_vec.write(std::cout);
+//        std::cout << "Jac: " ; elem_mat1.write(std::cout);
+//        std::cout << "Mass: " ; elem_mat2.write(std::cout);
     }
 }
 
@@ -257,9 +260,9 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 vec.zero();
                 for (FESystemUInt i=0; i<nodes.size(); i++)
                 {
-                    vec.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], 1.05); // rho
-                    vec.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], 1.05 * 300.0); // rho u
-                    vec.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], 1.05 * (300.0*716.0 + 300.0*300.0*0.5)); // rho * (cv * T + u^2/2)
+                    vec.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], rho); // rho
+                    vec.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1); // rho u
+                    vec.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5)); // rho * (cv * T + u^2/2)
                 }
             }
                 break;
