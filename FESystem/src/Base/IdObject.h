@@ -9,6 +9,9 @@
 #ifndef __fesystem_id_object_h__
 #define __fesystem_id_object_h__
 
+// C++ includes
+#include <set>
+
 // FESystem includes
 #include "Base/FESystemTypes.h"
 
@@ -69,6 +72,34 @@ namespace FESystem
             {
                 return this->external_id;
             }
+            
+            
+            /*!
+             *    Set a user-defined tag
+             */
+            void setTag(FESystemInt n)
+            {
+                FESystemAssert0(!this->tags.count(n), FESystem::Exception::InvalidValue);
+                this->tags.insert(n);
+            }
+
+            /*!
+             *    removes a user-defined tag
+             */
+            void unsetTag(FESystemInt n)
+            {
+                FESystemAssert0(this->tags.count(n), FESystem::Exception::InvalidValue);
+                this->tags.erase(n);
+            }
+
+            
+            /*!
+             *    checks if a user defined tags is set
+             */
+            FESystemBoolean checkForTag(FESystemInt n)
+            {
+                return this->tags.count(n);
+            }
 
         protected:
             
@@ -80,7 +111,12 @@ namespace FESystem
             /*!
              *   external ID
              */
-            FESystemUInt external_id;            
+            FESystemUInt external_id;
+            
+            /*!
+             *   Integer tags that the user can use to identify various properties
+             */
+            std::set<FESystemInt> tags;
         };
     }
 }

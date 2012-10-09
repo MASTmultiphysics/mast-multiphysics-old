@@ -173,6 +173,12 @@ FESystem::Mesh::QuadElemBase::getConstantCoordinateIDAndValueForBoundary(const F
 }
 
 
+const std::map<FESystemUInt, std::vector<FESystemUInt> >&
+FESystem::Mesh::QuadElemBase::getBoundaryIDAndBoundaryNodeMap() const
+{
+    return *FESystem::Mesh::QuadElemBase::quad_boundary_node_set;
+}
+
 
 
 
@@ -215,12 +221,6 @@ FESystem::Mesh::FaceElemBase(nnodes, type, local_cs_same_as_global)
         
 }
 
-
-const std::map<FESystemUInt, std::vector<FESystemUInt> >& 
-FESystem::Mesh::QuadElemBase::getBoundaryIDAndBoundaryNodeMap() const
-{
-    return *FESystem::Mesh::QuadElemBase::quad_boundary_node_set;
-}
 
 
 FESystem::Mesh::TriElemBase::~TriElemBase()

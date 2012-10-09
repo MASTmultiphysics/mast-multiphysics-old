@@ -28,6 +28,7 @@ if_include_diffusion_flux(false),
 interpolated_sol(NULL),
 solution(NULL),
 velocity(NULL),
+dt(0.0),
 cp(0.0),
 cv(0.0),
 gamma(0.0),
@@ -102,6 +103,7 @@ FESystem::Fluid::FluidElementBase::clear()
     this->if_include_diffusion_flux = false;
     this->solution = NULL;
     this->velocity = NULL;
+    this->dt = 0.0;
     this->cp = 0.0;
     this->cv = 0.0;
     this->gamma = 0.0;
@@ -157,9 +159,10 @@ FESystem::Fluid::FluidElementBase::clear()
 
 void
 FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                              FESystemDouble cp_val, FESystemDouble cv_val)
+                                              FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
+    this->dt = dt_val;
     this->cp = cp_val;
     this->cv = cv_val;
     this->R = cp - cv;
@@ -265,7 +268,7 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
         this->updateVariablesAtQuadraturePoint(B_mat);
 
         this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat);
-        this->calculateArtificialDiffusionOperator(diff1, diff2);
+        this->calculateArtificialDiffusionOperator(*(q_pts[i]), diff1, diff2);
         diff1.matrixTransposeRightMultiply(1.0, LS_mat, B_matdx); // LS^T tau
         LS_mat.copyMatrix(B_matdx);
 
@@ -342,7 +345,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
 
         // get the other matrices of interest
         this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat);
-        this->calculateArtificialDiffusionOperator(diff1, diff2);
+        this->calculateArtificialDiffusionOperator(*(q_pts[i]), diff1, diff2);
         diff1.matrixTransposeRightMultiply(1.0, LS_mat, tmp_mat2_n1n2); // LS^T tau
         LS_mat.copyMatrix(tmp_mat2_n1n2);
         
@@ -670,17 +673,98 @@ FESystem::Fluid::FluidElementBase::calculateDiffusiveFluxJacobian(FESystemUInt d
 
 
 void
-FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator)
+FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
+    FESystemUInt dim = this->geometric_elem->getDimension(), n = this->geometric_elem->getNNodes(), n1 = 2 + dim;
     const std::pair<FESystemUInt, FESystemUInt> s_mat1 = streamline_operator.getSize(), s_mat2 = discontinuity_operator.getSize();
     
     FESystemAssert4((s_mat1.first == n1) && (s_mat1.second == n1), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.second, n1, n1);
     FESystemAssert4((s_mat2.first == n1) && (s_mat2.second == n1), FESystem::Numerics::MatrixSizeMismatch, s_mat2.first, s_mat2.second, n1, n1);
     
+    static FESystem::Numerics::LocalVector<FESystemDouble> N, dNdx, dNdy, dNdz, u, dN;
+    static std::vector<FESystemUInt> deriv;
+    N.resize(n); dNdx.resize(n); dNdy.resize(n); dNdz.resize(n); u.resize(dim); dN.resize(dim);
+    deriv.resize(dim);
+    
     streamline_operator.zero();
     discontinuity_operator.zero();
+    
+    // calculate the gradients
+    switch (dim)
+    {
+        case 3:
+        {
+            std::fill(deriv.begin(), deriv.end(), 0);
+            deriv[2] = 1;
+            this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(deriv, pt, dNdz);
+            u.setVal(2, this->u3);
+        }
+
+        case 2:
+        {
+            std::fill(deriv.begin(), deriv.end(), 0);
+            deriv[1] = 1;
+            this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(deriv, pt, dNdy);
+            u.setVal(1, this->u2);
+        }
+
+        case 1:
+        {
+            std::fill(deriv.begin(), deriv.end(), 0);
+            deriv[0] = 1;
+            this->finite_element->getShapeFunctionDerivativeForPhysicalCoordinates(deriv, pt, dNdx);
+            u.setVal(0, this->u1);
+        }
+            break;
+
+        default:
+            break;
+    }
+
+    // calculate the dot product of velocity times gradient of shape function
+    FESystemDouble h = 0, u_val = u.getL2Norm(), tau_rho, tau_m, tau_e;
+    u.scaleToUnitLength();
+
+    for (FESystemUInt i_nodes=0; i_nodes<n; i_nodes++)
+    {
+        // set value of shape function gradient
+        switch (dim)
+        {
+            case 3:
+                dN.setVal(2, dNdz.getVal(i_nodes));
+            case 2:
+                dN.setVal(1, dNdy.getVal(i_nodes));
+            case 1:
+                dN.setVal(0, dNdx.getVal(i_nodes));
+                break;
+                
+            default:
+                break;
+        }
+        
+        h += fabs(dN.dotProduct(u));
+    }
+    
+    h = 2.0/h;
+    
+    // now set the value of streamwise dissipation
+    tau_rho = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
+    tau_m = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
+    tau_e = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
+    
+    streamline_operator.setVal(0, 0, tau_rho);
+    switch (dim)
+    {
+        case 3:
+            streamline_operator.setVal(3, 3, tau_m);
+        case 2:
+            streamline_operator.setVal(2, 2, tau_m);
+        default:
+            streamline_operator.setVal(1, 1, tau_m);
+            break;
+    }
+    streamline_operator.setVal(n1-1, n1-1, tau_e);
 }
 
 

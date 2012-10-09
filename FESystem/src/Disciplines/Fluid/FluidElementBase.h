@@ -40,7 +40,7 @@ namespace FESystem
             
             
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                            FESystemDouble cp_val, FESystemDouble cv_val);
+                            FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val);
             
             void calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
                                                 const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
@@ -66,7 +66,7 @@ namespace FESystem
             
             void calculateDiffusiveFluxJacobian(FESystemUInt div_coord, FESystemUInt flux_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 
-            void calculateArtificialDiffusionOperator(FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
+            void calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
             
             void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 
@@ -90,7 +90,7 @@ namespace FESystem
             const FESystem::Numerics::VectorBase<FESystemDouble>* velocity;
            
             // Fluid properties: given as user input
-            FESystemDouble cp, cv, gamma, R, s0, p0, T0;
+            FESystemDouble dt, cp, cv, gamma, R, s0, p0, T0;
             
             // Fluid variables
             FESystemDouble mu, rho, p, T, u1, u2, u3, e_tot;

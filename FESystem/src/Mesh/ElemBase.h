@@ -205,12 +205,6 @@ namespace FESystem
             //                             const FESystem::Numerics::VectorBase<FESystemDouble>& b_pt, FESystem::Numerics::VectorBase<FESystemDouble>& n_vec ) const;
             
 
-            /*!
-             *    Initialize the boundary data for the element. This identifies the element has any boundary, and if so, marks them
-             */
-            virtual void initBoundaryData();
-            
-
         protected:
 
             /*!

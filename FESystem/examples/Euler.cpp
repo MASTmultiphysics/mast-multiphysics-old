@@ -12,7 +12,7 @@
 
 
 
-
+const FESystemDouble  rho=1.05, u1=300.0, temp = 300.0, p = 1.0e5, cp= 1.003e3, cv = 0.716e3, R=cp-cv, final_t=10.0, time_step=1.0e-5;
 
 
 
@@ -24,8 +24,6 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
                               FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
                               FESystem::Numerics::MatrixBase<FESystemDouble>& global_mass_mat)
 {
-    //FESystemDouble E=30.0e6, nu=0.3, rho=2700.0, p_val = 67.5, thick = 0.1; // (Reddy's parameters)
-    FESystemDouble cp= 1.003e3, cv = 0.716e3, R=cp-cv, gamma=cp/cv; // (R should be 287.04)
     FESystemUInt n_elem_dofs;
     
     n_elem_dofs = 4*n_elem_nodes;
@@ -77,13 +75,38 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
         dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
         
         fluid_elem.clear();
-        fluid_elem.initialize(*(elems[i]), fe, q_rule, cp, cv);
+        fluid_elem.initialize(*(elems[i]), fe, q_rule, time_step, cp, cv);
 
-        if ()
+        // set the flux value for the left and right boundary
+        mass_flux.zero(); mass_flux.setVal(0, rho*u1);
+        momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p);
+        energy_flux.zero(); energy_flux.setVal(0, rho*(cp*temp-p/rho+0.5*u1*u1));
+
+        if (elems[i]->checkForTag(0)) // left edge
         {
-            fluid_elem.calculateFluxBoundaryCondition(b_id, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
+            fluid_elem.calculateFluxBoundaryCondition(3, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
             dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
         }
+        if (elems[i]->checkForTag(1)) // right edge
+        {
+            fluid_elem.calculateFluxBoundaryCondition(1, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
+            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+        }
+
+//        // set the flux value for the lower and upper boundary
+//        mass_flux.zero(); mass_flux.setVal(0, rho*u1);
+//        momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p);
+//        energy_flux.zero(); energy_flux.setVal(0, rho*(cp*temp-p/rho+0.5*u1*u1));
+//        if (elems[i]->checkForTag(2)) // lower edge
+//        {
+//            fluid_elem.calculateFluxBoundaryCondition(0, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
+//            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+//        }
+//        if (elems[i]->checkForTag(3)) // upper edge
+//        {
+//            fluid_elem.calculateFluxBoundaryCondition(2, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
+//            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+//        }
 
         fluid_elem.calculateResidualVector(elem_sol, elem_vel, elem_vec);
         fluid_elem.calculateTangentMatrix(elem_sol, elem_vel, elem_mat1, elem_mat2);
@@ -116,8 +139,6 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     
     FESystemUInt id= 0;
     
-    FESystemDouble final_t=10.0, time_step=1.0e-3;
-    
     // initialize the solver
     FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
     FESystem::Numerics::SparsityPattern ode_sparsity;
@@ -133,9 +154,9 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     sol.zero();
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], 1.05); // rho
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], 1.05 * 300.0); // rho u
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], 1.05 * (300.0*716.0 + 300.0*300.0*0.5)); // rho * (cv * T + u^2/2)
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], rho); // rho
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1); // rho u
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5)); // rho * (cv * T + u^2/2)
     }
     
     transient_solver.setInitialTimeData(0, time_step, sol);
@@ -147,7 +168,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     
     FESystem::OutputProcessor::VtkOutputProcessor output;
     std::fstream output_file;
-    std::vector<FESystemUInt> vars(5); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; vars[4] = 4; // write all solutions
+    std::vector<FESystemUInt> vars(4); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; //vars[4] = 4; // write all solutions
     
     FESystemUInt n_skip=0, n_count=0, n_write=0;
     FESystem::TransientSolvers::TransientSolverCallBack call_back;
@@ -340,15 +361,42 @@ int euler_analysis_driver(int argc, char * const argv[])
     std::set<FESystemUInt> bc_dofs;
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
-//        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-displacement
-//        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-displacement
-//        bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(5).global_dof_id[0]); // theta-z
-//        if ((nodes[i]->getVal(0) == 0.0) || (nodes[i]->getVal(1) == 0.0) || (nodes[i]->getVal(0) == x_length) || (nodes[i]->getVal(1) == y_length)) // boundary nodes
-//        {
-//            //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // u-displacement on edges
-//            //bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // v-displacement on edges
-//            bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // w-displacement on edges
-//        }
+        if ((nodes[i]->getVal(0) == 0.0)) // left boundary nodes
+        {
+            const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
+            std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
+            for ( ; it != end; it++)
+                if (!(*it)->checkForTag(0))
+                    (*it)->setTag(0);
+        }
+        
+        if ((nodes[i]->getVal(0) == x_length)) // right boundary nodes
+        {
+            const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
+            std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
+            for ( ; it != end; it++)
+                if (!(*it)->checkForTag(1))
+                    (*it)->setTag(1);
+        }
+
+        if ((nodes[i]->getVal(1) == 0.0)) // lower boundary nodes
+        {
+            const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
+            std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
+            for ( ; it != end; it++)
+                if (!(*it)->checkForTag(2))
+                    (*it)->setTag(2);
+        }
+        
+        
+        if ((nodes[i]->getVal(1) == y_length)) // upper boundary nodes
+        {
+            const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
+            std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
+            for ( ; it != end; it++)
+                if (!(*it)->checkForTag(3))
+                    (*it)->setTag(3);
+        }
     }
     
     // now create the vector of ids that do not have bcs

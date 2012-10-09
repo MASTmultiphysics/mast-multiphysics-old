@@ -124,11 +124,7 @@ FESystem::OutputProcessor::VtkOutputProcessor::writeSolution(std::ostream& outpu
             output<< "LOOKUP_TABLE default" << std::endl;
             
             for (FESystemUInt i_node=0; i_node<nodes.size(); i_node++)
-            {
-                for (FESystemUInt i_var=0; i_var<variables_to_write.size(); i_var++)
-                    output << std::setw(20) << vec.getVal(nodes[i_node]->getDegreeOfFreedomUnit(variables_to_write[i_var]).global_dof_id[0]) << " ";
-                output << std::endl;
-            }
+                output << std::setw(20) << vec.getVal(nodes[i_node]->getDegreeOfFreedomUnit(variables_to_write[i]).global_dof_id[0]) << std::endl;
         }
         
         this->n_previous_dofs = variables_to_write.size(); 
