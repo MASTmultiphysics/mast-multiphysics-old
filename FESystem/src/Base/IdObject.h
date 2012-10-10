@@ -36,7 +36,7 @@ namespace FESystem
                 
             }
             
-            ~IdObject()
+            virtual ~IdObject()
             {
                 
             }

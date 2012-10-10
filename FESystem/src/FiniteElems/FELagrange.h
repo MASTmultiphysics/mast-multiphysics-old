@@ -34,7 +34,7 @@ namespace FESystem
              */
             FELagrange();
             
-            ~FELagrange();
+            virtual ~FELagrange();
             
             /*!
              *   Method to clear the shape functions in the matrices that have been set up by reinit. This method is to be called 

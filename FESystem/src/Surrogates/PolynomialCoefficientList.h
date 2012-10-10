@@ -41,9 +41,9 @@ namespace FESystem
     public:
       PolynomialCoefficientList();
       
-      ~PolynomialCoefficientList();
+      virtual ~PolynomialCoefficientList();
       
-      void clear();
+      virtual void clear();
       
       void prepareCoefficientList(FESystem::Field::FieldBase<FESystemDouble>&,
                                   FESystem::Surrogates::PolynomialType t);

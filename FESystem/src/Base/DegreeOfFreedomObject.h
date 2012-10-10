@@ -38,7 +38,7 @@ namespace FESystem
              */
             DegreeOfFreedomObject();
             
-            ~DegreeOfFreedomObject();
+            virtual ~DegreeOfFreedomObject();
 
             /*!
              *    Initializes the table to the required size of number of variables \p n_vars

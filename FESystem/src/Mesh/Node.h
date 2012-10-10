@@ -46,7 +46,7 @@ namespace FESystem
              */
 			Node(const FESystem::Geometry::CoordinateSystemBase& cs);
 			
-			~Node();
+			virtual ~Node();
             
             /*!
              *   Tells the node that it is connected to the element \el. This is needed in preparation of degree of freedom connectivity

@@ -43,7 +43,7 @@ namespace FESystem
             /*!
              *   clears the data structures
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   Initializes the data container and sets all pointers to NULL
@@ -93,7 +93,7 @@ template <typename ValType>
 FESystem::Utility::AutoPtrTable<ValType>::AutoPtrTable():
 FESystem::Utility::Table<ValType*>()
 {
-    
+
 }
 
 template <typename ValType>

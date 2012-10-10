@@ -35,7 +35,7 @@ namespace FESystem
             SparseMatrix();
             
             
-            ~SparseMatrix();
+            virtual ~SparseMatrix();
 
             /*!
              *   Returns the type of matrix

@@ -41,7 +41,7 @@ namespace FESystem
             /*!
              *   clears the data structure for this object.
              */ 
-            void clear();
+            virtual void clear();
  
             /*!
              *   This initializes the polyonomial using the given \p vals

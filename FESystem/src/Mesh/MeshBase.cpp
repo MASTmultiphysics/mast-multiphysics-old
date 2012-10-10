@@ -32,7 +32,7 @@ FESystem::Mesh::MeshBase::~MeshBase()
         end = this->nodes.end();
         
         for ( ; it != end; it++)
-            if ( *it == NULL)
+            if ( *it != NULL)
                 delete *it;
     }
     
@@ -43,7 +43,7 @@ FESystem::Mesh::MeshBase::~MeshBase()
         end = this->elements.end();
         
         for ( ; it != end; it++)
-            if ( *it == NULL)
+            if ( *it != NULL)
                 delete *it;
     }
     

@@ -22,7 +22,7 @@ variable_table(NULL)
 
 FESystem::Base::DegreeOfFreedomObject::~DegreeOfFreedomObject()
 {
-    
+
 }
 
 

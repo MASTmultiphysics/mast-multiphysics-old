@@ -41,7 +41,7 @@ namespace FESystem
             /*!
              *  this method clears the data structures
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   sets the number of sub-matrices in the row and column directions respectively

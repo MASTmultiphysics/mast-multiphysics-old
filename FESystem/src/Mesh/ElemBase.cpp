@@ -278,7 +278,7 @@ void
 FESystem::Mesh::ElemBase::calculateBoundaryNormal(const FESystemUInt b_id, FESystem::Numerics::VectorBase<FESystemDouble>& n_vec) const
 {
     // only to be used for first order elements
-    FESystemAssert0(this->getGeometryOrder() == 1, FESystem::Exception::InvalidFunctionCall);
+    //FESystemAssert0(this->getGeometryOrder() == 1, FESystem::Exception::InvalidFunctionCall);
     
     FESystem::Numerics::LocalVector<FESystemDouble> v1, v2, v3;
     FESystem::Numerics::DenseMatrix<FESystemDouble> jac;

@@ -47,7 +47,7 @@ namespace FESystem
             /*!
              *   Clears the data structures for used with another system matrix.
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   Sets the system matrix \f$ A \f$ in the system of equation through parameter \p mat and

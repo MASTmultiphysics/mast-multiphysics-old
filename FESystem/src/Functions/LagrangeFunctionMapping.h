@@ -44,7 +44,7 @@ namespace FESystem
             /*!
              *   clears the dats structures
              */ 
-            void clear();
+            virtual void clear();
                         
             /*!
              *   This initializes the mapping using the given dimension, \p dim, for the mapped space, and the 

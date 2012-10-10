@@ -1188,7 +1188,7 @@ namespace FESystem
             /*!
              *   clears the data structures
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   checks for the error number from the solver

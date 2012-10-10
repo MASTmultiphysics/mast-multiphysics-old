@@ -12,7 +12,7 @@
 
 
 
-const FESystemDouble  rho=1.05, u1=300.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, final_t=10.0, time_step=1.0e-5;
+const FESystemDouble  rho=1.05, u1=300.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-5, final_t=time_step*2;
 
 
 
@@ -120,7 +120,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
 //        std::cout << "Mass: " ; elem_mat2.write(std::cout);
     }
     
-//    residual.write(std::cout);
+    residual.write(std::cout);
 //    global_mass_mat.write(std::cout);
 //    global_stiffness_mat.write(std::cout);
 }
@@ -329,7 +329,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystemDouble x_length, y_length;
     FESystem::Geometry::Point origin(3);
     
-    nx=15; ny=15; x_length = 2; y_length = 2; dim = 2;
+    nx=6; ny=6; x_length = 2; y_length = 2; dim = 2;
     elem_type = FESystem::Mesh::QUAD4;
     createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     
@@ -418,7 +418,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     //nonlinearEulerSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs);
     transientEulerAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs);
     
-    exit(1);
+    //exit(1);
     
     return 0;
 }

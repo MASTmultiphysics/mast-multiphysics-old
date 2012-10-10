@@ -38,13 +38,13 @@ namespace FESystem
              */
             SparsityPattern();
             
-            ~SparsityPattern();
+            virtual ~SparsityPattern();
                
             
             /*!
              *    clears the data structure for reinitialization
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   clears the data structure nonzero_column_ids_per_row already specified

@@ -36,7 +36,7 @@ namespace FESystem
             ~FluidElementBase();
             
             
-            void clear();
+            virtual void clear();
             
             
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,

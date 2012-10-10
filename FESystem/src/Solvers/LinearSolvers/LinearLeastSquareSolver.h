@@ -46,12 +46,12 @@ namespace FESystem
              */
             LinearLeastSquareSolver();
             
-            ~LinearLeastSquareSolver();
+            virtual ~LinearLeastSquareSolver();
             
             /*!
              *   clears the data structures for use with a second matrix
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   Sets the linear solver to be used by the equation. 

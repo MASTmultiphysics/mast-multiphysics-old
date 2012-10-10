@@ -37,7 +37,7 @@ namespace FESystem
             
             HessenbergFormReduction();
             
-            ~HessenbergFormReduction();
+            virtual ~HessenbergFormReduction();
             
             void initializeMatrices();
             

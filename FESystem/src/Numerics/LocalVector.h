@@ -55,7 +55,7 @@ namespace FESystem
             /*!
              *   clears the data structure
              */
-            void clear();
+            virtual void clear();
             
             virtual void copyVector(const VectorBase<ValType>& t);
 

@@ -43,12 +43,12 @@ namespace FESystem
              */
             TriangularBacksubstitution();
             
-            ~TriangularBacksubstitution();
+            virtual ~TriangularBacksubstitution();
             
             /*!
              *   Clears the data structure
              */
-            void clear();
+            virtual void clear();
             
             void setTriangularMatrixType(FESystem::FactorizationSolvers::TriangularType t);
 

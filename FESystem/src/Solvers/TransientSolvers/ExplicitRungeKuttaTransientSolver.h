@@ -33,7 +33,7 @@ namespace FESystem
              */
             ExplicitRungeKuttaTransientSolver();
             
-            ~ExplicitRungeKuttaTransientSolver();
+            virtual ~ExplicitRungeKuttaTransientSolver();
             
             /*!
              *   initializes the solver to a system with n_dofs unknowns and highest order of derivative \p o. This 

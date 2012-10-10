@@ -45,7 +45,7 @@ namespace FESystem
             /*!
              *   clears the data structures
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   initializes the data structure for the two mappings. The X3(X1) is defined by \p original and X2(X1) is defined by 
@@ -116,12 +116,12 @@ namespace FESystem
         public: 
             DiscreteCompositeMappingFunctionBase();
             
-            ~DiscreteCompositeMappingFunctionBase();
+            virtual ~DiscreteCompositeMappingFunctionBase();
             
             /*!
              *   clears the data structures
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   This is an invalid function call and an exception will be thrown. 

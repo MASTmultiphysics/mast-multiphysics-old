@@ -27,7 +27,7 @@ namespace FESystem
             
             LinearBeamElementBase();
             
-            ~LinearBeamElementBase();
+            virtual ~LinearBeamElementBase();
             
             virtual FESystemUInt getNElemDofs() const;
             

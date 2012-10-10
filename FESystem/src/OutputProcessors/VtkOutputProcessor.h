@@ -30,7 +30,7 @@ namespace FESystem
              */
             VtkOutputProcessor();
             
-            ~VtkOutputProcessor();
+            virtual ~VtkOutputProcessor();
             
             /*!
              *   Write \p mesh to the output stream \p output in a Vtk readable format

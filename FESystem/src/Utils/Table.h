@@ -1,3 +1,4 @@
+
 //
 //  Table.h
 //  FESystem
@@ -40,7 +41,7 @@ namespace FESystem
             /*!
              *    Clears the data structure
              */
-            void clear();
+            virtual void clear();
             
             /*!
              *   This will initialize the data structures for storing the data. The dimensions of the table is the size of the vector, 
@@ -145,7 +146,7 @@ FESystem::Utility::Table<ValType>::Table()
 template <typename ValType>
 FESystem::Utility::Table<ValType>::~Table()
 {
-    
+
 }
 
 

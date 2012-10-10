@@ -37,7 +37,7 @@ namespace FESystem
             /*!
              *   clears the data structures use with another mapping
              */
-            void clear();
+            virtual void clear();
 
             /*!
              *   initializes the data structures for a specified Jacobian

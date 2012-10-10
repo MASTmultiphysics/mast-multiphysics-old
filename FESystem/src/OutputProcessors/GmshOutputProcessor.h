@@ -29,7 +29,7 @@ namespace FESystem
              */
             GmshOutputProcessor();
             
-            ~GmshOutputProcessor();
+            virtual ~GmshOutputProcessor();
             
             /*!
              *   Write \p mesh to the output stream \p output in a Gmsh readable format

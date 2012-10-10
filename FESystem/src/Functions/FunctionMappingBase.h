@@ -92,7 +92,7 @@ namespace FESystem
              */
             DiscreteFunctionMappingBase();
             
-            ~DiscreteFunctionMappingBase();
+            virtual ~DiscreteFunctionMappingBase();
             
             /*!
              *   Returns the number of discrete functions, which is the number of shape functions that this method will return. 

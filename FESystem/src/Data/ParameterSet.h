@@ -19,7 +19,7 @@ namespace FESystem
         public:
             ParameterSet();
             
-            ~ParameterSet();
+            virtual ~ParameterSet();
             
         protected:
             

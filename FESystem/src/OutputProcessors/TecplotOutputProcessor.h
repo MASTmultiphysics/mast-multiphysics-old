@@ -29,7 +29,7 @@ namespace FESystem
              */
             TecplotOutputProcessor();
             
-            ~TecplotOutputProcessor();
+            virtual ~TecplotOutputProcessor();
             
             /*!
              *   Write \p mesh to the output stream \p output in a Gmsh readable format

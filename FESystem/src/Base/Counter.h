@@ -32,7 +32,7 @@ namespace FESystem
 		{
 		public:
 			
-			~Counter();
+			virtual ~Counter();
 			
 			void incrementCounter(const std::string& name); 
 			

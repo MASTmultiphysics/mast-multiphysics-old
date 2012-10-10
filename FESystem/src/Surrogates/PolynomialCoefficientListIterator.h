@@ -30,7 +30,7 @@ namespace FESystem
     public:
       PolynomialCoefficientListIterator(const FESystem::Surrogates::PolynomialCoefficientList& c_list);
       
-      ~PolynomialCoefficientListIterator();
+      virtual ~PolynomialCoefficientListIterator();
       
       virtual void increment();
       
