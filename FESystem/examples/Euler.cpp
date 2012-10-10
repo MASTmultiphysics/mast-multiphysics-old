@@ -329,7 +329,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystemDouble x_length, y_length;
     FESystem::Geometry::Point origin(3);
     
-    nx=2; ny=2; x_length = 2; y_length = 2; dim = 2; 
+    nx=15; ny=15; x_length = 2; y_length = 2; dim = 2;
     elem_type = FESystem::Mesh::QUAD4;
     createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     
