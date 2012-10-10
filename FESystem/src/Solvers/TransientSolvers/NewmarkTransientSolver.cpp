@@ -38,7 +38,7 @@ temp_vec2(NULL)
 template <typename ValType>
 FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::~NewmarkTransientSolver()
 {
-    
+    this->clear();
 }
 
 
