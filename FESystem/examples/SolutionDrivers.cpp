@@ -364,7 +364,7 @@ void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, c
 
 
 
-int test_ode_integration(int argc, char * const argv[])
+int test_ode_integration_second_order(int argc, char * const argv[])
 {
     
     FESystem::Plotting::PLPlot<FESystemDouble> plot(FESystem::Plotting::REAL_AXIS, FESystem::Plotting::REAL_AXIS);
@@ -430,6 +430,76 @@ int test_ode_integration(int argc, char * const argv[])
     
     return 0;
 }
+
+
+int test_ode_integration_first_order(int argc, char * const argv[])
+{
+    
+    FESystem::Plotting::PLPlot<FESystemDouble> plot(FESystem::Plotting::REAL_AXIS, FESystem::Plotting::REAL_AXIS);
+    FESystemDouble a=-2.0, final_t=2.0, time_step=final_t*1.0e-4;
+    
+    // initialize the solver
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
+    std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
+    transient_solver.initialize(1, 1, int_constants);
+    transient_solver.setMassMatrix(true);
+    std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
+    transient_solver.setActiveJacobianTerm(ode_order_include);
+    
+    
+    //    FESystem::Solvers::ExplicitRungeKuttaTransientSolver<FESystemDouble> transient_solver;
+    //    transient_solver.initialize(2, 1, 4);
+    
+    FESystem::Numerics::LocalVector<FESystemDouble> vec, x_vals, y_vals;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> jac, ode_jac;
+    vec.resize(1); jac.resize(1, 1);
+    vec.setVal(0, 1.0);
+    x_vals.resize(final_t/time_step+1); y_vals.resize(final_t/time_step+1);
+    
+    transient_solver.setInitialTimeData(0, time_step, vec);
+    
+    FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble> linear_solver;
+    transient_solver.setLinearSolver(linear_solver, true);
+    transient_solver.resizeMatrixToJacobianTemplate(ode_jac);
+    transient_solver.setJacobianMatrix(ode_jac);
+    
+    jac.setVal(0, 0, a);
+    transient_solver.updateJacobianValuesForDerivativeOrder(1, 0, jac, transient_solver.getCurrentJacobianMatrix());
+    
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
+    while (transient_solver.getCurrentTime()<final_t)
+    {
+        call_back = transient_solver.incrementTimeStep();
+        switch (call_back)
+        {
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
+            {
+                x_vals.setVal(transient_solver.getCurrentIterationNumber()-1, transient_solver.getCurrentTime());
+                y_vals.setVal(transient_solver.getCurrentIterationNumber()-1, transient_solver.getCurrentStateVector().getVal(0));
+            }
+                break;
+                
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+            case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
+                // the Jacobian is not updated since it is constant with respect to time
+            {
+                transient_solver.getVelocityFunction().setVal(0, a*transient_solver.getCurrentStateVector().getVal(0));
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getVelocityFunction());
+            }
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
+    plot.plotData2D(x_vals, y_vals);
+    
+    
+    return 0;
+}
+
+
 
 
 
