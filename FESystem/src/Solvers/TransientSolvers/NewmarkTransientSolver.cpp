@@ -78,6 +78,18 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initialize(FESystem
 
 template <typename ValType>
 void
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::setConvergenceTolerance(FESystemDouble tol, FESystemUInt max_itrs)
+{
+    this->max_nonlinear_iterations = max_itrs;
+    this->convergence_tolerance = tol;
+}
+
+
+
+
+
+template <typename ValType>
+void
 FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::clear()
 {
     if (this->temp_vec != NULL) delete this->temp_vec;

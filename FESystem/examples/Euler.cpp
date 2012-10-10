@@ -12,7 +12,7 @@
 
 
 
-const FESystemDouble  rho=1.05, u1=300.0, temp = 300.0, p = 1.0e5, cp= 1.003e3, cv = 0.716e3, R=cp-cv, final_t=10.0, time_step=1.0e-5;
+const FESystemDouble  rho=1.05, u1=300.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, final_t=10.0, time_step=1.0e-5;
 
 
 
@@ -80,7 +80,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
         // set the flux value for the left and right boundary
         mass_flux.zero(); mass_flux.setVal(0, rho*u1);
         momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p);
-        energy_flux.zero(); energy_flux.setVal(0, rho*(cp*temp-p/rho+0.5*u1*u1));
+        energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
 
         if (elems[i]->checkForTag(0)) // left edge
         {
@@ -116,14 +116,17 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
 
 //        std::cout << "Elem num: " << i << std::endl;
-//        for (FESystemUInt i_node=0; i_node<elems[i]->getNNodes(); i_node++)
-//            elems[i]->getNode(i_node).write(std::cout);
 //        std::cout << "Sol: " ; elem_sol.write(std::cout);
-//        std::cout << "Vel: " ; elem_vec.write(std::cout);
+//        std::cout << "Vel: " ; elem_vel.write(std::cout);
+//        std::cout << "Res: " ; elem_vec.write(std::cout);
 //        std::cout << "BC: " ; bc_vec.write(std::cout);
 //        std::cout << "Jac: " ; elem_mat1.write(std::cout);
 //        std::cout << "Mass: " ; elem_mat2.write(std::cout);
     }
+    
+//    residual.write(std::cout);
+//    global_mass_mat.write(std::cout);
+//    global_stiffness_mat.write(std::cout);
 }
 
 
@@ -147,8 +150,9 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     FESystem::Numerics::SparsityPattern ode_sparsity;
     FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
-    std::vector<FESystemDouble> int_constants(1); int_constants[0]=1.0/2.0;
+    std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
     transient_solver.initialize(1, nonbc_dofs.size(), int_constants);
+    transient_solver.setConvergenceTolerance(1.0e-10, 5);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);
     
@@ -332,7 +336,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystemDouble x_length, y_length;
     FESystem::Geometry::Point origin(3);
     
-    nx=5; ny=5; x_length = 10.8; y_length = 10.8; dim = 2; n_modes = 10;
+    nx=11; ny=11; x_length = 10.8; y_length = 10.8; dim = 2; n_modes = 10;
     elem_type = FESystem::Mesh::QUAD4;
     createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     

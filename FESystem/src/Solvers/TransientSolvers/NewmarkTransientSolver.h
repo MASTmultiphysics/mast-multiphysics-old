@@ -75,6 +75,8 @@ namespace FESystem
              */
             virtual void initializeMatrixSparsityPatterForSystem(const FESystem::Numerics::SparsityPattern& spatial_sparsity_pattern,  FESystem::Numerics::SparsityPattern& system_pattern) const;
             
+            void setConvergenceTolerance(FESystemDouble tol, FESystemUInt max_itrs);
+            
         protected:
  
             void evaluateResidual(const FESystem::Numerics::VectorBase<ValType>& prev_state, const FESystem::Numerics::VectorBase<ValType>&  prev_velocity,

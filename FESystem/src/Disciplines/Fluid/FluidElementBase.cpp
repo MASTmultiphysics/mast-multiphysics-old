@@ -352,12 +352,11 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
         // contribution from unsteady term
         // Galerkin contribution of velocity
         this->calculateConservationVariableJacobian(A);
-        A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2);
+        A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2); // A Bmat
         B_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2);
         dres_dxdot.add(q_weight[i]*jac, tmp_mat1_n2n2);
         
         // LS contribution of velocity
-        A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2); // A Bmat
         LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau A Bmat
         dres_dxdot.add(q_weight[i]*jac, tmp_mat1_n2n2);
         
@@ -588,7 +587,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFlux(const FESystemUInt i, 
             
         case 2:
         {
-            flux.setVal(0, rho * u1);
+            flux.setVal(0, rho * u3);
             flux.setVal(energy_i, u3 * (rho * e_tot + p));
             switch (dim)
             {
@@ -753,18 +752,19 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FE
     tau_m = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
     tau_e = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
     
-    streamline_operator.setVal(0, 0, tau_rho);
-    switch (dim)
-    {
-        case 3:
-            streamline_operator.setVal(3, 3, tau_m);
-        case 2:
-            streamline_operator.setVal(2, 2, tau_m);
-        default:
-            streamline_operator.setVal(1, 1, tau_m);
-            break;
-    }
-    streamline_operator.setVal(n1-1, n1-1, tau_e);
+//    streamline_operator.setVal(0, 0, tau_rho);
+//    switch (dim)
+//    {
+//        case 3:
+//            streamline_operator.setVal(3, 3, tau_m);
+//        case 2:
+//            streamline_operator.setVal(2, 2, tau_m);
+//        default:
+//            streamline_operator.setVal(1, 1, tau_m);
+//            break;
+//    }
+//    streamline_operator.setVal(n1-1, n1-1, tau_e);
+    
 }
 
 
@@ -901,8 +901,8 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePoint(const FESyst
     this->s1 = dp_drho_T / rho / T;
     this->s2 = (T / rho * dp_dT_rho - h) / pow(T, 2) +  k / pow(T,2);
     this->e_c_1 = (2.0 * k - e_rho_1) / rho / cv;
-    this->e_c_2 = dp_drho_T - e_c_3 + e_c_1 * dp_dT_rho;
     this->e_c_3 = h + k;
+    this->e_c_2 = dp_drho_T - e_c_3 + e_c_1 * dp_dT_rho;
     this->e_c_4 = 1.0 + dp_dT_rho / rho / cv;
 }
 
