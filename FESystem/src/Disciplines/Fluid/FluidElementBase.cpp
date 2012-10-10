@@ -605,7 +605,6 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFlux(const FESystemUInt i, 
             FESystemAssert0(false, FESystem::Exception::InvalidValue);
             break;
     }
-    
 }
 
 

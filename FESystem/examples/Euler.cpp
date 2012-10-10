@@ -79,9 +79,9 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
 
         // set the flux value for the left and right boundary
         mass_flux.zero(); mass_flux.setVal(0, rho*u1);
-        momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p);
+        momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(1, 1, p);
         energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
-
+        
         if (elems[i]->checkForTag(0)) // left edge
         {
             fluid_elem.calculateFluxBoundaryCondition(3, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
@@ -92,21 +92,17 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
             fluid_elem.calculateFluxBoundaryCondition(1, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
             dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
         }
-
-//        // set the flux value for the lower and upper boundary
-//        mass_flux.zero(); mass_flux.setVal(0, rho*u1);
-//        momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p);
-//        energy_flux.zero(); energy_flux.setVal(0, rho*(cp*temp-p/rho+0.5*u1*u1));
-//        if (elems[i]->checkForTag(2)) // lower edge
-//        {
-//            fluid_elem.calculateFluxBoundaryCondition(0, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
-//            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
-//        }
-//        if (elems[i]->checkForTag(3)) // upper edge
-//        {
-//            fluid_elem.calculateFluxBoundaryCondition(2, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
-//            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
-//        }
+        // set the flux value for the lower and upper boundary
+        if (elems[i]->checkForTag(2)) // lower edge
+        {
+            fluid_elem.calculateFluxBoundaryCondition(0, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
+            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+        }
+        if (elems[i]->checkForTag(3)) // upper edge
+        {
+            fluid_elem.calculateFluxBoundaryCondition(2, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, bc_vec);
+            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+        }
 
         fluid_elem.calculateResidualVector(elem_sol, elem_vel, elem_vec);
         fluid_elem.calculateTangentMatrix(elem_sol, elem_vel, elem_mat1, elem_mat2);
@@ -161,9 +157,9 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     sol.zero();
     for (FESystemUInt i=0; i<nodes.size(); i++)
     {
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], rho); // rho
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1); // rho u
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5)); // rho * (cv * T + u^2/2)
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], rho);
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1);
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5));
     }
     
     transient_solver.setInitialTimeData(0, time_step, sol);
@@ -312,9 +308,6 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
         // write location
         for (FESystemUInt j=0; j<dim; j++)
             std::cout << std::setw(15) << nodes[i]->getVal(j);
-//        // write the forces
-//        for (FESystemUInt j=0; j<3; j++)
-//            std::cout << std::setw(15) << rhs.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
         for (FESystemUInt j=0; j<3; j++)
             std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
         std::cout << std::endl;
@@ -332,11 +325,11 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystem::Mesh::MeshBase mesh;
     
     // create a nx x ny grid of nodes
-    FESystemUInt nx, ny, dim, n_elem_nodes, n_elem_dofs, n_modes;
+    FESystemUInt nx, ny, dim, n_elem_nodes, n_elem_dofs;
     FESystemDouble x_length, y_length;
     FESystem::Geometry::Point origin(3);
     
-    nx=11; ny=11; x_length = 10.8; y_length = 10.8; dim = 2; n_modes = 10;
+    nx=2; ny=2; x_length = 2; y_length = 2; dim = 2; 
     elem_type = FESystem::Mesh::QUAD4;
     createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     
