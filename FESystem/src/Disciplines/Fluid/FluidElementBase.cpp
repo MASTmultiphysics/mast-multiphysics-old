@@ -213,7 +213,7 @@ FESystem::Fluid::FluidElementBase::calculateFluxBoundaryCondition(const FESystem
     
     for (FESystemUInt i=0; i<q_pts.size(); i++)
     {
-        jac = this->finite_element->getJacobianValueForBoundary(1, *(q_pts[i]));
+        jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
         
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
         normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
@@ -751,18 +751,18 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FE
     tau_m = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
     tau_e = 1.0/sqrt(pow(2.0/this->dt, 2)+ pow(2.0/h*(u_val+this->a), 2));
     
-    streamline_operator.setVal(0, 0, tau_rho);
-    switch (dim)
-    {
-        case 3:
-            streamline_operator.setVal(3, 3, tau_m);
-        case 2:
-            streamline_operator.setVal(2, 2, tau_m);
-        default:
-            streamline_operator.setVal(1, 1, tau_m);
-            break;
-    }
-    streamline_operator.setVal(n1-1, n1-1, tau_e);
+//    streamline_operator.setVal(0, 0, tau_rho);
+//    switch (dim)
+//    {
+//        case 3:
+//            streamline_operator.setVal(3, 3, tau_m);
+//        case 2:
+//            streamline_operator.setVal(2, 2, tau_m);
+//        default:
+//            streamline_operator.setVal(1, 1, tau_m);
+//            break;
+//    }
+//    streamline_operator.setVal(n1-1, n1-1, tau_e);
     
 }
 
