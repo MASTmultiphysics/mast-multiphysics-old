@@ -11,6 +11,7 @@
 // C++ includes
 #include <cmath>
 #include <stdlib.h>
+#include <iomanip.h>
 
 
 // FESystem includes
@@ -623,10 +624,14 @@ FESystem::Numerics::LocalVector<ValType>::write(std::ostream& out) const
 {
     unsigned int m = this->getSize();
     
+    FESystemUInt width = 15, precision = 7;
+    
     out << "Local Vector" << std::endl;
     out << "Size: " << m << std::endl;
     for (unsigned int i=0; i<m; i++)
-        out << "#" << i << "  :   " << this->getVal(i) << std::endl; 
+        out << "#" << i << "  :   " << std::setw(width) << std::setprecision(precision) << this->getVal(i) << std::endl;
+    //        out << "#" << i << "  :   " << std::setw(width) << std::showpoint << std::setprecision(precision) << this->getVal(i) << std::endl;
+
 }
 
 

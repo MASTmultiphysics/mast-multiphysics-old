@@ -457,7 +457,7 @@ FESystem::Numerics::LocalMatrixBase<FESystemFloat>::write(std::ostream& out) con
 {
     unsigned int m = this->getSize().first;
     unsigned int n = this->getSize().second;
-    FESystemUInt width = 17, precision = 9;
+    FESystemUInt width = 25, precision = 15;
     
     out << "Size: " << m << ",  " << n << std::endl;
     for (unsigned int i=0; i<m; i++)
