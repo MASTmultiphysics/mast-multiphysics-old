@@ -235,6 +235,220 @@ FESystem::Fluid::FluidElementBase::calculateFluxBoundaryCondition(const FESystem
 
 
 
+
+void
+FESystem::Fluid::FluidElementBase::calculateSolidWallFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
+                                                                           const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    
+    FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
+    
+    this->solution = &sol;
+    this->velocity = NULL;
+    
+    static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1, flux;
+    static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat;
+    Nvec.resize(n); normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n2); flux.resize(n1);
+    B_mat.resize(n1, n2);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    FESystemDouble jac=0.0;
+    bc_vec.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+        this->finite_element->getShapeFunctionForBoundary(b_id, *(q_pts[i]), Nvec);
+        
+        // set the row matrix
+        for (FESystemUInt ii=0; ii<n1; ii++)
+            B_mat.setRowVals(ii, ii*n, (ii+1)*n-1, Nvec);
+        
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePoint(B_mat);
+        
+        // now calculate the flux
+        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        {
+            flux.zero();
+            flux.setVal(i_dim+1, this->p); // only pressure is set
+            B_mat.leftVectorMultiply(flux, tmp_vec1);
+            bc_vec.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_vec1);
+        }
+    }
+}
+
+
+
+
+void
+FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
+                                                                                           const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::MatrixBase<FESystemDouble>& dfdx)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    
+    const std::pair<FESystemUInt, FESystemUInt> s_mat1 = dfdx.getSize();
+    
+    FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
+    
+    this->solution = &sol;
+    this->velocity = NULL;
+    
+    static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local;
+    static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat, A, tmp_mat_n1n2, tmp_mat2_n2n2;
+    Nvec.resize(n); normal.resize(3); normal_local.resize(dim);
+    B_mat.resize(n1, n2); A.resize(n1, n1); tmp_mat_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    FESystemDouble jac=0.0;
+    dfdx.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+        this->finite_element->getShapeFunctionForBoundary(b_id, *(q_pts[i]), Nvec);
+        
+        // set the row matrix
+        for (FESystemUInt ii=0; ii<n1; ii++)
+            B_mat.setRowVals(ii, ii*n, (ii+1)*n-1, Nvec);
+        
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePoint(B_mat);
+        
+        // now calculate the flux
+        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        {
+            this->calculatePressureFluxJacobianOnSolidWall(i_dim, A);
+            A.matrixRightMultiply(1.0, B_mat, tmp_mat_n1n2);
+            B_mat.matrixTransposeRightMultiply(1.0, tmp_mat_n1n2, tmp_mat2_n2n2);
+            dfdx.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_mat2_n2n2);
+        }
+    }
+}
+
+
+
+
+
+void
+FESystem::Fluid::FluidElementBase::calculateFluxBoundaryConditionUsingLocalSolution(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
+                                                                                    const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    
+    FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
+    
+    this->solution = &sol;
+    this->velocity = NULL;
+    
+    static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1, flux;
+    static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat;
+    Nvec.resize(n); normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n2); flux.resize(n1);
+    B_mat.resize(n1, n2);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    FESystemDouble jac=0.0;
+    bc_vec.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+        this->finite_element->getShapeFunctionForBoundary(b_id, *(q_pts[i]), Nvec);
+
+        // set the row matrix
+        for (FESystemUInt ii=0; ii<n1; ii++)
+            B_mat.setRowVals(ii, ii*n, (ii+1)*n-1, Nvec);
+        
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePoint(B_mat);
+
+        // now calculate the flux
+        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        {
+            this->calculateAdvectionFlux(i_dim, flux); // F^adv_i
+            B_mat.leftVectorMultiply(flux, tmp_vec1);
+            bc_vec.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_vec1);
+        }
+    }
+}
+
+
+
+
+void
+FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
+                                                                                                    const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::MatrixBase<FESystemDouble>& dfdx)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    
+    const std::pair<FESystemUInt, FESystemUInt> s_mat1 = dfdx.getSize();
+    
+    FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
+    
+    this->solution = &sol;
+    this->velocity = NULL;
+    
+    static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local;
+    static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat, A, tmp_mat_n1n2, tmp_mat2_n2n2;
+    Nvec.resize(n); normal.resize(3); normal_local.resize(dim);
+    B_mat.resize(n1, n2); A.resize(n1, n1); tmp_mat_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    FESystemDouble jac=0.0;
+    dfdx.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+        this->finite_element->getShapeFunctionForBoundary(b_id, *(q_pts[i]), Nvec);
+        
+        // set the row matrix
+        for (FESystemUInt ii=0; ii<n1; ii++)
+            B_mat.setRowVals(ii, ii*n, (ii+1)*n-1, Nvec);
+        
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePoint(B_mat);
+        
+        // now calculate the flux
+        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        {
+            this->calculateAdvectionFluxJacobian(i_dim, A); // TODO: Generalize this to group FEM
+            A.matrixRightMultiply(1.0, B_mat, tmp_mat_n1n2);
+            B_mat.matrixTransposeRightMultiply(1.0, tmp_mat_n1n2, tmp_mat2_n2n2);
+            dfdx.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_mat2_n2n2);
+        }
+    }
+}
+
+
+
+
+
 void
 FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                                                            FESystem::Numerics::VectorBase<FESystemDouble>& res)
@@ -398,6 +612,43 @@ FESystem::Fluid::FluidElementBase::calculateConservationVariableJacobian(FESyste
     mat.setToIdentity(); // for conservative formulation
 }
 
+
+
+
+void
+FESystem::Fluid::FluidElementBase::calculatePressureFluxJacobianOnSolidWall(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
+    
+    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
+    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+    
+    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
+    FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
+    
+    mat.zero();
+    FESystemUInt energy_i = n1-1;
+    
+    switch (dim)
+    {
+        case 3:
+            mat.setVal(div_coord+1, 3, -u3);
+            
+        case 2:
+            mat.setVal(div_coord+1, 2, -u2);
+            
+        case 1:
+        {
+            mat.setVal(div_coord+1, 0, k);
+            mat.setVal(div_coord+1, 1, -u1);
+            mat.setVal(div_coord+1, energy_i, 1.0);
+        }
+            break;
+    }
+
+    mat.scale(this->gamma_bar);
+}
 
 
 
