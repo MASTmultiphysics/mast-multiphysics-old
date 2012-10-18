@@ -101,13 +101,15 @@ endif
 
 SOURCES = $(wildcard ${SRC_SUBDIR}/*.cpp ${SRC_SUBDIR}/*/*.cpp ${SRC_SUBDIR}/*/*/*.cpp)
 DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${SOURCES})
+EXAMPLE_SOURCES = $(wildcard ${SRC_SUBDIR}/../examples/*.cpp)
+EXAMPLE_DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${EXAMPLE_SOURCES})
 
 all: fesystem-meshtest-${METHOD}
 
-fesystem-meshtest-dbg: ../examples/MeshTest.cpp  libfesystem-dbg.a 
+fesystem-meshtest-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-dbg.a 
 	${GCC} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
-fesystem-meshtest-opt: ../examples/MeshTest.cpp  libfesystem-opt.a 
+fesystem-meshtest-opt: $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt.a 
 	${GCC} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
