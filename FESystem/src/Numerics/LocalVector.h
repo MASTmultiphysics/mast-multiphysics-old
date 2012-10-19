@@ -201,7 +201,7 @@ namespace FESystem
         DeclareException2(ElementLocationExceedesVectorSize, 
                           FESystemUInt, FESystemUInt, 
                           << "Element Location Exceedes Vector Size\n"
-                          << "Matrix Dimension: " << Arg1 << "\n"
+                          << "Vector Dimension: " << Arg1 << "\n"
                           << "Element Location: " << Arg2 );
         
         

@@ -28,7 +28,6 @@ finite_element(NULL),
 if_include_diffusion_flux(false),
 interpolated_sol(NULL),
 solution(NULL),
-velocity(NULL),
 dt(0.0),
 cp(0.0),
 cv(0.0),
@@ -103,7 +102,6 @@ FESystem::Fluid::FluidElementBase::clear()
     this->finite_element = NULL;
     this->if_include_diffusion_flux = false;
     this->solution = NULL;
-    this->velocity = NULL;
     this->dt = 0.0;
     this->cp = 0.0;
     this->cv = 0.0;
@@ -246,7 +244,6 @@ FESystem::Fluid::FluidElementBase::calculateSolidWallFluxBoundaryCondition(const
     FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
     
     this->solution = &sol;
-    this->velocity = NULL;
     
     static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1, flux;
     static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat;
@@ -300,7 +297,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
     FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
     
     this->solution = &sol;
-    this->velocity = NULL;
     
     static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local;
     static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat, A, tmp_mat_n1n2, tmp_mat2_n2n2;
@@ -353,7 +349,6 @@ FESystem::Fluid::FluidElementBase::calculateFluxBoundaryConditionUsingLocalSolut
     FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
     
     this->solution = &sol;
-    this->velocity = NULL;
     
     static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1, flux;
     static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat;
@@ -406,7 +401,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditio
     FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
     
     this->solution = &sol;
-    this->velocity = NULL;
     
     static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local;
     static FESystem::Numerics::DenseMatrix<FESystemDouble>  B_mat, A, tmp_mat_n1n2, tmp_mat2_n2n2;
@@ -450,8 +444,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditio
 
 
 void
-FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
-                                                           FESystem::Numerics::VectorBase<FESystemDouble>& res)
+FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& res)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
@@ -459,7 +452,6 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
     FESystemAssert2(res.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, res.getSize(), n2);
     
     this->solution = &sol;
-    this->velocity = &vel;
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, B_matdx, LS_mat, diff1, diff2;
     static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2;
@@ -522,8 +514,7 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
 
 
 void
-FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
-                                                          FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dx, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dxdot)
+FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dx, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dxdot)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
@@ -534,7 +525,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
     FESystemAssert4((s_mat2.first == n2) && (s_mat2.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat2.first, s_mat2.first, n2, n2);
     
     this->solution = &sol;
-    this->velocity = &vel;
 
     static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, B_matdx, LS_mat, diff1, diff2, tmp_mat1_n2n2, tmp_mat2_n1n2, tmp_mat3_n1n1;
     static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1;

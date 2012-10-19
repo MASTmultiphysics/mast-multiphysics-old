@@ -58,11 +58,9 @@ namespace FESystem
             void calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
                                                                                   const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::MatrixBase<FESystemDouble>& jac);
             
-            void calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
-                                         FESystem::Numerics::VectorBase<FESystemDouble>& res);
+            void calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& res);
             
-            void calculateTangentMatrix(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
-                                        FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dx, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dxdot);
+            void calculateTangentMatrix(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dx, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dxdot);
             
         protected:
             
@@ -101,7 +99,6 @@ namespace FESystem
             
             const FESystem::Numerics::VectorBase<FESystemDouble>* solution;
             
-            const FESystem::Numerics::VectorBase<FESystemDouble>* velocity;
            
             // Fluid properties: given as user input
             FESystemDouble dt, cp, cv, gamma, R, s0, p0, T0;
