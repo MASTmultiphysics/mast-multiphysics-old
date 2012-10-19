@@ -70,10 +70,10 @@ FESystem::Mesh::ElemBase::updateAfterMeshDeformation()
     for (FESystemUInt i_node=0; i_node<this->getNNodes(); i_node++)
         FESystemAssert0(this->physical_nodes[i_node] != NULL, FESystem::Exception::NULLQuantity);
     
-    this->clearLocalPhysicalCoordinateSystem();
-    this->clearParentNondegenerateElement();
+    if (!this->if_local_physical_cs_same_as_global) this->clearLocalPhysicalCoordinateSystem();
+    if (this->ifDegerateElement()) this->clearParentNondegenerateElement();
     
-    this->initializeLocalPhysicalCoordinateSystem();
+    if (!this->if_local_physical_cs_same_as_global) this->initializeLocalPhysicalCoordinateSystem();
     if (this->ifDegerateElement()) this->initializeParentNondegenerateElement();
 }
 

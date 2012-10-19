@@ -20,6 +20,7 @@
 
 // constants
 #define MACHINE_EPSILON 1.0e-14
+#define PI_VAL 3.141592653589793238462643383279502884197
 
 // define number types here
 typedef unsigned int  FESystemUInt;

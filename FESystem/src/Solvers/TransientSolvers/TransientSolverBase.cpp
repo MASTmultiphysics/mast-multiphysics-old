@@ -34,7 +34,6 @@ current_state(NULL),
 current_velocity(NULL),
 previous_state(NULL),
 previous_velocity(NULL),
-velocity_function(NULL),
 linear_solver(NULL),
 if_constant_system_matrices(false)
 {
@@ -63,7 +62,6 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::initialize(FESystemUIn
     this->current_velocity = new FESystem::Numerics::LocalVector<ValType>; this->current_velocity->resize(this->order*this->n_dofs);
     this->previous_state = new FESystem::Numerics::LocalVector<ValType>; this->previous_state->resize(this->order*this->n_dofs);
     this->previous_velocity = new FESystem::Numerics::LocalVector<ValType>; this->previous_velocity->resize(this->order*this->n_dofs);
-    this->velocity_function = new FESystem::Numerics::LocalVector<ValType>; this->velocity_function->resize(this->order*this->n_dofs);
 
     this->active_jacobian_terms.resize(o);
     for (FESystemUInt i=0; i<o; i++) this->active_jacobian_terms[i] = false;
@@ -102,13 +100,11 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::clear()
     if (this->current_velocity != NULL) delete this->current_velocity;
     if (this->previous_state != NULL) delete this->previous_state;
     if (this->previous_velocity != NULL) delete this->previous_velocity;
-    if (this->velocity_function != NULL) delete this->velocity_function;
 
     this->current_state = NULL;
     this->current_velocity = NULL;
     this->previous_state = NULL;
     this->previous_velocity = NULL;
-    this->velocity_function = NULL;
     this->linear_solver = NULL;
     this->if_constant_system_matrices = false;
 }
@@ -173,14 +169,6 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::getPreviousStateVeloci
     return *(this->previous_velocity);
 }
 
-
-template <typename ValType>
-FESystem::Numerics::VectorBase<ValType>&
-FESystem::TransientSolvers::TransientSolverBase<ValType>::getVelocityFunction()
-{
-    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    return *(this->velocity_function);
-}
 
 
 template <typename ValType>

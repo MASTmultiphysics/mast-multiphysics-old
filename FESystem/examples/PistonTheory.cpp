@@ -153,8 +153,8 @@ void transientFlutterSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem
                 reduced_aero_damp.rightVectorMultiply(reduced_sol_vec, reduced_mass_vec);
                 reduced_load_vec.add(1.0, reduced_mass_vec);
                 
-                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getVelocityFunction()); // set the acceleration
-                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getVelocityFunction());
+                transient_solver.updateVectorValuesForDerivativeOrder(1, reduced_load_vec, transient_solver.getCurrentStateVelocityVector()); // set the acceleration
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
             }
                 break;
                 

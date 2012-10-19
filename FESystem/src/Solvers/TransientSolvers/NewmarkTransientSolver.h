@@ -92,12 +92,7 @@ namespace FESystem
              *   Maximum allowable iterations
              */
             FESystemUInt  nonlinear_iteration_number, max_nonlinear_iterations;
-            
-            /*!
-             *    whether the integration is explicit or implicit, which depends on the integration_constant values
-             */
-            FESystemBoolean if_explicit;
-            
+                        
             /*!
              *   constants for integration rule definition, starting with the lowest order and going towards the (o-1) order
              */

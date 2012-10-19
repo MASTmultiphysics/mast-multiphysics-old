@@ -1015,7 +1015,6 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FE
             break;
     }
     streamline_operator.setVal(n1-1, n1-1, tau_e);
-    
 }
 
 

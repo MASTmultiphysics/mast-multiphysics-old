@@ -416,8 +416,8 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
                 global_damping_mat.rightVectorMultiply(sol, tmp_vec); // -C x_dot
                 rhs.add(1.0, tmp_vec); // -K x - C x_dot
                 
-                transient_solver.updateVectorValuesForDerivativeOrder(1, rhs, transient_solver.getVelocityFunction());
-                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getVelocityFunction());
+                transient_solver.updateVectorValuesForDerivativeOrder(1, rhs, transient_solver.getCurrentStateVelocityVector());
+                transient_solver.copyDerivativeValuesFromStateToVelocityVector(transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
             }
                 break;
                 

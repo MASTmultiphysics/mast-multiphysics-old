@@ -12,7 +12,9 @@
 
 
 
-const FESystemDouble  rho=1.05, u1=500.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-7, final_t=time_step*2000;
+const FESystemDouble  rho=1.05, u1=1000.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-5, final_t=time_step*2000;
+const FESystemDouble x_length = 2, y_length = .5, t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord;
+const FESystemUInt nx=30, ny=10, dim = 2;
 
 
 
@@ -116,17 +118,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
         dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
         dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
-
-//        std::cout << "Elem num: " << i << std::endl;
-//        std::cout << "BC" << std::endl; vec.write(std::cout);
-//        std::cout << "Sol: " ; elem_sol.write(std::cout);
-//        std::cout << "Vel: " ; elem_vel.write(std::cout);
-//        std::cout << "Res: " ; elem_vec.write(std::cout);
-//        std::cout << "BC: " ; bc_vec.write(std::cout);
-//        std::cout << "Jac: " ; elem_mat1.write(std::cout);
-//        std::cout << "Mass: " ; elem_mat2.write(std::cout);
     }
-    
 //    residual.write(std::cout);
 //    global_mass_mat.write(std::cout);
 //    global_stiffness_mat.write(std::cout);
@@ -290,9 +282,9 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     FESystem::Numerics::SparsityPattern ode_sparsity;
     FESystem::Numerics::SparseMatrix<FESystemDouble> ode_jac;
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
-    std::vector<FESystemDouble> int_constants(1); int_constants[0]=1.0;
+    std::vector<FESystemDouble> int_constants(1); int_constants[0]=0;
     transient_solver.initialize(1, nonbc_dofs.size(), int_constants);
-    transient_solver.setConvergenceTolerance(1.0e-8, 15);
+    transient_solver.setConvergenceTolerance(1.0e-10, 3);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);
     
@@ -305,7 +297,6 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
         sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1);
         sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5));
     }
-    sol.scale(1.01);
     
     transient_solver.setInitialTimeData(0, time_step, sol);
     
@@ -368,10 +359,10 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
 
 //                testJacobian(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector());
                 calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector(),
-                                         transient_solver.getVelocityFunction(), transient_solver.getCurrentJacobianMatrix(), mass);
+                                         transient_solver.getCurrentStateVelocityVector(), transient_solver.getCurrentJacobianMatrix(), mass);
                 if (false)
                 {
-                    sol.copyVector(transient_solver.getVelocityFunction());
+                    sol.copyVector(transient_solver.getCurrentStateVelocityVector());
                     // write the solution for each node
                     for (FESystemUInt i=0; i<nodes.size(); i++)
                     {
@@ -497,6 +488,37 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
 
 
 
+void modifyMeshForCase(FESystem::Mesh::MeshBase& mesh)
+{
+    {
+        std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+        std::vector<FESystem::Mesh::Node*>::iterator it=nodes.begin(), end=nodes.end();
+        
+        FESystemDouble x_val, y_val;
+        
+        for ( ; it!=end; it++)
+        {
+            if (((*it)->getVal(0) >= x0) && ((*it)->getVal(0) <= x1))
+            {
+                x_val = (*it)->getVal(0);
+                y_val = (*it)->getVal(1);
+                
+                y_val += thickness*(1.0-y_val/y_length)*sin(PI_VAL*(x_val-x0)/chord);
+                
+                (*it)->setVal(1, y_val);
+            }
+        }
+    }
+
+    {
+        std::vector<FESystem::Mesh::ElemBase*> elems = mesh.getElements();
+        std::vector<FESystem::Mesh::ElemBase*>::iterator it=elems.begin(), end=elems.end();
+        
+        for ( ; it!=end; it++)
+            (*it)->updateAfterMeshDeformation();
+    }
+}
+
 
 
 
@@ -509,11 +531,9 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystem::Mesh::MeshBase mesh;
     
     // create a nx x ny grid of nodes
-    FESystemUInt nx, ny, dim, n_elem_nodes, n_elem_dofs;
-    FESystemDouble x_length, y_length;
+    FESystemUInt n_elem_nodes, n_elem_dofs;
     FESystem::Geometry::Point origin(3);
     
-    nx=15; ny=15; x_length = 2; y_length = 2; dim = 2;
     elem_type = FESystem::Mesh::QUAD4;
     createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     
@@ -588,6 +608,11 @@ int euler_analysis_driver(int argc, char * const argv[])
     for (FESystemUInt i=0; i<dof_map.getNDofs(); i++)
         if (!bc_dofs.count(i))
             nonbc_dofs.push_back(i);
+
+    
+    // modify mesh after application of boundary condition
+    modifyMeshForCase(mesh);
+
     
     // prepare a map of the old to new ID
     std::vector<FESystemUInt>::const_iterator dof_it=nonbc_dofs.begin(), dof_end=nonbc_dofs.end();
