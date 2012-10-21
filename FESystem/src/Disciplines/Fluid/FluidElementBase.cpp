@@ -453,10 +453,10 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
     
     this->solution = &sol;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, B_matdx, LS_mat, diff1, diff2;
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_matdx, LS_mat, diff1, diff2;
     static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2;
     B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff1.resize(n1, n1); diff2.resize(n1, n1);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2); A.resize(n1, n1);
+    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2); 
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();

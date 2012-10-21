@@ -196,9 +196,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             // calculate residual to identify convergence
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity), *(this->current_state), *(this->current_velocity), *(this->residual));
             
-            std::cout << "Xdot: "  << this->current_velocity->getL2Norm() << "  " << this->residual->getL2Norm() << std::endl;
-
-            
             FESystemDouble l2 = this->residual->getL2Norm();
             
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
@@ -295,8 +292,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             this->linear_solver->solve(*(this->residual), *(this->temp_vec));
             this->current_state->add(-1.0, *(this->temp_vec)); // this updates the current state
 
-            std::cout << "XJac: " << this->residual->getL2Norm() << "  "  << this->temp_vec->getL2Norm() << std::endl;
-            
             // now, evaluate the exact time step
             this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
             return FESystem::TransientSolvers::EVALUATE_X_DOT;
