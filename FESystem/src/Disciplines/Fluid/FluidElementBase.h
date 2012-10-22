@@ -71,7 +71,9 @@ namespace FESystem
             void updateVariablesAtQuadraturePoint(const FESystem::Numerics::MatrixBase<FESystemDouble>& Bmat);
             
             void calculateConservationVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-            
+
+            void calculateEntropyVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& dUdV, FESystem::Numerics::MatrixBase<FESystemDouble>& dVdU);
+
             void calculatePressureFluxJacobianOnSolidWall(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 
             void calculateAdvectionFluxJacobian(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);

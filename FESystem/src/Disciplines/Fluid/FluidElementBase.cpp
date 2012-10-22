@@ -606,6 +606,83 @@ FESystem::Fluid::FluidElementBase::calculateConservationVariableJacobian(FESyste
 
 
 void
+FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& dUdV, FESystem::Numerics::MatrixBase<FESystemDouble>& dVdU)
+{
+    // calculates dU/dV where V is the Entropy variable vector
+    
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    // calculate A0 = d U / d Y , where U = conservation variable vector, and Y = unknown variable vector
+    // note that for conservation variables as the unknown, this is an identity matrix
+    
+    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
+    const std::pair<FESystemUInt, FESystemUInt> s = dUdV.getSize();
+    
+    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
+    
+    switch (dim)
+    {
+        case 3:
+        {
+            dUdV.setVal(0, 3, u3);
+
+            dUdV.setVal(1, 3, u1*u3);
+
+            dUdV.setVal(2, 3, u2*u3);
+
+            dUdV.setVal(3, 0, dUdV.getVal(0, 3));
+            dUdV.setVal(3, 1, dUdV.getVal(1, 3));
+            dUdV.setVal(3, 2, dUdV.getVal(2, 3));
+            dUdV.setVal(3, 3, u3*u3+v/beta_T);
+            dUdV.setVal(3, n1-1, u3*(h+k-v*(alpha_p*T+1)/beta_T));
+            
+            dUdV.setVal(n1-1, 3, dUdV.getVal(3, n1-1));
+        }
+            
+        case 2:
+        {
+            dUdV.setVal(0, 2, u2);
+            
+            dUdV.setVal(1, 2, u1*u2);
+
+            dUdV.setVal(2, 0, dUdV.getVal(0, 2));
+            dUdV.setVal(2, 1, dUdV.getVal(1, 2));
+            dUdV.setVal(2, 2, u2*u2+v/beta_T);
+            dUdV.setVal(2, n1-1, u2*(h+k-v*(alpha_p*T+1)/beta_T));
+            
+            dUdV.setVal(n1-1, 2, dUdV.getVal(2, n1-1));
+        }
+
+        case 1:
+        {
+            dUdV.setVal(0, 0, 1.0);
+            dUdV.setVal(0, 1, u1);
+            dUdV.setVal(0, n1-1, h+k-v*alpha_p*T/beta_T);
+
+            dUdV.setVal(1, 0, dUdV.getVal(0, 1));
+            dUdV.setVal(1, 1, u1*u1+v/beta_T);
+            dUdV.setVal(1, n1-1, u1*(h+k-v*(alpha_p*T+1)/beta_T));
+
+            dUdV.setVal(n1-1, 0, dUdV.getVal(0, n1-1));
+            dUdV.setVal(n1-1, 1, dUdV.getVal(1, n1-1));
+            dUdV.setVal(n1-1, n1-1, pow(h+k,2)+v/beta_T*(cp*T-2*h*alpha_p*T-2*k*(alpha_p*T-1)));
+
+        }
+            break;
+
+        default:
+            break;
+    }
+    
+    dUdV.scale(beta_T*T/v/v);
+    
+    // now calculate the invert of this matrix
+    dUdV.getInverse(dVdU);
+}
+
+
+
+
+void
 FESystem::Fluid::FluidElementBase::calculatePressureFluxJacobianOnSolidWall(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
