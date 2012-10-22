@@ -15,9 +15,10 @@ ifeq (${PLATFORM},Darwin)
     GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     PLPLOT_INCLUDE_DIR=/opt/local/include
-    HAVE_PLPLOT_LIBS=1
+    HAVE_PLPLOT_LIBS=0
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
+    BOOST_DIR=/opt/local/include
 endif
 
 ifeq (${PLATFORM},Darwinhome)
@@ -30,6 +31,7 @@ ifeq (${PLATFORM},Darwinhome)
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
     PLATFORM=Darwin
+    BOOST_DIR=/opt/local/include
 endif
 
 ifeq (${PLATFORM},Linux)
@@ -38,6 +40,7 @@ ifeq (${PLATFORM},Linux)
     GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     HAVE_PLPLOT_LIBS=0
+    BOOST_DIR=/home/bhatiam/usr
 endif
 
 ifeq (${PLATFORM},script)
@@ -71,7 +74,9 @@ AR = ar
 SRC_SUBDIR=../src
 BUILD_DIR=${PWD}
 
+EXTERNAL_INCLUDE_DIRS+=-I${BOOST_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}
+EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}/../examples
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_INCLUDE_DIRS+=-I${PLPLOT_INCLUDE_DIR}
 endif

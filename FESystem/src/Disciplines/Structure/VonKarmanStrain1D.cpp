@@ -88,11 +88,11 @@ void
 FESystem::Structures::VonKarmanStrain1D::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                                     FESystemDouble pre_stress, FESystem::Structures::ExtensionBar& bar, FESystem::Structures::LinearBeamElementBase& beam)
 {
-    FESystemAssert0(bar.E_val == beam.E_val, FESystem::Exception::InvalidValue);
+    FESystemAssert0(bar.getEVal() == beam.getEVal(), FESystem::Exception::InvalidValue);
     FESystemAssert0(bar.getArea() == beam.getArea(), FESystem::Exception::InvalidValue);
-    FESystemAssert0(bar.rho_val == beam.rho_val, FESystem::Exception::InvalidValue);
+    FESystemAssert0(bar.getRhoVal() == beam.getRhoVal(), FESystem::Exception::InvalidValue);
     
-    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.E_val, beam.nu_val, beam.rho_val, beam.getArea());
+    FESystem::Structures::Structural1DElementBase::initialize(elem, fe, q_rule, beam.getEVal(), beam.getNuVal(), beam.getRhoVal(), beam.getArea());
     this->area_val = beam.getArea();
     this->extension_pre_stress = pre_stress;
     this->bar_elem = &bar;

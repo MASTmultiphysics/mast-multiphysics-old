@@ -88,6 +88,14 @@ namespace FESystem
             virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);
 
             virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec, FESystem::Numerics::VectorBase<FESystemDouble>& global_vec);
+            
+            FESystemDouble getEVal() const {return this->E_val;}
+            
+            FESystemDouble getGVal() const {return this->G_val;}
+
+            FESystemDouble getNuVal() const {return this->nu_val;}
+
+            FESystemDouble getRhoVal() const {return this->rho_val;}
 
         protected:
             

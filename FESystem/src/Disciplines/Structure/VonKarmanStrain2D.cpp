@@ -90,14 +90,14 @@ void
 FESystem::Structures::VonKarmanStrain2D::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                                     const FESystem::Numerics::MatrixBase<FESystemDouble>& pre_stress, FESystem::Structures::Membrane& mem, FESystem::Structures::LinearPlateElementBase& plt)
 {
-    FESystemAssert0(mem.E_val == plt.E_val, FESystem::Exception::InvalidValue);
+    FESystemAssert0(mem.getEVal() == plt.getEVal(), FESystem::Exception::InvalidValue);
     FESystemAssert0(mem.getThickness() == plt.getThickness(), FESystem::Exception::InvalidValue);
-    FESystemAssert0(mem.rho_val == mem.rho_val, FESystem::Exception::InvalidValue);
+    FESystemAssert0(mem.getRhoVal() == mem.getRhoVal(), FESystem::Exception::InvalidValue);
 
     const std::pair<FESystemUInt, FESystemUInt> s = pre_stress.getSize();
     FESystemAssert4((s.first == 2) && (s.second == 2), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s.first, s.first);
 
-    FESystem::Structures::Structural2DElementBase::initialize(elem, fe, q_rule, plt.E_val, plt.nu_val, plt.rho_val, plt.getThickness());
+    FESystem::Structures::Structural2DElementBase::initialize(elem, fe, q_rule, plt.getEVal(), plt.getNuVal(), plt.getRhoVal(), plt.getThickness());
     this->inplane_pre_stress->copyMatrix(pre_stress);
     this->th_val = plt.getThickness();
     this->membrane_elem = &mem;
