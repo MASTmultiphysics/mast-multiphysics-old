@@ -17,8 +17,6 @@
 #include "Quadrature/QuadratureBase.h"
 #include "Geom/Point.h"
 
-#include <iomanip.h>
-
 
 FESystem::Fluid::FluidElementBase::FluidElementBase():
 if_initialized(false),
@@ -441,8 +439,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditio
 
 
 
-
-
 void
 FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& res)
 {
@@ -456,7 +452,7 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
     static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_matdx, LS_mat, diff1, diff2;
     static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2;
     B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff1.resize(n1, n1); diff2.resize(n1, n1);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2); 
+    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
@@ -479,20 +475,6 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
         diff1.matrixTransposeRightMultiply(1.0, LS_mat, B_matdx); // LS^T tau
         LS_mat.copyMatrix(B_matdx);
 
-        // contribution from unsteady term
-        // interpolate velocity for current point
-//        B_mat.rightVectorMultiply(vel, tmp_vec1_n1); // interpolated velocity
-//        this->calculateConservationVariableJacobian(A);
-//        A.rightVectorMultiply(tmp_vec1_n1, tmp_vec2_n1);
-//        
-//        // Galerkin contribution of velocity
-//        B_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2);
-//        res.add(q_weight[i]*jac, tmp_vec3_n2); // Bw^T u_dot
-//        
-//        // LS contribution of velocity
-//        LS_mat.leftVectorMultiply(tmp_vec2_n1, tmp_vec3_n2); // LS^T tau A U_dot
-//        res.add(q_weight[i]*jac, tmp_vec3_n2);
-        
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
             this->calculateOperatorMatrix(*(q_pts[i]), B_matdx, true, i_dim); // dBw/dx_i
@@ -506,6 +488,11 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(const FESystem::Numer
             this->calculateAdvectionFluxSpatialDerivative(i_dim, B_matdx, &flux, NULL); // d F^adv_i / dxi
             LS_mat.leftVectorMultiply(flux, tmp_vec3_n2); // LS^T tau F^adv_i
             res.add(-q_weight[i]*jac, tmp_vec3_n2);
+
+            // discontinuity capturing operator
+//            B_matdx.rightVectorMultiply(*(this->solution), flux);
+//            B_matdx.leftVectorMultiply(flux, tmp_vec3_n2);
+//            res.add(-q_weight[i]*jac, tmp_vec3_n2);
         }
     }
 }
@@ -530,7 +517,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
     static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1;
     B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff1.resize(n1, n1); diff2.resize(n1, n1);
     A.resize(n1, n1); flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2); tmp_mat3_n1n1.resize(n1, n1); A.resize(n1, n1);
-    
+
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
     
@@ -579,6 +566,10 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(const FESystem::Numeri
             this->calculateAdvectionFluxSpatialDerivative(i_dim, B_matdx, NULL, &tmp_mat2_n1n2); // d^2 F^adv_i / dxi dU
             LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau d^2F^adv_i / dx dU
             dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
+            
+            // discontinuity capturing term
+//            B_matdx.matrixTransposeRightMultiply(1.0, B_matdx, tmp_mat1_n2n2);
+//            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
         }
     }
 }
@@ -1105,14 +1096,14 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
     // contribution of unsteady term
     this->calculateConservationVariableJacobian(A);
     this->calculateOperatorMatrix(pt, B_mat, false, 0);
-    A.matrixRightMultiply(1.0, B_mat, mat);
+    A.matrixTransposeRightMultiply(1.0, B_mat, mat);
 
     // contribution of advection flux term
     for (FESystemUInt i=0; i<dim; i++)
     {
         this->calculateAdvectionFluxJacobian(i, A);
         this->calculateOperatorMatrix(pt, B_mat, true, i);
-        A.matrixRightMultiply(1.0, B_mat, tmp_mat);
+        A.matrixTransposeRightMultiply(1.0, B_mat, tmp_mat);
         
         mat.add(1.0, tmp_mat);
     }
