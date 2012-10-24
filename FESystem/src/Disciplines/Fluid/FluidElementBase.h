@@ -80,7 +80,7 @@ namespace FESystem
             
             void calculateDiffusiveFluxJacobian(FESystemUInt div_coord, FESystemUInt flux_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 
-            void calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
+            void calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator);
             
             void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
 

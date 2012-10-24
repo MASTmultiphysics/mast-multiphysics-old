@@ -992,14 +992,13 @@ FESystem::Fluid::FluidElementBase::calculateDiffusiveFluxJacobian(FESystemUInt d
 
 
 void
-FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator)
+FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n = this->geometric_elem->getNNodes(), n1 = 2 + dim;
-    const std::pair<FESystemUInt, FESystemUInt> s_mat1 = streamline_operator.getSize(), s_mat2 = discontinuity_operator.getSize();
+    const std::pair<FESystemUInt, FESystemUInt> s_mat1 = streamline_operator.getSize();
     
     FESystemAssert4((s_mat1.first == n1) && (s_mat1.second == n1), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.second, n1, n1);
-    FESystemAssert4((s_mat2.first == n1) && (s_mat2.second == n1), FESystem::Numerics::MatrixSizeMismatch, s_mat2.first, s_mat2.second, n1, n1);
     
     static FESystem::Numerics::LocalVector<FESystemDouble> N, dNdx, dNdy, dNdz, u, dN;
     static std::vector<FESystemUInt> deriv;
@@ -1007,7 +1006,6 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FE
     deriv.resize(dim);
     
     streamline_operator.zero();
-    discontinuity_operator.zero();
     
     // calculate the gradients
     switch (dim)
@@ -1130,10 +1128,6 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
         
         mat.add(1.0, tmp_mat);
         
-        // now calculate the spectral radius of the Jacobian
-        val2 = 0.5 * this->h_val->getVal(i)/this->estimateJacobianSpectralRadius(A);
-        if (fabs(val2) > val1) val1 = fabs(val2);
-        
         // prepare the solution gradient vectors for the discontinuity capturing term
         switch (i)
         {
@@ -1157,7 +1151,9 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
     }
     
     // scale the LS matrix with the correct factor
-    mat.scale(val1);
+    this->calculateArtificialDiffusionOperator(pt, A);
+    A.matrixRightMultiply(1.0, mat, tmp_mat);
+    mat.copyMatrix(tmp_mat);
     
     // now evaluate the dissipation factor for the discontinuity capturing term
     // this is the denominator term
@@ -1197,6 +1193,7 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
     discontinuity_val = sqrt(discontinuity_val);
     discontinuity_operator.setToIdentity();
     discontinuity_operator.scale(discontinuity_val);
+    discontinuity_operator.zero();
 }
 
 
