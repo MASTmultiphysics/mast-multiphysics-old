@@ -10,21 +10,21 @@ else
 endif
 
 ifeq (${PLATFORM},Darwin)
-    ARPACK_LIB_DIR=/Users/bhatiam/Documents/usr/lib/
+    ARPACK_LIB_DIR=/opt/local/lib
     LAPACK_BLAS_LIB_DIR=/usr/lib
-    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
+    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     PLPLOT_INCLUDE_DIR=/opt/local/include
-    HAVE_PLPLOT_LIBS=0
+    HAVE_PLPLOT_LIBS=1
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
     BOOST_DIR=/opt/local/include
 endif
 
 ifeq (${PLATFORM},Darwinhome)
-    ARPACK_LIB_DIR=/Users/manav/Documents/codes/numerical_libs/arpack
+    ARPACK_LIB_DIR=/opt/local/lib/
     LAPACK_BLAS_LIB_DIR=/usr/lib
-    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47/i386
+    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     HAVE_PLPLOT_LIBS=1
     PLPLOT_INCLUDE_DIR=/opt/local/include
@@ -40,7 +40,7 @@ ifeq (${PLATFORM},Linux)
     GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     HAVE_PLPLOT_LIBS=0
-    BOOST_DIR=/home/bhatiam/usr
+    BOOST_DIR=/home/bhatia/usr/include
 endif
 
 ifeq (${PLATFORM},script)
@@ -55,8 +55,8 @@ endif
 GCC = g++
 PYTHON = python
 
-GCC_FLAGS_DEBUG = -g3 -O0 -Wall -m32
-GCC_FLAGS_OPT = -g3 -O3 -m32 -ftree-vectorize 
+GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
+GCC_FLAGS_OPT = -g3 -O3 -ftree-vectorize 
 
 D      = cd
 ECHO    = echo
@@ -90,7 +90,7 @@ ifeq (${HAVE_PLPLOT_LIBS},1)
 endif
 
 EXTERNAL_LIBS=-lfesystem-${METHOD}
-EXTERNAL_LIBS+=-larpack -llapack -lblas
+EXTERNAL_LIBS+=-larpack -llapack -lblas -latlas
 EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIBS+=${PLPLOT_LIBS}
@@ -132,7 +132,7 @@ libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})
 	ar -rv $@ $^ 
 
 clean:
-	rm -rf ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})  libfesystem-${METHOD}.a  fesystem-meshtest-${METHOD}*
+	rm -rf ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES}) $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})  libfesystem-${METHOD}.a  fesystem-meshtest-${METHOD}*
 
 clean-deps:
 	rm -f ${DEP_FILES}

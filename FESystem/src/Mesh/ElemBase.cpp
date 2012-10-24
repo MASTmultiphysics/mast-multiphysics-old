@@ -353,6 +353,24 @@ FESystem::Mesh::ElemBase::calculateBoundaryNormal(const FESystemUInt b_id, FESys
 
 
 
+FESystemDouble
+FESystem::Mesh::ElemBase::getCharacteristicLengthAlongPhysicalDimension(FESystemUInt d) const
+{
+    FESystemAssert2(d<this->getDimension(), FESystem::Exception::IndexOutOfBound, d, this->getDimension());
+    
+    FESystemDouble minval = FESystem::Base::getMachineMax<FESystemDouble>(), maxval = -FESystem::Base::getMachineMax<FESystemDouble>();
+    
+    for (FESystemUInt i=0; i<this->physical_nodes.size(); i++)
+    {
+        if (minval > this->physical_nodes[i]->getVal(d)) minval = this->physical_nodes[i]->getVal(d);
+        if (maxval < this->physical_nodes[i]->getVal(d)) maxval = this->physical_nodes[i]->getVal(d);
+    }
+    maxval-=minval;
+    
+    return maxval;
+}
+
+
 std::auto_ptr<FESystem::Mesh::ElemBase> 
 FESystem::Mesh::ElementCreate(FESystem::Mesh::MeshBase& mesh, FESystem::Mesh::ElementType elem_type, FESystemBoolean if_local_physical_cs_same_as_global)
 {

@@ -82,11 +82,12 @@ namespace FESystem
 
             void calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
             
-            void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+            void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
 
             void calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain, FESystemUInt deriv_dim);
             
-            
+            FESystemDouble estimateJacobianSpectralRadius(const FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+
             FESystemBoolean if_initialized;
             
             const FESystem::Mesh::ElemBase* geometric_elem;
@@ -100,8 +101,9 @@ namespace FESystem
             FESystem::Numerics::VectorBase<FESystemDouble>* interpolated_sol;
             
             const FESystem::Numerics::VectorBase<FESystemDouble>* solution;
+
+            FESystem::Numerics::VectorBase<FESystemDouble> *h_val;
             
-           
             // Fluid properties: given as user input
             FESystemDouble dt, cp, cv, gamma, R, s0, p0, T0;
             

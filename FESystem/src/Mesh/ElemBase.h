@@ -203,7 +203,11 @@ namespace FESystem
              */
             // void calculateBoundaryNormal(const FESystemUInt b_id, const FESystem::Functions::FunctionMappingBase<FESystemDouble>& geom_mapping_func, 
             //                             const FESystem::Numerics::VectorBase<FESystemDouble>& b_pt, FESystem::Numerics::VectorBase<FESystemDouble>& n_vec ) const;
-            
+
+            /*!
+             *   Calculates the characteristic length of the element along the specified direction. This is primarily the maximum distance between any two nodes along the distance.
+             */
+            FESystemDouble getCharacteristicLengthAlongPhysicalDimension(FESystemUInt d) const;
 
         protected:
 
