@@ -86,25 +86,37 @@ namespace FESystem
 //            virtual void rewindTimeStep() = 0;
 
             /*!
-             *   Returns a reference to the current state vector
+             *   Returns a constant reference to the current state vector
              */
-            FESystem::Numerics::VectorBase<ValType>& getCurrentStateVector();
+            const FESystem::Numerics::VectorBase<ValType>& getCurrentStateVector() const;
 
             /*!
-             *   Returns a reference to the current state velocity (or x dot) vector 
+             *   Returns a constant reference to the current state velocity (or x dot) vector
              */
-            FESystem::Numerics::VectorBase<ValType>& getCurrentStateVelocityVector();
+            const FESystem::Numerics::VectorBase<ValType>& getCurrentStateVelocityVector() const;
 
             /*!
-             *   Returns a reference to the previous state vector
+             *   Returns a reference to the previous state velocity vector. This is same as the state velocity vector for cases where the system has an
+             *   identity mass matrix 
              */
-            FESystem::Numerics::VectorBase<ValType>& getPreviousStateVector();
+            FESystem::Numerics::VectorBase<ValType>& getCurrentVelocityFunctionVector();
+
+            /*!
+             *   Returns a constant reference to the previous state vector
+             */
+            const FESystem::Numerics::VectorBase<ValType>& getPreviousStateVector() const;
             
             /*!
-             *   Returns a reference to the previous state velocity (or x dot) vector
+             *   Returns a constant reference to the previous state velocity (or x dot) vector
              */
-            FESystem::Numerics::VectorBase<ValType>& getPreviousStateVelocityVector();
+            const FESystem::Numerics::VectorBase<ValType>& getPreviousStateVelocityVector() const;
 
+            /*!
+             *   Returns a reference to the previous state velocity vector. This is same as the state velocity vector for cases where the system has an
+             *   identity mass matrix
+             */
+            FESystem::Numerics::VectorBase<ValType>& getPreviousVelocityFunctionVector();
+            
             /*
              *   Returns the current time of the solver integration
              */
@@ -258,7 +270,7 @@ namespace FESystem
             /*!
              *    Stores the solution at the last solved time step, used to store the initial conditions at the beginning of solution. 
              */
-            FESystem::Numerics::VectorBase<ValType> *current_state, *current_velocity, *previous_state, *previous_velocity;
+            FESystem::Numerics::VectorBase<ValType> *current_state, *current_velocity, *current_velocity_function, *previous_state, *previous_velocity, *previous_velocity_function;
             
             /*!
              *    Pointer to linear sovler
