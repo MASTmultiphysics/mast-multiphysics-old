@@ -102,8 +102,6 @@ namespace FESystem
 
             const FESystem::Numerics::VectorBase<FESystemDouble>* velocity;
 
-            FESystem::Numerics::VectorBase<FESystemDouble> *h_val;
-            
             // Fluid properties: given as user input
             FESystemDouble dt, cp, cv, gamma, R, s0, p0, T0;
             
