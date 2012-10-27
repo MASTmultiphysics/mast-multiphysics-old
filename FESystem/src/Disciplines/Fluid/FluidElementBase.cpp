@@ -447,15 +447,15 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
     
     FESystemAssert2(res.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, res.getSize(), n2);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_matdx, LS_mat, diff2;
-    static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2;
-    B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff2.resize(n1, n1);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2);
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_matdx, LS_mat;
+    static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, diff_sens;
+    B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2);
+    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2); diff_sens.resize(n2);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
     
-    FESystemDouble jac=0.0;
+    FESystemDouble jac=0.0, diff_val=0.0;
     res.zero();
     
     for (FESystemUInt i=0; i<q_pts.size(); i++)
@@ -467,7 +467,7 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
         // first update the variables at the current quadrature point
         this->updateVariablesAtQuadraturePoint(B_mat);
 
-        this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat, diff2);
+        this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat, diff_val, diff_sens);
 
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
@@ -485,9 +485,8 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
 
             // discontinuity capturing operator
             B_matdx.rightVectorMultiply(*(this->solution), flux);
-            diff2.rightVectorMultiply(flux, tmp_vec1_n1);
-            B_matdx.leftVectorMultiply(tmp_vec1_n1, tmp_vec3_n2);
-            res.add(-q_weight[i]*jac, tmp_vec3_n2);
+            B_matdx.leftVectorMultiply(flux, tmp_vec3_n2);
+            res.add(-q_weight[i]*jac*diff_val, tmp_vec3_n2);
         }
     }
 }
@@ -507,14 +506,15 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
     FESystemAssert4((s_mat2.first == n2) && (s_mat2.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat2.first, s_mat2.first, n2, n2);
     
     static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, B_matdx, LS_mat, diff2, tmp_mat1_n2n2, tmp_mat2_n1n2, tmp_mat3_n1n1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1;
-    B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff2.resize(n1, n1); 
-    A.resize(n1, n1); flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2); tmp_mat3_n1n1.resize(n1, n1); A.resize(n1, n1);
+    static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n2, diff_sens;
+    B_mat.resize(n1, n2); B_matdx.resize(n1, n2); LS_mat.resize(n1, n2); diff2.resize(n1, n1);
+    tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2); tmp_mat3_n1n1.resize(n1, n1); A.resize(n1, n1);
+    A.resize(n1, n1); flux.resize(n1); diff_sens.resize(n2); tmp_vec2_n2.resize(n2);
 
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
     
-    FESystemDouble jac=0.0;
+    FESystemDouble jac=0.0, diff_val=0.0;
     dres_dx.zero(); dres_dxdot.zero();
     
     for (FESystemUInt i=0; i<q_pts.size(); i++)
@@ -527,17 +527,15 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
         this->updateVariablesAtQuadraturePoint(B_mat);
 
         // get the other matrices of interest
-        this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat, diff2);
+        this->calculateDifferentialOperatorMatrix(*(q_pts[i]), LS_mat, diff_val, diff_sens);
         
         // contribution from unsteady term
         // Galerkin contribution of velocity
-        this->calculateConservationVariableJacobian(A);
-        A.matrixRightMultiply(1.0, B_mat, tmp_mat2_n1n2); // A Bmat
-        B_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2);
+        B_mat.matrixTransposeRightMultiply(1.0, B_mat, tmp_mat1_n2n2);
         dres_dxdot.add(q_weight[i]*jac, tmp_mat1_n2n2);
         
         // LS contribution of velocity
-        LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau A Bmat
+        LS_mat.matrixTransposeRightMultiply(1.0, B_mat, tmp_mat1_n2n2); // LS^T tau A Bmat
         dres_dxdot.add(q_weight[i]*jac, tmp_mat1_n2n2);
         
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
@@ -556,31 +554,20 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
             dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
             
             // discontinuity capturing term
-            diff2.matrixRightMultiply(1.0, B_matdx, tmp_mat2_n1n2);
-            B_matdx.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2);
+            B_matdx.matrixTransposeRightMultiply(1.0, B_matdx, tmp_mat1_n2n2);
+            dres_dx.add(-q_weight[i]*jac*diff_val, tmp_mat1_n2n2);
+            
+            // discontinuity capturing term Jac due to coefficient dependence on solution
+            B_matdx.rightVectorMultiply(*(this->solution), flux);
+            B_matdx.leftVectorMultiply(flux, tmp_vec2_n2);
+            for (FESystemUInt ii=0; ii<n2; ii++)
+                for (FESystemUInt jj=0; jj<n2; jj++)
+                    tmp_mat1_n2n2.setVal(ii, jj, tmp_vec2_n2.getVal(ii)*diff_sens.getVal(jj));
             dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
         }
     }
 }
 
-
-
-
-
-void
-FESystem::Fluid::FluidElementBase::calculateConservationVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
-{
-    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    // calculate A0 = d U / d Y , where U = conservation variable vector, and Y = unknown variable vector
-    // note that for conservation variables as the unknown, this is an identity matrix
-
-    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
-    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
-    
-    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
-    
-    mat.setToIdentity(); // for conservative formulation
-}
 
 
 
@@ -1067,7 +1054,7 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(const FE
 
 
 void
-FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator)
+FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystemDouble& discontinuity_val, FESystem::Numerics::VectorBase<FESystemDouble>& discont_operator_sens)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
@@ -1075,10 +1062,11 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
     
     FESystemAssert4((s.first == n1) && (s.second == n2), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n2);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, tmp_mat, A0, A0inv, dX_dxi, dxi_dX;
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2, diff1, diff2, diff3;
-    A.resize(n1, n1); B_mat.resize(n1, n2); tmp_mat.resize(n1, n2); A0.resize(n1, n1); A0inv.resize(n1, n1); dX_dxi.resize(dim, dim); dxi_dX.resize(dim, dim);
-    vec1.resize(n1); vec2.resize(n1); diff1.resize(n1); diff2.resize(n1); diff3.resize(n1);
+    static FESystem::Numerics::DenseMatrix<FESystemDouble> A, B_mat, B_matx, B_maty, B_matz, tmp_mat, A0, A0inv, dX_dxi, dxi_dX;
+    static FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2, vec3, vec4, vec5, diff1, diff2, diff3;
+    A.resize(n1, n1); B_mat.resize(n1, n2); B_matx.resize(n1, n2); B_maty.resize(n1, n2); B_maty.resize(n1, n2);
+    tmp_mat.resize(n1, n2); A0.resize(n1, n1); A0inv.resize(n1, n1); dX_dxi.resize(dim, dim); dxi_dX.resize(dim, dim);
+    vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4.resize(n2); vec5.resize(n2); diff1.resize(n1); diff2.resize(n1); diff3.resize(n1);
     
     mat.zero();
 
@@ -1086,17 +1074,16 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
     this->calculateEntropyVariableJacobian(A0, A0inv);
 
     // contribution of unsteady term
-    this->calculateConservationVariableJacobian(A);
     this->calculateOperatorMatrix(pt, B_mat, false, 0);
-    A.matrixTransposeRightMultiply(1.0, B_mat, mat);
+    mat.copyMatrix(B_mat);
 
-    FESystemDouble val1 = 0.0, discontinuity_val = 0.0;
+    FESystemDouble val1 = 0.0;
 
     vec2.zero();
     diff1.zero();
     diff2.zero();
     diff3.zero();
-
+    
     // contribution of advection flux term
     for (FESystemUInt i=0; i<dim; i++)
     {
@@ -1110,32 +1097,41 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
         switch (i)
         {
             case 0:
+            {
                 B_mat.rightVectorMultiply(*(this->solution), diff1);
                 A.rightVectorMultiply(diff1, vec1);
+                B_matx.copyMatrix(B_mat);
+            }
                 break;
             case 1:
+            {
                 B_mat.rightVectorMultiply(*(this->solution), diff2);
                 A.rightVectorMultiply(diff2, vec1);
+                B_maty.copyMatrix(B_mat);
+            }
                 break;
             case 2:
+            {
                 B_mat.rightVectorMultiply(*(this->solution), diff3);
                 A.rightVectorMultiply(diff3, vec1);
+                B_matz.copyMatrix(B_mat);
+            }
                 break;
         }
 
         vec2.add(1.0, vec1); // sum A_i dU/dx_i
     }
 
-    // scale the LS matrix with the correct factor
-    this->calculateArtificialDiffusionOperator(pt, A);
-    A.matrixRightMultiply(1.0, mat, tmp_mat);
-    mat.copyMatrix(tmp_mat);
-
     // add the velocity and calculate the numerator of the discontinuity capturing term coefficient
     vec2.add(1.0, *(this->interpolated_vel)); // add velocity
     A0inv.rightVectorMultiply(vec2, vec1);
     discontinuity_val = vec1.dotProduct(vec2); // this is the numerator term
     
+    // calculate the sensitivity of the numerator
+    vec3.copyVector(vec1); // A0inv v
+    A0inv.leftVectorMultiply(vec2, vec1); // A0inv^T v
+    vec3.add(1.0, vec1);
+    mat.leftVectorMultiply(vec3, discont_operator_sens); // v^T (A0inv^T + A0inv) (B + A_i B_i)
 
     // now evaluate the dissipation factor for the discontinuity capturing term
     // this is the denominator term
@@ -1146,34 +1142,66 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(const FES
     for (FESystemUInt i=0; i<dim; i++)
     {
         vec1.zero();
+        tmp_mat.zero();
+
         for (FESystemUInt j=0; j<dim; j++)
         {
             switch (j)
             {
                 case 0:
+                {
                     vec1.add(dxi_dX.getVal(i, j), diff1);
+                    tmp_mat.add(dxi_dX.getVal(i, j), B_matx);
+                }
                     break;
                 case 1:
+                {
                     vec1.add(dxi_dX.getVal(i, j), diff2);
+                    tmp_mat.add(dxi_dX.getVal(i, j), B_maty);
+                }
                     break;
                 case 2:
+                {
                     vec1.add(dxi_dX.getVal(i, j), diff3);
+                    tmp_mat.add(dxi_dX.getVal(i, j), B_matz);
+                }
                     break;
             }
         }
+        
+        // calculate the value of denominator
         A0inv.rightVectorMultiply(vec1, vec2);
         val1 += vec1.dotProduct(vec2);
+        
+        // calculate the sensitivity of the denominator
+        vec3.copyVector(vec2); // A0inv v
+        A0inv.leftVectorMultiply(vec1, vec2); // A0inv^T v
+        vec3.add(1.0, vec2); // v^T (A0inv + A0inv^T)
+        tmp_mat.leftVectorMultiply(vec3, vec4);
+        vec5.add(1.0, vec4);
     }
     
     // now calculate the discontinuity capturing operator
-    if (fabs(val1) > 0.0)
+    if ((fabs(val1) > FESystem::Base::getMachineEpsilon<FESystemDouble>()) &&  (fabs(discontinuity_val) > FESystem::Base::getMachineEpsilon<FESystemDouble>()))
+    {
+        discont_operator_sens.scale(1.0/val1);
+        discont_operator_sens.add(-discontinuity_val/pow(val1, 2), vec5);
         discontinuity_val /= val1;
+        discontinuity_val = sqrt(discontinuity_val);
+        discont_operator_sens.scale(0.5/discontinuity_val);
+    }
     else
+    {
         discontinuity_val = 0.0;
+        discont_operator_sens.zero();
+    }
     
-    discontinuity_val = sqrt(discontinuity_val);
-    discontinuity_operator.setToIdentity();
-    discontinuity_operator.scale(discontinuity_val);
+    // scale the LS matrix with the correct factor
+    this->calculateArtificialDiffusionOperator(pt, A);
+    A.matrixRightMultiply(1.0, mat, tmp_mat);
+    mat.copyMatrix(tmp_mat);
+    
+    discont_operator_sens.zero();
 }
 
 

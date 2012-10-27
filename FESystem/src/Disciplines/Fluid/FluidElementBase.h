@@ -66,8 +66,6 @@ namespace FESystem
             
             void updateVariablesAtQuadraturePoint(const FESystem::Numerics::MatrixBase<FESystemDouble>& Bmat);
             
-            void calculateConservationVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-
             void calculateEntropyVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& dUdV, FESystem::Numerics::MatrixBase<FESystemDouble>& dVdU);
 
             void calculatePressureFluxJacobianOnSolidWall(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
@@ -78,7 +76,7 @@ namespace FESystem
 
             void calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator);
             
-            void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystem::Numerics::MatrixBase<FESystemDouble>& discontinuity_operator);
+            void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystemDouble& discontinuity_val, FESystem::Numerics::VectorBase<FESystemDouble>& discont_operator_sens);
 
             void calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain, FESystemUInt deriv_dim);
             
