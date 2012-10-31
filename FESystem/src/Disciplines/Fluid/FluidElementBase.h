@@ -9,6 +9,8 @@
 #ifndef __FESystem__FluidElementBase__
 #define __FESystem__FluidElementBase__
 
+// C++ includes
+#include <vector>
 
 // FESystem includes
 #include "Base/FESystemTypes.h"
@@ -62,9 +64,7 @@ namespace FESystem
             
             void calculateAdvectionFlux(const FESystemUInt i, FESystem::Numerics::VectorBase<FESystemDouble>& flux);
             
-            void calculateAdvectionFluxSpatialDerivative(const FESystemUInt i, const FESystem::Numerics::MatrixBase<FESystemDouble>& dBmat_dx, FESystem::Numerics::VectorBase<FESystemDouble>* flux, FESystem::Numerics::MatrixBase<FESystemDouble>* dflux_dU);
-            
-            void updateVariablesAtQuadraturePoint(const FESystem::Numerics::MatrixBase<FESystemDouble>& Bmat);
+            void calculateAdvectionFluxSpatialDerivative(const FESystemUInt i, FESystem::Numerics::VectorBase<FESystemDouble>* flux, FESystem::Numerics::MatrixBase<FESystemDouble>* dflux_dU);
             
             void calculateEntropyVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& dUdV, FESystem::Numerics::MatrixBase<FESystemDouble>& dVdU);
 
@@ -74,11 +74,19 @@ namespace FESystem
             
             void calculateDiffusiveFluxJacobian(FESystemUInt div_coord, FESystemUInt flux_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 
-            void calculateArtificialDiffusionOperator(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator);
+            void calculateArtificialDiffusionOperator(FESystem::Numerics::MatrixBase<FESystemDouble>& streamline_operator);
             
-            void calculateDifferentialOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystemDouble& discontinuity_val, FESystem::Numerics::VectorBase<FESystemDouble>& discont_operator_sens);
+            void calculateDifferentialOperatorMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& LS_operator, FESystemDouble& discontinuity_val, FESystem::Numerics::VectorBase<FESystemDouble>& discont_operator_sens);
 
             void calculateOperatorMatrix(const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain, FESystemUInt deriv_dim);
+            
+            void calculateOperatorMatrixForBoundary(const FESystemUInt b_id, const FESystem::Geometry::Point& pt, FESystem::Numerics::MatrixBase<FESystemDouble>& B_mat, FESystemBoolean if_strain, FESystemUInt deriv_dim);
+            
+            void updateVariablesAtQuadraturePoint(const FESystem::Geometry::Point& pt);
+
+            void updateVariablesAtQuadraturePointForBoundary(const FESystemUInt b_id, const FESystem::Geometry::Point& pt);
+
+            void updateVariablesForInterpolationOperator(const FESystem::Numerics::MatrixBase<FESystemDouble>& Bmat);
             
             FESystemDouble estimateJacobianSpectralRadius(const FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 
@@ -100,6 +108,19 @@ namespace FESystem
 
             const FESystem::Numerics::VectorBase<FESystemDouble>* velocity;
 
+            FESystem::Numerics::MatrixBase<FESystemDouble>  *dX_dxi, *dxi_dX, *B_mat, *A_entropy, *A_inv_entropy, *Ai_Bi_advection;
+            
+            FESystem::Numerics::VectorBase<FESystemDouble> *N_vec;
+
+            std::vector<FESystem::Numerics::VectorBase<FESystemDouble>*> N_vec_dx;
+
+            std::vector<FESystem::Numerics::MatrixBase<FESystemDouble>*> B_mat_dxi;
+            
+            std::vector<FESystem::Numerics::MatrixBase<FESystemDouble>*> Ai_advection;
+
+            // shape function Jacobian
+            FESystemDouble jac;
+            
             // Fluid properties: given as user input
             FESystemDouble dt, cp, cv, gamma, R, s0, p0, T0;
             

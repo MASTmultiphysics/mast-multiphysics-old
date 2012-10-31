@@ -315,6 +315,44 @@ FESystem::Base::DegreeOfFreedomMap::initializeSparsityPattern()
             this->sparsity_pattern->addNonZeroColumnsForRow(*s_it1, ids);
     }
     
+    std::vector<FESystemUInt> reordered_ids(this->n_dofs);
+    this->sparsity_pattern->calculateFillReducingOrdering(reordered_ids);
+    
+
+    // now redefine the ordeing
+    std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+    std::vector<FESystem::Mesh::Node*>::iterator it = nodes.begin(), end = nodes.end();
+    
+    for ( ; it != end; it++)
+        for (FESystemUInt i_var=0; i_var<this->getNVariables(); i_var++)
+            for (FESystemUInt i_order=0; i_order<(*it)->getDegreeOfFreedomUnit(i_var).global_dof_id.size(); i_order++)
+                (*it)->getDegreeOfFreedomUnit(i_var).global_dof_id[i_order] = reordered_ids[(*it)->getDegreeOfFreedomUnit(i_var).global_dof_id[i_order]];
+    
+
+    
+    // now reset the data structure of sparsity pattern with the updated orderin
+    this->sparsity_pattern->clear();
+    
+    this->sparsity_pattern->nonzero_column_ids_per_row.resize(this->getNDofs());
+    
+    // iterate over the elements
+    el_it=elems.begin();
+    
+    // iterate over each node and element and initialize their dofs and the connectivity model
+    for ( ; el_it != elems.end(); el_it++)
+    {
+        ids.clear();
+        for (FESystemUInt i_nodes=0; i_nodes<(*el_it)->getNNodes(); i_nodes++)
+            for (FESystemUInt i_dofs=0; i_dofs<(*el_it)->getNode(i_nodes).getNDegreeOfFreedomUnits(); i_dofs++)
+                // now add the connectivity for the respective degree of freedom units
+                ids.insert((*el_it)->getNode(i_nodes).getDegreeOfFreedomUnit(i_dofs).global_dof_id[0]); //  currently works only for a single p-level
+        
+        // now that the dofs ids for this element are known, tell each id that it is connected to the others; this requires a double loop
+        for (s_it1 = ids.begin(); s_it1 != ids.end(); s_it1++)
+            this->sparsity_pattern->addNonZeroColumnsForRow(*s_it1, ids);
+    }
+    
+    
     // now tell the patten to reinit its data structures
     this->sparsity_pattern->reinit();
 }

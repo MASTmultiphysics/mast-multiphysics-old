@@ -31,6 +31,7 @@
 		EB55F83615E6880E00D8E6B1 /* LinearPlateElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */; };
 		EB55F83715E6880E00D8E6B1 /* LinearPlateElementBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */; };
 		EB55F83A15E68C7900D8E6B1 /* LinearBeamElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */; };
+		EB8B00DC1640758B0064AEF1 /* libmetis.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8B00DB1640758B0064AEF1 /* libmetis.dylib */; };
 		EB906D4915D4330B00C1F550 /* FrequencyDomainFlutterSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFCE15C1B73B0062459D /* FrequencyDomainFlutterSolverBase.cpp */; };
 		EB906D4A15D4330E00C1F550 /* PKFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD015C1B73B0062459D /* PKFlutterSolver.cpp */; };
 		EB906D4B15D4330F00C1F550 /* UGFlutterSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFD315C1B73B0062459D /* UGFlutterSolver.cpp */; };
@@ -313,6 +314,7 @@
 		EB55F83415E6880D00D8E6B1 /* LinearPlateElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearPlateElementBase.cpp; sourceTree = "<group>"; };
 		EB55F83515E6880D00D8E6B1 /* LinearPlateElementBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinearPlateElementBase.h; sourceTree = "<group>"; };
 		EB55F83915E68C7800D8E6B1 /* LinearBeamElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LinearBeamElementBase.cpp; sourceTree = "<group>"; };
+		EB8B00DB1640758B0064AEF1 /* libmetis.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmetis.dylib; path = ../../../../../opt/local/lib/libmetis.dylib; sourceTree = "<group>"; };
 		EB906D4C15D4428000C1F550 /* ParameterSet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ParameterSet.h; sourceTree = "<group>"; };
 		EB906D5115D450E600C1F550 /* FlutterSolverBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FlutterSolverBase.cpp; sourceTree = "<group>"; };
 		EB906D5215D450E600C1F550 /* FlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlutterSolverBase.h; sourceTree = "<group>"; };
@@ -562,6 +564,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB8B00DC1640758B0064AEF1 /* libmetis.dylib in Frameworks */,
 				69107D221578D8CF00196B94 /* libarpack.a in Frameworks */,
 				69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */,
 				6967BA82156A80B000F2FB18 /* libplplotcxxd.dylib in Frameworks */,
@@ -642,6 +645,7 @@
 		69677C941340386A002B32C8 = {
 			isa = PBXGroup;
 			children = (
+				EB8B00DB1640758B0064AEF1 /* libmetis.dylib */,
 				EBAEDFA815C1B73B0062459D /* FESystem */,
 				69107D211578D8CF00196B94 /* libarpack.a */,
 				6967BA81156A80B000F2FB18 /* libplplotcxxd.dylib */,

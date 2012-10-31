@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
-		EB1A021B1635825A008A3A69 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB1A021A1635825A008A3A69 /* FESystem.dylib */; };
+		EB8B00DF164075A10064AEF1 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8B00DE164075A10064AEF1 /* FESystem.dylib */; };
 		EBAEE19515C1B8A90062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19215C1B8A90062459D /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -27,7 +27,7 @@
 /* Begin PBXFileReference section */
 		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
-		EB1A021A1635825A008A3A69 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
+		EB8B00DE164075A10064AEF1 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBAEE19215C1B8A90062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = FESystem/examples/main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -36,7 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB1A021B1635825A008A3A69 /* FESystem.dylib in Frameworks */,
+				EB8B00DF164075A10064AEF1 /* FESystem.dylib in Frameworks */,
 				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -47,7 +47,7 @@
 		69677EBC13404448002B32C8 = {
 			isa = PBXGroup;
 			children = (
-				EB1A021A1635825A008A3A69 /* FESystem.dylib */,
+				EB8B00DE164075A10064AEF1 /* FESystem.dylib */,
 				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
 				EBAEE19215C1B8A90062459D /* main.cpp */,
 				69677EC813404448002B32C8 /* Products */,
@@ -171,6 +171,8 @@
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-dnngzprkwoyuvxdbkrjlfrgzblqx/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-cfluvlaxjtzfymanuimtsegvmehz/Build/Products/Debug\"",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-gxbstmkzgllzasfxircgnhskqlii/Build/Products/Debug\"",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug\"",
 				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -193,6 +195,8 @@
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-dnngzprkwoyuvxdbkrjlfrgzblqx/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-cfluvlaxjtzfymanuimtsegvmehz/Build/Products/Debug\"",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-gxbstmkzgllzasfxircgnhskqlii/Build/Products/Debug\"",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug\"",
 				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -15,6 +15,9 @@
 #include "Numerics/SparsityPattern.h"
 #include "Base/FESystemExceptions.h"
 
+// Metis includes
+#include "metis/metis.h"
+
 
 FESystem::Numerics::SparsityPattern::SparsityPattern():
 if_initialized(false),
@@ -183,17 +186,6 @@ FESystem::Numerics::SparsityPattern::getAllNonzeroColumnsInRow(const FESystemUIn
 
 
 
-//const std::vector<std::pair<FESystemUInt, FESystemUInt> >&
-//FESystem::Numerics::SparsityPattern::getAllNonzeroRowsInColumn(const FESystemUInt column) const
-//{
-//    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-//    FESystemAssert2(column < this->nonzero_column_ids_per_row.size(), FESystem::Exception::IndexOutOfBound, column, this->nonzero_column_ids_per_row.size());
-//    
-//    return this->nonzero_row_ids_per_column[column];
-//}
-//
-
-
 void
 FESystem::Numerics::SparsityPattern::getIDForRowAndColumn(const FESystemUInt row, const FESystemUInt column, FESystemBoolean& if_exists, FESystemUInt& id_val) const
 {
@@ -271,34 +263,6 @@ FESystem::Numerics::SparsityPattern::reinit()
             n++;
         }
     }
-
-//    // update the nonzero rows per column
-//    this->nonzero_row_ids_per_column.resize(this->nonzero_column_ids_per_row.size());    
-//    FESystemUInt n_nonzeros_in_col=0,id_num=0;
-//    std::vector<std::pair<FESystemUInt, FESystemUInt> >::const_iterator s_it, s_end;
-//    for (id_num=0; id_num<this->nonzero_row_ids_per_column.size(); id_num++)
-//    {
-//        std::fill(nonzeros_per_col.begin(), nonzeros_per_col.begin()+n_nonzeros_in_col, std::pair<FESystemBoolean, FESystemUInt>(0, 0));
-//        n_nonzeros_in_col = 0;
-//        // find the nonzeros from all rows
-//        for (FESystemUInt i=col_row_limits[id_num].first; i<=col_row_limits[id_num].second; i++)
-//            // if the first col is greater than the column, then none will be found here
-//            if ((this->nonzero_column_ids_per_row[i].begin()->first <= id_num) || (this->nonzero_column_ids_per_row[i].rbegin()->first >= id_num))
-//            {
-//                s_it = this->nonzero_column_ids_per_row[i].begin();
-//                s_end = this->nonzero_column_ids_per_row[i].end();
-//                this->find(s_it, s_end, id_num);
-//                if (s_it != s_end)
-//                {
-//                    nonzeros_per_col[n_nonzeros_in_col].first = i; // row number
-//                    nonzeros_per_col[n_nonzeros_in_col++].second = s_it->second; // id number in sparse value array
-//                }
-//            }
-//        // copy the nonzeros to the sparsity
-//        this->nonzero_row_ids_per_column[id_num].resize(n_nonzeros_in_col);
-//        for (FESystemUInt j=0; j<n_nonzeros_in_col; j++)
-//            this->nonzero_row_ids_per_column[id_num][j] = nonzeros_per_col[j]; 
-//    }
     
     this->nonzero_cols_tmp.clear(); // not needed anymore, so can be cleared
     this->if_initialized = true;
@@ -480,74 +444,51 @@ FESystem::Numerics::SparsityPattern::write(std::ostream &output) const
         // increment the counter
         i++;
     }
-
-//    output << "Nonzero Rows In Columns:" << std::endl;
-//    
-//    it=this->nonzero_row_ids_per_column.begin(), end=this->nonzero_row_ids_per_column.end();
-//    
-//    i=0;
-//    // add all the nonzero columns per row
-//    for ( ; it != end; it++)
-//    {
-//        s_it = it->begin(); s_end = it->end();
-//        
-//        output << std::setw(10) << i << " : "  << std::setw(5) << it->size() << " :  ";
-//        for ( ; s_it != s_end; s_it++)
-//            output << std::setw(10) << s_it->first;
-//        output << std::endl;
-//        
-//        // increment the counter
-//        i++;
-//    }
-
 }
 
 
-//void
-//FESystem::Numerics::SparsityPattern::calculateFillReducingOrdering(std::vector<FESystemUInt> &reordered_dofs)
-//{
-//    FESystemInt n_dofs = this->nonzero_column_range_per_row.size(), adjncy_id=0;
-//    for (FESystemInt i=0; i<this->nonzero_column_range_per_row.size(); i++)
-//        adjncy_id += (this->nonzero_column_range_per_row[i].second-this->nonzero_column_range_per_row[i].first+1); // minus 1 to omit itself from the list
-//    
-//    // create the adjacency array
-//    int *xadj=new int[n_dofs+1], *adjncy=new int[adjncy_id], *perm=new int[n_dofs], *iperm=new int[n_dofs], *options=new int[METIS_NOPTIONS];
-//
-//    for (FESystemInt i=0; i<n_dofs+1; i++) xadj[i] = 0;
-//    for (FESystemInt i=0; i<adjncy_id; i++) adjncy[i] = 0;
-//    for (FESystemInt i=0; i<n_dofs; i++) {perm[i] = 0; iperm[i] = 0;}
-//
-//    xadj[0] = 0; adjncy_id=0;
-//    // initialize the adjacency array data
-//    for (FESystemInt i=1; i<n_dofs+1; i++)
-//    {
-//        if (i == 1)
-//            xadj[i] = xadj[i-1]+this->nonzero_column_range_per_row[i-1].size();
-//        else
-//            xadj[i] = xadj[i-1]+this->nonzero_column_range_per_row[i-1].size()-1;
-//        
-//        for (FESystemInt j=0; j<this->nonzero_column_range_per_row[i-1].size(); j++)
-//            if (this->nonzero_column_range_per_row[i-1][j].first != i-1)
-//                adjncy[adjncy_id++] = this->nonzero_column_range_per_row[i-1][j].first;
-//    }
-//    
-//    METIS_SetDefaultOptions(options);
-//    options[METIS_OPTION_NUMBERING] = 0;
-//    
-//    FESystemInt metis_return = METIS_NodeND(&n_dofs, &xadj[0], &adjncy[0], NULL, NULL, &perm[0], &iperm[0]);
-//    FESystemAssert1(metis_return==METIS_OK, FESystem::Exception::InvalidID, metis_return);
-//    
-//    // copy the ids back to the return vector
-//    for (FESystemInt i=0; i<n_dofs; i++)
-//        reordered_dofs[i] = iperm[i];
-//
-//    delete[] xadj;
-//    delete[] adjncy;
-//    delete[] perm;
-//    delete[] iperm;
-//    delete[] options;
-//
-//}
+void
+FESystem::Numerics::SparsityPattern::calculateFillReducingOrdering(std::vector<FESystemUInt> &reordered_dofs)
+{
+    FESystemInt n_dofs = this->nonzero_column_ids_per_row.size(), adjncy_id=0;
+    for (FESystemInt i=0; i<this->nonzero_column_ids_per_row.size(); i++)
+        adjncy_id += (this->nonzero_column_ids_per_row[i].size()-1); // minus 1 to omit itself from the list
+    
+    // create the adjacency array
+    int *xadj=new int[n_dofs+1], *adjncy=new int[adjncy_id], *perm=new int[n_dofs], *iperm=new int[n_dofs], *options=new int[METIS_NOPTIONS];
+
+    for (FESystemInt i=0; i<n_dofs+1; i++) xadj[i] = 0;
+    for (FESystemInt i=0; i<adjncy_id; i++) adjncy[i] = 0;
+    for (FESystemInt i=0; i<n_dofs; i++) {perm[i] = 0; iperm[i] = 0;}
+
+    xadj[0] = 0; adjncy_id=0;
+    // initialize the adjacency array data
+    for (FESystemInt i=1; i<n_dofs+1; i++)
+    {
+        xadj[i] = xadj[i-1]+this->nonzero_column_ids_per_row[i-1].size()-1;
+        
+        for (FESystemInt j=0; j<this->nonzero_column_ids_per_row[i-1].size(); j++)
+            if (this->nonzero_column_ids_per_row[i-1][j].first != i-1)
+                adjncy[adjncy_id++] = this->nonzero_column_ids_per_row[i-1][j].first;
+    }
+    
+    METIS_SetDefaultOptions(options);
+    options[METIS_OPTION_NUMBERING] = 0;
+    
+    FESystemInt metis_return = METIS_NodeND(&n_dofs, &xadj[0], &adjncy[0], NULL, NULL, &perm[0], &iperm[0]);
+    FESystemAssert1(metis_return==METIS_OK, FESystem::Exception::InvalidID, metis_return);
+    
+    // copy the ids back to the return vector
+    for (FESystemInt i=0; i<n_dofs; i++)
+        reordered_dofs[i] = iperm[i];
+
+    delete[] xadj;
+    delete[] adjncy;
+    delete[] perm;
+    delete[] iperm;
+    delete[] options;
+
+}
 
 
 

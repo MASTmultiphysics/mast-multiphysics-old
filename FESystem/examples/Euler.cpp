@@ -12,9 +12,9 @@
 
 
 
-const FESystemDouble  rho=1.05, u1=1000.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-2, final_t=time_step*2000;
+const FESystemDouble  rho=1.05, u1=1000.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-1, final_t=time_step*1;
 const FESystemDouble x_length = 2, y_length = .5, t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord;
-const FESystemUInt nx=75, ny=30, dim = 2;
+const FESystemUInt nx=100, ny=35, dim = 2;
 
 
 
@@ -282,7 +282,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
     std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
     transient_solver.initialize(1, nonbc_dofs.size(), int_constants);
-    transient_solver.setConvergenceTolerance(1.0e-10, 20);
+    transient_solver.setConvergenceTolerance(1.0e-10, 10);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass_mat_reduced);
     

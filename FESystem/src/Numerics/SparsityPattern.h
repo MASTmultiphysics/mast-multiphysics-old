@@ -88,11 +88,6 @@ namespace FESystem
              *   returns the nonzero columns for the specified row. The IDs are provided in a set, so they are in increasing order
              */
             const std::vector<std::pair<FESystemUInt, FESystemUInt> >& getAllNonzeroColumnsInRow(const FESystemUInt row) const;
-
-//            /*!
-//             *   returns the nonzero rows for the specified column. The IDs are provided in a set, so they are in increasing order
-//             */
-//            const std::vector<std::pair<FESystemUInt, FESystemUInt> >& getAllNonzeroRowsInColumn(const FESystemUInt column) const;
                         
             /*!
              *   Returns the ID of the specified row and column in the contiguous vector of all nonzero values. It is an error if the 
@@ -130,7 +125,11 @@ namespace FESystem
             
         protected:
             
-            
+            /*!
+             *   calculates the new dof ordering so that they reduce the number of non-zeros for LU factorization
+             */
+            void calculateFillReducingOrdering(std::vector<FESystemUInt> &reordered_dofs);
+
             // this is a friend class
             friend class FESystem::Base::DegreeOfFreedomMap;
 
@@ -145,15 +144,10 @@ namespace FESystem
             FESystemUInt n_nonzero_values;
 
             /*!
-             *   For each row, the set stores the columns for which the values are nonzero
+             *   For each row, the set stores the columns for which the values are nonzero. The first element of the pair is the number of the nonzero column, and the second element is the
+             *   location of this element in the sparse matrix array data structure.
              */
             std::vector<std::vector<std::pair<FESystemUInt, FESystemUInt> > >  nonzero_column_ids_per_row;
-
-//            /*!
-//             *   For each column, the set stores the rows for which the values are nonzero. This is post processed from the 
-//             *   same data for rows.
-//             */
-//            std::vector<std::vector<std::pair<FESystemUInt, FESystemUInt> > > nonzero_row_ids_per_column;
             
             /*!
              *   a temporary vector of booleans to track the number of nonzeros in a row

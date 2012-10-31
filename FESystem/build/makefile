@@ -18,6 +18,8 @@ ifeq (${PLATFORM},Darwin)
     HAVE_PLPLOT_LIBS=1
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
+    METIS_LIB_DIR=/opt/local/lib
+    METIS_LIBS=-lmetis
     BOOST_DIR=/opt/local/include
 endif
 
@@ -30,6 +32,8 @@ ifeq (${PLATFORM},Darwinhome)
     PLPLOT_INCLUDE_DIR=/opt/local/include
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
+    METIS_LIB_DIR=/opt/local/lib
+    METIS_LIBS=-lmetis
     PLATFORM=Darwin
     BOOST_DIR=/opt/local/include
 endif
@@ -40,6 +44,8 @@ ifeq (${PLATFORM},Linux)
     GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     HAVE_PLPLOT_LIBS=0
+    METIS_LIB_DIR=/opt/local/lib
+    METIS_LIBS=-lmetis
     BOOST_DIR=/home/bhatia/usr/include
 endif
 
@@ -84,6 +90,7 @@ endif
 EXTERNAL_LIB_DIRS=-L${SOURCE_DIR}
 EXTERNAL_LIB_DIRS+=-L${ARPACK_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
+EXTERNAL_LIB_DIRS+=-L${METIS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${GFORT_SYSTEM_LIB_DIR}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
@@ -91,6 +98,7 @@ endif
 
 EXTERNAL_LIBS=-lfesystem-${METHOD}
 EXTERNAL_LIBS+=-larpack -llapack -lblas -latlas
+EXTERNAL_LIBS+=${METIS_LIBS}
 EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIBS+=${PLPLOT_LIBS}
