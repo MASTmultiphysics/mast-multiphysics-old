@@ -47,8 +47,8 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     {
         case FESystem::Mesh::QUAD4:
         case FESystem::Mesh::TRI3:
-            q_rule.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
-            q_boundary.init(1,3);
+            q_rule.init(2, 2);  // bending quadrature is higher than the shear quadrature for reduced integrations
+            q_boundary.init(1,2);
             break;
             
         case FESystem::Mesh::QUAD9:

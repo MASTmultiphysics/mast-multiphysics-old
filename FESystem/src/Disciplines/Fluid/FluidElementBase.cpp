@@ -499,16 +499,16 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
             this->B_mat_dxi[i_dim]->leftVectorMultiply(flux, tmp_vec3_n2); // dBw/dx_i F^adv_i
             res.add(q_weight[i]*jac, tmp_vec3_n2);
             
-            // Least square contribution from flux
-            this->calculateAdvectionFluxSpatialDerivative(i_dim, &flux, NULL); // d F^adv_i / dxi
-            LS_mat.leftVectorMultiply(flux, tmp_vec3_n2); // LS^T tau F^adv_i
-            res.add(-q_weight[i]*jac, tmp_vec3_n2);
-
             // discontinuity capturing operator
             this->B_mat_dxi[i_dim]->rightVectorMultiply(*(this->solution), flux);
             this->B_mat_dxi[i_dim]->leftVectorMultiply(flux, tmp_vec3_n2);
             res.add(-q_weight[i]*jac*diff_val, tmp_vec3_n2);
         }
+        
+        // Least square contribution from flux
+        this->Ai_Bi_advection->rightVectorMultiply(*(this->solution), flux); // d F^adv_i / dxi
+        LS_mat.leftVectorMultiply(flux, tmp_vec3_n2); // LS^T tau F^adv_i
+        res.add(-q_weight[i]*jac, tmp_vec3_n2);
     }
 }
 
@@ -562,11 +562,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
             this->B_mat_dxi[i_dim]->matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // dBw/dx_i^T  dF^adv_i/ dU
             dres_dx.add(q_weight[i]*jac, tmp_mat1_n2n2);
             
-            // Least square contribution from flux
-            this->calculateAdvectionFluxSpatialDerivative(i_dim, NULL, &tmp_mat2_n1n2); // d^2 F^adv_i / dxi dU
-            LS_mat.matrixTransposeRightMultiply(1.0, tmp_mat2_n1n2, tmp_mat1_n2n2); // LS^T tau d^2F^adv_i / dx dU
-            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
-            
             // discontinuity capturing term
             this->B_mat_dxi[i_dim]->matrixTransposeRightMultiply(1.0, *(this->B_mat_dxi[i_dim]), tmp_mat1_n2n2);
             dres_dx.add(-q_weight[i]*jac*diff_val, tmp_mat1_n2n2);
@@ -579,6 +574,10 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
 //                    tmp_mat1_n2n2.setVal(ii, jj, tmp_vec2_n2.getVal(ii)*diff_sens.getVal(jj));
 //            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
         }
+
+        // Lease square contribution of flux gradient
+        LS_mat.matrixTransposeRightMultiply(1.0, *(this->Ai_Bi_advection), tmp_mat1_n2n2); // LS^T tau d^2F^adv_i / dx dU
+        dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
     }
 }
 
