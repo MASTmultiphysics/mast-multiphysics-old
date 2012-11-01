@@ -614,8 +614,8 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
             dUdV.setVal(3, 0, dUdV.getVal(0, 3));
             dUdV.setVal(3, 1, dUdV.getVal(1, 3));
             dUdV.setVal(3, 2, dUdV.getVal(2, 3));
-            dUdV.setVal(3, 3, u3*u3+v/beta_T);
-            dUdV.setVal(3, n1-1, u3*(h+k-v*(alpha_p*T+1)/beta_T));
+            dUdV.setVal(3, 3, u3*u3+cv*T*(gamma-1.0));
+            dUdV.setVal(3, n1-1, u3*(cv*T*gamma+k));
             
             dUdV.setVal(n1-1, 3, dUdV.getVal(3, n1-1));
         }
@@ -628,8 +628,8 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
 
             dUdV.setVal(2, 0, dUdV.getVal(0, 2));
             dUdV.setVal(2, 1, dUdV.getVal(1, 2));
-            dUdV.setVal(2, 2, u2*u2+v/beta_T);
-            dUdV.setVal(2, n1-1, u2*(h+k-v*(alpha_p*T+1)/beta_T));
+            dUdV.setVal(2, 2, u2*u2+cv*T*(gamma-1.0));
+            dUdV.setVal(2, n1-1, u2*(cv*T*gamma+k));
             
             dUdV.setVal(n1-1, 2, dUdV.getVal(2, n1-1));
         }
@@ -638,15 +638,15 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
         {
             dUdV.setVal(0, 0, 1.0);
             dUdV.setVal(0, 1, u1);
-            dUdV.setVal(0, n1-1, h+k-v*alpha_p*T/beta_T);
+            dUdV.setVal(0, n1-1, e_tot);
 
             dUdV.setVal(1, 0, dUdV.getVal(0, 1));
-            dUdV.setVal(1, 1, u1*u1+v/beta_T);
-            dUdV.setVal(1, n1-1, u1*(h+k-v*(alpha_p*T+1)/beta_T));
+            dUdV.setVal(1, 1, u1*u1+cv*T*(gamma-1.0));
+            dUdV.setVal(1, n1-1, u1*(cv*T*gamma+k));
 
             dUdV.setVal(n1-1, 0, dUdV.getVal(0, n1-1));
             dUdV.setVal(n1-1, 1, dUdV.getVal(1, n1-1));
-            dUdV.setVal(n1-1, n1-1, pow(h+k,2)+v/beta_T*(cp*T-2*h*alpha_p*T-2*k*(alpha_p*T-1)));
+            dUdV.setVal(n1-1, n1-1, k*k+gamma*cv*T*(cv*T+2*k));
 
         }
             break;
@@ -655,7 +655,7 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
             break;
     }
     
-    dUdV.scale(beta_T*T/v/v);
+    dUdV.scale(rho/(gamma-1.0));
 
     
     // dv/du
@@ -663,7 +663,7 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
     {
         case 3:
         {
-            dVdU.setVal(0, 3, u3);
+            dVdU.setVal(0, 3, -u3*k);
             
             dVdU.setVal(1, 3, u1*u3);
             
@@ -672,39 +672,39 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
             dVdU.setVal(3, 0, dVdU.getVal(0, 3));
             dVdU.setVal(3, 1, dVdU.getVal(1, 3));
             dVdU.setVal(3, 2, dVdU.getVal(2, 3));
-            dVdU.setVal(3, 3, u3*u3+v/beta_T);
-            dVdU.setVal(3, n1-1, u3*(h+k-v*(alpha_p*T+1)/beta_T));
+            dVdU.setVal(3, 3, u3*u3+cv*T);
+            dVdU.setVal(3, n1-1, -u3);
             
             dVdU.setVal(n1-1, 3, dVdU.getVal(3, n1-1));
         }
             
         case 2:
         {
-            dVdU.setVal(0, 2, u2);
+            dVdU.setVal(0, 2, -u2*k);
             
             dVdU.setVal(1, 2, u1*u2);
             
             dVdU.setVal(2, 0, dVdU.getVal(0, 2));
             dVdU.setVal(2, 1, dVdU.getVal(1, 2));
-            dVdU.setVal(2, 2, u2*u2+v/beta_T);
-            dVdU.setVal(2, n1-1, u2*(h+k-v*(alpha_p*T+1)/beta_T));
+            dVdU.setVal(2, 2, u2*u2+cv*T);
+            dVdU.setVal(2, n1-1, -u2);
             
             dVdU.setVal(n1-1, 2, dVdU.getVal(2, n1-1));
         }
             
         case 1:
         {
-            dVdU.setVal(0, 0, 1.0);
-            dVdU.setVal(0, 1, u1);
-            dVdU.setVal(0, n1-1, h+k-v*alpha_p*T/beta_T);
+            dVdU.setVal(0, 0, k*k+cv*cv*T*T*gamma);
+            dVdU.setVal(0, 1, -u1*k);
+            dVdU.setVal(0, n1-1, -e_tot+2.0*k);
             
             dVdU.setVal(1, 0, dVdU.getVal(0, 1));
-            dVdU.setVal(1, 1, u1*u1+v/beta_T);
-            dVdU.setVal(1, n1-1, u1*(h+k-v*(alpha_p*T+1)/beta_T));
+            dVdU.setVal(1, 1, u1*u1+cv*T);
+            dVdU.setVal(1, n1-1, -u1);
             
             dVdU.setVal(n1-1, 0, dVdU.getVal(0, n1-1));
             dVdU.setVal(n1-1, 1, dVdU.getVal(1, n1-1));
-            dVdU.setVal(n1-1, n1-1, pow(h+k,2)+v/beta_T*(cp*T-2*h*alpha_p*T-2*k*(alpha_p*T-1)));
+            dVdU.setVal(n1-1, n1-1, 1.0);
         }
             break;
             
@@ -712,8 +712,7 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
             break;
     }
     
-    dVdU.scale(beta_T*T/v/v);
-    dVdU.zero();
+    dVdU.scale(1.0/(rho*cv*cv*T*T));
 }
 
 
@@ -1161,7 +1160,7 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     
     //    // now calculate the discontinuity capturing operator
 //    if ((fabs(val1) > FESystem::Base::getMachineEpsilon<FESystemDouble>()) &&  (fabs(discontinuity_val) > FESystem::Base::getMachineEpsilon<FESystemDouble>()))
-    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 0.0))
+    if ((fabs(val1) > 1.0e-2) &&  (fabs(discontinuity_val) > 1.0e-2))
     {
         discont_operator_sens.scale(1.0/discontinuity_val);
         discont_operator_sens.add(-1.0/val1, vec5);
