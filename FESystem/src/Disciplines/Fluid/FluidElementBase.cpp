@@ -1159,8 +1159,7 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     }
     
     //    // now calculate the discontinuity capturing operator
-//    if ((fabs(val1) > FESystem::Base::getMachineEpsilon<FESystemDouble>()) &&  (fabs(discontinuity_val) > FESystem::Base::getMachineEpsilon<FESystemDouble>()))
-    if ((fabs(val1) > 1.0e-2) &&  (fabs(discontinuity_val) > 1.0e-2))
+    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 1.0e-2))
     {
         discont_operator_sens.scale(1.0/discontinuity_val);
         discont_operator_sens.add(-1.0/val1, vec5);

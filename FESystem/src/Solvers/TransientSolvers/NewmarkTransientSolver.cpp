@@ -199,7 +199,9 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             FESystemDouble l2 = this->residual->getL2Norm();
             
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
-            <<  "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number << "  Residual: " << std::setw(15) << l2  << std::endl;
+            << "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number
+            << "  Vel Norm: " << std::setw(15) << this->current_velocity->getL2Norm()
+            << "  Res Norm: " << std::setw(15) << l2  << std::endl;
             
             // if converged, increment the time step
             if ((l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
