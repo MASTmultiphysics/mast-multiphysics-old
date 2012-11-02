@@ -9,6 +9,7 @@
 
 // FESystem includes
 #include "Solvers/LinearSolvers/PseudoTimeSteppingLinearSolver.h"
+#include "Solvers/TransientSolvers/ExplicitRungeKuttaTransientSolver.h"
 #include "Numerics/LocalVector.h"
 #include "Numerics/MatrixBase.h"
 #include "Base/macros.h"
@@ -18,7 +19,7 @@ template <typename ValType>
 FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::PseudoTimeSteppingLinearSolver():
 FESystem::LinearSolvers::LinearSolverBase<ValType>(),
 tolerance(1.0e-6),
-max_iters(100)
+max_iters(10e10)
 {
     
 }
@@ -72,30 +73,55 @@ FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FE
                     this->getSystemMatrix().getSize().second,
                     sol.getSize()); 
 
-    FESystemDouble conv=0.0, pseudo_time_step=0.001;
+    FESystemDouble conv=0.0, pseudo_time_step=1.0e-4;
     FESystemUInt n_iters=0;
     FESystemBoolean if_converged=false;
+
+    sol.setAllVals(1.0);
+
+    FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType> ode_solver;
+    ode_solver.initialize(1, this->getSystemMatrix().getSize().first, 4);
+    ode_solver.setInitialTimeData(0.0, pseudo_time_step, sol);
     
     // set the initial guess
-    sol.setAllVals(1.0);
     
+    FESystem::TransientSolvers::TransientSolverCallBack call_back;
+
     while (!if_converged)
     {
-        this->residual_vec->zero();
-        this->getSystemMatrix().rightVectorMultiply(sol, *(this->residual_vec)); // A x 
-        this->residual_vec->add(-1.0, rhs); // Ax-b
-        conv = this->residual_vec->getL2Norm();
-        sol.add(-pseudo_time_step, *(this->residual_vec));
+        call_back = ode_solver.incrementTimeStep();
+        switch (call_back)
+        {
+            case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
+                break;
+                
+            case FESystem::TransientSolvers::EVALUATE_X_DOT:
+                // the Jacobian is not updated since it is constant with respect to time
+            {
+                this->getSystemMatrix().rightVectorMultiply(ode_solver.getCurrentStateVector(), ode_solver.getCurrentVelocityFunctionVector()); // Ax
+                ode_solver.getCurrentVelocityFunctionVector().add(-1.0, rhs); // Ax-b
+                ode_solver.getCurrentVelocityFunctionVector().scale(-1.0); // -(Ax-b)
+                conv = ode_solver.getCurrentVelocityFunctionVector().getL2Norm();
+            }
+                break;
+                
+            default:
+                FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+                break;
+        }
+        
         n_iters++;
-        if ((conv < this->tolerance) || (n_iters == this->max_iters))
+        if ((conv < this->tolerance))// || (n_iters == this->max_iters))
             if_converged = true;
         std::cout << n_iters << " " << conv << std::endl;
     }
+    
+    sol.copyVector(ode_solver.getCurrentStateVector());
 }
-            
 
-template <typename ValType> 
-void 
+
+template <typename ValType>
+void
 FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::solve(const FESystem::Numerics::MatrixBase<ValType>& rhs,
                                                                    FESystem::Numerics::MatrixBase<ValType>& sol)
 {

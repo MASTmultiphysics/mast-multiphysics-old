@@ -14,7 +14,7 @@
 
 const FESystemDouble  rho=1.05, u1=1300.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-2, final_t=time_step*1.0e5;
 const FESystemDouble x_length = 2, y_length = .5, t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord, nonlin_tol = 1.0e-10;
-const FESystemUInt nx=200, ny=70, dim = 2, max_nonlin_iters = 10;
+const FESystemUInt nx=75, ny=30, dim = 2, max_nonlin_iters = 10;
 
 
 
