@@ -125,16 +125,7 @@ namespace FESystem
             FESystemDouble dt, cp, cv, gamma, R, s0, p0, T0;
             
             // Fluid variables
-            FESystemDouble mu, rho, p, T, u1, u2, u3, e_tot;
-            
-            // Derived properties
-            FESystemDouble s, v, a, d, h, e, alpha_p, beta_T, gamma_bar, k, e_1, e_1_bar;
-            
-            // Derivatives
-            FESystemDouble dp_drho_T, dp_dT_rho, de_drho_T, de_dT_rho, drho_dp_T, drho_dT_p, de_dp_T, de_dT_p;
-            
-            // Other intermediate constants
-            FESystemDouble e_rho_1, e_rho_2, e_rho_3, e_rho_4, e_p_1, e_p_2, e_p_3, e_p_4, s1, s2, e_c_1, e_c_2, e_c_3, e_c_4;
+            FESystemDouble rho, p, T, u1, u2, u3, e_tot, k, e, a;
         };
     }
 }

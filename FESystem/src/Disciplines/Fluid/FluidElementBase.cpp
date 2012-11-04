@@ -44,7 +44,6 @@ R(0.0),
 s0(0.0),
 p0(0.0),
 T0(0.0),
-mu(0.0),
 rho(0.0),
 p(0.0),
 T(0.0),
@@ -52,40 +51,9 @@ u1(0.0),
 u2(0.0),
 u3(0.0),
 e_tot(0.0),
-s(0.0),
-v(0.0),
-a(0.0),
-d(0.0),
-h(0.0),
 e(0.0),
-alpha_p(0.0),
-beta_T(0.0),
-gamma_bar(0.0),
 k(0.0),
-e_1(0.0),
-e_1_bar(0.0),
-dp_drho_T(0.0),
-dp_dT_rho(0.0),
-de_drho_T(0.0),
-de_dT_rho(0.0),
-drho_dp_T(0.0),
-drho_dT_p(0.0),
-de_dp_T(0.0),
-de_dT_p(0.0),
-e_rho_1(0.0),
-e_rho_2(0.0),
-e_rho_3(0.0),
-e_rho_4(0.0),
-e_p_1(0.0),
-e_p_2(0.0),
-e_p_3(0.0),
-e_p_4(0.0),
-s1(0.0),
-s2(0.0),
-e_c_1(0.0),
-e_c_2(0.0),
-e_c_3(0.0),
-e_c_4(0.0)
+a(0.0)
 {
     this->interpolated_sol = new FESystem::Numerics::LocalVector<FESystemDouble>;
     this->interpolated_vel = new FESystem::Numerics::LocalVector<FESystemDouble>;
@@ -167,7 +135,6 @@ FESystem::Fluid::FluidElementBase::clear()
     this->s0 = 0.0;
     this->p0 = 0.0;
     this->T0 = 0.0;
-    this->mu = 0.0;
     this->rho = 0.0;
     this->p = 0.0;
     this->T = 0.0;
@@ -175,40 +142,9 @@ FESystem::Fluid::FluidElementBase::clear()
     this->u2 = 0.0;
     this->u3 = 0.0;
     this->e_tot = 0.0;
-    this->s = 0.0;
-    this->v = 0.0;
     this->a = 0.0;
-    this->d = 0.0;
-    this->h = 0.0;
     this->e = 0.0;
-    this->alpha_p = 0.0;
-    this->beta_T = 0.0;
-    this->gamma_bar = 0.0;
     this->k = 0.0;
-    this->e_1 = 0.0;
-    this->e_1_bar = 0.0;
-    this->dp_drho_T = 0.0;
-    this->dp_dT_rho = 0.0;
-    this->de_drho_T = 0.0;
-    this->de_dT_rho = 0.0;
-    this->drho_dp_T = 0.0;
-    this->drho_dT_p = 0.0;
-    this->de_dp_T = 0.0;
-    this->de_dT_p = 0.0;
-    this->e_rho_1 = 0.0;
-    this->e_rho_2 = 0.0;
-    this->e_rho_3 = 0.0;
-    this->e_rho_4 = 0.0;
-    this->e_p_1 = 0.0;
-    this->e_p_2 = 0.0;
-    this->e_p_3 = 0.0;
-    this->e_p_4 = 0.0;
-    this->s1 = 0.0;
-    this->s2 = 0.0;
-    this->e_c_1 = 0.0;
-    this->e_c_2 = 0.0;
-    this->e_c_3 = 0.0;
-    this->e_c_4 = 0.0;
 }
 
 
@@ -750,7 +686,7 @@ FESystem::Fluid::FluidElementBase::calculatePressureFluxJacobianOnSolidWall(FESy
             break;
     }
 
-    mat.scale(this->gamma_bar);
+    mat.scale(this->R/cv);
 }
 
 
@@ -778,37 +714,37 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             {
                 case 3:
                 {
-                    mat.setVal(1, 3, -u3*gamma_bar);
+                    mat.setVal(1, 3, -u3*R/cv);
                     
                     mat.setVal(3, 0, -u1*u3);
                     mat.setVal(3, 1, u3);
                     mat.setVal(3, 3, u1);
                     
-                    mat.setVal(energy_i, 3, -u1*u3*gamma_bar);
+                    mat.setVal(energy_i, 3, -u1*u3*R/cv);
                 }
 
                 case 2:
                 {
-                    mat.setVal(1, 2, -u2*gamma_bar);
+                    mat.setVal(1, 2, -u2*R/cv);
                     
                     mat.setVal(2, 0, -u1*u2);
                     mat.setVal(2, 1, u2);
                     mat.setVal(2, 2, u1);
                     
-                    mat.setVal(energy_i, 2, -u1*u2*gamma_bar);
+                    mat.setVal(energy_i, 2, -u1*u2*R/cv);
                 }
                     
                 case 1:
                 {
                     mat.setVal(0, 1, 1.0); // d U / d (rho u1)
                     
-                    mat.setVal(1, 0, a*a-u1*u1-e_1_bar*gamma_bar);
-                    mat.setVal(1, 1, u1*(2.0-gamma_bar));
-                    mat.setVal(1, energy_i, gamma_bar);
+                    mat.setVal(1, 0, -u1*u1+R*k/cv);
+                    mat.setVal(1, 1, u1*(2.0-R/cv));
+                    mat.setVal(1, energy_i, R/cv);
                     
-                    mat.setVal(energy_i, 0, u1*e_c_2);
-                    mat.setVal(energy_i, 1, e_c_3-u1*u1*gamma_bar);
-                    mat.setVal(energy_i, energy_i, u1*e_c_4);
+                    mat.setVal(energy_i, 0, u1*(R*(-e_tot+2.0*k)-e_tot*cv)/cv);
+                    mat.setVal(energy_i, 1, e_tot+R*(T-u1*u1/cv));
+                    mat.setVal(energy_i, energy_i, u1*gamma);
                 }
                     break;
             }
@@ -821,13 +757,13 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             {
                 case 3:
                 {
-                    mat.setVal(2, 3, -u3*gamma_bar);
+                    mat.setVal(2, 3, -u3*R/cv);
                     
                     mat.setVal(3, 0, -u2*u3);
                     mat.setVal(3, 2, u3);
                     mat.setVal(3, 3, u2);
                     
-                    mat.setVal(energy_i, 3, -u2*u3*gamma_bar);
+                    mat.setVal(energy_i, 3, -u2*u3*R/cv);
                 }
                     
                 case 2:
@@ -838,15 +774,15 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
                     mat.setVal(1, 1, u2);
                     mat.setVal(1, 2, u1);
 
-                    mat.setVal(2, 0, a*a-u2*u2-e_1_bar*gamma_bar);
-                    mat.setVal(2, 1, -u1*gamma_bar);
-                    mat.setVal(2, 2, u2*(2.0-gamma_bar));
-                    mat.setVal(2, energy_i, gamma_bar);
+                    mat.setVal(2, 0, -u2*u2+R*k/cv);
+                    mat.setVal(2, 1, -u1*R/cv);
+                    mat.setVal(2, 2, u2*(2.0-R/cv));
+                    mat.setVal(2, energy_i, R/cv);
                                         
-                    mat.setVal(energy_i, 0, u2*e_c_2);
-                    mat.setVal(energy_i, 1, -u1*u2*gamma_bar);
-                    mat.setVal(energy_i, 2, e_c_3-u2*u2*gamma_bar);
-                    mat.setVal(energy_i, energy_i, u2*e_c_4);
+                    mat.setVal(energy_i, 0, u2*(R*(-e_tot+2.0*k)-e_tot*cv)/cv);
+                    mat.setVal(energy_i, 1, -u1*u2*R/cv);
+                    mat.setVal(energy_i, 2, e_tot+R*(T-u2*u2/cv));
+                    mat.setVal(energy_i, energy_i, u2*gamma);
                 }
                     break;
                     
@@ -870,17 +806,17 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             mat.setVal(2, 2, u3);
             mat.setVal(2, 3, u2);
             
-            mat.setVal(3, 0, a*a-u3*u3-e_1_bar*gamma_bar);
-            mat.setVal(3, 1, -u1*gamma_bar);
-            mat.setVal(3, 2, -u2*gamma_bar);
-            mat.setVal(3, 3, u3*(2.0-gamma_bar));
-            mat.setVal(3, energy_i, gamma_bar);
+            mat.setVal(3, 0, -u3*u3+R*k/cv);
+            mat.setVal(3, 1, -u1*R/cv);
+            mat.setVal(3, 2, -u2*R/cv);
+            mat.setVal(3, 3, u3*(2.0-R/cv));
+            mat.setVal(3, energy_i, R/cv);
 
-            mat.setVal(energy_i, 0, u3*e_c_2);
-            mat.setVal(energy_i, 1, -u1*u3*gamma_bar);
-            mat.setVal(energy_i, 2, -u2*u3*gamma_bar);
-            mat.setVal(energy_i, 3, e_c_3-u3*u3*gamma_bar);
-            mat.setVal(energy_i, energy_i, u3*e_c_4);
+            mat.setVal(energy_i, 0, u3*(R*(-e_tot+2.0*k)-e_tot*cv)/cv);
+            mat.setVal(energy_i, 1, -u1*u3*R/cv);
+            mat.setVal(energy_i, 2, -u2*u3*R/cv);
+            mat.setVal(energy_i, 3, e_tot+R*(T-u3*u3/cv));
+            mat.setVal(energy_i, energy_i, u3*gamma);
         }
             break;
 
@@ -1342,39 +1278,7 @@ FESystem::Fluid::FluidElementBase::updateVariablesForInterpolationOperator(const
     this->e =  e_tot - k;// internal energy: defined as (cv * T)
     this->T =  e / cv; // Temperature (K)
     this->p =  R * T * rho; // pressure (using ideal gas relationship)
-    this->mu =  cp * T * (1.0 - log(T / T0)) + R * T * log(p / p0) - T * s0;// equation of state
-    this->s =  cp * log(T / T0) - R * log(p / p0) + s0;// entropy
-    this->v =  1.0 / rho;// specific volume
-    this->h =  cp * T;// enthalpy
-    this->alpha_p = 1.0 / T;// expansivity (ideal gas)
-    this->beta_T =  1.0 / p; // isothermal compressibility (ideal gas)
-    this->a =  sqrt(v * cp / cv / beta_T);// speed of sound (isentropic speed of sound)
-    this->d =  v * alpha_p * T/ beta_T;//
-    this->gamma_bar = v * alpha_p / beta_T / cv; //
-    this->e_1 = h + k;
-    this->e_1_bar = h - k;
-    this->dp_drho_T = 1.0 / rho / beta_T;
-    this->dp_dT_rho = alpha_p / beta_T;
-    this->de_drho_T = -(T * alpha_p / beta_T - p) / pow(rho,2);
-    this->de_dT_rho = cv;
-    this->drho_dp_T = rho * beta_T;
-    this->drho_dT_p = - rho * alpha_p;
-    this->de_dp_T = (beta_T * p - alpha_p * T) / rho;
-    this->de_dT_p = cp - p * alpha_p / rho;
-    this->e_rho_1 = rho * de_drho_T + e_tot;
-    this->e_rho_2 = e_rho_1 + dp_drho_T;
-    this->e_rho_3 = rho * e_tot + p;
-    this->e_rho_4 = rho * de_dT_rho + dp_dT_rho;
-    this->e_p_1 = drho_dp_T * e_tot + rho * de_dp_T;
-    this->e_p_2 = e_p_1 + 1.0;
-    this->e_p_3 = rho * e_tot + p;
-    this->e_p_4 = drho_dT_p * e_tot + rho * de_dT_p;
-    this->s1 = dp_drho_T / rho / T;
-    this->s2 = (T / rho * dp_dT_rho - h) / pow(T, 2) +  k / pow(T,2);
-    this->e_c_1 = (2.0 * k - e_rho_1) / rho / cv;
-    this->e_c_3 = h + k;
-    this->e_c_2 = dp_drho_T - e_c_3 + e_c_1 * dp_dT_rho;
-    this->e_c_4 = 1.0 + dp_dT_rho / rho / cv;
+    this->a =  sqrt(gamma*R*T);// speed of sound (isentropic speed of sound)
     
     // update the Jacobian matrices
     this->Ai_Bi_advection->zero();
