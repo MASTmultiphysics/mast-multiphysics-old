@@ -19,12 +19,13 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=993.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-5, final_t=time_step*1.0e5;
-const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-10;;
-const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // chord value
-const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0;
-const FESystemUInt nx=60, ny=80, dim = 2, max_nonlin_iters = 2;
-const AnalysisCase case_type = HYPERSONIC_CYLINDER;
+const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-4, final_t=time_step*1.0e5;
+const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-10;
+const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
+const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
+const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
+const FESystemUInt nx=150, ny=85, dim = 2, max_nonlin_iters = 2;
+const AnalysisCase case_type = RAMP;
 FESystem::Numerics::LocalVector<FESystemDouble> mass_flux, energy_flux;
 FESystem::Numerics::DenseMatrix<FESystemDouble> momentum_flux_tensor;
 
@@ -55,6 +56,21 @@ void modifyMeshForCase(FESystem::Mesh::MeshBase& mesh)
                         
                         (*it)->setVal(1, y_val);
                     }
+                }
+            }
+                break;
+
+            case RAMP:
+            {
+                for ( ; it!=end; it++)
+                {
+                    x_val = (*it)->getVal(0);
+                    y_val = (*it)->getVal(1);
+                    
+                    if (x_val >= x_init*x_length)
+                        y_val += (x_val-x_init*x_length)*(1.0-y_val/y_length)*ramp_slope;
+                    
+                    (*it)->setVal(1, y_val);
                 }
             }
                 break;
@@ -100,6 +116,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
     switch (case_type)
     {
         case AIRFOIL_BUMP:
+        case RAMP:
         {
             for (FESystemUInt i=0; i<nodes.size(); i++)
             {
@@ -214,6 +231,7 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
     switch (case_type)
     {
         case AIRFOIL_BUMP:
+        case RAMP:
         {
             // set the flux value for the left and right boundary
             mass_flux.zero(); mass_flux.setVal(0, rho*u1);
