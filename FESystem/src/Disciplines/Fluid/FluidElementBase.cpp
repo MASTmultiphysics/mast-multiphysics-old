@@ -1322,3 +1322,44 @@ FESystem::Fluid::FluidElementBase::estimateJacobianSpectralRadius(const FESystem
 
 
 
+
+void
+FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, FESystem::Numerics::VectorBase<FESystemDouble>& primitive_sol, FESystemDouble& press, FESystemDouble& entropy)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
+    
+    FESystemAssert2(conservative_sol.getSize() == n1, FESystem::Exception::DimensionsDoNotMatch, conservative_sol.getSize(), n1);
+    FESystemAssert2(primitive_sol.getSize() == n1, FESystem::Exception::DimensionsDoNotMatch, primitive_sol.getSize(), n1);
+    
+    FESystemDouble rho_val=0.0, u_val=0.0, v_val=0.0, w_val=0.0, k_val=0.0, T_val = 0.0;
+ 
+    rho_val = conservative_sol.getVal(0);
+    primitive_sol.setVal(0, rho_val);
+    
+    u_val = conservative_sol.getVal(1)/rho_val;
+    primitive_sol.setVal(1, u_val);
+    k_val += u_val*u_val;
+
+    if (dim > 2)
+    {
+        v_val = conservative_sol.getVal(2)/rho_val;
+        primitive_sol.setVal(2, v_val);
+        k_val += v_val*v_val;
+    }
+
+    if (dim > 3)
+    {
+        w_val = conservative_sol.getVal(3)/rho_val;
+        primitive_sol.setVal(3, w_val);
+        k_val += w_val*w_val;
+    }
+
+    k_val *= 0.5;
+    T_val = (conservative_sol.getVal(n1-1)/rho_val - k_val)/this->cv;
+    primitive_sol.setVal(n1-1, T_val);
+    
+    press = this->R*T_val*rho_val;
+    entropy = log(press/pow(rho_val,this->gamma));
+}
+
