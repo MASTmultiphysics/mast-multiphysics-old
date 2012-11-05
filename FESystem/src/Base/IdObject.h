@@ -96,7 +96,7 @@ namespace FESystem
             /*!
              *    checks if a user defined tags is set
              */
-            FESystemBoolean checkForTag(FESystemInt n)
+            FESystemBoolean checkForTag(FESystemInt n) const
             {
                 return this->tags.count(n);
             }
