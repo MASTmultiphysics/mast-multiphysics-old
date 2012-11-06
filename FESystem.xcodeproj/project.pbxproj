@@ -1498,6 +1498,7 @@
 					/opt/local/lib,
 					"\"$(SRCROOT)/build\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\"";
 			};
@@ -1523,6 +1524,7 @@
 					/opt/local/lib,
 					"\"$(SRCROOT)/build\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\"";
 			};

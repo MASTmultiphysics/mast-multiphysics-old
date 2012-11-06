@@ -196,17 +196,17 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             // calculate residual to identify convergence
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity_function), *(this->current_state), *(this->current_velocity_function), *(this->residual));
             
-            FESystemDouble l2 = this->residual->getL2Norm();
+            FESystemDouble res_l2 = this->residual->getL2Norm(), vel_l2 = this->current_velocity->getL2Norm();
             
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
             << "  Current t: " << std::setw(10) << this->current_time
             << "  Current dt: " << std::setw(10) << this->current_time_step
             << "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number
-            << "  Vel Norm: " << std::setw(15) << this->current_velocity->getL2Norm()
-            << "  Res Norm: " << std::setw(15) << l2  << std::endl;
+            << "  Vel Norm: " << std::setw(15) << vel_l2
+            << "  Res Norm: " << std::setw(15) << res_l2  << std::endl;
                         
             // if converged, increment the time step
-            if ((l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
+            if ((res_l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
             {
                 std::cout << "Convergence Achieved" << std::endl;
                 
@@ -239,9 +239,9 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
                 // update the residual data for time step calibration
                 if ((this->if_adaptive_time_stepping) && (this->nonlinear_iteration_number == 0))
                 {
-                    this->current_residual_norm = l2;
+                    this->current_residual_norm = vel_l2;
                     if (this->current_iteration_number == 0) // this needs to be done since the first residual is needed for calibration
-                        this->old_residual_norm = l2;
+                        this->old_residual_norm = vel_l2;
                 }
                 
                 this->nonlinear_iteration_number++;
