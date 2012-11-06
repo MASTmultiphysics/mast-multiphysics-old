@@ -403,7 +403,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
             tmp_vec.setVal(j, sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
         fluid_elem.calculatePrimitiveVariableValues(tmp_vec, tmp_vec2, press, entropy);
         for (FESystemUInt j=0; j<n_vars; j++)
-            primitive_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0], tmp_vec.getVal(j));
+            primitive_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0], tmp_vec2.getVal(j));
         additional_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], press);
         additional_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], entropy);
     }
