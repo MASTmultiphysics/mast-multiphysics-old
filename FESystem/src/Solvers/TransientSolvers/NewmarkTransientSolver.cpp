@@ -46,7 +46,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::~NewmarkTransientSo
 
 template <typename ValType>
 void
-FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<FESystemDouble>& int_constants)
+FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<typename RealOperationType(ValType)>& int_constants)
 {
     // TODO: revisit for parallel and sparse
     FESystem::TransientSolvers::TransientSolverBase<ValType>::initialize(o,n_dofs);
@@ -199,10 +199,12 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             FESystemDouble l2 = this->residual->getL2Norm();
             
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
+            << "  Current t: " << std::setw(10) << this->current_time
+            << "  Current dt: " << std::setw(10) << this->current_time_step
             << "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number
             << "  Vel Norm: " << std::setw(15) << this->current_velocity->getL2Norm()
             << "  Res Norm: " << std::setw(15) << l2  << std::endl;
-            
+                        
             // if converged, increment the time step
             if ((l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
             {
@@ -216,12 +218,32 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
                 this->current_time += this->current_time_step;
                 this->current_iteration_number++;
                 this->nonlinear_iteration_number = 0;
+
+                // now recalibrate the time step
+                if ((this->if_adaptive_time_stepping) && (this->iteration_counter_for_time_step_calibration == 0))
+                {
+                    this->current_time_step = this->old_time_step * pow(this->old_residual_norm/this->current_residual_norm, this->time_step_calibration_exponent);
+                    if (this->current_time_step > this->max_time_step) this->current_time_step = this->max_time_step;
+                    this->iteration_counter_for_time_step_calibration = this->n_iters_before_time_step_calibration;
+                    this->old_residual_norm = this->current_residual_norm;
+                    this->old_time_step = this->current_time_step;
+                }
+                else
+                    this->iteration_counter_for_time_step_calibration--;
                 
                 this->latest_call_back = FESystem::TransientSolvers::TIME_STEP_CONVERGED;
                 return FESystem::TransientSolvers::TIME_STEP_CONVERGED;
             }
             else
             {
+                // update the residual data for time step calibration
+                if ((this->if_adaptive_time_stepping) && (this->nonlinear_iteration_number == 0))
+                {
+                    this->current_residual_norm = l2;
+                    if (this->current_iteration_number == 0) // this needs to be done since the first residual is needed for calibration
+                        this->old_residual_norm = l2;
+                }
+                
                 this->nonlinear_iteration_number++;
                 this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
                 return FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;

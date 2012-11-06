@@ -197,6 +197,12 @@ namespace FESystem
              *    are constant with respect to time.
              */
             void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices);
+            
+            /*!
+             *    Enables adaptive time stepping, which is off by default
+             */
+            void enableAdaptiveTimeStepping(FESystemUInt n_iters_for_update, typename RealOperationType(ValType) exponent, typename RealOperationType(ValType) max_dt);
+        
 
         protected:
 
@@ -253,9 +259,34 @@ namespace FESystem
             typename RealOperationType(ValType) current_time;
 
             /*!
-             *    current time step
+             *    old values of time step and residual for use in adaptive time stepping
              */
-            typename RealOperationType(ValType) current_time_step;
+            typename RealOperationType(ValType) old_time_step, old_residual_norm;
+
+            /*!
+             *    current values of time step and residual for use in adaptive time stepping
+             */
+            typename RealOperationType(ValType) current_time_step, current_residual_norm;
+
+            /*!
+             *   Iteration counter for time step calibration
+             */
+            FESystemUInt iteration_counter_for_time_step_calibration, n_iters_before_time_step_calibration;
+            
+            /*!
+             *   Exponent used in time step calibration
+             */
+            typename RealOperationType(ValType) time_step_calibration_exponent;
+
+            /*!
+             *   Exponent used in time step calibration
+             */
+            typename RealOperationType(ValType) max_time_step;
+
+            /*!
+             *    If enable adaptive time stepping
+             */
+            FESystemBoolean if_adaptive_time_stepping;
 
             /*!
              *    current iteration_number

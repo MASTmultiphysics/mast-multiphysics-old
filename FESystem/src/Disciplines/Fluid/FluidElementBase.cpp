@@ -1341,14 +1341,14 @@ FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESyst
     primitive_sol.setVal(1, u_val);
     k_val += u_val*u_val;
 
-    if (dim > 2)
+    if (dim > 1)
     {
         v_val = conservative_sol.getVal(2)/rho_val;
         primitive_sol.setVal(2, v_val);
         k_val += v_val*v_val;
     }
 
-    if (dim > 3)
+    if (dim > 2)
     {
         w_val = conservative_sol.getVal(3)/rho_val;
         primitive_sol.setVal(3, w_val);

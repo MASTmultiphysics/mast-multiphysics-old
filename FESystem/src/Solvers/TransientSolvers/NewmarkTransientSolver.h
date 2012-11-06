@@ -40,7 +40,7 @@ namespace FESystem
              *   in the vector int_constants. The first element is for the 0th order state, followed by the 1st order time differential term,
              *   and so on.
              */
-            void initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<FESystemDouble>& int_constants);
+            void initialize(FESystemUInt o, FESystemUInt n_dofs, const std::vector<typename RealOperationType(ValType)>& int_constants);
                         
             /*!
              *   this method clears the data structures of this object. This should be called 
@@ -86,17 +86,17 @@ namespace FESystem
             /*!
              *   convergence tolerance
              */
-            FESystemDouble convergence_tolerance;
+            typename RealOperationType(ValType) convergence_tolerance;
             
             /*!
              *   Maximum allowable iterations
              */
             FESystemUInt  nonlinear_iteration_number, max_nonlinear_iterations;
-                        
+            
             /*!
              *   constants for integration rule definition, starting with the lowest order and going towards the (o-1) order
              */
-            std::vector<FESystemDouble> integration_constants;
+            std::vector<typename RealOperationType(ValType)> integration_constants;
             
             /*!
              *   Jacobian matrix for the solver

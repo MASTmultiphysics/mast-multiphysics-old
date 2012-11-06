@@ -27,7 +27,15 @@ order(0),
 n_dofs(0),
 initial_time(0.0),
 current_time(0.0),
+old_time_step(0.0),
+old_residual_norm(0.0),
 current_time_step(0.0),
+current_residual_norm(0.0),
+n_iters_before_time_step_calibration(0),
+iteration_counter_for_time_step_calibration(0),
+time_step_calibration_exponent(0.0),
+max_time_step(1.0),
+if_adaptive_time_stepping(false),
 current_iteration_number(0),
 latest_call_back(FESystem::TransientSolvers::WAITING_TO_START),
 current_state(NULL),
@@ -95,8 +103,16 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::clear()
     this->order = 0;
     this->initial_time = 0.0;
     this->current_time = 0.0;
+    this->old_time_step = 0.0;
+    this->old_residual_norm = 0.0;
     this->current_time_step = 0.0;
+    this->current_residual_norm = 0.0;
+    this->if_adaptive_time_stepping = false;
     this->current_iteration_number = 0;
+    this->n_iters_before_time_step_calibration = 0;
+    this->iteration_counter_for_time_step_calibration = 0;
+    this->time_step_calibration_exponent = 0.0;
+    this->max_time_step = 1.0;
     this->latest_call_back = FESystem::TransientSolvers::WAITING_TO_START;
     
     // delete the vectors if they have been initialized
@@ -128,6 +144,7 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::setInitialTimeData(typ
     
     this->initial_time = t0;
     this->current_time = t0;
+    this->old_time_step = dt;
     this->current_time_step = dt;
     this->current_iteration_number = 0;
     this->latest_call_back = FESystem::TransientSolvers::WAITING_TO_START;
@@ -135,6 +152,23 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::setInitialTimeData(typ
     this->current_state->copyVector(vec);
     
     this->if_initialized_initial_time_data = true;
+}
+
+
+
+template <typename ValType>
+void
+FESystem::TransientSolvers::TransientSolverBase<ValType>::enableAdaptiveTimeStepping(FESystemUInt n_iters_for_update, typename RealOperationType(ValType) exponent, typename RealOperationType(ValType) max_dt)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    this->n_iters_before_time_step_calibration = n_iters_for_update;
+    this->time_step_calibration_exponent = exponent;
+    this->max_time_step = max_dt;
+    this->if_adaptive_time_stepping = true;
+    // only for the first time step, set the iteration counter
+    // this allows the user to reset the parameters during the course of time integration
+    if (this->current_iteration_number == 0)
+        this->iteration_counter_for_time_step_calibration = this->n_iters_before_time_step_calibration;
 }
 
 
