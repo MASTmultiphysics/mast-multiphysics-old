@@ -60,8 +60,8 @@ FESystem::Structures::Membrane::getStressTensor(const FESystem::Geometry::Point&
     FESystemAssert4(((s.first == 2) && (s.second== 2)), FESystem::Numerics::MatrixSizeMismatch, 2, 2, s.first, s.second);
     FESystemAssert2(sol.getSize() == 2*n, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), 2*n);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat;
-    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, tmp_vec2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, tmp_vec2;
     
     C_mat.resize(3,3); B_mat.resize(3, 2*n); tmp_vec1.resize(3); tmp_vec2.resize(3);
     C_mat.zero(); B_mat.zero(); tmp_vec1.zero(); tmp_vec2.zero();
@@ -90,7 +90,7 @@ FESystem::Structures::Membrane::calculateConsistentMassMatrix(FESystem::Numerics
     
     FESystemAssert4(((s.first == 2*n) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(2,2); B_mat.resize(2, 2*n); tmp_mat1.resize(2, 2*n), tmp_mat2.resize(2*n, 2*n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -125,7 +125,7 @@ FESystem::Structures::Membrane::calculateStiffnessMatrix(FESystem::Numerics::Mat
     
     FESystemAssert4(((s.first == 2*n) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 2*n, 2*n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(3,3); B_mat.resize(3, 2*n); tmp_mat1.resize(3, 2*n), tmp_mat2.resize(2*n, 2*n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -161,10 +161,10 @@ FESystem::Structures::Membrane::calculateOperatorMatrix(const FESystem::Geometry
     
     FESystemAssert4(((s.first == 3) && (s.second== 2*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 2*n, s.first, s.second);
     
-    static std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
+    std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
     derivatives_x[0] = 1; derivatives_x[1] = 0;
     derivatives_y[0] = 0; derivatives_y[1] = 1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
     

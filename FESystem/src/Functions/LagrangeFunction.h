@@ -214,7 +214,7 @@ FESystem::Functions::LagrangeFunction<ValType>::getFunctionValue(const ValType& 
     FESystemAssert2(point < n, FESystem::Exception::IndexOutOfBound, n, point);
     
     // calculate the numerator terms
-    static std::vector<ValType> sub_vals;
+    std::vector<ValType> sub_vals;
     if (sub_vals.size() != (n-1))
         sub_vals.resize(n-1);
     FESystemUInt n_sub = 0;
@@ -251,7 +251,7 @@ FESystem::Functions::LagrangeFunction<ValType>::getFunctionDerivative(const ValT
     FESystemAssert2(point < n, FESystem::Exception::IndexOutOfBound,n, point);
     
     // calculate the numerator terms
-    static std::vector<ValType> sub_vals;
+    std::vector<ValType> sub_vals;
     if (sub_vals.size() != n-1)
         sub_vals.resize(n-1);
     

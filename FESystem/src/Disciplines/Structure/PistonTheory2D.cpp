@@ -101,8 +101,8 @@ FESystem::Structures::PistonTheory2D::calculateForceVector(const FESystem::Numer
     FESystemAssert2(vel.getSize() == n, FESystem::Exception::DimensionsDoNotMatch, n, vel.getSize());
     FESystemAssert2(force.getSize() == n, FESystem::Exception::DimensionsDoNotMatch, n, force.getSize());
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, Nvec;
-    static std::vector<FESystemUInt> derivatives(2);
+    FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, Nvec;
+    std::vector<FESystemUInt> derivatives(2);
     tmp_vec1.resize(n); Nvec.resize(n);
     tmp_vec1.zero(); Nvec.zero();
     derivatives[0] = 1; derivatives[1] = 0;
@@ -163,9 +163,9 @@ FESystem::Structures::PistonTheory2D::calculateTangentMatrix(const FESystem::Num
     FESystemAssert4((s2.first == n) && (s2.second == n), FESystem::Numerics::MatrixSizeMismatch, n, n, s2.first, s2.second);
     
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> Bmat, Bmatdx, tmp_mat1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, Nvec;
-    static std::vector<FESystemUInt> derivatives(2);
+    FESystem::Numerics::DenseMatrix<FESystemDouble> Bmat, Bmatdx, tmp_mat1;
+    FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec1, Nvec;
+    std::vector<FESystemUInt> derivatives(2);
     Bmat.resize(1, n); Bmatdx.resize(1, n); tmp_mat1.resize(n, n);
     tmp_vec1.resize(n); Nvec.resize(n);
     tmp_vec1.zero(); Nvec.zero();

@@ -64,7 +64,7 @@ FESystem::Structures::LinearPlateElementBase::calculateConsistentMassMatrix(FESy
     
     FESystemAssert4(((s.first == 3*n) && (s.second == 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(3,3); B_mat.resize(3, 3*n); tmp_mat1.resize(3, 3*n), tmp_mat2.resize(3*n, 3*n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -97,8 +97,8 @@ FESystem::Structures::LinearPlateElementBase::calculateDistributedLoad(FESystemD
     
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const FESystemUInt s = vec.getSize();
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
-    static std::vector<FESystemUInt> v_dof_indices, w_dof_indices;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    std::vector<FESystemUInt> v_dof_indices, w_dof_indices;
     Nvec.resize(n); w_dof_indices.resize(n);
     Nvec.zero(); vec.zero();
     
@@ -153,7 +153,7 @@ FESystem::Structures::LinearPlateElementBase::calculateInertiaOperatorMatrix(con
     
     FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n);
     B_mat.zero();
     

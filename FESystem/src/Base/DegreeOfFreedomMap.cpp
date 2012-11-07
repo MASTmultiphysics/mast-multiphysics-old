@@ -189,7 +189,7 @@ FESystem::Base::DegreeOfFreedomMap::addToGlobalMatrix(const FESystem::Mesh::Elem
     FESystemUInt n_dofs = this->getNDofsForElem(elem);
 
     // create the sequence of the dofs    
-    static std::vector<FESystemUInt> dof_ids;
+    std::vector<FESystemUInt> dof_ids;
     if (dof_ids.size() != n_dofs)
         dof_ids.resize(n_dofs);
     
@@ -233,7 +233,7 @@ FESystem::Base::DegreeOfFreedomMap::addToGlobalVector(const FESystem::Mesh::Elem
     FESystemUInt n_dofs = this->getNDofsForElem(elem);
     
     // create the sequence of the dofs    
-    static std::vector<FESystemUInt> dof_ids;
+    std::vector<FESystemUInt> dof_ids;
     if (dof_ids.size() != n_dofs)
         dof_ids.resize(n_dofs);
     

@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
-		EB5ACB561648027C00FC882C /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB5ACB551648027C00FC882C /* FESystem.dylib */; };
 		EBAEE19515C1B8A90062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19215C1B8A90062459D /* main.cpp */; };
+		EBFDC9F2164AB5980008B7E0 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F1164AB5980008B7E0 /* FESystem.dylib */; };
+		EBFDC9F5164ABA5D0008B7E0 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F3164ABA5D0008B7E0 /* libtbb.dylib */; };
+		EBFDC9F6164ABA5D0008B7E0 /* libtbbmalloc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F4164ABA5D0008B7E0 /* libtbbmalloc.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,8 +29,10 @@
 /* Begin PBXFileReference section */
 		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
-		EB5ACB551648027C00FC882C /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBAEE19215C1B8A90062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = FESystem/examples/main.cpp; sourceTree = "<group>"; };
+		EBFDC9F1164AB5980008B7E0 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
+		EBFDC9F3164ABA5D0008B7E0 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../../../opt/local/tbb41_20121003oss/lib/libtbb.dylib; sourceTree = "<group>"; };
+		EBFDC9F4164ABA5D0008B7E0 /* libtbbmalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbbmalloc.dylib; path = ../../../../../opt/local/tbb41_20121003oss/lib/libtbbmalloc.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,7 +40,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB5ACB561648027C00FC882C /* FESystem.dylib in Frameworks */,
+				EBFDC9F2164AB5980008B7E0 /* FESystem.dylib in Frameworks */,
+				EBFDC9F5164ABA5D0008B7E0 /* libtbb.dylib in Frameworks */,
+				EBFDC9F6164ABA5D0008B7E0 /* libtbbmalloc.dylib in Frameworks */,
 				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -47,7 +53,9 @@
 		69677EBC13404448002B32C8 = {
 			isa = PBXGroup;
 			children = (
-				EB5ACB551648027C00FC882C /* FESystem.dylib */,
+				EBFDC9F3164ABA5D0008B7E0 /* libtbb.dylib */,
+				EBFDC9F4164ABA5D0008B7E0 /* libtbbmalloc.dylib */,
+				EBFDC9F1164AB5980008B7E0 /* FESystem.dylib */,
 				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
 				EBAEE19215C1B8A90062459D /* main.cpp */,
 				69677EC813404448002B32C8 /* Products */,
@@ -158,6 +166,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -167,6 +177,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/opt/local/tbb41_20121003oss/lib,
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystem-ekefbbavvptttkaipojuuqifqhgn/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-dnngzprkwoyuvxdbkrjlfrgzblqx/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug\"",
@@ -176,7 +187,7 @@
 				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/include /opt/local/tbb41_20121003oss/include";
 			};
 			name = Debug;
 		};
@@ -185,12 +196,15 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_PLPLOT;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/opt/local/tbb41_20121003oss/lib,
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystem-ekefbbavvptttkaipojuuqifqhgn/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-dnngzprkwoyuvxdbkrjlfrgzblqx/Build/Products/Debug\"",
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-clcwtnboaiusqtffrzzrtitzzilf/Build/Products/Debug\"",
@@ -200,7 +214,7 @@
 				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/include /opt/local/tbb41_20121003oss/include";
 			};
 			name = Release;
 		};

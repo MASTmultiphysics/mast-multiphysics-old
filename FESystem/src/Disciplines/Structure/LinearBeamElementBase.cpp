@@ -86,7 +86,7 @@ FESystem::Structures::LinearBeamElementBase::calculateConsistentMassMatrix(FESys
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     
     FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
     C_mat.resize(4,4); B_mat.resize(4, 4*n); tmp_mat1.resize(4, 4*n), tmp_mat2.resize(4*n, 4*n);
@@ -146,8 +146,8 @@ FESystem::Structures::LinearBeamElementBase::calculateDistributedLoad(FESystemDo
 
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const FESystemUInt s = vec.getSize();
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
-    static std::vector<FESystemUInt> v_dof_indices, w_dof_indices;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    std::vector<FESystemUInt> v_dof_indices, w_dof_indices;
     Nvec.resize(n); v_dof_indices.resize(n); w_dof_indices.resize(n);
     Nvec.zero(); vec.zero();
     
@@ -188,7 +188,7 @@ FESystem::Structures::LinearBeamElementBase::calculateInertiaOperatorMatrix(cons
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n);
     Nvec.zero(); B_mat.zero();
     this->finite_element->getShapeFunction(pt, Nvec);

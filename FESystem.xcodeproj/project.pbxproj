@@ -270,6 +270,8 @@
 		EBF47F1D15EFD38C00640485 /* NonlinearSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */; };
 		EBF47F2015EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */; };
 		EBF47F2115EFDB4600640485 /* NewtonIterationNonlinearSolver.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF47F1F15EFDB4600640485 /* NewtonIterationNonlinearSolver.h */; };
+		EBFDC9FA164AEA520008B7E0 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F8164AEA520008B7E0 /* libtbb.dylib */; };
+		EBFDC9FB164AEA520008B7E0 /* libtbbmalloc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F9164AEA520008B7E0 /* libtbbmalloc.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -557,6 +559,8 @@
 		EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NonlinearSolverBase.h; sourceTree = "<group>"; };
 		EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewtonIterationNonlinearSolver.cpp; sourceTree = "<group>"; };
 		EBF47F1F15EFDB4600640485 /* NewtonIterationNonlinearSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewtonIterationNonlinearSolver.h; sourceTree = "<group>"; };
+		EBFDC9F8164AEA520008B7E0 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../../../opt/local/tbb41_20121003oss/lib/libtbb.dylib; sourceTree = "<group>"; };
+		EBFDC9F9164AEA520008B7E0 /* libtbbmalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbbmalloc.dylib; path = ../../../../../opt/local/tbb41_20121003oss/lib/libtbbmalloc.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -569,6 +573,8 @@
 				69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */,
 				6967BA82156A80B000F2FB18 /* libplplotcxxd.dylib in Frameworks */,
 				6967BA84156A80C700F2FB18 /* libplplotd.dylib in Frameworks */,
+				EBFDC9FA164AEA520008B7E0 /* libtbb.dylib in Frameworks */,
+				EBFDC9FB164AEA520008B7E0 /* libtbbmalloc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -645,6 +651,8 @@
 		69677C941340386A002B32C8 = {
 			isa = PBXGroup;
 			children = (
+				EBFDC9F8164AEA520008B7E0 /* libtbb.dylib */,
+				EBFDC9F9164AEA520008B7E0 /* libtbbmalloc.dylib */,
 				EB8B00DB1640758B0064AEF1 /* libmetis.dylib */,
 				EBAEDFA815C1B73B0062459D /* FESystem */,
 				69107D211578D8CF00196B94 /* libarpack.a */,
@@ -1480,6 +1488,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -1495,12 +1505,13 @@
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/opt/local/tbb41_20121003oss/lib,
 					/opt/local/lib,
 					"\"$(SRCROOT)/build\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include";
 			};
 			name = Debug;
 		};
@@ -1509,6 +1520,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -1521,12 +1534,13 @@
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/opt/local/tbb41_20121003oss/lib,
 					/opt/local/lib,
 					"\"$(SRCROOT)/build\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include";
 			};
 			name = Release;
 		};

@@ -48,7 +48,7 @@ namespace FESystem
          */
         void getEdgeNormalSineCosine(const FESystem::Mesh::ElemBase& elem, const FESystemUInt i, const FESystemUInt j, FESystemDouble& sine, FESystemDouble& cosine)
         {
-            static FESystem::Numerics::LocalVector<FESystemDouble> vec0, vec1, vec2, vec3;
+            FESystem::Numerics::LocalVector<FESystemDouble> vec0, vec1, vec2, vec3;
             vec0.resize(3); vec1.resize(3); vec2.resize(3); vec3.resize(3);
             
             // calculate the normal to the element
@@ -98,10 +98,10 @@ namespace FESystem
             //  they follow Hx for w1, w2, w3, thetax1, thetax2, thetax3, thetay1, thetay2, thetay3.
             // And then the same this is followed for Hy (from dofs 9-17)
             
-            // local static variables for shape functions
+            // local variables for shape functions
             double N1, N2, N3, N4, N5, N6;
             
-            // local static variables for edge lengths and sine/cosines
+            // local variables for edge lengths and sine/cosines
             double l12, l23, l31, cos4, cos5, cos6, sin4, sin5, sin6;
             
             N1 = tri6_shape_funcs.getVal(0);
@@ -249,7 +249,7 @@ FESystem::Structures::DKTPlate::calculateStiffnessMatrix(FESystem::Numerics::Mat
 
     const FESystemUInt n = this->geometric_elem->getNNodes();
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(3,3); B_mat.resize(3, 3*n); tmp_mat1.resize(3, 3*n), tmp_mat2.resize(3*n, 3*n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -282,10 +282,10 @@ FESystem::Structures::DKTPlate::calculateBendingOperatorMatrix(const FESystem::G
 {
     const FESystemUInt n = this->finite_element_tri6->getNShapeFunctions();
     
-    static std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
+    std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
     derivatives_x[0] = 1; derivatives_x[1] = 0;
     derivatives_y[0] = 0; derivatives_y[1] = 1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy;
     Nvec.resize(n); dbetaxdx.resize(9); dbetaxdy.resize(9); dbetaydx.resize(9); dbetaydy.resize(9);
     B_mat.zero(); dbetaxdx.zero(); dbetaxdy.zero(); dbetaydx.zero(); dbetaydy.zero();
     

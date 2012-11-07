@@ -9,6 +9,9 @@
 // FESystem include
 #include "TestingIncludes.h"
 
+// TBB includes
+#include "tbb/tbb.h"
+
 
 enum AnalysisCase
 {
@@ -313,8 +316,164 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
 
 
 
+class AssembleElementMatrices
+{
+public:
+    AssembleElementMatrices(const std::vector<FESystem::Mesh::ElemBase*>& e, FESystemDouble t_step,
+                            FESystemUInt n,
+                            const FESystem::Base::DegreeOfFreedomMap& dof,
+                            const FESystem::Quadrature::QuadratureBase& q,
+                            const FESystem::Quadrature::QuadratureBase& q_b,
+                            const FESystem::Numerics::VectorBase<FESystemDouble>& s,
+                            const FESystem::Numerics::VectorBase<FESystemDouble>& v,
+                            FESystem::Numerics::VectorBase<FESystemDouble>& r,
+                            FESystem::Numerics::MatrixBase<FESystemDouble>& stiff,
+                            FESystem::Numerics::MatrixBase<FESystemDouble>& mass):
+    elems(e),
+    n_elem_dofs(n),
+    dt(t_step),
+    dof_map(dof),
+    q_rule(q),
+    q_boundary(q_b),
+    sol(s),
+    vel(v),
+    residual(r),
+    global_stiffness_mat(stiff),
+    global_mass_mat(mass)
+    {
+        
+    }
+    
+    void operator() (const tbb::blocked_range<FESystemUInt>& r) const
+    {
+        FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat1, elem_mat2;
+        FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, elem_sol, elem_vel, bc_vec, tmp_vec, tmp_vec2;
+        elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs);
+        elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
+        
+        FESystem::FiniteElement::FELagrange fe;
+        FESystem::Fluid::FluidElementBase fluid_elem;
+        
+        for (FESystemUInt i=r.begin(); i!=r.end(); i++)
+        {
+            fe.clear();
+            fe.reinit(*(elems[i]));
+            elem_mat1.zero();
+            elem_mat2.zero();
+            elem_vec.zero();
+            
+            dof_map.getFromGlobalVector(*(elems[i]), sol, elem_sol);
+            dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
+            
+            fluid_elem.clear();
+            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
+            
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, elem_mat2,  bc_vec, elem_mat1);
+            
+            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+            dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+            
+            fluid_elem.calculateResidualVector(elem_vec);
+            fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
+            
+            dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
+            dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+            dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+        }
+    }
+    
+protected:
+    
+    const std::vector<FESystem::Mesh::ElemBase*>& elems;
+    const FESystemUInt n_elem_dofs;
+    const FESystemDouble dt;
+    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::Quadrature::QuadratureBase& q_rule;
+    const FESystem::Quadrature::QuadratureBase& q_boundary;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
+    FESystem::Numerics::VectorBase<FESystemDouble>& residual;
+    FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat;
+    FESystem::Numerics::MatrixBase<FESystemDouble>& global_mass_mat;
+};
+
+
+
+
+class EvaluatePrimitiveVariables
+{
+public:
+    EvaluatePrimitiveVariables(const std::vector<FESystem::Mesh::ElemBase*>& e,
+                               const std::vector<FESystem::Mesh::Node*>& nd,
+                               FESystemDouble t_step, FESystemUInt n,
+                               const FESystem::Base::DegreeOfFreedomMap& dof,
+                               const FESystem::Quadrature::QuadratureBase& q,
+                               const FESystem::Numerics::VectorBase<FESystemDouble>& s,
+                               const FESystem::Numerics::VectorBase<FESystemDouble>& v,
+                               FESystem::Numerics::VectorBase<FESystemDouble>& pr,
+                               FESystem::Numerics::VectorBase<FESystemDouble>& ad):
+    elems(e),
+    nodes(nd),
+    n_elem_dofs(n),
+    dt(t_step),
+    dof_map(dof),
+    q_rule(q),
+    sol(s),
+    vel(v),
+    primitive(pr),
+    additional(ad)
+    {
+        
+    }
+    
+    void operator() (const tbb::blocked_range<FESystemUInt>& r) const
+    {
+        FESystem::Numerics::LocalVector<FESystemDouble> elem_sol, elem_vel, tmp_vec, tmp_vec2;
+        elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); tmp_vec.resize(n_vars); tmp_vec2.resize(n_vars);
+        
+        FESystem::FiniteElement::FELagrange fe;
+        FESystem::Fluid::FluidElementBase fluid_elem;
+        
+        fe.clear();
+        fe.reinit(*(elems[0]));
+        dof_map.getFromGlobalVector(*(elems[0]), sol, elem_sol);
+        dof_map.getFromGlobalVector(*(elems[0]), vel, elem_vel);
+        fluid_elem.clear();
+        fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
+
+        FESystemDouble press, entropy;
+        
+        for (FESystemUInt i=r.begin(); i!=r.end(); i++)
+        {
+            for (FESystemUInt j=0; j<n_vars; j++)
+                tmp_vec.setVal(j, sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
+            fluid_elem.calculatePrimitiveVariableValues(tmp_vec, tmp_vec2, press, entropy);
+            for (FESystemUInt j=0; j<n_vars; j++)
+                primitive.setVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0], tmp_vec2.getVal(j));
+            additional.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], press);
+            additional.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], entropy);
+        }
+    }
+    
+protected:
+    
+    const std::vector<FESystem::Mesh::ElemBase*>& elems;
+    const std::vector<FESystem::Mesh::Node*>& nodes;
+    const FESystemUInt n_elem_dofs;
+    const FESystemDouble dt;
+    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::Quadrature::QuadratureBase& q_rule;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
+    FESystem::Numerics::VectorBase<FESystemDouble>& primitive;
+    FESystem::Numerics::VectorBase<FESystemDouble>& additional;
+};
+
+
+
 void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
                               const FESystem::Mesh::MeshBase& mesh,
+                              const FESystemDouble dt,
                               const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                               const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                               FESystem::Numerics::VectorBase<FESystemDouble>& residual,
@@ -326,19 +485,10 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     FESystemUInt n_elem_dofs;
     
     n_elem_dofs = n_vars*n_elem_nodes;
-    
-    
-    FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat1, elem_mat2;
-    FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, elem_sol, elem_vel, bc_vec, tmp_vec, tmp_vec2;
-    std::vector<FESystemUInt> elem_dof_indices;
-    elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs);
-    elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
     mass_flux.resize(2); energy_flux.resize(2); momentum_flux_tensor.resize(2, 2);
     
     // prepare the quadrature rule and FE for the
     FESystem::Quadrature::TrapezoidQuadrature q_rule, q_boundary;
-    FESystem::FiniteElement::FELagrange fe;
-    FESystem::Fluid::FluidElementBase fluid_elem;
     
     switch (elem_type)
     {
@@ -362,54 +512,15 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     primitive_sol.zero(); additional_sol.zero();
     
     const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
-    
-    for (FESystemUInt i=0; i<elems.size(); i++)
-    {
-        fe.clear();
-        fe.reinit(*(elems[i]));
-        elem_mat1.zero();
-        elem_mat2.zero();
-        elem_vec.zero();
-        
-        dof_map.getFromGlobalVector(*(elems[i]), sol, elem_sol);
-        dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
-        
-        fluid_elem.clear();
-        fluid_elem.initialize(*(elems[i]), fe, q_rule, time_step, cp, cv, elem_sol, elem_vel);                
-
-        evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, elem_mat2,  bc_vec, elem_mat1);
-        
-        dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
-        dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
-
-        fluid_elem.calculateResidualVector(elem_vec);
-        fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
-        
-        dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
-        dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
-        dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
-    }
-    
-
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
-    tmp_vec.resize(n_vars);
-    tmp_vec2.resize(n_vars);
-    FESystemDouble press, entropy;
     
-    // now calculate the primitive variable solutions, and pressure and entropy
-    for (FESystemUInt i=0; i<nodes.size(); i++)
-    {
-        for (FESystemUInt j=0; j<n_vars; j++)
-            tmp_vec.setVal(j, sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
-        fluid_elem.calculatePrimitiveVariableValues(tmp_vec, tmp_vec2, press, entropy);
-        for (FESystemUInt j=0; j<n_vars; j++)
-            primitive_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0], tmp_vec2.getVal(j));
-        additional_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], press);
-        additional_sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], entropy);
-    }
+    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
+                      AssembleElementMatrices(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, residual, global_stiffness_mat, global_mass_mat));
+
+    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),
+                      EvaluatePrimitiveVariables(elems, nodes, dt, n_elem_dofs, dof_map, q_rule, sol, vel, primitive_sol, additional_sol));
+    
 }
-
-
 
 
 void testJacobian(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
@@ -424,7 +535,6 @@ void testJacobian(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nod
     
     FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat1, elem_mat2, momentum_flux_tensor;
     FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, elem_sol, elem_vel, bc_vec, mass_flux, energy_flux, elem_res, vec, elem_sol_delta;
-    std::vector<FESystemUInt> elem_dof_indices;
     elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs);  elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs), bc_vec.resize(n_elem_dofs);
     mass_flux.resize(2); energy_flux.resize(2); momentum_flux_tensor.resize(2, 2); vec.resize(n_elem_dofs), elem_sol_delta.resize(n_elem_dofs); elem_res.resize(n_elem_dofs);
     
@@ -657,7 +767,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 vel.setSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentStateVelocityVector());
                 
                 //testJacobian(elem_type, n_elem_nodes, dof_map, mesh, sol, vel, vel_func);
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, sol, vel, vel_func, stiff_mat, mass, primitive_sol, additional_sol);
+                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStepSize(), sol, vel, vel_func, stiff_mat, mass, primitive_sol, additional_sol);
                 
                 vel_func.getSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentVelocityFunctionVector());
                 stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, transient_solver.getCurrentJacobianMatrix());
@@ -759,7 +869,7 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
             case FESystem::NonlinearSolvers::EVALUATE_JACOBIAN:
             case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL_AND_JACOBIAN:
             {
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, nonlinear_solver.getCurrentSolution(), vel,
+                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, 1.0, nonlinear_solver.getCurrentSolution(), vel,
                                          nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass,
                                          primitive_sol, additional_sol);
             }
@@ -826,7 +936,6 @@ int euler_analysis_driver(int argc, char * const argv[])
     // create the finite element and initialize the shape functions
     FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat, global_mass_mat;
     FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol;
-    std::vector<FESystemUInt> elem_dof_indices;
     
     rhs.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs());
     global_mass_mat.resize(dof_map.getSparsityPattern());

@@ -514,7 +514,7 @@ void inline FESystem::Numerics::MatrixBase<ValType>::getDiagonalBlockEigenvalue(
     
     // get the four entries of the block
     ValTypeEig a = this->getVal(i,i), b = this->getVal(i,i+1), c=this->getVal(i+1,i), d = this->getVal(i+1,i+1);
-    ValTypeEig val3 = pow(a+d,2), val4 = (a*d-b*c);
+    ValTypeEig val3 = (a+d)*(a+d), val4 = (a*d-b*c);
     val4 *= -4.0; 
     val3 += val4; val3 = sqrt(val3);
     // the polynomial is created from [a b; c d] and the A, B, C terms of the quadratic polynomial A l^2 + B l + C = 0 are

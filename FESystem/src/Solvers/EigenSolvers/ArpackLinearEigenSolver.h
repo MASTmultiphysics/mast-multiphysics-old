@@ -1193,7 +1193,7 @@ namespace FESystem
             /*!
              *   checks for the error number from the solver
              */
-            void checkError(const FESystemUInt ierr);
+            void checkError(const FESystemInt ierr);
             
             /*!
              *  linear solver used by this eigen solver

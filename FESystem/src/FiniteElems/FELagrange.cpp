@@ -70,9 +70,9 @@ FESystem::FiniteElement::FELagrange::initializeMaps()
     FESystemUInt dim = this->geom_elem->getParentNondegenerateElem().getDimension(), n_nodes_dim=0;
     
     // initialize the Lagrange polynomials with the point locations 
-    static std::vector<FESystemDouble> vals(10), physical_loc(150); // a static array to store node locaitons
-    static FESystem::Numerics::LocalVector<FESystemDouble> node_locations, vec;
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> node_physical_locations;
+    std::vector<FESystemDouble> vals(10), physical_loc(150); // array to store node locaitons
+    FESystem::Numerics::LocalVector<FESystemDouble> node_locations, vec;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> node_physical_locations;
     if (vec.getSize() != 3)
         vec.resize(3);
     if (physical_loc.size() < dim*this->geom_elem->getParentNondegenerateElem().getNNodes())

@@ -62,7 +62,7 @@ FESystem::Structures::VonKarmanStrain2D::clear()
 void
 FESystem::Structures::VonKarmanStrain2D::getActiveElementMatrixIndices(std::vector<FESystemUInt>& vec)
 {
-    static std::vector<FESystemUInt> plate_vec, membrane_vec;
+    std::vector<FESystemUInt> plate_vec, membrane_vec;
     
     this->membrane_elem->getActiveElementMatrixIndices(membrane_vec);
     this->plate_elem->getActiveElementMatrixIndices(plate_vec);
@@ -117,9 +117,9 @@ FESystem::Structures::VonKarmanStrain2D::calculateInternalForceVector(const FESy
     FESystemAssert2(sol.getSize() == this->getNElemDofs(), FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), this->getNElemDofs());
     FESystemAssert2(vec.getSize() == this->getNElemDofs(), FESystem::Exception::DimensionsDoNotMatch, vec.getSize(), this->getNElemDofs());
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> membrane_dof, w_dof, stress_vec, strain_vec, tmp_vk_2, tmp_vec_3, tmp_vec_2n, tmp_vec_n, plate_sol, plate_internal_force;
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_vk_mat, B_plate_mat, B_membrane_mat, plate_stiff_mat, C_mat;
-    static std::vector<FESystemUInt> membrane_dof_indices, plate_dof_indices, w_dof_indices;
+    FESystem::Numerics::LocalVector<FESystemDouble> membrane_dof, w_dof, stress_vec, strain_vec, tmp_vk_2, tmp_vec_3, tmp_vec_2n, tmp_vec_n, plate_sol, plate_internal_force;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_vk_mat, B_plate_mat, B_membrane_mat, plate_stiff_mat, C_mat;
+    std::vector<FESystemUInt> membrane_dof_indices, plate_dof_indices, w_dof_indices;
     B_membrane_mat.resize(3, 2*n); B_plate_mat.resize(2, n); B_vk_mat.resize(3, 2); stress_tensor.resize(2, 2); C_mat.resize(3, 3);
     stress_vec.resize(3), strain_vec.resize(3); tmp_vec_3.resize(3); tmp_vec_2n.resize(2*n); tmp_vk_2.resize(2); tmp_vec_n.resize(n);
     plate_stiff_mat.resize(this->plate_elem->getNElemDofs(), this->plate_elem->getNElemDofs()); membrane_dof.resize(2*n); w_dof.resize(n);
@@ -219,10 +219,10 @@ FESystem::Structures::VonKarmanStrain2D::calculateTangentStiffnessMatrix(const F
     FESystemAssert4((s.first == this->getNElemDofs()) && (s.second == this->getNElemDofs()), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, this->getNElemDofs(), this->getNElemDofs());
     
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> membrane_dof, w_dof, stress_vec, strain_vec, tmp_vk, tmp_vec1;
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_vk_mat, B_plate_mat, B_membrane_mat, plate_stiff_mat, C_mat, dsigma_dw_3n, membrane_stiff_mat,
+    FESystem::Numerics::LocalVector<FESystemDouble> membrane_dof, w_dof, stress_vec, strain_vec, tmp_vk, tmp_vec1;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> stress_tensor, B_vk_mat, B_plate_mat, B_membrane_mat, plate_stiff_mat, C_mat, dsigma_dw_3n, membrane_stiff_mat,
     tmp_mat_32, tmp_mat_2n, tmp_mat_nn, tmp_mat_32n, tmp_mat_22n, tmp_mat_n2n, tmp_mat_2nn;
-    static std::vector<FESystemUInt> membrane_dof_indices, plate_dof_indices, w_dof_indices;
+    std::vector<FESystemUInt> membrane_dof_indices, plate_dof_indices, w_dof_indices;
     B_membrane_mat.resize(3, 2*n); B_plate_mat.resize(2, n); B_vk_mat.resize(3, 2); stress_tensor.resize(2, 2); C_mat.resize(3, 3);
     stress_vec.resize(3), strain_vec.resize(3); tmp_vec1.resize(3); tmp_vk.resize(2);
     plate_stiff_mat.resize(this->plate_elem->getNElemDofs(), this->plate_elem->getNElemDofs());
@@ -348,8 +348,8 @@ FESystem::Structures::VonKarmanStrain2D::calculateTransverseDisplacementOperator
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     FESystemAssert4(((s.first == 2) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, 2, n, s.first, s.second);
     
-    static std::vector<FESystemUInt> derivatives(2);
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    std::vector<FESystemUInt> derivatives(2);
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
 
     B_mat.zero();

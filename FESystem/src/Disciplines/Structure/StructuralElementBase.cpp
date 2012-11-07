@@ -138,7 +138,7 @@ FESystem::Structures::StructuralElementBase::initialize(const FESystem::Mesh::El
 void
 FESystem::Structures::StructuralElementBase::calculateDeformationTransformationMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
 {
-    static FESystem::Geometry::Point pt(3);
+    FESystem::Geometry::Point pt(3);
     
     // valid combinations of displacement include
     FESystemUInt n_elem_nodes = this->geometric_elem->getNNodes();
@@ -147,7 +147,7 @@ FESystem::Structures::StructuralElementBase::calculateDeformationTransformationM
     
     FESystemAssert4((s.first == n_elem_nodes*6) && (s.second == n_elem_nodes*6), FESystem::Numerics::MatrixSizeMismatch, 6*n_elem_nodes, 6*n_elem_nodes, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat_sub;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat_sub;
     T_mat_sub.resize(3,3);
     
     this->geometric_elem->getLocalPhysicalCoordinateSystem().getFunctionMappingObject().getMappingJacobian(pt, T_mat_sub);
@@ -173,9 +173,9 @@ FESystem::Structures::StructuralElementBase::transformMatrixToGlobalSystem(const
     FESystemAssert4((s.first == ndof_elem) && (s.second == ndof_elem), FESystem::Numerics::MatrixSizeMismatch, ndof_elem, ndof_elem, s.first, s.second);
     FESystemAssert4((s_g.first == n*6) && (s_g.second == n*6), FESystem::Numerics::MatrixSizeMismatch, n*6, n*6, s_g.first, s_g.second);
     
-    static std::vector<FESystemUInt> indices;
+    std::vector<FESystemUInt> indices;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat, tmp_mat;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat, tmp_mat;
     T_mat.resize(n*6, n*6); T_mat.zero();
     tmp_mat.resize(n*6, n*6); tmp_mat.zero();
     
@@ -200,10 +200,10 @@ FESystem::Structures::StructuralElementBase::transformVectorToGlobalSystem(const
 {
     FESystemUInt n = this->geometric_elem->getNNodes();
     
-    static std::vector<FESystemUInt> indices;
+    std::vector<FESystemUInt> indices;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat;
-    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> T_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec;
     T_mat.resize(n*6, n*6); T_mat.zero();
     tmp_vec.resize(n*6); tmp_vec.zero();
     

@@ -626,7 +626,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<FESystemDouble>::solve()
 
 template <typename ValType>
 void 
-FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::checkError(const unsigned int ierr)
+FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::checkError(const FESystemInt ierr)
 {
     switch (ierr)
     {

@@ -76,8 +76,8 @@ FESystem::Structures::ExtensionBar::getStressTensor(const FESystem::Geometry::Po
     FESystemAssert2(sol.getSize() == n, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), n);
     FESystemAssert4(((s.first == 1) && (s.second== 1)), FESystem::Numerics::MatrixSizeMismatch, 1, 1, s.first, s.second);
 
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat;
-    static FESystem::Numerics::LocalVector<FESystemDouble> strain;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> strain;
     B_mat.resize(1, n);
     strain.resize(1);
     
@@ -100,7 +100,7 @@ FESystem::Structures::ExtensionBar::calculateConsistentMassMatrix(FESystem::Nume
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(1,1); B_mat.resize(1, n); tmp_mat1.resize(1, n), tmp_mat2.resize(n, n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -135,7 +135,7 @@ FESystem::Structures::ExtensionBar::calculateStiffnessMatrix(FESystem::Numerics:
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(1,1); B_mat.resize(1, n); tmp_mat1.resize(1, n), tmp_mat2.resize(n, n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -190,9 +190,9 @@ FESystem::Structures::ExtensionBar::calculateOperatorMatrix(const FESystem::Geom
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     FESystemAssert4(((s.first == 1) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, 1, n, s.first, s.second);
     
-    static std::vector<FESystemUInt> derivatives(1);
+    std::vector<FESystemUInt> derivatives(1);
     derivatives[0] = 1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
 

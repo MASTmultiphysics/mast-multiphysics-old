@@ -69,7 +69,7 @@ FESystem::FiniteElement::FiniteElementBase::getShapeFunction(const FESystem::Num
     // make sure that the element is initialized before access to any of these data structures is requested
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
 
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec1;
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1;
     vec1.resize(this->geom_elem->getParentNondegenerateElem().getNNodes());
     
     if (this->geom_elem->ifDegerateElement())
@@ -88,7 +88,7 @@ FESystem::FiniteElement::FiniteElementBase::getShapeFunctionForBoundary(const FE
 {
     const FESystemUInt elem_dim=this->geom_elem->getDimension();
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
+    FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
     vin_b.resize(elem_dim);
     vin_b.zero();
     v2.resize(elem_dim);
@@ -120,7 +120,7 @@ FESystem::FiniteElement::FiniteElementBase::getShapeFunctionDerivativeForLocalCo
     // make sure that the element is initialized before access to any of these data structures is requested
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec1;
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1;
     vec1.resize(this->geom_elem->getParentNondegenerateElem().getNNodes());
     
     if (this->geom_elem->ifDegerateElement())
@@ -143,7 +143,7 @@ FESystem::FiniteElement::FiniteElementBase::getShapeFunctionDerivativeForLocalCo
 {
     const FESystemUInt elem_dim=this->geom_elem->getDimension();
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
+    FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
     vin_b.resize(elem_dim);
     vin_b.zero();
     v2.resize(elem_dim);
@@ -175,7 +175,7 @@ FESystem::FiniteElement::FiniteElementBase::getShapeFunctionDerivativeForPhysica
     // make sure that the element is initialized before access to any of these data structures is requested
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec1;
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1;
     vec1.resize(this->geom_elem->getParentNondegenerateElem().getNNodes());
     
     if (this->geom_elem->ifDegerateElement())
@@ -197,7 +197,7 @@ FESystem::FiniteElement::FiniteElementBase::getShapeFunctionDerivativeForPhysica
 {
     const FESystemUInt elem_dim=this->geom_elem->getDimension();
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
+    FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
     vin_b.resize(elem_dim);
     vin_b.zero();
     v2.resize(elem_dim);
@@ -235,7 +235,7 @@ FESystem::FiniteElement::FiniteElementBase::getJacobianMatrix(const FESystem::Nu
 FESystemDouble 
 FESystem::FiniteElement::FiniteElementBase::getJacobianValue(const FESystem::Numerics::VectorBase<FESystemDouble>& vin) const
 {
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> jac;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> jac;
     jac.resize(this->geom_elem->getDimension(), this->geom_elem->getDimension());
     jac.zero();
     
@@ -252,8 +252,8 @@ FESystem::FiniteElement::FiniteElementBase::getJacobianValueForBoundary(const FE
     if (elem_dim == 1)
         return 1.0;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> jac;
-    static FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> jac;
+    FESystem::Numerics::LocalVector<FESystemDouble> vin_b, v2, v3;
     jac.resize(elem_dim, elem_dim);
     jac.zero();
     vin_b.resize(elem_dim);

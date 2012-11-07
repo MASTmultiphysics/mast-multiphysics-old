@@ -78,7 +78,7 @@ FESystem::Structures::ReissnerMindlinPlate::calculateStiffnessMatrix(FESystem::N
     
     FESystemAssert4(((s.first == 3*n) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3*n, 3*n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat_bend, C_mat_shear, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat_bend, C_mat_shear, tmp_mat1, tmp_mat2;
     C_mat_bend.resize(3,3); C_mat_shear.resize(3,3); B_mat.resize(3, 3*n); tmp_mat1.resize(3, 3*n), tmp_mat2.resize(3*n, 3*n);
     C_mat_bend.zero(); C_mat_shear.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -132,10 +132,10 @@ FESystem::Structures::ReissnerMindlinPlate::calculateBendingOperatorMatrix(const
     
     FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);
     
-    static std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
+    std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
     derivatives_x[0] = 1; derivatives_x[1] = 0;
     derivatives_y[0] = 0; derivatives_y[1] = 1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); 
     B_mat.zero();
 
@@ -162,10 +162,10 @@ FESystem::Structures::ReissnerMindlinPlate::calculateShearOperatorMatrix(const F
     
     FESystemAssert4(((s.first == 3) && (s.second== 3*n)), FESystem::Numerics::MatrixSizeMismatch, 3, 3*n, s.first, s.second);
     
-    static std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
+    std::vector<FESystemUInt> derivatives_x(2),derivatives_y(2);
     derivatives_x[0] = 1; derivatives_x[1] = 0;
     derivatives_y[0] = 0; derivatives_y[1] = 1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n);
     B_mat.zero();
     

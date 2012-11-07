@@ -49,7 +49,7 @@ FESystem::Geometry::CoordinateSystemBase::mapPointInSelf(const FESystem::Geometr
 {
     // TODO: revisit for ensuring hierarchy of coordinate systems
 
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec2;
+    FESystem::Numerics::LocalVector<FESystemDouble> vec2;
     vec2.resize(this->getDimension());
     vec2.copyVector(p);
     vec2.add(-1.0, this->getOrigin());

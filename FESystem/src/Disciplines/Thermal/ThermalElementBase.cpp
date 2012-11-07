@@ -137,7 +137,7 @@ FESystem::Thermal::ThermalElementBase::calculateConsistentCapacitanceMatrix(FESy
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(1,1); B_mat.resize(1, n); tmp_mat1.resize(1, n), tmp_mat2.resize(n, n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -191,7 +191,7 @@ FESystem::Thermal::ThermalElementBase::calculateConductanceMatrix(FESystem::Nume
     
     FESystemAssert4(((s.first == n) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, n, n, s.first, s.second);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat, tmp_mat1, tmp_mat2;
     C_mat.resize(dim,dim); B_mat.resize(dim, n); tmp_mat1.resize(dim, n), tmp_mat2.resize(n, n);
     C_mat.zero(); B_mat.zero(); tmp_mat1.zero(); tmp_mat2.zero();
     
@@ -226,7 +226,7 @@ FESystem::Thermal::ThermalElementBase::calculateCapacitanceOperatorMatrix(const 
     
     FESystemAssert4(((s.first == dim) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, dim, n, s.first, s.second);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
     
@@ -249,11 +249,11 @@ FESystem::Thermal::ThermalElementBase::calculateConductanceOperatorMatrix(const 
     
     FESystemAssert4(((s.first == dim) && (s.second== n)), FESystem::Numerics::MatrixSizeMismatch, dim, n, s.first, s.second);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
     
-    static std::vector<FESystemUInt> derivatives;
+    std::vector<FESystemUInt> derivatives;
     derivatives.resize(dim);
     
     for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)

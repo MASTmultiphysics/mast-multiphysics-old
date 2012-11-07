@@ -115,7 +115,7 @@ FESystem::Functions::LagrangeFunctionMapping<ValType>::map(const FESystem::Numer
 
     FESystemAssert4(((s_discrete.first==s.second)&&(s_discrete.second == n_pts)), FESystem::Numerics::MatrixSizeMismatch, s_discrete.first, s_discrete.second, s.second, n_pts);
     
-    static FESystem::Numerics::LocalVector<ValType> vec;
+    FESystem::Numerics::LocalVector<ValType> vec;
     vec.resize(n_pts);
 
     this->getDiscreteFunction(vin, vec);
@@ -148,10 +148,10 @@ FESystem::Functions::LagrangeFunctionMapping<ValType>::getMappingJacobian(const 
     
     FESystemAssert4(((s_discrete.first==s.second)&&(s_discrete.second == n_pts)), FESystem::Numerics::MatrixSizeMismatch, s_discrete.first, s_discrete.second, s.second, n_pts);    
 
-    static FESystem::Numerics::LocalVector<ValType> deriv; 
+    FESystem::Numerics::LocalVector<ValType> deriv;
     deriv.resize(s.second);
     
-    static std::vector<FESystemUInt> deriv_order;
+    std::vector<FESystemUInt> deriv_order;
     if (deriv_order.size() != s.first)
         deriv_order.resize(s.first);
     
@@ -182,7 +182,7 @@ FESystem::Functions::LagrangeFunctionMapping<ValType>::getFunctionDerivative(con
     
     FESystemAssert4(((s_discrete.first==s.second)&&(s_discrete.second == n_pts)), FESystem::Numerics::MatrixSizeMismatch, s_discrete.first, s_discrete.second, s.second, n_pts);    
     
-    static FESystem::Numerics::LocalVector<ValType> vec;
+    FESystem::Numerics::LocalVector<ValType> vec;
     vec.resize(n_pts);
 
     this->getDiscreteFunctionDerivative(derivative_orders, vin, vec);
@@ -213,7 +213,7 @@ FESystem::Functions::LagrangeFunctionMapping<ValType>::getDiscreteFunction(const
     FESystemAssert2(vout.getSize() == n_pts, FESystem::Exception::DimensionsDoNotMatch, vout.getSize(), n_pts);
     
     // iterate over each dimension and shape function and calculate the mapped function value
-    static std::vector<ValType> func_vals;
+    std::vector<ValType> func_vals;
     if (func_vals.size() != n_pts)
         func_vals.resize(n_pts);
     for (FESystemUInt i=0; i<n_pts; i++) func_vals[i]=1.0;
@@ -244,7 +244,7 @@ FESystem::Functions::LagrangeFunctionMapping<ValType>::getDiscreteFunctionDeriva
     FESystemAssert2(deriv.getSize() == n_pts, FESystem::Exception::DimensionsDoNotMatch, deriv.getSize(), n_pts);
         
     // iterate over each dimension and shape function and calculate the mapped function value
-    static std::vector<std::vector<ValType> > func_val_deriv;
+    std::vector<std::vector<ValType> > func_val_deriv;
     if (func_val_deriv.size() != s.first)
         func_val_deriv.resize(s.first);
     for (FESystemUInt i=0; i<s.first; i++) 
@@ -271,7 +271,7 @@ FESystemUInt
 FESystem::Functions::LagrangeFunctionMapping<ValType>::getDiscretePointNumberAlongLocalDimension(FESystemUInt p_id, FESystemUInt dim_id) const
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    static std::vector<FESystemUInt> el(2);
+    std::vector<FESystemUInt> el(2);
     el[0] = p_id;
     el[1] = dim_id;
     return this->point_id_table->getVal(el);

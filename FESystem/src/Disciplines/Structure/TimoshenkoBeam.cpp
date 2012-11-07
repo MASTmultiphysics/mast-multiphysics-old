@@ -76,7 +76,7 @@ FESystem::Structures::TimoshenkoBeam::calculateStiffnessMatrix(FESystem::Numeric
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_mat_shear, C_mat_bend, C_mat_shear, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, B_mat_shear, C_mat_bend, C_mat_shear, tmp_mat1, tmp_mat2;
     
     FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
     C_mat_bend.resize(2,2); C_mat_shear.resize(2,2); B_mat.resize(2, 4*n); B_mat_shear.resize(2, 4*n); tmp_mat1.resize(2, 4*n); tmp_mat2.resize(4*n, 4*n);
@@ -133,9 +133,9 @@ FESystem::Structures::TimoshenkoBeam::calculateBendingOperatorMatrix(const FESys
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
-    static std::vector<FESystemUInt> derivatives_x(1);
+    std::vector<FESystemUInt> derivatives_x(1);
     derivatives_x[0] = 1;
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n);
     B_mat.zero();
     Nvec.zero();
@@ -156,10 +156,10 @@ FESystem::Structures::TimoshenkoBeam::calculateShearOperatorMatrix(const FESyste
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
-    static std::vector<FESystemUInt> derivatives_x(1);
+    std::vector<FESystemUInt> derivatives_x(1);
     derivatives_x[0] = 1;
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n);
     B_mat.zero();
 

@@ -214,7 +214,7 @@ FESystem::Fluid::FluidElementBase::calculateFluxBoundaryCondition(const FESystem
     FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
     
     
-    static FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1;
+    FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1;
     Nvec.resize(n); normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(dim);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
@@ -254,7 +254,7 @@ FESystem::Fluid::FluidElementBase::calculateSolidWallFluxBoundaryCondition(const
     
     FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, tmp_vec1, flux;
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, tmp_vec1, flux;
     normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n2); flux.resize(n1);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
@@ -295,8 +295,8 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
     
     FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local;
-    static FESystem::Numerics::DenseMatrix<FESystemDouble>  A, tmp_mat_n1n2, tmp_mat2_n2n2;
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local;
+    FESystem::Numerics::DenseMatrix<FESystemDouble>  A, tmp_mat_n1n2, tmp_mat2_n2n2;
     normal.resize(3); normal_local.resize(dim);
     A.resize(n1, n1); tmp_mat_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
     
@@ -335,7 +335,7 @@ FESystem::Fluid::FluidElementBase::calculateFluxBoundaryConditionUsingLocalSolut
     
     FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, tmp_vec1, flux;
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, tmp_vec1, flux;
     normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n2); flux.resize(n1);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
@@ -373,8 +373,8 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditio
     
     FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local;
-    static FESystem::Numerics::DenseMatrix<FESystemDouble>  tmp_mat_n1n2, tmp_mat2_n2n2;
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local;
+    FESystem::Numerics::DenseMatrix<FESystemDouble>  tmp_mat_n1n2, tmp_mat2_n2n2;
     normal.resize(3); normal_local.resize(dim);
     tmp_mat_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
     
@@ -410,8 +410,8 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
     
     FESystemAssert2(res.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, res.getSize(), n2);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> LS_mat;
-    static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, diff_sens;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> LS_mat;
+    FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, diff_sens;
     LS_mat.resize(n1, n2);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n2); diff_sens.resize(n2);
     
@@ -462,8 +462,8 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
     FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
     FESystemAssert4((s_mat2.first == n2) && (s_mat2.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat2.first, s_mat2.first, n2, n2);
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> LS_mat, diff2, tmp_mat1_n2n2, tmp_mat2_n1n2;
-    static FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n2, diff_sens;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> LS_mat, diff2, tmp_mat1_n2n2, tmp_mat2_n1n2;
+    FESystem::Numerics::LocalVector<FESystemDouble> flux, tmp_vec1_n1, tmp_vec2_n2, diff_sens;
     LS_mat.resize(n1, n2); diff2.resize(n1, n1);
     tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2);
     flux.resize(n1); diff_sens.resize(n2); tmp_vec2_n2.resize(n2);
@@ -912,7 +912,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxSpatialDerivative(const
     FESystemAssert0(( flux!=NULL ) || (dflux_dU != NULL), FESystem::Exception::InvalidFunctionCall); // both can't be null
     FESystemAssert0(i < dim, FESystem::Exception::InvalidValue);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec;
+    FESystem::Numerics::LocalVector<FESystemDouble> tmp_vec;
     tmp_vec.resize(n1);
     
     // calculate the Jacobian
@@ -965,7 +965,7 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(FESystem
     
     FESystemAssert4((s_mat1.first == n1) && (s_mat1.second == n1), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.second, n1, n1);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> u, dN;
+    FESystem::Numerics::LocalVector<FESystemDouble> u, dN;
     u.resize(dim); dN.resize(dim);
     
     streamline_operator.zero();
@@ -1026,9 +1026,9 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     
     FESystemAssert4((s.first == n1) && (s.second == n2), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n2);
     
-    static std::vector<FESystem::Numerics::LocalVector<FESystemDouble> > diff_vec(3);
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat, tmp_mat_n1n1, diff_operator;
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2, vec3, vec4, vec5;
+    std::vector<FESystem::Numerics::LocalVector<FESystemDouble> > diff_vec(3);
+    FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat, tmp_mat_n1n1, diff_operator;
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2, vec3, vec4, vec5;
     tmp_mat.resize(n1, n2); tmp_mat_n1n1.resize(n1, n1); diff_operator.resize(n1, n2);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4.resize(n2); vec5.resize(n2);
     for (FESystemUInt i=0; i<dim; i++) diff_vec[i].resize(n1);
@@ -1129,9 +1129,9 @@ FESystem::Fluid::FluidElementBase::calculateOperatorMatrix(const FESystem::Geome
     
     FESystemAssert4((s.first == n1) && (s.second == n2), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n2);
     
-    static std::vector<FESystemUInt> derivatives;
+    std::vector<FESystemUInt> derivatives;
 
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
     
@@ -1165,9 +1165,9 @@ FESystem::Fluid::FluidElementBase::calculateOperatorMatrixForBoundary(const FESy
     FESystemAssert2(pt.getSize() == dim-1, FESystem::Exception::DimensionsDoNotMatch, dim-1, pt.getSize());
     FESystemAssert4((s.first == n1) && (s.second == n2), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n2);
     
-    static std::vector<FESystemUInt> derivatives;
+    std::vector<FESystemUInt> derivatives;
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
+    FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
     
@@ -1197,7 +1197,7 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePoint(const FESyst
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat;
     tmp_mat.resize(n1, n2);
     
     // update the shape function and Jacobian matrices
@@ -1227,7 +1227,7 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePointForBoundary(c
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat;
     tmp_mat.resize(n1, n2);
     
     // update the shape function and Jacobian matrices
@@ -1254,7 +1254,7 @@ FESystem::Fluid::FluidElementBase::updateVariablesForInterpolationOperator(const
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> tmp_mat;
     tmp_mat.resize(n1, n2);
     
     // set the value of interpolated sol through interpolation
@@ -1300,7 +1300,7 @@ FESystem::Fluid::FluidElementBase::estimateJacobianSpectralRadius(const FESystem
     
     FESystemAssert0(size.first == size.second, FESystem::Numerics::MatrixMustBeSquareForOperation);
     
-    static FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2;
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2;
     vec1.resize(size.first); vec2.resize(size.first);
     
     vec1.setAllVals(1.0);

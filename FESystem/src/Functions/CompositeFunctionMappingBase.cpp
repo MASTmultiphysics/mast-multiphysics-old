@@ -279,12 +279,12 @@ FESystem::Functions::DiscreteCompositeMappingFunctionBase<ValType>::getDiscreteF
         case 1:
         {
             // d X3_i / d X2_j =  (d X3_i / d X1_k)  (d X1_k / d X2_j)
-            static FESystem::Numerics::LocalVector<ValType> dX3_dX1;
-            static FESystem::Numerics::DenseMatrix<ValType> dX2_dX1_jac, dX2_dX1_jac_inv;
+            FESystem::Numerics::LocalVector<ValType> dX3_dX1;
+            FESystem::Numerics::DenseMatrix<ValType> dX2_dX1_jac, dX2_dX1_jac_inv;
             dX3_dX1.resize(n_funcs);
             dX2_dX1_jac.resize(s3.second, s3.first);
             dX2_dX1_jac_inv.resize(s3.second, s3.first);
-            static std::vector<FESystemUInt> x3_deriv;
+            std::vector<FESystemUInt> x3_deriv;
             if (x3_deriv.size() != s3.first)
                 x3_deriv.resize(s3.first);
             

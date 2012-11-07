@@ -72,7 +72,7 @@ FESystem::Structures::EulerBernoulliBeam::calculateStiffnessMatrix(FESystem::Num
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     FESystemDouble length=this->geometric_elem->getElementSize(*(this->finite_element), *(this->quadrature));
     
-    static FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat_bend, tmp_mat1, tmp_mat2;
+    FESystem::Numerics::DenseMatrix<FESystemDouble> B_mat, C_mat_bend, tmp_mat1, tmp_mat2;
     
     FESystemAssert4(((s.first == 4*n) && (s.second == 4*n)), FESystem::Numerics::MatrixSizeMismatch, 4*n, 4*n, s.first, s.second);
     C_mat_bend.resize(2,2); B_mat.resize(2, 4*n); tmp_mat1.resize(2, 4*n), tmp_mat2.resize(4*n, 4*n);
@@ -110,7 +110,7 @@ FESystem::Structures::EulerBernoulliBeam::calculateBendingOperatorMatrix(const F
     const FESystemUInt n = this->geometric_elem->getNNodes();
     const std::pair<FESystemUInt, FESystemUInt> s = B_mat.getSize();
     
-    static FESystemDouble N1, N2, N3, N4;
+    FESystemDouble N1, N2, N3, N4;
     FESystemDouble xi = pt.getVal(0);
     
     // shape function values
