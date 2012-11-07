@@ -133,7 +133,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
                             (*it)->setTag(0);
                 }
                 
-                if ((nodes[i]->getVal(0) == x_length)) // right boundary nodes
+                if (fabs(nodes[i]->getVal(0) - x_length) <= FESystem::Base::getMachineEpsilon<FESystemDouble>()) // right boundary nodes
                 {
                     const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
                     std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
@@ -152,7 +152,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
                 }
                 
                 
-                if ((nodes[i]->getVal(1) == y_length)) // upper boundary nodes
+                if (fabs(nodes[i]->getVal(1) - y_length) <= FESystem::Base::getMachineEpsilon<FESystemDouble>()) // upper boundary nodes
                 {
                     const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
                     std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
