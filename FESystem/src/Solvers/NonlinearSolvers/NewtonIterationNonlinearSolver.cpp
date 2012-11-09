@@ -58,7 +58,7 @@ FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::initialize(
     FESystem::NonlinearSolvers::NonlinearSolverBase<ValType>::initialize(s.first);
     this->jacobian = &mat;
     this->linear_solver = &solver;
-    this->linear_solver->setSystemMatrix(*(this->jacobian));
+    this->linear_solver->setSystemMatrix(*(this->jacobian), this->if_reuse_linear_solver_data_structure);
 }
             
             
@@ -107,7 +107,7 @@ FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<ValType>::incrementSo
             
             // calculate the solution increment
             this->linear_solver->clear();
-            this->linear_solver->setSystemMatrix(*(this->jacobian));
+            this->linear_solver->setSystemMatrix(*(this->jacobian), this->if_reuse_linear_solver_data_structure);
             this->linear_solver->solve(*(this->residual), *(this->sol_increment_vec));
                         
             // update the solution

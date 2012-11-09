@@ -71,7 +71,7 @@ FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::getLinearSolver()
 
 template <typename ValType>
 void 
-FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::initializeDataStructures()
 {
     FESystemAssert0( this->linear_solver != NULL, FESystem::LinearSolvers::LinearSolverNotInitialized);
         
@@ -82,9 +82,7 @@ FESystem::LinearSolvers::LinearLeastSquareSolver<ValType>::setSystemMatrix(const
     this->least_square_system_matrix->resize(s.second, s.second);
     m_val.matrixTransposeRightMultiply(1.0, m_val, *(this->least_square_system_matrix));
     
-    this->getLinearSolver().setSystemMatrix(*(this->least_square_system_matrix));
-    
-    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    this->getLinearSolver().setSystemMatrix(*(this->least_square_system_matrix), false);
 }
 
 

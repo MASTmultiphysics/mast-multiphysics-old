@@ -45,6 +45,7 @@ FESystem::FactorizationSolvers::LUFactorization<ValType>::clear()
     this->u_mat.reset();
     this->l_sparsity_pattern.reset();
     this->u_sparsity_pattern.reset();
+    this->lu_combined_sparsity.reset();
     
     this->factorization_complete = false;
 }
@@ -53,34 +54,57 @@ FESystem::FactorizationSolvers::LUFactorization<ValType>::clear()
 
 template <typename ValType>
 void
-FESystem::FactorizationSolvers::LUFactorization<ValType>::initializeMatrices()
+FESystem::FactorizationSolvers::LUFactorization<ValType>::refactorMatrix(FESystemBoolean if_reuse_data_structure)
+{
+    FESystemAssert0(this->mat != NULL, FESystem::Exception::InvalidState);
+    FESystemAssert0(this->factorization_complete, FESystem::Exception::InvalidState);
+    
+    this->initializeMatrices(if_reuse_data_structure);
+}
+
+
+
+template <typename ValType>
+void
+FESystem::FactorizationSolvers::LUFactorization<ValType>::initializeMatrices(FESystemBoolean if_reuse_data_structure)
 {
     FESystemAssert0(this->mat != NULL, FESystem::Exception::InvalidState);
     
-    this->l_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
-    this->u_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
-
-    std::pair<FESystemUInt, FESystemUInt> s = this->mat->getSize();
-
     switch (this->mat->getType()) {
         case FESystem::Numerics::LOCAL_DENSE_MATRIX:
-        {            
+        {
+            this->l_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
+            this->u_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
+            
+            std::pair<FESystemUInt, FESystemUInt> s = this->mat->getSize();
+            
             this->l_mat->resize(s.first, s.second);
-            this->u_mat->resize(s.first, s.second);    
+            this->u_mat->resize(s.first, s.second);
+            this->mat->initializeLUFactoredMatrices(*(this->l_mat), *(this->u_mat));
         }
             break;
 
         case FESystem::Numerics::LOCAL_SPARSE_MATRIX:
         {
-            // initialize the sparsity pattern
-            this->l_sparsity_pattern.reset(new FESystem::Numerics::SparsityPattern);
-            this->u_sparsity_pattern.reset(new FESystem::Numerics::SparsityPattern);
-
-            // ask the sparsity pattern to initialize the sparsity pattern for the LU matrices
-            dynamic_cast<const FESystem::Numerics::SparseMatrix<ValType>* >(this->mat)->getSparsityPattern().initSparsityPatternForLUFactorization(*(this->l_sparsity_pattern), *(this->u_sparsity_pattern));
+            if (!if_reuse_data_structure)
+            {
+                // initialize the sparsity pattern
+                this->l_sparsity_pattern.reset(new FESystem::Numerics::SparsityPattern);
+                this->u_sparsity_pattern.reset(new FESystem::Numerics::SparsityPattern);
+                this->lu_combined_sparsity.reset(new FESystem::Numerics::SparsityPattern);
+                
+                // ask the sparsity pattern to initialize the sparsity pattern for the LU matrices
+                dynamic_cast<const FESystem::Numerics::SparseMatrix<ValType>* >(this->mat)->getSparsityPattern().initSparsityPatternForLUFactorization(*(this->l_sparsity_pattern), *(this->u_sparsity_pattern));
+                
+                // initialize the matrices
+                this->l_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
+                this->u_mat.reset(FESystem::Numerics::MatrixCreate<ValType>(this->mat->getType()).release());
+                
+                dynamic_cast<FESystem::Numerics::SparseMatrix<ValType>* >(this->l_mat.get())->resize(*this->l_sparsity_pattern);
+                dynamic_cast<FESystem::Numerics::SparseMatrix<ValType>* >(this->u_mat.get())->resize(*this->u_sparsity_pattern);
+            }
             
-            dynamic_cast<FESystem::Numerics::SparseMatrix<ValType>* >(this->l_mat.get())->resize(*this->l_sparsity_pattern);
-            dynamic_cast<FESystem::Numerics::SparseMatrix<ValType>* >(this->u_mat.get())->resize(*this->u_sparsity_pattern);
+            dynamic_cast<const FESystem::Numerics::SparseMatrix<ValType>* >(this->mat)->initializeLUFactoredMatrices(*(this->l_mat), *(this->u_mat), if_reuse_data_structure, *(this->lu_combined_sparsity));
         }
             break;
             
@@ -89,7 +113,6 @@ FESystem::FactorizationSolvers::LUFactorization<ValType>::initializeMatrices()
             break;
     }
 
-    this->mat->initializeLUFactoredMatrices(*(this->l_mat), *(this->u_mat));
     
     this->factorization_complete = true;
 }
@@ -107,7 +130,7 @@ FESystem::FactorizationSolvers::LUFactorization<ValType>::setMatrix(const FESyst
     
     this->mat = m;
     
-    this->initializeMatrices();
+    this->initializeMatrices(false);
 }
 
 

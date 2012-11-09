@@ -14,6 +14,7 @@
 template <typename ValType>
 FESystem::LinearSolvers::LinearSolverBase<ValType>::LinearSolverBase():
 if_initialized(false),
+if_reuse_data(false),
 system_matrix(NULL)
 {
     
@@ -33,16 +34,20 @@ FESystem::LinearSolvers::LinearSolverBase<ValType>::clear()
 {
     this->system_matrix = NULL;
     this->if_initialized = false;
+    this->if_reuse_data = false;
 }
 
 
 template <typename ValType>
 void 
-FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat, FESystemBoolean if_reuse_data_structure)
 {
-    FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemAssert0(!this->if_initialized || if_reuse_data_structure, FESystem::Exception::InvalidState);
     
     this->system_matrix = &mat;
+    this->if_reuse_data = if_reuse_data_structure;
+    
+    this->initializeDataStructures();
     
     this->if_initialized = true;
 }

@@ -62,13 +62,6 @@ namespace FESystem
              *   Returns a reference to the linear solver object
              */
             FESystem::LinearSolvers::LinearSolverBase<ValType>& getLinearSolver();
-
-            /*!
-             *   Sets the system matrix \f$ A \f$ in the system of equation through parameter \p mat and
-             *   initializes the necessary data structures for a solution. If the solver is already associated with a 
-             *   different matrix, the clear() method must be called before reassigning the system matrix. 
-             */
-            void setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat);
             
             /*!
              *   The setSystemMatrix must be called before this method. The method solves \f$ A x = b \f$ where 
@@ -85,6 +78,12 @@ namespace FESystem
                                FESystem::Numerics::MatrixBase<ValType>& sol);
 
         protected:
+
+            /*!
+             *   Initializes the data structures for linear solution
+             */
+            virtual void initializeDataStructures();
+            
 
             /*!
              *   Temporary vector storage

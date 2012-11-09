@@ -77,7 +77,7 @@ FESystem::Surrogates::LeastSquareSurrogate<ValType>::initialize()
   }
 
   // attach the matrix and solver
-  this->least_square_solver->setSystemMatrix(*(this->ls_matrix));
+  this->least_square_solver->setSystemMatrix(*(this->ls_matrix), false);
   this->least_square_solver->setLinearSolver(*(this->linear_solver));
 
   // calculate rhs

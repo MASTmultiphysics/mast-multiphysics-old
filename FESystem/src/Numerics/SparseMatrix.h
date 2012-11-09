@@ -325,12 +325,18 @@ namespace FESystem
 			virtual void add (ValType f, const MatrixBase<ValType>& t);
             
             /*!
-             *    Initializes the LU factored matrices based on the current matrix
+             *   The user should call the other method, instead of this one. The sparsity pattern operation is an expensive operation, and the data structure should be reused if possible. 
              */  
             virtual void initializeLUFactoredMatrices(FESystem::Numerics::MatrixBase<ValType>& l_mat, FESystem::Numerics::MatrixBase<ValType>& u_mat) const;
 
+            
+            /*!
+             *    Initializes the LU factored matrices based on the current matrix. The sparsity pattern operation is an expensive operation, and the data structure should be reused if possible.
+             */
+            void initializeLUFactoredMatrices(FESystem::Numerics::MatrixBase<ValType>& l_mat, FESystem::Numerics::MatrixBase<ValType>& u_mat,
+                                              FESystemBoolean if_reuse_sparsity, FESystem::Numerics::SparsityPattern& lu_combined_sparsity) const;
 		protected:
-			            
+			         
             /*!
              *    Sparsity pattern for this matrix
              */

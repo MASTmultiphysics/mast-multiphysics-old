@@ -199,6 +199,11 @@ namespace FESystem
             void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver, FESystemBoolean if_constant_matrices);
             
             /*!
+             *   Sets the flag so that the linear solver is able to reuse its data structures, in case that leads to any reduction in CPU cost.
+             */
+            void setLinearSolverDataStructureReuse(FESystemBoolean flag);
+
+            /*!
              *    Enables adaptive time stepping, which is off by default
              */
             void enableAdaptiveTimeStepping(FESystemUInt n_iters_for_update, typename RealOperationType(ValType) exponent, typename RealOperationType(ValType) max_dt);
@@ -308,6 +313,10 @@ namespace FESystem
              */
             FESystem::LinearSolvers::LinearSolverBase<ValType>* linear_solver;
             
+            /*!
+             *    Tells the linear solver to reuse data structure, if that may lead to any CPU cost savings
+             */
+            FESystemBoolean if_reuse_linear_solver_data_structure;
             
             /*!
              *    In case the system matrices are constant with respect to time, the linear solver will be initialized only once for the first time step.

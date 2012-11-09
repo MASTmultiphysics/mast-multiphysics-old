@@ -255,7 +255,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
         {
             // only for implicit scheme, where both x_dot and x_dot_jacobian are used here
             
-            if ((this->current_iteration_number == 0) || (!this->if_constant_system_matrices))
+            if (((this->current_iteration_number == 0) && (this->nonlinear_iteration_number == 0)) || (!this->if_constant_system_matrices))
             {
                 // copy the jacobian terms from 1st row to the 0th row
                 switch (this->order) 
@@ -308,8 +308,11 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
                         break;
                 }
                 
-                this->linear_solver->clear();
-                this->linear_solver->setSystemMatrix(*this->jacobian);
+                
+                if (((this->current_iteration_number == 0) && (this->nonlinear_iteration_number==0)) || !this->if_reuse_linear_solver_data_structure)
+                    this->linear_solver->clear();
+                
+                this->linear_solver->setSystemMatrix(*this->jacobian, this->if_reuse_linear_solver_data_structure);
             }
             
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity_function), *(this->current_state), *(this->current_velocity_function), *(this->residual));

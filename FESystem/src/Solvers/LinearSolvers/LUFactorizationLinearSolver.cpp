@@ -50,22 +50,24 @@ FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::clear()
 
 
 
-
 template <typename ValType>
 void 
-FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::LUFactorizationLinearSolver<ValType>::initializeDataStructures()
 {
-    FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    
-    // and initialize the rest of the data structures
-    this->lu_factorization->setMatrix(&mat);
-    this->l_triangular_backsubstitute->setMatrix(this->lu_factorization->getLMatrix());
-    this->u_triangular_backsubstitute->setMatrix(this->lu_factorization->getUMatrix());
-
-    this->l_triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::LOWER_TRIANGULAR);
-    this->u_triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
-    
-    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    if (this->if_reuse_data && this->if_initialized)
+        this->lu_factorization->refactorMatrix(true);
+    else
+    {
+        FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
+        
+        // and initialize the rest of the data structures
+        this->lu_factorization->setMatrix(this->system_matrix);
+        this->l_triangular_backsubstitute->setMatrix(this->lu_factorization->getLMatrix());
+        this->u_triangular_backsubstitute->setMatrix(this->lu_factorization->getUMatrix());
+        
+        this->l_triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::LOWER_TRIANGULAR);
+        this->u_triangular_backsubstitute->setTriangularMatrixType(FESystem::FactorizationSolvers::UPPER_TRIANGULAR);
+    }
 }
 
 

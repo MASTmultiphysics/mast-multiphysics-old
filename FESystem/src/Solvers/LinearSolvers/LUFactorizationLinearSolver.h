@@ -50,13 +50,6 @@ namespace FESystem
             virtual void clear();
             
             /*!
-             *   Sets the system matrix \f$ A \f$ in the system of equation through parameter \p mat and
-             *   initializes the necessary data structures for a solution. If the solver is already associated with a 
-             *   different matrix, the clear() method must be called before reassigning the system matrix. 
-             */
-            virtual void setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat);
-            
-            /*!
              *   The setSystemMatrix must be called before this method. The method solves \f$ A x = b \f$ where 
              *   \f$ b \f$ is given as the parameter \p rhs and \f$ x \f$ is given as the parameter \p sol. 
              */
@@ -71,6 +64,11 @@ namespace FESystem
                                FESystem::Numerics::MatrixBase<ValType>& sol);
             
         protected:
+            
+            /*!
+             *   Initializes the data structures for linear solution
+             */
+            virtual void initializeDataStructures();
             
             /*!
              *   Temporary vector storage

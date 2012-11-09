@@ -20,6 +20,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::ArpackLinearEigenSolve
 FESystem::EigenSolvers::LinearEigenSolverBase<ValType>::LinearEigenSolverBase(),
 solution_completed(false),
 if_initialized(false),
+if_reuse_linear_solver_data_structure(false),
 n_converged_eigen_pairs(0),
 ido(0),
 n(0),
@@ -88,6 +89,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::clear()
     this->workev.clear();
     this->operator_matrix.reset();
     this->linear_solver = NULL;
+    this->if_reuse_linear_solver_data_structure = false;
 }
 
 
@@ -98,6 +100,15 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::setLinearSolver(FESyst
     this->linear_solver = &solver;
 }
 
+
+
+template <typename ValType>
+void
+FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::setLinearSolverDataStructureReuse(FESystemBoolean flag)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    this->if_reuse_linear_solver_data_structure = flag;
+}
 
 
 template <typename ValType>
@@ -317,7 +328,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::init(FESystemUInt n_ei
             if (this->bmat == "G")
             {
                 this->operator_matrix->copyMatrix(this->getBMatrix());
-                this->linear_solver->setSystemMatrix(*this->operator_matrix);
+                this->linear_solver->setSystemMatrix(*this->operator_matrix, this->if_reuse_linear_solver_data_structure);
             }
             break;
             
@@ -329,7 +340,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::init(FESystemUInt n_ei
             {
                 this->operator_matrix->copyMatrix(this->getAMatrix());
                 this->operator_matrix->shiftDiagonal(- this->sigmar);
-                this->linear_solver->setSystemMatrix(*this->operator_matrix);
+                this->linear_solver->setSystemMatrix(*this->operator_matrix, this->if_reuse_linear_solver_data_structure);
             }
                 break;
                 
@@ -338,7 +349,7 @@ FESystem::EigenSolvers::ArpackLinearEigenSolver<ValType>::init(FESystemUInt n_ei
             {
                 this->operator_matrix->copyMatrix(this->getAMatrix());
                 this->operator_matrix->add(-this->sigmar, this->getBMatrix());
-                this->linear_solver->setSystemMatrix(*this->operator_matrix);
+                this->linear_solver->setSystemMatrix(*this->operator_matrix, this->if_reuse_linear_solver_data_structure);
             }
                 break;
                 

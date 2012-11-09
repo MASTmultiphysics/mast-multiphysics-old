@@ -43,15 +43,13 @@ FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::clear()
 
 template <typename ValType> 
 void 
-FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat)
+FESystem::LinearSolvers::PseudoTimeSteppingLinearSolver<ValType>::initializeDataStructures()
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
 
     this->residual_vec.reset(new FESystem::Numerics::LocalVector<ValType>);
     
-    this->residual_vec->resize(mat.getSize().first);
-    
-    FESystem::LinearSolvers::LinearSolverBase<ValType>::setSystemMatrix(mat); 
+    this->residual_vec->resize(this->system_matrix->getSize().first);
 }
 
 template <typename ValType> 

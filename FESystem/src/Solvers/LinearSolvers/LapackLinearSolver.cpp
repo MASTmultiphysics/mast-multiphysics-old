@@ -56,10 +56,9 @@ FESystem::LinearSolvers::LapackLinearSolver<ValType>::clear()
 
 template <>
 void 
-FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::initializeDataStructures()
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    FESystem::LinearSolvers::LinearSolverBase<FESystemDouble>::setSystemMatrix(mat); 
 
     // and initialize the rest of the data structures
     std::pair<FESystemUInt, FESystemUInt> s = this->getSystemMatrix().getSize();
@@ -82,10 +81,9 @@ FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(con
 
 template <>
 void 
-FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemFloat>& mat)
+FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::initializeDataStructures()
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    FESystem::LinearSolvers::LinearSolverBase<FESystemFloat>::setSystemMatrix(mat); 
     
     // and initialize the rest of the data structures
     std::pair<FESystemUInt, FESystemUInt> s = this->getSystemMatrix().getSize();

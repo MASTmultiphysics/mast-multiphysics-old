@@ -22,13 +22,13 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-4, final_t=time_step*1.0e5;
+const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-2, final_t=time_step*1;
 const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-10;
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=125, ny=60, dim = 2, max_nonlin_iters = 5, n_vars=4;
-const AnalysisCase case_type = RAMP;
+const FESystemUInt nx=125, ny=55, dim = 2, max_nonlin_iters = 5, n_vars=4;
+const AnalysisCase case_type = AIRFOIL_BUMP;
 FESystem::Numerics::LocalVector<FESystemDouble> mass_flux, energy_flux;
 FESystem::Numerics::DenseMatrix<FESystemDouble> momentum_flux_tensor;
 
@@ -658,34 +658,18 @@ void testJacobian(FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nod
 }
 
 
-void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
-                            const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern, const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs)
+void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map)
 {
     FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
     
-    FESystem::Numerics::SparseMatrix<FESystemDouble> stiff_mat, mass, stiff_mat_reduced, mass_mat_reduced;
-    FESystem::Numerics::LocalVector<FESystemDouble>  sol, sol_reduced, vel, vel_func, primitive_sol, additional_sol;
+    FESystem::Numerics::SparseMatrix<FESystemDouble> stiff_mat, mass;
+    FESystem::Numerics::LocalVector<FESystemDouble>  sol, vel, primitive_sol, additional_sol;
     
-    sol.resize(dof_map.getNDofs()); vel_func.resize(dof_map.getNDofs()); vel.resize(dof_map.getNDofs()); sol_reduced.resize(nonbc_sparsity_pattern.getNDOFs());
+    sol.resize(dof_map.getNDofs()); vel.resize(dof_map.getNDofs());
     stiff_mat.resize(dof_map.getSparsityPattern());  mass.resize(dof_map.getSparsityPattern());
     primitive_sol.resize(dof_map.getNDofs()); additional_sol.resize(dof_map.getNDofs());
-    stiff_mat_reduced.resize(nonbc_sparsity_pattern); mass_mat_reduced.resize(nonbc_sparsity_pattern);
     
-    FESystemUInt id= 0;
-    
-    // initialize the solver
-    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
-    FESystem::Numerics::SparsityPattern ode_sparsity;
-    std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
-    std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
-    transient_solver.initialize(1, nonbc_dofs.size(), int_constants);
-    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0);
-    transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
-    transient_solver.setActiveJacobianTerm(ode_order_include);
-    transient_solver.setMassMatrix(false, &mass_mat_reduced);
-    
-    transient_solver.initializeStateVector(sol_reduced); //  initialize the vector and apply the initial condition
     // set the initial condition
     sol.zero();
     for (FESystemUInt i=0; i<nodes.size(); i++)
@@ -694,15 +678,24 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
         sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1);
         sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5));
     }
+
+    // initialize the solver
+    FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
+    FESystem::Numerics::SparsityPattern ode_sparsity;
+    std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
+    std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
+    transient_solver.initialize(1, dof_map.getNDofs(), int_constants);
+    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0);
+    transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
+    transient_solver.setActiveJacobianTerm(ode_order_include);
+    transient_solver.setMassMatrix(false, &mass);
     
-    sol.getSubVectorValsFromIndices(nonbc_dofs, sol_reduced);
     
-    transient_solver.setInitialTimeData(0, time_step, sol_reduced);
+    transient_solver.setInitialTimeData(0, time_step, sol);
     
-    transient_solver.initializeMatrixSparsityPatterForSystem(nonbc_sparsity_pattern, ode_sparsity);
-    stiff_mat_reduced.resize(ode_sparsity);
-    transient_solver.setJacobianMatrix(stiff_mat_reduced);
+    transient_solver.setJacobianMatrix(stiff_mat);
     transient_solver.setLinearSolver(linear_solver, false);
+    transient_solver.setLinearSolverDataStructureReuse(true);
     
     FESystem::OutputProcessor::VtkOutputProcessor output;
     std::fstream output_file;
@@ -719,15 +712,12 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
             {
                 if (n_count == n_skip)
                 {
-                    sol.setSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentStateVector());
-                    vel.setSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentStateVelocityVector());
-
                     std::stringstream oss;
                     oss << "sol_" << n_write << ".vtk";
                     output_file.open(oss.str().c_str(),std::fstream::out);
                     output.writeMesh(output_file, mesh, dof_map);
-                    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, sol);
-                    output.writeSolution(output_file, "Vel", mesh, dof_map, vars, vel);
+                    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, transient_solver.getCurrentStateVector());
+                    output.writeSolution(output_file, "Vel", mesh, dof_map, vars, transient_solver.getCurrentStateVelocityVector());
                     output.writeSolution(output_file, "Primitive", mesh, dof_map, vars, primitive_sol);
                     output.writeSolution(output_file, "Additional", mesh, dof_map, vars, additional_sol);
                     
@@ -745,51 +735,11 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
             case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
                 // the Jacobian is not updated since it is constant with respect to time
             {
-                if (false)
-                {
-                    sol.copyVector(transient_solver.getCurrentStateVector());
-                    // write the solution for each node
-                    for (FESystemUInt i=0; i<nodes.size(); i++)
-                    {
-                        std::cout << "Node: " << std::setw(8) << i;
-                        // write location
-                        for (FESystemUInt j=0; j<3; j++)
-                            std::cout << std::setw(15) << nodes[i]->getVal(j);
-                        for (FESystemUInt j=0; j<4; j++)
-                            std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
-                        std::cout << std::endl;
-                    }
-                    std::cout << std::endl<<  std::endl;;
-
-                }
-
-                sol.setSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentStateVector());
-                vel.setSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentStateVelocityVector());
-                
                 //testJacobian(elem_type, n_elem_nodes, dof_map, mesh, sol, vel, vel_func);
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStepSize(), sol, vel, vel_func, stiff_mat, mass, primitive_sol, additional_sol);
-                
-                vel_func.getSubVectorValsFromIndices(nonbc_dofs, transient_solver.getCurrentVelocityFunctionVector());
-                stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, transient_solver.getCurrentJacobianMatrix());
-                mass.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, mass_mat_reduced);
-                
-                
-                if (false)
-                {
-                    sol.copyVector(transient_solver.getCurrentStateVelocityVector());
-                    // write the solution for each node
-                    for (FESystemUInt i=0; i<nodes.size(); i++)
-                    {
-                        std::cout << "Node: " << std::setw(8) << i;
-                        // write location
-                        for (FESystemUInt j=0; j<3; j++)
-                            std::cout << std::setw(15) << nodes[i]->getVal(j);
-                        for (FESystemUInt j=0; j<4; j++)
-                            std::cout << std::setw(15) << sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]);
-                        std::cout << std::endl;
-                    }
-                    std::cout << std::endl<<  std::endl;
-                }
+                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStepSize(),
+                                         transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector(),
+                                         transient_solver.getCurrentVelocityFunctionVector(), transient_solver.getCurrentJacobianMatrix(),
+                                         mass, primitive_sol, additional_sol);
             }
                 break;
                 
@@ -947,26 +897,26 @@ int euler_analysis_driver(int argc, char * const argv[])
     
     // now create the vector of ids that do not have bcs
     std::vector<FESystemUInt> nonbc_dofs;
-    for (FESystemUInt i=0; i<dof_map.getNDofs(); i++)
-        if (!bc_dofs.count(i))
-            nonbc_dofs.push_back(i);
+//    for (FESystemUInt i=0; i<dof_map.getNDofs(); i++)
+//        if (!bc_dofs.count(i))
+//            nonbc_dofs.push_back(i);
     
     // modify mesh after application of boundary condition
     modifyMeshForCase(mesh);
 
     
-    // prepare a map of the old to new ID
-    std::vector<FESystemUInt>::const_iterator dof_it=nonbc_dofs.begin(), dof_end=nonbc_dofs.end();
-    std::map<FESystemUInt, FESystemUInt> old_to_new_id_map;
-    FESystemUInt n=0;
-    for ( ; dof_it!=dof_end; dof_it++)
-        old_to_new_id_map.insert(std::map<FESystemUInt, FESystemUInt>::value_type(*dof_it, n++));
+//    // prepare a map of the old to new ID
+//    std::vector<FESystemUInt>::const_iterator dof_it=nonbc_dofs.begin(), dof_end=nonbc_dofs.end();
+//    std::map<FESystemUInt, FESystemUInt> old_to_new_id_map;
+//    FESystemUInt n=0;
+//    for ( ; dof_it!=dof_end; dof_it++)
+//        old_to_new_id_map.insert(std::map<FESystemUInt, FESystemUInt>::value_type(*dof_it, n++));
     
-    FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
-    dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
+//    FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
+//    dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
     
     //nonlinearEulerSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs);
-    transientEulerAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, nonbc_dofs);
+    transientEulerAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map);
     
     //exit(1);
     

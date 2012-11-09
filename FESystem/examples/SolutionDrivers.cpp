@@ -28,7 +28,7 @@ void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, cons
     stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
     
     FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
-    linear_solver.setSystemMatrix(reduced_stiff_mat);
+    linear_solver.setSystemMatrix(reduced_stiff_mat, true);
     linear_solver.solve(reduced_load_vec, reduced_sol_vec);
     sol.setSubVectorValsFromIndices(nonbc_dofs, reduced_sol_vec);
     // write the solution for each node

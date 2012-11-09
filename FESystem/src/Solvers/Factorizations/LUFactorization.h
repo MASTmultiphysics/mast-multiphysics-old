@@ -34,6 +34,8 @@ namespace FESystem
             
             virtual ~LUFactorization();
             
+            void refactorMatrix(FESystemBoolean if_reuse_data_structure);
+
             void setMatrix(const FESystem::Numerics::MatrixBase<ValType>* m);
             
             const FESystem::Numerics::MatrixBase<ValType>& getMatrix() const;
@@ -46,7 +48,7 @@ namespace FESystem
                         
         protected:
             
-            void initializeMatrices();
+            void initializeMatrices(FESystemBoolean if_reuse_data_structure);
             
             FESystemBoolean factorization_complete;
             
@@ -56,6 +58,7 @@ namespace FESystem
             std::auto_ptr<FESystem::Numerics::MatrixBase<ValType> > u_mat;
             std::auto_ptr<FESystem::Numerics::SparsityPattern> l_sparsity_pattern;
             std::auto_ptr<FESystem::Numerics::SparsityPattern> u_sparsity_pattern;
+            std::auto_ptr<FESystem::Numerics::SparsityPattern> lu_combined_sparsity;
         };
     }
 }

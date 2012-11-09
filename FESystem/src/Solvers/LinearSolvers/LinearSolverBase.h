@@ -47,7 +47,7 @@ namespace FESystem
              *   initializes the necessary data structures for a solution. If the solver is already associated with a 
              *   different matrix, the clear() method must be called before reassigning the system matrix. 
              */
-            virtual void setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat);
+            virtual void setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat, FESystemBoolean if_reuse_data_structure);
 
             /*!
              *    Returns a constant reference to the system matrix. The matrix should be set using setSystemMatrix 
@@ -72,10 +72,17 @@ namespace FESystem
         protected:
             
             /*!
+             *   Initializes the data structures for linear solution
+             */
+            virtual void initializeDataStructures()=0;
+            
+            /*!
              *   stores the state of the solver, whether or not it is initialized
              */
             FESystemBoolean if_initialized;
-                    
+            
+            FESystemBoolean if_reuse_data;
+            
             /*!
              *    A pointer to the system matrix. 
              */

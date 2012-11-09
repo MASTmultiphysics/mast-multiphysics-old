@@ -45,6 +45,7 @@ previous_state(NULL),
 previous_velocity(NULL),
 previous_velocity_function(NULL),
 linear_solver(NULL),
+if_reuse_linear_solver_data_structure(false),
 if_constant_system_matrices(false)
 {
     
@@ -130,6 +131,7 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::clear()
     this->previous_velocity = NULL;
     this->previous_velocity_function = NULL;
     this->linear_solver = NULL;
+    this->if_reuse_linear_solver_data_structure = false;
     this->if_constant_system_matrices = false;
 }
 
@@ -458,6 +460,15 @@ FESystem::TransientSolvers::TransientSolverBase<ValType>::setLinearSolver(FESyst
     this->if_constant_system_matrices = if_constant_matrices;
 }
 
+
+
+template <typename ValType>
+void
+FESystem::TransientSolvers::TransientSolverBase<ValType>::setLinearSolverDataStructureReuse(FESystemBoolean flag)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    this->if_reuse_linear_solver_data_structure = flag;
+}
 
 
 /***************************************************************************************/

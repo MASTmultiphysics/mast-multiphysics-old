@@ -44,13 +44,6 @@ namespace FESystem
             virtual void clear();
             
             /*!
-             *   Sets the system matrix \f$ A \f$ in the system of equation through parameter \p mat and
-             *   initializes the necessary data structures for a solution. If the solver is already associated with a 
-             *   different matrix, the clear() method must be called before reassigning the system matrix. 
-             */
-            virtual void setSystemMatrix(const FESystem::Numerics::MatrixBase<ValType>& mat);
-
-            /*!
              *   The setSystemMatrix must be called before this method. The method solves \f$ A x = b \f$ where 
              *   \f$ b \f$ is given as the parameter \p rhs and \f$ x \f$ is given as the parameter \p sol. 
              */
@@ -65,6 +58,11 @@ namespace FESystem
                                FESystem::Numerics::MatrixBase<ValType>& sol);
 
         protected:
+            
+            /*!
+             *   Initializes the data structures for linear solution
+             */
+            virtual void initializeDataStructures();
             
             /*!
              *   The matrix data is copied and stored in this vector to be passed on to Lapack. 
@@ -83,14 +81,14 @@ namespace FESystem
 
         // template specialization
         template <>
-        void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemDouble> &mat);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::initializeDataStructures();
         template <>
         void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::VectorBase<FESystemDouble> &rhs, FESystem::Numerics::VectorBase<FESystemDouble> &sol);
         template <>
         void FESystem::LinearSolvers::LapackLinearSolver<FESystemDouble>::solve(const FESystem::Numerics::MatrixBase<FESystemDouble> &rhs, FESystem::Numerics::MatrixBase<FESystemDouble> &sol);
 
         template <>
-        void FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::setSystemMatrix(const FESystem::Numerics::MatrixBase<FESystemFloat> &mat);
+        void FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::initializeDataStructures();
         template <>
         void FESystem::LinearSolvers::LapackLinearSolver<FESystemFloat>::solve(const FESystem::Numerics::VectorBase<FESystemFloat> &rhs, FESystem::Numerics::VectorBase<FESystemFloat> &sol);
         template <>

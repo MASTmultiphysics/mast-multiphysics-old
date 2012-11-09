@@ -15,6 +15,7 @@
 template <typename ValType>
 FESystem::NonlinearSolvers::NonlinearSolverBase<ValType>::NonlinearSolverBase():
 if_initialized(false),
+if_reuse_linear_solver_data_structure(false),
 max_allowed_iterations(20),
 convergence_tolerance(FESystem::Base::getMachineEpsilon<typename RealOperationType(ValType)>()),
 n_dofs(0),
@@ -59,6 +60,15 @@ FESystem::NonlinearSolvers::NonlinearSolverBase<ValType>::setConvergenceLimits(F
 }
 
 
+template <typename ValType>
+void
+FESystem::NonlinearSolvers::NonlinearSolverBase<ValType>::setLinearSolverDataStructureReuse(FESystemBoolean flag)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    this->if_reuse_linear_solver_data_structure = flag;
+}
+
+
 
 template <typename ValType>
 void
@@ -73,6 +83,7 @@ FESystem::NonlinearSolvers::NonlinearSolverBase<ValType>::clear()
     this->residual = NULL;
     
     this->if_initialized = false;
+    this->if_reuse_linear_solver_data_structure = false;
     this->max_allowed_iterations = 20;
     this->convergence_tolerance = FESystem::Base::getMachineEpsilon<typename RealOperationType(ValType)>();
     this->n_dofs = 0;

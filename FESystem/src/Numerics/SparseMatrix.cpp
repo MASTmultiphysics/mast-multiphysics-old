@@ -1312,8 +1312,18 @@ namespace FESystem
 
 
 template <typename ValType>
-void 
+void
 FESystem::Numerics::SparseMatrix<ValType>::initializeLUFactoredMatrices(FESystem::Numerics::MatrixBase<ValType>& l_mat, FESystem::Numerics::MatrixBase<ValType>& u_mat) const
+{
+    FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall); // call the other function
+}
+
+
+    
+template <typename ValType>
+void 
+FESystem::Numerics::SparseMatrix<ValType>::initializeLUFactoredMatrices(FESystem::Numerics::MatrixBase<ValType>& l_mat, FESystem::Numerics::MatrixBase<ValType>& u_mat,
+                                                                        FESystemBoolean if_reuse_sparsity, FESystem::Numerics::SparsityPattern& lu_combined_sparsity) const
 {
     const std::pair<FESystemUInt, FESystemUInt> s = this->getSize();
     const std::pair<FESystemUInt, FESystemUInt> s_l = l_mat.getSize();
@@ -1334,11 +1344,13 @@ FESystem::Numerics::SparseMatrix<ValType>::initializeLUFactoredMatrices(FESystem
     const FESystem::Numerics::SparsityPattern& l_sparsity = *(dynamic_cast<FESystem::Numerics::SparseMatrix<ValType>&>(l_mat).sparsity_pattern), 
     &u_sparsity = *(dynamic_cast<FESystem::Numerics::SparseMatrix<ValType>&>(u_mat).sparsity_pattern);
     
-    FESystem::Numerics::SparsityPattern lu_combined_sparsity;
-    lu_combined_sparsity.setNDofs(s.first);
-    lu_combined_sparsity.unionWithSparsityPattern(l_sparsity);
-    lu_combined_sparsity.unionWithSparsityPattern(u_sparsity);
-    lu_combined_sparsity.reinit();
+    if (!if_reuse_sparsity)
+    {
+        lu_combined_sparsity.setNDofs(s.first);
+        lu_combined_sparsity.unionWithSparsityPattern(l_sparsity);
+        lu_combined_sparsity.unionWithSparsityPattern(u_sparsity);
+        lu_combined_sparsity.reinit();
+    }
 
     FESystem::Numerics::SparseMatrix<ValType> lu_combined;
     lu_combined.resize(lu_combined_sparsity);

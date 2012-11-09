@@ -70,6 +70,11 @@ namespace FESystem
             virtual void clear();
             
             /*!
+             *   Sets the flag so that the linear solver is able to reuse its data structures, in case that leads to any reduction in CPU cost.
+             */
+            void setLinearSolverDataStructureReuse(FESystemBoolean flag);
+            
+            /*!
              *   Sets the tolerance limits for the solver
              */
             void setConvergenceLimits(FESystemUInt max_iters, FESystemDouble tol);
@@ -116,6 +121,11 @@ namespace FESystem
              *    initial time data
              */
             FESystemBoolean if_initialized;
+            
+            /*!
+             *   Tells the linear solver to reuse the data structure, if that leads to any optimization
+             */
+            FESystemBoolean if_reuse_linear_solver_data_structure;
 
             /*!
              *   convergence tolerance

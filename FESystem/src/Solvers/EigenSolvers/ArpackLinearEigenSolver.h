@@ -1172,6 +1172,11 @@ namespace FESystem
             void setLinearSolver(FESystem::LinearSolvers::LinearSolverBase<ValType>& solver);
 
             /*!
+             *   Sets the flag so that the linear solver is able to reuse its data structures, in case that leads to any reduction in CPU cost.
+             */
+            void setLinearSolverDataStructureReuse(FESystemBoolean flag);
+            
+            /*!
              *   initializes the data structures
              */
             void init(FESystemUInt n_eig_to_compute, FESystemBoolean if_calculate_eig_vec);
@@ -1205,6 +1210,11 @@ namespace FESystem
              */
             FESystemBoolean if_initialized;
 
+            /*!
+             *   Flag that tells the linear solver to reuse any data structure, if that leads to any reduction in CPU cost
+             */
+            FESystemBoolean if_reuse_linear_solver_data_structure;
+            
             /*!
              *   if the solution has been performed
              */
