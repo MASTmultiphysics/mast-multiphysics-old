@@ -1260,6 +1260,56 @@ FESystem::Numerics::SparseMatrix<ValType>::add(ValType f, const MatrixBase<ValTy
 
 
 
+namespace FESystem
+{
+    namespace Numerics
+    {
+        template <typename ValType>
+        class LUOperateOnRows
+        {
+        public:
+            LUOperateOnRows(FESystemUInt i, FESystemUInt n, const std::vector<std::pair<FESystemUInt, FESystemUInt> >& col,
+                            const FESystem::Numerics::SparsityPattern& sparsity, FESystem::Numerics::MatrixBase<ValType>& mat):
+            row(i),
+            dim(n),
+            cols(col),
+            lu_combined_sparsity(sparsity),
+            lu_combined(mat)
+            {
+                
+            }
+            
+            void operator() (const tbb::blocked_range<FESystemUInt>& r) const
+            {
+                ValType v=0.0, v2=lu_combined.getVal(row,row);
+                
+                for (FESystemUInt j=r.begin(); j<r.end(); j++)
+                {
+                    if (cols[j].first > row)
+                    {
+                        v=lu_combined.getVal(cols[j].first, row);
+                        if (FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(v) > 0.0)
+                        {
+                            v /= v2;
+                            lu_combined.addScaledSubRow(cols[j].first, 1.0, row, -v, row, dim-1);
+                            lu_combined.setVal(cols[j].first, row, v);
+                        }
+                    }
+                }
+            }
+            
+        protected:
+            FESystemUInt row;
+            FESystemUInt dim;
+            const std::vector<std::pair<FESystemUInt, FESystemUInt> >& cols;
+            const FESystem::Numerics::SparsityPattern& lu_combined_sparsity;
+            FESystem::Numerics::MatrixBase<ValType>& lu_combined;
+        };
+    }
+}
+
+
+
 
 template <typename ValType>
 void 
@@ -1302,24 +1352,7 @@ FESystem::Numerics::SparseMatrix<ValType>::initializeLUFactoredMatrices(FESystem
         const std::vector<std::pair<FESystemUInt, FESystemUInt> >& cols = lu_combined_sparsity.getAllNonzeroColumnsInRow(i);
         
         tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, cols.size()),
-                          [=, &i, &s, &cols, &lu_combined, &lu_combined_sparsity] (const tbb::blocked_range<FESystemUInt>& r)
-                          {
-                              ValType v=0.0, v2=lu_combined.getVal(i,i);
-                              
-                              for (FESystemUInt j=r.begin(); j<r.end(); j++)
-                              {
-                                  if (cols[j].first > i)
-                                  {
-                                      v=lu_combined.getVal(cols[j].first, i);
-                                      if (FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(v) > 0.0)
-                                      {
-                                          v /= v2;
-                                          lu_combined.addScaledSubRow(cols[j].first, 1.0, i, -v, i, s.second-1);
-                                          lu_combined.setVal(cols[j].first, i, v);
-                                      }
-                                  }
-                              }
-                          });
+                          FESystem::Numerics::LUOperateOnRows<ValType>(i, s.first, cols, lu_combined_sparsity, lu_combined));
     }
     
     // copy the value from the combined lu decomposition matrix
