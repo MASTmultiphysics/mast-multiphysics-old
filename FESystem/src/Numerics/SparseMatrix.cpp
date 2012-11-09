@@ -20,6 +20,8 @@
 #include "Solvers/Factorizations/HouseHolderTriangulation.h"
 #include "Solvers/Factorizations/TriangularBacksubstitution.h"
 
+// TBB includes
+#include "tbb/tbb.h"
 
 template <typename ValType>
 FESystem::Numerics::SparseMatrix<ValType>::SparseMatrix():
@@ -1294,25 +1296,31 @@ FESystem::Numerics::SparseMatrix<ValType>::initializeLUFactoredMatrices(FESystem
     lu_combined.copyMatrixValues(*this);
     
     // it is assumed that the matrix and its sparsity pattern are initialized
-    for (FESystemUInt i=1; i<s.first; i++) // zero everything in the columns before the diagonal 
+    for (FESystemUInt i=0; i<s.first-1; i++) // zero everything in the columns before the diagonal
     {
+        // operate using this on the rows below it. It is assumed that the nonzero rows in the i^th column are same as nonzero columns in the i^th row
         const std::vector<std::pair<FESystemUInt, FESystemUInt> >& cols = lu_combined_sparsity.getAllNonzeroColumnsInRow(i);
-        it_col = cols.begin();
-        end_col = cols.end();
         
-        for ( ; it_col->first < i; it_col++) // this will iterate till the sub-diagonal element
-        {
-            v = lu_combined.mat_vals[it_col->second];
-            if (FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(v) > 0.0) // perform only if the value left of diagonal is nonzero
-            {
-                // calculate the factor for this row
-                v /= lu_combined.getVal(it_col->first, it_col->first);
-                lu_combined.addScaledSubRow(i, 1.0, it_col->first, -v, it_col->first, s.second-1);
-                lu_combined.setVal(i, it_col->first, v);
-            }
-        }
+        tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, cols.size()),
+                          [=, &i, &s, &cols, &lu_combined, &lu_combined_sparsity] (const tbb::blocked_range<FESystemUInt>& r)
+                          {
+                              ValType v=0.0, v2=lu_combined.getVal(i,i);
+                              
+                              for (FESystemUInt j=r.begin(); j<r.end(); j++)
+                              {
+                                  if (cols[j].first > i)
+                                  {
+                                      v=lu_combined.getVal(cols[j].first, i);
+                                      if (FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(v) > 0.0)
+                                      {
+                                          v /= v2;
+                                          lu_combined.addScaledSubRow(cols[j].first, 1.0, i, -v, i, s.second-1);
+                                          lu_combined.setVal(cols[j].first, i, v);
+                                      }
+                                  }
+                              }
+                          });
     }
-    
     
     // copy the value from the combined lu decomposition matrix
     for (FESystemUInt i=0; i<s.first; i++) // 
