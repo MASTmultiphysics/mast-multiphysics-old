@@ -53,9 +53,8 @@ template <typename ValType>
 void 
 FESystem::LinearSolvers::QRFactorizationLinearSolver<ValType>::initializeDataStructures()
 {
-    FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
-    
     // and initialize the rest of the data structures
+    this->clear();
     this->qr_factorization->setMatrix(this->system_matrix);
     this->qr_factorization->factorize();
     this->triangular_backsubstitute->setMatrix(this->qr_factorization->getRMatrix());
