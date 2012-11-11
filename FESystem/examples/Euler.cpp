@@ -316,6 +316,8 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
 
 
 
+tbb::spin_mutex my_lock;
+
 class AssembleElementMatrices
 {
 public:
@@ -353,7 +355,7 @@ public:
         
         FESystem::FiniteElement::FELagrange fe;
         FESystem::Fluid::FluidElementBase fluid_elem;
-        
+
         for (FESystemUInt i=r.begin(); i!=r.end(); i++)
         {
             fe.clear();
@@ -370,15 +372,21 @@ public:
             
             evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, elem_mat2,  bc_vec, elem_mat1);
             
-            dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
-            dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+            {
+                tbb::spin_mutex::scoped_lock lock(my_lock);
+                dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
+                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+            }
             
             fluid_elem.calculateResidualVector(elem_vec);
             fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
             
-            dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
-            dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
-            dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+            {
+                tbb::spin_mutex::scoped_lock lock(my_lock);
+                dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
+                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+            }
         }
     }
     
@@ -685,7 +693,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
     std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
     transient_solver.initialize(1, dof_map.getNDofs(), int_constants);
-    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0);
+    transient_solver.enableAdaptiveTimeStepping(2, 1.2, 1.0e-1);
     transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);

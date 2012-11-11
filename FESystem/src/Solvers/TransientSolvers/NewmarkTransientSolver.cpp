@@ -198,6 +198,15 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             
             FESystemDouble res_l2 = this->residual->getL2Norm(), vel_l2 = this->current_velocity->getL2Norm();
             
+            // update the residual data for time step calibration
+            if ((this->if_adaptive_time_stepping) && (this->nonlinear_iteration_number == 0))
+            {
+                this->current_residual_norm = vel_l2;
+                if (this->current_iteration_number == 0) // this needs to be done since the first residual is needed for calibration
+                    this->old_residual_norm = vel_l2;
+            }
+            
+            
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
             << "  Current t: " << std::setw(10) << this->current_time
             << "  Current dt: " << std::setw(10) << this->current_time_step
@@ -236,14 +245,6 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             }
             else
             {
-                // update the residual data for time step calibration
-                if ((this->if_adaptive_time_stepping) && (this->nonlinear_iteration_number == 0))
-                {
-                    this->current_residual_norm = vel_l2;
-                    if (this->current_iteration_number == 0) // this needs to be done since the first residual is needed for calibration
-                        this->old_residual_norm = vel_l2;
-                }
-                
                 this->nonlinear_iteration_number++;
                 this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
                 return FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN;
