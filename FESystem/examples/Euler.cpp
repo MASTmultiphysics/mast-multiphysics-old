@@ -11,7 +11,8 @@
 
 // TBB includes
 #include "tbb/tbb.h"
-
+#include "tbb/mutex.h"
+#include "tbb/spin_mutex.h"
 
 enum AnalysisCase
 {
@@ -27,7 +28,7 @@ const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-10;
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=55, ny=35, dim = 2, max_nonlin_iters = 0, n_vars=4;
+const FESystemUInt nx=120, ny=80, dim = 2, max_nonlin_iters = 8, n_vars=4;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 FESystem::Numerics::LocalVector<FESystemDouble> mass_flux, energy_flux;
 FESystem::Numerics::DenseMatrix<FESystemDouble> momentum_flux_tensor;
@@ -316,7 +317,7 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
 
 
 
-tbb::spin_mutex my_lock;
+tbb::mutex assembly_mutex;
 
 class AssembleElementMatrices
 {
@@ -348,10 +349,11 @@ public:
     
     void operator() (const tbb::blocked_range<FESystemUInt>& r) const
     {
-        FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat1, elem_mat2;
+        FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat1, elem_mat2, tmp_mat, bc_mat;
         FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, elem_sol, elem_vel, bc_vec, tmp_vec, tmp_vec2;
         elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs);
         elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
+        tmp_mat.resize(n_elem_dofs, n_elem_dofs); bc_mat.resize(n_elem_dofs, n_elem_dofs);
         
         FESystem::FiniteElement::FELagrange fe;
         FESystem::Fluid::FluidElementBase fluid_elem;
@@ -370,25 +372,64 @@ public:
             fluid_elem.clear();
             fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
             
-            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, elem_mat2,  bc_vec, elem_mat1);
-            
-            {
-                tbb::spin_mutex::scoped_lock lock(my_lock);
-                dof_map.addToGlobalVector(*(elems[i]), bc_vec, residual);
-                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
-            }
-            
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, tmp_mat,  bc_vec, bc_mat);
+
             fluid_elem.calculateResidualVector(elem_vec);
             fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
+
+            elem_vec.add(1.0, bc_vec);
+            elem_mat1.add(1.0, bc_mat);
             
             {
-                tbb::spin_mutex::scoped_lock lock(my_lock);
+                tbb::mutex::scoped_lock my_lock(assembly_mutex);
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
                 dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
                 dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
             }
         }
     }
+    
+    void assembleAll() const
+    {
+        FESystem::Numerics::DenseMatrix<FESystemDouble> elem_mat1, elem_mat2, tmp_mat, bc_mat;
+        FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, elem_sol, elem_vel, bc_vec, tmp_vec, tmp_vec2;
+        elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs);
+        elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
+        tmp_mat.resize(n_elem_dofs, n_elem_dofs); bc_mat.resize(n_elem_dofs, n_elem_dofs);
+        
+        FESystem::FiniteElement::FELagrange fe;
+        FESystem::Fluid::FluidElementBase fluid_elem;
+        
+        for (FESystemUInt i=0; i<elems.size(); i++)
+        {
+            fe.clear();
+            fe.reinit(*(elems[i]));
+            elem_mat1.zero();
+            elem_mat2.zero();
+            elem_vec.zero();
+            
+            dof_map.getFromGlobalVector(*(elems[i]), sol, elem_sol);
+            dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
+            
+            fluid_elem.clear();
+            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
+            
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, tmp_mat,  bc_vec, bc_mat);
+            
+            fluid_elem.calculateResidualVector(elem_vec);
+            fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
+            
+            elem_vec.add(1.0, bc_vec);
+            elem_mat1.add(1.0, bc_mat);
+            
+            {
+                dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
+                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+            }
+        }
+    }
+
     
 protected:
     
@@ -524,10 +565,13 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
                       AssembleElementMatrices(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, residual, global_stiffness_mat, global_mass_mat));
-
+    
+    
+//    AssembleElementMatrices a(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, residual, global_stiffness_mat, global_mass_mat);
+//    a.assembleAll();
+    
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),
                       EvaluatePrimitiveVariables(elems, nodes, dt, n_elem_dofs, dof_map, q_rule, sol, vel, primitive_sol, additional_sol));
-    
 }
 
 
@@ -693,7 +737,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
     std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
     transient_solver.initialize(1, dof_map.getNDofs(), int_constants);
-    transient_solver.enableAdaptiveTimeStepping(2, 1.2, 1.0e-1);
+    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0e-1);
     transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);
