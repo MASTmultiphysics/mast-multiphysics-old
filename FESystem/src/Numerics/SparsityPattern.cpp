@@ -16,7 +16,7 @@
 #include "Base/FESystemExceptions.h"
 
 // Metis includes
-#include "metis/metis.h"
+#include "metis.h"
 
 
 FESystem::Numerics::SparsityPattern::SparsityPattern():

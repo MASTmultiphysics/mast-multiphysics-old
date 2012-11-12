@@ -20,7 +20,8 @@ ifeq (${PLATFORM},Darwin)
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
     METIS_LIB_DIR=/opt/local/lib
     METIS_LIBS=-lmetis
-    TBB_DIR=/opt/local/tbb41_20121003oss
+    TBB_LIB_DIR=/opt/local/tbb41_20121003oss/lib
+    TBB_INCLUDE_DIR=/opt/local/tbb41_20121003oss/include
     TBB_LIBS=-ltbb -ltbbmalloc
     BOOST_DIR=/opt/local/include
 endif
@@ -36,7 +37,8 @@ ifeq (${PLATFORM},Darwinhome)
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
     METIS_LIB_DIR=/opt/local/lib
     METIS_LIBS=-lmetis
-    TBB_DIR=/opt/local/tbb41_20121003oss
+    TBB_LIB_DIR=/opt/local/tbb41_20121003oss/lib
+    TBB_INCLUDE_DIR=/opt/local/tbb41_20121003oss/include
     TBB_LIBS=-ltbb -ltbbmalloc
     PLATFORM=Darwin
     BOOST_DIR=/opt/local/include
@@ -48,9 +50,11 @@ ifeq (${PLATFORM},Linux)
     GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     HAVE_PLPLOT_LIBS=0
-    METIS_LIB_DIR=/opt/local/lib
+    METIS_INCLUDE_DIR=/home/bhatiam/usr/metis/include
+    METIS_LIB_DIR=/home/bhatiam/usr/metis/lib
     METIS_LIBS=-lmetis
-    TBB_DIR=/home/bhatiam/usr/tbb41_20121003oss
+    TBB_LIB_DIR=/home/bhatiam/usr/tbb/tbb41_20121003oss/lib/intel64/cc4.1.0_libc2.4_kernel2.6.16.21
+    TBB_INCLUDE_DIR=/home/bhatiam/usr/tbb/tbb41_20121003oss/include
     TBB_LIBS=-ltbb -ltbbmalloc
     BOOST_DIR=/home/bhatia/usr/include
 endif
@@ -87,7 +91,8 @@ SRC_SUBDIR=../src
 BUILD_DIR=${PWD}
 
 EXTERNAL_INCLUDE_DIRS+=-I${BOOST_DIR}
-EXTERNAL_INCLUDE_DIRS+=-I${TBB_DIR}/include
+EXTERNAL_INCLUDE_DIRS+=-I${TBB_INCLUDE_DIR}
+EXTERNAL_INCLUDE_DIRS+=-I${METIS_INCLUDE_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}/../examples
 ifeq (${HAVE_PLPLOT_LIBS},1)
@@ -98,14 +103,14 @@ EXTERNAL_LIB_DIRS=-L${SOURCE_DIR}
 EXTERNAL_LIB_DIRS+=-L${ARPACK_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${METIS_LIB_DIR}
-EXTERNAL_LIB_DIRS+=-L${TBB_DIR}/lib
+EXTERNAL_LIB_DIRS+=-L${TBB_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${GFORT_SYSTEM_LIB_DIR}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
 endif
 
 EXTERNAL_LIBS=-lfesystem-${METHOD}
-EXTERNAL_LIBS+=-larpack -llapack -lblas -latlas
+EXTERNAL_LIBS+=-larpack -llapack -lblas 
 EXTERNAL_LIBS+=${METIS_LIBS}
 EXTERNAL_LIBS+=${TBB_LIBS}
 EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
