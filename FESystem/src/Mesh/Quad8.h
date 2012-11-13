@@ -117,14 +117,14 @@ namespace FESystem
              */
             virtual const FESystem::Numerics::MatrixBase<FESystemDouble>& getParentToDegenerateElemMappingMatrix() const;
                         
+            
+		protected:
+			
             /*!
              *   Matrix that stores the mapping from the nondegenerate to degenerate element. This is a unit matrix for the QUAD elements
              */
             static std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > quad8_nondegenerate_to_degenerate_element_mapping;
-            
-            
-		protected:
-			
+
             /*!
              *   Dummy function call for Quad. This throws an error, since it does not exist for Quad elements
              */

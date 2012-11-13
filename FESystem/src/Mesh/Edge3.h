@@ -89,6 +89,8 @@ namespace FESystem
              */
             virtual const FESystem::Numerics::MatrixBase<FESystemDouble>& getParentToDegenerateElemMappingMatrix() const;
             
+        protected:
+			
             /*!
              *   Table that stores the local node ID along the direction of the computational coordinates
              */
@@ -99,8 +101,6 @@ namespace FESystem
              */
             static std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > edge3_nondegenerate_to_degenerate_element_mapping;
             
-        protected:
-			
 		};
         
 	}

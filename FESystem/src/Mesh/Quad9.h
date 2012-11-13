@@ -118,6 +118,9 @@ namespace FESystem
              */
             virtual const FESystem::Numerics::MatrixBase<FESystemDouble>& getParentToDegenerateElemMappingMatrix() const;
             
+            
+		protected:
+			
             /*!
              *   Table that stores the local node ID along the direction of the computational coordinates
              */
@@ -128,9 +131,7 @@ namespace FESystem
              */
             static std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > quad9_nondegenerate_to_degenerate_element_mapping;
             
-            
-		protected:
-			
+
             /*!
              *   Dummy function call for Quad. This throws an error, since it does not exist for Quad elements
              */
