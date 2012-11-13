@@ -273,7 +273,7 @@ FESystem::Functions::LagrangeFunction<ValType>::calculateDerivative(const std::v
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
 
-    // if the order of differentiation is greater than the number of terms in val, then the differentiation value is equal to 0.0. 
+    // if the order of differentiation is greater than the number of terms in val, then the differentiation value is equal to 0.0.
     // if the order of differentiation, and the number of terms in val are equal to 1, then the differentiation value is equal to -1.0. 
     // Else, subdivide the number of terms into summation of N products, where N = vals.size()
     FESystemUInt n = vals.size(), n_sub=0;
@@ -290,7 +290,7 @@ FESystem::Functions::LagrangeFunction<ValType>::calculateDerivative(const std::v
     {
         dval = 0.0;
         // this will store the terms for each differential term, and there are n=vals.size() of those.
-        static std::vector<ValType> sub_vals;
+        std::vector<ValType> sub_vals;
         if (sub_vals.size() != n-1)
             sub_vals.resize(n-1);
         for (FESystemUInt i=0; i<n; i++)
