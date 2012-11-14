@@ -11,6 +11,8 @@ endif
 
 ifeq (${PLATFORM},Darwin)
     ARPACK_LIB_DIR=/opt/local/lib
+    ARPACK_LIB=-larpack
+    LAPACK_BLAS_LIBS=-llapack -lblas -latlas
     LAPACK_BLAS_LIB_DIR=/usr/lib
     GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
@@ -18,6 +20,7 @@ ifeq (${PLATFORM},Darwin)
     HAVE_PLPLOT_LIBS=1
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
+    METIS_INCLUDE_DIR=/opt/local/include/metis
     METIS_LIB_DIR=/opt/local/lib
     METIS_LIBS=-lmetis
     TBB_LIB_DIR=/opt/local/tbb41_20121003oss/lib
@@ -28,6 +31,8 @@ endif
 
 ifeq (${PLATFORM},Darwinhome)
     ARPACK_LIB_DIR=/opt/local/lib/
+    ARPACK_LIB=-larpack
+    LAPACK_BLAS_LIBS=-llapack -lblas -latlas
     LAPACK_BLAS_LIB_DIR=/usr/lib
     GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
@@ -35,6 +40,7 @@ ifeq (${PLATFORM},Darwinhome)
     PLPLOT_INCLUDE_DIR=/opt/local/include
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
+    METIS_INCLUDE_DIR=/opt/local/include/metis
     METIS_LIB_DIR=/opt/local/lib
     METIS_LIBS=-lmetis
     TBB_LIB_DIR=/opt/local/tbb41_20121003oss/lib
@@ -46,6 +52,8 @@ endif
 
 ifeq (${PLATFORM},Linux)
     ARPACK_LIB_DIR=/home/bhatiam/usr/lib/
+    ARPACK_LIB=-larpack
+    LAPACK_BLAS_LIBS=-llapack -lblas
     LAPACK_BLAS_LIB_DIR=/home/bhatiam/usr/lib/
     GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
@@ -68,11 +76,12 @@ ifeq (${PLATFORM},script)
     PLATFORM=linux
 endif
 
-GCC = g++
+GCC_PRE = g++
+GCC_COMP = clang++
 PYTHON = python
 
 GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
-GCC_FLAGS_OPT = -g3 -O3 -ftree-vectorize 
+GCC_FLAGS_OPT = -g0 -Os 
 
 D      = cd
 ECHO    = echo
@@ -110,7 +119,8 @@ ifeq (${HAVE_PLPLOT_LIBS},1)
 endif
 
 EXTERNAL_LIBS=-lfesystem-${METHOD}
-EXTERNAL_LIBS+=-larpack -llapack -lblas 
+EXTERNAL_LIBS+=${ARPACK_LIB}
+EXTERNAL_LIBS+=${LAPACK_BLAS_LIBS} 
 EXTERNAL_LIBS+=${METIS_LIBS}
 EXTERNAL_LIBS+=${TBB_LIBS}
 EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
@@ -134,20 +144,20 @@ EXAMPLE_DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${EXAMPLE_SOURCES})
 all: fesystem-meshtest-${METHOD}
 
 fesystem-meshtest-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-dbg.a 
-	${GCC} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
 fesystem-meshtest-opt: $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt.a 
-	${GCC} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
+	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
-	${GCC} -M  ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp > $@
+	${GCC_PRE} -M  ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp > $@
 	${PYTHON} ${BUILD_DIR}/modify_dep_file.py $@ ${*D}
 
 %-dbg-cpp.o: %.cpp
-	${GCC} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+	${GCC_COMP} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 %-opt-cpp.o: %.cpp
-	${GCC} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 
 libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES}) 

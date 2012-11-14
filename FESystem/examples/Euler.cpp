@@ -28,10 +28,8 @@ const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-10;
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=120, ny=80, dim = 2, max_nonlin_iters = 8, n_vars=4;
+const FESystemUInt nx=60, ny=40, dim = 2, max_nonlin_iters = 14, n_vars=4;
 const AnalysisCase case_type = AIRFOIL_BUMP;
-FESystem::Numerics::LocalVector<FESystemDouble> mass_flux, energy_flux;
-FESystem::Numerics::DenseMatrix<FESystemDouble> momentum_flux_tensor;
 
 
 
@@ -223,6 +221,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
 
 
 void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const FESystem::Quadrature::QuadratureBase& q_boundary, FESystem::Fluid::FluidElementBase& fluid_elem,
+                                   FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux, FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
                                    FESystem::Numerics::VectorBase<FESystemDouble>& tmp_vec, FESystem::Numerics::MatrixBase<FESystemDouble>& tmp_mat,
                                    FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec, FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat)
 {
@@ -237,11 +236,6 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
         case AIRFOIL_BUMP:
         case RAMP:
         {
-            // set the flux value for the left and right boundary
-            mass_flux.zero(); mass_flux.setVal(0, rho*u1);
-            momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(1, 1, p);
-            energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
-
             if (elem.checkForTag(0)) // left edge
             {
                 fluid_elem.calculateFluxBoundaryCondition(3, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, tmp_vec);
@@ -274,11 +268,6 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
 
         case HYPERSONIC_CYLINDER:
         {
-            // set the flux value for the left and right boundary
-            mass_flux.zero(); mass_flux.setVal(0, rho*u1);
-            momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(1, 1, p);
-            energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
-            
             if (elem.checkForTag(0)) // inlet
             {
                 fluid_elem.calculateFluxBoundaryCondition(3, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, tmp_vec);
@@ -355,6 +344,28 @@ public:
         elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
         tmp_mat.resize(n_elem_dofs, n_elem_dofs); bc_mat.resize(n_elem_dofs, n_elem_dofs);
         
+        FESystem::Numerics::LocalVector<FESystemDouble> mass_flux, energy_flux;
+        FESystem::Numerics::DenseMatrix<FESystemDouble> momentum_flux_tensor;
+        mass_flux.resize(2); energy_flux.resize(2); momentum_flux_tensor.resize(2, 2);
+        switch (case_type)
+        {
+            case AIRFOIL_BUMP:
+            case RAMP:
+            case HYPERSONIC_CYLINDER:
+            {
+                // set the flux value for the left and right boundary
+                mass_flux.zero(); mass_flux.setVal(0, rho*u1);
+                momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(1, 1, p);
+                energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
+            }
+                break;
+
+            default:
+                FESystemAssert1(false, FESystem::Exception::EnumerationNotHandled, case_type);
+                break;
+        }
+
+        
         FESystem::FiniteElement::FELagrange fe;
         FESystem::Fluid::FluidElementBase fluid_elem;
 
@@ -372,7 +383,7 @@ public:
             fluid_elem.clear();
             fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
             
-            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, tmp_mat,  bc_vec, bc_mat);
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, momentum_flux_tensor, mass_flux, energy_flux, tmp_vec, tmp_mat,  bc_vec, bc_mat);
 
             fluid_elem.calculateResidualVector(elem_vec);
             fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
@@ -397,6 +408,27 @@ public:
         elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
         tmp_mat.resize(n_elem_dofs, n_elem_dofs); bc_mat.resize(n_elem_dofs, n_elem_dofs);
         
+        FESystem::Numerics::LocalVector<FESystemDouble> mass_flux, energy_flux;
+        FESystem::Numerics::DenseMatrix<FESystemDouble> momentum_flux_tensor;
+        mass_flux.resize(2); energy_flux.resize(2); momentum_flux_tensor.resize(2, 2);
+        switch (case_type)
+        {
+            case AIRFOIL_BUMP:
+            case RAMP:
+            case HYPERSONIC_CYLINDER:
+            {
+                // set the flux value for the left and right boundary
+                mass_flux.zero(); mass_flux.setVal(0, rho*u1);
+                momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(1, 1, p);
+                energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
+            }
+                break;
+                
+            default:
+                FESystemAssert1(false, FESystem::Exception::EnumerationNotHandled, case_type);
+                break;
+        }
+
         FESystem::FiniteElement::FELagrange fe;
         FESystem::Fluid::FluidElementBase fluid_elem;
         
@@ -414,7 +446,7 @@ public:
             fluid_elem.clear();
             fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
             
-            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, tmp_vec, tmp_mat,  bc_vec, bc_mat);
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, momentum_flux_tensor, mass_flux, energy_flux, tmp_vec, tmp_mat,  bc_vec, bc_mat);
             
             fluid_elem.calculateResidualVector(elem_vec);
             fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
@@ -534,7 +566,6 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     FESystemUInt n_elem_dofs;
     
     n_elem_dofs = n_vars*n_elem_nodes;
-    mass_flux.resize(2); energy_flux.resize(2); momentum_flux_tensor.resize(2, 2);
     
     // prepare the quadrature rule and FE for the
     FESystem::Quadrature::TrapezoidQuadrature q_rule, q_boundary;

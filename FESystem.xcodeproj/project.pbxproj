@@ -1511,7 +1511,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis";
 			};
 			name = Debug;
 		};
@@ -1540,7 +1540,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis";
 			};
 			name = Release;
 		};
