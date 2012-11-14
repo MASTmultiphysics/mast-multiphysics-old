@@ -23,12 +23,12 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=time_step*1.0e6;
-const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-10;
+const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
+const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-6;
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=60, ny=40, dim = 2, max_nonlin_iters = 14, n_vars=4;
+const FESystemUInt nx=60, ny=40, dim = 2, max_nonlin_iters = 100, n_vars=4;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 
 
@@ -784,7 +784,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::fstream output_file;
     std::vector<FESystemUInt> vars(4); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; //vars[4] = 4; // write all solutions
     
-    FESystemUInt n_skip=0, n_count=0, n_write=0;
+    FESystemUInt n_skip=4, n_count=0, n_write=0;
     FESystem::TransientSolvers::TransientSolverCallBack call_back;
     while (transient_solver.getCurrentTime()<final_t)
     {
@@ -803,6 +803,8 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                     output.writeSolution(output_file, "Vel", mesh, dof_map, vars, transient_solver.getCurrentStateVelocityVector());
                     output.writeSolution(output_file, "Primitive", mesh, dof_map, vars, primitive_sol);
                     output.writeSolution(output_file, "Additional", mesh, dof_map, vars, additional_sol);
+                    additional_sol.setAllVals(transient_solver.getCurrentTime());
+                    output.writeSolution(output_file, "TimeValue", mesh, dof_map, vars, additional_sol);
                     
                     output_file.close();
                     

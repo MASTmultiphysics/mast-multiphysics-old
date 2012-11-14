@@ -10,6 +10,9 @@ else
 endif
 
 ifeq (${PLATFORM},Darwin)
+    GCC_PRE = g++
+    GCC_COMP = clang++
+    PYTHON = python
     ARPACK_LIB_DIR=/opt/local/lib
     ARPACK_LIB=-larpack
     LAPACK_BLAS_LIBS=-llapack -lblas -latlas
@@ -30,6 +33,9 @@ ifeq (${PLATFORM},Darwin)
 endif
 
 ifeq (${PLATFORM},Darwinhome)
+    GCC_PRE = g++
+    GCC_COMP = clang++
+    PYTHON = python
     ARPACK_LIB_DIR=/opt/local/lib/
     ARPACK_LIB=-larpack
     LAPACK_BLAS_LIBS=-llapack -lblas -latlas
@@ -51,6 +57,9 @@ ifeq (${PLATFORM},Darwinhome)
 endif
 
 ifeq (${PLATFORM},Linux)
+    GCC_PRE = g++
+    GCC_COMP = g++
+    PYTHON = python
     ARPACK_LIB_DIR=/home/bhatiam/usr/lib/
     ARPACK_LIB=-larpack
     LAPACK_BLAS_LIBS=-llapack -lblas
@@ -76,9 +85,6 @@ ifeq (${PLATFORM},script)
     PLATFORM=linux
 endif
 
-GCC_PRE = g++
-GCC_COMP = clang++
-PYTHON = python
 
 GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
 GCC_FLAGS_OPT = -g0 -Os 
