@@ -503,8 +503,8 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
             dres_dx.add(-q_weight[i]*jac*diff_val, tmp_mat1_n2n2);
             
 //            // discontinuity capturing term Jac due to coefficient dependence on solution
-//            B_matdx.rightVectorMultiply(*(this->solution), flux);
-//            B_matdx.leftVectorMultiply(flux, tmp_vec2_n2);
+//            this->B_mat_dxi[i_dim]->rightVectorMultiply(*(this->solution), flux);
+//            this->B_mat_dxi[i_dim]->leftVectorMultiply(flux, tmp_vec2_n2);
 //            for (FESystemUInt ii=0; ii<n2; ii++)
 //                for (FESystemUInt jj=0; jj<n2; jj++)
 //                    tmp_mat1_n2n2.setVal(ii, jj, tmp_vec2_n2.getVal(ii)*diff_sens.getVal(jj));
@@ -1095,14 +1095,13 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     }
     
     //    // now calculate the discontinuity capturing operator
-    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 1.0e-2))
+    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 0.0))
     {
         discont_operator_sens.scale(1.0/discontinuity_val);
         discont_operator_sens.add(-1.0/val1, vec5);
         discontinuity_val /= val1;
         discontinuity_val = sqrt(discontinuity_val);
         discont_operator_sens.scale(0.5*discontinuity_val);
-        discont_operator_sens.zero();
     }
     else
     {
