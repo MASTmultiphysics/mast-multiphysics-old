@@ -23,12 +23,12 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
+const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-0, final_t=1.0e6;
 const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-6;
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=60, ny=40, dim = 2, max_nonlin_iters = 100, n_vars=4;
+const FESystemUInt nx=100, ny=60, dim = 2, max_nonlin_iters = 3, n_vars=4;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 
 
@@ -222,6 +222,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
 
 void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const FESystem::Quadrature::QuadratureBase& q_boundary, FESystem::Fluid::FluidElementBase& fluid_elem,
                                    FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux, FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
+                                   FESystemBoolean if_calculate_jacobian,
                                    FESystem::Numerics::VectorBase<FESystemDouble>& tmp_vec, FESystem::Numerics::MatrixBase<FESystemDouble>& tmp_mat,
                                    FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec, FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat)
 {
@@ -244,24 +245,36 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
             if (elem.checkForTag(1)) // right edge
             {
                 fluid_elem.calculateFluxBoundaryConditionUsingLocalSolution(1, q_boundary, tmp_vec);
-                fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(1, q_boundary, tmp_mat);
                 bc_vec.add(1.0, tmp_vec);
-                elem_mat.add(1.0, tmp_mat);
+
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(1, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
             // set the flux value for the lower and upper boundary
             if (elem.checkForTag(2)) // lower edge
             {
                 fluid_elem.calculateSolidWallFluxBoundaryCondition(0, q_boundary, tmp_vec);
-                fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(0, q_boundary, tmp_mat);
                 bc_vec.add(1.0, tmp_vec);
-                elem_mat.add(1.0, tmp_mat);
+                
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(0, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
             if (elem.checkForTag(3)) // upper edge
             {
                 fluid_elem.calculateSolidWallFluxBoundaryCondition(2, q_boundary, tmp_vec);
-                fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(2, q_boundary, tmp_mat);
                 bc_vec.add(1.0, tmp_vec);
-                elem_mat.add(1.0, tmp_mat);
+
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(2, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
         }
             break;
@@ -276,24 +289,36 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
             if (elem.checkForTag(1)) // solid wall
             {
                 fluid_elem.calculateSolidWallFluxBoundaryCondition(1, q_boundary, tmp_vec);
-                fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(1, q_boundary, tmp_mat);
                 bc_vec.add(1.0, tmp_vec);
-                elem_mat.add(1.0, tmp_mat);
+                
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(1, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
             // set the flux value for the lower and upper boundary
             if (elem.checkForTag(2)) // outlet
             {
                 fluid_elem.calculateFluxBoundaryConditionUsingLocalSolution(0, q_boundary, tmp_vec);
-                fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(0, q_boundary, tmp_mat);
                 bc_vec.add(1.0, tmp_vec);
-                elem_mat.add(1.0, tmp_mat);
+                
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(0, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
             if (elem.checkForTag(3)) // outlet
             {
                 fluid_elem.calculateFluxBoundaryConditionUsingLocalSolution(2, q_boundary, tmp_vec);
-                fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(2, q_boundary, tmp_mat);
                 bc_vec.add(1.0, tmp_vec);
-                elem_mat.add(1.0, tmp_mat);
+                
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(2, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
         }
             break;
@@ -318,6 +343,7 @@ public:
                             const FESystem::Quadrature::QuadratureBase& q_b,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& s,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& v,
+                            const FESystemBoolean if_jacobian,
                             FESystem::Numerics::VectorBase<FESystemDouble>& r,
                             FESystem::Numerics::MatrixBase<FESystemDouble>& stiff,
                             FESystem::Numerics::MatrixBase<FESystemDouble>& mass):
@@ -329,6 +355,7 @@ public:
     q_boundary(q_b),
     sol(s),
     vel(v),
+    if_calculate_jacobian(if_jacobian),
     residual(r),
     global_stiffness_mat(stiff),
     global_mass_mat(mass)
@@ -383,19 +410,25 @@ public:
             fluid_elem.clear();
             fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
             
-            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, momentum_flux_tensor, mass_flux, energy_flux, tmp_vec, tmp_mat,  bc_vec, bc_mat);
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, momentum_flux_tensor, mass_flux, energy_flux, if_calculate_jacobian, tmp_vec, tmp_mat,  bc_vec, bc_mat);
 
             fluid_elem.calculateResidualVector(elem_vec);
-            fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
-
             elem_vec.add(1.0, bc_vec);
-            elem_mat1.add(1.0, bc_mat);
+
+            if (if_calculate_jacobian)
+            {
+                fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
+                elem_mat1.add(1.0, bc_mat);
+            }
             
             {
                 tbb::mutex::scoped_lock my_lock(assembly_mutex);
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
-                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
-                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+                if (if_calculate_jacobian)
+                {
+                    dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+                    dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+                }
             }
         }
     }
@@ -446,18 +479,24 @@ public:
             fluid_elem.clear();
             fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel);
             
-            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, momentum_flux_tensor, mass_flux, energy_flux, tmp_vec, tmp_mat,  bc_vec, bc_mat);
+            evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, momentum_flux_tensor, mass_flux, energy_flux, if_calculate_jacobian, tmp_vec, tmp_mat,  bc_vec, bc_mat);
             
             fluid_elem.calculateResidualVector(elem_vec);
-            fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
-            
             elem_vec.add(1.0, bc_vec);
-            elem_mat1.add(1.0, bc_mat);
+            
+            if (if_calculate_jacobian)
+            {
+                fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
+                elem_mat1.add(1.0, bc_mat);
+            }
             
             {
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
-                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
-                dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+                if (if_calculate_jacobian)
+                {
+                    dof_map.addToGlobalMatrix(*(elems[i]), elem_mat1, global_stiffness_mat);
+                    dof_map.addToGlobalMatrix(*(elems[i]), elem_mat2, global_mass_mat);
+                }
             }
         }
     }
@@ -473,6 +512,7 @@ protected:
     const FESystem::Quadrature::QuadratureBase& q_boundary;
     const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
     const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
+    const FESystemBoolean if_calculate_jacobian;
     FESystem::Numerics::VectorBase<FESystemDouble>& residual;
     FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat;
     FESystem::Numerics::MatrixBase<FESystemDouble>& global_mass_mat;
@@ -557,6 +597,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
                               const FESystemDouble dt,
                               const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                               const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
+                              const FESystemBoolean if_calculate_jacobian,
                               FESystem::Numerics::VectorBase<FESystemDouble>& residual,
                               FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
                               FESystem::Numerics::MatrixBase<FESystemDouble>& global_mass_mat,
@@ -574,8 +615,8 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     {
         case FESystem::Mesh::QUAD4:
         case FESystem::Mesh::TRI3:
-            q_rule.init(2, 2);  // bending quadrature is higher than the shear quadrature for reduced integrations
-            q_boundary.init(1,2);
+            q_rule.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
+            q_boundary.init(1,3);
             break;
             
         case FESystem::Mesh::QUAD9:
@@ -595,7 +636,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
     
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
-                      AssembleElementMatrices(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, residual, global_stiffness_mat, global_mass_mat));
+                      AssembleElementMatrices(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat));
     
     
 //    AssembleElementMatrices a(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, residual, global_stiffness_mat, global_mass_mat);
@@ -766,9 +807,9 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     FESystem::TransientSolvers::NewmarkTransientSolver<FESystemDouble> transient_solver;
     FESystem::Numerics::SparsityPattern ode_sparsity;
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
-    std::vector<FESystemDouble> int_constants(1); int_constants[0]=0.5;
+    std::vector<FESystemDouble> int_constants(1); int_constants[0]=1.0;
     transient_solver.initialize(1, dof_map.getNDofs(), int_constants);
-    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0e-1);
+    //transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0e-1);
     transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);
@@ -784,7 +825,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::fstream output_file;
     std::vector<FESystemUInt> vars(4); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; //vars[4] = 4; // write all solutions
     
-    FESystemUInt n_skip=4, n_count=0, n_write=0;
+    FESystemUInt n_skip=0, n_count=0, n_write=0;
     FESystem::TransientSolvers::TransientSolverCallBack call_back;
     while (transient_solver.getCurrentTime()<final_t)
     {
@@ -817,12 +858,22 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 break;
                 
             case FESystem::TransientSolvers::EVALUATE_X_DOT:
+                // the Jacobian is not updated since it is constant with respect to time
+            {
+                //testJacobian(elem_type, n_elem_nodes, dof_map, mesh, sol, vel, vel_func);
+                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStepSize(),
+                                         transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector(), false,
+                                         transient_solver.getCurrentVelocityFunctionVector(), transient_solver.getCurrentJacobianMatrix(),
+                                         mass, primitive_sol, additional_sol);
+            }
+                break;
+
             case FESystem::TransientSolvers::EVALUATE_X_DOT_AND_X_DOT_JACOBIAN:
                 // the Jacobian is not updated since it is constant with respect to time
             {
                 //testJacobian(elem_type, n_elem_nodes, dof_map, mesh, sol, vel, vel_func);
                 calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, transient_solver.getCurrentStepSize(),
-                                         transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector(),
+                                         transient_solver.getCurrentStateVector(), transient_solver.getCurrentStateVelocityVector(), true,
                                          transient_solver.getCurrentVelocityFunctionVector(), transient_solver.getCurrentJacobianMatrix(),
                                          mass, primitive_sol, additional_sol);
             }
@@ -901,10 +952,17 @@ void nonlinearEulerSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 break;
                 
             case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL:
+            {
+                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, 1.0, nonlinear_solver.getCurrentSolution(), vel, false,
+                                         nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass,
+                                         primitive_sol, additional_sol);
+            }
+                break;
+                
             case FESystem::NonlinearSolvers::EVALUATE_JACOBIAN:
             case FESystem::NonlinearSolvers::EVALUATE_RESIDUAL_AND_JACOBIAN:
             {
-                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, 1.0, nonlinear_solver.getCurrentSolution(), vel,
+                calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, 1.0, nonlinear_solver.getCurrentSolution(), vel, true,
                                          nonlinear_solver.getResidualVector(), nonlinear_solver.getJacobianMatrix(), mass,
                                          primitive_sol, additional_sol);
             }
