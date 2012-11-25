@@ -270,14 +270,12 @@ FESystem::Fluid::FluidElementBase::calculateSolidWallFluxBoundaryCondition(const
         // first update the variables at the current quadrature point
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
         
+        flux.zero();
         // now calculate the flux
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
-        {
-            flux.zero();
-            flux.setVal(i_dim+1, this->p); // only pressure is set
-            this->B_mat->leftVectorMultiply(flux, tmp_vec1);
-            bc_vec.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_vec1);
-        }
+            flux.setVal(i_dim+1, this->p*normal_local.getVal(i_dim)); // only pressure is set
+        this->B_mat->leftVectorMultiply(flux, tmp_vec1);
+        bc_vec.add(-q_weight[i]*jac, tmp_vec1);
     }
 }
 
@@ -295,9 +293,9 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
     
     FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
     
-    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local;
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, dpdU;
     FESystem::Numerics::DenseMatrix<FESystemDouble>  A, tmp_mat_n1n2, tmp_mat2_n2n2;
-    normal.resize(3); normal_local.resize(dim);
+    normal.resize(3); normal_local.resize(dim); dpdU.resize(n1);
     A.resize(n1, n1); tmp_mat_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
     
     const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
@@ -311,15 +309,19 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
         normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
 
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
+        this->calculatePressureJacobianOnSolidWall(dpdU);
 
-        // now calculate the flux
+        A.zero();
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
-            this->calculatePressureFluxJacobianOnSolidWall(i_dim, A);
-            A.matrixRightMultiply(1.0, *(this->B_mat), tmp_mat_n1n2);
-            this->B_mat->matrixTransposeRightMultiply(1.0, tmp_mat_n1n2, tmp_mat2_n2n2);
-            dfdx.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_mat2_n2n2);
+            A.setRowVals(i_dim+1, 0, n1-1, dpdU);
+            A.scaleRow(i_dim+1, normal_local.getVal(i_dim));
         }
+        
+        A.matrixRightMultiply(1.0, *(this->B_mat), tmp_mat_n1n2);
+        this->B_mat->matrixTransposeRightMultiply(1.0, tmp_mat_n1n2, tmp_mat2_n2n2);
+        dfdx.add(-q_weight[i]*jac, tmp_mat2_n2n2);
+
     }
 }
 
@@ -655,38 +657,36 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
 
 
 void
-FESystem::Fluid::FluidElementBase::calculatePressureFluxJacobianOnSolidWall(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat)
+FESystem::Fluid::FluidElementBase::calculatePressureJacobianOnSolidWall(FESystem::Numerics::VectorBase<FESystemDouble>& dpdU)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
     FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
-    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
-    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
-    FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
+    FESystemAssert2(dpdU.getSize() == n1, FESystem::Exception::DimensionsDoNotMatch, dpdU.getSize(), n1);
     
-    mat.zero();
+    dpdU.zero();
     FESystemUInt energy_i = n1-1;
     
     switch (dim)
     {
         case 3:
-            mat.setVal(div_coord+1, 3, -u3);
+            dpdU.setVal(3, -u3);
             
         case 2:
-            mat.setVal(div_coord+1, 2, -u2);
+            dpdU.setVal(2, -u2);
             
         case 1:
         {
-            mat.setVal(div_coord+1, 0, k);
-            mat.setVal(div_coord+1, 1, -u1);
-            mat.setVal(div_coord+1, energy_i, 1.0);
+            dpdU.setVal(0, k);
+            dpdU.setVal(1, -u1);
+            dpdU.setVal(energy_i, 1.0);
         }
             break;
     }
 
-    mat.scale(this->R/cv);
+    dpdU.scale(this->R/cv);
 }
 
 

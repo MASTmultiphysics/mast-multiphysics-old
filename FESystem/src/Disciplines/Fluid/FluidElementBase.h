@@ -70,7 +70,7 @@ namespace FESystem
             
             void calculateEntropyVariableJacobian(FESystem::Numerics::MatrixBase<FESystemDouble>& dUdV, FESystem::Numerics::MatrixBase<FESystemDouble>& dVdU);
 
-            void calculatePressureFluxJacobianOnSolidWall(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+            void calculatePressureJacobianOnSolidWall(FESystem::Numerics::VectorBase<FESystemDouble>& dpdU);
 
             void calculateAdvectionFluxJacobian(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
             
