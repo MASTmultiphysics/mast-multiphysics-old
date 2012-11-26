@@ -6,6 +6,9 @@
 //  Copyright (c) 2012. All rights reserved.
 //
 
+// C++ includes
+#include <iomanip>
+
 // FESystem includes
 #include "Solvers/TransientSolvers/ExplicitRungeKuttaTransientSolver.h"
 #include "Solvers/LinearSolvers/LinearSolverBase.h"
@@ -114,7 +117,14 @@ FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incremen
             // first time step, setup the matrices
         {
             this->previous_state->copyVector(*this->current_state);
+            this->previous_velocity->copyVector(*this->current_velocity);
             this->new_state_estimate->copyVector(*this->current_state);
+            
+            std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
+            << "  Current t: " << std::setw(10) << this->current_time
+            << "  Current dt: " << std::setw(10) << this->current_time_step
+            << "  Vel Norm: " << std::setw(15) << this->current_velocity->getL2Norm() << std::endl;
+
             
             this->current_velocity_function->zero();
             this->n_rk_steps_completed = 0;
@@ -145,6 +155,10 @@ FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incremen
             {
                 this->current_state->copyVector(*this->new_state_estimate);
 
+                this->current_velocity->copyVector(*this->current_state);
+                this->current_velocity->add(-1.0, *this->previous_state);
+                this->current_velocity->scale(1.0/this->current_time_step);
+                
                 this->current_time = this->previous_time + this->current_time_step;
                 this->previous_time = this->current_time;
                 this->current_iteration_number++;

@@ -356,6 +356,9 @@ FESystem::Numerics::DenseMatrix<ValType>::setRowVals(const FESystemUInt row_num,
     FESystemAssert2(col2 < s.second,
                     FESystem::Numerics::ColumnNumberSizeMismatch,
                     s.second, col2);
+    FESystemAssert2(vec.getSize() == col2-col1+1,
+                    FESystem::Exception::DimensionsDoNotMatch,
+                    vec.getSize(), col2-col1+1);
     
     // stored in a column major format: column1 vals -> column2 vals -> ... -> columnN vals
     for (FESystemUInt j=col1; j<=col2; j++)
@@ -382,6 +385,9 @@ FESystem::Numerics::DenseMatrix<ValType>::getRowVals(const FESystemUInt row_num,
     FESystemAssert2(col2 < s.second,
                     FESystem::Numerics::ColumnNumberSizeMismatch,
                     s.second, col2);
+    FESystemAssert2(vec.getSize() == col2-col1+1,
+                    FESystem::Exception::DimensionsDoNotMatch,
+                    vec.getSize(), col2-col1+1);
     
     // stored in a column major format: column1 vals -> column2 vals -> ... -> columnN vals
     for (FESystemUInt j=col1; j<=col2; j++)
@@ -407,6 +413,9 @@ FESystem::Numerics::DenseMatrix<ValType>::getColumnVals(const FESystemUInt col_n
     FESystemAssert2(row2 < s.first,
                     FESystem::Numerics::RowNumberSizeMismatch,
                     s.first, row2);
+    FESystemAssert2(vec.getSize() == row2-row1+1,
+                    FESystem::Exception::DimensionsDoNotMatch,
+                    vec.getSize(), row2-row1+1);
     
     // stored in a column major format: column1 vals -> column2 vals -> ... -> columnN vals
     for (FESystemUInt j=row1; j<=row2; j++)
@@ -433,6 +442,9 @@ FESystem::Numerics::DenseMatrix<ValType>::setColumnVals(const FESystemUInt col_n
     FESystemAssert2(row2 < s.first,
                     FESystem::Numerics::RowNumberSizeMismatch,
                     s.first, row2);
+    FESystemAssert2(vec.getSize() == row2-row1+1,
+                    FESystem::Exception::DimensionsDoNotMatch,
+                    vec.getSize(), row2-row1+1);
     
     // stored in a column major format: column1 vals -> column2 vals -> ... -> columnN vals
     for (FESystemUInt j=row1; j<=row2; j++)

@@ -3,7 +3,7 @@
 // FESystem include
 #include "TestingIncludes.h"
 
-
+#include "OpenCL/opencl.h"
 
 int main(int argc, char * const argv[])
 {

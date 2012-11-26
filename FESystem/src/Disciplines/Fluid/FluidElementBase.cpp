@@ -183,10 +183,10 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
     this->A_entropy->resize(n1,n1);
     this->A_inv_entropy->resize(n1, n1);
     this->Ai_Bi_advection->resize(n1, n2);
-    this->N_vec->resize(n2);
+    this->N_vec->resize(this->geometric_elem->getNNodes());
     for (FESystemUInt i=0; i<dim; i++)
     {
-        this->N_vec_dx[i]->resize(n2);
+        this->N_vec_dx[i]->resize(this->geometric_elem->getNNodes());
         this->B_mat_dxi[i]->resize(n1, n2);
         this->Ai_advection[i]->resize(n1, n1);
     }
@@ -261,7 +261,7 @@ FESystem::Fluid::FluidElementBase::calculateSolidWallFluxBoundaryCondition(const
     const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
     
     bc_vec.zero();
-    
+
     for (FESystemUInt i=0; i<q_pts.size(); i++)
     {
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
@@ -1201,11 +1201,11 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePoint(const FESyst
     
     // update the shape function and Jacobian matrices
     this->calculateOperatorMatrix(pt, *(this->B_mat), false, 0);
-    this->B_mat->getRowVals(0, 0, n, *(this->N_vec));
+    this->B_mat->getRowVals(0, 0, n-1, *(this->N_vec));
     for (FESystemUInt i=0; i<dim; i++)
     {
         this->calculateOperatorMatrix(pt, *(this->B_mat_dxi[i]), true, i);
-        this->B_mat_dxi[i]->getRowVals(0, 0, n, *(this->N_vec_dx[i]));
+        this->B_mat_dxi[i]->getRowVals(0, 0, n-1, *(this->N_vec_dx[i]));
     }
 
     // shape function Jacobian matrix
@@ -1231,11 +1231,11 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePointForBoundary(c
     
     // update the shape function and Jacobian matrices
     this->calculateOperatorMatrixForBoundary(b_id, pt, *(this->B_mat), false, 0);
-    this->B_mat->getRowVals(0, 0, n, *(this->N_vec));
+    this->B_mat->getRowVals(0, 0, n-1, *(this->N_vec));
     for (FESystemUInt i=0; i<dim; i++)
     {
         this->calculateOperatorMatrixForBoundary(b_id, pt, *(this->B_mat_dxi[i]), true, i);
-        this->B_mat_dxi[i]->getRowVals(0, 0, n, *(this->N_vec_dx[i]));
+        this->B_mat_dxi[i]->getRowVals(0, 0, n-1, *(this->N_vec_dx[i]));
     }
 
     // shape function Jacobian matrix
