@@ -23,10 +23,15 @@ template <typename ValType>
 FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::NewmarkTransientSolver():
 FESystem::TransientSolvers::TransientSolverBase<ValType>(),
 convergence_tolerance(1.0e-12),
+base_res_l2(0.0),
+base_res_l2_slope(0.0),
+newton_step_res_l2(0.0),
+if_backtracked(false),
 max_nonlinear_iterations(20),
 nonlinear_iteration_number(0),
 jacobian(NULL),
 residual(NULL),
+newton_step(NULL),
 temp_vec(NULL),
 temp_vec2(NULL)
 {
@@ -54,12 +59,17 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::initialize(FESystem
     
     // if all int_constants are zero, the integration is explicit
     this->residual = new FESystem::Numerics::LocalVector<ValType>; this->residual->resize(this->order*this->n_dofs);
+    this->newton_step = new FESystem::Numerics::LocalVector<ValType>; this->newton_step->resize(this->order*this->n_dofs);
     this->temp_vec = new FESystem::Numerics::LocalVector<ValType>; this->temp_vec->resize(this->order*this->n_dofs);
     this->temp_vec2 = new FESystem::Numerics::LocalVector<ValType>; this->temp_vec2->resize(this->order*this->n_dofs);
     
     this->max_nonlinear_iterations = 20;
     this->convergence_tolerance = 1.0e-12;
     this->nonlinear_iteration_number = 0;
+    this->base_res_l2 = 0.0;
+    this->base_res_l2_slope = 0.0;
+    this->newton_step_res_l2 = 0.0;
+    this->if_backtracked = false;
 }
 
 
@@ -84,18 +94,24 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::clear()
     if (this->temp_vec != NULL) delete this->temp_vec;
     if (this->temp_vec2 != NULL) delete this->temp_vec2;
     if (this->residual != NULL) delete this->residual;
+    if (this->newton_step != NULL) delete this->newton_step;
 
     
     this->integration_constants.clear();
     
     this->jacobian = NULL;
     this->residual = NULL;
+    this->newton_step = NULL;
     this->temp_vec = NULL;
     this->temp_vec2 = NULL;
 
     this->max_nonlinear_iterations = 20;
     this->convergence_tolerance = 1.0e-12;
     this->nonlinear_iteration_number = 0;
+    this->base_res_l2 = 0.0;
+    this->base_res_l2_slope = 0.0;
+    this->newton_step_res_l2 = 0.0;
+    this->if_backtracked = false;
 
     FESystem::TransientSolvers::TransientSolverBase<ValType>::clear();
 }
@@ -196,7 +212,32 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             // calculate residual to identify convergence
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity_function), *(this->current_state), *(this->current_velocity_function), *(this->residual));
             
-            FESystemDouble res_l2 = this->residual->getL2Norm(), vel_l2 = this->current_velocity->getL2Norm();
+            FESystemDouble vel_l2 = this->current_velocity->getL2Norm();
+            this->newton_step_res_l2 = this->residual->getL2Norm();
+            
+            
+            // if the residual L2 norm after full newton iterate is larger than the base norm, correct the step
+            if ((this->newton_step_res_l2 > this->base_res_l2)  && !this->if_backtracked)  // Backtracking is allowed only once
+            {
+                // calculate the correction in stepsize, and backtrack
+                FESystemDouble a0 = this->base_res_l2, a1 = this->base_res_l2_slope, a2 = this->newton_step_res_l2 - a0 - a1, // quadratic expression of the residual with respect to step size
+                lambda = -a1/2.0/a2;
+
+                std::cout << "Newton Step Correction: "
+                << "  Base Res Norm: " << std::setw(15) << this->base_res_l2
+                << "  Full dx Res Norm: " << std::setw(15) << this->newton_step_res_l2
+                << "  Corrected step size:  " << std::setw(15) << lambda << std::endl;
+                
+                // now, subtract (1.0-lambda)dx from the current state (which is already -ve)
+                this->current_state->add(1.0-lambda, *(this->newton_step));
+                
+                this->if_backtracked = true;
+                this->latest_call_back = FESystem::TransientSolvers::EVALUATE_X_DOT;
+                return FESystem::TransientSolvers::EVALUATE_X_DOT;
+            }
+
+            // if it gets past this point, then no backtracking was requested
+            this->if_backtracked = false;
             
             // update the residual data for time step calibration
             if ((this->if_adaptive_time_stepping) && (this->nonlinear_iteration_number == 0))
@@ -212,10 +253,10 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             << "  Current dt: " << std::setw(10) << this->current_time_step
             << "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number
             << "  Vel Norm: " << std::setw(15) << vel_l2
-            << "  Res Norm: " << std::setw(15) << res_l2  << std::endl;
+            << "  Res Norm: " << std::setw(15) << this->newton_step_res_l2  << std::endl;
                         
             // if converged, increment the time step
-            if ((res_l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
+            if ((this->newton_step_res_l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
             {
                 std::cout << "Convergence Achieved" << std::endl;
                 
@@ -318,8 +359,13 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity_function), *(this->current_state), *(this->current_velocity_function), *(this->residual));
             
-            this->linear_solver->solve(*(this->residual), *(this->temp_vec));
-            this->current_state->add(-1.0, *(this->temp_vec)); // this updates the current state
+            this->linear_solver->solve(*(this->residual), *(this->newton_step));
+            this->current_state->add(-1.0, *(this->newton_step)); // this updates the current state
+            this->jacobian->rightVectorMultiply(*(this->newton_step), *(this->temp_vec));
+            
+            // update ths residual values for backtracking in case the complete Newton step does not lower residual l2 norm
+            this->base_res_l2 = this->residual->getL2Norm();
+            this->base_res_l2_slope = -this->temp_vec->getL2Norm();
 
             // estimate the current velocity based on the states
             if (this->if_identity_mass_matrix)

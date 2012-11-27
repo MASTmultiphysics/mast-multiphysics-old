@@ -53,7 +53,9 @@ u3(0.0),
 e_tot(0.0),
 e(0.0),
 k(0.0),
-a(0.0)
+a(0.0),
+discontinuity_capturing_value(NULL),
+if_update_discont_values(true)
 {
     this->interpolated_sol = new FESystem::Numerics::LocalVector<FESystemDouble>;
     this->interpolated_vel = new FESystem::Numerics::LocalVector<FESystemDouble>;
@@ -145,6 +147,8 @@ FESystem::Fluid::FluidElementBase::clear()
     this->a = 0.0;
     this->e = 0.0;
     this->k = 0.0;
+    this->discontinuity_capturing_value = NULL;
+    this->if_update_discont_values = true;
 }
 
 
@@ -152,9 +156,11 @@ FESystem::Fluid::FluidElementBase::clear()
 void
 FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
                                               FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
-                                              const FESystem::Numerics::VectorBase<FESystemDouble>& vel)
+                                              const FESystem::Numerics::VectorBase<FESystemDouble>& vel, FESystemBoolean if_update_dc, std::vector<FESystemDouble>& dc_vals_at_q_pts)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemAssert2(dc_vals_at_q_pts.size() == q_rule.getQuadraturePoints().size(), FESystem::Exception::DimensionsDoNotMatch, q_rule.getQuadraturePoints().size(), dc_vals_at_q_pts.size());
+    
     this->dt = dt_val;
     this->cp = cp_val;
     this->cv = cv_val;
@@ -191,6 +197,8 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
         this->Ai_advection[i]->resize(n1, n1);
     }
 
+    this->discontinuity_capturing_value = &dc_vals_at_q_pts;
+    this->if_update_discont_values = if_update_dc;
     
     this->if_initialized = true;
 }
@@ -430,6 +438,11 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
 
         this->calculateDifferentialOperatorMatrix(LS_mat, diff_val, diff_sens);
 
+        if (this->if_update_discont_values)
+            (*this->discontinuity_capturing_value)[i] = diff_val;
+        else
+            diff_val = (*this->discontinuity_capturing_value)[i];
+        
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
             // Galerkin contribution from the advection flux terms
@@ -484,6 +497,11 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
         // get the other matrices of interest
         this->calculateDifferentialOperatorMatrix(LS_mat, diff_val, diff_sens);
         
+        if (this->if_update_discont_values)
+            (*this->discontinuity_capturing_value)[i] = diff_val;
+        else
+            diff_val = (*this->discontinuity_capturing_value)[i];
+
         // contribution from unsteady term
         // Galerkin contribution of velocity
         this->B_mat->matrixTransposeRightMultiply(1.0, *(this->B_mat), tmp_mat1_n2n2);

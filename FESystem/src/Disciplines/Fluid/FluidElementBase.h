@@ -42,7 +42,8 @@ namespace FESystem
             
             
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                            FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel);
+                            FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
+                            FESystemBoolean if_update_dc, std::vector<FESystemDouble>& dc_vals_at_q_pts);
             
             void calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
                                                 const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
@@ -128,6 +129,12 @@ namespace FESystem
             
             // Fluid variables
             FESystemDouble rho, p, T, u1, u2, u3, e_tot, k, e, a;
+            
+            // discontinuity capturing operator value at quadrature points
+            std::vector<FESystemDouble>* discontinuity_capturing_value;
+            
+            // flag to specifiy whether to use the provided discontinuity capturing values, or to calculate and update them
+            FESystemBoolean if_update_discont_values;
         };
     }
 }

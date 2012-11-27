@@ -86,7 +86,13 @@ namespace FESystem
             /*!
              *   convergence tolerance
              */
-            typename RealOperationType(ValType) convergence_tolerance;
+            typename RealOperationType(ValType) convergence_tolerance, base_res_l2, base_res_l2_slope, newton_step_res_l2;
+            
+            /*!
+             *    Boolean to check if the backtracking has been done once for the current Newton step
+             */
+            FESystemBoolean if_backtracked;
+            
             
             /*!
              *   Maximum allowable iterations
@@ -106,7 +112,7 @@ namespace FESystem
             /*!
              *   temporary storage vector
              */
-            FESystem::Numerics::VectorBase<ValType> *residual, *temp_vec, *temp_vec2;
+            FESystem::Numerics::VectorBase<ValType> *residual, *newton_step, *temp_vec, *temp_vec2;
 
         };
     }
