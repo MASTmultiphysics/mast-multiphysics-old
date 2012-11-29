@@ -475,13 +475,29 @@ template <typename ValType>
 typename RealOperationType(ValType)
 FESystem::Numerics::LocalVector<ValType>::getL2Norm() const
 {
-    FESystemDouble v=0.0;
+    typename RealOperationType(ValType) v=0.0;
     const ValType* vec_vals = this->getVectorValues();
     
     for (FESystemUInt i=0; i<this->getSize(); i++)
         v += pow(FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(vec_vals[i]), 2);
     
     return pow(v, 0.5);
+}
+
+
+
+template <typename ValType>
+typename RealOperationType(ValType)
+FESystem::Numerics::LocalVector<ValType>::getLInfNorm() const
+{
+    typename RealOperationType(ValType) v=0.0;
+    const ValType* vec_vals = this->getVectorValues();
+
+    for (FESystemUInt i=0; i<this->getSize(); i++)
+        if (FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(vec_vals[i]) > v)
+            v = FESystem::Base::magnitude<ValType, typename RealOperationType(ValType)>(vec_vals[i]);
+    
+    return v;
 }
 
 

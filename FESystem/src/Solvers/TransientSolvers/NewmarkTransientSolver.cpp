@@ -252,9 +252,12 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             << "  Current t: " << std::setw(10) << this->current_time
             << "  Current dt: " << std::setw(10) << this->current_time_step
             << "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number
-            << "  Vel Norm: " << std::setw(15) << vel_l2
-            << "  Res Norm: " << std::setw(15) << this->newton_step_res_l2  << std::endl;
-                        
+            << "  Vel L2-Norm: " << std::setw(15) << vel_l2
+            << "  Vel LInf-Norm: " << std::setw(15) << this->current_velocity->getLInfNorm()
+            << "  Res L2-Norm: " << std::setw(15) << this->newton_step_res_l2
+            << "  Res LInf-Norm: " << std::setw(15) << this->residual->getLInfNorm() << std::endl;
+
+            
             // if converged, increment the time step
             if ((this->newton_step_res_l2 < this->convergence_tolerance) || (this->nonlinear_iteration_number >= this->max_nonlinear_iterations))
             {

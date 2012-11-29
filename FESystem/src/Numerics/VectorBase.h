@@ -131,7 +131,9 @@ namespace FESystem
             
             virtual typename RealOperationType(ValType) getL2Norm() const=0;
 
-			virtual  void 
+            virtual typename RealOperationType(ValType) getLInfNorm() const=0;
+
+			virtual  void
             elementwiseMultiply(const FESystem::Numerics::VectorBase<ValType>& t)=0;
             
 			virtual  void 

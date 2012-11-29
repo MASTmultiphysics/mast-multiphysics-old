@@ -28,7 +28,7 @@ const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-6, fd_del
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=240, ny=160, dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 10;
+const FESystemUInt nx=240, ny=160, dim = 2, max_nonlin_iters = 2, n_vars=4, dc_freeze_iter_num = 10;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 const FESystemBoolean if_fd = false;
 std::vector<std::vector<FESystemDouble> > dc_vals;
@@ -569,17 +569,19 @@ public:
         fluid_elem.clear();
         fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, false, elem_dc_vals[0]);
 
-        FESystemDouble press, entropy;
+        FESystemDouble press, entropy, mach, cp;
         
         for (FESystemUInt i=r.begin(); i!=r.end(); i++)
         {
             for (FESystemUInt j=0; j<n_vars; j++)
                 tmp_vec.setVal(j, sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
-            fluid_elem.calculatePrimitiveVariableValues(tmp_vec, tmp_vec2, press, entropy);
+            fluid_elem.calculatePrimitiveVariableValues(tmp_vec, p, tmp_vec2, press, entropy, mach, cp);
             for (FESystemUInt j=0; j<n_vars; j++)
                 primitive.setVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0], tmp_vec2.getVal(j));
             additional.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], press);
             additional.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], entropy);
+            additional.setVal(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0], mach);
+            additional.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], cp);
         }
     }
     
@@ -624,14 +626,14 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
     {
         case FESystem::Mesh::QUAD4:
         case FESystem::Mesh::TRI3:
-            q_rule.init(2, 3);  // bending quadrature is higher than the shear quadrature for reduced integrations
-            q_boundary.init(1,3);
+            q_rule.init(2, 1);  // bending quadrature is higher than the shear quadrature for reduced integrations
+            q_boundary.init(1,1);
             break;
             
         case FESystem::Mesh::QUAD9:
         case FESystem::Mesh::TRI6:
-            q_rule.init(2, 5);
-            q_boundary.init(1, 5);
+            q_rule.init(2, 4);
+            q_boundary.init(1, 4);
             break;
             
         default:
@@ -659,7 +661,7 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
                       AssembleElementMatrices(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat));
     
     
-//    AssembleElementMatrices a(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat);
+//    AssembleElementMatrices a(elems, dt, n_elem_dofs, dof_map, q_rule, q_boundary, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat);
 //    a.assembleAll();
     
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),

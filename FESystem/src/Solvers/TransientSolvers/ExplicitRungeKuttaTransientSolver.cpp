@@ -123,7 +123,8 @@ FESystem::TransientSolvers::ExplicitRungeKuttaTransientSolver<ValType>::incremen
             std::cout << "Iter: " << std::setw(10) << this->current_iteration_number
             << "  Current t: " << std::setw(10) << this->current_time
             << "  Current dt: " << std::setw(10) << this->current_time_step
-            << "  Vel Norm: " << std::setw(15) << this->current_velocity->getL2Norm() << std::endl;
+            << "  Vel L2-Norm: " << std::setw(15) << this->current_velocity->getL2Norm()
+            << "  Vel LInf-Norm: " << std::setw(15) << this->current_velocity->getLInfNorm() << std::endl;
 
             
             this->current_velocity_function->zero();

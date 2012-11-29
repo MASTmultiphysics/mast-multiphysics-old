@@ -1341,7 +1341,7 @@ FESystem::Fluid::FluidElementBase::estimateJacobianSpectralRadius(const FESystem
 
 
 void
-FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, FESystem::Numerics::VectorBase<FESystemDouble>& primitive_sol, FESystemDouble& press, FESystemDouble& entropy)
+FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, const FESystemDouble p0, FESystem::Numerics::VectorBase<FESystemDouble>& primitive_sol, FESystemDouble& press, FESystemDouble& entropy, FESystemDouble& mach, FESystemDouble& cp)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
@@ -1378,5 +1378,7 @@ FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESyst
     
     press = this->R*T_val*rho_val;
     entropy = log(press/pow(rho_val,this->gamma));
+    mach = sqrt(2.0*k_val/(gamma*R*T_val));
+    cp = (press-p0)/(rho_val*k_val);
 }
 
