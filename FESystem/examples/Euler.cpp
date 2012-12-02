@@ -23,12 +23,12 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-2, final_t=1.0e6;
+const FESystemDouble  rho=1.05, u1=1400.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
 const FESystemDouble x_length = 2.0, y_length = 0.5, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
 const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=240, ny=160, dim = 2, max_nonlin_iters = 2, n_vars=4, dc_freeze_iter_num = 10;
+const FESystemUInt nx=60, ny=40, dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 10;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 const FESystemBoolean if_fd = false;
 std::vector<std::vector<FESystemDouble> > dc_vals;
@@ -697,7 +697,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
     std::vector<FESystemDouble> int_constants(1); int_constants[0]=1.0;
     transient_solver.initialize(1, dof_map.getNDofs(), int_constants);
-    //transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0e-1);
+    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0e3);
     transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);
@@ -789,7 +789,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystemUInt n_elem_nodes, n_elem_dofs;
     FESystem::Geometry::Point origin(3);
     
-    elem_type = FESystem::Mesh::QUAD4;
+    elem_type = FESystem::Mesh::QUAD9;
     createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
     
     n_elem_dofs = 6*n_elem_nodes;

@@ -212,7 +212,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             // calculate residual to identify convergence
             this->evaluateResidual(*(this->previous_state), *(this->previous_velocity_function), *(this->current_state), *(this->current_velocity_function), *(this->residual));
             
-            FESystemDouble vel_l2 = this->current_velocity->getL2Norm();
+            FESystemDouble vel_l2 = this->current_velocity->getL2Norm(), vel_linf = this->current_velocity->getLInfNorm();
             this->newton_step_res_l2 = this->residual->getL2Norm();
             
             
@@ -242,9 +242,9 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             // update the residual data for time step calibration
             if ((this->if_adaptive_time_stepping) && (this->nonlinear_iteration_number == 0))
             {
-                this->current_residual_norm = vel_l2;
+                this->current_residual_norm = vel_linf;
                 if (this->current_iteration_number == 0) // this needs to be done since the first residual is needed for calibration
-                    this->old_residual_norm = vel_l2;
+                    this->old_residual_norm = vel_linf;
             }
             
             
@@ -253,7 +253,7 @@ FESystem::TransientSolvers::NewmarkTransientSolver<ValType>::incrementTimeStep()
             << "  Current dt: " << std::setw(10) << this->current_time_step
             << "  Nonlin Iter: " << std::setw(5) << this->nonlinear_iteration_number
             << "  Vel L2-Norm: " << std::setw(15) << vel_l2
-            << "  Vel LInf-Norm: " << std::setw(15) << this->current_velocity->getLInfNorm()
+            << "  Vel LInf-Norm: " << std::setw(15) << vel_linf
             << "  Res L2-Norm: " << std::setw(15) << this->newton_step_res_l2
             << "  Res LInf-Norm: " << std::setw(15) << this->residual->getLInfNorm() << std::endl;
 
