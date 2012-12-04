@@ -140,24 +140,36 @@ FESystem::OutputProcessor::VtkOutputProcessor::getVtkElemTypeNum(FESystem::Mesh:
     switch (type)
     {
         case FESystem::Mesh::EDGE2:
-        case FESystem::Mesh::EDGE3:
             elem_type_num = 3;
             n_nodes_to_write = 2;
             break;
-            
+
+        case FESystem::Mesh::EDGE3:
+            elem_type_num = 21;
+            n_nodes_to_write = 3;
+            break;
+
         case FESystem::Mesh::TRI3:
-        case FESystem::Mesh::TRI6:
-        case FESystem::Mesh::TRI7:
             elem_type_num = 5;
             n_nodes_to_write = 3;
             break;
-            
+
+        case FESystem::Mesh::TRI6:
+        case FESystem::Mesh::TRI7:
+            elem_type_num = 22;
+            n_nodes_to_write = 6;
+            break;
+
         case FESystem::Mesh::QUAD4:
-        case FESystem::Mesh::QUAD9:
             elem_type_num = 9;
             n_nodes_to_write = 4;
             break;
-            
+
+        case FESystem::Mesh::QUAD9:
+            elem_type_num = 23;
+            n_nodes_to_write = 9;
+            break;
+
         case FESystem::Mesh::TET4:
             elem_type_num = 10;
             n_nodes_to_write = 4;
