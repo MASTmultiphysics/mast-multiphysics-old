@@ -45,6 +45,12 @@ namespace FESystem
                             FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                             FESystemBoolean if_update_dc, std::vector<FESystemDouble>& dc_vals_at_q_pts);
             
+            void calculateMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& U_vec,
+                                                 FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec);
+            
+            void calculateTangentMatrixForMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& U_vec,
+                                                                 FESystem::Numerics::MatrixBase<FESystemDouble>& bc_mat);
+            
             void calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
                                                 const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
                                                 FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec);
@@ -74,6 +80,9 @@ namespace FESystem
             void calculatePressureJacobianOnSolidWall(FESystem::Numerics::VectorBase<FESystemDouble>& dpdU);
 
             void calculateAdvectionFluxJacobian(FESystemUInt div_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
+            
+            void calculateAdvectionLeftEigenvectorAndInverseForNormal(const FESystem::Numerics::VectorBase<FESystemDouble>& normal, FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vals,
+                                                                      FESystem::Numerics::MatrixBase<FESystemDouble>& l_eig_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& l_eig_mat_inv);
             
             void calculateDiffusiveFluxJacobian(FESystemUInt div_coord, FESystemUInt flux_coord, FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
 

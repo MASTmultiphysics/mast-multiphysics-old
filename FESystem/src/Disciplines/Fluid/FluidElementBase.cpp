@@ -207,6 +207,130 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
 
 
 void
+FESystem::Fluid::FluidElementBase::calculateMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& U_vec,
+                                                                   FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    
+    FESystemAssert2(U_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, U_vec.getSize(), n2);
+    FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
+    
+    
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, U_vec_interpolated, tmp_vec1_n2, flux;
+    FESystem::Numerics::DenseMatrix<FESystemDouble>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2;
+    normal.resize(3); normal_local.resize(dim); tmp_vec1_n2.resize(n2); flux.resize(n1); U_vec_interpolated.resize(n1);
+    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1); tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    bc_vec.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        this->jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+        
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
+
+        this->calculateAdvectionLeftEigenvectorAndInverseForNormal(normal, eig_val, l_eig_vec, l_eig_vec_inv_tr);
+        
+        // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
+        // evaluate them using the given solution.
+        tmp_mat1.copyMatrix(l_eig_vec_inv_tr);
+        for (FESystemDouble j=0; j<n1; j++)
+            if (eig_val.getVal(j, j) < 0)
+                tmp_mat1.scaleColumn(j, eig_val.getVal(j, j)); // L^-T [omaga]_{-}
+            else
+                tmp_mat1.scaleColumn(j, 0.0);
+        tmp_mat1.matrixRightMultiplyTranspose(1.0, l_eig_vec, tmp_mat2); // A_{-} = L^-T [omaga]_{-} L^T
+        this->B_mat->rightVectorMultiply(U_vec, U_vec_interpolated);
+        tmp_mat2.rightVectorMultiply(U_vec_interpolated, flux);  // f_{-} = A_{-} B U
+
+        B_mat->leftVectorMultiply(flux, tmp_vec1_n2); // B^T f_{-}   (this is flux coming into the solution domain)
+        bc_vec.add(-q_weight[i]*jac, tmp_vec1_n2);
+        
+        // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
+        // the flux is evaluated using the local solution
+        tmp_mat1.copyMatrix(l_eig_vec_inv_tr);
+        for (FESystemDouble j=0; j<n1; j++)
+            if (eig_val.getVal(j, j) > 0)
+                tmp_mat1.scaleColumn(j, eig_val.getVal(j, j)); // L^-T [omaga]_{+}
+            else
+                tmp_mat1.scaleColumn(j, 0.0);
+        tmp_mat1.matrixRightMultiplyTranspose(1.0, l_eig_vec, tmp_mat2); // A_{+} = L^-T [omaga]_{+} L^T
+        this->B_mat->rightVectorMultiply(*this->solution, U_vec_interpolated);
+        tmp_mat2.rightVectorMultiply(U_vec_interpolated, flux); // f_{+} = A_{+} B U
+        
+        B_mat->leftVectorMultiply(flux, tmp_vec1_n2); // B^T f_{+}   (this is flux going out of the solution domain)
+        bc_vec.add(-q_weight[i]*jac, tmp_vec1_n2);
+    }
+}
+
+
+
+void
+FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& U_vec,
+                                                                                   FESystem::Numerics::MatrixBase<FESystemDouble>& bc_mat)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+
+    const std::pair<FESystemUInt, FESystemUInt> bc_mat_s = bc_mat.getSize();
+    
+    FESystemAssert2(U_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, U_vec.getSize(), n2);
+    FESystemAssert4((bc_mat_s.first == n2) && (bc_mat_s.second == n2), FESystem::Numerics::MatrixSizeMismatch, bc_mat_s.first, bc_mat_s.second, n2, n2);
+    
+    
+    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, tmp_vec1_n2, flux;
+    FESystem::Numerics::DenseMatrix<FESystemDouble>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2, tmp_mat3, tmp_mat4;
+    normal.resize(3); normal_local.resize(dim); tmp_vec1_n2.resize(n2); flux.resize(n1);
+    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1); tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
+    tmp_mat3.resize(n1, n2); tmp_mat4.resize(n2, n2);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    bc_mat.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        this->jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+        
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
+
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
+        
+        this->calculateAdvectionLeftEigenvectorAndInverseForNormal(normal, eig_val, l_eig_vec, l_eig_vec_inv_tr);
+        
+        // terms with negative eigenvalues do not contribute to the Jacobian
+        
+        // now calculate the Jacobian for eigenvalues greater than 0, the characteristics go out of the domain, so that
+        // the flux is evaluated using the local solution
+        tmp_mat1.copyMatrix(l_eig_vec_inv_tr);
+        for (FESystemDouble j=0; j<n1; j++)
+            if (eig_val.getVal(j, j) > 0)
+                tmp_mat1.scaleColumn(j, eig_val.getVal(j, j)); // L^-T [omaga]_{+}
+            else
+                tmp_mat1.scaleColumn(j, 0.0);
+        tmp_mat1.matrixRightMultiplyTranspose(1.0, l_eig_vec, tmp_mat2); // A_{+} = L^-T [omaga]_{+} L^T
+        tmp_mat2.matrixRightMultiply(1.0, *this->B_mat, tmp_mat3);
+        B_mat->matrixTransposeRightMultiply(1.0, tmp_mat3, tmp_mat4); // B^T A_{+} B   (this is flux going out of the solution domain)
+        
+        bc_mat.add(-q_weight[i]*jac, tmp_mat4);
+    }
+}
+
+
+
+
+void
 FESystem::Fluid::FluidElementBase::calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
                                                                   const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
                                                                   FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
@@ -950,6 +1074,169 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxSpatialDerivative(const
 }
 
 
+
+void
+FESystem::Fluid::FluidElementBase::calculateAdvectionLeftEigenvectorAndInverseForNormal(const FESystem::Numerics::VectorBase<FESystemDouble>& normal, FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vals,
+                                                                                        FESystem::Numerics::MatrixBase<FESystemDouble>& l_eig_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& l_eig_mat_inv_tr)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim, n=this->geometric_elem->getNNodes(), n2 = n*n1;
+    
+    const std::pair<FESystemUInt, FESystemUInt> s_eig_val = eig_vals.getSize(), s_l_eig_mat = l_eig_mat.getSize(), s_l_eig_mat_inv_tr = l_eig_mat_inv_tr.getSize();
+    
+    FESystemAssert4((s_eig_val.first == n1) && (s_eig_val.first == n1), FESystem::Numerics::MatrixSizeMismatch, s_eig_val.first, s_eig_val.second, n1, n1);
+    FESystemAssert4((s_l_eig_mat.first == n1) && (s_l_eig_mat.first == n1), FESystem::Numerics::MatrixSizeMismatch, s_l_eig_mat.first, s_l_eig_mat.second, n1, n1);
+    FESystemAssert4((s_l_eig_mat_inv_tr.first == n1) && (s_l_eig_mat_inv_tr.first == n1), FESystem::Numerics::MatrixSizeMismatch, s_l_eig_mat_inv_tr.first, s_l_eig_mat_inv_tr.second, n1, n1);
+    
+    eig_vals.zero(); l_eig_mat.zero(); l_eig_mat_inv_tr.zero();
+    FESystemDouble nx=0.0, ny=0.0, nz=0.0, u=0.0;
+
+    // initialize the values 
+    switch (dim)
+    {
+        case 3:
+        {
+            nz = normal.getVal(2);
+            u += this->u3*nz;
+        }
+            
+        case 2:
+        {
+            ny = normal.getVal(1);
+            u += this->u2*ny;
+        }
+            
+        case 1:
+        {
+            nx = normal.getVal(0);
+            u += this->u1*nx;
+        }
+    }
+    
+    
+    // set values in the left eigenvector matrix and eigenvalue matrix
+    switch (dim)
+    {
+        case 3:
+        {
+            eig_vals.setVal(2, 2, u);
+
+            // for u
+            l_eig_mat.setVal(0, 2, (nz*u1-nx*u3)/nx);
+            l_eig_mat.setVal(1, 2, -nz/nx);
+            l_eig_mat.setVal(3, 2, 1.0);
+
+            // for u-a
+            l_eig_mat.setVal(3, n1-2, -u3-nz*a/(gamma-1.0));
+
+            // for u+a
+            l_eig_mat.setVal(3, n1-1, -u3+nz*a/(gamma-1.0));
+        }
+            
+        case 2:
+        {
+            eig_vals.setVal(1, 1, u);
+
+            // for u
+            l_eig_mat.setVal(0, 1, (ny*u1-nx*u2)/nx);
+            l_eig_mat.setVal(1, 1, -ny/nx);
+            l_eig_mat.setVal(2, 1, 1.0);
+            
+            // for u-a
+            l_eig_mat.setVal(2, n1-2, -u2-ny*a/(gamma-1.0));
+
+            // for u+a
+            l_eig_mat.setVal(2, n1-1, -u2+ny*a/(gamma-1.0));
+        }
+            
+        case 1:
+        {
+            eig_vals.setVal(0, 0, u);
+            eig_vals.setVal(n1-2, n1-2, u-this->a);
+            eig_vals.setVal(n1-1, n1-1, u+this->a);
+
+            // for u
+            l_eig_mat.setVal(0, 0, -cv*T*gamma+u*(u1/nx-u/2.0));
+            l_eig_mat.setVal(1, 0, -u/nx);
+            l_eig_mat.setVal(n1-1, 0, 1.0);
+
+            // for u-a
+            l_eig_mat.setVal(0, n1-2, u*u/2.0+u*a/(gamma-1.0));
+            l_eig_mat.setVal(1, n1-2, -u1-nx*a/(gamma-1.0));
+            l_eig_mat.setVal(n1-1, n1-2, 1.0);
+            
+            // for u+a
+            l_eig_mat.setVal(0, n1-1, u*u/2.0-u*a/(gamma-1.0));
+            l_eig_mat.setVal(1, n1-1, -u1+nx*a/(gamma-1.0));
+            l_eig_mat.setVal(n1-1, n1-1, 1.0);
+        }
+    }
+
+    // set values in the inverse of left eigenvector matrix transposed
+    switch (dim)
+    {
+        case 3:
+        {
+            // for u
+            l_eig_mat_inv_tr.setVal(3, 0, -u3);
+
+            // for u
+            l_eig_mat_inv_tr.setVal(3, 1, (gamma-1.0)*u3*u2/(a*a)-nz*ny);
+
+            // for u
+            l_eig_mat_inv_tr.setVal(0, 2, u3/(cv*T*gamma));
+            l_eig_mat_inv_tr.setVal(1, 2, (gamma-1.0)*u1*u3/(a*a)-nx*nz);
+            l_eig_mat_inv_tr.setVal(2, 2, (gamma-1.0)*u2*u3/(a*a)-ny*nz);
+            l_eig_mat_inv_tr.setVal(3, 2, (gamma-1.0)*u3*u3/(a*a)-nz*nz+1.0);
+            l_eig_mat_inv_tr.setVal(4, 2, (gamma-1.0)*u3*u*u/(2.0*a*a)+u3-nz*u);
+
+            // for u-a
+            l_eig_mat_inv_tr.setVal(3, n1-2, 0.5*(gamma-1.0)*(-nz+u3/a)/a);
+
+            // for u+a
+            l_eig_mat_inv_tr.setVal(3, n1-1, 0.5*(gamma-1.0)*(nz+u3/a)/a);
+        }
+            
+        case 2:
+        {
+            // for u
+            l_eig_mat_inv_tr.setVal(2, 0, -u2);
+
+            // for u
+            l_eig_mat_inv_tr.setVal(0, 1, u2/(cv*T*gamma));
+            l_eig_mat_inv_tr.setVal(1, 1, (gamma-1.0)*u1*u2/(a*a)-nx*ny);
+            l_eig_mat_inv_tr.setVal(2, 1, (gamma-1.0)*u2*u2/(a*a)-ny*ny+1.0);
+            l_eig_mat_inv_tr.setVal(n1-1, 1, (gamma-1.0)*u2*u*u/(2.0*a*a)+u2-ny*u);
+
+            // for u-a
+            l_eig_mat_inv_tr.setVal(2, n1-2, 0.5*(gamma-1.0)*(-ny+u2/a)/a);
+
+            // for u+a
+            l_eig_mat_inv_tr.setVal(2, n1-1, 0.5*(gamma-1.0)*(ny+u2/a)/a);
+        }
+            
+        case 1:
+        {
+            // for u
+            l_eig_mat_inv_tr.setVal(0, 0, -1);
+            l_eig_mat_inv_tr.setVal(1, 0, -u1);
+            l_eig_mat_inv_tr.setVal(n1-1, 0, -u*u/2.0);
+            l_eig_mat_inv_tr.scaleColumn(0, 1.0/(cv*T*gamma));
+            
+            // for u-a
+            l_eig_mat_inv_tr.setVal(0, n1-2, 1.0/(2.0*cv*T*gamma));
+            l_eig_mat_inv_tr.setVal(1, n1-2, 0.5*(gamma-1.0)*(-nx+u1/a)/a);
+            l_eig_mat_inv_tr.setVal(n1-1, n1-2, 0.5+0.5*(gamma-1.0)*(-u+0.5*u*u/a)/a);
+
+            // for u+a
+            l_eig_mat_inv_tr.setVal(0, n1-1, 1.0/(2.0*cv*T*gamma));
+            l_eig_mat_inv_tr.setVal(1, n1-1, 0.5*(gamma-1.0)*(nx+u1/a)/a);
+            l_eig_mat_inv_tr.setVal(n1-1, n1-1, 0.5+0.5*(gamma-1.0)*(u+0.5*u*u/a)/a);
+            
+        }
+    }
+
+}
 
 
 
