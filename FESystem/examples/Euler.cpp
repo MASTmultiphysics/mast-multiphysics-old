@@ -24,8 +24,8 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=200.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
-const FESystemDouble x_length = 4.0, y_length = 2.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
+const FESystemDouble  rho=1.05, u1=200.0, temp = 200.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
+const FESystemDouble x_length = 8.0, y_length = 3.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
 const FESystemDouble t_by_c = 0.12, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
@@ -161,7 +161,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
                             (*it)->setTag(0);
                 }
                 
-                if (fabs(nodes[i]->getVal(0) - x_length) <= FESystem::Base::getMachineEpsilon<FESystemDouble>()) // right boundary nodes
+                if (fabs(nodes[i]->getVal(0) - x_length) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // right boundary nodes
                 {
                     const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
                     std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
@@ -180,7 +180,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
                 }
                 
                 
-                if (fabs(nodes[i]->getVal(1) - y_length) <= FESystem::Base::getMachineEpsilon<FESystemDouble>()) // upper boundary nodes
+                if (fabs(nodes[i]->getVal(1) - y_length) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // upper boundary nodes
                 {
                     const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
                     std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
