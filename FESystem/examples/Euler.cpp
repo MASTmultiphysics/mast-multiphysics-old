@@ -24,12 +24,12 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=310.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
-const FESystemDouble x_length = 4.0, y_length = 5.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
-const FESystemDouble t_by_c = 0.02, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
+const FESystemDouble  rho=1.05, u1=200.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
+const FESystemDouble x_length = 4.0, y_length = 2.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
+const FESystemDouble t_by_c = 0.12, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=120, ny=80, dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 20;
+const FESystemUInt nx=240, ny=160, dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 20;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 const FESystemBoolean if_fd = false;
 std::vector<std::vector<FESystemDouble> > dc_vals;
@@ -304,14 +304,14 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
             }
             if (elem.checkForTag(3)) // upper edge
             {
-                fluid_elem.calculateSolidWallFluxBoundaryCondition(2, q_boundary, tmp_vec);
-                //fluid_elem.calculateMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_vec);
+                //fluid_elem.calculateSolidWallFluxBoundaryCondition(2, q_boundary, tmp_vec);
+                fluid_elem.calculateMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
 
                 if (if_calculate_jacobian)
                 {
-                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(2, q_boundary, tmp_mat);
-                    //fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_mat);
+                    //fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(2, q_boundary, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }

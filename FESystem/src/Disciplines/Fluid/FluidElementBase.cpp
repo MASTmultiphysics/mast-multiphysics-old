@@ -173,7 +173,7 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
     
     this->solution = &sol;
     this->velocity = &vel;
-
+    
     // arbitrary reference values
     this->s0 = 0.0;
     this->p0 = 1.01335e3; // STP
@@ -182,7 +182,7 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
     FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim, n2=n1*this->geometric_elem->getNNodes();
     this->interpolated_sol->resize(n1);
     this->interpolated_vel->resize(n1);
-
+    
     this->dX_dxi->resize(dim, dim);
     this->dxi_dX->resize(dim, dim);
     this->B_mat->resize(n1, n2);
@@ -196,7 +196,7 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
         this->B_mat_dxi[i]->resize(n1, n2);
         this->Ai_advection[i]->resize(n1, n1);
     }
-
+    
     this->discontinuity_capturing_value = &dc_vals_at_q_pts;
     this->if_update_discont_values = if_update_dc;
     
@@ -236,7 +236,7 @@ FESystem::Fluid::FluidElementBase::calculateMixedBoundaryCondition(const FESyste
         
         // first update the variables at the current quadrature point
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
-
+        
         this->calculateAdvectionLeftEigenvectorAndInverseForNormal(normal, eig_val, l_eig_vec, l_eig_vec_inv_tr);
         
         // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
@@ -250,7 +250,7 @@ FESystem::Fluid::FluidElementBase::calculateMixedBoundaryCondition(const FESyste
         tmp_mat1.matrixRightMultiplyTranspose(1.0, l_eig_vec, tmp_mat2); // A_{-} = L^-T [omaga]_{-} L^T
         this->B_mat->rightVectorMultiply(U_vec, U_vec_interpolated);
         tmp_mat2.rightVectorMultiply(U_vec_interpolated, flux);  // f_{-} = A_{-} B U
-
+        
         B_mat->leftVectorMultiply(flux, tmp_vec1_n2); // B^T f_{-}   (this is flux coming into the solution domain)
         bc_vec.add(-q_weight[i]*jac, tmp_vec1_n2);
         
@@ -279,7 +279,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryConditi
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
-
+    
     const std::pair<FESystemUInt, FESystemUInt> bc_mat_s = bc_mat.getSize();
     
     FESystemAssert2(U_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, U_vec.getSize(), n2);
@@ -303,7 +303,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryConditi
         
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
         normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-
+        
         // first update the variables at the current quadrature point
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
         
@@ -393,7 +393,7 @@ FESystem::Fluid::FluidElementBase::calculateSolidWallFluxBoundaryCondition(const
     const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
     
     bc_vec.zero();
-
+    
     for (FESystemUInt i=0; i<q_pts.size(); i++)
     {
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
@@ -439,10 +439,10 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
     {
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
         normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-
+        
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
         this->calculatePressureJacobianOnSolidWall(dpdU);
-
+        
         A.zero();
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
@@ -453,7 +453,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
         A.matrixRightMultiply(1.0, *(this->B_mat), tmp_mat_n1n2);
         this->B_mat->matrixTransposeRightMultiply(1.0, tmp_mat_n1n2, tmp_mat2_n2n2);
         dfdx.add(-q_weight[i]*jac, tmp_mat2_n2n2);
-
+        
     }
 }
 
@@ -478,12 +478,12 @@ FESystem::Fluid::FluidElementBase::calculateFluxBoundaryConditionUsingLocalSolut
     bc_vec.zero();
     
     for (FESystemUInt i=0; i<q_pts.size(); i++)
-    {        
+    {
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
         normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-
+        
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
-
+        
         // now calculate the flux
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
@@ -521,9 +521,9 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditio
     {
         this->geometric_elem->calculateBoundaryNormal(b_id, normal);
         normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-
+        
         this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
-
+        
         // now calculate the flux
         for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
         {
@@ -559,9 +559,9 @@ FESystem::Fluid::FluidElementBase::calculateResidualVector(FESystem::Numerics::V
     {
         // first update the variables at the current quadrature point
         this->updateVariablesAtQuadraturePoint(*(q_pts[i]));
-
+        
         this->calculateDifferentialOperatorMatrix(LS_mat, diff_val, diff_sens);
-
+        
         if (this->if_update_discont_values)
             (*this->discontinuity_capturing_value)[i] = diff_val;
         else
@@ -606,7 +606,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
     LS_mat.resize(n1, n2); diff2.resize(n1, n1);
     tmp_vec1_n1.resize(n1); tmp_mat1_n2n2.resize(n2,n2); tmp_mat2_n1n2.resize(n1, n2);
     flux.resize(n1); diff_sens.resize(n2); tmp_vec2_n2.resize(n2);
-
+    
     const std::vector<FESystem::Geometry::Point*>& q_pts = this->quadrature->getQuadraturePoints();
     const std::vector<FESystemDouble>& q_weight = this->quadrature->getQuadraturePointWeights();
     
@@ -617,7 +617,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
     {
         // update all variables at the quadrature point for given shape functions
         this->updateVariablesAtQuadraturePoint(*(q_pts[i]));
-
+        
         // get the other matrices of interest
         this->calculateDifferentialOperatorMatrix(LS_mat, diff_val, diff_sens);
         
@@ -625,7 +625,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
             (*this->discontinuity_capturing_value)[i] = diff_val;
         else
             diff_val = (*this->discontinuity_capturing_value)[i];
-
+        
         // contribution from unsteady term
         // Galerkin contribution of velocity
         this->B_mat->matrixTransposeRightMultiply(1.0, *(this->B_mat), tmp_mat1_n2n2);
@@ -646,15 +646,15 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
             this->B_mat_dxi[i_dim]->matrixTransposeRightMultiply(1.0, *(this->B_mat_dxi[i_dim]), tmp_mat1_n2n2);
             dres_dx.add(-q_weight[i]*jac*diff_val, tmp_mat1_n2n2);
             
-//            // discontinuity capturing term Jac due to coefficient dependence on solution
-//            this->B_mat_dxi[i_dim]->rightVectorMultiply(*(this->solution), flux);
-//            this->B_mat_dxi[i_dim]->leftVectorMultiply(flux, tmp_vec2_n2);
-//            for (FESystemUInt ii=0; ii<n2; ii++)
-//                for (FESystemUInt jj=0; jj<n2; jj++)
-//                    tmp_mat1_n2n2.setVal(ii, jj, tmp_vec2_n2.getVal(ii)*diff_sens.getVal(jj));
-//            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
+            //            // discontinuity capturing term Jac due to coefficient dependence on solution
+            //            this->B_mat_dxi[i_dim]->rightVectorMultiply(*(this->solution), flux);
+            //            this->B_mat_dxi[i_dim]->leftVectorMultiply(flux, tmp_vec2_n2);
+            //            for (FESystemUInt ii=0; ii<n2; ii++)
+            //                for (FESystemUInt jj=0; jj<n2; jj++)
+            //                    tmp_mat1_n2n2.setVal(ii, jj, tmp_vec2_n2.getVal(ii)*diff_sens.getVal(jj));
+            //            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
         }
-
+        
         // Lease square contribution of flux gradient
         LS_mat.matrixTransposeRightMultiply(1.0, *(this->Ai_Bi_advection), tmp_mat1_n2n2); // LS^T tau d^2F^adv_i / dx dU
         dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
@@ -678,7 +678,7 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
     const std::pair<FESystemUInt, FESystemUInt> s = dUdV.getSize();
     
     FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
-
+    
     
     // du/dv
     switch (dim)
@@ -686,11 +686,11 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
         case 3:
         {
             dUdV.setVal(0, 3, u3);
-
+            
             dUdV.setVal(1, 3, u1*u3);
-
+            
             dUdV.setVal(2, 3, u2*u3);
-
+            
             dUdV.setVal(3, 0, dUdV.getVal(0, 3));
             dUdV.setVal(3, 1, dUdV.getVal(1, 3));
             dUdV.setVal(3, 2, dUdV.getVal(2, 3));
@@ -705,7 +705,7 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
             dUdV.setVal(0, 2, u2);
             
             dUdV.setVal(1, 2, u1*u2);
-
+            
             dUdV.setVal(2, 0, dUdV.getVal(0, 2));
             dUdV.setVal(2, 1, dUdV.getVal(1, 2));
             dUdV.setVal(2, 2, u2*u2+cv*T*(gamma-1.0));
@@ -713,30 +713,30 @@ FESystem::Fluid::FluidElementBase::calculateEntropyVariableJacobian(FESystem::Nu
             
             dUdV.setVal(n1-1, 2, dUdV.getVal(2, n1-1));
         }
-
+            
         case 1:
         {
             dUdV.setVal(0, 0, 1.0);
             dUdV.setVal(0, 1, u1);
             dUdV.setVal(0, n1-1, e_tot);
-
+            
             dUdV.setVal(1, 0, dUdV.getVal(0, 1));
             dUdV.setVal(1, 1, u1*u1+cv*T*(gamma-1.0));
             dUdV.setVal(1, n1-1, u1*(cv*T*gamma+k));
-
+            
             dUdV.setVal(n1-1, 0, dUdV.getVal(0, n1-1));
             dUdV.setVal(n1-1, 1, dUdV.getVal(1, n1-1));
             dUdV.setVal(n1-1, n1-1, k*k+gamma*cv*T*(cv*T+2*k));
-
+            
         }
             break;
-
+            
         default:
             break;
     }
     
     dUdV.scale(rho/(gamma-1.0));
-
+    
     
     // dv/du
     switch (dim)
@@ -827,7 +827,7 @@ FESystem::Fluid::FluidElementBase::calculatePressureJacobianOnSolidWall(FESystem
         }
             break;
     }
-
+    
     dpdU.scale(this->R/cv);
 }
 
@@ -838,13 +838,13 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
-
+    
     FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
     FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
-
+    
     mat.zero();
     FESystemUInt energy_i = n1-1;
     
@@ -864,7 +864,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
                     
                     mat.setVal(energy_i, 3, -u1*u3*R/cv);
                 }
-
+                    
                 case 2:
                 {
                     mat.setVal(1, 2, -u2*R/cv);
@@ -892,7 +892,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             }
         }
             break;
-
+            
         case 1:
         {
             switch (dim)
@@ -915,12 +915,12 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
                     mat.setVal(1, 0, -u1*u2);
                     mat.setVal(1, 1, u2);
                     mat.setVal(1, 2, u1);
-
+                    
                     mat.setVal(2, 0, -u2*u2+R*k/cv);
                     mat.setVal(2, 1, -u1*R/cv);
                     mat.setVal(2, 2, u2*(2.0-R/cv));
                     mat.setVal(2, energy_i, R/cv);
-                                        
+                    
                     mat.setVal(energy_i, 0, u2*(R*(-e_tot+2.0*k)-e_tot*cv)/cv);
                     mat.setVal(energy_i, 1, -u1*u2*R/cv);
                     mat.setVal(energy_i, 2, e_tot+R*(T-u2*u2/cv));
@@ -935,7 +935,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             }
         }
             break;
-
+            
         case 2:
         {
             mat.setVal(0, 3, 1.0); // d U / d (rho u3)
@@ -953,7 +953,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             mat.setVal(3, 2, -u2*R/cv);
             mat.setVal(3, 3, u3*(2.0-R/cv));
             mat.setVal(3, energy_i, R/cv);
-
+            
             mat.setVal(energy_i, 0, u3*(R*(-e_tot+2.0*k)-e_tot*cv)/cv);
             mat.setVal(energy_i, 1, -u1*u3*R/cv);
             mat.setVal(energy_i, 2, -u2*u3*R/cv);
@@ -961,7 +961,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxJacobian(FESystemUInt d
             mat.setVal(energy_i, energy_i, u3*gamma);
         }
             break;
-
+            
         default:
             FESystemAssert0(false, FESystem::Exception::InvalidValue);
             break;
@@ -1064,7 +1064,7 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionFluxSpatialDerivative(const
         this->B_mat_dxi[i]->rightVectorMultiply(*(this->solution), tmp_vec);
         this->Ai_advection[i]->rightVectorMultiply(tmp_vec, *flux);
     }
-
+    
     if (dflux_dU != NULL)
     {
         const std::pair<FESystemUInt, FESystemUInt> s1 = dflux_dU->getSize();
@@ -1090,8 +1090,9 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionLeftEigenvectorAndInverseFo
     
     eig_vals.zero(); l_eig_mat.zero(); l_eig_mat_inv_tr.zero();
     FESystemDouble nx=0.0, ny=0.0, nz=0.0, u=0.0;
-
-    // initialize the values 
+    FESystemUInt dim_for_eig_vec=100; // initializing with arbitrarily high value
+    
+    // initialize the values
     switch (dim)
     {
         case 3:
@@ -1113,129 +1114,214 @@ FESystem::Fluid::FluidElementBase::calculateAdvectionLeftEigenvectorAndInverseFo
         }
     }
     
+    // select the largest value of surface normal component, so that the appropriate section can be chosen
+    if ((fabs(nx)>=fabs(ny)) && (fabs(nx)>=fabs(nz)))
+        dim_for_eig_vec = 1;
+    else if ((fabs(ny)>=fabs(nx)) && (fabs(ny)>=fabs(nz)))
+        dim_for_eig_vec = 2;
+    else if ((fabs(nz)>=fabs(nx)) && (fabs(nz)>=fabs(ny)))
+        dim_for_eig_vec = 3;
     
-    // set values in the left eigenvector matrix and eigenvalue matrix
+    // set eigenvalues
     switch (dim)
     {
         case 3:
-        {
             eig_vals.setVal(2, 2, u);
-
-            // for u
-            l_eig_mat.setVal(0, 2, (nz*u1-nx*u3)/nx);
-            l_eig_mat.setVal(1, 2, -nz/nx);
-            l_eig_mat.setVal(3, 2, 1.0);
-
-            // for u-a
-            l_eig_mat.setVal(3, n1-2, -u3-nz*a/(gamma-1.0));
-
-            // for u+a
-            l_eig_mat.setVal(3, n1-1, -u3+nz*a/(gamma-1.0));
-        }
-            
         case 2:
-        {
             eig_vals.setVal(1, 1, u);
-
-            // for u
-            l_eig_mat.setVal(0, 1, (ny*u1-nx*u2)/nx);
-            l_eig_mat.setVal(1, 1, -ny/nx);
-            l_eig_mat.setVal(2, 1, 1.0);
-            
-            // for u-a
-            l_eig_mat.setVal(2, n1-2, -u2-ny*a/(gamma-1.0));
-
-            // for u+a
-            l_eig_mat.setVal(2, n1-1, -u2+ny*a/(gamma-1.0));
-        }
-            
         case 1:
         {
             eig_vals.setVal(0, 0, u);
-            eig_vals.setVal(n1-2, n1-2, u-this->a);
-            eig_vals.setVal(n1-1, n1-1, u+this->a);
-
-            // for u
-            l_eig_mat.setVal(0, 0, -cv*T*gamma+u*(u1/nx-u/2.0));
-            l_eig_mat.setVal(1, 0, -u/nx);
-            l_eig_mat.setVal(n1-1, 0, 1.0);
-
-            // for u-a
-            l_eig_mat.setVal(0, n1-2, u*u/2.0+u*a/(gamma-1.0));
-            l_eig_mat.setVal(1, n1-2, -u1-nx*a/(gamma-1.0));
-            l_eig_mat.setVal(n1-1, n1-2, 1.0);
-            
-            // for u+a
-            l_eig_mat.setVal(0, n1-1, u*u/2.0-u*a/(gamma-1.0));
-            l_eig_mat.setVal(1, n1-1, -u1+nx*a/(gamma-1.0));
-            l_eig_mat.setVal(n1-1, n1-1, 1.0);
+            eig_vals.setVal(n1-2, n1-2, u-a);
+            eig_vals.setVal(n1-1, n1-1, u+a);
         }
     }
 
-    // set values in the inverse of left eigenvector matrix transposed
+    // set last two columns of the eigenvector matrices, and all columns of the eigenvector inverse.
+    // Note that the dim_for_eig_vec column of the inverse matrix will be overwritten by the appropriate matrix
     switch (dim)
     {
         case 3:
         {
+            // for u-a
+            l_eig_mat.setVal(3, n1-2, -u3-nz*a/(gamma-1.0));
+            
+            // for u+a
+            l_eig_mat.setVal(3, n1-1, -u3+nz*a/(gamma-1.0));
+            
             // for u
-            l_eig_mat_inv_tr.setVal(3, 0, -u3);
+            l_eig_mat_inv_tr.setVal(3, 0, (gamma-1.0)*u1*u3/(a*a)-nx*nz);
 
             // for u
-            l_eig_mat_inv_tr.setVal(3, 1, (gamma-1.0)*u3*u2/(a*a)-nz*ny);
+            l_eig_mat_inv_tr.setVal(3, 1, (gamma-1.0)*u2*u3/(a*a)-ny*nz);
 
             // for u
-            l_eig_mat_inv_tr.setVal(0, 2, u3/(cv*T*gamma));
-            l_eig_mat_inv_tr.setVal(1, 2, (gamma-1.0)*u1*u3/(a*a)-nx*nz);
-            l_eig_mat_inv_tr.setVal(2, 2, (gamma-1.0)*u2*u3/(a*a)-ny*nz);
-            l_eig_mat_inv_tr.setVal(3, 2, (gamma-1.0)*u3*u3/(a*a)-nz*nz+1.0);
-            l_eig_mat_inv_tr.setVal(4, 2, (gamma-1.0)*u3*u*u/(2.0*a*a)+u3-nz*u);
+            l_eig_mat_inv_tr.setVal(0, 2, (gamma-1.0)*u3/(a*a));
+            l_eig_mat_inv_tr.setVal(1, 2, (gamma-1.0)*u3*u1/(a*a)-nz*nx);
+            l_eig_mat_inv_tr.setVal(2, 2, (gamma-1.0)*u3*u2/(a*a)-nz*ny);
+            l_eig_mat_inv_tr.setVal(3, 2, (gamma-1.0)*u3*u3/(a*a)+1.0-nz*nz);
+            l_eig_mat_inv_tr.setVal(n1-1, 2, (gamma-1.0)*k*u3/(a*a)+u3-nz*u);
+
+            // overwrite for u
+            l_eig_mat_inv_tr.setVal(3, dim_for_eig_vec-1, u3);
 
             // for u-a
             l_eig_mat_inv_tr.setVal(3, n1-2, 0.5*(gamma-1.0)*(-nz+u3/a)/a);
-
+            
             // for u+a
             l_eig_mat_inv_tr.setVal(3, n1-1, 0.5*(gamma-1.0)*(nz+u3/a)/a);
+
         }
             
         case 2:
         {
+            // for u-a
+            l_eig_mat.setVal(2, n1-2, -u2-ny*a/(gamma-1.0));
+            
+            // for u+a
+            l_eig_mat.setVal(2, n1-1, -u2+ny*a/(gamma-1.0));
+            
             // for u
-            l_eig_mat_inv_tr.setVal(2, 0, -u2);
+            l_eig_mat_inv_tr.setVal(2, 0, (gamma-1.0)*u1*u2/(a*a)-nx*ny);
 
             // for u
-            l_eig_mat_inv_tr.setVal(0, 1, u2/(cv*T*gamma));
-            l_eig_mat_inv_tr.setVal(1, 1, (gamma-1.0)*u1*u2/(a*a)-nx*ny);
-            l_eig_mat_inv_tr.setVal(2, 1, (gamma-1.0)*u2*u2/(a*a)-ny*ny+1.0);
-            l_eig_mat_inv_tr.setVal(n1-1, 1, (gamma-1.0)*u2*u*u/(2.0*a*a)+u2-ny*u);
+            l_eig_mat_inv_tr.setVal(0, 1, (gamma-1.0)*u2/(a*a));
+            l_eig_mat_inv_tr.setVal(1, 1, (gamma-1.0)*u2*u1/(a*a)-ny*nx);
+            l_eig_mat_inv_tr.setVal(2, 1, (gamma-1.0)*u2*u2/(a*a)+1.0-ny*ny);
+            l_eig_mat_inv_tr.setVal(n1-1, 1, (gamma-1.0)*k*u2/(a*a)+u2-ny*u);
+            
+            // overwrite for u
+            l_eig_mat_inv_tr.setVal(2, dim_for_eig_vec-1, u2);
 
             // for u-a
             l_eig_mat_inv_tr.setVal(2, n1-2, 0.5*(gamma-1.0)*(-ny+u2/a)/a);
-
+            
             // for u+a
             l_eig_mat_inv_tr.setVal(2, n1-1, 0.5*(gamma-1.0)*(ny+u2/a)/a);
         }
             
         case 1:
         {
+            // for u-a
+            l_eig_mat.setVal(0, n1-2, k+u*a/(gamma-1.0));
+            l_eig_mat.setVal(1, n1-2, -u1-nx*a/(gamma-1.0));
+            l_eig_mat.setVal(n1-1, n1-2, 1.0);
+            
+            // for u+a
+            l_eig_mat.setVal(0, n1-1, k-u*a/(gamma-1.0));
+            l_eig_mat.setVal(1, n1-1, -u1+nx*a/(gamma-1.0));
+            l_eig_mat.setVal(n1-1, n1-1, 1.0);
+            
             // for u
-            l_eig_mat_inv_tr.setVal(0, 0, -1);
-            l_eig_mat_inv_tr.setVal(1, 0, -u1);
-            l_eig_mat_inv_tr.setVal(n1-1, 0, -u*u/2.0);
-            l_eig_mat_inv_tr.scaleColumn(0, 1.0/(cv*T*gamma));
+            l_eig_mat_inv_tr.setVal(0, 0, (gamma-1.0)*u1/(a*a));
+            l_eig_mat_inv_tr.setVal(1, 0, (gamma-1.0)*u1*u1/(a*a)+1.0-nx*nx);
+            l_eig_mat_inv_tr.setVal(n1-1, 0, (gamma-1.0)*k*u1/(a*a)+u1-nx*u);
+            
+            // overwrite for u
+            l_eig_mat_inv_tr.setVal(0, dim_for_eig_vec-1, 1.0);
+            l_eig_mat_inv_tr.setVal(1, dim_for_eig_vec-1, u1);
+            l_eig_mat_inv_tr.setVal(n1-1, dim_for_eig_vec-1, k);
+            l_eig_mat_inv_tr.scaleColumn(dim_for_eig_vec-1, -1.0/(cv*T*gamma));
             
             // for u-a
             l_eig_mat_inv_tr.setVal(0, n1-2, 1.0/(2.0*cv*T*gamma));
             l_eig_mat_inv_tr.setVal(1, n1-2, 0.5*(gamma-1.0)*(-nx+u1/a)/a);
-            l_eig_mat_inv_tr.setVal(n1-1, n1-2, 0.5+0.5*(gamma-1.0)*(-u+0.5*u*u/a)/a);
-
+            l_eig_mat_inv_tr.setVal(n1-1, n1-2, 0.5*(1.0+(gamma-1.0)*(-u+k/a)/a));
+            
             // for u+a
             l_eig_mat_inv_tr.setVal(0, n1-1, 1.0/(2.0*cv*T*gamma));
             l_eig_mat_inv_tr.setVal(1, n1-1, 0.5*(gamma-1.0)*(nx+u1/a)/a);
-            l_eig_mat_inv_tr.setVal(n1-1, n1-1, 0.5+0.5*(gamma-1.0)*(u+0.5*u*u/a)/a);
+            l_eig_mat_inv_tr.setVal(n1-1, n1-1, 0.5*(1.0+(gamma-1.0)*(u+k/a)/a));
             
         }
     }
 
+
+    switch (dim_for_eig_vec)
+    {
+        case 1:
+        {
+            // set values in the left eigenvector matrix and eigenvalue matrix
+            switch (dim)
+            {
+                case 3:
+                {
+                    // for u
+                    l_eig_mat.setVal(0, 2, nz*u1/nx-u3);
+                    l_eig_mat.setVal(1, 2, -nz/nx);
+                    l_eig_mat.setVal(3, 2, 1.0);
+                }
+                    
+                case 2:
+                {
+                    // for u
+                    l_eig_mat.setVal(0, 1, ny*u1/nx-u2);
+                    l_eig_mat.setVal(1, 1, -ny/nx);
+                    l_eig_mat.setVal(2, 1, 1.0);
+                }
+                    
+                case 1:
+                {
+                    // for u
+                    l_eig_mat.setVal(0, 0, u*u1/nx-(cv*T*gamma+k));
+                    l_eig_mat.setVal(1, 0, -u/nx);
+                    l_eig_mat.setVal(n1-1, 0, 1.0);
+                }
+            }
+        }
+            break;
+            
+        case 2:
+        {
+            // set values in the left eigenvector matrix and eigenvalue matrix
+            switch (dim)
+            {
+                case 3:
+                {
+                    // for u
+                    l_eig_mat.setVal(0, 2, nz*u2/ny-u3);
+                    l_eig_mat.setVal(2, 2, -nz/ny);
+                    l_eig_mat.setVal(3, 2, 1.0);
+                }
+                    
+                case 2:
+                case 1:
+                {
+                    // for u
+                    l_eig_mat.setVal(0, 0, nx*u2/ny-u1);
+                    l_eig_mat.setVal(1, 0, 1.0);
+                    l_eig_mat.setVal(2, 0, -nx/ny);
+
+                    // for u
+                    l_eig_mat.setVal(0, 1, u*u2/ny-(cv*T*gamma+k));
+                    l_eig_mat.setVal(2, 1, -u/ny);
+                    l_eig_mat.setVal(n1-1, 1, 1.0);
+                }
+            }
+        }
+            break;
+            
+        case 3:
+        {
+            // set values in the left eigenvector matrix and eigenvalue matrix
+            
+            // for u
+            l_eig_mat.setVal(0, 0, nx*u3/nz-u1);
+            l_eig_mat.setVal(1, 0, 1.0);
+            l_eig_mat.setVal(3, 0, -nx/nz);
+            
+            // for u
+            l_eig_mat.setVal(0, 1, ny*u3/nz-u2);
+            l_eig_mat.setVal(2, 1, 1.0);
+            l_eig_mat.setVal(3, 1, -ny/nz);
+            
+            // for u
+            l_eig_mat.setVal(0, 2, u*u3/nz-(cv*T*gamma+k));
+            l_eig_mat.setVal(3, 2, -u/nz);
+            l_eig_mat.setVal(n1-1, 2, 1.0);
+        }
+            break;
+    }
 }
 
 
@@ -1246,14 +1332,14 @@ FESystem::Fluid::FluidElementBase::calculateDiffusiveFluxJacobian(FESystemUInt d
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     // calculate Aij = d F_diff_j / d x_i, where F_diff_j = Kij d U / dxj is the Euler advection flux vector
-
+    
     FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
     const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
     
     FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
     FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
     FESystemAssert0(flux_coord < dim, FESystem::Exception::InvalidValue);
-
+    
     
 }
 
@@ -1280,22 +1366,22 @@ FESystem::Fluid::FluidElementBase::calculateArtificialDiffusionOperator(FESystem
     {
         case 3:
             u.setVal(2, this->u3);
-
+            
         case 2:
             u.setVal(1, this->u2);
-
+            
         case 1:
             u.setVal(0, this->u1);
             break;
-
+            
         default:
             break;
     }
-
+    
     // calculate the dot product of velocity times gradient of shape function
     FESystemDouble h = 0, u_val = u.getL2Norm(), tau_rho, tau_m, tau_e;
     u.scaleToUnitLength();
-
+    
     for (FESystemUInt i_nodes=0; i_nodes<n; i_nodes++)
     {
         // set value of shape function gradient
@@ -1340,26 +1426,26 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     
     // contribution of unsteady term
     LS_operator.copyMatrix(*(this->B_mat));
-
+    
     diff_operator.copyMatrix(*(this->B_mat));
     diff_operator.add(1.0, *(this->Ai_Bi_advection));
-
+    
     FESystemDouble val1 = 0.0;
-
+    
     vec2.zero();
-
+    
     // contribution of advection flux term
     for (FESystemUInt i=0; i<dim; i++)
     {
         this->Ai_advection[i]->matrixTransposeRightMultiply(1.0, *(this->B_mat_dxi[i]), tmp_mat);
         LS_operator.add(1.0, tmp_mat);  // (B + A_i^T B_i)
-
+        
         this->B_mat_dxi[i]->rightVectorMultiply(*(this->solution), diff_vec[i]);
         this->Ai_advection[i]->rightVectorMultiply(diff_vec[i], vec1);
-
+        
         vec2.add(1.0, vec1); // sum A_i dU/dx_i
     }
-
+    
     // add the velocity and calculate the numerator of the discontinuity capturing term coefficient
     vec2.add(1.0, *(this->interpolated_vel)); // add velocity
     this->A_inv_entropy->rightVectorMultiply(vec2, vec1);
@@ -1370,7 +1456,7 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     this->A_inv_entropy->leftVectorMultiply(vec2, vec1); // A0inv^T v
     vec3.add(1.0, vec1);
     diff_operator.leftVectorMultiply(vec3, discont_operator_sens); // v^T (A0inv^T + A0inv) (B + A_i B_i)
-
+    
     // now evaluate the dissipation factor for the discontinuity capturing term
     // this is the denominator term
     
@@ -1380,7 +1466,7 @@ FESystem::Fluid::FluidElementBase::calculateDifferentialOperatorMatrix(FESystem:
     {
         vec1.zero();
         tmp_mat.zero();
-
+        
         for (FESystemUInt j=0; j<dim; j++)
         {
             vec1.add(this->dxi_dX->getVal(i, j), diff_vec[j]);
@@ -1434,7 +1520,7 @@ FESystem::Fluid::FluidElementBase::calculateOperatorMatrix(const FESystem::Geome
     FESystemAssert4((s.first == n1) && (s.second == n2), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n2);
     
     std::vector<FESystemUInt> derivatives;
-
+    
     FESystem::Numerics::LocalVector<FESystemDouble> Nvec;
     Nvec.resize(n); Nvec.zero();
     B_mat.zero();
@@ -1451,7 +1537,7 @@ FESystem::Fluid::FluidElementBase::calculateOperatorMatrix(const FESystem::Geome
     }
     else
         this->finite_element->getShapeFunction(pt, Nvec);
-        
+    
     // now put these values in the operator matrix
     for (FESystemUInt i=0; i<n1; i++)
         B_mat.setRowVals(i, i*n, (i+1)*n-1, Nvec);
@@ -1512,11 +1598,11 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePoint(const FESyst
         this->calculateOperatorMatrix(pt, *(this->B_mat_dxi[i]), true, i);
         this->B_mat_dxi[i]->getRowVals(0, 0, n-1, *(this->N_vec_dx[i]));
     }
-
+    
     // shape function Jacobian matrix
     this->finite_element->getJacobianMatrix(pt, *(this->dX_dxi));
     this->dX_dxi->getInverse(*(this->dxi_dX));
-
+    
     // determinant of the Jacobian for numerical integration
     this->jac = this->dX_dxi->getDeterminant();
     
@@ -1542,16 +1628,16 @@ FESystem::Fluid::FluidElementBase::updateVariablesAtQuadraturePointForBoundary(c
         this->calculateOperatorMatrixForBoundary(b_id, pt, *(this->B_mat_dxi[i]), true, i);
         this->B_mat_dxi[i]->getRowVals(0, 0, n-1, *(this->N_vec_dx[i]));
     }
-
+    
     // shape function Jacobian matrix
     this->dX_dxi->zero();  // not used for boundary integrals
     this->dxi_dX->zero();  // not used for boundary integrals
     this->jac = this->finite_element->getJacobianValueForBoundary(b_id, pt);
-
+    
     this->updateVariablesForInterpolationOperator(*(this->B_mat));
 }
 
-    
+
 void
 FESystem::Fluid::FluidElementBase::updateVariablesForInterpolationOperator(const FESystem::Numerics::MatrixBase<FESystemDouble>& Bmat)
 {
@@ -1566,7 +1652,7 @@ FESystem::Fluid::FluidElementBase::updateVariablesForInterpolationOperator(const
     this->B_mat->rightVectorMultiply(*(this->velocity), *(this->interpolated_vel));
     
     this->rho = this->interpolated_sol->getVal(0);
-
+    
     switch (dim)
     {
         case 3:
@@ -1576,7 +1662,7 @@ FESystem::Fluid::FluidElementBase::updateVariablesForInterpolationOperator(const
         case 1:
             this->u1 = this->interpolated_sol->getVal(1)/rho;
     }
-
+    
     this->e_tot = this->interpolated_sol->getVal(n1-1)/rho; // total energy: defined as (e + k)
     this->k = 0.5 * (u1*u1 + u2*u2 + u3*u3); // kinetic energy
     this->e =  e_tot - k;// internal energy: defined as (cv * T)
@@ -1637,28 +1723,28 @@ FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESyst
     FESystemAssert2(primitive_sol.getSize() == n1, FESystem::Exception::DimensionsDoNotMatch, primitive_sol.getSize(), n1);
     
     FESystemDouble rho_val=0.0, u_val=0.0, v_val=0.0, w_val=0.0, k_val=0.0, T_val = 0.0;
- 
+    
     rho_val = conservative_sol.getVal(0);
     primitive_sol.setVal(0, rho_val);
     
     u_val = conservative_sol.getVal(1)/rho_val;
     primitive_sol.setVal(1, u_val);
     k_val += u_val*u_val;
-
+    
     if (dim > 1)
     {
         v_val = conservative_sol.getVal(2)/rho_val;
         primitive_sol.setVal(2, v_val);
         k_val += v_val*v_val;
     }
-
+    
     if (dim > 2)
     {
         w_val = conservative_sol.getVal(3)/rho_val;
         primitive_sol.setVal(3, w_val);
         k_val += w_val*w_val;
     }
-
+    
     k_val *= 0.5;
     T_val = (conservative_sol.getVal(n1-1)/rho_val - k_val)/this->cv;
     primitive_sol.setVal(n1-1, T_val);
