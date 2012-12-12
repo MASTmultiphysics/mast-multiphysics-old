@@ -8,17 +8,62 @@
 
 // FESystem include
 #include "TestingIncludes.h"
+#include <cmath>
 
 
+
+void distributePoints(const FESystemUInt n_divs, const std::vector<FESystemDouble>& div_locations, const std::vector<FESystemUInt>& n_subdivs_in_div, const std::vector<FESystemDouble>& relative_mesh_size_at_div, std::vector<FESystemDouble>& points)
+{
+    FESystemAssert2(div_locations.size() == n_divs+1, FESystem::Exception::DimensionsDoNotMatch, div_locations.size(), n_divs+1);
+    FESystemAssert2(relative_mesh_size_at_div.size() == n_divs+1, FESystem::Exception::DimensionsDoNotMatch, relative_mesh_size_at_div.size(), n_divs+1);
+    FESystemAssert2(n_subdivs_in_div.size() == n_divs, FESystem::Exception::DimensionsDoNotMatch, n_subdivs_in_div.size(), n_divs);
+    
+    // calculate total number of points
+    FESystemUInt n_total_points = 1;
+    for (FESystemUInt i=0; i<n_divs; i++)
+        n_total_points += n_subdivs_in_div[i];
+    
+    // resize the points vector and set the first and last points of each division
+    points.resize(n_total_points);
+
+    FESystemUInt n=1;
+    points[0] = div_locations[0];
+    for (FESystemUInt i=0; i<n_divs; i++)
+    {
+        n += n_subdivs_in_div[i];
+        points[n-1] = div_locations[i+1];
+    }
+
+    n=1;
+    FESystemDouble dx=0.0, growth_factor = 0.0;
+    // now calculate the base mesh size, and calculate the nodal points
+    for (FESystemUInt i=0; i<n_divs; i++)
+    {
+        growth_factor = pow(relative_mesh_size_at_div[i+1]/relative_mesh_size_at_div[i], 1.0/(n_subdivs_in_div[i]-1.0));
+        if (fabs(growth_factor-1.0)>1.0e-10)
+            dx = (div_locations[i+1]-div_locations[i]) * (1.0-growth_factor)/(1.0-pow(growth_factor, n_subdivs_in_div[i]));
+        else
+        {
+            growth_factor = 1.0;
+            dx = (div_locations[i+1]-div_locations[i]) / n_subdivs_in_div[i];
+        }
+        
+        for (FESystemUInt n_pt=1; n_pt<n_subdivs_in_div[i]; n_pt++)
+        {
+            points[n+n_pt-1] = points[n+n_pt-2] + dx;
+            dx *= growth_factor;
+        }
+        n += n_subdivs_in_div[i];
+    }
+}
 
 
 
 
 void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
-                    FESystemUInt nx, FESystemDouble x_length, FESystemUInt& n_elem_nodes, MeshType m_type, FESystemBoolean local_cs_same_as_global)
+                    const std::vector<FESystemDouble>& points, FESystemUInt& n_elem_nodes, MeshType m_type, FESystemBoolean local_cs_same_as_global)
 {
     // create a nx x ny grid of nodes, and connect them by quad4 elements
-    FESystemDouble dx;
     FESystemUInt n_nodes, n_elems;
     
     const FESystem::Geometry::CoordinateSystemBase& global_cs = origin.getCoordinateSystem();
@@ -33,29 +78,28 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
     {
         case FESystem::Mesh::EDGE2:
         {
-            n_nodes=nx;
-            n_elems=(nx-1);
+            n_nodes=points.size();
+            n_elems=(n_nodes-1);
             n_elem_nodes = 2;
-            dx=x_length/(nx-1);
             
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
             elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
-            for (FESystemUInt ix=0; ix<nx; ix++)
+            for (FESystemUInt ix=0; ix<n_nodes; ix++)
             {
                 node_p = (*nodes)[id];
-                node_p->setVal(0,ix*dx);
+                node_p->setVal(0,points[ix]);
                 node_p->setExternalID(id);
                 id++;
             }
             
             
-            // set the location of individual nodes
+            // set the nodes for each element
             id=0;
             FESystem::Mesh::ElemBase* elem_p;
-            for (FESystemUInt ix=0; ix<(nx-1); ix++)
+            for (FESystemUInt ix=0; ix<(n_nodes-1); ix++)
             {
                 elem_p = (*elems)[id];
                 dynamic_cast<FESystem::Mesh::EdgeElemBase*>(elem_p)->setVectorForXYPlane(vec);
@@ -69,20 +113,19 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
             
         case FESystem::Mesh::EDGE3:
         {
-            n_nodes=(2*nx-1);
-            n_elems=(nx-1);
+            n_nodes=points.size();
+            n_elems=n_nodes/2-1;
             n_elem_nodes = 3;
-            dx=x_length/(2*(nx-1));
-            
+
             nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
             elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
             
             FESystemUInt id=0;
             FESystem::Mesh::Node* node_p;
-            for (FESystemUInt ix=0; ix<(2*nx-1); ix++)
+            for (FESystemUInt ix=0; ix<n_nodes; ix++)
             {
                 node_p = (*nodes)[id];
-                node_p->setVal(0,ix*dx);
+                node_p->setVal(0,points[ix]);
                 node_p->setExternalID(id);
                 id++;
             }
@@ -91,7 +134,7 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
             // set the location of individual nodes
             id=0;
             FESystem::Mesh::ElemBase* elem_p;
-            for (FESystemUInt ix=0; ix<(nx-1); ix++)
+            for (FESystemUInt ix=0; ix<n_elems; ix++)
             {
                 elem_p = (*elems)[id];
                 dynamic_cast<FESystem::Mesh::EdgeElemBase*>(elem_p)->setVectorForXYPlane(vec);
@@ -116,44 +159,43 @@ void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshB
 
 
 void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
-                       FESystemUInt nx, FESystemUInt ny, FESystemDouble x_length, FESystemDouble y_length, FESystemUInt& n_elem_nodes,
-                       MeshType m_type, FESystemBoolean local_cs_same_as_global)
+                     const std::vector<FESystemDouble>& x_points, const std::vector<FESystemDouble>& y_points, FESystemUInt& n_elem_nodes,
+                     MeshType m_type, FESystemBoolean local_cs_same_as_global)
 {
     // create a nx x ny grid of nodes, and connect them by quad4 elements
-    FESystemDouble dx, dy;
-    FESystemUInt n_nodes, n_elems;
+    FESystemUInt nx, ny, n_nodes, n_elems;
     
     const FESystem::Geometry::CoordinateSystemBase& global_cs = origin.getCoordinateSystem();
     
     std::auto_ptr<std::vector<FESystem::Mesh::Node*> > nodes;
     std::auto_ptr<std::vector<FESystem::Mesh::ElemBase*> > elems;
     
+    // create the nodes
+    nx = x_points.size();
+    ny = y_points.size();
+    nodes.reset(mesh.createNodes(nx*ny, global_cs).release());
+    FESystemUInt id=0;
+    FESystem::Mesh::Node* node_p;
+    for (FESystemUInt iy=0; iy<ny; iy++)
+        for (FESystemUInt ix=0; ix<nx; ix++)
+        {
+            node_p = (*nodes)[id];
+            node_p->setVal(0,x_points[ix]);
+            node_p->setVal(1,y_points[iy]);
+            node_p->setExternalID(id);
+            id++;
+        }
+    
+    
     // set the location of individual nodes
     switch (elem_type)
     {
         case FESystem::Mesh::QUAD4:
         {
-            n_nodes=nx*ny;
             n_elems=(nx-1)*(ny-1);
             n_elem_nodes = 4;
-            dx=x_length/(nx-1);
-            dy=y_length/(ny-1);
             
-            nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
             elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
-            
-            FESystemUInt id=0;
-            FESystem::Mesh::Node* node_p;
-            for (FESystemUInt iy=0; iy<ny; iy++)
-                for (FESystemUInt ix=0; ix<nx; ix++)
-                {
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx);
-                    node_p->setVal(1,iy*dy);
-                    node_p->setExternalID(id);
-                    id++;
-                }
-            
             
             // set the location of individual nodes
             id=0;
@@ -174,46 +216,33 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
             
         case FESystem::Mesh::QUAD9:
         {
-            n_nodes=(2*nx-1)*(2*ny-1);
-            n_elems=(nx-1)*(ny-1);
+            FESystemAssert0(fmod(1.0*(nx-1),2.0) == 0.0, FESystem::Exception::InvalidValue);
+            FESystemAssert0(fmod(1.0*(ny-1),2.0) == 0.0, FESystem::Exception::InvalidValue);
+            
+            FESystemUInt nx_elems = (nx-1)/2, ny_elems = (ny-1)/2;
+            n_elems=nx_elems*ny_elems;
             n_elem_nodes = 9;
-            dx=x_length/(2*(nx-1));
-            dy=y_length/(2*(ny-1));
             
-            nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
             elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
-            
-            FESystemUInt id=0;
-            FESystem::Mesh::Node* node_p;
-            for (FESystemUInt iy=0; iy<(2*ny-1); iy++)
-                for (FESystemUInt ix=0; ix<(2*nx-1); ix++)
-                {
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx);
-                    node_p->setVal(1,iy*dy);
-                    node_p->setExternalID(id);
-                    id++;
-                }
-            
-            
+                        
             // set the location of individual nodes
             id=0;
             FESystem::Mesh::ElemBase* elem_p;
-            for (FESystemUInt iy=0; iy<(ny-1); iy++)
-                for (FESystemUInt ix=0; ix<(nx-1); ix++)
+            for (FESystemUInt iy=0; iy<nx_elems; iy++)
+                for (FESystemUInt ix=0; ix<ny_elems; ix++)
                 {
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(1, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(2, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(3, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix)]);
+                    elem_p->setNode(0, *(*nodes)[2*iy*nx+2*ix]);
+                    elem_p->setNode(1, *(*nodes)[2*iy*nx+2*(ix+1)]);
+                    elem_p->setNode(2, *(*nodes)[2*(iy+1)*nx+2*(ix+1)]);
+                    elem_p->setNode(3, *(*nodes)[2*(iy+1)*nx+2*ix]);
                     
-                    elem_p->setNode(4, *(*nodes)[(2*iy*(2*nx-1)+2*ix+1)]);
-                    elem_p->setNode(5, *(*nodes)[((2*iy+1)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(6, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix+1)]);
-                    elem_p->setNode(7, *(*nodes)[((2*iy+1)*(2*nx-1)+2*ix)]);
+                    elem_p->setNode(4, *(*nodes)[2*iy*nx+2*ix+1]);
+                    elem_p->setNode(5, *(*nodes)[(2*iy+1)*nx+2*(ix+1)]);
+                    elem_p->setNode(6, *(*nodes)[2*(iy+1)*nx+2*ix+1]);
+                    elem_p->setNode(7, *(*nodes)[(2*iy+1)*nx+2*ix]);
                     
-                    elem_p->setNode(8, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
+                    elem_p->setNode(8, *(*nodes)[(2*iy+1)*nx+(2*ix+1)]);
                     
                     elem_p->setExternalID(id);
                     id++;
@@ -228,26 +257,10 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                 case RIGHT_DIAGONAL:
                 case LEFT_DIAGONAL:
                 {
-                    n_nodes=nx*ny;
                     n_elems=(nx-1)*(ny-1)*2;
                     n_elem_nodes = 3;
-                    dx=x_length/(nx-1);
-                    dy=y_length/(ny-1);
                     
-                    nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
                     elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
-                    
-                    FESystemUInt id=0;
-                    FESystem::Mesh::Node* node_p;
-                    for (FESystemUInt iy=0; iy<ny; iy++)
-                        for (FESystemUInt ix=0; ix<nx; ix++)
-                        {
-                            node_p = (*nodes)[id];
-                            node_p->setVal(0,ix*dx);
-                            node_p->setVal(1,iy*dy);
-                            node_p->setExternalID(id);
-                            id++;
-                        }
                     
                     // set the location of individual nodes
                     id=0;
@@ -291,35 +304,16 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                     
                 case CROSS:
                 {
-                    n_nodes=nx*ny + (nx-1)*(ny-1);
+                    FESystemAssert0(fmod(1.0*(nx-1),2.0) == 0.0, FESystem::Exception::InvalidValue);
+                    FESystemAssert0(fmod(1.0*(ny-1),2.0) == 0.0, FESystem::Exception::InvalidValue);
+
                     n_elems=(nx-1)*(ny-1)*4;
                     n_elem_nodes = 3;
-                    dx=x_length/(nx-1);
-                    dy=y_length/(ny-1);
+
+                    std::auto_ptr<std::vector<FESystem::Mesh::Node*> > mid_nodes;
+                    mid_nodes.reset(mesh.createNodes(n_elems, global_cs).release());
                     
-                    nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
                     elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
-                    
-                    FESystemUInt id=0;
-                    FESystem::Mesh::Node* node_p;
-                    for (FESystemUInt iy=0; iy<ny; iy++)
-                        for (FESystemUInt ix=0; ix<nx; ix++)
-                        {
-                            node_p = (*nodes)[id];
-                            node_p->setVal(0,ix*dx);
-                            node_p->setVal(1,iy*dy);
-                            node_p->setExternalID(id);
-                            id++;
-                        }
-                    for (FESystemUInt iy=0; iy<ny-1; iy++)
-                        for (FESystemUInt ix=0; ix<nx-1; ix++)
-                        {
-                            node_p = (*nodes)[id];
-                            node_p->setVal(0,ix*dx+dx/2);
-                            node_p->setVal(1,iy*dy+dy/2);
-                            node_p->setExternalID(id);
-                            id++;
-                        }
                     
                     // set the location of individual nodes
                     id=0;
@@ -327,31 +321,34 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                     for (FESystemUInt iy=0; iy<(ny-1); iy++)
                         for (FESystemUInt ix=0; ix<(nx-1); ix++)
                         {
+                            (*mid_nodes)[iy*(nx-1)+ix]->setVal(0, 0.5*((*nodes)[iy*nx+ix]->getVal(0)+(*nodes)[iy*nx+ix+1]->getVal(0)));
+                            (*mid_nodes)[iy*(nx-1)+ix]->setVal(1, 0.5*((*nodes)[iy*nx+ix]->getVal(1)+(*nodes)[(iy+1)*nx+ix]->getVal(1)));
+                            
                             elem_p = (*elems)[id];
-                            elem_p->setNode(0, *(*nodes)[(iy*nx+ix)]);
-                            elem_p->setNode(1, *(*nodes)[(iy*nx+ix+1)]);
-                            elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
+                            elem_p->setNode(0, *(*nodes)[iy*nx+ix]);
+                            elem_p->setNode(1, *(*nodes)[iy*nx+ix+1]);
+                            elem_p->setNode(2, *(*mid_nodes)[iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
                             id++;
                             
                             elem_p = (*elems)[id];
-                            elem_p->setNode(0, *(*nodes)[(iy*nx+ix+1)]);
-                            elem_p->setNode(1, *(*nodes)[((iy+1)*nx+ix+1)]);
-                            elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
+                            elem_p->setNode(0, *(*nodes)[iy*nx+ix+1]);
+                            elem_p->setNode(1, *(*nodes)[(iy+1)*nx+ix+1]);
+                            elem_p->setNode(2, *(*mid_nodes)[iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
                             id++;
                             
                             elem_p = (*elems)[id];
-                            elem_p->setNode(0, *(*nodes)[((iy+1)*nx+ix+1)]);
-                            elem_p->setNode(1, *(*nodes)[((iy+1)*nx+ix)]);
-                            elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
+                            elem_p->setNode(0, *(*nodes)[(iy+1)*nx+ix+1]);
+                            elem_p->setNode(1, *(*nodes)[(iy+1)*nx+ix]);
+                            elem_p->setNode(2, *(*mid_nodes)[iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
                             id++;
                             
                             elem_p = (*elems)[id];
-                            elem_p->setNode(0, *(*nodes)[((iy+1)*nx+ix)]);
-                            elem_p->setNode(1, *(*nodes)[(iy*nx+ix)]);
-                            elem_p->setNode(2, *(*nodes)[nx*ny+iy*(nx-1)+ix]);
+                            elem_p->setNode(0, *(*nodes)[(iy+1)*nx+ix]);
+                            elem_p->setNode(1, *(*nodes)[iy*nx+ix]);
+                            elem_p->setNode(2, *(*mid_nodes)[iy*(nx-1)+ix]);
                             elem_p->setExternalID(id);
                             id++;
                         }
@@ -370,55 +367,15 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
             
         case FESystem::Mesh::TRI6:
         {
-            n_nodes=(2*nx-1)*(2*ny-1) + 4*(nx-1)*(ny-1);
-            n_elems=(nx-1)*(ny-1)*4;
+            FESystemAssert0(fmod(1.0*(nx-1),2.0) == 0.0, FESystem::Exception::InvalidValue);
+            FESystemAssert0(fmod(1.0*(ny-1),2.0) == 0.0, FESystem::Exception::InvalidValue);
+
+            FESystemUInt nx_elems = (nx-1)/2, ny_elems = (ny-1)/2;
+            
+            n_elems=(nx_elems-1)*(ny_elems-1)*4;
             n_elem_nodes = 6;
-            dx=x_length/(2*(nx-1));
-            dy=y_length/(2*(ny-1));
             
-            nodes.reset(mesh.createNodes(n_nodes, global_cs).release());
             elems.reset(mesh.createElements(n_elems, elem_type, local_cs_same_as_global).release());
-            
-            FESystemUInt id=0;
-            FESystem::Mesh::Node* node_p;
-            for (FESystemUInt iy=0; iy<(2*ny-1); iy++)
-                for (FESystemUInt ix=0; ix<(2*nx-1); ix++)
-                {
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx);
-                    node_p->setVal(1,iy*dy);
-                    node_p->setExternalID(id);
-                    id++;
-                }
-            for (FESystemUInt iy=0; iy<(ny-1); iy++)
-                for (FESystemUInt ix=0; ix<(nx-1); ix++)
-                {
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx*2+dx/2.0);
-                    node_p->setVal(1,iy*dy*2+dy/2.0);
-                    node_p->setExternalID(id);
-                    id++;
-                    
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx*2+dx/2.0+dx);
-                    node_p->setVal(1,iy*dy*2+dy/2.0);
-                    node_p->setExternalID(id);
-                    id++;
-                    
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx*2+dx/2.0+dx);
-                    node_p->setVal(1,iy*dy*2+dy/2.0+dy);
-                    node_p->setExternalID(id);
-                    id++;
-                    
-                    node_p = (*nodes)[id];
-                    node_p->setVal(0,ix*dx*2+dx/2.0);
-                    node_p->setVal(1,iy*dy*2+dy/2.0+dy);
-                    node_p->setExternalID(id);
-                    id++;
-                    
-                }
-            
             
             // set the location of individual nodes
             id=0;
@@ -427,49 +384,49 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                 for (FESystemUInt ix=0; ix<(nx-1); ix++)
                 {
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(1, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
+                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx_elems-1)+2*ix)]);
+                    elem_p->setNode(1, *(*nodes)[((2*iy)*(2*nx_elems-1)+2*(ix+1))]);
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx_elems-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[(2*iy*(2*nx-1)+2*ix+1)]);
-                    elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+1)]);
-                    elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+0)]);
-                    
-                    elem_p->setExternalID(id);
-                    id++;
-                    
-                    elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(1, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
-                    
-                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+2)]);
-                    elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+1)]);
+                    elem_p->setNode(3, *(*nodes)[(2*iy*(2*nx_elems-1)+2*ix+1)]);
+                    elem_p->setNode(4, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+1)]);
+                    elem_p->setNode(5, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+0)]);
                     
                     elem_p->setExternalID(id);
                     id++;
                     
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*(ix+1))]);
-                    elem_p->setNode(1, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
+                    elem_p->setNode(0, *(*nodes)[((2*iy)*(2*nx_elems-1)+2*(ix+1))]);
+                    elem_p->setNode(1, *(*nodes)[(2*(iy+1)*(2*nx_elems-1)+2*(ix+1))]);
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx_elems-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix+1)]);
-                    elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+3)]);
-                    elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+2)]);
+                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx_elems-1)+2*(ix+1))]);
+                    elem_p->setNode(4, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+2)]);
+                    elem_p->setNode(5, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+1)]);
                     
                     elem_p->setExternalID(id);
                     id++;
                     
                     elem_p = (*elems)[id];
-                    elem_p->setNode(0, *(*nodes)[(2*(iy+1)*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(1, *(*nodes)[(2*iy*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx-1)+(2*ix+1))]);
+                    elem_p->setNode(0, *(*nodes)[(2*(iy+1)*(2*nx_elems-1)+2*(ix+1))]);
+                    elem_p->setNode(1, *(*nodes)[(2*(iy+1)*(2*nx_elems-1)+2*ix)]);
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx_elems-1)+(2*ix+1))]);
                     
-                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx-1)+2*ix)]);
-                    elem_p->setNode(4, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+0)]);
-                    elem_p->setNode(5, *(*nodes)[((2*nx-1)*(2*ny-1)+4*(nx-1)*iy+4*ix+3)]);
+                    elem_p->setNode(3, *(*nodes)[(2*(iy+1)*(2*nx_elems-1)+2*ix+1)]);
+                    elem_p->setNode(4, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+3)]);
+                    elem_p->setNode(5, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+2)]);
+                    
+                    elem_p->setExternalID(id);
+                    id++;
+                    
+                    elem_p = (*elems)[id];
+                    elem_p->setNode(0, *(*nodes)[(2*(iy+1)*(2*nx_elems-1)+2*ix)]);
+                    elem_p->setNode(1, *(*nodes)[(2*iy*(2*nx_elems-1)+2*ix)]);
+                    elem_p->setNode(2, *(*nodes)[((2*iy+1)*(2*nx_elems-1)+(2*ix+1))]);
+                    
+                    elem_p->setNode(3, *(*nodes)[((2*iy+1)*(2*nx_elems-1)+2*ix)]);
+                    elem_p->setNode(4, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+0)]);
+                    elem_p->setNode(5, *(*nodes)[((2*nx_elems-1)*(2*ny-1)+4*(nx_elems-1)*iy+4*ix+3)]);
                     
                     elem_p->setExternalID(id);
                     id++;

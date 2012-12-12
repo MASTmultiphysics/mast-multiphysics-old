@@ -24,18 +24,129 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=200.0, temp = 200.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
-const FESystemDouble x_length = 8.0, y_length = 3.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
+const FESystemDouble  rho=1.05, u1=290.0, temp = 200.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
+const FESystemDouble x_length = 12.0, y_length = 3.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
 const FESystemDouble t_by_c = 0.12, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
 const FESystemUInt nx=240, ny=160, dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 20;
 const AnalysisCase case_type = AIRFOIL_BUMP;
 const FESystemBoolean if_fd = false;
+
 std::vector<std::vector<FESystemDouble> > dc_vals;
 
+FESystemUInt x_n_divs, y_n_divs;
+std::vector<FESystemDouble> x_div_locations, x_relative_mesh_size_in_div, x_points, y_div_locations, y_relative_mesh_size_in_div, y_points;
+std::vector<FESystemUInt> x_n_subdivs_in_div, y_n_subdivs_in_div;
 
 
+void initMeshParameters()
+{
+    switch (case_type)
+    {
+        case AIRFOIL_BUMP:
+        case NACA_AIRFOIL:
+        {
+            x_n_divs = 3;
+            x_div_locations.resize(x_n_divs+1);
+            x_relative_mesh_size_in_div.resize(x_n_divs+1);
+            x_n_subdivs_in_div.resize(x_n_divs);
+            
+            x_div_locations[0] = 0.0;
+            x_div_locations[1] = (x_length-chord)/2.0;
+            x_div_locations[2] = (x_length+chord)/2.0;
+            x_div_locations[3] = x_length;            
+            x_relative_mesh_size_in_div[0] = 30.0;
+            x_relative_mesh_size_in_div[1] = 1.0;
+            x_relative_mesh_size_in_div[2] = 1.0;
+            x_relative_mesh_size_in_div[3] = 30.0;
+            
+            x_n_subdivs_in_div[0] = 20;
+            x_n_subdivs_in_div[1] = 100;
+            x_n_subdivs_in_div[2] = 20;
+
+            y_n_divs = 1;
+            y_div_locations.resize(y_n_divs+1);
+            y_relative_mesh_size_in_div.resize(y_n_divs+1);
+            y_n_subdivs_in_div.resize(y_n_divs);
+            
+            y_div_locations[0] = 0.0;
+            y_div_locations[1] = y_length;
+            
+            y_relative_mesh_size_in_div[0] = 1.0;
+            y_relative_mesh_size_in_div[1] = 20.0;
+            
+            y_n_subdivs_in_div[0] = 40;
+        }
+            break;
+
+        case RAMP:
+        {
+            x_n_divs = 2;
+            x_div_locations.resize(x_n_divs+1);
+            x_relative_mesh_size_in_div.resize(x_n_divs+1);
+            x_n_subdivs_in_div.resize(x_n_divs);
+            
+            x_div_locations[0] = 0.0;
+            x_div_locations[1] = x_init;
+            x_div_locations[2] = x_length;
+            
+            x_relative_mesh_size_in_div[0] = 30.0;
+            x_relative_mesh_size_in_div[1] = 1.0;
+            x_relative_mesh_size_in_div[2] = 1.0;
+            
+            x_n_subdivs_in_div[0] = 20;
+            x_n_subdivs_in_div[1] = 100;
+            
+            y_n_divs = 1;
+            y_div_locations.resize(y_n_divs+1);
+            y_relative_mesh_size_in_div.resize(y_n_divs+1);
+            y_n_subdivs_in_div.resize(y_n_divs);
+            
+            y_div_locations[0] = 0.0;
+            y_div_locations[1] = y_length;
+            
+            y_relative_mesh_size_in_div[0] = 1.0;
+            y_relative_mesh_size_in_div[1] = 20.0;
+            
+            y_n_subdivs_in_div[0] = 40;
+        }
+            break;
+
+        case HYPERSONIC_CYLINDER:
+        {
+            x_n_divs = 1;
+            x_div_locations.resize(x_n_divs+1);
+            x_relative_mesh_size_in_div.resize(x_n_divs+1);
+            x_n_subdivs_in_div.resize(x_n_divs);
+            
+            x_div_locations[0] = 0.0;
+            x_div_locations[1] = x_length;
+            
+            x_relative_mesh_size_in_div[0] = 20.0;
+            x_relative_mesh_size_in_div[1] = 1.0;
+            
+            x_n_subdivs_in_div[0] = 60;
+            
+            y_n_divs = 1;
+            y_div_locations.resize(y_n_divs+1);
+            y_relative_mesh_size_in_div.resize(y_n_divs+1);
+            y_n_subdivs_in_div.resize(y_n_divs);
+            
+            y_div_locations[0] = 0.0;
+            y_div_locations[1] = y_length;
+            
+            y_relative_mesh_size_in_div[0] = 1.0;
+            y_relative_mesh_size_in_div[1] = 1.0;
+            
+            y_n_subdivs_in_div[0] = 80;
+        }
+            break;
+
+        default:
+            break;
+    }
+}
 
 
 void modifyMeshForCase(FESystem::Mesh::MeshBase& mesh)
@@ -837,7 +948,13 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystem::Geometry::Point origin(3);
     
     elem_type = FESystem::Mesh::QUAD4;
-    createPlaneMesh(elem_type, mesh, origin, nx, ny, x_length, y_length, n_elem_nodes, CROSS, true);
+    
+    initMeshParameters();
+    
+    distributePoints(x_n_divs, x_div_locations, x_n_subdivs_in_div, x_relative_mesh_size_in_div, x_points);
+    distributePoints(y_n_divs, y_div_locations, y_n_subdivs_in_div, y_relative_mesh_size_in_div, y_points);
+    
+    createPlaneMesh(elem_type, mesh, origin, x_points, y_points, n_elem_nodes, CROSS, true);
     
     n_elem_dofs = 6*n_elem_nodes;
     

@@ -80,12 +80,14 @@
 
 enum MeshType{RIGHT_DIAGONAL, LEFT_DIAGONAL, CROSS, INVALID_MESH};
 
+void distributePoints(const FESystemUInt n_divs, const std::vector<FESystemDouble>& div_locations, const std::vector<FESystemUInt>& n_subdivs_in_div, const std::vector<FESystemDouble>& relative_mesh_size_at_div, std::vector<FESystemDouble>& points);
+
 void createLineMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
-                    FESystemUInt nx, FESystemDouble x_length, FESystemUInt& n_elem_nodes, MeshType m_type, FESystemBoolean local_cs_same_as_global);
+                    const std::vector<FESystemDouble>& points, FESystemUInt& n_elem_nodes, MeshType m_type, FESystemBoolean local_cs_same_as_global);
 
 void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::MeshBase& mesh, FESystem::Geometry::Point& origin,
-                       FESystemUInt nx, FESystemUInt ny, FESystemDouble x_length, FESystemDouble y_length, FESystemUInt& n_elem_nodes,
-                       MeshType m_type, FESystemBoolean local_cs_same_as_global);
+                     const std::vector<FESystemDouble>& x_points, const std::vector<FESystemDouble>& y_points, FESystemUInt& n_elem_nodes,
+                     MeshType m_type, FESystemBoolean local_cs_same_as_global);
 
 void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
                                      const FESystem::Mesh::MeshBase& mesh, FESystem::Numerics::VectorBase<FESystemDouble>& global_sol,

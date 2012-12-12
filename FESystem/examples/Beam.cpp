@@ -189,7 +189,27 @@ int beam_analysis_driver(int argc, char * const argv[])
     
     nx=15; x_length = 10.8; dim = 1; n_modes = 5;
     elem_type = FESystem::Mesh::EDGE2;
-    createLineMesh(elem_type, mesh, origin, nx, x_length, n_elem_nodes, INVALID_MESH, false);
+
+    FESystemUInt x_n_divs;
+    std::vector<FESystemDouble> x_div_locations, x_relative_mesh_size_in_div, x_points;
+    std::vector<FESystemUInt> x_n_subdivs_in_div;
+    
+    x_n_divs = 1;
+    x_div_locations.resize(x_n_divs+1);
+    x_relative_mesh_size_in_div.resize(x_n_divs+1);
+    x_n_subdivs_in_div.resize(x_n_divs);
+    
+    x_div_locations[0] = 0.0;
+    x_div_locations[1] = x_length;
+    
+    x_relative_mesh_size_in_div[0] = 1.0;
+    x_relative_mesh_size_in_div[1] = 1.0;
+    
+    x_n_subdivs_in_div[0] = 60;
+    
+    distributePoints(x_n_divs, x_div_locations, x_n_subdivs_in_div, x_relative_mesh_size_in_div, x_points);
+    
+    createLineMesh(elem_type, mesh, origin, x_points, n_elem_nodes, INVALID_MESH, true);
     
     // set the location of individual nodes
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
