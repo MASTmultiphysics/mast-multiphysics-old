@@ -24,13 +24,13 @@ enum AnalysisCase
 
 
 
-const FESystemDouble  rho=1.05, u1=290.0, temp = 200.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, p = R*rho*temp, time_step=1.0e-3, final_t=1.0e6;
-const FESystemDouble x_length = 12.0, y_length = 3.0, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
-const FESystemDouble t_by_c = 0.12, chord = 0.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
+const FESystemDouble  rho=1.05, u1=277.832, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
+const FESystemDouble x_length = 22.0, y_length = 8.00, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
+const FESystemDouble t_by_c = 0.12, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt nx=240, ny=160, dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 20;
-const AnalysisCase case_type = AIRFOIL_BUMP;
+const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 150;
+const AnalysisCase case_type = NACA_AIRFOIL;
 const FESystemBoolean if_fd = false;
 
 std::vector<std::vector<FESystemDouble> > dc_vals;
@@ -56,14 +56,14 @@ void initMeshParameters()
             x_div_locations[1] = (x_length-chord)/2.0;
             x_div_locations[2] = (x_length+chord)/2.0;
             x_div_locations[3] = x_length;            
-            x_relative_mesh_size_in_div[0] = 30.0;
+            x_relative_mesh_size_in_div[0] = 100.0;
             x_relative_mesh_size_in_div[1] = 1.0;
-            x_relative_mesh_size_in_div[2] = 1.0;
-            x_relative_mesh_size_in_div[3] = 30.0;
+            x_relative_mesh_size_in_div[2] = 2.0;
+            x_relative_mesh_size_in_div[3] = 100.0;
             
-            x_n_subdivs_in_div[0] = 20;
-            x_n_subdivs_in_div[1] = 100;
-            x_n_subdivs_in_div[2] = 20;
+            x_n_subdivs_in_div[0] = 60;
+            x_n_subdivs_in_div[1] = 80;
+            x_n_subdivs_in_div[2] = 30;
 
             y_n_divs = 1;
             y_div_locations.resize(y_n_divs+1);
@@ -74,9 +74,9 @@ void initMeshParameters()
             y_div_locations[1] = y_length;
             
             y_relative_mesh_size_in_div[0] = 1.0;
-            y_relative_mesh_size_in_div[1] = 20.0;
+            y_relative_mesh_size_in_div[1] = 50.0;
             
-            y_n_subdivs_in_div[0] = 40;
+            y_n_subdivs_in_div[0] = 50;
         }
             break;
 
@@ -109,7 +109,7 @@ void initMeshParameters()
             y_relative_mesh_size_in_div[0] = 1.0;
             y_relative_mesh_size_in_div[1] = 20.0;
             
-            y_n_subdivs_in_div[0] = 40;
+            y_n_subdivs_in_div[0] = 60;
         }
             break;
 
@@ -218,7 +218,7 @@ void modifyMeshForCase(FESystem::Mesh::MeshBase& mesh)
                         
                         eta = (x_val-x0)/chord;
                         
-                        y_val += (1.0-y_val/y_length)*thickness/0.2*(.2969*sqrt(eta)-.1260*eta-.3516*eta*eta+.2843*pow(eta,3)-.1015*pow(eta,4));
+                        y_val += (1.0-y_val/y_length)*2.0*thickness/0.2*(.2969*sqrt(eta)-.1260*eta-.3516*eta*eta+.2843*pow(eta,3)-.1015*pow(eta,4));
                         
                         (*it)->setVal(1, y_val);
                     }
@@ -733,7 +733,7 @@ public:
         {
             for (FESystemUInt j=0; j<n_vars; j++)
                 tmp_vec.setVal(j, sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
-            fluid_elem.calculatePrimitiveVariableValues(tmp_vec, p, tmp_vec2, press, entropy, mach, cp);
+            fluid_elem.calculatePrimitiveVariableValues(tmp_vec, q0, p, tmp_vec2, press, entropy, mach, cp);
             for (FESystemUInt j=0; j<n_vars; j++)
                 primitive.setVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0], tmp_vec2.getVal(j));
             additional.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], press);
@@ -855,7 +855,7 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     std::vector<FESystemBoolean> ode_order_include(1); ode_order_include[0] = true;
     std::vector<FESystemDouble> int_constants(1); int_constants[0]=1.0;
     transient_solver.initialize(1, dof_map.getNDofs(), int_constants);
-    transient_solver.enableAdaptiveTimeStepping(4, 1.2, 1.0e3);
+    transient_solver.enableAdaptiveTimeStepping(4, 0.4, 1.0e3);
     transient_solver.setConvergenceTolerance(nonlin_tol, max_nonlin_iters);
     transient_solver.setActiveJacobianTerm(ode_order_include);
     transient_solver.setMassMatrix(false, &mass);

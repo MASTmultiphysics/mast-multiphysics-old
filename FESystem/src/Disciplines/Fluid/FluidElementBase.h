@@ -67,7 +67,8 @@ namespace FESystem
             
             void calculateTangentMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dx, FESystem::Numerics::MatrixBase<FESystemDouble>& dres_dxdot);
             
-            void calculatePrimitiveVariableValues(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, const FESystemDouble p0, FESystem::Numerics::VectorBase<FESystemDouble>& primitive_sol, FESystemDouble& press, FESystemDouble& entropy, FESystemDouble& mach, FESystemDouble& cp);
+            void calculatePrimitiveVariableValues(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, const FESystemDouble q0, const FESystemDouble p0,
+                                                  FESystem::Numerics::VectorBase<FESystemDouble>& primitive_sol, FESystemDouble& press, FESystemDouble& entropy, FESystemDouble& mach, FESystemDouble& cp);
             
         protected:
             
