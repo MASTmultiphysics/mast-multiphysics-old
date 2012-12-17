@@ -274,15 +274,13 @@ FESystem::Fluid::FluidElementBase::calculateMixedBoundaryCondition(const FESyste
 
 
 void
-FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& U_vec,
-                                                                                   FESystem::Numerics::MatrixBase<FESystemDouble>& bc_mat)
+FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, FESystem::Numerics::MatrixBase<FESystemDouble>& bc_mat)
 {
     FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
     FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
     
     const std::pair<FESystemUInt, FESystemUInt> bc_mat_s = bc_mat.getSize();
     
-    FESystemAssert2(U_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, U_vec.getSize(), n2);
     FESystemAssert4((bc_mat_s.first == n2) && (bc_mat_s.second == n2), FESystem::Numerics::MatrixSizeMismatch, bc_mat_s.first, bc_mat_s.second, n2, n2);
     
     
@@ -327,53 +325,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryConditi
     }
 }
 
-
-
-
-void
-FESystem::Fluid::FluidElementBase::calculateFluxBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& mass_flux,
-                                                                  const FESystem::Numerics::MatrixBase<FESystemDouble>& momentum_flux_tensor, const FESystem::Numerics::VectorBase<FESystemDouble>& energy_flux,
-                                                                  FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
-{
-    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
-    std::pair<FESystemUInt, FESystemUInt> s1 = momentum_flux_tensor.getSize();
-    
-    FESystemAssert2(mass_flux.getSize() == dim, FESystem::Exception::DimensionsDoNotMatch, mass_flux.getSize(), dim);
-    FESystemAssert2(energy_flux.getSize() == dim, FESystem::Exception::DimensionsDoNotMatch, energy_flux.getSize(), dim);
-    FESystemAssert4((s1.first == dim) && (s1.second == dim), FESystem::Numerics::MatrixSizeMismatch, s1.first, s1.second, dim, dim);
-    
-    FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
-    
-    
-    FESystem::Numerics::LocalVector<FESystemDouble>  Nvec, normal, normal_local, tmp_vec1;
-    Nvec.resize(n); normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(dim);
-    
-    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
-    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
-    
-    bc_vec.zero();
-    
-    for (FESystemUInt i=0; i<q_pts.size(); i++)
-    {
-        this->jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
-        
-        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
-        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-        this->finite_element->getShapeFunctionForBoundary(b_id, *(q_pts[i]), Nvec);
-        
-        // add the mass flux
-        bc_vec.addSubVectorVals(0, n-1, 0, n-1, -q_weight[i]*jac*mass_flux.dotProduct(normal_local), Nvec);
-        
-        // next, add the momentum flux
-        momentum_flux_tensor.rightVectorMultiply(normal_local, tmp_vec1);
-        for (FESystemUInt ii = 0; ii<dim; ii++)
-            bc_vec.addSubVectorVals(n*(ii+1), n*(ii+2)-1, 0, n-1, -q_weight[i]*jac*tmp_vec1.getVal(ii), Nvec);
-        
-        // next, add the energy flux
-        bc_vec.addSubVectorVals(n*(dim+1), n2-1, 0, n-1, -q_weight[i]*jac*energy_flux.dotProduct(normal_local), Nvec);
-    }
-}
 
 
 
@@ -458,81 +409,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForSolidWallFluxBoundar
 }
 
 
-
-
-
-void
-FESystem::Fluid::FluidElementBase::calculateFluxBoundaryConditionUsingLocalSolution(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec)
-{
-    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
-    
-    FESystemAssert2(bc_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, bc_vec.getSize(), n2);
-    
-    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local, tmp_vec1, flux;
-    normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n2); flux.resize(n1);
-    
-    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
-    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
-    
-    bc_vec.zero();
-    
-    for (FESystemUInt i=0; i<q_pts.size(); i++)
-    {
-        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
-        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-        
-        this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
-        
-        // now calculate the flux
-        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
-        {
-            this->calculateAdvectionFlux(i_dim, flux); // F^adv_i
-            this->B_mat->leftVectorMultiply(flux, tmp_vec1);
-            bc_vec.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_vec1);
-        }
-    }
-}
-
-
-
-
-void
-FESystem::Fluid::FluidElementBase::calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, FESystem::Numerics::MatrixBase<FESystemDouble>& dfdx)
-{
-    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
-    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
-    
-    const std::pair<FESystemUInt, FESystemUInt> s_mat1 = dfdx.getSize();
-    
-    FESystemAssert4((s_mat1.first == n2) && (s_mat1.first == n2), FESystem::Numerics::MatrixSizeMismatch, s_mat1.first, s_mat1.first, n2, n2);
-    
-    FESystem::Numerics::LocalVector<FESystemDouble>  normal, normal_local;
-    FESystem::Numerics::DenseMatrix<FESystemDouble>  tmp_mat_n1n2, tmp_mat2_n2n2;
-    normal.resize(3); normal_local.resize(dim);
-    tmp_mat_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    
-    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
-    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
-    
-    dfdx.zero();
-    
-    for (FESystemUInt i=0; i<q_pts.size(); i++)
-    {
-        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
-        normal_local.setSubVectorVals(0, dim-1, 0, dim-1, normal);
-        
-        this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
-        
-        // now calculate the flux
-        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
-        {
-            this->Ai_advection[i_dim]->matrixRightMultiply(1.0, *(this->B_mat), tmp_mat_n1n2);
-            this->B_mat->matrixTransposeRightMultiply(1.0, tmp_mat_n1n2, tmp_mat2_n2n2);
-            dfdx.add(-q_weight[i]*jac*normal_local.getVal(i_dim), tmp_mat2_n2n2);
-        }
-    }
-}
 
 
 

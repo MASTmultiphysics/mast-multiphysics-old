@@ -378,26 +378,23 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
         {
             if (elem.checkForTag(0)) // left edge
             {
-                //fluid_elem.calculateFluxBoundaryCondition(3, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, tmp_vec);
                 fluid_elem.calculateMixedBoundaryCondition(3, q_boundary, sol_inf, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
                 
                 if (if_calculate_jacobian)
                 {
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(3, q_boundary, sol_inf, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(3, q_boundary, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
             if (elem.checkForTag(1)) // right edge
             {
-                //fluid_elem.calculateFluxBoundaryConditionUsingLocalSolution(1, q_boundary, tmp_vec);
                 fluid_elem.calculateMixedBoundaryCondition(1, q_boundary, sol_inf, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
 
                 if (if_calculate_jacobian)
                 {
-                    //fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(1, q_boundary, tmp_mat);
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(1, q_boundary, sol_inf, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(1, q_boundary, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
@@ -422,7 +419,7 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
                 if (if_calculate_jacobian)
                 {
                     //fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(2, q_boundary, tmp_mat);
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
@@ -433,8 +430,14 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
         {
             if (elem.checkForTag(0)) // inlet
             {
-                fluid_elem.calculateFluxBoundaryCondition(3, q_boundary, mass_flux, momentum_flux_tensor, energy_flux, tmp_vec);
+                fluid_elem.calculateMixedBoundaryCondition(3, q_boundary, sol_inf, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
+                
+                if (if_calculate_jacobian)
+                {
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(3, q_boundary, tmp_mat);
+                    elem_mat.add(1.0, tmp_mat);
+                }
             }
             if (elem.checkForTag(1)) // solid wall
             {
@@ -450,23 +453,23 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
             // set the flux value for the lower and upper boundary
             if (elem.checkForTag(2)) // outlet
             {
-                fluid_elem.calculateFluxBoundaryConditionUsingLocalSolution(0, q_boundary, tmp_vec);
+                fluid_elem.calculateMixedBoundaryCondition(0, q_boundary, sol_inf, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
                 
                 if (if_calculate_jacobian)
                 {
-                    fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(0, q_boundary, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(0, q_boundary, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
             if (elem.checkForTag(3)) // outlet
             {
-                fluid_elem.calculateFluxBoundaryConditionUsingLocalSolution(2, q_boundary, tmp_vec);
+                fluid_elem.calculateMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
                 
                 if (if_calculate_jacobian)
                 {
-                    fluid_elem.calculateTangentMatrixForFluxBoundaryConditionUsingLocalSolution(2, q_boundary, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
