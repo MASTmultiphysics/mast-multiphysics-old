@@ -42,7 +42,9 @@ namespace FESystem
             virtual void resize(FESystemUInt i) = 0; 
             
             virtual void copyVector (const VectorBase<ValType>& t)=0;
-            
+
+            virtual void copyRealVector (const VectorBase<typename RealOperationType(ValType)>& t)=0;
+
             virtual void copyVectorVals(const VectorBase<ValType>& t)=0;
             
             virtual void addSubVectorVals(FESystemUInt row1, FESystemUInt row2, 

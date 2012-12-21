@@ -29,7 +29,7 @@ const FESystemDouble x_length = 22.0, y_length = 8.00, nonlin_tol = 1.0e-6, fd_d
 const FESystemDouble t_by_c = 0.12, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 150;
+const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 120;
 const AnalysisCase case_type = NACA_AIRFOIL;
 const FESystemBoolean if_fd = false;
 
@@ -61,9 +61,9 @@ void initMeshParameters()
             x_relative_mesh_size_in_div[2] = 2.0;
             x_relative_mesh_size_in_div[3] = 100.0;
             
-            x_n_subdivs_in_div[0] = 60;
-            x_n_subdivs_in_div[1] = 80;
-            x_n_subdivs_in_div[2] = 30;
+            x_n_subdivs_in_div[0] = 30;
+            x_n_subdivs_in_div[1] = 40;
+            x_n_subdivs_in_div[2] = 15;
 
             y_n_divs = 1;
             y_div_locations.resize(y_n_divs+1);
@@ -76,7 +76,7 @@ void initMeshParameters()
             y_relative_mesh_size_in_div[0] = 1.0;
             y_relative_mesh_size_in_div[1] = 50.0;
             
-            y_n_subdivs_in_div[0] = 50;
+            y_n_subdivs_in_div[0] = 30;
         }
             break;
 
@@ -261,10 +261,6 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
             {
                 if ((nodes[i]->getVal(0) == 0.0)) // left boundary nodes
                 {
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // rho
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // rho u1
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // rho u2
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // rho e
                     const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
                     std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
                     for ( ; it != end; it++)
@@ -288,6 +284,13 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
                     for ( ; it != end; it++)
                         if (!(*it)->checkForTag(2))
                             (*it)->setTag(2);
+                    
+                    // set tag 4 for airfoil surface
+                    it = e_set.begin(), end = e_set.end();
+                    if ((nodes[i]->getVal(0)>x0) && (nodes[i]->getVal(0)<x1))
+                        for ( ; it != end; it++)
+                            if (!(*it)->checkForTag(4))
+                                (*it)->setTag(4);
                 }
                 
                 
@@ -309,10 +312,6 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
             {
                 if ((nodes[i]->getVal(0) == 0.0)) // inlet
                 {
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0]); // rho
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0]); // rho u1
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0]); // rho u2
-                    bc_dofs.insert(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0]); // rho e
                     const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
                     std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
                     for ( ; it != end; it++)
@@ -685,6 +684,195 @@ protected:
 
 
 
+class EvaluateLinearizedForce
+{
+public:
+    EvaluateLinearizedForce(const std::vector<FESystem::Mesh::ElemBase*>& e, FESystemDouble t_step,
+                            FESystemUInt n_nd, FESystemUInt n_dof,
+                            const FESystem::Base::DegreeOfFreedomMap& dof,
+                            const FESystem::Quadrature::QuadratureBase& q,
+                            const FESystem::Quadrature::QuadratureBase& q_b,
+                            const FESystem::Numerics::VectorBase<FESystemDouble>& s,
+                            const FESystem::Numerics::VectorBase<FESystemDouble>& v,
+                            const FESystem::Numerics::VectorBase<FESystemDouble>& str_vel,
+                            std::vector<std::vector<FESystemDouble> >& dc,
+                            FESystem::Numerics::VectorBase<FESystemDouble>& f):
+    elems(e),
+    n_elem_nodes(n_nd),
+    n_elem_dofs(n_dof),
+    dt(t_step),
+    dof_map(dof),
+    q_rule(q),
+    q_boundary(q_b),
+    sol(s),
+    vel(v),
+    structural_vel(str_vel),
+    elem_dc_vals(dc),
+    force_vec(f)
+    {
+    }
+    
+    
+    void operator() (const tbb::blocked_range<FESystemUInt>& r) const
+    {
+        this->assemble(r.begin(), r.end());
+    }
+    
+    
+    void assembleAll() const
+    {
+        this->assemble(0, elems.size());
+    }
+    
+    
+    void assemble(FESystemUInt e1, FESystemUInt e2) const
+    {
+        FESystem::Numerics::LocalVector<FESystemDouble> elem_vec, elem_sol, elem_vel, motion_vec;
+        elem_vec.resize(n_elem_dofs); elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); motion_vec.resize(dim*n_elem_nodes);
+        
+        FESystem::FiniteElement::FELagrange fe;
+        FESystem::Fluid::FluidElementBase fluid_elem;
+        
+        motion_vec.zero();
+        for (FESystemUInt i=0; i<n_elem_nodes; i++)
+            motion_vec.setVal(n_elem_nodes+i, 1.0);
+        
+        for (FESystemUInt i=e1; i!=e2; i++)
+        {
+            fe.clear();
+            fe.reinit(*(elems[i]));
+            elem_vec.zero();
+            
+            dof_map.getFromGlobalVector(*(elems[i]), sol, elem_sol);
+            dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
+            
+            fluid_elem.clear();
+            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, false, elem_dc_vals[i]);
+            
+            
+            if (elems[i]->checkForTag(4))
+            {
+                fluid_elem.calculateLinearizedForcingFunctionForBoundaryMotion(0, q_boundary, motion_vec, elem_vec);
+                
+                {
+                    tbb::mutex::scoped_lock my_lock(assembly_mutex);
+                    dof_map.addToGlobalVector(*(elems[i]), elem_vec, force_vec);
+                }
+            }
+        }
+    }
+    
+    
+protected:
+    
+    const std::vector<FESystem::Mesh::ElemBase*>& elems;
+    const FESystemUInt n_elem_nodes, n_elem_dofs;
+    const FESystemDouble dt;
+    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::Quadrature::QuadratureBase& q_rule;
+    const FESystem::Quadrature::QuadratureBase& q_boundary;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& structural_vel;
+    std::vector<std::vector<FESystemDouble> >& elem_dc_vals;
+    FESystem::Numerics::VectorBase<FESystemDouble>& force_vec;
+};
+
+
+
+class EvaluateComplexCpPerturbation
+{
+public:
+    EvaluateComplexCpPerturbation(const std::vector<FESystem::Mesh::ElemBase*>& e,
+                                  const std::vector<FESystem::Mesh::Node*>& nd,
+                                  FESystemDouble t_step,
+                                  FESystemUInt n_nd, FESystemUInt n_dof,
+                                  const FESystem::Base::DegreeOfFreedomMap& dof,
+                                  const FESystem::Quadrature::QuadratureBase& q,
+                                  const FESystem::Quadrature::QuadratureBase& q_b,
+                                  const FESystem::Numerics::VectorBase<FESystemDouble>& s,
+                                  const FESystem::Numerics::VectorBase<FESystemDouble>& v,
+                                  std::vector<std::vector<FESystemDouble> >& dc,
+                                  const FESystem::Numerics::VectorBase<FESystemComplexDouble>& cmplx_sol,
+                                  FESystem::Numerics::VectorBase<FESystemDouble>& additional_vals):
+    elems(e),
+    nodes(nd),
+    n_elem_nodes(n_nd),
+    n_elem_dofs(n_dof),
+    dt(t_step),
+    dof_map(dof),
+    q_rule(q),
+    q_boundary(q_b),
+    sol(s),
+    vel(v),
+    elem_dc_vals(dc),
+    complex_sol(cmplx_sol),
+    cp_vals(additional_vals)
+    {
+    }
+    
+    void operator() (const tbb::blocked_range<FESystemUInt>& r) const
+    {
+        this->assemble(r.begin(), r.end());
+    }
+    
+    
+    void assembleAll() const
+    {
+        this->assemble(0, elems.size());
+    }
+    
+    void assemble(const FESystemUInt n1, const FESystemUInt n2) const
+    {
+        FESystem::Numerics::LocalVector<FESystemDouble> elem_sol, elem_vel, tmp_vec;
+        FESystem::Numerics::LocalVector<FESystemComplexDouble> tmp_vec_complex;
+        elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); tmp_vec.resize(n_vars); tmp_vec_complex.resize(n_vars);
+        
+        FESystem::FiniteElement::FELagrange fe;
+        FESystem::Fluid::FluidElementBase fluid_elem;
+        
+        fe.clear();
+        fe.reinit(*(elems[0]));
+        dof_map.getFromGlobalVector(*(elems[0]), sol, elem_sol);
+        dof_map.getFromGlobalVector(*(elems[0]), vel, elem_vel);
+        fluid_elem.clear();
+        fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, false, elem_dc_vals[0]);
+        
+        FESystemComplexDouble complex_cp;
+        
+        for (FESystemUInt i=n1; i!=n2; i++)
+        {
+            for (FESystemUInt j=0; j<n_vars; j++)
+                tmp_vec.setVal(j, sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
+            for (FESystemUInt j=0; j<n_vars; j++)
+                tmp_vec_complex.setVal(j, complex_sol.getVal(nodes[i]->getDegreeOfFreedomUnit(j).global_dof_id[0]));
+            
+            fluid_elem.calculateComplexCpPerturbation(tmp_vec, tmp_vec_complex, q0, complex_cp);
+            
+            cp_vals.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], FESystem::Base::real<FESystemComplexDouble, FESystemDouble>(complex_cp));
+            cp_vals.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], FESystem::Base::imag<FESystemComplexDouble, FESystemDouble>(complex_cp));
+        }
+    }
+    
+    
+protected:
+    
+    const std::vector<FESystem::Mesh::ElemBase*>& elems;
+    const std::vector<FESystem::Mesh::Node*>& nodes;
+    const FESystemUInt n_elem_nodes, n_elem_dofs;
+    const FESystemDouble dt;
+    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::Quadrature::QuadratureBase& q_rule;
+    const FESystem::Quadrature::QuadratureBase& q_boundary;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
+    const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
+    std::vector<std::vector<FESystemDouble> >& elem_dc_vals;
+    const FESystem::Numerics::VectorBase<FESystemComplexDouble>& complex_sol;
+    FESystem::Numerics::VectorBase<FESystemDouble>& cp_vals;
+};
+
+
+
 class EvaluatePrimitiveVariables
 {
 public:
@@ -831,7 +1019,8 @@ void calculateEulerQuantities(FESystem::Mesh::ElementType elem_type, FESystemUIn
 
 
 
-void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map)
+void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                            FESystem::Numerics::VectorBase<FESystemDouble>& final_sol)
 {
     FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
@@ -876,9 +1065,15 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
     
     FESystemUInt n_skip=0, n_count=0, n_write=0;
     FESystem::TransientSolvers::TransientSolverCallBack call_back;
-    while (transient_solver.getCurrentTime()<final_t)
+    FESystemBoolean if_converged = false;
+    
+    while (!if_converged)
     {
         call_back = transient_solver.incrementTimeStep();
+        
+        if (transient_solver.getCurrentTime()>final_t)
+            if_converged = true;
+        
         switch (call_back)
         {
             case FESystem::TransientSolvers::TIME_STEP_CONVERGED:
@@ -903,6 +1098,9 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 }
                 else
                     n_count++;
+                
+                if (transient_solver.getCurrentStateVelocityVector().getLInfNorm() <= 1.0e-10)
+                    if_converged = true;
             }
                 break;
                 
@@ -933,6 +1131,92 @@ void transientEulerAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_t
                 break;
         }
     }
+    
+    // return the final vector to the calling funciton
+    final_sol.copyVector(transient_solver.getCurrentStateVector());
+}
+
+
+
+
+void frequencyDomainAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                             const FESystem::Numerics::VectorBase<FESystemDouble>& final_sol)
+{
+    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemComplexDouble> linear_solver;
+    const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
+    
+    FESystem::Numerics::SparseMatrix<FESystemDouble> stiff_mat, mass;
+    FESystem::Numerics::LocalVector<FESystemDouble>  vel, f_vec, res, dummy_vec, additional_sol;
+    FESystem::Numerics::SparseMatrix<FESystemComplexDouble> complex_mat, tmp_complex_mat;
+    FESystem::Numerics::LocalVector<FESystemComplexDouble> complex_f_vec, complex_sol;
+    
+    vel.resize(dof_map.getNDofs()); f_vec.resize(dof_map.getNDofs()); res.resize(dof_map.getNDofs()); additional_sol.resize(dof_map.getNDofs());
+    stiff_mat.resize(dof_map.getSparsityPattern());  mass.resize(dof_map.getSparsityPattern());
+    
+    complex_f_vec.resize(dof_map.getNDofs()); complex_sol.resize(dof_map.getNDofs());
+    complex_mat.resize(dof_map.getSparsityPattern()); tmp_complex_mat.resize(dof_map.getSparsityPattern());
+    
+
+    
+    FESystemUInt n_elem_dofs;
+    
+    n_elem_dofs = n_vars*n_elem_nodes;
+    
+    // prepare the quadrature rule and FE for the
+    FESystem::Quadrature::TrapezoidQuadrature q_rule, q_boundary;
+    
+    switch (elem_type)
+    {
+        case FESystem::Mesh::QUAD4:
+        case FESystem::Mesh::TRI3:
+            q_rule.init(2, 1);  // bending quadrature is higher than the shear quadrature for reduced integrations
+            q_boundary.init(1,1);
+            break;
+            
+        case FESystem::Mesh::QUAD9:
+        case FESystem::Mesh::TRI6:
+            q_rule.init(2, 4);
+            q_boundary.init(1, 4);
+            break;
+            
+        default:
+            FESystemAssert0(false, FESystem::Exception::EnumNotHandled);
+    }
+    
+    additional_sol.zero();
+    
+    const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
+    
+    // calculate the Jacobian and mass matrices
+    calculateEulerQuantities(elem_type, n_elem_nodes, dof_map, mesh, 1.0e3, 1000, final_sol, vel, true, res, stiff_mat, mass, additional_sol, additional_sol);
+    
+    // calculate the force vector
+    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
+                      EvaluateLinearizedForce(elems, 1.0e3, n_elem_nodes, n_elem_dofs, dof_map, q_rule, q_boundary, final_sol, vel, dummy_vec, dc_vals, f_vec));
+    
+    FESystemDouble omega = 50.0;
+    complex_mat.copyRealMatrix(mass); complex_mat.scale(FESystemComplexDouble(0.0,1.0)*omega);
+    tmp_complex_mat.copyRealMatrix(stiff_mat);
+    complex_mat.add(FESystemComplexDouble(-1.0,0.0), tmp_complex_mat);
+    
+    complex_f_vec.copyRealVector(f_vec); complex_f_vec.scale(FESystemComplexDouble(0.0, 1.0)*omega);
+    complex_sol.zero();
+    
+    linear_solver.setSystemMatrix(complex_mat, false);
+    linear_solver.solve(complex_f_vec, complex_sol);
+
+    // calculate the complex cp values
+    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),
+                      EvaluateComplexCpPerturbation(elems, nodes, 1.0e3, n_elem_nodes, n_elem_dofs, dof_map, q_rule, q_boundary, final_sol, vel, dc_vals, complex_sol, additional_sol));
+    
+    FESystem::OutputProcessor::VtkOutputProcessor output;
+    std::fstream output_file;
+    std::vector<FESystemUInt> vars(4); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; //vars[4] = 4; // write all solutions
+    output_file.open("perturb_sol.vtk",std::fstream::out);
+    output.writeMesh(output_file, mesh, dof_map);
+    output.writeSolution(output_file, "Sol", mesh, dof_map, vars, final_sol);
+    output.writeSolution(output_file, "Perturbed", mesh, dof_map, vars, additional_sol);
+    output_file.close();
 }
 
 
@@ -983,27 +1267,17 @@ int euler_analysis_driver(int argc, char * const argv[])
     std::set<FESystemUInt> bc_dofs;
     setBoundaryConditionTag(mesh, bc_dofs);
     
-    // now create the vector of ids that do not have bcs
-    std::vector<FESystemUInt> nonbc_dofs;
-//    for (FESystemUInt i=0; i<dof_map.getNDofs(); i++)
-//        if (!bc_dofs.count(i))
-//            nonbc_dofs.push_back(i);
-    
     // modify mesh after application of boundary condition
     modifyMeshForCase(mesh);
+    
+    FESystem::Numerics::LocalVector<FESystemDouble> sol_vec;
+    sol_vec.resize(dof_map.getNDofs());
+    
+    // transient solution
+    transientEulerAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map, sol_vec);
 
-    
-//    // prepare a map of the old to new ID
-//    std::vector<FESystemUInt>::const_iterator dof_it=nonbc_dofs.begin(), dof_end=nonbc_dofs.end();
-//    std::map<FESystemUInt, FESystemUInt> old_to_new_id_map;
-//    FESystemUInt n=0;
-//    for ( ; dof_it!=dof_end; dof_it++)
-//        old_to_new_id_map.insert(std::map<FESystemUInt, FESystemUInt>::value_type(*dof_it, n++));
-    
-//    FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
-//    dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
-    
-    transientEulerAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map);
+    // frequency domain solution
+    frequencyDomainAnalysis(dim, elem_type, n_elem_nodes, mesh, dof_map, sol_vec);
     
     //exit(1);
     

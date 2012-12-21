@@ -521,14 +521,6 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
             // discontinuity capturing term
             this->B_mat_dxi[i_dim]->matrixTransposeRightMultiply(1.0, *(this->B_mat_dxi[i_dim]), tmp_mat1_n2n2);
             dres_dx.add(-q_weight[i]*jac*diff_val, tmp_mat1_n2n2);
-            
-            //            // discontinuity capturing term Jac due to coefficient dependence on solution
-            //            this->B_mat_dxi[i_dim]->rightVectorMultiply(*(this->solution), flux);
-            //            this->B_mat_dxi[i_dim]->leftVectorMultiply(flux, tmp_vec2_n2);
-            //            for (FESystemUInt ii=0; ii<n2; ii++)
-            //                for (FESystemUInt jj=0; jj<n2; jj++)
-            //                    tmp_mat1_n2n2.setVal(ii, jj, tmp_vec2_n2.getVal(ii)*diff_sens.getVal(jj));
-            //            dres_dx.add(-q_weight[i]*jac, tmp_mat1_n2n2);
         }
         
         // Lease square contribution of flux gradient
@@ -537,6 +529,64 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrix(FESystem::Numerics::Ma
     }
 }
 
+
+
+
+void FESystem::Fluid::FluidElementBase::calculateLinearizedForcingFunctionForBoundaryMotion(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
+                                                                                            const FESystem::Numerics::VectorBase<FESystemDouble>& motion_vec, FESystem::Numerics::VectorBase<FESystemDouble>& f_vec)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n=this->geometric_elem->getNNodes(), n1 = 2 + dim, n2 = n1*n;
+    
+    FESystemAssert2(motion_vec.getSize() == dim*n, FESystem::Exception::DimensionsDoNotMatch, motion_vec.getSize(), dim*n);
+    FESystemAssert2(f_vec.getSize() == n2, FESystem::Exception::DimensionsDoNotMatch, f_vec.getSize(), n2);
+    
+    FESystem::Numerics::LocalVector<FESystemDouble> flux_vec, tmp_vec1, tmp_vec2_n2, Bstr, normal;
+    Bstr.resize(dim*n); tmp_vec1.resize(dim); tmp_vec2_n2.resize(n2); flux_vec.resize(n1); normal.resize(3);
+    
+    const std::vector<FESystem::Geometry::Point*>& q_pts = q_boundary.getQuadraturePoints();
+    const std::vector<FESystemDouble>& q_weight = q_boundary.getQuadraturePointWeights();
+    
+    FESystemDouble val=0.0;
+    
+    f_vec.zero();
+    
+    for (FESystemUInt i=0; i<q_pts.size(); i++)
+    {
+        this->jac = this->finite_element->getJacobianValueForBoundary(b_id, *(q_pts[i]));
+
+        this->geometric_elem->calculateBoundaryNormal(b_id, normal);
+        
+        // first update the variables at the current quadrature point
+        this->updateVariablesAtQuadraturePointForBoundary(b_id, *(q_pts[i]));
+        
+        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        {
+            Bstr.setSubVectorVals(i_dim*n, (i_dim+1)*n-1, 0, n-1, *(this->N_vec));
+            Bstr.scaleSubVector(i_dim*n, (i_dim+1)*n-1, normal.getVal(i_dim));
+        }
+        
+        flux_vec.zero();
+        switch (dim)
+        {
+            case 3:
+                flux_vec.setVal(3, rho*u3);
+            case 2:
+                flux_vec.setVal(2, rho*u2);
+            case 1:
+            {
+                flux_vec.setVal(0, rho);
+                flux_vec.setVal(1, rho*u1);
+                flux_vec.setVal(n1-1, rho*e_tot+p);
+            }
+        }
+        
+        B_mat->leftVectorMultiply(flux_vec, tmp_vec2_n2);
+        val = Bstr.dotProduct(motion_vec);
+        
+        f_vec.add(-q_weight[i]*jac*val, tmp_vec2_n2);
+    }
+}
 
 
 
@@ -1630,4 +1680,53 @@ FESystem::Fluid::FluidElementBase::calculatePrimitiveVariableValues(const FESyst
     mach = sqrt(2.0*k_val/(gamma*R*T_val));
     cp = (press-p0)/q0;
 }
+
+
+
+void
+FESystem::Fluid::FluidElementBase::calculateComplexCpPerturbation(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, const FESystem::Numerics::VectorBase<FESystemComplexDouble>& complex_sol_perturb, const FESystemDouble q0, FESystemComplexDouble& complex_cp_perturb)
+{
+    FESystemAssert0(this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim;
+    
+    FESystemAssert2(conservative_sol.getSize() == n1, FESystem::Exception::DimensionsDoNotMatch, conservative_sol.getSize(), n1);
+    FESystemAssert2(complex_sol_perturb.getSize() == n1, FESystem::Exception::DimensionsDoNotMatch, complex_sol_perturb.getSize(), n1);
+    
+    FESystemDouble rho_val=0.0, u_val=0.0, v_val=0.0, w_val=0.0, k_val=0.0, T_val = 0.0;
+    FESystemComplexDouble dT_val, dk_val = FESystemComplexDouble(0.0, 0.0);
+    
+    rho_val = conservative_sol.getVal(0);
+    
+    u_val = conservative_sol.getVal(1)/rho_val;
+    k_val += u_val*u_val;
+    dk_val = (2.0*conservative_sol.getVal(1)*complex_sol_perturb.getVal(1) - pow(conservative_sol.getVal(1),2)*complex_sol_perturb.getVal(0)/rho_val)/(rho_val*rho_val);
+    
+    if (dim > 1)
+    {
+        v_val = conservative_sol.getVal(2)/rho_val;
+        k_val += v_val*v_val;
+        dk_val += (2.0*conservative_sol.getVal(2)*complex_sol_perturb.getVal(2) - pow(conservative_sol.getVal(2),2)*complex_sol_perturb.getVal(0)/rho_val)/(rho_val*rho_val);
+    }
+    
+    if (dim > 2)
+    {
+        w_val = conservative_sol.getVal(3)/rho_val;
+        k_val += w_val*w_val;
+        dk_val += (2.0*conservative_sol.getVal(3)*complex_sol_perturb.getVal(3) - pow(conservative_sol.getVal(3),2)*complex_sol_perturb.getVal(0)/rho_val)/(rho_val*rho_val);
+    }
+    
+    k_val *= 0.5;
+    dk_val *= 0.5;
+    T_val = (conservative_sol.getVal(n1-1)/rho_val - k_val)/this->cv;
+    dT_val = (complex_sol_perturb.getVal(n1-1)/rho_val - conservative_sol.getVal(n1-1)/(rho_val*rho_val)*complex_sol_perturb.getVal(0)-dk_val)/this->cv;
+
+//    conservative_sol.write(std::cout);
+//    complex_sol_perturb.write(std::cout);
+//    std::cout << "T_val: " << T_val << std::endl;
+//    std::cout << "dT_val: " << dT_val << std::endl;
+//    std::cout << "dk_val: " << dk_val << std::endl;
+    
+    complex_cp_perturb = this->R*(T_val*complex_sol_perturb.getVal(0)+rho_val*dT_val)/q0;
+}
+
 

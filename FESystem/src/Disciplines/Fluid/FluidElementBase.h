@@ -62,6 +62,11 @@ namespace FESystem
             void calculatePrimitiveVariableValues(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, const FESystemDouble q0, const FESystemDouble p0,
                                                   FESystem::Numerics::VectorBase<FESystemDouble>& primitive_sol, FESystemDouble& press, FESystemDouble& entropy, FESystemDouble& mach, FESystemDouble& cp);
             
+            void calculateLinearizedForcingFunctionForBoundaryMotion(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary,
+                                                                     const FESystem::Numerics::VectorBase<FESystemDouble>& motion_vec, FESystem::Numerics::VectorBase<FESystemDouble>& f_vec);
+
+            void calculateComplexCpPerturbation(const FESystem::Numerics::VectorBase<FESystemDouble>& conservative_sol, const FESystem::Numerics::VectorBase<FESystemComplexDouble>& complex_sol_perturb, const FESystemDouble q0, FESystemComplexDouble& complex_cp_perturb);
+            
         protected:
             
             void calculateAdvectionFlux(const FESystemUInt i, FESystem::Numerics::VectorBase<FESystemDouble>& flux);

@@ -141,6 +141,27 @@ FESystem::Numerics::LocalVector<ValType>::copyVectorVals(const VectorBase<ValTyp
 }
 
 
+template <typename ValType>
+void
+FESystem::Numerics::LocalVector<ValType>::copyRealVector(const FESystem::Numerics::VectorBase<typename RealOperationType(ValType)>& v)
+{
+    switch(v.getType())
+    {
+        case FESystem::Numerics::LOCAL_VECTOR:
+        {
+            const typename RealOperationType(ValType)* v_vals = v.getVectorValues();
+            if (this->getSize() != v.getSize())
+                this->resize(v.getSize());
+            for (FESystemUInt i=0; i<this->getSize(); i++)
+                this->vec_vals[i] = ValType(v_vals[i]);
+        }
+            break;
+            
+            // only sparse matrix is handled for now
+        default:
+            FESystemAssert0(false, FESystem::Exception::InvalidFunctionCall);
+    }
+}
 
 
 template <typename ValType>

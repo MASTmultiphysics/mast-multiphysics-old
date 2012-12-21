@@ -59,6 +59,7 @@ namespace FESystem
             
             virtual void copyVector(const VectorBase<ValType>& t);
 
+            virtual void copyRealVector (const VectorBase<typename RealOperationType(ValType)>& t);
             
             virtual void copyVectorVals(const VectorBase<ValType>& t);
 
