@@ -1206,6 +1206,7 @@ void frequencyDomainAnalysis(FESystemUInt dim, FESystem::Mesh::ElementType elem_
     linear_solver.solve(complex_f_vec, complex_sol);
 
     // calculate the complex cp values
+    additional_sol.zero();
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),
                       EvaluateComplexCpPerturbation(elems, nodes, 1.0e3, n_elem_nodes, n_elem_dofs, dof_map, q_rule, q_boundary, final_sol, vel, dc_vals, complex_sol, additional_sol));
     
