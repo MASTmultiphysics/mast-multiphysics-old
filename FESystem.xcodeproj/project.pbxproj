@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		69107D221578D8CF00196B94 /* libarpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 69107D211578D8CF00196B94 /* libarpack.a */; };
 		691123A815D9E58400FDCCCD /* VonKarmanStrain1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691123A715D9E58400FDCCCD /* VonKarmanStrain1D.cpp */; };
+		6915EA471687B80800D60F5B /* EllipticMeshGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915EA451687B80800D60F5B /* EllipticMeshGenerator.cpp */; };
+		6915EA481687B80800D60F5B /* EllipticMeshGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915EA461687B80800D60F5B /* EllipticMeshGenerator.h */; };
+		6915EA4B168808F000D60F5B /* EllipticMeshDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915EA49168808F000D60F5B /* EllipticMeshDriver.cpp */; };
 		6961E5CE15D8AE8500795584 /* StructuralElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5CD15D8AE8500795584 /* StructuralElementBase.cpp */; };
 		6961E5DF15D8C68500795584 /* DKTPlate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5DE15D8C68500795584 /* DKTPlate.cpp */; };
 		6961E5E115D8C6AD00795584 /* Membrane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6961E5E015D8C6AC00795584 /* Membrane.cpp */; };
@@ -278,6 +281,9 @@
 		69107D211578D8CF00196B94 /* libarpack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libarpack.a; path = ../../../../../../opt/local/lib/libarpack.a; sourceTree = "<group>"; };
 		691123A615D9E57700FDCCCD /* VonKarmanStrain1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VonKarmanStrain1D.h; sourceTree = "<group>"; };
 		691123A715D9E58400FDCCCD /* VonKarmanStrain1D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VonKarmanStrain1D.cpp; sourceTree = "<group>"; };
+		6915EA451687B80800D60F5B /* EllipticMeshGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EllipticMeshGenerator.cpp; sourceTree = "<group>"; };
+		6915EA461687B80800D60F5B /* EllipticMeshGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EllipticMeshGenerator.h; sourceTree = "<group>"; };
+		6915EA49168808F000D60F5B /* EllipticMeshDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EllipticMeshDriver.cpp; sourceTree = "<group>"; };
 		694DA49015E0732E004938D1 /* LinearBeamElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LinearBeamElementBase.h; sourceTree = "<group>"; };
 		6961E5CA15D8AA6500795584 /* StructuralElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StructuralElementBase.h; sourceTree = "<group>"; };
 		6961E5CC15D8ACA700795584 /* ThermalElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ThermalElementBase.h; sourceTree = "<group>"; };
@@ -588,6 +594,15 @@
 			path = Properties;
 			sourceTree = "<group>";
 		};
+		6915EA431687B7EB00D60F5B /* Meshing */ = {
+			isa = PBXGroup;
+			children = (
+				6915EA451687B80800D60F5B /* EllipticMeshGenerator.cpp */,
+				6915EA461687B80800D60F5B /* EllipticMeshGenerator.h */,
+			);
+			path = Meshing;
+			sourceTree = "<group>";
+		};
 		6961E5C715D8A53300795584 /* Fluid */ = {
 			isa = PBXGroup;
 			children = (
@@ -694,16 +709,17 @@
 			isa = PBXGroup;
 			children = (
 				EBAAB6CD161361CA0030FCEB /* Beam.cpp */,
+				6915EA49168808F000D60F5B /* EllipticMeshDriver.cpp */,
 				EBAAB6C0161361670030FCEB /* Euler.cpp */,
 				EBAEDFAF15C1B73B0062459D /* main.cpp */,
 				EBAEDFAE15C1B73B0062459D /* Mesh.cpp */,
 				EBAAB6C5161361940030FCEB /* PistonTheory.cpp */,
 				EBAAB6C9161361AF0030FCEB /* Plate.cpp */,
 				EBAAB6D1161362370030FCEB /* PotentialFlow.cpp */,
-				EBAAB6D5161362C90030FCEB /* SolutionDrivers.cpp */,
-				EBAAB6D9161363340030FCEB /* Thermal.cpp */,
 				EBAAB6DD1613639F0030FCEB /* ShapeFunction.cpp */,
+				EBAAB6D5161362C90030FCEB /* SolutionDrivers.cpp */,
 				EBAAB6E2161364860030FCEB /* TestingIncludes.h */,
+				EBAAB6D9161363340030FCEB /* Thermal.cpp */,
 			);
 			path = examples;
 			sourceTree = "<group>";
@@ -773,6 +789,7 @@
 		EBAEDFCA15C1B73B0062459D /* Disciplines */ = {
 			isa = PBXGroup;
 			children = (
+				6915EA431687B7EB00D60F5B /* Meshing */,
 				6961E5C715D8A53300795584 /* Fluid */,
 				6961E5C815D8A53300795584 /* Structure */,
 				6961E5C915D8A53300795584 /* Thermal */,
@@ -1252,6 +1269,7 @@
 				6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */,
 				6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */,
 				EBF0C619160A3E6200B963A8 /* FluidElementBase.h in Headers */,
+				6915EA481687B80800D60F5B /* EllipticMeshGenerator.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1440,6 +1458,8 @@
 				EBAAB6D7161362C90030FCEB /* SolutionDrivers.cpp in Sources */,
 				EBAAB6DB161363340030FCEB /* Thermal.cpp in Sources */,
 				EBAAB6DF1613639F0030FCEB /* ShapeFunction.cpp in Sources */,
+				6915EA471687B80800D60F5B /* EllipticMeshGenerator.cpp in Sources */,
+				6915EA4B168808F000D60F5B /* EllipticMeshDriver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

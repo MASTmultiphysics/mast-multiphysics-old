@@ -483,7 +483,7 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
 
 
 
-tbb::mutex assembly_mutex;
+extern tbb::mutex assembly_mutex;
 
 class AssembleElementMatrices
 {
