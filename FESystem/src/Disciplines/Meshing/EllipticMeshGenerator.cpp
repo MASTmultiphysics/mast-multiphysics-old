@@ -24,7 +24,10 @@ if_initialized(false),
 geometric_elem(NULL),
 quadrature(NULL),
 finite_element(NULL),
-solution(NULL)
+solution(NULL),
+P(0.0),
+Q(0.0),
+coupling_coeff(0.0)
 {
     
 }
@@ -48,13 +51,16 @@ FESystem::Meshing::EllipticMeshGenerator::clear()
     this->quadrature = NULL;
     this->finite_element = NULL;
     this->solution = NULL;
+    this->P = 0.0;
+    this->Q = 0.0;
+    this->coupling_coeff = 0.0;
 }
 
 
 
 void
 FESystem::Meshing::EllipticMeshGenerator::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                                     const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystemDouble p_val, const FESystemDouble q_val)
+                                                     const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystemDouble p_val, const FESystemDouble q_val, const FESystemDouble coeff)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
     
@@ -62,6 +68,9 @@ FESystem::Meshing::EllipticMeshGenerator::initialize(const FESystem::Mesh::ElemB
     this->quadrature = &q_rule;
     this->finite_element = &fe;
     this->solution = &sol;
+    this->P = p_val;
+    this->Q = q_val;
+    this->coupling_coeff = coeff;
     
     this->if_initialized = true;
 }
@@ -117,7 +126,7 @@ FESystem::Meshing::EllipticMeshGenerator::calculateResidual(FESystem::Numerics::
         res.add(q_weight[i]*jac*g22, tmp_vec2); // dB/dxi^T g22  dX/dxi
         
         Bmat_deta.leftVectorMultiply(tmp_vec1, tmp_vec2); // dB/deta^T  dX/dxi
-        res.add(-q_weight[i]*jac*g12, tmp_vec2); // -dB/deta^T g12  dX/dxi
+        res.add(-q_weight[i]*jac*g12*coupling_coeff, tmp_vec2); // -dB/deta^T g12  dX/dxi
         
         Bmat.leftVectorMultiply(tmp_vec1, tmp_vec2); // B^T  dX/dxi
         res.add(-q_weight[i]*jac*gval*this->P, tmp_vec2); // -B^T g dX/dxi
@@ -125,10 +134,10 @@ FESystem::Meshing::EllipticMeshGenerator::calculateResidual(FESystem::Numerics::
         
         Bmat_deta.rightVectorMultiply(*(this->solution), tmp_vec1);  // dX/deta
         Bmat_dxi.leftVectorMultiply(tmp_vec1, tmp_vec2); // dB/dxi^T  dX/deta
-        res.add(-q_weight[i]*jac*g12, tmp_vec2); // -dB/dxi^T g12  dX/deta
+        res.add(-q_weight[i]*jac*g12*coupling_coeff, tmp_vec2); // -dB/dxi^T g12  dX/deta
         
         Bmat_deta.leftVectorMultiply(tmp_vec1, tmp_vec2); // dB/deta^T  dX/deta
-        res.add(q_weight[i]*jac*g11, tmp_vec2); // -dB/deta^T g11  dX/deta
+        res.add(q_weight[i]*jac*g11, tmp_vec2); // dB/deta^T g11  dX/deta
         
         Bmat.leftVectorMultiply(tmp_vec1, tmp_vec2); // B^T  dX/deta
         res.add(-q_weight[i]*jac*gval*this->Q, tmp_vec2); // -B^T g  dX/deta
@@ -187,17 +196,17 @@ FESystem::Meshing::EllipticMeshGenerator::calculateTangentMatrix(FESystem::Numer
         mat.add(q_weight[i]*jac*g22, tmp_mat); // dB/dxi^T g22  dB/dxi
         
         Bmat_deta.matrixTransposeRightMultiply(1.0, Bmat_dxi, tmp_mat); // dB/deta^T  dB/dxi
-        mat.add(-q_weight[i]*jac*g12, tmp_mat); // -dB/deta^T g12  dX/dxi
+        mat.add(-q_weight[i]*jac*g12*coupling_coeff, tmp_mat); // -dB/deta^T g12  dX/dxi
         
         Bmat.matrixTransposeRightMultiply(1.0, Bmat_dxi, tmp_mat); // B^T  dX/dxi
         mat.add(-q_weight[i]*jac*gval*this->P, tmp_mat); // -B^T g dB/dxi
         
         
         Bmat_dxi.matrixTransposeRightMultiply(1.0, Bmat_deta, tmp_mat); // dB/dxi^T  dB/deta
-        mat.add(-q_weight[i]*jac*g12, tmp_mat); // -dB/dxi^T g12  dB/deta
+        mat.add(-q_weight[i]*jac*g12*coupling_coeff, tmp_mat); // -dB/dxi^T g12  dB/deta
         
         Bmat_deta.matrixTransposeRightMultiply(1.0, Bmat_deta, tmp_mat); // dB/deta^T  dB/deta
-        mat.add(q_weight[i]*jac*g11, tmp_mat); // -dB/deta^T g11  dB/deta
+        mat.add(q_weight[i]*jac*g11, tmp_mat); // dB/deta^T g11  dB/deta
         
         Bmat.matrixTransposeRightMultiply(1.0, Bmat_deta, tmp_mat); // B^T  dB/deta
         mat.add(-q_weight[i]*jac*gval*this->Q, tmp_mat); // -B^T g  dB/deta

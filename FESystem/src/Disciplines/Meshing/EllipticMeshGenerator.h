@@ -35,7 +35,7 @@ namespace FESystem
             virtual void clear();
             
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
-                            const FESystemDouble p_val, const FESystemDouble q_val);
+                            const FESystemDouble p_val, const FESystemDouble q_val, const FESystemDouble coeff);
             
             void calculateResidual(FESystem::Numerics::VectorBase<FESystemDouble>& res);
             
@@ -53,7 +53,7 @@ namespace FESystem
             
             const FESystem::Numerics::VectorBase<FESystemDouble>* solution;
 
-            FESystemDouble P, Q;
+            FESystemDouble P, Q, coupling_coeff;
         };
     }
 }

@@ -22,12 +22,13 @@
 
 const FESystem::Mesh::ElementType elem_type = FESystem::Mesh::QUAD4;
 
-tbb::mutex assembly_mutex;
+tbb::mutex elliptic_meshing_assembly_mutex;
 
 class AssembleEllipticMeshingElementMatrices
 {
 public:
     AssembleEllipticMeshingElementMatrices(const std::vector<FESystem::Mesh::ElemBase*>& e,
+                                           const std::vector<FESystemDouble>& coupling,
                                            const FESystemUInt ne_dofs,
                                            const FESystem::Base::DegreeOfFreedomMap& dof,
                                            const FESystem::Quadrature::QuadratureBase& q,
@@ -37,6 +38,7 @@ public:
                                            FESystem::Numerics::VectorBase<FESystemDouble>& r,
                                            FESystem::Numerics::MatrixBase<FESystemDouble>& stiff):
     elems(e),
+    elem_coupling_coeffs(coupling),
     n_elem_dofs(ne_dofs),
     dof_map(dof),
     q_rule(q),
@@ -80,7 +82,7 @@ public:
             dof_map.getFromGlobalVector(*(elems[i]), sol, elem_sol);
             
             meshing_elem.clear();
-            meshing_elem.initialize(*(elems[i]), fe, q_rule, elem_sol, 0.0, 0.0);
+            meshing_elem.initialize(*(elems[i]), fe, q_rule, elem_sol, 0.0, 0.0, elem_coupling_coeffs[i]);
             
             meshing_elem.calculateResidual(elem_vec);
             
@@ -88,7 +90,7 @@ public:
                 meshing_elem.calculateTangentMatrix(elem_mat);
             
             {
-                tbb::mutex::scoped_lock my_lock(assembly_mutex);
+                tbb::mutex::scoped_lock my_lock(elliptic_meshing_assembly_mutex);
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
                 if (if_calculate_jacobian)
                     dof_map.addToGlobalMatrix(*(elems[i]), elem_mat, global_stiffness_mat);
@@ -100,6 +102,7 @@ public:
 protected:
     
     const std::vector<FESystem::Mesh::ElemBase*>& elems;
+    const std::vector<FESystemDouble>& elem_coupling_coeffs;
     const FESystemUInt n_elem_dofs;
     const FESystem::Base::DegreeOfFreedomMap& dof_map;
     const FESystem::Quadrature::QuadratureBase& q_rule;
@@ -114,7 +117,9 @@ protected:
 
 
 
-void calculateEllipticMeshingMatrices(const FESystem::Mesh::MeshBase& mesh, FESystemUInt n_elem_dofs, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& res, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystemBoolean if_evaluate_jac)
+void calculateEllipticMeshingMatrices(const FESystem::Mesh::MeshBase& mesh, FESystemUInt n_elem_dofs, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                      const std::vector<FESystemDouble>& coupling,
+                                      const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& res, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystemBoolean if_evaluate_jac)
 {
     // prepare the quadrature rule and FE for the
     FESystem::Quadrature::TrapezoidQuadrature q_rule, q_boundary_rule;
@@ -143,16 +148,17 @@ void calculateEllipticMeshingMatrices(const FESystem::Mesh::MeshBase& mesh, FESy
     const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
-                      AssembleEllipticMeshingElementMatrices(elems, n_elem_dofs, dof_map, q_rule, q_boundary_rule, sol, if_evaluate_jac, res, mat));
-//    AssembleEllipticMeshingElementMatrices a(elems, n_elem_dofs, dof_map, q_rule, q_boundary_rule, sol, if_evaluate_jac, res, mat);
+                      AssembleEllipticMeshingElementMatrices(elems, coupling, n_elem_dofs, dof_map, q_rule, q_boundary_rule, sol, if_evaluate_jac, res, mat));
+//    AssembleEllipticMeshingElementMatrices a(elems, coupling, n_elem_dofs, dof_map, q_rule, q_boundary_rule, sol, if_evaluate_jac, res, mat);
 //    a.assembleAll();
 }
 
 
 
 
-void ellipticMeshingNonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const
-                                      FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+void ellipticMeshingNonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes,
+                                      const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                      const std::vector<FESystemDouble>& coupling,
                                       const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                                       const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map,
                                       const std::vector<FESystemUInt>& bc_dofs,
@@ -176,7 +182,8 @@ void ellipticMeshingNonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementT
     FESystem::NonlinearSolvers::NewtonIterationNonlinearSolver<FESystemDouble> nonlinear_solver;
     
     nonlinear_solver.initialize(reduced_stiff_mat, linear_solver);
-    nonlinear_solver.setConvergenceLimits(50, 1.0e-10);
+    nonlinear_solver.setLinearSolverDataStructureReuse(true);
+    nonlinear_solver.setConvergenceLimits(15, 1.0e-10);
     
     
     FESystem::NonlinearSolvers::NonlinearSolverCallBack call_back = nonlinear_solver.getCurrentCallBack();
@@ -199,7 +206,7 @@ void ellipticMeshingNonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementT
                 rhs.zero();
                 // get the latest solution vector
                 sol.setSubVectorValsFromIndices(nonbc_dofs, nonlinear_solver.getCurrentSolution());
-                calculateEllipticMeshingMatrices(mesh, n_elem_dofs, dof_map, sol, rhs, stiff_mat, false);
+                calculateEllipticMeshingMatrices(mesh, n_elem_dofs, dof_map, coupling, sol, rhs, stiff_mat, false);
                 rhs.getSubVectorValsFromIndices(nonbc_dofs, nonlinear_solver.getResidualVector());
             }
                 break;
@@ -211,7 +218,7 @@ void ellipticMeshingNonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementT
                 rhs.zero(); 
                 // get the latest solution vector
                 sol.setSubVectorValsFromIndices(nonbc_dofs, nonlinear_solver.getCurrentSolution());
-                calculateEllipticMeshingMatrices(mesh, n_elem_dofs, dof_map, sol, rhs, stiff_mat, true);
+                calculateEllipticMeshingMatrices(mesh, n_elem_dofs, dof_map, coupling, sol, rhs, stiff_mat, true);
                 rhs.getSubVectorValsFromIndices(nonbc_dofs, nonlinear_solver.getResidualVector());
                 stiff_mat.getSubMatrixValsFromRowAndColumnIndices(nonbc_dofs, nonbc_dofs, old_to_new_id_map, reduced_stiff_mat);
             }
@@ -279,7 +286,7 @@ int ellipticMeshingDriver(int argc, char * const argv[])
     x_relative_mesh_size_in_div[0] = 1.0;
     x_relative_mesh_size_in_div[1] = 1.0;
     
-    x_n_subdivs_in_div[0] = 30;
+    x_n_subdivs_in_div[0] = 50;
     
     y_n_divs = 1;
     y_div_locations.resize(y_n_divs+1);
@@ -292,7 +299,7 @@ int ellipticMeshingDriver(int argc, char * const argv[])
     y_relative_mesh_size_in_div[0] = 1.0;
     y_relative_mesh_size_in_div[1] = 1.0;
     
-    y_n_subdivs_in_div[0] = 20;
+    y_n_subdivs_in_div[0] = 50;
     
     distributePoints(x_n_divs, x_div_locations, x_n_subdivs_in_div, x_relative_mesh_size_in_div, x_points);
     distributePoints(y_n_divs, y_div_locations, y_n_subdivs_in_div, y_relative_mesh_size_in_div, y_points);
@@ -316,7 +323,7 @@ int ellipticMeshingDriver(int argc, char * const argv[])
     global_stiffness_mat.resize(dof_map.getSparsityPattern());
     
     std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
-    FESystemDouble xval, yval, domain_x = 10.0, domain_y = 5.0, y_height=domain_y*0.2;
+    FESystemDouble xval, yval, domain_x = 10.0, domain_y = 5.0, y_height=domain_y*0.5;
     FESystemUInt x_id, y_id;
     std::vector<FESystemUInt> nonbc_dofs, bc_dofs;
     // apply boundary condition and set the boundary dof locations
@@ -327,28 +334,28 @@ int ellipticMeshingDriver(int argc, char * const argv[])
         x_id = nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0];
         y_id = nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0];
         
-        if (xval == 0.0) // left boundary
+        if (fabs(xval) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // left boundary
         {
             sol.setVal(x_id, 0.0);
             sol.setVal(y_id, yval*domain_y); // initial value, allowed to float based on zero flux
             bc_dofs.push_back(x_id);
             bc_dofs.push_back(y_id);
         }
-        else if (xval == x_length) // right boundary
+        else if (fabs(xval - x_length) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // right boundary
         {
             sol.setVal(x_id, domain_x);
             sol.setVal(y_id, yval*domain_y);
             bc_dofs.push_back(x_id);
             bc_dofs.push_back(y_id);
         }
-        else if (yval == 0.0) // bottom boundary
+        else if (fabs(yval) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // bottom boundary
         {
             sol.setVal(x_id, xval*domain_x);
             sol.setVal(y_id, y_height*(.25-pow(xval-0.5,2))/.25);
             bc_dofs.push_back(x_id);
             bc_dofs.push_back(y_id);
         }
-        else if (yval == y_length) // top boundary
+        else if (fabs(yval - y_length) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // top boundary
         {
             sol.setVal(x_id, xval*domain_x);
             sol.setVal(y_id, domain_y);
@@ -363,6 +370,19 @@ int ellipticMeshingDriver(int argc, char * const argv[])
             nonbc_dofs.push_back(y_id);
         }
     }
+
+    std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
+    std::vector<FESystemDouble> coupling(elems.size());
+    
+    for (FESystemUInt i=0; i<elems.size(); i++)
+    {
+        coupling[i] = 0.0;
+        for (FESystemUInt j=0; j<elems[i]->getNNodes(); j++)
+            coupling[i] += elems[i]->getNode(j).getVal(1);
+        
+        coupling[i] /= (1.0*elems[i]->getNNodes());
+    }
+
     
     std::sort(bc_dofs.begin(), bc_dofs.end(), compareInt);
     std::sort(nonbc_dofs.begin(), nonbc_dofs.end(), compareInt);
@@ -378,7 +398,7 @@ int ellipticMeshingDriver(int argc, char * const argv[])
     FESystem::Numerics::SparsityPattern nonbc_sparsity_pattern;
     dof_map.getSparsityPattern().initSparsityPatternForNonConstrainedDOFs(nonbc_dofs, old_to_new_id_map, nonbc_sparsity_pattern);
         
-    ellipticMeshingNonlinearSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, nonbc_sparsity_pattern, old_to_new_id_map, bc_dofs, nonbc_dofs, global_stiffness_mat, rhs, sol);
+    ellipticMeshingNonlinearSolution(dim, elem_type, n_elem_nodes, mesh, dof_map, coupling, nonbc_sparsity_pattern, old_to_new_id_map, bc_dofs, nonbc_dofs, global_stiffness_mat, rhs, sol);
     
     // now set the nodal location
     std::vector<FESystem::Mesh::Node*>::iterator node_it=nodes.begin(), node_end=nodes.end();
@@ -388,7 +408,6 @@ int ellipticMeshingDriver(int argc, char * const argv[])
         (*node_it)->setVal(1, sol.getVal((*node_it)->getDegreeOfFreedomUnit(1).global_dof_id[0]));
     }
     
-    std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     std::vector<FESystem::Mesh::ElemBase*>::iterator elem_it=elems.begin(), elem_end=elems.end();
     for ( ; elem_it != elem_end; elem_it++)
         (*elem_it)->updateAfterMeshDeformation();

@@ -57,10 +57,25 @@ namespace FESystem
         protected:
             
             /*!
+             *   convergence tolerance
+             */
+            typename RealOperationType(ValType) base_res_l2, base_res_l2_slope, newton_step_res_l2;
+            
+            /*!
+             *    Boolean to check if the backtracking has been done once for the current Newton step
+             */
+            FESystemBoolean if_backtracked;
+
+            /*!
              *    Jacobian matrix used in this solution
              */
             FESystem::Numerics::MatrixBase<ValType>* jacobian;
-            
+
+            /*!
+             *    temporary scratch vector
+             */
+            FESystem::Numerics::VectorBase<ValType>* temp_vec;
+
             /*!
              *    Pointer to linear sovler
              */

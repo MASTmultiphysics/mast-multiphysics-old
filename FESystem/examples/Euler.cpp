@@ -483,7 +483,7 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
 
 
 
-extern tbb::mutex assembly_mutex;
+tbb::mutex euler_assembly_mutex;
 
 class AssembleElementMatrices
 {
@@ -607,7 +607,7 @@ public:
                                                                elem_sol, elem_vel, elem_vec, elem_dc_vals[i], elem_mat1, delta_sol, delta_res, tmp_mat, tmp_mat, tmp_vec);
             
             {
-                tbb::mutex::scoped_lock my_lock(assembly_mutex);
+                tbb::mutex::scoped_lock my_lock(euler_assembly_mutex);
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
                 if (if_calculate_jacobian)
                 {
@@ -755,7 +755,7 @@ public:
                 fluid_elem.calculateLinearizedForcingFunctionForBoundaryMotion(0, q_boundary, motion_vec, elem_vec);
                 
                 {
-                    tbb::mutex::scoped_lock my_lock(assembly_mutex);
+                    tbb::mutex::scoped_lock my_lock(euler_assembly_mutex);
                     dof_map.addToGlobalVector(*(elems[i]), elem_vec, force_vec);
                 }
             }
