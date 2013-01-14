@@ -38,6 +38,7 @@ std::vector<std::vector<FESystemDouble> > dc_vals;
 FESystemUInt x_n_divs, y_n_divs;
 std::vector<FESystemDouble> x_div_locations, x_relative_mesh_size_in_div, x_points, y_div_locations, y_relative_mesh_size_in_div, y_points;
 std::vector<FESystemUInt> x_n_subdivs_in_div, y_n_subdivs_in_div;
+FESystem::Numerics::LocalVector<FESystemDouble> surf_vel;
 
 
 void initMeshParameters()
@@ -400,12 +401,12 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
             // set the flux value for the lower and upper boundary
             if (elem.checkForTag(2)) // lower edge
             {
-                fluid_elem.calculateSolidWallFluxBoundaryCondition(0, q_boundary, tmp_vec);
+                fluid_elem.calculateSolidWallFluxBoundaryCondition(0, q_boundary, surf_vel, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
                 
                 if (if_calculate_jacobian)
                 {
-                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(0, q_boundary, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(0, q_boundary, surf_vel, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
@@ -440,12 +441,12 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
             }
             if (elem.checkForTag(1)) // solid wall
             {
-                fluid_elem.calculateSolidWallFluxBoundaryCondition(1, q_boundary, tmp_vec);
+                fluid_elem.calculateSolidWallFluxBoundaryCondition(1, q_boundary, surf_vel, tmp_vec);
                 bc_vec.add(1.0, tmp_vec);
                 
                 if (if_calculate_jacobian)
                 {
-                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(1, q_boundary, tmp_mat);
+                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(1, q_boundary, surf_vel, tmp_mat);
                     elem_mat.add(1.0, tmp_mat);
                 }
             }
@@ -1245,6 +1246,8 @@ int euler_analysis_driver(int argc, char * const argv[])
     createPlaneMesh(elem_type, mesh, origin, x_points, y_points, n_elem_nodes, CROSS, true);
     
     n_elem_dofs = 6*n_elem_nodes;
+
+    surf_vel.resize(dim);
     
     // now add the degrees of freedom
     FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
