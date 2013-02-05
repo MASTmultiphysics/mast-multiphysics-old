@@ -1212,7 +1212,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     std::fstream input;
     input.open("/Users/bhatiam/Documents/Projects/gmsh_models/naca0012.msh", std::fstream::in);
     input_processor.readMeshFromInput(input, 2, true, origin, mesh);
-    
+
 //
 //    initMeshParameters();
 //
@@ -1232,7 +1232,7 @@ int euler_analysis_driver(int argc, char * const argv[])
     //name = "rhow"; dof_map.addVariable(name, 0);
     name = "rhoe"; dof_map.addVariable(name, 0);
     dof_map.reinit(); // distribute the dofs
-    
+
     // create the finite element and initialize the shape functions
     FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat, global_mass_mat;
     FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol;
@@ -1242,11 +1242,11 @@ int euler_analysis_driver(int argc, char * const argv[])
     global_stiffness_mat.resize(dof_map.getSparsityPattern());
     
     // apply boundary condition and place a load on the last dof
-    std::set<FESystemUInt> bc_dofs;
-    setBoundaryConditionTag(mesh, bc_dofs);
+    //    std::set<FESystemUInt> bc_dofs;
+    //setBoundaryConditionTag(mesh, bc_dofs);
     
     // modify mesh after application of boundary condition
-    modifyMeshForCase(mesh);
+    //modifyMeshForCase(mesh);
     
     FESystem::Numerics::LocalVector<FESystemDouble> sol_vec;
     sol_vec.resize(dof_map.getNDofs());
