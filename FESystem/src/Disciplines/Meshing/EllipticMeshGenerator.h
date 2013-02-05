@@ -37,6 +37,9 @@ namespace FESystem
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                             const FESystemDouble p_val, const FESystemDouble q_val, const FESystemDouble coeff);
             
+//            void calculateBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& dXdxi,
+//                                            const FESystem::Numerics::VectorBase<FESystemDouble>& dXdeta, FESystem::Numerics::VectorBase<FESystemDouble>& bc_vec);
+
             void calculateResidual(FESystem::Numerics::VectorBase<FESystemDouble>& res);
             
             void calculateTangentMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);

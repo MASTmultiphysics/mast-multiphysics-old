@@ -63,6 +63,7 @@ FESystem::Meshing::EllipticMeshGenerator::initialize(const FESystem::Mesh::ElemB
                                                      const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystemDouble p_val, const FESystemDouble q_val, const FESystemDouble coeff)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
+    FESystemAssert2(sol.getSize() == elem.getNNodes()*2, FESystem::Exception::DimensionsDoNotMatch, sol.getSize(), elem.getNNodes()*2);
     
     this->geometric_elem = &elem;
     this->quadrature = &q_rule;
@@ -191,7 +192,7 @@ FESystem::Meshing::EllipticMeshGenerator::calculateTangentMatrix(FESystem::Numer
         
         g11 = pow(dxy_xi.getL2Norm(),2);  g22 = pow(dxy_eta.getL2Norm(),2);  g12 = dxy_xi.getVal(0)*dxy_eta.getVal(0) + dxy_xi.getVal(1)*dxy_eta.getVal(1);
         gval = g11*g22-g12*g12;
-        
+
         Bmat_dxi.matrixTransposeRightMultiply(1.0, Bmat_dxi, tmp_mat); // dB/dxi^T  dB/dxi
         mat.add(q_weight[i]*jac*g22, tmp_mat); // dB/dxi^T g22  dB/dxi
         
