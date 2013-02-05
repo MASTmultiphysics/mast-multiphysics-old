@@ -315,7 +315,7 @@ void
 FESystem::Mesh::ElemBase::getBoundariesWithTag(const FESystemInt tag, std::set<FESystemUInt>& b_ids) const
 {
     b_ids.clear();
-    std::map<FESystemUInt, std::set<FESystemInt> >::const_iterator it, end;
+    std::map<FESystemUInt, std::set<FESystemInt> >::const_iterator it = this->boundary_tags.begin(), end = this->boundary_tags.end();
     
     for ( ; it != end; it++)
         if (it->second.count(tag))
