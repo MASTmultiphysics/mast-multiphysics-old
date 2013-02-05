@@ -99,4 +99,5 @@ FESystem::Quadrature::TrapezoidQuadrature::init(FESystemUInt dim, FESystemUInt o
             break;
     }
     
+    this->if_initialized = true;
 }

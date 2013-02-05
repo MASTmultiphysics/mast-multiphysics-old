@@ -37,6 +37,11 @@ namespace FESystem
              */
             virtual FESystemUInt getDimension() const;
             
+            /*!
+             *    Calculates the normal for this element.
+             */
+            virtual void calculateSurfaceNormal(FESystem::Numerics::VectorBase<FESystemDouble>& n_vec) const;
+
 		protected:
 			
             /*!
@@ -73,6 +78,11 @@ namespace FESystem
             virtual void getConstantCoordinateIDAndValueForBoundary(const FESystemUInt b_id, FESystemUInt& coord_id, FESystemDouble& coord_val) const;
             
             /*!
+             *   Returns the number of boundaries for this element. A boundary is defined as a side of dimension dim-1 (eg. face for volume and line for face, etc.)
+             */
+            virtual FESystemUInt getNBoundaries() const;
+
+            /*!
              *   Returns the map of boundary id and nodes defining the boundary
              */
             virtual const std::map<FESystemUInt, std::vector<FESystemUInt> >& getBoundaryIDAndBoundaryNodeMap() const;
@@ -100,6 +110,11 @@ namespace FESystem
             
             virtual ~TriElemBase();
             
+            /*!
+             *   Returns the number of boundaries for this element. A boundary is defined as a side of dimension dim-1 (eg. face for volume and line for face, etc.)
+             */
+            virtual FESystemUInt getNBoundaries() const;
+
             /*!
              *   Dummy function call for Tri. This throws an error, since it does not exist for Tri elements
              */

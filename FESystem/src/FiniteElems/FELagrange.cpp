@@ -40,6 +40,14 @@ FESystem::FiniteElement::FELagrange::~FELagrange()
 }
 
 
+
+FESystem::FiniteElement::FiniteElementType
+FESystem::FiniteElement::FELagrange::getFiniteElementType() const
+{
+    return FESystem::FiniteElement::FE_LAGRANGE;
+}
+
+
 void
 FESystem::FiniteElement::FELagrange::clear()
 {

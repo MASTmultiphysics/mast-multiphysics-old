@@ -13,6 +13,7 @@
 
 // C++ includes
 #include <vector>
+#include <set>
 #include <map>
 #include <memory>
 
@@ -136,6 +137,12 @@ namespace FESystem
              */
             const FESystem::Mesh::ElemBase& getElemFromExternalID(FESystemUInt i) const; 
 
+            
+            /*!
+             *    Finds the appropriate boundary in the list of elements for the specified nodes, and sets the tags for those boundaries
+             */
+            void setTagsForBoundaryWithNodes(std::set<FESystem::Mesh::Node*>& n, const std::vector<FESystemUInt>& tags);
+            
             /*!
              *   Creates a new node in this mesh and return the pointer. The node will be defined in the given coordinate system \p cs. 
              *   The node will be associated to this mesh. The node location can be reset. 
@@ -196,6 +203,13 @@ namespace FESystem
                         
         };
         
+        
+        // this method returns the number of nodes for the specified element
+        FESystemUInt getNNodesForElement(FESystem::Mesh::ElementType type);
+        
+        
+        // this method returns the dimension of the specified element
+        FESystemUInt getElementDimension(FESystem::Mesh::ElementType type);
         
     }
 }

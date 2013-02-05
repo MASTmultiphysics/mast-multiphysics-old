@@ -13,6 +13,7 @@
 #include "Mesh/MeshBase.h"
 #include "Mesh/Node.h"
 #include "Mesh/ElemBase.h"
+#include "Base/FESystemExceptions.h"
 
 
 FESystem::Mesh::MeshBase::MeshBase():
@@ -275,6 +276,43 @@ FESystem::Mesh::MeshBase::getElements() const
 }
 
 
+void
+FESystem::Mesh::MeshBase::setTagsForBoundaryWithNodes(std::set<FESystem::Mesh::Node*>& n, const std::vector<FESystemUInt>& tags)
+{
+    // iterate over the nodes and the elements to which this boundary is connected to. Note that there can be atmost one element to which
+    // this boundary is connected
+    
+    FESystemUInt n_elems_sharing_given_boundary = 0;
+    FESystem::Mesh::ElemBase* elem_p = NULL;
+    
+    std::set<FESystem::Mesh::ElemBase*>::const_iterator it, end;
+    FESystemUInt b_id = 0;
+    FESystemBoolean if_elem_has_given_boundary = false;
+    
+    std::set<FESystem::Mesh::Node*>::iterator n_it = n.begin(), n_end = n.end();
+    
+    for ( ; n_it != n_end; n_it++)
+    {
+        // get element that the node is connected to
+        const std::set<FESystem::Mesh::ElemBase*>& elems = (*n_it)->getElementConnectivitySet();
+        it = elems.begin(); end = elems.end();
+        for ( ; it != end; it++)
+        {
+            (*it)->getIDOfBoundaryWithNodes(n, if_elem_has_given_boundary, b_id);
+            if (if_elem_has_given_boundary && (elem_p != *it))
+            {
+                FESystemAssert0(n_elems_sharing_given_boundary == 0, FESystem::Exception::InvalidValue); // only one element can have this boundary
+                n_elems_sharing_given_boundary++;
+                elem_p = *it; // the code should get here only once
+                for (FESystemUInt j=0; j<tags.size(); j++)
+                    (*it)->setTagForBoundary(b_id, tags[j]);
+            }
+        }
+    }
+}
+
+
+
 FESystem::Mesh::Node&
 FESystem::Mesh::MeshBase::createNode(const FESystem::Geometry::CoordinateSystemBase& cs)
 {
@@ -283,6 +321,112 @@ FESystem::Mesh::MeshBase::createNode(const FESystem::Geometry::CoordinateSystemB
 }
     
     
+
+
+FESystemUInt
+FESystem::Mesh::getNNodesForElement(FESystem::Mesh::ElementType type)
+{
+    switch (type)
+    {
+        case FESystem::Mesh::EDGE2:
+            return 2;
+            break;
+
+        case FESystem::Mesh::EDGE3:
+            return 3;
+            break;
+
+        case FESystem::Mesh::EDGE5:
+            return 5;
+            break;
+
+        case FESystem::Mesh::QUAD4:
+            return 4;
+            break;
+
+        case FESystem::Mesh::QUAD8:
+            return 8;
+            break;
+
+        case FESystem::Mesh::QUAD9:
+            return 9;
+            break;
+
+        case FESystem::Mesh::TRI3:
+            return 3;
+            break;
+
+        case FESystem::Mesh::TRI6:
+            return 6;
+            break;
+
+        case FESystem::Mesh::TRI7:
+            return 7;
+            break;
+
+        case FESystem::Mesh::HEX8:
+            return 8;
+            break;
+
+        case FESystem::Mesh::HEX27:
+            return 27;
+            break;
+
+        case FESystem::Mesh::TET4:
+            return 4;
+            break;
+
+        case FESystem::Mesh::PRISM6:
+            return 6;
+            break;
+
+        case FESystem::Mesh::PYRAMID5:
+            return 5;
+            break;
+
+        default:
+            FESystemAssert1(false, FESystem::Exception::EnumerationNotHandled, type);
+            break;
+    }
+}
+
+
+
+FESystemUInt
+FESystem::Mesh::getElementDimension(FESystem::Mesh::ElementType type)
+{
+    switch (type)
+    {
+        case FESystem::Mesh::EDGE2:
+        case FESystem::Mesh::EDGE3:
+        case FESystem::Mesh::EDGE5:
+            return 1;
+            break;
+            
+        case FESystem::Mesh::QUAD4:
+        case FESystem::Mesh::QUAD8:
+        case FESystem::Mesh::QUAD9:
+        case FESystem::Mesh::TRI3:
+        case FESystem::Mesh::TRI6:
+        case FESystem::Mesh::TRI7:
+            return 2;
+            break;
+            
+        case FESystem::Mesh::HEX8:
+        case FESystem::Mesh::HEX27:
+        case FESystem::Mesh::TET4:
+        case FESystem::Mesh::PRISM6:
+        case FESystem::Mesh::PYRAMID5:
+            return 3;
+            break;
+            
+        default:
+            FESystemAssert1(false, FESystem::Exception::EnumerationNotHandled, type);
+            break;
+    }
+}
+
+
 
 
 std::auto_ptr<std::vector<FESystem::Mesh::Node*> >
@@ -312,5 +456,6 @@ FESystem::Mesh::MeshBase::createElements(FESystemUInt n_elems, FESystem::Mesh::E
     
     return rval;
 }
+
 
 

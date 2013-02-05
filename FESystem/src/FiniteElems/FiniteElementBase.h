@@ -34,6 +34,15 @@ namespace FESystem
     namespace FiniteElement 
     {
         /*!
+         *    Type of finite element
+         */
+        enum FiniteElementType
+        {
+            FE_LAGRANGE
+        };
+        
+        
+        /*!
          *   This class defines the base class for finite elements. The basic purpose of this class is to 
          *   associate itself with a geometric element of 1-, 2- or 3- dimensions, and provide the shape 
          *   functions, shape function derivatives, and transformation jacobians associated at specified 
@@ -51,6 +60,12 @@ namespace FESystem
             FiniteElementBase();
             
             virtual ~FiniteElementBase();
+            
+            /*!
+             *   Returns the type of finite element
+             */
+            virtual FESystem::FiniteElement::FiniteElementType getFiniteElementType() const = 0;
+            
             
             /*!
              *   Clears all the data structures of the object, before initializing it

@@ -61,6 +61,11 @@ namespace FESystem
             /*!
              *   Returns a constant reference to the set of pointers to which this element is connected
              */
+            std::set<FESystem::Mesh::ElemBase*>& getElementConnectivitySet();
+
+            /*!
+             *   Returns a constant reference to the set of pointers to which this element is connected
+             */
             const std::set<FESystem::Mesh::ElemBase*>& getElementConnectivitySet() const;
 
             /*!

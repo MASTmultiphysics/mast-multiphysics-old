@@ -26,14 +26,14 @@ namespace FESystem
             PYRAMID5,
             // second order elements
             EDGE3,
+            EDGE5,
             TRI6,
             TRI7,
             QUAD8,
             QUAD9,
-            TET15,
-            HEX26,
-            PRISM21,
-            PYRAMID19,
+            TET18,
+            HEX27,
+            PRISM21
         };
     }
 }

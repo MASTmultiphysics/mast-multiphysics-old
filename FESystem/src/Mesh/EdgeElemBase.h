@@ -45,6 +45,11 @@ namespace FESystem
             virtual FESystemUInt getDimension() const; 
 
             /*!
+             *   Returns the number of boundaries for this element. A boundary is defined as a side of dimension dim-1 (eg. face for volume and line for face, etc.)
+             */
+            virtual FESystemUInt getNBoundaries() const;
+
+            /*!
              *   Returns true if the element is a degerate element from Quad or Hex element. This is used for 
              *   elements like Triangle, Tetrahedron, Prisms, Pyramids, etc. 
              */
@@ -55,6 +60,11 @@ namespace FESystem
              */
             virtual const FESystem::Mesh::ElemBase& getParentNondegenerateElem() const;
             		
+            /*!
+             *    Calculates the normal for this element.
+             */
+            virtual void calculateSurfaceNormal(FESystem::Numerics::VectorBase<FESystemDouble>& n_vec) const;
+
             /*!
              *   Each bounadry in FE is defined by one of the computational coordinates being constant. This method returns the 
              *   number of that computational coordinate and its value for the boundary, in the provided \p coord_id and \p coord_val variables. 

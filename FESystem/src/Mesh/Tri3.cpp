@@ -72,6 +72,7 @@ FESystem::Mesh::Tri3::initializeParentNondegenerateElement()
 {
     FESystemAssert0(this->parent_nondegenerate_elem == NULL, FESystem::Exception::InvalidState);
     this->parent_nondegenerate_elem = new FESystem::Mesh::Quad4(this->if_local_physical_cs_same_as_global);
+    this->parent_nondegenerate_elem->setToParentNondegenerateElement();
     this->parent_nondegenerate_elem->setNode(0, this->getNode(0));
     this->parent_nondegenerate_elem->setNode(1, this->getNode(1));
     this->parent_nondegenerate_elem->setNode(2, this->getNode(2));

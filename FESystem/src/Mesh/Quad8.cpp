@@ -112,7 +112,9 @@ FESystem::Mesh::Quad8::initializeParentNondegenerateElement()
     this->parent_nondegenerate_elem = new FESystem::Mesh::Quad9(this->if_local_physical_cs_same_as_global);
     FESystemAssert0(this->center_node_for_parent_nondegenerate_elem == NULL, FESystem::Exception::InvalidState);
  
-    // create the center node for the parent element; use the same coordinate system as the first node    
+    this->parent_nondegenerate_elem->setToParentNondegenerateElement();
+
+    // create the center node for the parent element; use the same coordinate system as the first node
     this->center_node_for_parent_nondegenerate_elem = new FESystem::Mesh::Node(this->getNode(0).getCoordinateSystem()); 
     for (FESystemUInt i=0; i<8; i++)
         this->center_node_for_parent_nondegenerate_elem->add(1.0/8.0, this->getNode(i));

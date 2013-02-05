@@ -31,6 +31,7 @@ element_type(type),
 if_local_physical_cs_same_as_global(local_cs_same_as_global),
 physical_nodes(n_nodes),
 local_coordinate_system(NULL),
+if_parent_nondegenerate_element(false),
 parent_nondegenerate_elem(NULL)
 {
     // initialize all nodes to NULL
@@ -79,6 +80,14 @@ FESystem::Mesh::ElemBase::updateAfterMeshDeformation()
 
 
 void
+FESystem::Mesh::ElemBase::setToParentNondegenerateElement()
+{
+    this->if_parent_nondegenerate_element = true;
+}
+
+
+
+void
 FESystem::Mesh::ElemBase::setNode(FESystemUInt i, FESystem::Mesh::Node& n)
 {
     FESystemAssert2(i < this->physical_nodes.size(), FESystem::Exception::IndexOutOfBound, i, this->physical_nodes.size()-1);
@@ -87,8 +96,8 @@ FESystem::Mesh::ElemBase::setNode(FESystemUInt i, FESystem::Mesh::Node& n)
     // set the pointer to this node
     this->physical_nodes[i] = &n;
     
-    // tell the node that it is connected to this element
-    n.addElementConnection(*this);
+    // tell the node that it is connected to this element; do this only if this element is not a parent degenerate element
+    if (!this->if_parent_nondegenerate_element) n.addElementConnection(*this);
     
     // if all the nodes for this element have been set, initialize the local coordinate system
     FESystemUInt counter = 0;
@@ -217,8 +226,8 @@ FESystem::Mesh::ElemBase::getLocalComputationalCoordinateForNodeAlongDim(FESyste
 
 
 
-FESystemUInt 
-FESystem::Mesh::ElemBase::getIDOfBoundaryWithNodes(const std::set<FESystemUInt>& b_nodes) const
+void
+FESystem::Mesh::ElemBase::getIDOfBoundaryWithNodes(const std::set<FESystemUInt>& b_nodes, FESystemBoolean& if_elem_has_given_boundary, FESystemUInt& b_id) const
 {
     // get the map of boundary id and node ids for each boundary
     const std::map<FESystemUInt, std::vector<FESystemUInt> >& b_n_map = this->getBoundaryIDAndBoundaryNodeMap();
@@ -239,38 +248,88 @@ FESystem::Mesh::ElemBase::getIDOfBoundaryWithNodes(const std::set<FESystemUInt>&
                 n_nodes_found++;
         
         if (n_nodes_found == it->second.size())
-            return it->first;
+        {
+            if_elem_has_given_boundary = true;
+            b_id = it->first;
+        }
     }
-    
-    // if the code gets here, then the boundary could not be identified. This is a logic error
-    FESystemAssert0(false, FESystem::Exception::InvalidValue);
 }
 
 
 
-FESystemUInt 
-FESystem::Mesh::ElemBase::getInternalIDForNode(const FESystem::Mesh::Node& node) const
-{
-    for (FESystemUInt i=0; i<this->physical_nodes.size(); i++)
-        if (this->physical_nodes[i] == &node)
-            return i;
-    
-    // if the code gets here, then this element does not contain this node, and it is a logic error
-    FESystemAssert0(false, FESystem::Exception::InvalidValue);
-}
-
-
-FESystemUInt 
-FESystem::Mesh::ElemBase::getIDOfBoundaryWithNodes(const std::set<FESystem::Mesh::Node*>& b_nodes) const
+void
+FESystem::Mesh::ElemBase::getIDOfBoundaryWithNodes(const std::set<FESystem::Mesh::Node*>& b_nodes, FESystemBoolean& if_elem_has_given_boundary, FESystemUInt& b_id) const
 {
     std::set<FESystem::Mesh::Node*>::const_iterator n_it=b_nodes.begin(), n_end=b_nodes.end();
     std::set<FESystemUInt> node_ids;
     
-    for ( ; n_it != n_end; n_it++)
-        node_ids.insert(this->getInternalIDForNode(**n_it));
+    FESystemUInt n_id;
     
-    return this->ElemBase::getIDOfBoundaryWithNodes(node_ids);
+    for ( ; n_it != n_end; n_it++)
+    {
+        this->getInternalIDForNode(**n_it, if_elem_has_given_boundary, n_id);
+        if (if_elem_has_given_boundary)
+            node_ids.insert(n_id);
+        else
+            return;
+    }
+    
+    this->ElemBase::getIDOfBoundaryWithNodes(node_ids, if_elem_has_given_boundary, b_id);
 }
+
+
+void
+FESystem::Mesh::ElemBase::getInternalIDForNode(const FESystem::Mesh::Node& node, FESystemBoolean& if_node_belongs_to_elem, FESystemUInt& internal_id) const
+{
+    for (FESystemUInt i=0; i<this->physical_nodes.size(); i++)
+        if (this->physical_nodes[i] == &node)
+        {
+            if_node_belongs_to_elem = true;
+            internal_id = i;
+            return;
+        }
+    
+    // if the code gets here, then the node does not belong to this elmeent
+    if_node_belongs_to_elem = false;
+    internal_id = 0;
+}
+
+
+
+void
+FESystem::Mesh::ElemBase::setTagForBoundary(const FESystemUInt b_id, const FESystemInt tag)
+{
+    std::map<FESystemUInt, std::set<FESystemInt> >::iterator it = this->boundary_tags.find(b_id);
+    
+    if (it == this->boundary_tags.end())
+        it = this->boundary_tags.insert(std::pair<FESystemUInt, std::set<FESystemInt> >(b_id, std::set<FESystemInt>())).first;
+    
+    if (it->second.count(tag) == 0)
+        it->second.insert(tag);
+}
+
+
+
+
+void
+FESystem::Mesh::ElemBase::getBoundariesWithTag(const FESystemInt tag, std::set<FESystemUInt>& b_ids) const
+{
+    b_ids.clear();
+    std::map<FESystemUInt, std::set<FESystemInt> >::const_iterator it, end;
+    
+    for ( ; it != end; it++)
+        if (it->second.count(tag))
+            b_ids.insert(it->first);
+}
+
+
+
+const std::map<FESystemUInt, std::set<FESystemInt> >&
+FESystem::Mesh::ElemBase::getBoundaryTags() const
+{
+    return this->boundary_tags;
+}
+
 
 
 

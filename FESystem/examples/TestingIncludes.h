@@ -171,4 +171,6 @@ int euler_analysis_driver(int argc, char * const argv[]);
 
 int ellipticMeshingDriver(int argc, char * const argv[]);
 
+int fluidStructutreInteractionDriver(int argc, char * const argv[]);
+
 #endif

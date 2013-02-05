@@ -20,6 +20,8 @@ namespace FESystem
 {
     // Forward declerations
     namespace Geometry {class Point;}
+    namespace Mesh {class ElemBase;}
+    namespace FiniteElement {class FiniteElementBase;}
     
     namespace Quadrature
     {        
@@ -37,7 +39,12 @@ namespace FESystem
             QuadratureBase();
             
             virtual ~QuadratureBase();
-                        
+            
+            /*!
+             *    clears the data structures for reinitialization
+             */
+            virtual void clear();
+            
             /*!
              *   Returns the dimension of this quadrature rule
              */ 
@@ -100,6 +107,17 @@ namespace FESystem
              */ 
             std::vector<FESystemDouble> quadrature_point_weights;
         };
+        
+        /*!
+         *    Initializes the qrule for the given geometric element and the finite element
+         */
+        void initializeQRuleForElem(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, FESystem::Quadrature::QuadratureBase& qrule);
+
+        /*!
+         *    Initializes the qrule for use on boundary of the given geometric element and the finite element
+         */
+        void initializeQRuleForElemBoundary(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, FESystem::Quadrature::QuadratureBase& qrule);
+
     }
 }
 

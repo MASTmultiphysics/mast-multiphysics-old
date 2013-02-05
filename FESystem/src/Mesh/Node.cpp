@@ -47,6 +47,13 @@ FESystem::Mesh::Node::ifConnectedToElement(FESystem::Mesh::ElemBase& el)
 }
 
 
+std::set<FESystem::Mesh::ElemBase*>&
+FESystem::Mesh::Node::getElementConnectivitySet()
+{
+    return this->element_connections;
+}
+
+
 const std::set<FESystem::Mesh::ElemBase*>&
 FESystem::Mesh::Node::getElementConnectivitySet() const
 {

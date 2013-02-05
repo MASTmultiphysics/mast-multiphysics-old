@@ -37,6 +37,11 @@ namespace FESystem
             virtual ~FELagrange();
             
             /*!
+             *   Returns the type of finite element
+             */
+            virtual FESystem::FiniteElement::FiniteElementType getFiniteElementType() const;
+
+            /*!
              *   Method to clear the shape functions in the matrices that have been set up by reinit. This method is to be called 
              *   by the method reinit. 
              */

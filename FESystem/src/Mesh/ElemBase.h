@@ -64,8 +64,20 @@ namespace FESystem
             /*!
              *   Returns the number of nodes that belong to this element
              */
-            FESystemUInt getNNodes() const; 
-                        
+            FESystemUInt getNNodes() const;
+            
+            /*!
+             *   Returns the number of boundaries for this element. A boundary is defined as a side of dimension dim-1 (eg. face for volume and line for face, etc.)
+             */
+            virtual FESystemUInt getNBoundaries() const = 0;
+            
+            
+            /*!
+             *   Tells the element that it is a parent nondegenerate element that is not to be used in node-element connectivity mapping
+             */
+            void setToParentNondegenerateElement();
+            
+            
             /*!
              *   Sets the \p i th node for this element to \p n
              */
@@ -168,17 +180,34 @@ namespace FESystem
             /*!
              *    returns the internal numbering of the node in this element
              */
-            FESystemUInt getInternalIDForNode(const FESystem::Mesh::Node& node) const;
+            void getInternalIDForNode(const FESystem::Mesh::Node& node, FESystemBoolean& if_node_belongs_to_elem, FESystemUInt& internal_id) const;
+
+            /*!
+             *    sets the tag for the specified boundary
+             */
+            void setTagForBoundary(const FESystemUInt b_id, const FESystemInt tag);
+            
+
+            /*!
+             *    gets list of boundaries with tag
+             */
+            void getBoundariesWithTag(const FESystemInt tag, std::set<FESystemUInt>& b_ids) const;
+
+            
+            /*!
+             *    returns the map of tags for boundary
+             */
+            const std::map<FESystemUInt, std::set<FESystemInt> >& getBoundaryTags() const;
             
             /*!
              *   Returns the id of the boundary that contains the nodes specified in the set
              */  
-            virtual FESystemUInt getIDOfBoundaryWithNodes(const std::set<FESystem::Mesh::Node*>& b_nodes) const;
+            virtual void getIDOfBoundaryWithNodes(const std::set<FESystem::Mesh::Node*>& b_nodes, FESystemBoolean& if_elem_has_given_boundary, FESystemUInt& b_id) const;
 
             /*!
              *   Returns the id of the boundary that contains the node ids specified in the set.  
              */  
-            virtual FESystemUInt getIDOfBoundaryWithNodes(const std::set<FESystemUInt>& b_nodes) const;
+            virtual void getIDOfBoundaryWithNodes(const std::set<FESystemUInt>& b_nodes, FESystemBoolean& if_elem_has_given_boundary, FESystemUInt& b_id) const;
 
             /*!
              *   Returns the map of boundary id and nodes defining the boundary
@@ -192,6 +221,11 @@ namespace FESystem
              */
             virtual void getConstantCoordinateIDAndValueForBoundary(const FESystemUInt b_id, FESystemUInt& coord_id, FESystemDouble& coord_val) const = 0; 
 
+            /*!
+             *    Calculates the normal for this element. This will throw an Exception for volume elements
+             */
+            virtual void calculateSurfaceNormal(FESystem::Numerics::VectorBase<FESystemDouble>& n_vec) const = 0;
+            
             /*!
              *   Calculates the normal of the specified boundary. This method is to be used for only the linear elements that have straight edges. 
              *   For curved elements, the other method should be used, since it requires an interpolation method. 
@@ -255,6 +289,16 @@ namespace FESystem
              *  parent nondegenrate element
              */
             FESystem::Mesh::ElemBase* parent_nondegenerate_elem;
+
+            /*!
+             *   if this is a parent nondegenerate element owned by a degenerate element
+             */
+            FESystemBoolean if_parent_nondegenerate_element;
+            
+            /*!
+             *   set of tags for each boundary
+             */
+            std::map<FESystemUInt, std::set<FESystemInt> > boundary_tags;
         };
         
         /*!

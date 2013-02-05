@@ -35,37 +35,65 @@ namespace FESystem
          *   Side2 -> 1, 2, 4
          *   Side3 -> 3, 2, 4
          *
-         *              ^ phi 
-         *              |
-         *              |
-         *             Node4
-         *              o  
-         *             /.\   ^ eta
-         *            /. .\ / 
-         *           /.   ./
-         *          /.    / \
-         *         /.    / . \
-         *        /.    /   . \
-         * Node3 o-------------o Node2 
-         *      /.          . /
-         *     /.            /------------> xi
-         *    o-------------o
-         *   Node0        Node1
+         *
+         *
+         *   \verbatim
+         *
+         *             ^ eta
+         *             |   ^ -phi
+         *        Node3|  /      Node 2
+         *       o-----|-/-----o
+         *       |     |    .  |
+         *       |             |
+         *       |        .    | -------> xi
+         *       | .           |
+         *       | Node0       | Node 1
+         *       o-----.-------o
+         *        \ . .
+         *          o   Node 4
+         *
+         *
+         *
+         *   \endverbatim
          *
          *
          */
-		class Prism5: public FESystem::Mesh::VolumeElemBase
+		class Pyramid5: public FESystem::Mesh::PyramidElemBase
 		{
 		public:
             /*!
-             *   Constructor takes the mesh as input. 
+             *   Constructor takes the mesh as input.
              */
-			Prism5(FESystem::Mesh::MeshBase& m);
+			Pyramid5(FESystemBoolean local_cs_same_as_global);
 			
-			virtual ~Prism5();
+			virtual ~Pyramid5();
 			
+            /*!
+             *   Returns the geometry order for this element.
+             */
+            virtual FESystemUInt getGeometryOrder() const;
+            
+            /*!
+             *   Returns the matrix that maps the shape functions from the parent nondegenrate to this element
+             */
+            virtual const FESystem::Numerics::MatrixBase<FESystemDouble>& getParentToDegenerateElemMappingMatrix() const;
+            
 		protected:
 			
+            /*!
+             *   Matrix that stores the mapping from the nondegenerate to degenerate element. This is a unit matrix for the QUAD elements
+             */
+            static std::auto_ptr<FESystem::Numerics::MatrixBase<FESystemDouble> > pyramid5_nondegenerate_to_degenerate_element_mapping;
+            
+            /*!
+             *   Initialize parent nondegenerate element. Is defined for each inherited element
+             */
+            virtual void initializeParentNondegenerateElement();
+            
+            /*!
+             *    clears the parent nondegenerate element before it can be updated
+             */
+            virtual void clearParentNondegenerateElement();
 		};
 	}
 }

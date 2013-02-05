@@ -200,12 +200,9 @@ FESystem::OutputProcessor::TecplotOutputProcessor::populateElemTypeVector(const 
     vec.push_back(FESystem::Mesh::EDGE3);
     vec.push_back(FESystem::Mesh::TRI7);
     vec.push_back(FESystem::Mesh::QUAD9);
-    vec.push_back(FESystem::Mesh::TET15);
-    vec.push_back(FESystem::Mesh::HEX26);
+    vec.push_back(FESystem::Mesh::TET18);
+    vec.push_back(FESystem::Mesh::HEX27);
     vec.push_back(FESystem::Mesh::PRISM21);
-    vec.push_back(FESystem::Mesh::PYRAMID19);
-
-    FESystemUInt n_elem_of_type = 0;
 
     // iterate over the number of elements and if a certain type exists in the mesh, add it to the vector to be returned
     for (FESystemUInt i_type=0; i_type<vec.size(); i_type++)

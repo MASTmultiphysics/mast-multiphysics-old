@@ -33,6 +33,23 @@ FESystem::Mesh::FaceElemBase::~FaceElemBase()
     
 }
 
+
+void
+FESystem::Mesh::FaceElemBase::calculateSurfaceNormal(FESystem::Numerics::VectorBase<FESystemDouble> &n_vec) const
+{
+    FESystemAssert2(n_vec.getSize() == 3, FESystem::Exception::DimensionsDoNotMatch, n_vec.getSize(), 3);
+    
+    n_vec.zero();
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1, vec2;
+    vec1.resize(3); vec2.resize(3);
+    
+    vec1.copyVector(this->getNode(1)); vec1.add(-1.0, this->getNode(0));
+    vec2.copyVector(this->getNode(2)); vec2.add(-1.0, this->getNode(0));
+    vec1.crossProduct(vec2, n_vec);
+}
+
+
+
 FESystemUInt 
 FESystem::Mesh::FaceElemBase::getDimension() const
 {
@@ -139,6 +156,11 @@ FESystem::Mesh::QuadElemBase::~QuadElemBase()
 
 
 
+FESystemUInt
+FESystem::Mesh::QuadElemBase::getNBoundaries() const
+{
+    return 4;
+}
 
 
 void 
@@ -228,6 +250,14 @@ FESystem::Mesh::TriElemBase::~TriElemBase()
     if (this->parent_nondegenerate_elem != NULL)
         delete this->parent_nondegenerate_elem;
 }
+
+
+FESystemUInt
+FESystem::Mesh::TriElemBase::getNBoundaries() const
+{
+    return 3;
+}
+
 
 
 const FESystem::Utility::Table<FESystemUInt>& 

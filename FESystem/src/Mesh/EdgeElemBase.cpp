@@ -37,6 +37,15 @@ FESystem::Mesh::EdgeElemBase::~EdgeElemBase()
 }
 
 
+
+FESystemUInt
+FESystem::Mesh::EdgeElemBase::getNBoundaries() const
+{
+    return 2;
+}
+
+
+
 FESystemUInt 
 FESystem::Mesh::EdgeElemBase::getDimension() const
 {
@@ -56,6 +65,22 @@ FESystem::Mesh::EdgeElemBase::setVectorForXYPlane(const FESystem::Numerics::Vect
     
     this->y_unit_vec->copyVector(vec);
 }
+
+
+
+void
+FESystem::Mesh::EdgeElemBase::calculateSurfaceNormal(FESystem::Numerics::VectorBase<FESystemDouble> &n_vec) const
+{
+    FESystemAssert2(n_vec.getSize() == 3, FESystem::Exception::DimensionsDoNotMatch, n_vec.getSize(), 3);
+    
+    n_vec.zero();
+    FESystem::Numerics::LocalVector<FESystemDouble> vec1;
+    vec1.resize(3);
+    
+    vec1.copyVector(this->getNode(1)); vec1.add(-1.0, this->getNode(0));
+    vec1.crossProduct(*this->y_unit_vec, n_vec);
+}
+
 
 
 bool 
