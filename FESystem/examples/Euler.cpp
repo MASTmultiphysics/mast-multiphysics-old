@@ -24,13 +24,13 @@ enum AnalysisCase
 };
 
 
-
-const FESystemDouble  rho=1.05, u1=277.832, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
+// speed of sound = 347.2926 m/s
+const FESystemDouble aoa=1.25, rho=1.05, uval=347.2926*.8, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
 const FESystemDouble x_length = 22.0, y_length = 8.00, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
 const FESystemDouble t_by_c = 0.12, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 120;
+const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 250;
 const AnalysisCase case_type = NACA_AIRFOIL;
 const FESystemBoolean if_fd = false;
 
@@ -593,15 +593,19 @@ public:
                 case NACA_AIRFOIL:
                 {
                     // set the flux value for the left and right boundary
-                    mass_flux.zero(); mass_flux.setVal(0, rho*u1);
-                    momentum_flux_tensor.zero(); momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(1, 1, p);
-                    energy_flux.zero(); energy_flux.setVal(0, rho*u1*(cv*temp+0.5*u1*u1)+p*u1);
+                    mass_flux.zero();
+                    mass_flux.setVal(0, rho*u1); mass_flux.setVal(1, rho*u2);
+                    momentum_flux_tensor.zero();
+                    momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(0, 1, rho*u1*u2);
+                    momentum_flux_tensor.setVal(1, 0, rho*u1*u2); momentum_flux_tensor.setVal(1, 1, rho*u2*u2+p);
+                    energy_flux.zero();
+                    energy_flux.setVal(0, rho*u1*(cv*temp+0.5*(u1*u1+u2*u2))+p*u1); energy_flux.setVal(1, rho*u2*(cv*temp+0.5*(u1*u1+u2*u2))+p*u2);
                     for (FESystemUInt i=0; i<n_elem_nodes; i++)
                     {
                         sol_inf.setVal(i, rho);
                         sol_inf.setVal(n_elem_nodes+i, rho*u1);
-                        sol_inf.setVal(n_elem_nodes*2+i, 0.0);
-                        sol_inf.setVal(n_elem_nodes*3+i, rho*(cv*temp+0.5*u1*u1));
+                        sol_inf.setVal(n_elem_nodes*2+i, rho*u2);
+                        sol_inf.setVal(n_elem_nodes*3+i, rho*(cv*temp+0.5*(u1*u1+u2*u2)));
                     }
                 }
                     break;
