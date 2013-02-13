@@ -24,7 +24,7 @@ namespace FESystem
     namespace Functions
     {
         /*!
-         *   This class derives from the base class FunctionBase, and implements the Lagrange function 
+         *   This class derives from the base class DiscreteFunctionMappingBase, and implements the Lagrange function 
          *   with abcissa and ordinate types as FESystemDoubles. 
          */
         template <typename ValType>

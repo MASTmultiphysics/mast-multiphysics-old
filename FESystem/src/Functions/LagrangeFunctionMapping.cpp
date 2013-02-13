@@ -212,12 +212,6 @@ FESystem::Functions::LagrangeFunctionMapping<ValType>::getDiscreteFunction(const
     FESystemAssert2(vin.getSize() == s.first, FESystem::Exception::DimensionsDoNotMatch, vin.getSize(), s.first);
     FESystemAssert2(vout.getSize() == n_pts, FESystem::Exception::DimensionsDoNotMatch, vout.getSize(), n_pts);
     
-    // iterate over each dimension and shape function and calculate the mapped function value
-    std::vector<ValType> func_vals;
-    if (func_vals.size() != n_pts)
-        func_vals.resize(n_pts);
-    for (FESystemUInt i=0; i<n_pts; i++) func_vals[i]=1.0;
-    
     // loops to calculate the shape functions at each point
     ValType out_val = 0.0;
     for (FESystemUInt i_pts=0; i_pts<n_pts; i_pts++)
