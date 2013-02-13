@@ -299,8 +299,8 @@ FESystem::FiniteElement::FiniteElementBase::getJacobianValueForBoundary(const FE
             id1=0; id2=1;
         }
 
-        jac.getColumnVals(id1, 0, elem_dim, vin_b);
-        jac.getColumnVals(id2, 0, elem_dim, v2);
+        jac.getColumnVals(id1, 0, elem_dim-1, vin_b);
+        jac.getColumnVals(id2, 0, elem_dim-1, v2);
         vin_b.crossProduct(v2, v3); // this calculates the differential area
         
         return v3.getL2Norm();

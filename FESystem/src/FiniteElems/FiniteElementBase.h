@@ -38,7 +38,8 @@ namespace FESystem
          */
         enum FiniteElementType
         {
-            FE_LAGRANGE
+            FE_LAGRANGE,
+            FE_LEGENDRE
         };
         
         
