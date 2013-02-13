@@ -18,6 +18,10 @@
 #include "Mesh/Tri3.h"
 #include "Mesh/Tri6.h"
 #include "Mesh/Tri7.h"
+#include "Mesh/Hex8.h"
+#include "Mesh/Tet4.h"
+#include "Mesh/Prism6.h"
+#include "Mesh/Pyramid5.h"
 #include "Mesh/Node.h"
 #include "Geom/CoordinateSystemBase.h"
 #include "Functions/FunctionMappingBase.h"
@@ -467,6 +471,22 @@ FESystem::Mesh::ElementCreate(FESystem::Mesh::MeshBase& mesh, FESystem::Mesh::El
 
         case FESystem::Mesh::QUAD9:
             elem.reset(new FESystem::Mesh::Quad9(if_local_physical_cs_same_as_global));
+            break;
+
+        case FESystem::Mesh::HEX8:
+            elem.reset(new FESystem::Mesh::Hex8(if_local_physical_cs_same_as_global));
+            break;
+
+        case FESystem::Mesh::TET4:
+            elem.reset(new FESystem::Mesh::Tet4(if_local_physical_cs_same_as_global));
+            break;
+
+        case FESystem::Mesh::PRISM6:
+            elem.reset(new FESystem::Mesh::Prism6(if_local_physical_cs_same_as_global));
+            break;
+
+        case FESystem::Mesh::PYRAMID5:
+            elem.reset(new FESystem::Mesh::Pyramid5(if_local_physical_cs_same_as_global));
             break;
 
         default:
