@@ -12,8 +12,8 @@
 // FESystem includes
 #include "OutputProcessors/TecplotOutputProcessor.h"
 #include "Numerics/VectorBase.h"
-#include "Base/DegreeOfFreedomMap.h"
-#include "Base/DegreeOfFreedomUnit.h"
+#include "DegreesOfFreedom/DegreeOfFreedomMap.h"
+#include "DegreesOfFreedom/DegreeOfFreedomUnit.h"
 #include "Mesh/MeshBase.h"
 #include "Mesh/ElemBase.h"
 #include "Mesh/Node.h"
@@ -35,7 +35,7 @@ FESystem::OutputProcessor::TecplotOutputProcessor::~TecplotOutputProcessor()
 
 
 void
-FESystem::OutputProcessor::TecplotOutputProcessor::writeMesh(std::ostream& output, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map)
+FESystem::OutputProcessor::TecplotOutputProcessor::writeMesh(std::ostream& output, const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map)
 {
     std::vector<FESystem::Mesh::ElementType> elem_type_map;
     this->populateElemTypeVector(mesh, elem_type_map);
@@ -94,7 +94,7 @@ void
 FESystem::OutputProcessor::TecplotOutputProcessor::writeSolution(std::ostream& output, 
                                                                  const std::string& data_name,
                                                                  const FESystem::Mesh::MeshBase& mesh, 
-                                                                 const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                                                 const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                                                  const std::vector<FESystemUInt>& variables_to_write,
                                                                  const FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {

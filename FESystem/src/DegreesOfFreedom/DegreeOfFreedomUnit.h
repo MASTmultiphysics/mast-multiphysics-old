@@ -17,7 +17,7 @@
 
 namespace FESystem
 {
-    namespace Base 
+    namespace DegreeOfFreedom 
     {
         /*!
          *   

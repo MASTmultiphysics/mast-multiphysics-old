@@ -20,7 +20,7 @@
 #include "Base/FESystemTypes.h"
 #include "Base/FESystemExceptions.h"
 #include "Mesh/ElementType.h"
-#include "Base/DegreeOfFreedomObject.h"
+#include "DegreesOfFreedom/DegreeOfFreedomObject.h"
 #include "Base/IdObject.h"
 
 
@@ -42,11 +42,11 @@ namespace FESystem
         class Node;
 
         /*!
-         *   This provides the base class for all geometric element types. An element is defined by a shape, 1-D, 2-D or 3-D, and 
+         *   This provides the base class for all geometric element types. An element is defined by a shape, 1-D, 2-D or 3-D, and
          *   the nodes that it is connected by. For each element, the sequence of nodes is important as it defined the face normal directions. 
          *   The requirement is specifically defined in each element. 
          */
-		class ElemBase: public FESystem::Base::DegreeOfFreedomObject, public FESystem::Base::IdObject
+		class ElemBase: public FESystem::DegreeOfFreedom::DegreeOfFreedomObject, public FESystem::Base::IdObject
 		{
 		public:
             /**

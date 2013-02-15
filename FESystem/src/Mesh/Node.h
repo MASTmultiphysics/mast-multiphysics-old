@@ -16,7 +16,7 @@
 
 // FESystem includes
 #include "Geom/Point.h"
-#include "Base/DegreeOfFreedomObject.h"
+#include "DegreesOfFreedom/DegreeOfFreedomObject.h"
 #include "Base/IdObject.h"
 
 
@@ -37,7 +37,7 @@ namespace FESystem
          *   computable degrees of freedom associated with it. The physical location is obtained though the class \t Point, whilt the 
          *   degree of freedom is obtained by the class \t DegreeOfFreedom. 
          */ 
-		class Node: public FESystem::Geometry::Point, public FESystem::Base::DegreeOfFreedomObject, public FESystem::Base::IdObject
+		class Node: public FESystem::Geometry::Point, public FESystem::DegreeOfFreedom::DegreeOfFreedomObject, public FESystem::Base::IdObject
 		{
 		public:
             /*!

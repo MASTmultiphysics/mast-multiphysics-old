@@ -25,12 +25,12 @@ enum AnalysisCase
 
 
 // speed of sound = 347.2926 m/s
-const FESystemDouble aoa=1.25, rho=1.05, uval=347.2926*.8, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
+const FESystemDouble aoa=1.25, rho=1.05, uval=347.2926*.8, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), u3 =0.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
 const FESystemDouble x_length = 22.0, y_length = 8.00, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
 const FESystemDouble t_by_c = 0.12, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
-const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=4, dc_freeze_iter_num = 250;
+const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=dim+2, dc_freeze_iter_num = 250;
 const AnalysisCase case_type = NACA_AIRFOIL;
 const FESystemBoolean if_fd = false;
 
@@ -525,7 +525,7 @@ class AssembleElementMatrices
 {
 public:
     AssembleElementMatrices(const std::vector<FESystem::Mesh::ElemBase*>& e, FESystemDouble t_step,
-                            const FESystem::Base::DegreeOfFreedomMap& dof,
+                            const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& s,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& v,
                             std::vector<std::vector<FESystemDouble> >& dc,
@@ -583,7 +583,7 @@ public:
             n_elem_dofs = dof_map.getNVariables() * n_elem_nodes;
             
             // set the solution at infinity for this element
-            mass_flux.resize(2); energy_flux.resize(2); momentum_flux_tensor.resize(2, 2); sol_inf.resize(n_elem_dofs);
+            mass_flux.resize(dim); energy_flux.resize(dim); momentum_flux_tensor.resize(dim, dim); sol_inf.resize(n_elem_dofs);
 
             switch (case_type)
             {
@@ -594,18 +594,25 @@ public:
                 {
                     // set the flux value for the left and right boundary
                     mass_flux.zero();
-                    mass_flux.setVal(0, rho*u1); mass_flux.setVal(1, rho*u2);
+                    mass_flux.setVal(0, rho*u1);
+                    if (dim > 1) mass_flux.setVal(1, rho*u2);
+                    if (dim > 2) mass_flux.setVal(2, rho*u3);
                     momentum_flux_tensor.zero();
-                    momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); momentum_flux_tensor.setVal(0, 1, rho*u1*u2);
-                    momentum_flux_tensor.setVal(1, 0, rho*u1*u2); momentum_flux_tensor.setVal(1, 1, rho*u2*u2+p);
+                    momentum_flux_tensor.setVal(0, 0, rho*u1*u1+p); if (dim > 1) momentum_flux_tensor.setVal(0, 1, rho*u2*u1); if (dim > 2) momentum_flux_tensor.setVal(0, 2, rho*u3*u1);
+                    if (dim > 1)
+                    { momentum_flux_tensor.setVal(1, 0, rho*u1*u2); momentum_flux_tensor.setVal(1, 1, rho*u2*u2+p); if (dim > 2) momentum_flux_tensor.setVal(1, 2, rho*u3*u2); }
+                    if (dim > 2)
+                    { momentum_flux_tensor.setVal(2, 0, rho*u1*u3); momentum_flux_tensor.setVal(2, 1, rho*u2*u3); momentum_flux_tensor.setVal(2, 2, rho*u3*u3+p); }
                     energy_flux.zero();
-                    energy_flux.setVal(0, rho*u1*(cv*temp+0.5*(u1*u1+u2*u2))+p*u1); energy_flux.setVal(1, rho*u2*(cv*temp+0.5*(u1*u1+u2*u2))+p*u2);
+                    energy_flux.setVal(0, rho*u1*(cv*temp+0.5*(u1*u1+u2*u2+u3*u3))+p*u1); if (dim > 1) energy_flux.setVal(1, rho*u2*(cv*temp+0.5*(u1*u1+u2*u2+u3*u3))+p*u2);
+                    if (dim > 2) energy_flux.setVal(2, rho*u3*(cv*temp+0.5*(u1*u1+u2*u2+u3*u3))+p*u3);
                     for (FESystemUInt i=0; i<n_elem_nodes; i++)
                     {
                         sol_inf.setVal(i, rho);
                         sol_inf.setVal(n_elem_nodes+i, rho*u1);
-                        sol_inf.setVal(n_elem_nodes*2+i, rho*u2);
-                        sol_inf.setVal(n_elem_nodes*3+i, rho*(cv*temp+0.5*(u1*u1+u2*u2)));
+                        if (dim > 1) sol_inf.setVal(n_elem_nodes*2+i, rho*u2);
+                        if (dim > 2) sol_inf.setVal(n_elem_nodes*3+i, rho*u3);
+                        sol_inf.setVal(n_elem_nodes*(dof_map.getNVariables()-1)+i, rho*(cv*temp+0.5*(u1*u1+u2*u2+u3*u3)));
                     }
                 }
                     break;
@@ -628,7 +635,7 @@ public:
             elem_mat1.zero();
             elem_mat2.zero();
             elem_vec.zero();
-
+            
             // resize the dc vector if the values are still being updated
             if (if_update_elem_dc_vals && (dc_vals[i].size() != q_rule.getQuadraturePoints().size()))
                 dc_vals[i].resize(q_rule.getQuadraturePoints().size());
@@ -646,7 +653,7 @@ public:
             
             fluid_elem.calculateResidualVector(elem_vec);
             elem_vec.add(1.0, bc_vec);
-            
+
             if (if_calculate_jacobian && !if_fd)
             {
                 fluid_elem.calculateTangentMatrix(elem_mat1, elem_mat2);
@@ -658,6 +665,7 @@ public:
             
             {
                 tbb::mutex::scoped_lock my_lock(euler_assembly_mutex);
+                
                 dof_map.addToGlobalVector(*(elems[i]), elem_vec, residual);
                 if (if_calculate_jacobian)
                 {
@@ -721,7 +729,7 @@ protected:
     
     const std::vector<FESystem::Mesh::ElemBase*>& elems;
     const FESystemDouble dt;
-    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map;
     const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
     const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
     const FESystemBoolean if_calculate_jacobian;
@@ -739,7 +747,7 @@ class EvaluateLinearizedForce
 {
 public:
     EvaluateLinearizedForce(const std::vector<FESystem::Mesh::ElemBase*>& e, FESystemDouble t_step,
-                            const FESystem::Base::DegreeOfFreedomMap& dof,
+                            const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& s,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& v,
                             const FESystem::Numerics::VectorBase<FESystemDouble>& str_vel,
@@ -819,7 +827,7 @@ protected:
     
     const std::vector<FESystem::Mesh::ElemBase*>& elems;
     const FESystemDouble dt;
-    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map;
     const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
     const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
     const FESystem::Numerics::VectorBase<FESystemDouble>& structural_vel;
@@ -835,7 +843,7 @@ public:
     EvaluateComplexCpPerturbation(const std::vector<FESystem::Mesh::ElemBase*>& e,
                                   const std::vector<FESystem::Mesh::Node*>& nd,
                                   FESystemDouble t_step,
-                                  const FESystem::Base::DegreeOfFreedomMap& dof,
+                                  const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof,
                                   const FESystem::Numerics::VectorBase<FESystemDouble>& s,
                                   const FESystem::Numerics::VectorBase<FESystemDouble>& v,
                                   std::vector<std::vector<FESystemDouble> >& dc,
@@ -902,7 +910,7 @@ protected:
     const std::vector<FESystem::Mesh::ElemBase*>& elems;
     const std::vector<FESystem::Mesh::Node*>& nodes;
     const FESystemDouble dt;
-    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map;
     const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
     const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
     std::vector<std::vector<FESystemDouble> >& elem_dc_vals;
@@ -918,7 +926,7 @@ public:
     EvaluatePrimitiveVariables(const std::vector<FESystem::Mesh::ElemBase*>& e,
                                const std::vector<FESystem::Mesh::Node*>& nd,
                                FESystemDouble t_step,
-                               const FESystem::Base::DegreeOfFreedomMap& dof,
+                               const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof,
                                const FESystem::Numerics::VectorBase<FESystemDouble>& s,
                                const FESystem::Numerics::VectorBase<FESystemDouble>& v,
                                std::vector<std::vector<FESystemDouble> >& dc,
@@ -975,7 +983,7 @@ protected:
     const std::vector<FESystem::Mesh::ElemBase*>& elems;
     const std::vector<FESystem::Mesh::Node*>& nodes;
     const FESystemDouble dt;
-    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map;
     const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
     const FESystem::Numerics::VectorBase<FESystemDouble>& vel;
     const FESystemBoolean if_update_elem_dc_vals;
@@ -986,7 +994,7 @@ protected:
 
 
 
-void calculateEulerQuantities(const FESystem::Base::DegreeOfFreedomMap& dof_map,
+void calculateEulerQuantities(const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                               const FESystem::Mesh::MeshBase& mesh,
                               const FESystemDouble dt, const FESystemUInt iter_num,
                               const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
@@ -1025,7 +1033,7 @@ void calculateEulerQuantities(const FESystem::Base::DegreeOfFreedomMap& dof_map,
 
 
 
-void transientEulerAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, FESystem::Numerics::VectorBase<FESystemDouble>& final_sol)
+void transientEulerAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map, FESystem::Numerics::VectorBase<FESystemDouble>& final_sol)
 {
     FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> linear_solver;
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
@@ -1043,7 +1051,9 @@ void transientEulerAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem
     {
         sol.setVal(nodes[i]->getDegreeOfFreedomUnit(0).global_dof_id[0], rho);
         sol.setVal(nodes[i]->getDegreeOfFreedomUnit(1).global_dof_id[0], rho * u1);
-        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * (temp*cv + u1*u1*0.5));
+        if (dim > 1) sol.setVal(nodes[i]->getDegreeOfFreedomUnit(2).global_dof_id[0], rho * u2);
+        if (dim > 2) sol.setVal(nodes[i]->getDegreeOfFreedomUnit(3).global_dof_id[0], rho * u3);
+        sol.setVal(nodes[i]->getDegreeOfFreedomUnit(dim + 1).global_dof_id[0], rho * (temp*cv + 0.5*(u1*u1+u2*u2+u3*u3)));
     }
 
     // initialize the solver
@@ -1066,7 +1076,9 @@ void transientEulerAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem
     
     FESystem::OutputProcessor::VtkOutputProcessor output;
     std::fstream output_file;
-    std::vector<FESystemUInt> vars(4); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; //vars[4] = 4; // write all solutions
+    std::vector<FESystemUInt> vars;
+    if (dim == 2) { vars.resize(4); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3;} // 2-D analysis
+    if (dim == 3) { vars.resize(5); vars[0]=0; vars[1]=1; vars[2]=2; vars[3] = 3; vars[4] = 4; } // 3-D analysis
     
     FESystemUInt n_skip=0, n_count=0, n_write=0;
     FESystem::TransientSolvers::TransientSolverCallBack call_back;
@@ -1144,7 +1156,7 @@ void transientEulerAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem
 
 
 
-void frequencyDomainAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::VectorBase<FESystemDouble>& final_sol)
+void frequencyDomainAnalysis(const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::VectorBase<FESystemDouble>& final_sol)
 {
     FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemComplexDouble> linear_solver;
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
@@ -1215,8 +1227,8 @@ int euler_analysis_driver(int argc, char * const argv[])
     FESystem::InputProcessor::GmshInputProcessor input_processor;
     std::fstream input;
     input.open("/Users/bhatiam/Documents/Projects/gmsh_models/naca0012.msh", std::fstream::in);
-    input_processor.readMeshFromInput(input, 2, true, origin, mesh);
-
+    input_processor.readMeshFromInput(input, dim, true, origin, mesh);
+    
 //
 //    initMeshParameters();
 //
@@ -1228,15 +1240,23 @@ int euler_analysis_driver(int argc, char * const argv[])
     surf_vel.resize(dim);
     
     // now add the degrees of freedom
-    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    FESystem::DegreeOfFreedom::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
     name = "rho"; dof_map.addVariable(name, 0);
     name = "rhou"; dof_map.addVariable(name, 0);
-    name = "rhov"; dof_map.addVariable(name, 0);
-    //name = "rhow"; dof_map.addVariable(name, 0);
+    if (dim > 1) { name = "rhov"; dof_map.addVariable(name, 0);}
+    if (dim > 2) { name = "rhow"; dof_map.addVariable(name, 0);}
     name = "rhoe"; dof_map.addVariable(name, 0);
     dof_map.reinit(); // distribute the dofs
 
+//    FESystem::OutputProcessor::VtkOutputProcessor output;
+//    std::fstream output_file;
+//    output_file.open("mesh.vtk",std::fstream::out);
+//    output.writeMesh(output_file, mesh, dof_map);
+//    output_file.close();
+//
+//    return 0;
+    
     // create the finite element and initialize the shape functions
     FESystem::Numerics::SparseMatrix<FESystemDouble> global_stiffness_mat, global_mass_mat;
     FESystem::Numerics::LocalVector<FESystemDouble> rhs, sol;
@@ -1244,10 +1264,6 @@ int euler_analysis_driver(int argc, char * const argv[])
     rhs.resize(dof_map.getNDofs()); sol.resize(dof_map.getNDofs());
     global_mass_mat.resize(dof_map.getSparsityPattern());
     global_stiffness_mat.resize(dof_map.getSparsityPattern());
-    
-    // apply boundary condition and place a load on the last dof
-    //    std::set<FESystemUInt> bc_dofs;
-    //setBoundaryConditionTag(mesh, bc_dofs);
     
     // modify mesh after application of boundary condition
     //modifyMeshForCase(mesh);
@@ -1260,8 +1276,6 @@ int euler_analysis_driver(int argc, char * const argv[])
 
     // frequency domain solution
     frequencyDomainAnalysis(mesh, dof_map, sol_vec);
-    
-    //exit(1);
     
     return 0;
 }

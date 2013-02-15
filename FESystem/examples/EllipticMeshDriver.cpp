@@ -30,7 +30,7 @@ public:
     AssembleEllipticMeshingElementMatrices(const std::vector<FESystem::Mesh::ElemBase*>& e,
                                            const std::vector<FESystemDouble>& coupling,
                                            const FESystemUInt ne_dofs,
-                                           const FESystem::Base::DegreeOfFreedomMap& dof,
+                                           const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof,
                                            const FESystem::Quadrature::QuadratureBase& q,
                                            const FESystem::Quadrature::QuadratureBase& q_b,
                                            const FESystem::Numerics::VectorBase<FESystemDouble>& s,
@@ -104,7 +104,7 @@ protected:
     const std::vector<FESystem::Mesh::ElemBase*>& elems;
     const std::vector<FESystemDouble>& elem_coupling_coeffs;
     const FESystemUInt n_elem_dofs;
-    const FESystem::Base::DegreeOfFreedomMap& dof_map;
+    const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map;
     const FESystem::Quadrature::QuadratureBase& q_rule;
     const FESystem::Quadrature::QuadratureBase& q_boundary;
     const FESystem::Numerics::VectorBase<FESystemDouble>& sol;
@@ -117,7 +117,7 @@ protected:
 
 
 
-void calculateEllipticMeshingMatrices(const FESystem::Mesh::MeshBase& mesh, FESystemUInt n_elem_dofs, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+void calculateEllipticMeshingMatrices(const FESystem::Mesh::MeshBase& mesh, FESystemUInt n_elem_dofs, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                       const std::vector<FESystemDouble>& coupling,
                                       const FESystem::Numerics::VectorBase<FESystemDouble>& sol, FESystem::Numerics::VectorBase<FESystemDouble>& res, FESystem::Numerics::MatrixBase<FESystemDouble>& mat, FESystemBoolean if_evaluate_jac)
 {
@@ -157,7 +157,7 @@ void calculateEllipticMeshingMatrices(const FESystem::Mesh::MeshBase& mesh, FESy
 
 
 void ellipticMeshingNonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes,
-                                      const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                      const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                       const std::vector<FESystemDouble>& coupling,
                                       const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                                       const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map,
@@ -308,7 +308,7 @@ int circleellipticMeshingDriver(int argc, char * const argv[])
     createPlaneMesh(elem_type, mesh, origin, x_points, y_points, n_elem_nodes, CROSS, true);
     
     // now add the degrees of freedom
-    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    FESystem::DegreeOfFreedom::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
     name = "x"; dof_map.addVariable(name, 0);
     name = "y"; dof_map.addVariable(name, 0);
@@ -486,7 +486,7 @@ int ellipticMeshingDriver(int argc, char * const argv[])
     createPlaneMesh(elem_type, mesh, origin, x_points, y_points, n_elem_nodes, CROSS, true);
         
     // now add the degrees of freedom
-    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    FESystem::DegreeOfFreedom::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
     name = "x"; dof_map.addVariable(name, 0);
     name = "y"; dof_map.addVariable(name, 0);

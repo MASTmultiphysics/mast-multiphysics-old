@@ -40,11 +40,12 @@
 // finite elements
 #include "FiniteElems/FELagrange.h"
 #include "Functions/FunctionMappingBase.h"
+#include "Functions/LegendreFunction.h"
 // quadrature
 #include "Quadrature/TrapezoidQuadrature.h"
 // degrees of freedom
-#include "Base/DegreeOfFreedomMap.h"
-#include "Base/DegreeOfFreedomUnit.h"
+#include "DegreesOfFreedom/DegreeOfFreedomMap.h"
+#include "DegreesOfFreedom/DegreeOfFreedomUnit.h"
 // numerics
 #include "Numerics/DenseMatrix.h"
 #include "Numerics/SparseMatrix.h"
@@ -89,25 +90,25 @@ void createPlaneMesh(FESystem::Mesh::ElementType elem_type, FESystem::Mesh::Mesh
                      const std::vector<FESystemDouble>& x_points, const std::vector<FESystemDouble>& y_points, FESystemUInt& n_elem_nodes,
                      MeshType m_type, FESystemBoolean local_cs_same_as_global);
 
-void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                      const FESystem::Mesh::MeshBase& mesh, FESystem::Numerics::VectorBase<FESystemDouble>& global_sol,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& internal_force,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& external_force,
                                      FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec);
 
-void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+void staticAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                     const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                     const FESystem::Numerics::VectorBase<FESystemDouble>& rhs, FESystem::Numerics::VectorBase<FESystemDouble>& sol);
 
 void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const
-                       FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                       FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                        const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                        const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs,
                        FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                        FESystem::Numerics::VectorBase<FESystemDouble>& rhs, FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                        void (*calculateStructuralMatrices)(FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes,
-                                                           const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                                           const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                                            const FESystem::Mesh::MeshBase& mesh,
                                                            FESystem::Numerics::VectorBase<FESystemDouble>& global_sol,
                                                            FESystem::Numerics::VectorBase<FESystemDouble>& internal_force,
@@ -115,23 +116,23 @@ void nonlinearSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, 
                                                            FESystem::Numerics::MatrixBase<FESystemDouble>& global_stiffness_mat,
                                                            FESystem::Numerics::VectorBase<FESystemDouble>& global_mass_vec));
 
-void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+void modalAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                    const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                    const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
                    FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec);
 
-void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+void transientAnalysis(FESystemUInt dim, const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                        const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                        const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const std::vector<FESystemUInt>& sorted_ids, const FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
                        const FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec);
 
 void transientFlutterSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes,
-                              const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
+                              const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map, const FESystem::Numerics::SparsityPattern& nonbc_sparsity_pattern,
                               const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Numerics::MatrixBase<FESystemDouble>& stiff_mat,
                               const FESystem::Numerics::VectorBase<FESystemDouble>& mass_vec, const FESystemUInt n_modes, std::vector<FESystemUInt>& sorted_ids, FESystem::Numerics::VectorBase<FESystemDouble>& eig_vals,
                               FESystem::Numerics::MatrixBase<FESystemDouble>& eig_vec,
                               void (*calculatePistonTheoryMatrices)(FESystemDouble mach, FESystemDouble rho, FESystemDouble gamma, FESystemDouble a_inf, FESystemDouble u_inf,
-                                                                    FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                                                    FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                                                     const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Mesh::MeshBase& mesh,
                                                                     FESystem::Numerics::VectorBase<FESystemDouble>& global_sol, FESystem::Numerics::VectorBase<FESystemDouble>& global_vel,
                                                                     FESystem::Numerics::VectorBase<FESystemDouble>& force, FESystem::Numerics::VectorBase<FESystemDouble>& generalized_force,
@@ -141,7 +142,7 @@ void transientFlutterSolution(FESystemUInt dim, FESystem::Mesh::ElementType elem
 
 
 void calculatePlatePistonTheoryMatrices(FESystemDouble mach, FESystemDouble rho, FESystemDouble gamma, FESystemDouble a_inf, FESystemDouble u_inf,
-                                        FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                        FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                         const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Mesh::MeshBase& mesh,
                                         FESystem::Numerics::VectorBase<FESystemDouble>& global_sol, FESystem::Numerics::VectorBase<FESystemDouble>& global_vel,
                                         FESystem::Numerics::VectorBase<FESystemDouble>& force, FESystem::Numerics::VectorBase<FESystemDouble>& generalized_force,
@@ -151,7 +152,7 @@ void calculatePlatePistonTheoryMatrices(FESystemDouble mach, FESystemDouble rho,
 
 
 void calculateBeamPistonTheoryMatrices(FESystemDouble mach, FESystemDouble rho, FESystemDouble gamma, FESystemDouble a_inf, FESystemDouble u_inf,
-                                       FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                       FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                        const std::map<FESystemUInt, FESystemUInt>& old_to_new_id_map, const std::vector<FESystemUInt>& nonbc_dofs, const FESystem::Mesh::MeshBase& mesh,
                                        FESystem::Numerics::VectorBase<FESystemDouble>& global_sol, FESystem::Numerics::VectorBase<FESystemDouble>& global_vel,
                                        FESystem::Numerics::VectorBase<FESystemDouble>& force, FESystem::Numerics::VectorBase<FESystemDouble>& generalized_force,
@@ -172,5 +173,7 @@ int euler_analysis_driver(int argc, char * const argv[]);
 int ellipticMeshingDriver(int argc, char * const argv[]);
 
 int fluidStructutreInteractionDriver(int argc, char * const argv[]);
+
+int legendre_function(int argc, char * const argv[]);
 
 #endif

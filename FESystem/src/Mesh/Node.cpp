@@ -15,7 +15,7 @@
 
 FESystem::Mesh::Node::Node(const FESystem::Geometry::CoordinateSystemBase& cs):
 FESystem::Geometry::Point(cs),
-FESystem::Base::DegreeOfFreedomObject()
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject()
 {
     
 }

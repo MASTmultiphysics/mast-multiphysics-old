@@ -30,7 +30,7 @@
 #include "Quadrature/QuadratureBase.h"
 
 FESystem::Mesh::ElemBase::ElemBase(FESystemUInt n_nodes, FESystem::Mesh::ElementType type, FESystemBoolean local_cs_same_as_global):
-FESystem::Base::DegreeOfFreedomObject(),
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject(),
 element_type(type),
 if_local_physical_cs_same_as_global(local_cs_same_as_global),
 physical_nodes(n_nodes),

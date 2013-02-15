@@ -25,7 +25,7 @@ namespace FESystem
     namespace Mesh {class ElemBoundaryBase;}
     namespace Geometry {class Point;}
     
-    namespace Base
+    namespace DegreeOfFreedom
     {
         // Forward declerations
         class DegreeOfFreedomUnit;
@@ -61,17 +61,17 @@ namespace FESystem
             /*!
              *    tells the object that it is a dependent degree of freedom object and sets the coefficients and parent dof objects
              */
-            void setDegreeOfFreedomConstraints(std::vector<FESystemDouble, FESystem::Base::DegreeOfFreedomObject*>& parent_dofs);
+            void setDegreeOfFreedomConstraints(std::vector<FESystemDouble, FESystem::DegreeOfFreedom::DegreeOfFreedomObject*>& parent_dofs);
             
             /*!
              *    tells the object that the specified dof object is dependent on this object
              */
-            void setDependentDegreeOfFreedomObject(FESystem::Base::DegreeOfFreedomObject& dof);
+            void setDependentDegreeOfFreedomObject(FESystem::DegreeOfFreedom::DegreeOfFreedomObject& dof);
 
             /*!
              *    tells the object that the specified dof object is dependent on this object
              */
-            void setDependentDegreeOfFreedomObject(std::set<FESystem::Base::DegreeOfFreedomObject>& dof);
+            void setDependentDegreeOfFreedomObject(std::set<FESystem::DegreeOfFreedom::DegreeOfFreedomObject>& dof);
 
             /*!
              *    Initializes the table to the required size of number of variables \p n_vars
@@ -87,19 +87,19 @@ namespace FESystem
              *   Adds a new DegreeOfFreedomUnit for variable \p var_id to this DegreeOfFreedomObject. 
              *   It is an error to add new variables to the same system and variable ids.
              */
-            FESystem::Base::DegreeOfFreedomUnit& addDegreeOfFreedomUnit(FESystemUInt var_id);
+            FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& addDegreeOfFreedomUnit(FESystemUInt var_id);
             
             /*!
              *   Returns the DegreeOfFreedomUnit for variable \p var_id in this DegreeOfFreedomObject. 
              *   An exception is thrown if the variable does not exist
              */
-            FESystem::Base::DegreeOfFreedomUnit& getDegreeOfFreedomUnit(FESystemUInt var_id);
+            FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& getDegreeOfFreedomUnit(FESystemUInt var_id);
 
             /*!
              *   Returns the DegreeOfFreedomUnit for variable \p var_id to this DegreeOfFreedomObject. 
              *   An exception is thrown if the variable does not exist
              */
-            const FESystem::Base::DegreeOfFreedomUnit& getDegreeOfFreedomUnit(FESystemUInt var_id) const;
+            const FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& getDegreeOfFreedomUnit(FESystemUInt var_id) const;
             
         protected:
             
@@ -139,20 +139,20 @@ namespace FESystem
              *   The degrees of freedom that this is dependent on. The first element of the pair defines the coefficient. The sum of all the coefficients should
              *   equal 1.0
              */
-            std::vector<std::pair<FESystemDouble, FESystem::Base::DegreeOfFreedomObject*> > parent_dof_objets;
+            std::vector<std::pair<FESystemDouble, FESystem::DegreeOfFreedom::DegreeOfFreedomObject*> > parent_dof_objets;
             
             /*!
              *   Dof objects that may depend on this object. It is imporant that if this object is going out of scope, it tells these
              *   objects that they are now independent
              */
-            std::set<FESystem::Base::DegreeOfFreedomObject*> dependent_dof_objects;
+            std::set<FESystem::DegreeOfFreedom::DegreeOfFreedomObject*> dependent_dof_objects;
             
             /*!
              *   Table of variables for this degree of freedom object. The table is two dimensional, where the
              *   first dimension is the system id, and the second dimension is the variable number for the system in
              *   question
              */
-            FESystem::Utility::AutoPtrTable<FESystem::Base::DegreeOfFreedomUnit>* variable_table;
+            FESystem::Utility::AutoPtrTable<FESystem::DegreeOfFreedom::DegreeOfFreedomUnit>* variable_table;
         };
     }
 }

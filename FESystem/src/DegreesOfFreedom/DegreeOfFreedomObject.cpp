@@ -7,20 +7,20 @@
 //
 
 // FESystem includes
-#include "Base/DegreeOfFreedomObject.h"
-#include "Base/DegreeOfFreedomUnit.h"
+#include "DegreesOfFreedom/DegreeOfFreedomObject.h"
+#include "DegreesOfFreedom/DegreeOfFreedomUnit.h"
 #include "Utils/AutoPtrTable.h"
 #include "Base/FESystemExceptions.h"
 
 
-FESystem::Base::DegreeOfFreedomObject::DegreeOfFreedomObject():
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::DegreeOfFreedomObject():
 variable_table(NULL)
 {
     
 }
             
 
-FESystem::Base::DegreeOfFreedomObject::~DegreeOfFreedomObject()
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::~DegreeOfFreedomObject()
 {
     if (this->variable_table != NULL)
         delete this->variable_table;
@@ -28,20 +28,20 @@ FESystem::Base::DegreeOfFreedomObject::~DegreeOfFreedomObject()
 
 
 void
-FESystem::Base::DegreeOfFreedomObject::init(FESystemUInt n_vars)
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::init(FESystemUInt n_vars)
 {
     FESystemAssert0(this->variable_table == NULL, FESystem::Exception::InvalidState);
 
     std::vector<FESystemUInt> el(1);
     el[0] = n_vars;
-    this->variable_table = new FESystem::Utility::AutoPtrTable<FESystem::Base::DegreeOfFreedomUnit>;
+    this->variable_table = new FESystem::Utility::AutoPtrTable<FESystem::DegreeOfFreedom::DegreeOfFreedomUnit>;
     this->variable_table->reinit(el);
 }
 
 
 
 FESystemUInt
-FESystem::Base::DegreeOfFreedomObject::getNDegreeOfFreedomUnits() const
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::getNDegreeOfFreedomUnits() const
 {
     FESystemAssert0(this->variable_table != NULL, FESystem::Exception::InvalidState); // make sure that the table has been initialized
 
@@ -49,8 +49,8 @@ FESystem::Base::DegreeOfFreedomObject::getNDegreeOfFreedomUnits() const
 }
 
 
-FESystem::Base::DegreeOfFreedomUnit&
-FESystem::Base::DegreeOfFreedomObject::addDegreeOfFreedomUnit(FESystemUInt var_id)
+FESystem::DegreeOfFreedom::DegreeOfFreedomUnit&
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::addDegreeOfFreedomUnit(FESystemUInt var_id)
 {
     std::vector<FESystemUInt> el(1);
     el[0] = var_id;
@@ -58,7 +58,7 @@ FESystem::Base::DegreeOfFreedomObject::addDegreeOfFreedomUnit(FESystemUInt var_i
     FESystemAssert0(this->variable_table != NULL, FESystem::Exception::InvalidState); // make sure that the table has been initialized
     FESystemAssert0(!this->variable_table->ifValExists(el), FESystem::Exception::InvalidState); // make sure that the variable does not alredy exist
 
-    FESystem::Base::DegreeOfFreedomUnit* dof = new FESystem::Base::DegreeOfFreedomUnit;
+    FESystem::DegreeOfFreedom::DegreeOfFreedomUnit* dof = new FESystem::DegreeOfFreedom::DegreeOfFreedomUnit;
     
     this->variable_table->resetVal(el, dof); 
     return *dof;
@@ -66,8 +66,8 @@ FESystem::Base::DegreeOfFreedomObject::addDegreeOfFreedomUnit(FESystemUInt var_i
 
 
 
-FESystem::Base::DegreeOfFreedomUnit& 
-FESystem::Base::DegreeOfFreedomObject::getDegreeOfFreedomUnit(FESystemUInt var_id)
+FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& 
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::getDegreeOfFreedomUnit(FESystemUInt var_id)
 {
     std::vector<FESystemUInt> el(1);
     el[0] = var_id;
@@ -79,8 +79,8 @@ FESystem::Base::DegreeOfFreedomObject::getDegreeOfFreedomUnit(FESystemUInt var_i
 }
 
 
-const FESystem::Base::DegreeOfFreedomUnit& 
-FESystem::Base::DegreeOfFreedomObject::getDegreeOfFreedomUnit(FESystemUInt var_id) const
+const FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& 
+FESystem::DegreeOfFreedom::DegreeOfFreedomObject::getDegreeOfFreedomUnit(FESystemUInt var_id) const
 {
     std::vector<FESystemUInt> el(1);
     el[0] = var_id;

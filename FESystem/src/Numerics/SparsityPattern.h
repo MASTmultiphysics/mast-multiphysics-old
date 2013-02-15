@@ -22,7 +22,7 @@
 namespace FESystem
 {
     // Forward decleration
-    namespace Base {class DegreeOfFreedomMap;}
+    namespace DegreeOfFreedom {class DegreeOfFreedomMap;}
     
     namespace Numerics
     {
@@ -131,7 +131,7 @@ namespace FESystem
             void calculateFillReducingOrdering(std::vector<FESystemUInt> &reordered_dofs);
 
             // this is a friend class
-            friend class FESystem::Base::DegreeOfFreedomMap;
+            friend class FESystem::DegreeOfFreedom::DegreeOfFreedomMap;
 
             /*!
              *   if the data structure has been initialized

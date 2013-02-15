@@ -55,7 +55,7 @@ int thermal_1D_analysis_driver(int argc, char * const argv[])
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
     
     // now add the degrees of freedom
-    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    FESystem::DegreeOfFreedom::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
     name = "T"; dof_map.addVariable(name, 0);
     dof_map.reinit(); // distribute the dofs

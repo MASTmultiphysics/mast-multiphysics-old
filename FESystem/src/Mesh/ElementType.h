@@ -17,6 +17,7 @@ namespace FESystem
         enum ElementType
         {
             // first order elementsO
+            VERTEX1,
             EDGE2,
             TRI3,
             QUAD4,

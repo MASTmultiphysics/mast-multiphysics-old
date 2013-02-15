@@ -11,7 +11,7 @@
 
 
 
-void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::Base::DegreeOfFreedomMap& dof_map,
+void calculateBeamStructuralMatrices(FESystemBoolean if_nonlinear, FESystem::Mesh::ElementType elem_type, FESystemUInt n_elem_nodes, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                      const FESystem::Mesh::MeshBase& mesh, FESystem::Numerics::VectorBase<FESystemDouble>& global_sol,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& internal_force,
                                      FESystem::Numerics::VectorBase<FESystemDouble>& external_force,
@@ -215,7 +215,7 @@ int beam_analysis_driver(int argc, char * const argv[])
     const std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
     
     // now add the degrees of freedom
-    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    FESystem::DegreeOfFreedom::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
     name = "u"; dof_map.addVariable(name, 0);
     name = "v"; dof_map.addVariable(name, 0);

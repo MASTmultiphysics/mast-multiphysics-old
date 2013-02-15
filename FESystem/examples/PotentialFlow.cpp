@@ -64,7 +64,7 @@ int linear_potential_flow_nonconservative(int argc, char * const argv[])
     const std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
     
     // now add the degrees of freedom
-    FESystem::Base::DegreeOfFreedomMap dof_map(mesh);
+    FESystem::DegreeOfFreedom::DegreeOfFreedomMap dof_map(mesh);
     std::string name;
     name = "phi"; dof_map.addVariable(name, 0);
     dof_map.reinit(); // distribute the dofs

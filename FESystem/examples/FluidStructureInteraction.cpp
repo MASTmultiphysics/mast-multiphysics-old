@@ -129,7 +129,7 @@
 //
 //
 //void transientFluidStructureInteractions(const FESystemUInt dim, const FESystem::Mesh::ElementType fluid_elem_type, const FESystemUInt n_fluid_elem_nodes, const FESystem::Mesh::ElementType struct_elem_type, const FESystemUInt n_struct_elem_nodes,
-//                                         FESystem::Mesh::MeshBase& fluid_mesh, FESystem::Base::DegreeOfFreedomMap& fluid_dof_map, FESystem::Mesh::MeshBase& structural_mesh, FESystem::Base::DegreeOfFreedomMap& structural_dof_map,
+//                                         FESystem::Mesh::MeshBase& fluid_mesh, FESystem::DegreeOfFreedom::DegreeOfFreedomMap& fluid_dof_map, FESystem::Mesh::MeshBase& structural_mesh, FESystem::DegreeOfFreedom::DegreeOfFreedomMap& structural_dof_map,
 //                                         const std::set<FESystemUInt>& structural_bc_dofs)
 //{
 //    FESystem::LinearSolvers::LUFactorizationLinearSolver<FESystemDouble> structural_linear_solver, fluid_linear_solver;
@@ -365,7 +365,7 @@
 //
 //    
 //    // now add the degrees of freedom
-//    FESystem::Base::DegreeOfFreedomMap fluid_dof_map(fluid_mesh), structural_dof_map(structural_mesh);
+//    FESystem::DegreeOfFreedom::DegreeOfFreedomMap fluid_dof_map(fluid_mesh), structural_dof_map(structural_mesh);
 //    std::string name;
 //    name = "rho"; fluid_dof_map.addVariable(name, 0);
 //    name = "rhou"; fluid_dof_map.addVariable(name, 0);

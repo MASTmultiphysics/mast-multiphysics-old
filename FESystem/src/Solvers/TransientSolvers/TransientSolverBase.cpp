@@ -10,7 +10,7 @@
 // FESystem includes
 #include "Solvers/TransientSolvers/TransientSolverBase.h"
 #include "Base/FESystemExceptions.h"
-#include "Base/DegreeOfFreedomMap.h"
+#include "DegreesOfFreedom/DegreeOfFreedomMap.h"
 #include "Numerics/LocalVector.h"
 #include "Base/macros.h"
 #include "Numerics/MatrixBase.h"

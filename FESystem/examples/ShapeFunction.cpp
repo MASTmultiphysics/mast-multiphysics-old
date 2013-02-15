@@ -216,3 +216,29 @@ int shape_function_main2DTri(int argc, char * const argv[])
 
 
 
+int legendre_function(int argc, char * const argv[])
+{
+    FESystemUInt order = 2, n_points=15, derivarive_order = 1;
+    
+    FESystem::Plotting::PLPlot<FESystemDouble> plot(FESystem::Plotting::REAL_AXIS, FESystem::Plotting::REAL_AXIS);
+    
+    FESystem::Numerics::LocalVector<FESystemDouble> x_vals, y_vals;
+    x_vals.resize(n_points);
+    y_vals.resize(n_points);
+    FESystemDouble xi;
+
+    FESystem::Functions::LegendreFunction<FESystemDouble> legendre_function;
+    
+    for (FESystemUInt i=0; i<n_points; i++)
+    {
+        xi = -1.0+2.0/(n_points-1)*i;
+        x_vals.setVal(i, xi);
+        //y_vals.setVal(i, legendre_function.getFunctionValue(xi, order));
+        y_vals.setVal(i, legendre_function.getFunctionDerivative(xi, order, derivarive_order));
+    }
+
+    plot.plotData2D(x_vals, y_vals);
+    
+    return 0;
+}
+

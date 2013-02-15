@@ -12,8 +12,8 @@
 // FESystem includes
 #include "OutputProcessors/GmshOutputProcessor.h"
 #include "Numerics/VectorBase.h"
-#include "Base/DegreeOfFreedomMap.h"
-#include "Base/DegreeOfFreedomUnit.h"
+#include "DegreesOfFreedom/DegreeOfFreedomMap.h"
+#include "DegreesOfFreedom/DegreeOfFreedomUnit.h"
 #include "Mesh/MeshBase.h"
 #include "Mesh/ElemBase.h"
 #include "Mesh/Node.h"
@@ -34,7 +34,7 @@ FESystem::OutputProcessor::GmshOutputProcessor::~GmshOutputProcessor()
             
 
 void
-FESystem::OutputProcessor::GmshOutputProcessor::writeMesh(std::ostream& output, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map)
+FESystem::OutputProcessor::GmshOutputProcessor::writeMesh(std::ostream& output, const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map)
 {
     std::vector<FESystem::Mesh::ElementType> elem_type_vec;
     
@@ -142,7 +142,7 @@ void
 FESystem::OutputProcessor::GmshOutputProcessor::writeSolution(std::ostream& output, 
                                                               const std::string& data_name,
                                                               const FESystem::Mesh::MeshBase& mesh, 
-                                                              const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                                              const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                                               const std::vector<FESystemUInt>& variables_to_write,
                                                               const FESystem::Numerics::VectorBase<FESystemDouble>& vec)
 {

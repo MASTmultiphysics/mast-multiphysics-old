@@ -40,8 +40,19 @@
 		6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4D91602C0DB005F754E /* PistonTheory1D.h */; };
 		6998A4DE1602C170005F754E /* PistonTheory2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6998A4DC1602C170005F754E /* PistonTheory2D.cpp */; };
 		6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4DD1602C170005F754E /* PistonTheory2D.h */; };
+		69E879EF16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */; };
+		69E879F016CAFDA100E06AF6 /* LegendreFunctionMapping.h in Headers */ = {isa = PBXBuildFile; fileRef = 69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */; };
 		69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */; };
 		EB14792E16A4AF210032515B /* FluidStructureInteraction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBA6C984169F623500B5C459 /* FluidStructureInteraction.cpp */; };
+		EB17465E16CD6E11008F08E6 /* VertexElem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB17465C16CD6E11008F08E6 /* VertexElem.cpp */; };
+		EB17465F16CD6E11008F08E6 /* VertexElem.h in Headers */ = {isa = PBXBuildFile; fileRef = EB17465D16CD6E11008F08E6 /* VertexElem.h */; };
+		EB17466616CD740F008F08E6 /* DegreeOfFreedomMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB17466116CD740F008F08E6 /* DegreeOfFreedomMap.cpp */; };
+		EB17466716CD740F008F08E6 /* DegreeOfFreedomMap.h in Headers */ = {isa = PBXBuildFile; fileRef = EB17466216CD740F008F08E6 /* DegreeOfFreedomMap.h */; };
+		EB17466816CD740F008F08E6 /* DegreeOfFreedomObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB17466316CD740F008F08E6 /* DegreeOfFreedomObject.cpp */; };
+		EB17466916CD740F008F08E6 /* DegreeOfFreedomObject.h in Headers */ = {isa = PBXBuildFile; fileRef = EB17466416CD740F008F08E6 /* DegreeOfFreedomObject.h */; };
+		EB17466A16CD740F008F08E6 /* DegreeOfFreedomUnit.h in Headers */ = {isa = PBXBuildFile; fileRef = EB17466516CD740F008F08E6 /* DegreeOfFreedomUnit.h */; };
+		EB17467116CD79EE008F08E6 /* FEInterpolationType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB17466F16CD79EE008F08E6 /* FEInterpolationType.cpp */; };
+		EB17467216CD79EE008F08E6 /* FEInterpolationType.h in Headers */ = {isa = PBXBuildFile; fileRef = EB17467016CD79EE008F08E6 /* FEInterpolationType.h */; };
 		EB44A32316C0157800B2EA19 /* GmshInputProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB44A32116C0157800B2EA19 /* GmshInputProcessor.cpp */; };
 		EB44A32416C0157800B2EA19 /* GmshInputProcessor.h in Headers */ = {isa = PBXBuildFile; fileRef = EB44A32216C0157800B2EA19 /* GmshInputProcessor.h */; };
 		EB44A32716C015FF00B2EA19 /* InputProcessorBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB44A32516C015FE00B2EA19 /* InputProcessorBase.cpp */; };
@@ -57,6 +68,8 @@
 		EB906D5415D450E600C1F550 /* FlutterSolverBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D5215D450E600C1F550 /* FlutterSolverBase.h */; };
 		EB906D6E15D9859C00C1F550 /* TorsionBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB906D6C15D9859700C1F550 /* TorsionBar.cpp */; };
 		EB906D7115D9876400C1F550 /* TorsionBar.h in Headers */ = {isa = PBXBuildFile; fileRef = EB906D7015D9875800C1F550 /* TorsionBar.h */; };
+		EB94FEF316CD5DDB0054E15C /* ElemBoundaryBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB94FEF116CD5DDB0054E15C /* ElemBoundaryBase.cpp */; };
+		EB94FEF416CD5DDB0054E15C /* ElemBoundaryBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EB94FEF216CD5DDB0054E15C /* ElemBoundaryBase.h */; };
 		EBAAB6C2161361670030FCEB /* Euler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6C0161361670030FCEB /* Euler.cpp */; };
 		EBAAB6C7161361940030FCEB /* PistonTheory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6C5161361940030FCEB /* PistonTheory.cpp */; };
 		EBAAB6CB161361AF0030FCEB /* Plate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAAB6C9161361AF0030FCEB /* Plate.cpp */; };
@@ -71,11 +84,6 @@
 		EBAEE0AB15C1B73B0062459D /* CountedObject.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFB315C1B73B0062459D /* CountedObject.h */; };
 		EBAEE0AC15C1B73B0062459D /* Counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFB415C1B73B0062459D /* Counter.cpp */; };
 		EBAEE0AD15C1B73B0062459D /* Counter.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFB515C1B73B0062459D /* Counter.h */; };
-		EBAEE0AE15C1B73B0062459D /* DegreeOfFreedomMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFB615C1B73B0062459D /* DegreeOfFreedomMap.cpp */; };
-		EBAEE0AF15C1B73B0062459D /* DegreeOfFreedomMap.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFB715C1B73B0062459D /* DegreeOfFreedomMap.h */; };
-		EBAEE0B015C1B73B0062459D /* DegreeOfFreedomObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFB815C1B73B0062459D /* DegreeOfFreedomObject.cpp */; };
-		EBAEE0B115C1B73B0062459D /* DegreeOfFreedomObject.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFB915C1B73B0062459D /* DegreeOfFreedomObject.h */; };
-		EBAEE0B215C1B73B0062459D /* DegreeOfFreedomUnit.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFBA15C1B73B0062459D /* DegreeOfFreedomUnit.h */; };
 		EBAEE0B315C1B73B0062459D /* FESystemBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEDFBB15C1B73B0062459D /* FESystemBase.cpp */; };
 		EBAEE0B415C1B73B0062459D /* FESystemBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFBC15C1B73B0062459D /* FESystemBase.h */; };
 		EBAEE0B515C1B73B0062459D /* FESystemConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEDFBD15C1B73B0062459D /* FESystemConfig.h */; };
@@ -344,7 +352,20 @@
 		6998A4D91602C0DB005F754E /* PistonTheory1D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory1D.h; sourceTree = "<group>"; };
 		6998A4DC1602C170005F754E /* PistonTheory2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PistonTheory2D.cpp; sourceTree = "<group>"; };
 		6998A4DD1602C170005F754E /* PistonTheory2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory2D.h; sourceTree = "<group>"; };
+		69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LegendreFunctionMapping.cpp; sourceTree = "<group>"; };
+		69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendreFunctionMapping.h; sourceTree = "<group>"; };
 		69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThermalElementBase.cpp; sourceTree = "<group>"; };
+		EB17465C16CD6E11008F08E6 /* VertexElem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VertexElem.cpp; sourceTree = "<group>"; };
+		EB17465D16CD6E11008F08E6 /* VertexElem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VertexElem.h; sourceTree = "<group>"; };
+		EB17466116CD740F008F08E6 /* DegreeOfFreedomMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DegreeOfFreedomMap.cpp; sourceTree = "<group>"; };
+		EB17466216CD740F008F08E6 /* DegreeOfFreedomMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomMap.h; sourceTree = "<group>"; };
+		EB17466316CD740F008F08E6 /* DegreeOfFreedomObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DegreeOfFreedomObject.cpp; sourceTree = "<group>"; };
+		EB17466416CD740F008F08E6 /* DegreeOfFreedomObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomObject.h; sourceTree = "<group>"; };
+		EB17466516CD740F008F08E6 /* DegreeOfFreedomUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomUnit.h; sourceTree = "<group>"; };
+		EB17466F16CD79EE008F08E6 /* FEInterpolationType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FEInterpolationType.cpp; sourceTree = "<group>"; };
+		EB17467016CD79EE008F08E6 /* FEInterpolationType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FEInterpolationType.h; sourceTree = "<group>"; };
+		EB17467316CD7A7A008F08E6 /* FiniteElementType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FiniteElementType.h; sourceTree = "<group>"; };
+		EB17467416CD924F008F08E6 /* QuadratureType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QuadratureType.h; sourceTree = "<group>"; };
 		EB44A32116C0157800B2EA19 /* GmshInputProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GmshInputProcessor.cpp; sourceTree = "<group>"; };
 		EB44A32216C0157800B2EA19 /* GmshInputProcessor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GmshInputProcessor.h; sourceTree = "<group>"; };
 		EB44A32516C015FE00B2EA19 /* InputProcessorBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputProcessorBase.cpp; sourceTree = "<group>"; };
@@ -358,6 +379,8 @@
 		EB906D5215D450E600C1F550 /* FlutterSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlutterSolverBase.h; sourceTree = "<group>"; };
 		EB906D6C15D9859700C1F550 /* TorsionBar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TorsionBar.cpp; sourceTree = "<group>"; };
 		EB906D7015D9875800C1F550 /* TorsionBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TorsionBar.h; sourceTree = "<group>"; };
+		EB94FEF116CD5DDB0054E15C /* ElemBoundaryBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ElemBoundaryBase.cpp; sourceTree = "<group>"; };
+		EB94FEF216CD5DDB0054E15C /* ElemBoundaryBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ElemBoundaryBase.h; sourceTree = "<group>"; };
 		EBA6C984169F623500B5C459 /* FluidStructureInteraction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FluidStructureInteraction.cpp; sourceTree = "<group>"; };
 		EBAAB6C0161361670030FCEB /* Euler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Euler.cpp; sourceTree = "<group>"; };
 		EBAAB6C5161361940030FCEB /* PistonTheory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PistonTheory.cpp; sourceTree = "<group>"; };
@@ -376,11 +399,6 @@
 		EBAEDFB315C1B73B0062459D /* CountedObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CountedObject.h; sourceTree = "<group>"; };
 		EBAEDFB415C1B73B0062459D /* Counter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Counter.cpp; sourceTree = "<group>"; };
 		EBAEDFB515C1B73B0062459D /* Counter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Counter.h; sourceTree = "<group>"; };
-		EBAEDFB615C1B73B0062459D /* DegreeOfFreedomMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DegreeOfFreedomMap.cpp; sourceTree = "<group>"; };
-		EBAEDFB715C1B73B0062459D /* DegreeOfFreedomMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomMap.h; sourceTree = "<group>"; };
-		EBAEDFB815C1B73B0062459D /* DegreeOfFreedomObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DegreeOfFreedomObject.cpp; sourceTree = "<group>"; };
-		EBAEDFB915C1B73B0062459D /* DegreeOfFreedomObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomObject.h; sourceTree = "<group>"; };
-		EBAEDFBA15C1B73B0062459D /* DegreeOfFreedomUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DegreeOfFreedomUnit.h; sourceTree = "<group>"; };
 		EBAEDFBB15C1B73B0062459D /* FESystemBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FESystemBase.cpp; sourceTree = "<group>"; };
 		EBAEDFBC15C1B73B0062459D /* FESystemBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESystemBase.h; sourceTree = "<group>"; };
 		EBAEDFBD15C1B73B0062459D /* FESystemConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESystemConfig.h; sourceTree = "<group>"; };
@@ -728,6 +746,18 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		EB17466016CD740F008F08E6 /* DegreesOfFreedom */ = {
+			isa = PBXGroup;
+			children = (
+				EB17466116CD740F008F08E6 /* DegreeOfFreedomMap.cpp */,
+				EB17466216CD740F008F08E6 /* DegreeOfFreedomMap.h */,
+				EB17466316CD740F008F08E6 /* DegreeOfFreedomObject.cpp */,
+				EB17466416CD740F008F08E6 /* DegreeOfFreedomObject.h */,
+				EB17466516CD740F008F08E6 /* DegreeOfFreedomUnit.h */,
+			);
+			path = DegreesOfFreedom;
+			sourceTree = "<group>";
+		};
 		EB44A31F16C0154B00B2EA19 /* InputProcessors */ = {
 			isa = PBXGroup;
 			children = (
@@ -783,6 +813,7 @@
 			children = (
 				EBAEDFB115C1B73B0062459D /* Base */,
 				EBAEDFC715C1B73B0062459D /* Data */,
+				EB17466016CD740F008F08E6 /* DegreesOfFreedom */,
 				EBAEDFCA15C1B73B0062459D /* Disciplines */,
 				EBAEDFD915C1B73B0062459D /* Field */,
 				EBAEDFE015C1B73B0062459D /* FiniteElems */,
@@ -810,11 +841,6 @@
 				EBAEDFB315C1B73B0062459D /* CountedObject.h */,
 				EBAEDFB415C1B73B0062459D /* Counter.cpp */,
 				EBAEDFB515C1B73B0062459D /* Counter.h */,
-				EBAEDFB615C1B73B0062459D /* DegreeOfFreedomMap.cpp */,
-				EBAEDFB715C1B73B0062459D /* DegreeOfFreedomMap.h */,
-				EBAEDFB815C1B73B0062459D /* DegreeOfFreedomObject.cpp */,
-				EBAEDFB915C1B73B0062459D /* DegreeOfFreedomObject.h */,
-				EBAEDFBA15C1B73B0062459D /* DegreeOfFreedomUnit.h */,
 				EBAEDFBB15C1B73B0062459D /* FESystemBase.cpp */,
 				EBAEDFBC15C1B73B0062459D /* FESystemBase.h */,
 				EBAEDFBD15C1B73B0062459D /* FESystemConfig.h */,
@@ -886,12 +912,15 @@
 		EBAEDFE015C1B73B0062459D /* FiniteElems */ = {
 			isa = PBXGroup;
 			children = (
+				EB17466F16CD79EE008F08E6 /* FEInterpolationType.cpp */,
+				EB17467016CD79EE008F08E6 /* FEInterpolationType.h */,
 				EBAEDFE115C1B73B0062459D /* FELagrange.cpp */,
 				EBAEDFE215C1B73B0062459D /* FELagrange.h */,
 				691F3CA116B25C2600503EF3 /* FELegendre.cpp */,
 				691F3CA216B25C2600503EF3 /* FELegendre.h */,
 				EBAEDFE315C1B73B0062459D /* FiniteElementBase.cpp */,
 				EBAEDFE415C1B73B0062459D /* FiniteElementBase.h */,
+				EB17467316CD7A7A008F08E6 /* FiniteElementType.h */,
 			);
 			path = FiniteElems;
 			sourceTree = "<group>";
@@ -910,6 +939,8 @@
 				EBAEDFEE15C1B73B0062459D /* LagrangeFunctionMapping.cpp */,
 				EBAEDFEF15C1B73B0062459D /* LagrangeFunctionMapping.h */,
 				691F3CA016B25BCD00503EF3 /* LegendreFunction.h */,
+				69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */,
+				69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */,
 				EBAEDFF015C1B73B0062459D /* LinearFunctionMapping.cpp */,
 				EBAEDFF115C1B73B0062459D /* LinearFunctionMapping.h */,
 				EBAEDFF215C1B73B0062459D /* PolarFunctionMapping.cpp */,
@@ -953,6 +984,8 @@
 				EBAEE00C15C1B73B0062459D /* EdgeElemBase.h */,
 				EBAEE00D15C1B73B0062459D /* ElemBase.cpp */,
 				EBAEE00E15C1B73B0062459D /* ElemBase.h */,
+				EB94FEF116CD5DDB0054E15C /* ElemBoundaryBase.cpp */,
+				EB94FEF216CD5DDB0054E15C /* ElemBoundaryBase.h */,
 				EBAEE00F15C1B73B0062459D /* ElementType.h */,
 				EBAEE01015C1B73B0062459D /* FaceElemBase.cpp */,
 				EBAEE01115C1B73B0062459D /* FaceElemBase.h */,
@@ -980,6 +1013,8 @@
 				EBAEE02515C1B73B0062459D /* Tri6.h */,
 				EBAEE02615C1B73B0062459D /* Tri7.cpp */,
 				EBAEE02715C1B73B0062459D /* Tri7.h */,
+				EB17465C16CD6E11008F08E6 /* VertexElem.cpp */,
+				EB17465D16CD6E11008F08E6 /* VertexElem.h */,
 				EBAEE02815C1B73B0062459D /* VolumeElemBase.cpp */,
 				EBAEE02915C1B73B0062459D /* VolumeElemBase.h */,
 			);
@@ -1066,6 +1101,7 @@
 				EBAEE05B15C1B73B0062459D /* QuadratureBase.h */,
 				EBAEE05C15C1B73B0062459D /* TrapezoidQuadrature.cpp */,
 				EBAEE05D15C1B73B0062459D /* TrapezoidQuadrature.h */,
+				EB17467416CD924F008F08E6 /* QuadratureType.h */,
 			);
 			path = Quadrature;
 			sourceTree = "<group>";
@@ -1210,9 +1246,6 @@
 			files = (
 				EBAEE0AB15C1B73B0062459D /* CountedObject.h in Headers */,
 				EBAEE0AD15C1B73B0062459D /* Counter.h in Headers */,
-				EBAEE0AF15C1B73B0062459D /* DegreeOfFreedomMap.h in Headers */,
-				EBAEE0B115C1B73B0062459D /* DegreeOfFreedomObject.h in Headers */,
-				EBAEE0B215C1B73B0062459D /* DegreeOfFreedomUnit.h in Headers */,
 				EBAEE0B415C1B73B0062459D /* FESystemBase.h in Headers */,
 				EBAEE0B515C1B73B0062459D /* FESystemConfig.h in Headers */,
 				EBAEE0B715C1B73B0062459D /* FESystemExceptions.h in Headers */,
@@ -1340,6 +1373,13 @@
 				691F3CC016B2BF9000503EF3 /* RadiationCavityAnalysis.h in Headers */,
 				EB44A32416C0157800B2EA19 /* GmshInputProcessor.h in Headers */,
 				EB44A32816C015FF00B2EA19 /* InputProcessorBase.h in Headers */,
+				69E879F016CAFDA100E06AF6 /* LegendreFunctionMapping.h in Headers */,
+				EB94FEF416CD5DDB0054E15C /* ElemBoundaryBase.h in Headers */,
+				EB17465F16CD6E11008F08E6 /* VertexElem.h in Headers */,
+				EB17466716CD740F008F08E6 /* DegreeOfFreedomMap.h in Headers */,
+				EB17466916CD740F008F08E6 /* DegreeOfFreedomObject.h in Headers */,
+				EB17466A16CD740F008F08E6 /* DegreeOfFreedomUnit.h in Headers */,
+				EB17467216CD79EE008F08E6 /* FEInterpolationType.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1400,9 +1440,7 @@
 				EBAEE0AC15C1B73B0062459D /* Counter.cpp in Sources */,
 				EB906D4915D4330B00C1F550 /* FrequencyDomainFlutterSolverBase.cpp in Sources */,
 				EB906D4A15D4330E00C1F550 /* PKFlutterSolver.cpp in Sources */,
-				EBAEE0AE15C1B73B0062459D /* DegreeOfFreedomMap.cpp in Sources */,
 				EB906D4B15D4330F00C1F550 /* UGFlutterSolver.cpp in Sources */,
-				EBAEE0B015C1B73B0062459D /* DegreeOfFreedomObject.cpp in Sources */,
 				EBAEE0B315C1B73B0062459D /* FESystemBase.cpp in Sources */,
 				EBAEE0B615C1B73B0062459D /* FESystemExceptions.cpp in Sources */,
 				EBAEE0BA15C1B73B0062459D /* IteratorBase.cpp in Sources */,
@@ -1538,6 +1576,12 @@
 				691F3CBF16B2BF9000503EF3 /* RadiationCavityAnalysis.cpp in Sources */,
 				EB44A32316C0157800B2EA19 /* GmshInputProcessor.cpp in Sources */,
 				EB44A32716C015FF00B2EA19 /* InputProcessorBase.cpp in Sources */,
+				69E879EF16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp in Sources */,
+				EB94FEF316CD5DDB0054E15C /* ElemBoundaryBase.cpp in Sources */,
+				EB17465E16CD6E11008F08E6 /* VertexElem.cpp in Sources */,
+				EB17466616CD740F008F08E6 /* DegreeOfFreedomMap.cpp in Sources */,
+				EB17466816CD740F008F08E6 /* DegreeOfFreedomObject.cpp in Sources */,
+				EB17467116CD79EE008F08E6 /* FEInterpolationType.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -34,7 +34,7 @@ namespace FESystem
             /*!
              *   Write \p mesh to the output stream \p output in a Gmsh readable format
              */
-            virtual void writeMesh(std::ostream& output, const FESystem::Mesh::MeshBase& mesh, const FESystem::Base::DegreeOfFreedomMap& dof_map);
+            virtual void writeMesh(std::ostream& output, const FESystem::Mesh::MeshBase& mesh, const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map);
             
             /*!
              *   Writes the variables specified in \p variables_to_write to the output stream. The variables should be 
@@ -43,7 +43,7 @@ namespace FESystem
             virtual void writeSolution(std::ostream& output, 
                                        const std::string& data_name,
                                        const FESystem::Mesh::MeshBase& mesh, 
-                                       const FESystem::Base::DegreeOfFreedomMap& dof_map,
+                                       const FESystem::DegreeOfFreedom::DegreeOfFreedomMap& dof_map,
                                        const std::vector<FESystemUInt>& variables_to_write,
                                        const FESystem::Numerics::VectorBase<FESystemDouble>& vec);
             
