@@ -7,8 +7,8 @@
 //
 
 // FESystem includes
-#include "Base/DegreeOfFreedomMap.h"
-#include "Base/DegreeOfFreedomUnit.h"
+#include "DegreesOfFreedom/DegreeOfFreedomMap.h"
+#include "DegreesOfFreedom/DegreeOfFreedomUnit.h"
 #include "Mesh/MeshBase.h"
 #include "Mesh/Node.h"
 #include "Mesh/ElemBase.h"
@@ -18,7 +18,7 @@
 #include "Numerics/SparsityPattern.h"
 
 
-FESystem::Base::DegreeOfFreedomMap::DegreeOfFreedomMap(FESystem::Mesh::MeshBase& m):
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::DegreeOfFreedomMap(FESystem::Mesh::MeshBase& m):
 mesh(m),
 sparsity_pattern(NULL),
 if_h_adaptable(false),
@@ -30,14 +30,14 @@ n_dofs(0)
 
 
 
-FESystem::Base::DegreeOfFreedomMap::~DegreeOfFreedomMap()
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::~DegreeOfFreedomMap()
 {
     delete this->sparsity_pattern;
 }
 
 
 FESystemUInt
-FESystem::Base::DegreeOfFreedomMap::getNVariables() const
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::getNVariables() const
 {
     return this->variable_vec.size();
 }
@@ -45,14 +45,14 @@ FESystem::Base::DegreeOfFreedomMap::getNVariables() const
 
 
 FESystemUInt 
-FESystem::Base::DegreeOfFreedomMap::addVariable(std::string& var_name, FESystemUInt order)
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::addVariable(std::string& var_name, FESystemUInt order)
 {
     // make sure the name does not already exist in the system. 
     for (FESystemUInt i=0; i<this->variable_vec.size(); i++)
-        FESystemAssert1(this->variable_vec[i].name != var_name, FESystem::Base::VariableNameAlreadyUsed, var_name);
+        FESystemAssert1(this->variable_vec[i].name != var_name, FESystem::DegreeOfFreedom::VariableNameAlreadyUsed, var_name);
 
     // create the variable and set the appropriate values
-    FESystem::Base::Variable var;
+    FESystem::DegreeOfFreedom::Variable var;
     var.name = var_name;
     var.order = order;
     var.variable_id = this->variable_vec.size();
@@ -66,14 +66,14 @@ FESystem::Base::DegreeOfFreedomMap::addVariable(std::string& var_name, FESystemU
 
 
 FESystemUInt
-FESystem::Base::DegreeOfFreedomMap::getNDofs() const
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::getNDofs() const
 {
     return this->n_dofs;
 }
 
 
 const FESystem::Numerics::SparsityPattern&
-FESystem::Base::DegreeOfFreedomMap::getSparsityPattern() const
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::getSparsityPattern() const
 {
     return *(this->sparsity_pattern);
 }
@@ -81,7 +81,7 @@ FESystem::Base::DegreeOfFreedomMap::getSparsityPattern() const
 
 
 void 
-FESystem::Base::DegreeOfFreedomMap::reinit()
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::reinit()
 {
     // get nodes and elements
     std::vector<FESystem::Mesh::Node*>& nodes = this->mesh.getNodes();
@@ -96,7 +96,7 @@ FESystem::Base::DegreeOfFreedomMap::reinit()
         nodes[i_node]->init(this->getNVariables());
         for (FESystemUInt i_var=0; i_var<this->getNVariables(); i_var++)
         {
-            FESystem::Base::DegreeOfFreedomUnit& dof = nodes[i_node]->addDegreeOfFreedomUnit(i_var);
+            FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& dof = nodes[i_node]->addDegreeOfFreedomUnit(i_var);
             dof.system_id = 0;
             dof.variable_id = i_var;
             dof.p_level = this->variable_vec[i_var].order;
@@ -115,7 +115,7 @@ FESystem::Base::DegreeOfFreedomMap::reinit()
 //        elems[i_elem]->init(this->getNVariables());
 //        for (FESystemUInt i_var=0; i_var<this->getNVariables(); i_var++)
 //        {
-//            FESystem::Base::DegreeOfFreedomUnit& dof = elems[i_elem]->addDegreeOfFreedomUnit(i_var);
+//            FESystem::DegreeOfFreedom::DegreeOfFreedomUnit& dof = elems[i_elem]->addDegreeOfFreedomUnit(i_var);
 //            dof.system_id = 0;
 //            dof.variable_id = i_var;
 //            dof.p_level = this->variable_vec[i_var].order;
@@ -183,7 +183,7 @@ FESystem::Base::DegreeOfFreedomMap::reinit()
     
 template <typename ValType>
 void
-FESystem::Base::DegreeOfFreedomMap::addToGlobalMatrix(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::MatrixBase<ValType>& elem_mat, 
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::addToGlobalMatrix(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::MatrixBase<ValType>& elem_mat, 
                                                       FESystem::Numerics::MatrixBase<ValType>& global_mat) const
 {
     FESystemUInt n_dofs = this->getNDofsForElem(elem);
@@ -215,7 +215,7 @@ FESystem::Base::DegreeOfFreedomMap::addToGlobalMatrix(const FESystem::Mesh::Elem
 
 
 FESystemUInt
-FESystem::Base::DegreeOfFreedomMap::getNDofsForElem(const FESystem::Mesh::ElemBase& elem) const
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::getNDofsForElem(const FESystem::Mesh::ElemBase& elem) const
 {
     FESystemUInt n_dofs=0;
     for (FESystemUInt i_var=0; i_var<this->getNVariables(); i_var++)
@@ -227,7 +227,7 @@ FESystem::Base::DegreeOfFreedomMap::getNDofsForElem(const FESystem::Mesh::ElemBa
     
 template <typename ValType>
 void
-FESystem::Base::DegreeOfFreedomMap::addToGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<ValType>& elem_vec, 
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::addToGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<ValType>& elem_vec, 
                                                       FESystem::Numerics::VectorBase<ValType>& global_vec) const
 {
     FESystemUInt n_dofs = this->getNDofsForElem(elem);
@@ -259,7 +259,7 @@ FESystem::Base::DegreeOfFreedomMap::addToGlobalVector(const FESystem::Mesh::Elem
 
 template <typename ValType>
 void
-FESystem::Base::DegreeOfFreedomMap::getFromGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<ValType>& global_vec,
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::getFromGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<ValType>& global_vec,
                                                         FESystem::Numerics::VectorBase<ValType>& elem_vec) const
 {
     // create the sequence of the dofs    
@@ -285,7 +285,7 @@ FESystem::Base::DegreeOfFreedomMap::getFromGlobalVector(const FESystem::Mesh::El
 
 
 void
-FESystem::Base::DegreeOfFreedomMap::initializeSparsityPattern()
+FESystem::DegreeOfFreedom::DegreeOfFreedomMap::initializeSparsityPattern()
 {
     if (this->sparsity_pattern == NULL)
         this->sparsity_pattern = new FESystem::Numerics::SparsityPattern;
@@ -363,11 +363,11 @@ FESystem::Base::DegreeOfFreedomMap::initializeSparsityPattern()
 //********************************************************************************************************************************
 // template instantiation
 
-template void FESystem::Base::DegreeOfFreedomMap::addToGlobalMatrix(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat,
+template void FESystem::DegreeOfFreedom::DegreeOfFreedomMap::addToGlobalMatrix(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat,
                                                                     FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat) const;
-template void FESystem::Base::DegreeOfFreedomMap::addToGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec,
+template void FESystem::DegreeOfFreedom::DegreeOfFreedomMap::addToGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec,
                                                                     FESystem::Numerics::VectorBase<FESystemDouble>& global_vec) const;
-template void FESystem::Base::DegreeOfFreedomMap::getFromGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<FESystemDouble>& global_vec,
+template void FESystem::DegreeOfFreedom::DegreeOfFreedomMap::getFromGlobalVector(const FESystem::Mesh::ElemBase& elem, const FESystem::Numerics::VectorBase<FESystemDouble>& global_vec,
                                                                       FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec) const;
 
 //********************************************************************************************************************************

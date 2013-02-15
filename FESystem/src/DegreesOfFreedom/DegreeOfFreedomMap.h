@@ -26,7 +26,7 @@ namespace FESystem
     namespace Numerics {template <typename ValType> class VectorBase;}
     namespace Numerics {class SparsityPattern;}
     
-    namespace Base
+    namespace DegreeOfFreedom
     {
         // Forward declerations
         class DegreeOfFreedomObject;
@@ -156,12 +156,12 @@ namespace FESystem
             /*!
              *   Vector storage of the variables
              */
-            std::vector<FESystem::Base::Variable> variable_vec;
+            std::vector<FESystem::DegreeOfFreedom::Variable> variable_vec;
             
             /*!
              *   vector of degree of freedom objects for each global ID.
              */
-            std::vector<FESystem::Base::DegreeOfFreedomObject*> dof_object_vector;
+            std::vector<FESystem::DegreeOfFreedom::DegreeOfFreedomObject*> dof_object_vector;
             
         };
         
