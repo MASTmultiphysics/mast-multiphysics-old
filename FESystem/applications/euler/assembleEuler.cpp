@@ -72,6 +72,8 @@ Real solution_value(const Point& p,
     {
         return parameters.get<Real> ("rhoe_inf");
     }
+    else
+        libmesh_assert(false);
 }
 
 
@@ -234,8 +236,8 @@ void EulerSystem::init_data ()
         params.set<Real> ("rhow_inf") = rho_inf*u3_inf;
     }
     
-    vars[dim+2] = this->add_variable ("rhoe", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[dim+2]);
+    vars[dim+2-1] = this->add_variable ("rhoe", static_cast<Order>(o), fefamily);
+    this->time_evolving(vars[dim+2-1]);
     params.set<Real> ("rhoe_inf") = rho_inf*temp_inf*cv + q0_inf;
     
     // Useful debugging options
@@ -291,10 +293,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     
     // Element Jacobian * quadrature weights for interior integration
     const std::vector<Real> &JxW = elem_fe->get_JxW();
-    
-    // Physical location of the quadrature points
-    const std::vector<Point>& qpoint = elem_fe->get_xyz();
-    
+        
     // The number of local degrees of freedom in each variable
     unsigned int n_dofs = 0;
     for (unsigned int i=0; i<dim+2; i++)
@@ -609,10 +608,7 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     
     // Element Jacobian * quadrature weights for interior integration
     const std::vector<Real> &JxW = elem_fe->get_JxW();
-    
-    // Physical location of the quadrature points
-    const std::vector<Point>& qpoint = elem_fe->get_xyz();
-    
+        
     // The number of local degrees of freedom in each variable
     unsigned int n_dofs = 0;
     for (unsigned int i=0; i<dim+2; i++)
@@ -894,8 +890,7 @@ EulerSystem::calculate_advection_flux_jacobian(const unsigned int calculate_dim,
     
     mat.zero();
     
-    const Real rho = sol.rho,
-    u1 = sol.u1,
+    const Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     k = sol.k,
@@ -1041,8 +1036,7 @@ EulerSystem::calculate_advection_left_eigenvector_and_inverse_for_normal(const P
     Real nx=0., ny=0., nz=0., u=0.;
     unsigned int dim_for_eig_vec=100; // initializing with arbitrarily high value
     
-    const Real rho = sol.rho,
-    u1 = sol.u1,
+    const Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     k = sol.k,
