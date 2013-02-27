@@ -25,13 +25,13 @@ enum AnalysisCase
 
 
 // speed of sound = 347.2926 m/s
-const FESystemDouble aoa=1.25, rho=1.05, uval=347.2926*.8, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), u3 =0.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
-const FESystemDouble x_length = 22.0, y_length = 8.00, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
-const FESystemDouble t_by_c = 0.12, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
+const FESystemDouble aoa=0.0, rho=1.05, uval=347.2926*4.0, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), u3 =0.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
+const FESystemDouble x_length = 4.5, y_length = 1.00, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
+const FESystemDouble t_by_c = 0.10, chord = 1.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
 const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=dim+2, dc_freeze_iter_num = 250;
-const AnalysisCase case_type = NACA_AIRFOIL;
+const AnalysisCase case_type = AIRFOIL_BUMP;
 const FESystemBoolean if_fd = false;
 
 std::vector<std::vector<FESystemDouble> > dc_vals;
@@ -58,14 +58,14 @@ void initMeshParameters()
             x_div_locations[1] = (x_length-chord)/2.0;
             x_div_locations[2] = (x_length+chord)/2.0;
             x_div_locations[3] = x_length;            
-            x_relative_mesh_size_in_div[0] = 100.0;
+            x_relative_mesh_size_in_div[0] = 1.0;
             x_relative_mesh_size_in_div[1] = 1.0;
-            x_relative_mesh_size_in_div[2] = 2.0;
-            x_relative_mesh_size_in_div[3] = 100.0;
+            x_relative_mesh_size_in_div[2] = 1.0;
+            x_relative_mesh_size_in_div[3] = 1.0;
             
-            x_n_subdivs_in_div[0] = 30;
-            x_n_subdivs_in_div[1] = 40;
-            x_n_subdivs_in_div[2] = 15;
+            x_n_subdivs_in_div[0] = 8;
+            x_n_subdivs_in_div[1] = 8;
+            x_n_subdivs_in_div[2] = 8;
 
             y_n_divs = 1;
             y_div_locations.resize(y_n_divs+1);
@@ -76,9 +76,9 @@ void initMeshParameters()
             y_div_locations[1] = y_length;
             
             y_relative_mesh_size_in_div[0] = 1.0;
-            y_relative_mesh_size_in_div[1] = 50.0;
+            y_relative_mesh_size_in_div[1] = 1.0;
             
-            y_n_subdivs_in_div[0] = 30;
+            y_n_subdivs_in_div[0] = 24;
         }
             break;
 
@@ -249,7 +249,7 @@ void modifyMeshForCase(FESystem::Mesh::MeshBase& mesh)
 
 
 
-void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUInt>& bc_dofs)
+void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, const unsigned int nx, const unsigned ny)
 {
     std::vector<FESystem::Mesh::Node*>& nodes = mesh.getNodes();
     
@@ -259,94 +259,36 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, std::set<FESystemUI
         case RAMP:
         case NACA_AIRFOIL:
         {
-            for (FESystemUInt i=0; i<nodes.size(); i++)
+            std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
+            // lower boundary as fixed wall bc
+            for (unsigned int i=0; i<nx-1; i++)
             {
-                if ((nodes[i]->getVal(0) == 0.0)) // left boundary nodes
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(0))
-                            (*it)->setTag(0);
-                }
-                
-                if (fabs(nodes[i]->getVal(0) - x_length) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // right boundary nodes
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(1))
-                            (*it)->setTag(1);
-                }
-                
-                if ((nodes[i]->getVal(1) == 0.0)) // lower boundary nodes
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(2))
-                            (*it)->setTag(2);
-                    
-                    // set tag 4 for airfoil surface
-                    it = e_set.begin(), end = e_set.end();
-                    if ((nodes[i]->getVal(0)>x0) && (nodes[i]->getVal(0)<x1))
-                        for ( ; it != end; it++)
-                            if (!(*it)->checkForTag(4))
-                                (*it)->setTag(4);
-                }
-                
-                
-                if (fabs(nodes[i]->getVal(1) - y_length) <= 100*FESystem::Base::getMachineEpsilon<FESystemDouble>()) // upper boundary nodes
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(3))
-                            (*it)->setTag(3);
-                }
+                elems[              i]->setTagForBoundary(0, 1);
+                elems[i+(ny-1)*(nx-2)]->setTagForBoundary(2, 2);
+            }
+
+            for (unsigned int i=0; i<ny-1; i++)
+            {
+                elems[i*(nx-1)       ]->setTagForBoundary(3, 2);
+                elems[i*(nx-1)+(nx-2)]->setTagForBoundary(1, 2);
             }
         }
             break;
 
         case HYPERSONIC_CYLINDER:
         {
-            for (FESystemUInt i=0; i<nodes.size(); i++)
+            std::vector<FESystem::Mesh::ElemBase*>& elems = mesh.getElements();
+            // lower boundary as fixed wall bc
+            for (unsigned int i=0; i<nx-1; i++)
             {
-                if ((nodes[i]->getVal(0) == 0.0)) // inlet
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(0))
-                            (*it)->setTag(0);
-                }
-                
-                if ((nodes[i]->getVal(0) == x_length)) // solid wall
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(1))
-                            (*it)->setTag(1);
-                }
-
-                if ((nodes[i]->getVal(1) == 0.0)) // outlet
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(2))
-                            (*it)->setTag(2);
-                }
-                
-                if ((nodes[i]->getVal(1) == y_length)) // outlet
-                {
-                    const std::set<FESystem::Mesh::ElemBase*>& e_set = nodes[i]->getElementConnectivitySet();
-                    std::set<FESystem::Mesh::ElemBase*>::const_iterator it = e_set.begin(), end = e_set.end();
-                    for ( ; it != end; it++)
-                        if (!(*it)->checkForTag(3))
-                            (*it)->setTag(3);
-                }
+                elems[              i]->setTagForBoundary(0, 2);
+                elems[i+(ny-1)*(nx-2)]->setTagForBoundary(2, 2);
+            }
+            
+            for (unsigned int i=0; i<ny-1; i++)
+            {
+                elems[i*(nx-1)       ]->setTagForBoundary(3, 2);
+                elems[i*(nx-1)+(nx-2)]->setTagForBoundary(1, 1);
             }
         }
             break;
@@ -375,7 +317,10 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
     
     switch (case_type)
     {
+        case AIRFOIL_BUMP:
+        case RAMP:
         case NACA_AIRFOIL:
+        case HYPERSONIC_CYLINDER:
         {
             elem.getBoundariesWithTag(1, bc_ids); // airfoil surface: treat as solid wall
             std::set<FESystemUInt>::const_iterator it = bc_ids.begin(), end = bc_ids.end();
@@ -408,108 +353,6 @@ void evaluateBoundaryConditionData(const FESystem::Mesh::ElemBase& elem, const F
         }
             break;
 
-        case AIRFOIL_BUMP:
-        case RAMP:
-        {
-            if (elem.checkForTag(0)) // left edge
-            {
-                fluid_elem.calculateMixedBoundaryCondition(3, q_boundary, sol_inf, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-                
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(3, q_boundary, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-            if (elem.checkForTag(1)) // right edge
-            {
-                fluid_elem.calculateMixedBoundaryCondition(1, q_boundary, sol_inf, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(1, q_boundary, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-            // set the flux value for the lower and upper boundary
-            if (elem.checkForTag(2)) // lower edge
-            {
-                fluid_elem.calculateSolidWallFluxBoundaryCondition(0, q_boundary, surf_vel, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-                
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(0, q_boundary, surf_vel, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-            if (elem.checkForTag(3)) // upper edge
-            {
-                //fluid_elem.calculateSolidWallFluxBoundaryCondition(2, q_boundary, tmp_vec);
-                fluid_elem.calculateMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-
-                if (if_calculate_jacobian)
-                {
-                    //fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(2, q_boundary, tmp_mat);
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-        }
-            break;
-
-        case HYPERSONIC_CYLINDER:
-        {
-            if (elem.checkForTag(0)) // inlet
-            {
-                fluid_elem.calculateMixedBoundaryCondition(3, q_boundary, sol_inf, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-                
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(3, q_boundary, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-            if (elem.checkForTag(1)) // solid wall
-            {
-                fluid_elem.calculateSolidWallFluxBoundaryCondition(1, q_boundary, surf_vel, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-                
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForSolidWallFluxBoundaryCondition(1, q_boundary, surf_vel, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-            // set the flux value for the lower and upper boundary
-            if (elem.checkForTag(2)) // outlet
-            {
-                fluid_elem.calculateMixedBoundaryCondition(0, q_boundary, sol_inf, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-                
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(0, q_boundary, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-            if (elem.checkForTag(3)) // outlet
-            {
-                fluid_elem.calculateMixedBoundaryCondition(2, q_boundary, sol_inf, tmp_vec);
-                bc_vec.add(1.0, tmp_vec);
-                
-                if (if_calculate_jacobian)
-                {
-                    fluid_elem.calculateTangentMatrixForMixedBoundaryCondition(2, q_boundary, tmp_mat);
-                    elem_mat.add(1.0, tmp_mat);
-                }
-            }
-        }
-            break;
 
         default:
             FESystemAssert1(false, FESystem::Exception::EnumerationNotHandled, case_type);
@@ -626,7 +469,10 @@ public:
             elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs); tmp_mat2.resize(n_elem_dofs, n_elem_dofs);
             elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
             tmp_mat.resize(n_elem_dofs, n_elem_dofs); bc_mat.resize(n_elem_dofs, n_elem_dofs); delta_sol.resize(n_elem_dofs); delta_res.resize(n_elem_dofs);
-
+            
+            std::cout << "elem num: " << i << std::endl;
+            for (unsigned int j=0; j<elems[i]->getNNodes(); j++)
+                elems[i]->getNode(j).write(std::cout);
             
             fe.clear();
             fe.reinit(*(elems[i]));
@@ -1020,12 +866,12 @@ void calculateEulerQuantities(const FESystem::DegreeOfFreedom::DegreeOfFreedomMa
     FESystemBoolean if_update_dc_vals = true;
     if (iter_num > dc_freeze_iter_num) if_update_dc_vals = false;
     
-    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
-                      AssembleElementMatrices(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat));
+//    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
+//                      AssembleElementMatrices(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat));
     
     
-//    AssembleElementMatrices a(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat);
-//    a.assembleAll();
+    AssembleElementMatrices a(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat);
+    a.assembleAll();
     
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),
                       EvaluatePrimitiveVariables(elems, nodes, dt, dof_map, sol, vel, dc_vals,if_update_dc_vals, primitive_sol, additional_sol));
@@ -1224,19 +1070,25 @@ int euler_analysis_driver(int argc, char * const argv[])
     // create a nx x ny grid of nodes
     FESystem::Geometry::Point origin(3);
     
-    FESystem::InputProcessor::GmshInputProcessor input_processor;
-    std::fstream input;
-    input.open("/Users/bhatiam/Documents/Projects/gmsh_models/naca0012.msh", std::fstream::in);
-    input_processor.readMeshFromInput(input, dim, true, origin, mesh);
+//    FESystem::InputProcessor::GmshInputProcessor input_processor;
+//    std::fstream input;
+//    input.open("/Users/bhatiam/Documents/Projects/gmsh_models/naca0012.msh", std::fstream::in);
+//    input_processor.readMeshFromInput(input, dim, true, origin, mesh);
     
-//
-//    initMeshParameters();
-//
-//    distributePoints(x_n_divs, x_div_locations, x_n_subdivs_in_div, x_relative_mesh_size_in_div, x_points);
-//    distributePoints(y_n_divs, y_div_locations, y_n_subdivs_in_div, y_relative_mesh_size_in_div, y_points);
-//    
-//    createPlaneMesh(elem_type, mesh, origin, x_points, y_points, n_elem_nodes, CROSS, true);
 
+    initMeshParameters();
+
+    FESystem::Mesh::ElementType elem_type = FESystem::Mesh::QUAD4;
+    unsigned int n_elem_nodes = 0;
+    
+    distributePoints(x_n_divs, x_div_locations, x_n_subdivs_in_div, x_relative_mesh_size_in_div, x_points);
+    distributePoints(y_n_divs, y_div_locations, y_n_subdivs_in_div, y_relative_mesh_size_in_div, y_points);
+    
+    createPlaneMesh(elem_type, mesh, origin, x_points, y_points, n_elem_nodes, CROSS, true);
+    setBoundaryConditionTag(mesh, x_points.size(), y_points.size());
+    
+    modifyMeshForCase(mesh);
+    
     surf_vel.resize(dim);
     
     // now add the degrees of freedom

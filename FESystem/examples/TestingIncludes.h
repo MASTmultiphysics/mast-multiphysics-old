@@ -176,4 +176,6 @@ int fluidStructutreInteractionDriver(int argc, char * const argv[]);
 
 int legendre_function(int argc, char * const argv[]);
 
+int libmesh_euler_analysis(int argc, char * const argv[]);
+
 #endif
