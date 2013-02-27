@@ -187,7 +187,7 @@ void EulerSystem::init_data ()
     
     // Check the input file for Reynolds number, application type,
     // approximation type
-    GetPot infile("navier.in");
+    GetPot infile("euler.in");
     aoa = infile("aoa",0.0);
     rho_inf = infile("rho",1.05);
     mach_inf = infile("mach",0.5);
@@ -243,12 +243,6 @@ void EulerSystem::init_data ()
     this->verify_analytic_jacobians = infile("verify_analytic_jacobians", 0.);
     this->print_jacobians = infile("print_jacobians", false);
     this->print_element_jacobians = infile("print_element_jacobians", false);
-    
-    // Set Dirichlet boundary conditions
-    const boundary_id_type top_id = (dim==3) ? 5 : 2;
-    
-    std::set<boundary_id_type> top_bdys;
-    top_bdys.insert(top_id);
     
     // Do the parent's initialization after variables and boundary constraints are defined
     FEMSystem::init_data();
@@ -343,7 +337,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
-        this->update_solution_at_quadrature_point( qp, c, true, conservative_sol, primitive_sol, B_mat);
+        this->update_solution_at_quadrature_point( qp, c, true, true, conservative_sol, primitive_sol, B_mat);
         this->update_jacobian_at_quadrature_point( qp, c, primitive_sol, dB_mat, Ai_advection, A_entropy, A_inv_entropy );
         
         Ai_Bi_advection.zero();
@@ -362,7 +356,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
 //        else
 //            diff_val = (*this->discontinuity_capturing_value)[i];
         
-        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
             // Galerkin contribution from the advection flux terms
             this->calculate_advection_flux(i_dim, primitive_sol, flux); // F^adv_i
@@ -383,7 +377,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         
         if (request_jacobian && c.elem_solution_derivative)
         {
-            for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+            for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             {
                 // Galerkin contribution from the advection flux terms
                 tmp_mat = Ai_advection[i_dim];
@@ -425,9 +419,11 @@ bool EulerSystem::side_constraint (bool request_jacobian,
     
     bool if_wall_bc = false, if_inf_bc = false;
     
-    if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 1) ) // wall bc
+    if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 0) ) // wall bc
         if_wall_bc = true;
-    if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 2) ) // infinite bc
+    if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 1) ||
+         this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 2) ||
+         this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 3) ) // infinite bc
         if_inf_bc = true;
     
     if ( !if_wall_bc && !if_inf_bc )
@@ -484,12 +480,12 @@ bool EulerSystem::side_constraint (bool request_jacobian,
     {
         Real xini = 0.;
 
-        for (FESystemUInt qp=0; qp<qpoint.size(); qp++)
+        for (unsigned int qp=0; qp<qpoint.size(); qp++)
         {
             xini = face_normals[qp] * vel;
             
             // first update the variables at the current quadrature point
-            this->update_solution_at_quadrature_point( qp, c, true, conservative_sol, p_sol, B_mat);
+            this->update_solution_at_quadrature_point( qp, c, true, false, conservative_sol, p_sol, B_mat);
             
             flux.zero();
             
@@ -515,8 +511,8 @@ bool EulerSystem::side_constraint (bool request_jacobian,
                 
                 tmp_mat2 = A_mat;
                 tmp_mat2.right_multiply(B_mat);
-                tmp_mat1 = B_mat;
-                tmp_mat1.right_multiply_transpose(tmp_mat2);
+                B_mat.get_transpose(tmp_mat1);
+                tmp_mat1.right_multiply(tmp_mat2);
                 Kmat.add(-JxW[qp], tmp_mat1);
             }
         }
@@ -525,17 +521,17 @@ bool EulerSystem::side_constraint (bool request_jacobian,
     
     if ( if_inf_bc )
     {
-        for (FESystemUInt qp=0; qp<qpoint.size(); qp++)
+        for (unsigned int qp=0; qp<qpoint.size(); qp++)
         {
             // first update the variables at the current quadrature point
-            this->update_solution_at_quadrature_point( qp, c, true, conservative_sol, p_sol, B_mat);
+            this->update_solution_at_quadrature_point( qp, c, true, false, conservative_sol, p_sol, B_mat);
 
             this->calculate_advection_left_eigenvector_and_inverse_for_normal(p_sol, face_normals[qp], eig_val, l_eig_vec, l_eig_vec_inv_tr);
             
             // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
             // evaluate them using the given solution.
             tmp_mat1 = l_eig_vec_inv_tr;
-            for (FESystemDouble j=0; j<n1; j++)
+            for (unsigned int j=0; j<n1; j++)
                 if (eig_val(j, j) < 0)
                     tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
                 else
@@ -551,7 +547,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
             // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
             // the flux is evaluated using the local solution
             tmp_mat1 = l_eig_vec_inv_tr;
-            for (FESystemDouble j=0; j<n1; j++)
+            for (unsigned int j=0; j<n1; j++)
                 if (eig_val(j, j) > 0)
                     tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                 else
@@ -571,7 +567,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
                 // now calculate the Jacobian for eigenvalues greater than 0, the characteristics go out of the domain, so that
                 // the flux is evaluated using the local solution
                 tmp_mat1 = l_eig_vec_inv_tr;
-                for (FESystemDouble j=0; j<n1; j++)
+                for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) > 0)
                         tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                     else
@@ -588,7 +584,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
     }
     
 //    std::cout << "inside side constraint " << std::endl;
-//    c.elem->print_info();
+////    c.elem->print_info();
 //    std::cout << if_inf_bc << "  " << if_wall_bc << std::endl;
 //    Fvec.print(std::cout);
 //    if (request_jacobian && c.elem_solution_derivative)
@@ -659,7 +655,7 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
-        this->update_solution_at_quadrature_point( qp, c, false, conservative_sol, primitive_sol, B_mat);
+        this->update_solution_at_quadrature_point( qp, c, false, true, conservative_sol, primitive_sol, B_mat);
         this->update_jacobian_at_quadrature_point( qp, c, primitive_sol, dB_mat, Ai_advection, A_entropy, A_inv_entropy );
         
         Ai_Bi_advection.zero();
@@ -703,9 +699,13 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             Kmat.add(JxW[qp], tmp_mat);
         }
     } // end of the quadrature point qp-loop
+
+    Fvec.scale(-1.0);
+    if (request_jacobian && c.get_elem_solution_derivative())
+        Kmat.scale(-1.0);
     
 //    std::cout << "inside mass residual " << std::endl;
-//    c.elem->print_info();
+////    c.elem->print_info();
 //    Fvec.print(std::cout);
 //    if (request_jacobian && c.elem_solution_derivative)
 //        Kmat.print(std::cout);
@@ -745,7 +745,8 @@ void EulerSystem::get_infinity_vars( DenseVector<Real>& vars_inf )
 
 
 
-void EulerSystem::update_solution_at_quadrature_point( const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative,
+void EulerSystem::update_solution_at_quadrature_point(  const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative,
+                                                        const bool if_elem_domain,
                                                         DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
                                                         DenseMatrix<Real>& B_mat)
 {
@@ -753,7 +754,10 @@ void EulerSystem::update_solution_at_quadrature_point( const unsigned int qp, FE
     B_mat.zero();
     
     FEBase* fe;
-    c.get_element_fe(vars[0], fe); // assuming that all variables have same interpolation
+    if (if_elem_domain)
+        c.get_element_fe(vars[0], fe); // assuming that all variables have same interpolation
+    else
+        c.get_side_fe(vars[0], fe); // assuming that all variables have same interpolation
 
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
     const unsigned int n_phi = phi.size();
@@ -764,7 +768,6 @@ void EulerSystem::update_solution_at_quadrature_point( const unsigned int qp, FE
             B_mat( i_var, i_var*n_phi+i_nd ) = phi[i_nd][qp];
     }
 
-    
     if ( if_elem_time_derivative ) // forcing function calculation
         B_mat.vector_mult( conservative_sol, c.elem_solution );
     else // time derivative calculation
@@ -1526,10 +1529,10 @@ EulerSystem::calculate_artificial_diffusion_operator(const unsigned int qp, FEMC
     Real h = 0, u_val = u.l2_norm(), tau_rho, tau_m, tau_e;
     u.scale(1.0/u_val);
     
-    for (FESystemUInt i_nodes=0; i_nodes<dphi.size(); i_nodes++)
+    for (unsigned int i_nodes=0; i_nodes<dphi.size(); i_nodes++)
     {
         // set value of shape function gradient
-        for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             dN(i_dim) = dphi[i_nodes][qp](i_dim);
         
         h += fabs(dN.dot(u));
@@ -1543,7 +1546,7 @@ EulerSystem::calculate_artificial_diffusion_operator(const unsigned int qp, FEMC
     tau_e = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
     
     streamline_operator(0, 0) = tau_rho;
-    for (FESystemUInt i_dim=0; i_dim<dim; i_dim++)
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         streamline_operator(1+i_dim, 1+i_dim) = tau_m;
     streamline_operator(n1-1, n1-1) = tau_e;
 }
@@ -1632,7 +1635,7 @@ void EulerSystem::calculate_differential_dperator_matrix( const unsigned int qp,
     tmp_mat.resize(n1, n2); tmp_mat_n1n1.resize(n1, n1); diff_operator.resize(n1, n2);
     dxi_dX.resize(dim, dim);
     vec1.resize(n1); vec2.resize(n1);
-    for (FESystemUInt i=0; i<dim; i++) diff_vec[i].resize(n1);
+    for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
     this->calculate_dxidX (qp, c, dxi_dX);
     
@@ -1642,12 +1645,12 @@ void EulerSystem::calculate_differential_dperator_matrix( const unsigned int qp,
     diff_operator = B_mat;
     diff_operator += Ai_Bi_advection;
     
-    FESystemDouble val1 = 0.0;
+    unsigned int val1 = 0.0;
     
     vec2.zero();
     
     // contribution of advection flux term
-    for (FESystemUInt i=0; i<dim; i++)
+    for (unsigned int i=0; i<dim; i++)
     {
         Ai_advection[i].get_transpose(tmp_mat);
         tmp_mat.right_multiply(dB_mat[i]);
@@ -1672,12 +1675,12 @@ void EulerSystem::calculate_differential_dperator_matrix( const unsigned int qp,
     // this is the denominator term
     
     val1 = 0.0;
-    for (FESystemUInt i=0; i<dim; i++)
+    for (unsigned int i=0; i<dim; i++)
     {
         vec1.zero();
         tmp_mat.zero();
         
-        for (FESystemUInt j=0; j<dim; j++)
+        for (unsigned int j=0; j<dim; j++)
             vec1.add(dxi_dX(i, j), diff_vec[j]);
         
         // calculate the value of denominator
@@ -1698,7 +1701,7 @@ void EulerSystem::calculate_differential_dperator_matrix( const unsigned int qp,
 
 
 // The main program.
-int main (int argc, char** argv)
+int libmesh_euler_analysis (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -1713,7 +1716,7 @@ int main (int argc, char** argv)
     const Real deltat                    = infile("deltat", 0.005);
     unsigned int n_timesteps             = infile("n_timesteps", 20);
     const unsigned int write_interval    = infile("write_interval", 5);
-    const unsigned int coarsegridsize    = infile("coarsegridsize", 1);
+    const unsigned int coarsegridsize    = infile("coarsegridsize", 15);
     const unsigned int coarserefinements = infile("coarserefinements", 0);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 10);
     const unsigned int dim               = infile("dimension", 2);
@@ -1736,6 +1739,8 @@ int main (int argc, char** argv)
     mesh_refinement.coarsen_fraction() = 0.3;
     mesh_refinement.coarsen_threshold() = 0.1;
     
+    const Real x_length=4.5, y_length=1.0, t_by_c = 0.10, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length*0.5-chord*0.5, x1=x0+chord, pi = acos(-1.);
+
     // Use the MeshTools::Generation mesh generator to create a uniform
     // grid on the square [-1,1]^D.  We instruct the mesh generator
     // to build a mesh of 8x8 \p Quad9 elements in 2D, or \p Hex27
@@ -1745,8 +1750,8 @@ int main (int argc, char** argv)
         MeshTools::Generation::build_square (mesh,
                                              coarsegridsize,
                                              coarsegridsize,
-                                             0., 1.,
-                                             0., 1.,
+                                             0., x_length,
+                                             0., y_length,
                                              QUAD4);
     else if (dim == 3)
         MeshTools::Generation::build_cube (mesh,
@@ -1758,11 +1763,30 @@ int main (int argc, char** argv)
                                            0., 1.,
                                            HEX8);
     
+    
     mesh_refinement.uniformly_refine(coarserefinements);
     
     // Print information about the mesh to the screen.
     mesh.print_info();
+
     
+    MeshBase::node_iterator   n_it  = mesh.nodes_begin();
+    const Mesh::node_iterator n_end = mesh.nodes_end();
+    
+    Real x_val, y_val;
+    
+    for (; n_it != n_end; n_it++)
+    {
+        Node& n =  **n_it;
+        if ((n(0) >= x0) && (n(0) <= x1))
+        {
+            x_val = n(0);
+            y_val = n(1);
+            
+            n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
+        }
+    }
+
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
     
@@ -1863,10 +1887,7 @@ int main (int argc, char** argv)
             }
             
             // Calculate error based on u and v (and w?) but not p
-            std::vector<Real> weights(2,1.0);  // u, v
-            if (dim == 3)
-                weights.push_back(1.0);          // w
-            weights.push_back(0.0);            // p
+            std::vector<Real> weights(dim+2,1.0);  // all set to 1.0
             // Keep the same default norm type.
             std::vector<FEMNormType>
             norms(1, error_estimator->error_norm.type(0));

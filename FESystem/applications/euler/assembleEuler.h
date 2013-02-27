@@ -69,6 +69,7 @@ protected:
     
 
     void update_solution_at_quadrature_point(const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative,
+                                             const bool if_elem_domain,
                                               DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
                                               DenseMatrix<Real>& B_mat);
     
