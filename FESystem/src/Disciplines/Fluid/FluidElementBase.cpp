@@ -242,7 +242,7 @@ FESystem::Fluid::FluidElementBase::calculateMixedBoundaryCondition(const FESyste
         // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
         // evaluate them using the given solution.
         tmp_mat1.copyMatrix(l_eig_vec_inv_tr);
-        for (FESystemDouble j=0; j<n1; j++)
+        for (FESystemUInt j=0; j<n1; j++)
             if (eig_val.getVal(j, j) < 0)
                 tmp_mat1.scaleColumn(j, eig_val.getVal(j, j)); // L^-T [omaga]_{-}
             else
@@ -257,7 +257,7 @@ FESystem::Fluid::FluidElementBase::calculateMixedBoundaryCondition(const FESyste
         // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
         // the flux is evaluated using the local solution
         tmp_mat1.copyMatrix(l_eig_vec_inv_tr);
-        for (FESystemDouble j=0; j<n1; j++)
+        for (FESystemUInt j=0; j<n1; j++)
             if (eig_val.getVal(j, j) > 0)
                 tmp_mat1.scaleColumn(j, eig_val.getVal(j, j)); // L^-T [omaga]_{+}
             else
@@ -312,7 +312,7 @@ FESystem::Fluid::FluidElementBase::calculateTangentMatrixForMixedBoundaryConditi
         // now calculate the Jacobian for eigenvalues greater than 0, the characteristics go out of the domain, so that
         // the flux is evaluated using the local solution
         tmp_mat1.copyMatrix(l_eig_vec_inv_tr);
-        for (FESystemDouble j=0; j<n1; j++)
+        for (FESystemUInt j=0; j<n1; j++)
             if (eig_val.getVal(j, j) > 0)
                 tmp_mat1.scaleColumn(j, eig_val.getVal(j, j)); // L^-T [omaga]_{+}
             else
