@@ -21,7 +21,7 @@ public:
     
     void zero();
     void init(const unsigned int dim, const DenseVector<Real>& conservative_sol, const Real cp, const Real cv);
-    void print(std::ostream& out);
+    void print(std::ostream& out) const;
     
     Real c_pressure(const Real p0, const Real q0);
     
@@ -52,8 +52,8 @@ public:
     virtual bool element_time_derivative (bool request_jacobian,
                                           DiffContext &context);
     
-    virtual bool side_constraint (bool request_jacobian,
-                                     DiffContext &context);
+    virtual bool side_time_derivative (bool request_jacobian,
+                                       DiffContext &context);
     
     virtual bool mass_residual (bool request_jacobian,
                                 DiffContext& context);

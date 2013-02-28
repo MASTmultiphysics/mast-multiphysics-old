@@ -15,12 +15,13 @@
 #include "libmesh/getpot.h"
 #include "libmesh/exodusII_io.h"
 #include "libmesh/vtk_io.h"
+#include "libmesh/tecplot_io.h"
 #include "libmesh/kelly_error_estimator.h"
 #include "libmesh/mesh.h"
 #include "libmesh/mesh_generation.h"
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/uniform_refinement_estimator.h"
-#include "libmesh/diff_solver.h"
+#include "libmesh/newton_solver.h"
 #include "libmesh/euler_solver.h"
 #include "libmesh/steady_solver.h"
 #include "libmesh/getpot.h"
@@ -158,7 +159,7 @@ PrimitiveSolution::c_pressure(const Real p0, const Real q0)
 
 
 void
-PrimitiveSolution::print(std::ostream& out)
+PrimitiveSolution::print(std::ostream& out) const
 {
     out << "Primitive Solution:" << std::endl;
     primitive_sol.print(out);
@@ -327,9 +328,6 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     
     
     Real diff_val=0.;
-    Fvec.zero();
-    if (request_jacobian && c.elem_solution_derivative)
-        Kmat.zero();
 
     PrimitiveSolution primitive_sol;
     
@@ -360,18 +358,18 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             // Galerkin contribution from the advection flux terms
             this->calculate_advection_flux(i_dim, primitive_sol, flux); // F^adv_i
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^adv_i
-            Fvec.add(JxW[qp], tmp_vec3_n2);
+            Fvec.add(-1.*JxW[qp], tmp_vec3_n2);
             
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.elem_solution);
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-            Fvec.add(-JxW[qp]*diff_val, tmp_vec3_n2);
+            Fvec.add(-1.*-JxW[qp]*diff_val, tmp_vec3_n2);
         }
         
         // Least square contribution from flux
         Ai_Bi_advection.vector_mult(flux, c.elem_solution); // d F^adv_i / dxi
         LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau F^adv_i
-        Fvec.add(-JxW[qp], tmp_vec3_n2);
+        Fvec.add(-1.*-JxW[qp], tmp_vec3_n2);
         
         
         if (request_jacobian && c.elem_solution_derivative)
@@ -383,18 +381,18 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                 tmp_mat.right_multiply(B_mat);
                 dB_mat[i_dim].get_transpose(tmp_mat2);
                 tmp_mat2.right_multiply(tmp_mat); // dBw/dx_i^T  dF^adv_i/ dU
-                Kmat.add(JxW[qp], tmp_mat2);
+                Kmat.add(-1.*JxW[qp], tmp_mat2);
                 
                 // discontinuity capturing term
                 dB_mat[i_dim].get_transpose(tmp_mat);
                 tmp_mat.right_multiply(dB_mat[i_dim]);
-                Kmat.add(-JxW[qp]*diff_val, tmp_mat);
+                Kmat.add(-1.*-JxW[qp]*diff_val, tmp_mat);
             }
             
             // Lease square contribution of flux gradient
             LS_mat.get_transpose(tmp_mat);
             tmp_mat.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU
-            Kmat.add(-JxW[qp], tmp_mat);
+            Kmat.add(-1.*-JxW[qp], tmp_mat);
         }
     } // end of the quadrature point qp-loop
     
@@ -409,8 +407,8 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
 
 
 
-bool EulerSystem::side_constraint (bool request_jacobian,
-                                   DiffContext &context)
+bool EulerSystem::side_time_derivative (bool request_jacobian,
+                                        DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
 
@@ -459,9 +457,6 @@ bool EulerSystem::side_constraint (bool request_jacobian,
     DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
     DenseVector<Number>& Fvec = c.get_elem_residual();
 
-    Fvec.zero();
-    if ( request_jacobian && c.get_elem_solution_derivative() )
-        Kmat.zero();
 
     
     DenseVector<Real>  normal, normal_local, tmp_vec1, flux, U_vec_interpolated, tmp_vec1_n2, conservative_sol;
@@ -502,7 +497,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
             }
             
             B_mat.vector_mult_transpose(tmp_vec1, flux);
-            Fvec.add(-JxW[qp], tmp_vec1);
+            Fvec.add(-1.*-JxW[qp], tmp_vec1);
             
             if ( request_jacobian && c.get_elem_solution_derivative() )
             {
@@ -512,7 +507,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
                 tmp_mat2.right_multiply(B_mat);
                 B_mat.get_transpose(tmp_mat1);
                 tmp_mat1.right_multiply(tmp_mat2);
-                Kmat.add(-JxW[qp], tmp_mat1);
+                Kmat.add(-1.*-JxW[qp], tmp_mat1);
             }
         }
     }
@@ -541,7 +536,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
             tmp_mat1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
             
             B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-            Fvec.add(-JxW[qp], tmp_vec1_n2);
+            Fvec.add(-1.*-JxW[qp], tmp_vec1_n2);
             
             // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
             // the flux is evaluated using the local solution
@@ -556,7 +551,7 @@ bool EulerSystem::side_constraint (bool request_jacobian,
             tmp_mat1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
             
             B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-            Fvec.add(-JxW[qp], tmp_vec1_n2);
+            Fvec.add(-1.*-JxW[qp], tmp_vec1_n2);
 
             
             if ( request_jacobian && c.get_elem_solution_derivative() )
@@ -576,16 +571,16 @@ bool EulerSystem::side_constraint (bool request_jacobian,
                 B_mat.get_transpose(tmp_mat2);
                 tmp_mat2.right_multiply(tmp_mat1); // B^T A_{+} B   (this is flux going out of the solution domain)
                 
-                Kmat.add(-JxW[qp], tmp_mat2);
+                Kmat.add(-1.*-JxW[qp], tmp_mat2);
             }
         }
         
     }
     
 //    std::cout << "inside side constraint " << std::endl;
-////    c.elem->print_info();
+//    std::cout << "elem solution" << std::endl; c.elem_solution.print(std::cout);
 //    std::cout << if_inf_bc << "  " << if_wall_bc << std::endl;
-//    Fvec.print(std::cout);
+//    std::cout << "bc vec: " << std::endl; Fvec.print(std::cout);
 //    if (request_jacobian && c.elem_solution_derivative)
 //        Kmat.print(std::cout);
 
@@ -642,12 +637,9 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     
     
     Real diff_val=0.;
-    Fvec.zero();
-    if (request_jacobian && c.get_elem_solution_derivative())
-        Kmat.zero();
     
     PrimitiveSolution primitive_sol;
-    
+        
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
@@ -695,14 +687,11 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             Kmat.add(JxW[qp], tmp_mat);
         }
     } // end of the quadrature point qp-loop
-
-    Fvec.scale(-1.0);
-    if (request_jacobian && c.get_elem_solution_derivative())
-        Kmat.scale(-1.0);
     
 //    std::cout << "inside mass residual " << std::endl;
-////    c.elem->print_info();
-//    Fvec.print(std::cout);
+//    std::cout << "elem velocity" << std::endl; c.elem_solution.print(std::cout);
+//    std::cout << "elem solution" << std::endl; c.elem_fixed_solution.print(std::cout);
+//    std::cout << "mass vec: " << std::endl; Fvec.print(std::cout);
 //    if (request_jacobian && c.elem_solution_derivative)
 //        Kmat.print(std::cout);
 
@@ -1712,7 +1701,7 @@ int libmesh_euler_analysis (int argc, char* const argv[])
     const unsigned int write_interval    = infile("write_interval", 5);
     const unsigned int coarsegridsize    = infile("coarsegridsize", 15);
     const unsigned int coarserefinements = infile("coarserefinements", 0);
-    const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 10);
+    const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
     const unsigned int dim               = infile("dimension", 2);
     
     // Skip higher-dimensional examples on a lower-dimensional libMesh build
@@ -1803,12 +1792,17 @@ int libmesh_euler_analysis (int argc, char* const argv[])
     
     // Initialize the system
     equation_systems.init ();
-    
+
+    system.print_residual_norms = infile("print_residual_norms", false);
+    system.print_residuals = infile("print_residuals", false);
+    system.print_jacobian_norms = infile("print_jacobian_norms", false);
+    system.print_jacobians = infile("print_jacobians", false);
+
     // Set the time stepping options
     system.deltat = deltat;
     
     // And the nonlinear solver options
-    DiffSolver &solver = *(system.time_solver->diff_solver().get());
+    NewtonSolver &solver = dynamic_cast<NewtonSolver&>(*(system.time_solver->diff_solver().get()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
     solver.max_nonlinear_iterations =
@@ -1819,6 +1813,12 @@ int libmesh_euler_analysis (int argc, char* const argv[])
     infile("relative_residual_tolerance", 0.0);
     solver.absolute_residual_tolerance =
     infile("absolute_residual_tolerance", 0.0);
+    solver.continue_after_backtrack_failure =
+    infile("continue_after_backtrack_failure", false);
+    solver.continue_after_max_iterations =
+    infile("continue_after_max_iterations", false);
+    solver.require_residual_reduction =
+    infile("require_residual_reduction", true);
     
     // And the linear solver options
     solver.max_linear_iterations =
