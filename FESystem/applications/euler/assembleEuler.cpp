@@ -398,7 +398,8 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     
 //    std::cout << "inside element time derivative " << std::endl;
 //    c.elem->print_info();
-//    Fvec.print(std::cout);
+//    std::cout << "sol: " << std::endl; c.elem_solution.print(std::cout);
+//    std::cout << "res: " << std::endl; Fvec.print(std::cout);
 //    if (request_jacobian && c.elem_solution_derivative)
 //        Kmat.print(std::cout);
     
@@ -1825,6 +1826,7 @@ int libmesh_euler_analysis (int argc, char* const argv[])
     infile("max_linear_iterations", 50000);
     solver.initial_linear_tolerance =
     infile("initial_linear_tolerance", 1.e-3);
+    solver.brent_line_search = false;
     
     // Print information about the system to the screen.
     equation_systems.print_info();
@@ -1881,7 +1883,8 @@ int libmesh_euler_analysis (int argc, char* const argv[])
             }
             
             // Calculate error based on u and v (and w?) but not p
-            std::vector<Real> weights(dim+2,1.0);  // all set to 1.0
+            std::vector<Real> weights(dim+2,0.0);  // all set to 1.0
+            weights[0] = 1.0;
             // Keep the same default norm type.
             std::vector<FEMNormType>
             norms(1, error_estimator->error_norm.type(0));
