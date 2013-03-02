@@ -358,18 +358,18 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             // Galerkin contribution from the advection flux terms
             this->calculate_advection_flux(i_dim, primitive_sol, flux); // F^adv_i
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^adv_i
-            Fvec.add(-1.*JxW[qp], tmp_vec3_n2);
+            Fvec.add(JxW[qp], tmp_vec3_n2);
             
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.elem_solution);
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-            Fvec.add(-1.*-JxW[qp]*diff_val, tmp_vec3_n2);
+            Fvec.add(-JxW[qp]*diff_val, tmp_vec3_n2);
         }
         
         // Least square contribution from flux
         Ai_Bi_advection.vector_mult(flux, c.elem_solution); // d F^adv_i / dxi
         LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau F^adv_i
-        Fvec.add(-1.*-JxW[qp], tmp_vec3_n2);
+        Fvec.add(-JxW[qp], tmp_vec3_n2);
         
         
         if (request_jacobian && c.elem_solution_derivative)
@@ -381,18 +381,18 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                 tmp_mat.right_multiply(B_mat);
                 dB_mat[i_dim].get_transpose(tmp_mat2);
                 tmp_mat2.right_multiply(tmp_mat); // dBw/dx_i^T  dF^adv_i/ dU
-                Kmat.add(-1.*JxW[qp], tmp_mat2);
+                Kmat.add(JxW[qp], tmp_mat2);
                 
                 // discontinuity capturing term
                 dB_mat[i_dim].get_transpose(tmp_mat);
                 tmp_mat.right_multiply(dB_mat[i_dim]);
-                Kmat.add(-1.*-JxW[qp]*diff_val, tmp_mat);
+                Kmat.add(-JxW[qp]*diff_val, tmp_mat);
             }
             
             // Lease square contribution of flux gradient
             LS_mat.get_transpose(tmp_mat);
             tmp_mat.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU
-            Kmat.add(-1.*-JxW[qp], tmp_mat);
+            Kmat.add(-JxW[qp], tmp_mat);
         }
     } // end of the quadrature point qp-loop
     
@@ -498,7 +498,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
             }
             
             B_mat.vector_mult_transpose(tmp_vec1, flux);
-            Fvec.add(-1.*-JxW[qp], tmp_vec1);
+            Fvec.add(-JxW[qp], tmp_vec1);
             
             if ( request_jacobian && c.get_elem_solution_derivative() )
             {
@@ -508,7 +508,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 tmp_mat2.right_multiply(B_mat);
                 B_mat.get_transpose(tmp_mat1);
                 tmp_mat1.right_multiply(tmp_mat2);
-                Kmat.add(-1.*-JxW[qp], tmp_mat1);
+                Kmat.add(-JxW[qp], tmp_mat1);
             }
         }
     }
@@ -537,7 +537,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
             tmp_mat1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
             
             B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-            Fvec.add(-1.*-JxW[qp], tmp_vec1_n2);
+            Fvec.add(-JxW[qp], tmp_vec1_n2);
             
             // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
             // the flux is evaluated using the local solution
@@ -552,7 +552,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
             tmp_mat1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
             
             B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-            Fvec.add(-1.*-JxW[qp], tmp_vec1_n2);
+            Fvec.add(-JxW[qp], tmp_vec1_n2);
 
             
             if ( request_jacobian && c.get_elem_solution_derivative() )
@@ -572,7 +572,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 B_mat.get_transpose(tmp_mat2);
                 tmp_mat2.right_multiply(tmp_mat1); // B^T A_{+} B   (this is flux going out of the solution domain)
                 
-                Kmat.add(-1.*-JxW[qp], tmp_mat2);
+                Kmat.add(-JxW[qp], tmp_mat2);
             }
         }
         
@@ -1826,7 +1826,7 @@ int libmesh_euler_analysis (int argc, char* const argv[])
     infile("max_linear_iterations", 50000);
     solver.initial_linear_tolerance =
     infile("initial_linear_tolerance", 1.e-3);
-    solver.brent_line_search = false;
+    //solver.brent_line_search = false;
     
     // Print information about the system to the screen.
     equation_systems.print_info();
