@@ -30,6 +30,11 @@ ifeq (${PLATFORM},Darwin)
     TBB_INCLUDE_DIR=/opt/local/tbb41_20121003oss/include
     TBB_LIBS=-ltbb -ltbbmalloc
     BOOST_DIR=/opt/local/include
+    LIBMESH_DIR=../../../libmesh
+    TRILINOS_DIR=/usr/local/trilinos
+    VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
+    MPI_INCLUDE_DIR=/opt/local/include/openmpi
+    MPI_LIB_DIR=/opt/local/lib/openmpi
 endif
 
 ifeq (${PLATFORM},Darwinhome)
@@ -54,6 +59,11 @@ ifeq (${PLATFORM},Darwinhome)
     TBB_LIBS=-ltbb -ltbbmalloc
     PLATFORM=Darwin
     BOOST_DIR=/opt/local/include
+    LIBMESH_DIR=../../../libmesh
+    TRILINOS_DIR=/usr/local/trilinos
+    VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
+    MPI_INCLUDE_DIR=/opt/local/include/openmpi
+    MPI_LIB_DIR=/opt/local/lib/openmpi
 endif
 
 ifeq (${PLATFORM},Linux)
@@ -105,11 +115,6 @@ AR = ar
 
 SRC_SUBDIR=../src
 APP_SUBDIR=../applications
-LIBMESH_DIR=../../../libmesh
-TRILINOS_DIR=/usr/local/trilinos
-VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
-MPI_INCLUDE_DIR=/opt/local/include/openmpi
-MPI_LIB_DIR=/opt/local/lib/openmpi
 BUILD_DIR=${PWD}
 
 EXTERNAL_INCLUDE_DIRS+=-I${BOOST_DIR}
@@ -118,7 +123,7 @@ EXTERNAL_INCLUDE_DIRS+=-I${METIS_INCLUDE_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}/../examples
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}/../applications
-EXTERNAL_INCLUDE_DIRS+=-I${LIBMESH_DIR}/include
+EXTERNAL_INCLUDE_DIRS+=-I${LIBMESH_DIR}/${SCALAR}/include
 EXTERNAL_INCLUDE_DIRS+=-I${TRILINOS_DIR}/include
 EXTERNAL_INCLUDE_DIRS+=-I${MPI_INCLUDE_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${VTK_INCLUDE_DIR}
@@ -132,13 +137,13 @@ EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${METIS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${TBB_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${GFORT_SYSTEM_LIB_DIR}
-EXTERNAL_LIB_DIRS+=-L${LIBMESH_DIR}/lib
+EXTERNAL_LIB_DIRS+=-L${LIBMESH_DIR}/${SCALAR}/lib
 EXTERNAL_LIB_DIRS+=-L${MPI_LIB_DIR}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
 endif
 
-EXTERNAL_LIBS=-lfesystem-${METHOD}
+EXTERNAL_LIBS=-lfesystem-${METHOD}-${SCALAR}
 EXTERNAL_LIBS+=${ARPACK_LIB}
 EXTERNAL_LIBS+=${LAPACK_BLAS_LIBS} 
 EXTERNAL_LIBS+=${METIS_LIBS}
@@ -163,30 +168,36 @@ DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${SOURCES})
 EXAMPLE_SOURCES = $(wildcard ${SRC_SUBDIR}/../examples/*.cpp)
 EXAMPLE_DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${EXAMPLE_SOURCES})
 
-all: fesystem-meshtest-${METHOD}
+all: fesystem-meshtest-${METHOD}-${SCALAR}
 
-fesystem-meshtest-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-dbg.a 
+fesystem-meshtest-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-dbg-real.a 
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
-fesystem-meshtest-opt: $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt.a 
+fesystem-meshtest-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt-real.a 
 	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
 	${GCC_PRE} -M  ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp > $@
 	${PYTHON} ${BUILD_DIR}/modify_dep_file.py $@ ${*D}
 
-%-dbg-cpp.o: %.cpp
+%-dbg-real-cpp.o: %.cpp
 	${GCC_COMP} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
-%-opt-cpp.o: %.cpp
+%-opt-real-cpp.o: %.cpp
+	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+
+%-dbg-complex-cpp.o: %.cpp
+	${GCC_COMP} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+
+%-opt-complex-cpp.o: %.cpp
 	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 
-libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES}) 
+libfesystem-${METHOD}-${SCALAR}.a: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${SOURCES}) 
 	ar -rv $@ $^ 
 
 clean:
-	rm -rf ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-cpp.o,${EXAMPLE_SOURCES}) $(patsubst %.cpp,%-${METHOD}-cpp.o,${SOURCES})  libfesystem-${METHOD}.a  fesystem-meshtest-${METHOD}*
+	rm -rf ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES}) $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${SOURCES})  libfesystem-${METHOD}-${SCALAR}.a  fesystem-meshtest-${METHOD}-${SCALAR}*
 
 clean-deps:
 	rm -f ${DEP_FILES}

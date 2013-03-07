@@ -40,6 +40,8 @@
 		6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4D91602C0DB005F754E /* PistonTheory1D.h */; };
 		6998A4DE1602C170005F754E /* PistonTheory2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6998A4DC1602C170005F754E /* PistonTheory2D.cpp */; };
 		6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4DD1602C170005F754E /* PistonTheory2D.h */; };
+		69E1C42B16E8069400F7E4A4 /* euler_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E1C42916E8069400F7E4A4 /* euler_elem_base.cpp */; };
+		69E1C42C16E8069400F7E4A4 /* euler_elem_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 69E1C42A16E8069400F7E4A4 /* euler_elem_base.h */; };
 		69E879EF16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */; };
 		69E879F016CAFDA100E06AF6 /* LegendreFunctionMapping.h in Headers */ = {isa = PBXBuildFile; fileRef = 69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */; };
 		69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */; };
@@ -411,6 +413,8 @@
 		6998A4D91602C0DB005F754E /* PistonTheory1D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory1D.h; sourceTree = "<group>"; };
 		6998A4DC1602C170005F754E /* PistonTheory2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PistonTheory2D.cpp; sourceTree = "<group>"; };
 		6998A4DD1602C170005F754E /* PistonTheory2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory2D.h; sourceTree = "<group>"; };
+		69E1C42916E8069400F7E4A4 /* euler_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = euler_elem_base.cpp; sourceTree = "<group>"; };
+		69E1C42A16E8069400F7E4A4 /* euler_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = euler_elem_base.h; sourceTree = "<group>"; };
 		69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LegendreFunctionMapping.cpp; sourceTree = "<group>"; };
 		69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendreFunctionMapping.h; sourceTree = "<group>"; };
 		69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThermalElementBase.cpp; sourceTree = "<group>"; };
@@ -1430,6 +1434,8 @@
 			children = (
 				EBE3D29016D6688400AD868D /* assembleEuler.cpp */,
 				EBE3D29116D6688400AD868D /* assembleEuler.h */,
+				69E1C42916E8069400F7E4A4 /* euler_elem_base.cpp */,
+				69E1C42A16E8069400F7E4A4 /* euler_elem_base.h */,
 			);
 			path = euler;
 			sourceTree = "<group>";
@@ -1669,6 +1675,7 @@
 				EB17466A16CD740F008F08E6 /* DegreeOfFreedomUnit.h in Headers */,
 				EB17467216CD79EE008F08E6 /* FEInterpolationType.h in Headers */,
 				EBE3D29316D6688400AD868D /* assembleEuler.h in Headers */,
+				69E1C42C16E8069400F7E4A4 /* euler_elem_base.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1862,6 +1869,7 @@
 				EB17466816CD740F008F08E6 /* DegreeOfFreedomObject.cpp in Sources */,
 				EB17467116CD79EE008F08E6 /* FEInterpolationType.cpp in Sources */,
 				EBE3D29216D6688400AD868D /* assembleEuler.cpp in Sources */,
+				69E1C42B16E8069400F7E4A4 /* euler_elem_base.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1935,12 +1943,12 @@
 					/opt/local/tbb41_20121003oss/lib,
 					/opt/local/lib,
 					"\"$(SRCROOT)/build\"",
-					"\"$(SRCROOT)/../libmesh/lib\"",
+					"\"$(SRCROOT)/../libmesh/real/lib\"",
 					"\"/usr/local/trilinos/lib\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis \"$(SRCROOT)/../libmesh/include\" \"$(SRCROOT)/FESystem/applications\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis \"$(SRCROOT)/../libmesh/real/include\" \"$(SRCROOT)/FESystem/applications\"";
 			};
 			name = Debug;
 		};
@@ -1970,12 +1978,12 @@
 					/opt/local/tbb41_20121003oss/lib,
 					/opt/local/lib,
 					"\"$(SRCROOT)/build\"",
-					"\"$(SRCROOT)/../libmesh/lib\"",
+					"\"$(SRCROOT)/../libmesh/real/lib\"",
 					"\"/usr/local/trilinos/lib\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis \"$(SRCROOT)/../libmesh/include\" \"$(SRCROOT)/FESystem/applications\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis \"$(SRCROOT)/../libmesh/real/include\" \"$(SRCROOT)/FESystem/applications\"";
 			};
 			name = Release;
 		};
