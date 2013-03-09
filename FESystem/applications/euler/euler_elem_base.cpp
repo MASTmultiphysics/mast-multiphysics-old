@@ -1209,3 +1209,4 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
 
 
 
+template class SmallPerturbationPrimitiveSolution<Number>;

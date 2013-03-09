@@ -569,7 +569,7 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             
             // LS contribution of velocity
             LS_mat.get_transpose(tmp_mat);
-            tmp_mat.right_multiply(B_mat); // LS^T tau A Bmat
+            tmp_mat.right_multiply(B_mat); // LS^T tau Bmat
             Kmat.add(JxW[qp], tmp_mat);
         }
     } // end of the quadrature point qp-loop
