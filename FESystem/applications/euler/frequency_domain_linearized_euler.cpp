@@ -147,9 +147,10 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     DenseVector<Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, elem_sol_magnitude, ref_sol;
     DenseVector<Number> elem_interpolated_sol, flux, tmp_vec3_n2;
     DenseMatrix<Number> mat_complex;
-    LS_mat.resize(n1, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs); A_inv_entropy.resize(dim+2, dim+2);
-    A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
+    LS_mat.resize(n1, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs);
+    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2);
+    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
+    conservative_sol.resize(dim+2);
     elem_sol_magnitude.resize(n_dofs); elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     
     for (unsigned int i=0; i<dim; i++)
@@ -360,12 +361,14 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     
     if ( if_wall_bc )
     {
-        Real xini;
+        Real xini=0.;
         
         for (unsigned int qp=0; qp<qpoint.size(); qp++)
         {
             if (this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 10))
                 xini = 1.0;//face_normals[qp] * vel;
+            else
+                xini = 0.;
             
             // first update the variables at the current quadrature point
             this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat);
@@ -373,7 +376,7 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             mat_complex1.vector_mult(flux, c.elem_solution); // initialize flux to interpolated sol for initialized of perturbed vars
             
             delta_p_sol.zero();
-            delta_p_sol.init(p_sol, flux);
+            delta_p_sol.init(p_sol, flux); // flux is actually the elem interpolated perturbed sol
 
             
             flux.zero(); // now that the perturbed sol has been initialized, zero the flux.
@@ -387,7 +390,7 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                 case 1:
                     flux(0) = p_sol.rho*xini;
                     flux(1) = p_sol.u1*p_sol.rho*xini+delta_p_sol.dp*face_normals[qp](0);
-                    flux(n1-1) = xini*(p_sol.rho*(cv*p_sol.T+p_sol.k)+p_sol.p);
+                    flux(n1-1) = xini*(p_sol.rho*p_sol.e_tot+p_sol.p);
                     break;
             }
             
@@ -396,6 +399,7 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             
             if ( request_jacobian && c.get_elem_solution_derivative() )
             {
+                xini = 0.; // for the steady case
                 this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
                 
                 tmp_mat2 = A_mat;
