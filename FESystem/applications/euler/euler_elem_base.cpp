@@ -1141,10 +1141,9 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
     std::vector<DenseVector<Real> > diff_vec(3);
-    DenseMatrix<Real> tmp_mat, tmp_mat_n1n1, diff_operator, dxi_dX;
+    DenseMatrix<Real> tmp_mat, tmp_mat_n1n1, dxi_dX;
     DenseVector<Real> vec1, vec2;
-    tmp_mat.resize(n1, n2); tmp_mat_n1n1.resize(n1, n1); diff_operator.resize(n1, n2);
-    dxi_dX.resize(dim, dim);
+    tmp_mat.resize(n1, n2); tmp_mat_n1n1.resize(n1, n1); dxi_dX.resize(dim, dim);
     vec1.resize(n1); vec2.resize(n1);
     for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
@@ -1152,11 +1151,6 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     
     // contribution of unsteady term
     LS_operator.zero();
-    
-    diff_operator = B_mat;
-    diff_operator += Ai_Bi_advection;
-    
-    unsigned int val1 = 0.0;
     
     vec2.zero();
     
@@ -1182,7 +1176,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     // now evaluate the dissipation factor for the discontinuity capturing term
     // this is the denominator term
     
-    val1 = 0.0;
+    Real val1 = 0.0;
     for (unsigned int i=0; i<dim; i++)
     {
         vec1.zero();
