@@ -469,11 +469,7 @@ public:
             elem_mat1.resize(n_elem_dofs, n_elem_dofs); elem_mat2.resize(n_elem_dofs, n_elem_dofs); elem_vec.resize(n_elem_dofs); tmp_mat2.resize(n_elem_dofs, n_elem_dofs);
             elem_sol.resize(n_elem_dofs); elem_vel.resize(n_elem_dofs); bc_vec.resize(n_elem_dofs); tmp_vec.resize(n_elem_dofs); tmp_vec2.resize(n_elem_dofs);
             tmp_mat.resize(n_elem_dofs, n_elem_dofs); bc_mat.resize(n_elem_dofs, n_elem_dofs); delta_sol.resize(n_elem_dofs); delta_res.resize(n_elem_dofs);
-            
-            std::cout << "elem num: " << i << std::endl;
-            for (unsigned int j=0; j<elems[i]->getNNodes(); j++)
-                elems[i]->getNode(j).write(std::cout);
-            
+                        
             fe.clear();
             fe.reinit(*(elems[i]));
             FESystem::Quadrature::initializeQRuleForElem(*(elems[i]), fe, q_rule);
