@@ -185,7 +185,7 @@ euler-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_S
 fesystem-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES})  libfesystem-dbg.a 
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
 
-fesystem-opt: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt.a 
+fesystem-opt: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES})  libfesystem-opt.a 
 	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
