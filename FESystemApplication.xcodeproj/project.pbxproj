@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6916B9C7159585C300D6DA82 /* CoreFoundation.framework */; };
-		EB2A842316DE5FAF00930F21 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2A842216DE5FAF00930F21 /* FESystem.dylib */; };
 		EBAEE19515C1B8A90062459D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE19215C1B8A90062459D /* main.cpp */; };
 		EBFDC9F5164ABA5D0008B7E0 /* libtbb.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F3164ABA5D0008B7E0 /* libtbb.dylib */; };
 		EBFDC9F6164ABA5D0008B7E0 /* libtbbmalloc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBFDC9F4164ABA5D0008B7E0 /* libtbbmalloc.dylib */; };
@@ -29,7 +28,6 @@
 /* Begin PBXFileReference section */
 		6916B9C7159585C300D6DA82 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		69677EC713404448002B32C8 /* FESystemApplication */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FESystemApplication; sourceTree = BUILT_PRODUCTS_DIR; };
-		EB2A842216DE5FAF00930F21 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBAEE19215C1B8A90062459D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = FESystem/examples/main.cpp; sourceTree = "<group>"; };
 		EBFDC9F3164ABA5D0008B7E0 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = ../../../../../opt/local/tbb41_20121003oss/lib/libtbb.dylib; sourceTree = "<group>"; };
 		EBFDC9F4164ABA5D0008B7E0 /* libtbbmalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbbmalloc.dylib; path = ../../../../../opt/local/tbb41_20121003oss/lib/libtbbmalloc.dylib; sourceTree = "<group>"; };
@@ -40,7 +38,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB2A842316DE5FAF00930F21 /* FESystem.dylib in Frameworks */,
 				EBFDC9F5164ABA5D0008B7E0 /* libtbb.dylib in Frameworks */,
 				EBFDC9F6164ABA5D0008B7E0 /* libtbbmalloc.dylib in Frameworks */,
 				6916B9C8159585C300D6DA82 /* CoreFoundation.framework in Frameworks */,
@@ -53,7 +50,6 @@
 		69677EBC13404448002B32C8 = {
 			isa = PBXGroup;
 			children = (
-				EB2A842216DE5FAF00930F21 /* FESystem.dylib */,
 				EBFDC9F3164ABA5D0008B7E0 /* libtbb.dylib */,
 				EBFDC9F4164ABA5D0008B7E0 /* libtbbmalloc.dylib */,
 				6916B9C7159585C300D6DA82 /* CoreFoundation.framework */,
@@ -140,7 +136,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -155,7 +151,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -179,6 +175,7 @@
 					"$(inherited)",
 					/opt/local/tbb41_20121003oss/lib,
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug\"",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-gxbstmkzgllzasfxircgnhskqlii/Build/Products/Debug\"",
 				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -201,6 +198,7 @@
 					"$(inherited)",
 					/opt/local/tbb41_20121003oss/lib,
 					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-hacwvrhimucwsdcjqnpcghlfyuri/Build/Products/Debug\"",
+					"\"$(SRCROOT)/../../../Library/Developer/Xcode/DerivedData/FESystemWorkspace-gxbstmkzgllzasfxircgnhskqlii/Build/Products/Debug\"",
 				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "$(TARGET_NAME)";

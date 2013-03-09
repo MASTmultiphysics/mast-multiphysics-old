@@ -137,23 +137,23 @@ EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${METIS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${TBB_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${GFORT_SYSTEM_LIB_DIR}
-EXTERNAL_LIB_DIRS+=-L${LIBMESH_DIR}/${SCALAR}/lib
 EXTERNAL_LIB_DIRS+=-L${MPI_LIB_DIR}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
 endif
+LIBMESH_LIB_DIR=-L${LIBMESH_DIR}/${SCALAR}/lib
 
-EXTERNAL_LIBS=-lfesystem-${METHOD}-${SCALAR}
+EXTERNAL_LIBS=-lfesystem-${METHOD}
 EXTERNAL_LIBS+=${ARPACK_LIB}
 EXTERNAL_LIBS+=${LAPACK_BLAS_LIBS} 
 EXTERNAL_LIBS+=${METIS_LIBS}
 EXTERNAL_LIBS+=${TBB_LIBS}
 EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
-EXTERNAL_LIBS+=-lmesh_${METHOD}
-EXTERNAL_LIBS+=-lmpi_cxx -lmpi
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIBS+=${PLPLOT_LIBS}
 endif
+LIBMESH_LIBS=-lmesh_${METHOD}
+MPI_LIBS=-lmpi_cxx -lmpi
 
 
 ifeq (${HAVE_PLPLOT_LIBS},1)
@@ -163,22 +163,40 @@ else
 endif
 
 
-SOURCES = $(wildcard ${SRC_SUBDIR}/*.cpp ${SRC_SUBDIR}/*/*.cpp ${SRC_SUBDIR}/*/*/*.cpp ${APP_SUBDIR}/*.cpp ${APP_SUBDIR}/*/*.cpp ${APP_SUBDIR}/*/*/*.cpp)
-DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${SOURCES})
-EXAMPLE_SOURCES = $(wildcard ${SRC_SUBDIR}/../examples/*.cpp)
-EXAMPLE_DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${EXAMPLE_SOURCES})
+FESYSTEM_LIB_SOURCES = $(wildcard ${SRC_SUBDIR}/*.cpp ${SRC_SUBDIR}/*/*.cpp ${SRC_SUBDIR}/*/*/*.cpp)
+FESYSTEM_APP_SOURCES = $(wildcard ${APP_SUBDIR}/*.cpp ${APP_SUBDIR}/*/*.cpp ${APP_SUBDIR}/*/*/*.cpp)
+FESYSTEM_EXAMPLE_SOURCES = $(wildcard ${SRC_SUBDIR}/../examples/*.cpp)
+DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${FESYSTEM_LIB_SOURCES} ${FESYSTEM_APP_SOURCES} ${FESYSTEM_EXAMPLE_SOURCES})
 
-all: fesystem-meshtest-${METHOD}-${SCALAR}
+all: fesystem-${METHOD} euler-${METHOD}-${SCALAR}
 
-fesystem-meshtest-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-dbg-real.a 
-	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
+euler-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
 
-fesystem-meshtest-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt-real.a 
-	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} -o $@
+euler-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+
+euler-dbg-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+
+euler-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+
+fesystem-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES})  libfesystem-dbg.a 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+
+fesystem-opt: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES})  libfesystem-opt.a 
+	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
 	${GCC_PRE} -M  ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp > $@
 	${PYTHON} ${BUILD_DIR}/modify_dep_file.py $@ ${*D}
+
+%-dbg-cpp.o: %.cpp
+	${GCC_COMP} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+
+%-opt-cpp.o: %.cpp
+	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 %-dbg-real-cpp.o: %.cpp
 	${GCC_COMP} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
@@ -193,11 +211,12 @@ fesystem-meshtest-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMP
 	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 
-libfesystem-${METHOD}-${SCALAR}.a: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${SOURCES}) 
+libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	ar -rv $@ $^ 
 
 clean:
-	rm -rf ${DEP_FILES} $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${EXAMPLE_SOURCES}) $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${SOURCES})  libfesystem-${METHOD}-${SCALAR}.a  fesystem-meshtest-${METHOD}-${SCALAR}*
+	rm -rf $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES}) $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_LIB_SOURCES})  libfesystem-${METHOD}.a  fesystem-${METHOD}
+	rm -rf $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES})  euler-${METHOD}-${SCALAR}
 
 clean-deps:
 	rm -f ${DEP_FILES}

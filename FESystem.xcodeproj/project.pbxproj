@@ -40,8 +40,6 @@
 		6998A4DB1602C0DB005F754E /* PistonTheory1D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4D91602C0DB005F754E /* PistonTheory1D.h */; };
 		6998A4DE1602C170005F754E /* PistonTheory2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6998A4DC1602C170005F754E /* PistonTheory2D.cpp */; };
 		6998A4DF1602C170005F754E /* PistonTheory2D.h in Headers */ = {isa = PBXBuildFile; fileRef = 6998A4DD1602C170005F754E /* PistonTheory2D.h */; };
-		69E1C42B16E8069400F7E4A4 /* euler_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E1C42916E8069400F7E4A4 /* euler_elem_base.cpp */; };
-		69E1C42C16E8069400F7E4A4 /* euler_elem_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 69E1C42A16E8069400F7E4A4 /* euler_elem_base.h */; };
 		69E879EF16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */; };
 		69E879F016CAFDA100E06AF6 /* LegendreFunctionMapping.h in Headers */ = {isa = PBXBuildFile; fileRef = 69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */; };
 		69F3CF3915F9912F0069C9B7 /* ThermalElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */; };
@@ -282,75 +280,6 @@
 		EBAEE18715C1B73B0062459D /* EnumName.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBAEE0A315C1B73B0062459D /* EnumName.cpp */; };
 		EBAEE18815C1B73B0062459D /* EnumName.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A415C1B73B0062459D /* EnumName.h */; };
 		EBAEE18915C1B73B0062459D /* Table.h in Headers */ = {isa = PBXBuildFile; fileRef = EBAEE0A515C1B73B0062459D /* Table.h */; };
-		EBE3D29216D6688400AD868D /* assembleEuler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3D29016D6688400AD868D /* assembleEuler.cpp */; };
-		EBE3D29316D6688400AD868D /* assembleEuler.h in Headers */ = {isa = PBXBuildFile; fileRef = EBE3D29116D6688400AD868D /* assembleEuler.h */; };
-		EBE3D29816D66A4700AD868D /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29716D66A4700AD868D /* libmesh_dbg.0.dylib */; };
-		EBE3D2D916D66A6200AD868D /* libamesos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29916D66A6100AD868D /* libamesos.a */; };
-		EBE3D2DA16D66A6200AD868D /* libanasazi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29A16D66A6100AD868D /* libanasazi.a */; };
-		EBE3D2DB16D66A6200AD868D /* libanasaziepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29B16D66A6100AD868D /* libanasaziepetra.a */; };
-		EBE3D2DC16D66A6200AD868D /* libanasazitpetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29C16D66A6100AD868D /* libanasazitpetra.a */; };
-		EBE3D2DD16D66A6200AD868D /* libaztecoo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29D16D66A6100AD868D /* libaztecoo.a */; };
-		EBE3D2DE16D66A6200AD868D /* libbelos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29E16D66A6100AD868D /* libbelos.a */; };
-		EBE3D2DF16D66A6200AD868D /* libbelosepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D29F16D66A6100AD868D /* libbelosepetra.a */; };
-		EBE3D2E016D66A6200AD868D /* libbelostpetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A016D66A6100AD868D /* libbelostpetra.a */; };
-		EBE3D2E116D66A6200AD868D /* libdpliris.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A116D66A6100AD868D /* libdpliris.a */; };
-		EBE3D2E216D66A6200AD868D /* libepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A216D66A6100AD868D /* libepetra.a */; };
-		EBE3D2E316D66A6200AD868D /* libepetraext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A316D66A6100AD868D /* libepetraext.a */; };
-		EBE3D2E416D66A6200AD868D /* libfei_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A416D66A6100AD868D /* libfei_base.a */; };
-		EBE3D2E516D66A6200AD868D /* libfei_trilinos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A516D66A6100AD868D /* libfei_trilinos.a */; };
-		EBE3D2E616D66A6200AD868D /* libgaleri-xpetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A616D66A6100AD868D /* libgaleri-xpetra.a */; };
-		EBE3D2E716D66A6200AD868D /* libgaleri.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A716D66A6100AD868D /* libgaleri.a */; };
-		EBE3D2E816D66A6200AD868D /* libglobipack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A816D66A6100AD868D /* libglobipack.a */; };
-		EBE3D2E916D66A6200AD868D /* libifpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2A916D66A6200AD868D /* libifpack.a */; };
-		EBE3D2EA16D66A6200AD868D /* libifpack2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2AA16D66A6200AD868D /* libifpack2.a */; };
-		EBE3D2EB16D66A6200AD868D /* libintrepid.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2AB16D66A6200AD868D /* libintrepid.a */; };
-		EBE3D2EC16D66A6200AD868D /* libisorropia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2AC16D66A6200AD868D /* libisorropia.a */; };
-		EBE3D2ED16D66A6200AD868D /* libkokkos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2AD16D66A6200AD868D /* libkokkos.a */; };
-		EBE3D2EE16D66A6200AD868D /* libkokkosdisttsqr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2AE16D66A6200AD868D /* libkokkosdisttsqr.a */; };
-		EBE3D2EF16D66A6200AD868D /* libkokkoslinalg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2AF16D66A6200AD868D /* libkokkoslinalg.a */; };
-		EBE3D2F016D66A6200AD868D /* libkokkosnodeapi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B016D66A6200AD868D /* libkokkosnodeapi.a */; };
-		EBE3D2F116D66A6200AD868D /* libkokkosnodetsqr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B116D66A6200AD868D /* libkokkosnodetsqr.a */; };
-		EBE3D2F216D66A6200AD868D /* libkomplex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B216D66A6200AD868D /* libkomplex.a */; };
-		EBE3D2F316D66A6200AD868D /* libloca.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B316D66A6200AD868D /* libloca.a */; };
-		EBE3D2F416D66A6200AD868D /* liblocaepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B416D66A6200AD868D /* liblocaepetra.a */; };
-		EBE3D2F516D66A6200AD868D /* liblocalapack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B516D66A6200AD868D /* liblocalapack.a */; };
-		EBE3D2F616D66A6200AD868D /* liblocathyra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B616D66A6200AD868D /* liblocathyra.a */; };
-		EBE3D2F716D66A6200AD868D /* libmesquite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B716D66A6200AD868D /* libmesquite.a */; };
-		EBE3D2F816D66A6200AD868D /* libml.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B816D66A6200AD868D /* libml.a */; };
-		EBE3D2F916D66A6200AD868D /* libModeLaplace.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2B916D66A6200AD868D /* libModeLaplace.a */; };
-		EBE3D2FA16D66A6200AD868D /* libmoertel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2BA16D66A6200AD868D /* libmoertel.a */; };
-		EBE3D2FB16D66A6200AD868D /* libmoocho.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2BB16D66A6200AD868D /* libmoocho.a */; };
-		EBE3D2FC16D66A6200AD868D /* libmoochothyra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2BC16D66A6200AD868D /* libmoochothyra.a */; };
-		EBE3D2FD16D66A6200AD868D /* libnox.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2BD16D66A6200AD868D /* libnox.a */; };
-		EBE3D2FE16D66A6200AD868D /* libnoxepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2BE16D66A6200AD868D /* libnoxepetra.a */; };
-		EBE3D2FF16D66A6200AD868D /* libnoxlapack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2BF16D66A6200AD868D /* libnoxlapack.a */; };
-		EBE3D30016D66A6200AD868D /* libnoxthyra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C016D66A6200AD868D /* libnoxthyra.a */; };
-		EBE3D30116D66A6200AD868D /* liboptipack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C116D66A6200AD868D /* liboptipack.a */; };
-		EBE3D30216D66A6200AD868D /* libpamgen_extras.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C216D66A6200AD868D /* libpamgen_extras.a */; };
-		EBE3D30316D66A6200AD868D /* libpamgen.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C316D66A6200AD868D /* libpamgen.a */; };
-		EBE3D30416D66A6200AD868D /* librtop.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C416D66A6200AD868D /* librtop.a */; };
-		EBE3D30516D66A6200AD868D /* librythmos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C516D66A6200AD868D /* librythmos.a */; };
-		EBE3D30616D66A6200AD868D /* libsacado.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C616D66A6200AD868D /* libsacado.a */; };
-		EBE3D30716D66A6200AD868D /* libshards.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C716D66A6200AD868D /* libshards.a */; };
-		EBE3D30816D66A6200AD868D /* libstratimikos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C816D66A6200AD868D /* libstratimikos.a */; };
-		EBE3D30916D66A6200AD868D /* libstratimikosamesos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2C916D66A6200AD868D /* libstratimikosamesos.a */; };
-		EBE3D30A16D66A6200AD868D /* libstratimikosaztecoo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2CA16D66A6200AD868D /* libstratimikosaztecoo.a */; };
-		EBE3D30B16D66A6200AD868D /* libstratimikosbelos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2CB16D66A6200AD868D /* libstratimikosbelos.a */; };
-		EBE3D30C16D66A6200AD868D /* libstratimikosifpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2CC16D66A6200AD868D /* libstratimikosifpack.a */; };
-		EBE3D30D16D66A6200AD868D /* libstratimikosml.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2CD16D66A6200AD868D /* libstratimikosml.a */; };
-		EBE3D30E16D66A6200AD868D /* libteuchos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2CE16D66A6200AD868D /* libteuchos.a */; };
-		EBE3D30F16D66A6200AD868D /* libthyracore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2CF16D66A6200AD868D /* libthyracore.a */; };
-		EBE3D31016D66A6200AD868D /* libthyraepetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D016D66A6200AD868D /* libthyraepetra.a */; };
-		EBE3D31116D66A6200AD868D /* libthyraepetraext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D116D66A6200AD868D /* libthyraepetraext.a */; };
-		EBE3D31216D66A6200AD868D /* libthyratpetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D216D66A6200AD868D /* libthyratpetra.a */; };
-		EBE3D31316D66A6200AD868D /* libtpetra.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D316D66A6200AD868D /* libtpetra.a */; };
-		EBE3D31416D66A6200AD868D /* libtpetraext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D416D66A6200AD868D /* libtpetraext.a */; };
-		EBE3D31516D66A6200AD868D /* libtpetrainout.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D516D66A6200AD868D /* libtpetrainout.a */; };
-		EBE3D31616D66A6200AD868D /* libtpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D616D66A6200AD868D /* libtpi.a */; };
-		EBE3D31716D66A6200AD868D /* libtriutils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D716D66A6200AD868D /* libtriutils.a */; };
-		EBE3D31816D66A6200AD868D /* libzoltan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D2D816D66A6200AD868D /* libzoltan.a */; };
-		EBE3D31B16D66A9200AD868D /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D31916D66A9200AD868D /* libmpi_cxx.1.dylib */; };
-		EBE3D31C16D66A9200AD868D /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3D31A16D66A9200AD868D /* libmpi.1.dylib */; };
 		EBF0C618160A3E6200B963A8 /* FluidElementBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF0C616160A3E6200B963A8 /* FluidElementBase.cpp */; };
 		EBF0C619160A3E6200B963A8 /* FluidElementBase.h in Headers */ = {isa = PBXBuildFile; fileRef = EBF0C617160A3E6200B963A8 /* FluidElementBase.h */; };
 		EBF47F1C15EFD38C00640485 /* NonlinearSolverBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBF47F1A15EFD38C00640485 /* NonlinearSolverBase.cpp */; };
@@ -415,6 +344,7 @@
 		6998A4DD1602C170005F754E /* PistonTheory2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PistonTheory2D.h; sourceTree = "<group>"; };
 		69E1C42916E8069400F7E4A4 /* euler_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = euler_elem_base.cpp; sourceTree = "<group>"; };
 		69E1C42A16E8069400F7E4A4 /* euler_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = euler_elem_base.h; sourceTree = "<group>"; };
+		69E1C43516E8319C00F7E4A4 /* run_euler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = run_euler.cpp; sourceTree = "<group>"; };
 		69E879ED16CAFDA100E06AF6 /* LegendreFunctionMapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LegendreFunctionMapping.cpp; sourceTree = "<group>"; };
 		69E879EE16CAFDA100E06AF6 /* LegendreFunctionMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendreFunctionMapping.h; sourceTree = "<group>"; };
 		69F3CF3815F9912F0069C9B7 /* ThermalElementBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThermalElementBase.cpp; sourceTree = "<group>"; };
@@ -746,6 +676,8 @@
 		EBF47F1B15EFD38C00640485 /* NonlinearSolverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NonlinearSolverBase.h; sourceTree = "<group>"; };
 		EBF47F1E15EFDB4600640485 /* NewtonIterationNonlinearSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NewtonIterationNonlinearSolver.cpp; sourceTree = "<group>"; };
 		EBF47F1F15EFDB4600640485 /* NewtonIterationNonlinearSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewtonIterationNonlinearSolver.h; sourceTree = "<group>"; };
+		EBF96D4D16EA653400316D86 /* frequency_domain_linearized_euler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = frequency_domain_linearized_euler.cpp; sourceTree = "<group>"; };
+		EBF96D4E16EA653400316D86 /* frequency_domain_linearized_euler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = frequency_domain_linearized_euler.h; sourceTree = "<group>"; };
 		EBFDC9F8164AEA520008B7E0 /* libtbb.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbb.dylib; path = /opt/local/tbb41_20121003oss/lib/libtbb.dylib; sourceTree = "<absolute>"; };
 		EBFDC9F9164AEA520008B7E0 /* libtbbmalloc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtbbmalloc.dylib; path = /opt/local/tbb41_20121003oss/lib/libtbbmalloc.dylib; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
@@ -755,71 +687,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBE3D2D916D66A6200AD868D /* libamesos.a in Frameworks */,
-				EBE3D2DA16D66A6200AD868D /* libanasazi.a in Frameworks */,
-				EBE3D2DB16D66A6200AD868D /* libanasaziepetra.a in Frameworks */,
-				EBE3D2DC16D66A6200AD868D /* libanasazitpetra.a in Frameworks */,
-				EBE3D2DD16D66A6200AD868D /* libaztecoo.a in Frameworks */,
-				EBE3D2DE16D66A6200AD868D /* libbelos.a in Frameworks */,
-				EBE3D2DF16D66A6200AD868D /* libbelosepetra.a in Frameworks */,
-				EBE3D2E016D66A6200AD868D /* libbelostpetra.a in Frameworks */,
-				EBE3D2E116D66A6200AD868D /* libdpliris.a in Frameworks */,
-				EBE3D2E216D66A6200AD868D /* libepetra.a in Frameworks */,
-				EBE3D2E316D66A6200AD868D /* libepetraext.a in Frameworks */,
-				EBE3D2E416D66A6200AD868D /* libfei_base.a in Frameworks */,
-				EBE3D2E516D66A6200AD868D /* libfei_trilinos.a in Frameworks */,
-				EBE3D2E616D66A6200AD868D /* libgaleri-xpetra.a in Frameworks */,
-				EBE3D2E716D66A6200AD868D /* libgaleri.a in Frameworks */,
-				EBE3D2E816D66A6200AD868D /* libglobipack.a in Frameworks */,
-				EBE3D2E916D66A6200AD868D /* libifpack.a in Frameworks */,
-				EBE3D2EA16D66A6200AD868D /* libifpack2.a in Frameworks */,
-				EBE3D2EB16D66A6200AD868D /* libintrepid.a in Frameworks */,
-				EBE3D2EC16D66A6200AD868D /* libisorropia.a in Frameworks */,
-				EBE3D2ED16D66A6200AD868D /* libkokkos.a in Frameworks */,
-				EBE3D2EE16D66A6200AD868D /* libkokkosdisttsqr.a in Frameworks */,
-				EBE3D2EF16D66A6200AD868D /* libkokkoslinalg.a in Frameworks */,
-				EBE3D2F016D66A6200AD868D /* libkokkosnodeapi.a in Frameworks */,
-				EBE3D2F116D66A6200AD868D /* libkokkosnodetsqr.a in Frameworks */,
-				EBE3D2F216D66A6200AD868D /* libkomplex.a in Frameworks */,
-				EBE3D2F316D66A6200AD868D /* libloca.a in Frameworks */,
-				EBE3D2F416D66A6200AD868D /* liblocaepetra.a in Frameworks */,
-				EBE3D2F516D66A6200AD868D /* liblocalapack.a in Frameworks */,
-				EBE3D2F616D66A6200AD868D /* liblocathyra.a in Frameworks */,
-				EBE3D2F716D66A6200AD868D /* libmesquite.a in Frameworks */,
-				EBE3D2F816D66A6200AD868D /* libml.a in Frameworks */,
-				EBE3D2F916D66A6200AD868D /* libModeLaplace.a in Frameworks */,
-				EBE3D2FA16D66A6200AD868D /* libmoertel.a in Frameworks */,
-				EBE3D2FB16D66A6200AD868D /* libmoocho.a in Frameworks */,
-				EBE3D2FC16D66A6200AD868D /* libmoochothyra.a in Frameworks */,
-				EBE3D2FD16D66A6200AD868D /* libnox.a in Frameworks */,
-				EBE3D2FE16D66A6200AD868D /* libnoxepetra.a in Frameworks */,
-				EBE3D2FF16D66A6200AD868D /* libnoxlapack.a in Frameworks */,
-				EBE3D30016D66A6200AD868D /* libnoxthyra.a in Frameworks */,
-				EBE3D30116D66A6200AD868D /* liboptipack.a in Frameworks */,
-				EBE3D30216D66A6200AD868D /* libpamgen_extras.a in Frameworks */,
-				EBE3D30316D66A6200AD868D /* libpamgen.a in Frameworks */,
-				EBE3D30416D66A6200AD868D /* librtop.a in Frameworks */,
-				EBE3D30516D66A6200AD868D /* librythmos.a in Frameworks */,
-				EBE3D30616D66A6200AD868D /* libsacado.a in Frameworks */,
-				EBE3D30716D66A6200AD868D /* libshards.a in Frameworks */,
-				EBE3D30816D66A6200AD868D /* libstratimikos.a in Frameworks */,
-				EBE3D30916D66A6200AD868D /* libstratimikosamesos.a in Frameworks */,
-				EBE3D30A16D66A6200AD868D /* libstratimikosaztecoo.a in Frameworks */,
-				EBE3D30B16D66A6200AD868D /* libstratimikosbelos.a in Frameworks */,
-				EBE3D30C16D66A6200AD868D /* libstratimikosifpack.a in Frameworks */,
-				EBE3D30D16D66A6200AD868D /* libstratimikosml.a in Frameworks */,
-				EBE3D30E16D66A6200AD868D /* libteuchos.a in Frameworks */,
-				EBE3D30F16D66A6200AD868D /* libthyracore.a in Frameworks */,
-				EBE3D31016D66A6200AD868D /* libthyraepetra.a in Frameworks */,
-				EBE3D31116D66A6200AD868D /* libthyraepetraext.a in Frameworks */,
-				EBE3D31216D66A6200AD868D /* libthyratpetra.a in Frameworks */,
-				EBE3D31316D66A6200AD868D /* libtpetra.a in Frameworks */,
-				EBE3D31416D66A6200AD868D /* libtpetraext.a in Frameworks */,
-				EBE3D31516D66A6200AD868D /* libtpetrainout.a in Frameworks */,
-				EBE3D31616D66A6200AD868D /* libtpi.a in Frameworks */,
-				EBE3D31716D66A6200AD868D /* libtriutils.a in Frameworks */,
-				EBE3D31816D66A6200AD868D /* libzoltan.a in Frameworks */,
-				EBE3D29816D66A4700AD868D /* libmesh_dbg.0.dylib in Frameworks */,
 				EB8B00DC1640758B0064AEF1 /* libmetis.dylib in Frameworks */,
 				69107D221578D8CF00196B94 /* libarpack.a in Frameworks */,
 				69677EB513403B06002B32C8 /* vecLib.framework in Frameworks */,
@@ -827,8 +694,6 @@
 				6967BA84156A80C700F2FB18 /* libplplotd.dylib in Frameworks */,
 				EBFDC9FA164AEA520008B7E0 /* libtbb.dylib in Frameworks */,
 				EBFDC9FB164AEA520008B7E0 /* libtbbmalloc.dylib in Frameworks */,
-				EBE3D31B16D66A9200AD868D /* libmpi_cxx.1.dylib in Frameworks */,
-				EBE3D31C16D66A9200AD868D /* libmpi.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1436,6 +1301,9 @@
 				EBE3D29116D6688400AD868D /* assembleEuler.h */,
 				69E1C42916E8069400F7E4A4 /* euler_elem_base.cpp */,
 				69E1C42A16E8069400F7E4A4 /* euler_elem_base.h */,
+				EBF96D4D16EA653400316D86 /* frequency_domain_linearized_euler.cpp */,
+				EBF96D4E16EA653400316D86 /* frequency_domain_linearized_euler.h */,
+				69E1C43516E8319C00F7E4A4 /* run_euler.cpp */,
 			);
 			path = euler;
 			sourceTree = "<group>";
@@ -1674,8 +1542,6 @@
 				EB17466916CD740F008F08E6 /* DegreeOfFreedomObject.h in Headers */,
 				EB17466A16CD740F008F08E6 /* DegreeOfFreedomUnit.h in Headers */,
 				EB17467216CD79EE008F08E6 /* FEInterpolationType.h in Headers */,
-				EBE3D29316D6688400AD868D /* assembleEuler.h in Headers */,
-				69E1C42C16E8069400F7E4A4 /* euler_elem_base.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1868,8 +1734,6 @@
 				EB17466616CD740F008F08E6 /* DegreeOfFreedomMap.cpp in Sources */,
 				EB17466816CD740F008F08E6 /* DegreeOfFreedomObject.cpp in Sources */,
 				EB17467116CD79EE008F08E6 /* FEInterpolationType.cpp in Sources */,
-				EBE3D29216D6688400AD868D /* assembleEuler.cpp in Sources */,
-				69E1C42B16E8069400F7E4A4 /* euler_elem_base.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1948,7 +1812,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis \"$(SRCROOT)/../libmesh/real/include\" \"$(SRCROOT)/FESystem/applications\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis";
 			};
 			name = Debug;
 		};
@@ -1983,7 +1847,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis \"$(SRCROOT)/../libmesh/real/include\" \"$(SRCROOT)/FESystem/applications\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/src\" /opt/local/tbb41_20121003oss/include /opt/local/include/metis";
 			};
 			name = Release;
 		};

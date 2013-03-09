@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:ComplexSolver.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:RealSolver.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:FESystem.xcodeproj">
    </FileRef>
    <FileRef
