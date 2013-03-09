@@ -40,14 +40,18 @@ void
 PrimitiveSolution::zero()
 {
     this->primitive_sol.zero();
+    dimension = 0;
+    cp = 0.; cv = 0.;
     rho = 0.; u1 = 0.; u2 = 0.; u3 = 0.; T = 0.; p = 0.; a = 0.; e_tot = 0.; k = 0.;
     entropy = 0.; mach = 0.;
 }
 
 
-void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &conservative_sol, const Real cp, const Real cv)
+void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &conservative_sol, const Real cp_val, const Real cv_val)
 {
+    dimension = dim;
     const unsigned int n1 = dim+2;
+    cp = cp_val; cv = cv_val;
     const Real R = cp-cv, gamma = cp/cv;
     primitive_sol.resize(n1);
     
@@ -71,16 +75,17 @@ void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &co
         primitive_sol(3) = u3;
         k += u3*u3;
     }
-    
     k *= 0.5;
-    T = (conservative_sol(n1-1)/rho - k)/cv;
+    
+    e_tot = conservative_sol(n1-1)/rho; // cv*T+k;
+
+    T = (e_tot - k)/cv;
     primitive_sol(n1-1) = T;
     
-    e_tot = cv*T+k;
-    a = sqrt(gamma*R*T);
     p = R*T*rho;
+    a = sqrt(gamma*R*T);
+    mach = sqrt(2.0*k)/a;
     entropy = log(p/pow(rho,gamma));
-    mach = sqrt(2.0*k/(gamma*R*T));
 }
 
 
@@ -112,10 +117,102 @@ PrimitiveSolution::print(std::ostream& out) const
 
 
 
+
+template <typename ValType>
+SmallPerturbationPrimitiveSolution<ValType>::SmallPerturbationPrimitiveSolution()
+{
+    this->zero();
+}
+
+
+template <typename ValType>
+void SmallPerturbationPrimitiveSolution<ValType>::zero()
+{
+    perturb_primitive_sol.zero();
+    drho = 0.; du1 = 0.; du2 = 0.; du3 = 0.; dT = 0.; dp = 0.; da = 0.; de_tot = 0.; dk = 0.;
+    dentropy = 0.; dmach = 0.;
+}
+
+
+template <typename ValType>
+void
+SmallPerturbationPrimitiveSolution<ValType>::init(const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol)
+{
+    const unsigned int n1 = sol.dimension+2;
+    const Real R = sol.cp-sol.cv, gamma = sol.cp/sol.cv;
+    perturb_primitive_sol.resize(n1);
+    
+    drho = delta_sol(0);
+    perturb_primitive_sol(0) = drho;
+    
+    du1 = (delta_sol(1) - drho * sol.u1)/sol.rho;
+    perturb_primitive_sol(1) = du1;
+    dk += sol.u1*du1;
+    
+    if (sol.dimension > 1)
+    {
+        du2 = (delta_sol(2) - drho * sol.u2)/sol.rho;
+        perturb_primitive_sol(2) = du2;
+        dk += sol.u2*du2;
+    }
+    
+    if (sol.dimension > 2)
+    {
+        du3 = (delta_sol(3) - drho * sol.u3)/sol.rho;
+        perturb_primitive_sol(3) = du3;
+        dk += sol.u3*du3;
+    }
+    
+    de_tot = (delta_sol(n1-1) - drho * sol.e_tot)/sol.rho;
+
+    dT = (de_tot - dk)/sol.cv;
+    perturb_primitive_sol(n1-1) = dT;
+    
+    dp = R*(dT*sol.rho + sol.T*drho);
+    da = 0.5*sqrt(gamma*R/sol.T)*dT;
+    dmach =  dk/sqrt(2.0*sol.k)/sol.a - sqrt(2.*sol.k)/pow(sol.a,2) * da;
+    dentropy = (dp/pow(sol.rho,gamma) - gamma*sol.p/pow(sol.rho,gamma+1.)*drho) / (sol.p/pow(sol.rho,gamma)) ;
+}
+
+
+template <typename ValType>
+void
+SmallPerturbationPrimitiveSolution<ValType>::print(std::ostream& out) const
+{
+    out << "Small Perturbation Primitive Solution:" << std::endl;
+    perturb_primitive_sol.print(out);
+    std::cout
+    << std::setw(15) <<  " drho: " << drho << std::endl
+    << std::setw(15) <<  " du1: " << du1 << std::endl
+    << std::setw(15) <<  " du2: " << du2 << std::endl
+    << std::setw(15) <<  " du3: " << du3 << std::endl
+    << std::setw(15) <<  " dmach: " << dmach << std::endl
+    << std::setw(15) <<  " da: " << da << std::endl
+    << std::setw(15) <<  " dT: " << dT << std::endl
+    << std::setw(15) <<  " dp: " << dp << std::endl
+    << std::setw(15) <<  " de_tot: " << de_tot << std::endl
+    << std::setw(15) <<  " dk: " << dk << std::endl
+    << std::setw(15) <<  " dentropy: " << dentropy << std::endl << std::endl;
+}
+    
+
+template <typename ValType>
+ValType
+SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real p0, const Real q0)
+{
+    
+}
+    
+
+
+
+
 void EulerElemBase::init_data ()
 {
     // Check the input file for Reynolds number, application type,
     // approximation type
+    const Real pi = acos(-1.);
+
     GetPot infile("euler.in");
     aoa = infile("aoa",0.0);
     rho_inf = infile("rho",1.05);
@@ -160,8 +257,8 @@ void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf )
 
 
 
-void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative,
-                                                        const bool if_elem_domain,
+void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, 
+                                                        const bool if_elem_domain, const DenseVector<Real>& elem_solution,
                                                         DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
                                                         DenseMatrix<Real>& B_mat)
 {
@@ -184,10 +281,7 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
             B_mat( i_var, i_var*n_phi+i_nd ) = phi[i_nd][qp];
     }
     
-    if ( if_elem_time_derivative ) // forcing function calculation
-        B_mat.vector_mult( conservative_sol, c.elem_solution );
-    else // time derivative calculation
-        B_mat.vector_mult( conservative_sol, c.elem_fixed_solution );
+    B_mat.vector_mult( conservative_sol, elem_solution );
     
     primitive_sol.zero();
     primitive_sol.init(dim, conservative_sol, cp, cv);
@@ -1038,7 +1132,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
 }
 
 
-void EulerElemBase::calculate_differential_dperator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative, const PrimitiveSolution& sol,
+void EulerElemBase::calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
                                                            const DenseMatrix<Real>& B_mat, const std::vector<DenseMatrix<Real> >& dB_mat,
                                                            const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
                                                            const DenseMatrix<Real>& A_inv_entropy,
@@ -1071,12 +1165,9 @@ void EulerElemBase::calculate_differential_dperator_matrix(const std::vector<uns
     {
         Ai_advection[i].get_transpose(tmp_mat);
         tmp_mat.right_multiply(dB_mat[i]);
-        LS_operator.add(1.0, tmp_mat);  // A_i^T B_i
+        LS_operator.add(1.0, tmp_mat);  // A_i^T dB/dx_i
         
-        if (if_elem_time_derivative)
-            dB_mat[i].vector_mult(diff_vec[i], c.elem_solution);
-        else
-            dB_mat[i].vector_mult(diff_vec[i], c.elem_fixed_solution);
+        dB_mat[i].vector_mult(diff_vec[i], elem_solution);
         
         Ai_advection[i].vector_mult(vec1, diff_vec[i]);
         

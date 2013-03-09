@@ -28,14 +28,36 @@ public:
     PrimitiveSolution();
     
     void zero();
-    void init(const unsigned int dim, const DenseVector<Real>& conservative_sol, const Real cp, const Real cv);
+    void init(const unsigned int dim, const DenseVector<Real>& conservative_sol, const Real cp_val, const Real cv_val);
     void print(std::ostream& out) const;
     
     Real c_pressure(const Real p0, const Real q0);
     
     DenseVector<Real> primitive_sol;
+    unsigned int dimension;
+    Real cp, cv;
     Real rho, u1, u2, u3, T, p, a, e_tot, k, entropy, mach;
 };
+
+
+template <typename ValType>
+class SmallPerturbationPrimitiveSolution
+{
+public:
+    SmallPerturbationPrimitiveSolution();
+    
+    void zero();
+    void init(const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol);
+    void print(std::ostream& out) const;
+    
+    ValType c_pressure(const Real p0, const Real q0);
+    
+    DenseVector<ValType> perturb_primitive_sol;
+    ValType drho, du1, du2, du3, dT, dp, da, de_tot, dk, dentropy, dmach;
+    
+    const PrimitiveSolution* primitive_sol;
+};
+
 
 // The Navier-Stokes system class.
 // FEMSystem, TimeSolver and  NewtonSolver will handle most tasks,
@@ -60,8 +82,8 @@ protected:
                           DenseMatrix<Real>& dxi_dX);
     
     
-    void update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative,
-                                             const bool if_elem_domain,
+    void update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, 
+                                             const bool if_elem_domain, const DenseVector<Real>& elem_solution,
                                              DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
                                              DenseMatrix<Real>& B_mat);
     
@@ -104,7 +126,7 @@ protected:
                                                  DenseMatrix<Real>& streamline_operator);
     
     
-    void calculate_differential_dperator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const bool if_elem_time_derivative, const PrimitiveSolution& sol,
+    void calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
                                                 const DenseMatrix<Real>& B_mat, const std::vector<DenseMatrix<Real> >& dB_mat,
                                                 const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
                                                 const DenseMatrix<Real>& A_inv_entropy,
