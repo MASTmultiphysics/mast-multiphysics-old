@@ -215,9 +215,10 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../libmesh/complex/lib\"",
 					/opt/local/lib,
+					/opt/local/tbb41_20121003oss/lib/,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/complex/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/complex/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\" /opt/local/include/vtk-5.10";
 			};
 			name = Debug;
 		};
@@ -232,9 +233,10 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../libmesh/complex/lib\"",
 					/opt/local/lib,
+					/opt/local/tbb41_20121003oss/lib/,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/complex/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/complex/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\" /opt/local/include/vtk-5.10";
 			};
 			name = Release;
 		};

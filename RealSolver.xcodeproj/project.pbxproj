@@ -219,7 +219,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\" /opt/local/include/vtk-5.10";
 			};
 			name = Debug;
 		};
@@ -238,7 +238,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/FESystem/applications\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/FESystem/src\" /opt/local/include/vtk-5.10";
 			};
 			name = Release;
 		};
