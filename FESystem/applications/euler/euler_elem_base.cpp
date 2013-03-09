@@ -60,7 +60,7 @@ void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &co
     
     u1 = conservative_sol(1)/rho;
     primitive_sol(1) = u1;
-    k += u1*u1;
+    k = u1*u1;
     
     if (dim > 1)
     {
@@ -147,7 +147,7 @@ SmallPerturbationPrimitiveSolution<ValType>::init(const PrimitiveSolution& sol, 
     
     du1 = (delta_sol(1) - drho * sol.u1)/sol.rho;
     perturb_primitive_sol(1) = du1;
-    dk += sol.u1*du1;
+    dk = sol.u1*du1;
     
     if (sol.dimension > 1)
     {
