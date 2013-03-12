@@ -17,6 +17,8 @@
 #include "libmesh/dense_vector.h"
 #include "libmesh/dense_matrix.h"
 #include "libmesh/fem_context.h"
+#include "libmesh/system.h"
+#include "libmesh/analytic_function.h"
 
 
 using namespace libMesh;
@@ -31,7 +33,7 @@ public:
     void init(const unsigned int dim, const DenseVector<Real>& conservative_sol, const Real cp_val, const Real cv_val);
     void print(std::ostream& out) const;
     
-    Real c_pressure(const Real p0, const Real q0);
+    Real c_pressure(const Real p0, const Real q0) const;
     
     DenseVector<Real> primitive_sol;
     unsigned int dimension;
@@ -50,12 +52,37 @@ public:
     void init(const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol);
     void print(std::ostream& out) const;
     
-    ValType c_pressure(const Real p0, const Real q0);
+    ValType c_pressure(const Real q0) const;
     
     DenseVector<ValType> perturb_primitive_sol;
     ValType drho, du1, du2, du3, dT, dp, da, de_tot, dk, dentropy, dmach;
     
     const PrimitiveSolution* primitive_sol;
+};
+
+
+
+
+class FluidPostProcessSystem : public System
+{
+public:
+    // Constructor
+    FluidPostProcessSystem(EquationSystems& es,
+                const std::string& name_in,
+                const unsigned int number_in)
+    : System(es, name_in, number_in)
+    {}
+    
+    virtual void init_data();
+    
+    virtual void postprocess();
+
+    unsigned int u, v, w, T, s, p, cp, a, M;
+
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    unsigned int rho_im, u_im, v_im, w_im, T_im, s_im, p_im, cp_im, a_im, M_im;
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 };
 
 
@@ -134,6 +161,7 @@ protected:
     
     unsigned int dim;
     
+public:
     Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
     
 };

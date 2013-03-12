@@ -59,7 +59,6 @@ public:
     virtual bool mass_residual (bool request_jacobian,
                                 DiffContext& context);
     
-    
 protected:
     
     std::vector<unsigned int> vars;

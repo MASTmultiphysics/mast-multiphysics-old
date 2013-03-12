@@ -585,4 +585,5 @@ bool EulerSystem::mass_residual (bool request_jacobian,
 }
 
 
+
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

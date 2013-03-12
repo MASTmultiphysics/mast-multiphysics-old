@@ -9,7 +9,7 @@
 
 // FESystem includes
 #include "euler/euler_elem_base.h"
-
+#include "euler/assembleEuler.h"
 
 // C++ includes
 #include <iomanip>
@@ -21,6 +21,7 @@
 #include "libmesh/fe_interface.h"
 #include "libmesh/quadrature.h"
 #include "libmesh/string_to_enum.h"
+#include "libmesh/equation_systems.h"
 #include "libmesh/parameters.h"
 
 
@@ -90,7 +91,7 @@ void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &co
 
 
 Real
-PrimitiveSolution::c_pressure(const Real p0, const Real q0)
+PrimitiveSolution::c_pressure(const Real p0, const Real q0) const
 {
     return (p-p0)/q0;
 }
@@ -198,11 +199,109 @@ SmallPerturbationPrimitiveSolution<ValType>::print(std::ostream& out) const
 
 template <typename ValType>
 ValType
-SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real p0, const Real q0)
+SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real q0) const
 {
-    
+    return dp/q0;
 }
     
+
+
+void FluidPostProcessSystem::init_data()
+{
+    const unsigned int dim = this->get_mesh().mesh_dimension();
+
+    const Order order = static_cast<Order>(1);
+    FEFamily fefamily = LAGRANGE;
+    u = this->add_variable("u", order, fefamily);
+    if (dim > 1)
+        v = this->add_variable("v", order, fefamily);
+    if (dim > 2)
+        w = this->add_variable("w", order, fefamily);
+    T = this->add_variable("T", order, fefamily);
+    s = this->add_variable("s", order, fefamily);
+    p = this->add_variable("p", order, fefamily);
+    cp = this->add_variable("cp", order, fefamily);
+    a = this->add_variable("a", order, fefamily);
+    M = this->add_variable("M", order, fefamily);
+
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    rho_im = this->add_variable("rho_im", order, fefamily);
+    u_im = this->add_variable("u1_im", order, fefamily);
+    if (dim > 1)
+        v_im = this->add_variable("u2_im", order, fefamily);
+    if (dim > 2)
+        w_im = this->add_variable("u3_im", order, fefamily);
+    T_im = this->add_variable("T_im", order, fefamily);
+    s_im = this->add_variable("s_im", order, fefamily);
+    p_im = this->add_variable("p_im", order, fefamily);
+    cp_im = this->add_variable("cp_im", order, fefamily);
+    a_im = this->add_variable("a_im", order, fefamily);
+    M_im = this->add_variable("M_im", order, fefamily);
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+    
+    System::init_data();
+}
+
+
+Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol, Real p0, Real q0)
+{
+    if (var_name == "u")
+        return p_sol.u1;
+    else if (var_name == "v")
+        return p_sol.u2;
+    else if (var_name == "w")
+        return p_sol.u3;
+    else if (var_name == "T")
+        return p_sol.T;
+    else if (var_name == "s")
+        return p_sol.entropy;
+    else if (var_name == "p")
+        return p_sol.p;
+    else if (var_name == "cp")
+        return p_sol.c_pressure(p0, q0);
+    else if (var_name == "a")
+        return p_sol.a;
+    else if (var_name == "M")
+        return p_sol.mach;
+    else
+        libmesh_assert(false);
+}
+
+
+void FluidPostProcessSystem::postprocess()
+{
+    // get the solution vector from
+    Parameters& params = this->get_equation_systems().parameters;
+    const EulerSystem& euler = this->get_equation_systems().get_system<EulerSystem>("EulerSystem");
+    const NumericVector<Number>& euler_sol = (*euler.solution.get());
+    NumericVector<Number>& local_sol = (*this->solution.get());
+    
+    MeshBase& m = this->get_mesh();
+    
+    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());
+    MeshBase::node_iterator n_end       = m.pid_nodes_end(libMesh::processor_id());
+    
+    PrimitiveSolution p_sol;
+    DenseVector<Number> sol; sol.resize(euler.n_vars());
+
+    GetPot infile("euler.in");
+    Real cp = infile("cp",1.003e3),
+    cv = infile("cv",0.716e3);
+
+    
+    for ( ; n_begin != n_end; n_begin++)
+    {
+        p_sol.zero();
+        for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
+            sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
+        p_sol.init(m.mesh_dimension(), sol, cp, cv);
+        // now init the values
+        for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
+            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_var_val(this->variable_name(i_var), p_sol, euler.p_inf, euler.q0_inf));
+    }
+    
+    local_sol.close();
+}
 
 
 

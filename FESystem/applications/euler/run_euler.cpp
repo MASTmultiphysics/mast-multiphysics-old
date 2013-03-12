@@ -20,6 +20,7 @@
 #include "libmesh/mesh_generation.h"
 #include "libmesh/exodusII_io.h"
 #include "libmesh/vtk_io.h"
+#include "libmesh/gmsh_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/euler_solver.h"
 #include "libmesh/steady_solver.h"
@@ -53,6 +54,7 @@ int main (int argc, char* const argv[])
     const unsigned int coarserefinements = infile("coarserefinements", 0);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
     const unsigned int dim               = infile("dimension", 2);
+    const bool if_panel_mesh             = infile("use_panel_mesh", true);
     
     // Skip higher-dimensional examples on a lower-dimensional libMesh build
     libmesh_example_assert(dim <= LIBMESH_DIM, "2D/3D support");
@@ -68,103 +70,126 @@ int main (int argc, char* const argv[])
     mesh_refinement.coarsen_by_parents() = true;
     mesh_refinement.absolute_global_tolerance() = global_tolerance;
     mesh_refinement.nelem_target() = nelem_target;
-    mesh_refinement.refine_fraction() = 0.3;
-    mesh_refinement.coarsen_fraction() = 0.3;
+    mesh_refinement.refine_fraction() = 0.15;
+    mesh_refinement.coarsen_fraction() = 0.15;
     mesh_refinement.coarsen_threshold() = 0.1;
     
-    const Real pi = acos(-1.), x_length=4.5, y_length=1.0, z_length=1.0, t_by_c = 0.05, chord = 1.0, span = 1.0, thickness = 0.5*t_by_c*chord,
-    x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
-    
-    // Use the MeshTools::Generation mesh generator to create a uniform
-    // grid on the square [-1,1]^D.  We instruct the mesh generator
-    // to build a mesh of 8x8 \p Quad9 elements in 2D, or \p Hex27
-    // elements in 3D.  Building these higher-order elements allows
-    // us to use higher-order approximation, as in example 3.
-    if (dim == 2)
-        MeshTools::Generation::build_square (mesh,
-                                             coarsegridsize,
-                                             coarsegridsize,
-                                             0., x_length,
-                                             0., y_length,
-                                             QUAD4);
-    else if (dim == 3)
-        MeshTools::Generation::build_cube (mesh,
-                                           coarsegridsize,
-                                           coarsegridsize,
-                                           coarsegridsize,
-                                           0., x_length,
-                                           0., y_length,
-                                           0., z_length,
-                                           HEX8);
-    
-    
-    mesh_refinement.uniformly_refine(coarserefinements);
-    
-    // Print information about the mesh to the screen.
-    mesh.print_info();
-    
-    //march over all the elmeents and tag the sides that all lie on the panel suface
-    MeshBase::element_iterator e_it = mesh.elements_begin();
-    const MeshBase::element_iterator e_end = mesh.elements_end();
-    
-    for ( ; e_it != e_end; e_it++)
+
+    if (if_panel_mesh)
     {
-        for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
+        const Real pi = acos(-1.),
+        x_length= infile("x_length", 10.),
+        y_length= infile("y_length", 10.),
+        z_length= infile("y_length", 10.),
+        t_by_c =  infile("t_by_c", 0.05),
+        chord =   infile("chord", 1.0),
+        span =    infile("span", 1.0),
+        thickness = 0.5*t_by_c*chord,
+        x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
+        
+        // Use the MeshTools::Generation mesh generator to create a uniform
+        // grid on the square [-1,1]^D.  We instruct the mesh generator
+        // to build a mesh of 8x8 \p Quad9 elements in 2D, or \p Hex27
+        // elements in 3D.  Building these higher-order elements allows
+        // us to use higher-order approximation, as in example 3.
+        if (dim == 2)
+            MeshTools::Generation::build_square (mesh,
+                                                 coarsegridsize,
+                                                 coarsegridsize,
+                                                 0., x_length,
+                                                 0., y_length,
+                                                 QUAD4);
+        else if (dim == 3)
+            MeshTools::Generation::build_cube (mesh,
+                                               coarsegridsize,
+                                               coarsegridsize,
+                                               coarsegridsize,
+                                               0., x_length,
+                                               0., y_length,
+                                               0., z_length,
+                                               HEX8);
+        
+        
+        mesh_refinement.uniformly_refine(coarserefinements);
+                
+        //march over all the elmeents and tag the sides that all lie on the panel suface
+        MeshBase::element_iterator e_it = mesh.elements_begin();
+        const MeshBase::element_iterator e_end = mesh.elements_end();
+        
+        for ( ; e_it != e_end; e_it++)
         {
-            bool side_on_panel = true;
-            AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
-            for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
+            for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
             {
-                const Node& n = *(side_elem->get_node(i_node));
-                if (dim == 2)
-                    if ((n(1)>0.) || (n(0) < x0) || (n(0)>x1))
-                    {
-                        side_on_panel = false;
-                        break;
-                    }
-                if (dim == 3)
-                    if ((n(2)>0.) || (n(0) < x0) || (n(0)>x1) || (n(1) < y0) || (n(1)>y1))
-                    {
-                        side_on_panel = false;
-                        break;
-                    }
+                bool side_on_panel = true;
+                AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
+                for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
+                {
+                    const Node& n = *(side_elem->get_node(i_node));
+                    if (dim == 2)
+                        if ((n(1)>0.) || (n(0) < x0) || (n(0)>x1))
+                        {
+                            side_on_panel = false;
+                            break;
+                        }
+                    if (dim == 3)
+                        if ((n(2)>0.) || (n(0) < x0) || (n(0)>x1) || (n(1) < y0) || (n(1)>y1))
+                        {
+                            side_on_panel = false;
+                            break;
+                        }
+                }
+                if (side_on_panel)
+                    mesh.boundary_info->add_side(*e_it, i_side, 10);
             }
-            if (side_on_panel)
-                mesh.boundary_info->add_side(*e_it, i_side, 10);
+        }
+        
+        
+        MeshBase::node_iterator   n_it  = mesh.nodes_begin();
+        const Mesh::node_iterator n_end = mesh.nodes_end();
+        
+        Real x_val, y_val, z_val;
+        
+        for (; n_it != n_end; n_it++)
+        {
+            Node& n =  **n_it;
+            
+            if (dim == 2)
+                if ((n(0) >= x0) && (n(0) <= x1))
+                {
+                    x_val = n(0);
+                    y_val = n(1);
+                    
+                    n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
+                }
+            
+            if (dim == 3)
+                if ((n(0) >= x0) && (n(0) <= x1) &&
+                    (n(1) >= y0) && (n(1) <= y1))
+                {
+                    x_val = n(0);
+                    y_val = n(1);
+                    z_val = n(2);
+                    
+                    n(2) += thickness*(1.0-z_val/z_length)*sin(pi*(x_val-x0)/chord)*sin(pi*(y_val-y0)/span);
+                }
         }
     }
-    
-    
-    MeshBase::node_iterator   n_it  = mesh.nodes_begin();
-    const Mesh::node_iterator n_end = mesh.nodes_end();
-    
-    Real x_val, y_val, z_val;
-    
-    for (; n_it != n_end; n_it++)
+    else
     {
-        Node& n =  **n_it;
-
-        if (dim == 2)
-            if ((n(0) >= x0) && (n(0) <= x1))
-            {
-                x_val = n(0);
-                y_val = n(1);
-                
-                n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
-            }
+        mesh.set_mesh_dimension(dim);
+        const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
+        GmshIO gmsh_io(mesh);
+        gmsh_io.read(gmsh_input_file);
+        mesh.prepare_for_use();
+        mesh_refinement.uniformly_refine(coarserefinements);
         
-        if (dim == 3)
-            if ((n(0) >= x0) && (n(0) <= x1) &&
-                (n(1) >= y0) && (n(1) <= y1))
-            {
-                x_val = n(0);
-                y_val = n(1);
-                z_val = n(2);
-                
-                n(2) += thickness*(1.0-z_val/z_length)*sin(pi*(x_val-x0)/chord)*sin(pi*(y_val-y0)/span);
-            }
+        // Print information about the mesh to the screen.
     }
     
+
+    // Print information about the mesh to the screen.
+    mesh.print_info();
+
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
     
@@ -172,7 +197,10 @@ int main (int argc, char* const argv[])
     // Declare the system "EulerSystem"
     EulerSystem & system =
     equation_systems.add_system<EulerSystem> ("EulerSystem");
+    FluidPostProcessSystem& fluid_post =
+    equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
 
+    
     system.attach_init_function (init_euler_variables);
 
     system.time_solver =
@@ -242,7 +270,7 @@ int main (int argc, char* const argv[])
         {
             system.solve();
             
-            system.postprocess();
+            fluid_post.postprocess();
             
             ErrorVector error;
             
@@ -334,7 +362,7 @@ int main (int argc, char* const argv[])
         {
             system.solve();
             
-            system.postprocess();
+            fluid_post.postprocess();
         }
         
         // Advance to the next timestep in a transient problem
