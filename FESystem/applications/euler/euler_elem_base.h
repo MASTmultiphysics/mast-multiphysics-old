@@ -100,9 +100,10 @@ public:
     void init_data();
 
     
-protected:
+    void get_infinity_vars( DenseVector<Real>& vars_inf ) const;
     
-    void get_infinity_vars( DenseVector<Real>& vars_inf );
+    
+protected:
     
     
     void calculate_dxidX (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
@@ -162,6 +163,7 @@ protected:
     unsigned int dim;
     
 public:
+    
     Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
     
 };

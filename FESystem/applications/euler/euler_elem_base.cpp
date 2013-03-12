@@ -10,6 +10,7 @@
 // FESystem includes
 #include "euler/euler_elem_base.h"
 #include "euler/assembleEuler.h"
+#include "euler/frequency_domain_linearized_euler.h"
 
 // C++ includes
 #include <iomanip>
@@ -225,12 +226,11 @@ void FluidPostProcessSystem::init_data()
     M = this->add_variable("M", order, fefamily);
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
-    rho_im = this->add_variable("rho_im", order, fefamily);
-    u_im = this->add_variable("u1_im", order, fefamily);
+    u_im = this->add_variable("u_im", order, fefamily);
     if (dim > 1)
-        v_im = this->add_variable("u2_im", order, fefamily);
+        v_im = this->add_variable("v_im", order, fefamily);
     if (dim > 2)
-        w_im = this->add_variable("u3_im", order, fefamily);
+        w_im = this->add_variable("w_im", order, fefamily);
     T_im = this->add_variable("T_im", order, fefamily);
     s_im = this->add_variable("s_im", order, fefamily);
     p_im = this->add_variable("p_im", order, fefamily);
@@ -268,11 +268,64 @@ Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol, Re
 }
 
 
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+
+Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPrimitiveSolution<Number>& delta_p_sol, Real q0)
+{
+    if (var_name == "u")
+        return std::real(delta_p_sol.du1);
+    else if (var_name == "v")
+        return std::real(delta_p_sol.du2);
+    else if (var_name == "w")
+        return std::real(delta_p_sol.du3);
+    else if (var_name == "T")
+        return std::real(delta_p_sol.dT);
+    else if (var_name == "s")
+        return std::real(delta_p_sol.dentropy);
+    else if (var_name == "p")
+        return std::real(delta_p_sol.dp);
+    else if (var_name == "cp")
+        return std::real(delta_p_sol.c_pressure(q0));
+    else if (var_name == "a")
+        return std::real(delta_p_sol.da);
+    else if (var_name == "M")
+        return std::real(delta_p_sol.dmach);
+    else if (var_name == "u_im")
+        return std::imag(delta_p_sol.du1);
+    else if (var_name == "v_im")
+        return std::imag(delta_p_sol.du2);
+    else if (var_name == "w_im")
+        return std::imag(delta_p_sol.du3);
+    else if (var_name == "T_im")
+        return std::imag(delta_p_sol.dT);
+    else if (var_name == "s_im")
+        return std::imag(delta_p_sol.dentropy);
+    else if (var_name == "p_im")
+        return std::imag(delta_p_sol.dp);
+    else if (var_name == "cp_im")
+        return std::imag(delta_p_sol.c_pressure(q0));
+    else if (var_name == "a_im")
+        return std::imag(delta_p_sol.da);
+    else if (var_name == "M_im")
+        return std::imag(delta_p_sol.dmach);
+    else
+        libmesh_assert(false);
+}
+
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
+
+
 void FluidPostProcessSystem::postprocess()
 {
     // get the solution vector from
     Parameters& params = this->get_equation_systems().parameters;
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     const EulerSystem& euler = this->get_equation_systems().get_system<EulerSystem>("EulerSystem");
+#else
+    const FrequencyDomainLinearizedEuler& euler = this->get_equation_systems().get_system<FrequencyDomainLinearizedEuler>("FrequencyDomainLinearizedEuler");
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     const NumericVector<Number>& euler_sol = (*euler.solution.get());
     NumericVector<Number>& local_sol = (*this->solution.get());
     
@@ -282,25 +335,35 @@ void FluidPostProcessSystem::postprocess()
     MeshBase::node_iterator n_end       = m.pid_nodes_end(libMesh::processor_id());
     
     PrimitiveSolution p_sol;
-    DenseVector<Number> sol; sol.resize(euler.n_vars());
-
-    GetPot infile("euler.in");
-    Real cp = infile("cp",1.003e3),
-    cv = infile("cv",0.716e3);
-
+    SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+    DenseVector<Real> sol; sol.resize(euler.n_vars());
+    DenseVector<Number> delta_sol; delta_sol.resize(euler.n_vars());
     
     for ( ; n_begin != n_end; n_begin++)
     {
         p_sol.zero();
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
         for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
             sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
-        p_sol.init(m.mesh_dimension(), sol, cp, cv);
+        p_sol.init(m.mesh_dimension(), sol, euler.cp, euler.cv);
         // now init the values
         for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
             local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_var_val(this->variable_name(i_var), p_sol, euler.p_inf, euler.q0_inf));
+#else //LIBMESH_USE_COMPLEX_NUMBERS
+        euler.get_infinity_vars(sol);
+        p_sol.init(m.mesh_dimension(), sol, euler.cp, euler.cv);
+        for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
+            delta_sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
+        delta_p_sol.zero();
+        delta_p_sol.init(p_sol, delta_sol);
+        // now init the values
+        for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
+            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_complex_var_val(this->variable_name(i_var), delta_p_sol, euler.q0_inf));
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     }
     
     local_sol.close();
+    this->update();
 }
 
 
@@ -335,7 +398,7 @@ void EulerElemBase::init_data ()
 
 
 
-void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf )
+void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 {
     Real k = 0.0;
     vars_inf(0) = rho_inf;

@@ -197,9 +197,6 @@ int main (int argc, char* const argv[])
     // Declare the system "EulerSystem"
     EulerSystem & system =
     equation_systems.add_system<EulerSystem> ("EulerSystem");
-    FluidPostProcessSystem& fluid_post =
-    equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
-
     
     system.attach_init_function (init_euler_variables);
 
@@ -208,12 +205,14 @@ int main (int argc, char* const argv[])
 #else
     // Declare the system "EulerSystem"
     FrequencyDomainLinearizedEuler & system =
-    equation_systems.add_system<FrequencyDomainLinearizedEuler> ("EulerSystem");
+    equation_systems.add_system<FrequencyDomainLinearizedEuler> ("FrequencyDomainLinearizedEuler");
 
     system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(system));
     libmesh_assert_equal_to (n_timesteps, 1);
 #endif
+    FluidPostProcessSystem& fluid_post =
+    equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
     
     // Initialize the system
     equation_systems.init ();
