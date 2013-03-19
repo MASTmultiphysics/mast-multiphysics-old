@@ -319,7 +319,6 @@ Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPri
 void FluidPostProcessSystem::postprocess()
 {
     // get the solution vector from
-    Parameters& params = this->get_equation_systems().parameters;
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     const EulerSystem& euler = this->get_equation_systems().get_system<EulerSystem>("EulerSystem");
 #else
