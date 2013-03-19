@@ -199,10 +199,11 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
 
     std::vector<DenseMatrix<Real> > dB_mat(dim), Ai_advection(dim);
     DenseMatrix<Real> LS_mat, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat, tmp_mat2;
-    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, conservative_sol;
+    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, conservative_sol, delta_vals;
     LS_mat.resize(n1, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs); A_inv_entropy.resize(dim+2, dim+2);
     A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
+    delta_vals.resize(n_qpoints);
     for (unsigned int i=0; i<dim; i++)
     {
         dB_mat[i].resize(dim+2, n_dofs);
@@ -211,6 +212,17 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     
     
     Real diff_val=0.;
+
+    System& delta_val_system = this->get_equation_systems().get_system<System>("DeltaValSystem");
+    NumericVector<Real>& diff_val_vec = (*delta_val_system.solution.get());
+    
+    if (if_use_stored_delta)
+    {
+        diff_val = diff_val_vec.el(c.elem->dof_number(delta_val_system.number(), 0, 0));
+        for (unsigned int qp=0; qp<n_qpoints; qp++)
+            delta_vals(qp) = diff_val;
+    }
+    
 
     PrimitiveSolution primitive_sol;
     
@@ -230,11 +242,11 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         }
                 
         this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat, dB_mat, Ai_advection, Ai_Bi_advection, A_inv_entropy, LS_mat, diff_val);
-        
-//        if (this->if_update_discont_values)
-//            (*this->discontinuity_capturing_value)[i] = diff_val;
-//        else
-//            diff_val = (*this->discontinuity_capturing_value)[i];
+
+        if (if_use_stored_delta)
+            diff_val = delta_vals(qp);
+        else
+            delta_vals(qp) = diff_val;
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
@@ -278,6 +290,15 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             Kmat.add(-JxW[qp], tmp_mat);
         }
     } // end of the quadrature point qp-loop
+    
+    if (!if_use_stored_delta)
+    {
+        diff_val = 0.;
+        for (unsigned int qp=0; qp<n_qpoints; qp++)
+            diff_val += delta_vals(qp);
+        diff_val /= (1.*n_qpoints);
+        diff_val_vec.set(c.elem->dof_number(delta_val_system.number(), 0, 0), diff_val);
+    }
     
 //    std::cout << "inside element time derivative " << std::endl;
 //    c.elem->print_info();

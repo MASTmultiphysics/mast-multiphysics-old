@@ -43,7 +43,8 @@ public:
                 const std::string& name_in,
                 const unsigned int number_in)
     : FEMSystem(es, name_in, number_in),
-    EulerElemBase()
+    EulerElemBase(),
+    if_use_stored_delta(false)
     {}
     
     void init_data();
@@ -58,8 +59,11 @@ public:
     
     virtual bool mass_residual (bool request_jacobian,
                                 DiffContext& context);
-    
+
+    bool if_use_stored_delta;
+
 protected:
+    
     
     std::vector<unsigned int> vars;
 };
