@@ -23,13 +23,63 @@
 #include "libmesh/gmsh_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/euler_solver.h"
+#include "libmesh/twostep_time_solver.h"
 #include "libmesh/steady_solver.h"
 #include "libmesh/newton_solver.h"
 #include "libmesh/error_vector.h"
 #include "libmesh/error_estimator.h"
+#include "libmesh/patch_recovery_error_estimator.h"
 #include "libmesh/uniform_refinement_estimator.h"
 #include "libmesh/kelly_error_estimator.h"
+#include "libmesh/string_to_enum.h"
 
+
+
+
+void distributePoints(const unsigned int n_divs, const std::vector<double>& div_locations, const std::vector<unsigned int>& n_subdivs_in_div, const std::vector<double>& relative_mesh_size_at_div, std::vector<double>& points)
+{
+    libmesh_assert(div_locations.size() == n_divs+1);
+    libmesh_assert(relative_mesh_size_at_div.size() == n_divs+1);
+    libmesh_assert(n_subdivs_in_div.size() == n_divs);
+    
+    // calculate total number of points
+    unsigned int n_total_points = 1;
+    for (unsigned int i=0; i<n_divs; i++)
+        n_total_points += n_subdivs_in_div[i];
+    
+    // resize the points vector and set the first and last points of each division
+    points.resize(n_total_points);
+    
+    unsigned int n=1;
+    points[0] = div_locations[0];
+    for (unsigned int i=0; i<n_divs; i++)
+    {
+        n += n_subdivs_in_div[i];
+        points[n-1] = div_locations[i+1];
+    }
+    
+    n=1;
+    double dx=0.0, growth_factor = 0.0;
+    // now calculate the base mesh size, and calculate the nodal points
+    for (unsigned int i=0; i<n_divs; i++)
+    {
+        growth_factor = pow(relative_mesh_size_at_div[i+1]/relative_mesh_size_at_div[i], 1.0/(n_subdivs_in_div[i]-1.0));
+        if (fabs(growth_factor-1.0)>1.0e-10)
+            dx = (div_locations[i+1]-div_locations[i]) * (1.0-growth_factor)/(1.0-pow(growth_factor, n_subdivs_in_div[i]));
+        else
+        {
+            growth_factor = 1.0;
+            dx = (div_locations[i+1]-div_locations[i]) / n_subdivs_in_div[i];
+        }
+        
+        for (unsigned int n_pt=1; n_pt<n_subdivs_in_div[i]; n_pt++)
+        {
+            points[n+n_pt-1] = points[n+n_pt-2] + dx;
+            dx *= growth_factor;
+        }
+        n += n_subdivs_in_div[i];
+    }
+}
 
 
 
@@ -49,9 +99,8 @@ int main (int argc, char* const argv[])
     const bool transient                 = infile("transient", true);
     const Real deltat                    = infile("deltat", 0.005);
     unsigned int n_timesteps             = infile("n_timesteps", 20);
+    unsigned int n_timesteps_delta_const = infile("n_timesteps_const_delta", 150);
     const unsigned int write_interval    = infile("write_interval", 5);
-    const unsigned int coarsegridsize    = infile("coarsegridsize", 15);
-    const unsigned int coarserefinements = infile("coarserefinements", 0);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
@@ -70,48 +119,159 @@ int main (int argc, char* const argv[])
     mesh_refinement.coarsen_by_parents() = true;
     mesh_refinement.absolute_global_tolerance() = global_tolerance;
     mesh_refinement.nelem_target() = nelem_target;
-    mesh_refinement.refine_fraction() = 0.15;
-    mesh_refinement.coarsen_fraction() = 0.15;
-    mesh_refinement.coarsen_threshold() = 0.1;
+    mesh_refinement.refine_fraction() = infile("refine_fraction",0.80);
+    mesh_refinement.coarsen_fraction() = infile("coarsen_fraction",0.20);
+    mesh_refinement.coarsen_threshold() = infile("coarsen_threshold",0.30);
+    mesh_refinement.max_h_level() = infile("max_h_level",5);
+    std::string strategy = infile("refine_strategy", std::string("error_fraction")),
+    error_norm = infile("error_norm", std::string("kelly")),
+    elem_type = infile("elem_type", std::string("QUAD4"));
     
-
+    Real mesh_dx, mesh_dy, mesh_dz;
+    
     if (if_panel_mesh)
     {
+        // first calculate the distributed points
+        std::vector<double> div_locations, relative_mesh_size_at_div, x_points, y_points, z_points;
+        std::vector<unsigned int> n_subdivs_in_div;
+        
         const Real pi = acos(-1.),
         x_length= infile("x_length", 10.),
         y_length= infile("y_length", 10.),
-        z_length= infile("y_length", 10.),
+        z_length= infile("z_length", 10.),
         t_by_c =  infile("t_by_c", 0.05),
         chord =   infile("chord", 1.0),
         span =    infile("span", 1.0),
+        dx_chordwise_inlet =  infile("dx_chordwise_inlet", 1.0), // these are relative sizes
+        dx_chordwise_le =     infile("dx_chordwise_le", 1.0),
+        dx_chordwise_te =     infile("dx_chordwise_te", 1.0),
+        dx_chordwise_outlet = infile("dx_chordwise_outlet", 1.0),
+        dx_spanwise_inlet =   infile("dx_spanwise_inlet", 1.0),
+        dx_spanwise_le =      infile("dx_spanwise_le", 1.0),
+        dx_spanwise_te =      infile("dx_spanwise_te", 1.0),
+        dx_spanwise_outlet =  infile("dx_spanwise_outlet", 1.0),
+        dx_vert_surface =     infile("dx_vert_surface", 1.0),
+        dx_vert_inf =         infile("dx_vert_inf", 1.0),
         thickness = 0.5*t_by_c*chord,
         x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
+        
+        const unsigned int
+        n_chordwise_le_divs    = infile("n_chordwise_le_divs", 10),
+        n_chordwise_panel_divs = infile("n_chordwise_panel_divs", 10),
+        n_chordwise_te_divs    = infile("n_chordwise_te_divs", 10),
+        n_spanwise_le_divs     = infile("n_spanwise_le_divs", 10),
+        n_spanwise_panel_divs  = infile("n_spanwise_panel_divs", 10),
+        n_spanwise_te_divs     = infile("n_spanwise_te_divs", 10),
+        n_vertical_divs        = infile("n_vertical_divs", 10);
         
         // Use the MeshTools::Generation mesh generator to create a uniform
         // grid on the square [-1,1]^D.  We instruct the mesh generator
         // to build a mesh of 8x8 \p Quad9 elements in 2D, or \p Hex27
         // elements in 3D.  Building these higher-order elements allows
         // us to use higher-order approximation, as in example 3.
+        {   double vals[] = {0., (x_length-chord)/2., (x_length+chord)/2. , x_length};
+            div_locations.assign(vals, vals+4); }
+        {   unsigned int vals[] = {n_chordwise_le_divs, n_chordwise_panel_divs, n_chordwise_te_divs};
+            n_subdivs_in_div.assign(vals, vals+3); }
+        {   double vals[] = {dx_chordwise_inlet, dx_chordwise_le, dx_chordwise_te, dx_chordwise_outlet};
+            relative_mesh_size_at_div.assign(vals, vals+4); }
+        distributePoints(3, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, x_points);
+        mesh_dx = 1./(1.*(n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs));
+
         if (dim == 2)
+        {
+            {   double vals[] = {0., y_length};
+                div_locations.assign(vals, vals+2); }
+            {   unsigned int vals[] = {n_vertical_divs};
+                n_subdivs_in_div.assign(vals, vals+1); }
+            {   double vals[] = {dx_vert_surface, dx_vert_inf};
+                relative_mesh_size_at_div.assign(vals, vals+2); }
+            distributePoints(1, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, y_points);
+            
+            mesh_dy = 1./(1.*n_vertical_divs);
+            
             MeshTools::Generation::build_square (mesh,
-                                                 coarsegridsize,
-                                                 coarsegridsize,
-                                                 0., x_length,
-                                                 0., y_length,
-                                                 QUAD4);
-        else if (dim == 3)
-            MeshTools::Generation::build_cube (mesh,
-                                               coarsegridsize,
-                                               coarsegridsize,
-                                               coarsegridsize,
-                                               0., x_length,
-                                               0., y_length,
-                                               0., z_length,
-                                               HEX8);
-        
-        
-        mesh_refinement.uniformly_refine(coarserefinements);
+                                                 n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
+                                                 n_vertical_divs,
+                                                 0., 1.,
+                                                 0., 1.,
+                                                 Utility::string_to_enum<ElemType>(elem_type));
+            
+            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
+            const Mesh::node_iterator n_end = mesh.nodes_end();
+            Real x_val, y_val;
+            unsigned int x_id, y_id;
+            
+            for (; n_it != n_end; n_it++)
+            {
+                Node& n =  **n_it;
+
+                x_val = n(0);
+                y_val = n(1);
                 
+                x_id = static_cast<int>(x_val*1.0e9)/ static_cast<int>(mesh_dx*1.0e9);  // this is a bad hack, should be temporary
+                y_id = static_cast<int>(y_val*1.0e9)/ static_cast<int>(mesh_dy*1.0e9);
+                
+                n(0) = x_points[x_id];
+                n(1) = y_points[y_id];
+            }
+
+        }
+        
+        else if (dim == 3)
+        {
+            {   double vals[] = {0., (y_length-span)/2., (y_length+span)/2. , y_length};
+                div_locations.assign(vals, vals+4); }
+            {   unsigned int vals[] = {n_spanwise_le_divs, n_spanwise_panel_divs, n_spanwise_te_divs};
+                n_subdivs_in_div.assign(vals, vals+3); }
+            {   double vals[] = {dx_spanwise_inlet, dx_spanwise_le, dx_spanwise_te, dx_spanwise_outlet};
+                relative_mesh_size_at_div.assign(vals, vals+4); }
+            distributePoints(3, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, y_points);
+
+
+            {   double vals[] = {0., z_length};
+                div_locations.assign(vals, vals+2); }
+            {   unsigned int vals[] = {n_vertical_divs};
+                n_subdivs_in_div.assign(vals, vals+1); }
+            {   double vals[] = {dx_vert_surface, dx_vert_inf};
+                relative_mesh_size_at_div.assign(vals, vals+2); }
+            distributePoints(1, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, z_points);
+
+            mesh_dy = 1./(1.*(n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs));
+            mesh_dz = 1./(1.*n_vertical_divs);
+
+            MeshTools::Generation::build_cube (mesh,
+                                               n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
+                                               n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs,
+                                               n_vertical_divs,
+                                               0., 1.,
+                                               0., 1.,
+                                               0., 1.,
+                                               Utility::string_to_enum<ElemType>(elem_type));
+            
+            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
+            const Mesh::node_iterator n_end = mesh.nodes_end();
+            Real x_val, y_val, z_val;
+            unsigned int x_id, y_id, z_id;
+            
+            for (; n_it != n_end; n_it++)
+            {
+                Node& n =  **n_it;
+                x_val = n(0);
+                y_val = n(1);
+                z_val = n(2);
+                
+                x_id = ceil(x_val/mesh_dx);
+                y_id = ceil(y_val/mesh_dy);
+                z_id = ceil(z_val/mesh_dz);
+                
+                n(0) = x_points[x_id];
+                n(1) = y_points[y_id];
+                n(2) = z_points[z_id];
+            }
+
+        }
+        
         //march over all the elmeents and tag the sides that all lie on the panel suface
         MeshBase::element_iterator e_it = mesh.elements_begin();
         const MeshBase::element_iterator e_end = mesh.elements_end();
@@ -169,7 +329,7 @@ int main (int argc, char* const argv[])
                     x_val = n(0);
                     y_val = n(1);
                     z_val = n(2);
-                    
+
                     n(2) += thickness*(1.0-z_val/z_length)*sin(pi*(x_val-x0)/chord)*sin(pi*(y_val-y0)/span);
                 }
         }
@@ -181,12 +341,10 @@ int main (int argc, char* const argv[])
         GmshIO gmsh_io(mesh);
         gmsh_io.read(gmsh_input_file);
         mesh.prepare_for_use();
-        mesh_refinement.uniformly_refine(coarserefinements);
         
         // Print information about the mesh to the screen.
     }
     
-
     // Print information about the mesh to the screen.
     mesh.print_info();
 
@@ -200,8 +358,23 @@ int main (int argc, char* const argv[])
     
     system.attach_init_function (init_euler_variables);
 
-    system.time_solver =
-    AutoPtr<TimeSolver>(new EulerSolver(system));
+//    TwostepTimeSolver *timesolver =
+//    new TwostepTimeSolver(system);
+//    
+////    timesolver->max_growth       = infile("timesolver_maxgrowth",);
+////    timesolver->target_tolerance = infile("timesolver_tolerance",);
+////    timesolver->upper_tolerance  = infile("timesolver_upper_tolerance",);
+////    timesolver->component_norm   = SystemNorm(infile("timesolver_norm",));
+//    timesolver->quiet = infile("solver_quiet", true);
+//    
+//    timesolver->core_time_solver =
+//    AutoPtr<EulerSolver>(new EulerSolver(system));
+//    system.time_solver =
+//    AutoPtr<UnsteadySolver>(timesolver);
+    
+
+    system.time_solver = AutoPtr<UnsteadySolver>(new EulerSolver(system));
+    
 #else
     // Declare the system "EulerSystem"
     FrequencyDomainLinearizedEuler & system =
@@ -213,6 +386,9 @@ int main (int argc, char* const argv[])
 #endif
     FluidPostProcessSystem& fluid_post =
     equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
+    System& delta_val_system =
+    equation_systems.add_system<System> ("DeltaValSystem");
+    delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
     
     // Initialize the system
     equation_systems.init ();
@@ -229,6 +405,7 @@ int main (int argc, char* const argv[])
     NewtonSolver &solver = dynamic_cast<NewtonSolver&>(*(system.time_solver->diff_solver().get()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
+    solver.brent_line_search = true;
     solver.max_nonlinear_iterations =
     infile("max_nonlinear_iterations", 15);
     solver.relative_step_tolerance =
@@ -249,7 +426,6 @@ int main (int argc, char* const argv[])
     infile("max_linear_iterations", 50000);
     solver.initial_linear_tolerance =
     infile("initial_linear_tolerance", 1.e-3);
-    //solver.brent_line_search = false;
     
     // Print information about the system to the screen.
     equation_systems.print_info();
@@ -259,6 +435,10 @@ int main (int argc, char* const argv[])
     // solution of the equations.
     for (unsigned int t_step=0; t_step != n_timesteps; ++t_step)
     {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        if (t_step > n_timesteps_delta_const)
+            system.if_use_stored_delta = true;
+#endif
         // A pretty update message
         std::cout << "\n\nSolving time step " << t_step << ", time = "
         << system.time << std::endl;
@@ -268,7 +448,8 @@ int main (int argc, char* const argv[])
         for (; a_step != max_adaptivesteps; ++a_step)
         {
             system.solve();
-            
+            delta_val_system.solution->close();
+            delta_val_system.update();
             fluid_post.postprocess();
             
             ErrorVector error;
@@ -277,22 +458,18 @@ int main (int argc, char* const argv[])
             
             // To solve to a tolerance in this problem we
             // need a better estimator than Kelly
-            if (global_tolerance != 0.)
+            if (error_norm == "uniform")
             {
                 // We can't adapt to both a tolerance and a mesh
                 // size at once
+                libmesh_assert_greater (global_tolerance, 0);
                 libmesh_assert_equal_to (nelem_target, 0);
                 
-                UniformRefinementEstimator *u =
-                new UniformRefinementEstimator;
-                
-                // The lid-driven cavity problem isn't in H1, so
-                // lets estimate L2 error
+                UniformRefinementEstimator *u = new UniformRefinementEstimator;
                 u->error_norm = L2;
-                
                 error_estimator.reset(u);
             }
-            else
+            else if (error_norm == "kelly")
             {
                 // If we aren't adapting to a tolerance we need a
                 // target mesh size
@@ -304,6 +481,12 @@ int main (int argc, char* const argv[])
                 // maximum level of our adaptivity eventually
                 error_estimator.reset(new KellyErrorEstimator);
             }
+            else if (error_norm == "patch")
+            {
+                error_estimator.reset(new PatchRecoveryErrorEstimator);
+            }
+            else
+                libmesh_assert(false);
             
             // Calculate error based on u and v (and w?) but not p
             std::vector<Real> weights(dim+2,0.0);  // all set to 1.0
@@ -325,7 +508,9 @@ int main (int argc, char* const argv[])
                 std::cout << "Worst element error = " << error.maximum()
                 << ", mean = " << error.mean() << std::endl;
             
-            if (global_tolerance != 0.)
+            if (strategy == "error_fraction")
+                mesh_refinement.flag_elements_by_error_fraction(error);
+            else if (strategy == "error_tolerance")
             {
                 // If we've reached our desired tolerance, we
                 // don't need any more adaptive steps
@@ -333,10 +518,8 @@ int main (int argc, char* const argv[])
                     break;
                 mesh_refinement.flag_elements_by_error_tolerance(error);
             }
-            else
+            else if (strategy == "nelem_target")
             {
-                // If flag_elements_by_nelem_target returns true, this
-                // should be our last adaptive step.
                 if (mesh_refinement.flag_elements_by_nelem_target(error))
                 {
                     mesh_refinement.refine_and_coarsen_elements();
@@ -345,6 +528,12 @@ int main (int argc, char* const argv[])
                     break;
                 }
             }
+            else if (strategy == "elem_fraction")
+                mesh_refinement.flag_elements_by_elem_fraction(error);
+            else if (strategy == "mean_stddev")
+                mesh_refinement.flag_elements_by_mean_stddev(error);
+            else
+                libmesh_assert(false);
             
             // Carry out the adaptive mesh refinement/coarsening
             mesh_refinement.refine_and_coarsen_elements();
@@ -361,6 +550,8 @@ int main (int argc, char* const argv[])
         {
             system.solve();
             
+            delta_val_system.solution->close();
+            delta_val_system.update();
             fluid_post.postprocess();
         }
         
