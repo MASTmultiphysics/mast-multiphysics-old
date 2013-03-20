@@ -261,9 +261,9 @@ int main (int argc, char* const argv[])
                 y_val = n(1);
                 z_val = n(2);
                 
-                x_id = ceil(x_val/mesh_dx);
-                y_id = ceil(y_val/mesh_dy);
-                z_id = ceil(z_val/mesh_dz);
+                x_id = static_cast<int>(x_val*1.0e9)/ static_cast<int>(mesh_dx*1.0e9);  // this is a bad hack, should be temporary
+                y_id = static_cast<int>(y_val*1.0e9)/ static_cast<int>(mesh_dy*1.0e9);
+                z_id = static_cast<int>(z_val*1.0e9)/ static_cast<int>(mesh_dz*1.0e9);
                 
                 n(0) = x_points[x_id];
                 n(1) = y_points[y_id];
