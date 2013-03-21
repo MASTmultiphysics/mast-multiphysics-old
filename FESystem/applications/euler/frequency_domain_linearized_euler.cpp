@@ -13,6 +13,7 @@
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 #include "Base/FESystemTypes.h"
+#include "euler/surface_motion.h"
 
 // Basic include files
 #include "libmesh/equation_systems.h"
@@ -37,6 +38,30 @@ void FrequencyDomainLinearizedEuler::init_data()
     // approximation type
     
     GetPot infile("euler.in");
+    
+    
+    // initialize the surface motion definition
+    surface_motion.reset(new SurfaceMotion(this->get_mesh()));
+    
+    surface_motion->frequency = infile("frequency",0.);
+    surface_motion->pitch_amplitude.real() = infile("pitch_ampl_real",0.);
+    surface_motion->pitch_amplitude.imag() = infile("pitch_ampl_imag",0.);
+    surface_motion->plunge_amplitude.real() = infile("plunge_ampl_real",0.);
+    surface_motion->plunge_amplitude.imag() = infile("plunge_ampl_imag",0.);
+
+    surface_motion->pitch_axis(0) = infile("pitch_axis_x",0.);
+    surface_motion->pitch_axis(1) = infile("pitch_axis_y",0.);
+    surface_motion->pitch_axis(2) = infile("pitch_axis_z",0.);
+
+    surface_motion->hinge_location(0) = infile("hinge_x",0.);
+    surface_motion->hinge_location(1) = infile("hinge_y",0.);
+    surface_motion->hinge_location(2) = infile("hinge_z",0.);
+    
+    surface_motion->plunge_vector(0) = infile("plunge_vec_x",0.);
+    surface_motion->plunge_vector(1) = infile("plunge_vec_y",0.);
+    surface_motion->plunge_vector(2) = infile("plunge_vec_z",0.);
+    
+
     
     // set parameter values
     Parameters& params = this->get_equation_systems().parameters;
@@ -110,7 +135,6 @@ void FrequencyDomainLinearizedEuler::init_context(libMesh::DiffContext &context)
 }
 
 
-
 bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacobian,
                                                               DiffContext &context)
 {
@@ -173,7 +197,7 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         for (unsigned int i_nodes=0; i_nodes<c.elem->n_nodes(); i_nodes++)
             ref_sol(i_vars*c.elem->n_nodes()+i_nodes) = conservative_sol(i_vars);
             
-    Number iota(0, 1.), scaling = iota*30.;
+    Number iota(0, 1.), scaling = iota*surface_motion->frequency;
 
     
     for (unsigned int qp=0; qp != n_qpoints; qp++)
@@ -192,6 +216,7 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         }
         
         this->calculate_differential_operator_matrix(vars, qp, c, elem_sol_magnitude, primitive_sol, B_mat, dB_mat, Ai_advection, Ai_Bi_advection, A_inv_entropy, LS_mat, diff_val);
+        // diff_val = 0.;
         
         //        if (this->if_update_discont_values)
         //            (*this->discontinuity_capturing_value)[i] = diff_val;
@@ -341,13 +366,13 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     
     DenseVector<Real>  normal, normal_local, tmp_vec1, U_vec_interpolated, conservative_sol, ref_sol;
     DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2, B_mat, A_mat;
-    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2;
+    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2, surf_vel;
     DenseMatrix<Number> mat_complex1, mat_complex2;
     
     conservative_sol.resize(dim+2);
     normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs); U_vec_interpolated.resize(n1);
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1); tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
-    B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2);
+    B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2); surf_vel.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     
 
@@ -362,13 +387,19 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     if ( if_wall_bc )
     {
         Real xini=0.;
+        Number perturbed_xini;
         
         for (unsigned int qp=0; qp<qpoint.size(); qp++)
         {
             if (this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 10))
-                xini = 1.0;//face_normals[qp] * vel;
+            {
+                surface_motion->surface_velocity(qpoint[qp], surf_vel);
+                perturbed_xini = Number(0.,0.);
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    perturbed_xini += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
+            }
             else
-                xini = 0.;
+                perturbed_xini = 0.;
             
             // first update the variables at the current quadrature point
             this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat);
@@ -384,13 +415,13 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             switch (dim)
             {
                 case 3:
-                    flux(3) = p_sol.u3*p_sol.rho*xini+delta_p_sol.dp*face_normals[qp](2);
+                    flux(3) = p_sol.u3*p_sol.rho*perturbed_xini+delta_p_sol.dp*face_normals[qp](2);
                 case 2:
-                    flux(2) = p_sol.u2*p_sol.rho*xini+delta_p_sol.dp*face_normals[qp](1);
+                    flux(2) = p_sol.u2*p_sol.rho*perturbed_xini+delta_p_sol.dp*face_normals[qp](1);
                 case 1:
-                    flux(0) = p_sol.rho*xini;
-                    flux(1) = p_sol.u1*p_sol.rho*xini+delta_p_sol.dp*face_normals[qp](0);
-                    flux(n1-1) = xini*(p_sol.rho*p_sol.e_tot+p_sol.p);
+                    flux(0) = p_sol.rho*perturbed_xini;
+                    flux(1) = p_sol.u1*p_sol.rho*perturbed_xini+delta_p_sol.dp*face_normals[qp](0);
+                    flux(n1-1) = perturbed_xini*(p_sol.rho*p_sol.e_tot+p_sol.p);
                     break;
             }
             

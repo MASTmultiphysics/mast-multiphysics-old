@@ -16,12 +16,16 @@
 
 // DiffSystem framework files
 #include "libmesh/fem_system.h"
+#include "libmesh/auto_ptr.h"
 
 // FEsystem includes
 #include "euler/euler_elem_base.h"
 
 
 using namespace libMesh;
+
+class SurfaceMotion;
+
 
 class FrequencyDomainLinearizedEuler: public FEMSystem, public EulerElemBase
 {
@@ -43,7 +47,10 @@ public:
     
     virtual bool side_time_derivative (bool request_jacobian,
                                        DiffContext &context);
-        
+    
+    
+    AutoPtr<SurfaceMotion> surface_motion;
+    
 protected:
     
     std::vector<unsigned int> vars;
