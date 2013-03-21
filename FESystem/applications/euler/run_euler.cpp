@@ -209,8 +209,32 @@ int main (int argc, char* const argv[])
                 x_val = n(0);
                 y_val = n(1);
                 
-                x_id = static_cast<int>(x_val*1.0e9)/ static_cast<int>(mesh_dx*1.0e9);  // this is a bad hack, should be temporary
-                y_id = static_cast<int>(y_val*1.0e9)/ static_cast<int>(mesh_dy*1.0e9);
+                x_id = floor(x_val/mesh_dx);
+                // find the correct id
+                bool found_id = false;
+                unsigned int correct_id = 0;
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = x_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                x_id = correct_id;
+                    
+                found_id = false;
+                correct_id = 0;
+                y_id = floor(y_val/mesh_dy);
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = y_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                y_id = correct_id;
                 
                 n(0) = x_points[x_id];
                 n(1) = y_points[y_id];
@@ -261,10 +285,47 @@ int main (int argc, char* const argv[])
                 y_val = n(1);
                 z_val = n(2);
                 
-                x_id = static_cast<int>(x_val*1.0e9)/ static_cast<int>(mesh_dx*1.0e9);  // this is a bad hack, should be temporary
-                y_id = static_cast<int>(y_val*1.0e9)/ static_cast<int>(mesh_dy*1.0e9);
-                z_id = static_cast<int>(z_val*1.0e9)/ static_cast<int>(mesh_dz*1.0e9);
+                x_id = floor(x_val/mesh_dx);
+                y_id = floor(y_val/mesh_dy);
+                z_id = floor(z_val/mesh_dz);
+
+                // find the correct id
+                bool found_id = false;
+                unsigned int correct_id = 0;
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = x_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                x_id = correct_id;
                 
+                found_id = false;
+                correct_id = 0;
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = y_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                y_id = correct_id;
+
+                found_id = false;
+                correct_id = 0;
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((z_id+i)*mesh_dz-z_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = z_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                z_id = correct_id;
+
                 n(0) = x_points[x_id];
                 n(1) = y_points[y_id];
                 n(2) = z_points[z_id];
@@ -379,7 +440,7 @@ int main (int argc, char* const argv[])
     // Declare the system "EulerSystem"
     FrequencyDomainLinearizedEuler & system =
     equation_systems.add_system<FrequencyDomainLinearizedEuler> ("FrequencyDomainLinearizedEuler");
-
+    
     system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(system));
     libmesh_assert_equal_to (n_timesteps, 1);
