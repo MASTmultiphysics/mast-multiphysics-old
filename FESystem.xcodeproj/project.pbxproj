@@ -308,6 +308,8 @@
 		691F3CB516B2BB7C00503EF3 /* RadiationElementPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RadiationElementPair.h; sourceTree = "<group>"; };
 		691F3CBD16B2BF9000503EF3 /* RadiationCavityAnalysis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RadiationCavityAnalysis.cpp; sourceTree = "<group>"; };
 		691F3CBE16B2BF9000503EF3 /* RadiationCavityAnalysis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RadiationCavityAnalysis.h; sourceTree = "<group>"; };
+		6938C00016FA963300231032 /* surface_motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = surface_motion.cpp; sourceTree = "<group>"; };
+		6938C00116FA963300231032 /* surface_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface_motion.h; sourceTree = "<group>"; };
 		694DA49015E0732E004938D1 /* LinearBeamElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LinearBeamElementBase.h; sourceTree = "<group>"; };
 		6961E5CA15D8AA6500795584 /* StructuralElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StructuralElementBase.h; sourceTree = "<group>"; };
 		6961E5CC15D8ACA700795584 /* ThermalElementBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ThermalElementBase.h; sourceTree = "<group>"; };
@@ -1304,6 +1306,8 @@
 				EBF96D4D16EA653400316D86 /* frequency_domain_linearized_euler.cpp */,
 				EBF96D4E16EA653400316D86 /* frequency_domain_linearized_euler.h */,
 				69E1C43516E8319C00F7E4A4 /* run_euler.cpp */,
+				6938C00016FA963300231032 /* surface_motion.cpp */,
+				6938C00116FA963300231032 /* surface_motion.h */,
 			);
 			path = euler;
 			sourceTree = "<group>";

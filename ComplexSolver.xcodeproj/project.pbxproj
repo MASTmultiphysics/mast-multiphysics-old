@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6938C00916FA967B00231032 /* surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6938C00716FA967B00231032 /* surface_motion.cpp */; };
 		EBE3223D16EA73430078E733 /* assembleEuler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3222B16EA73430078E733 /* assembleEuler.cpp */; };
 		EBE3223F16EA73430078E733 /* euler_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3222F16EA73430078E733 /* euler_elem_base.cpp */; };
 		EBE3224016EA73430078E733 /* frequency_domain_linearized_euler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3223116EA73430078E733 /* frequency_domain_linearized_euler.cpp */; };
@@ -29,6 +30,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6938C00716FA967B00231032 /* surface_motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = surface_motion.cpp; sourceTree = "<group>"; };
+		6938C00816FA967B00231032 /* surface_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface_motion.h; sourceTree = "<group>"; };
 		EBE3222B16EA73430078E733 /* assembleEuler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = assembleEuler.cpp; sourceTree = "<group>"; };
 		EBE3222C16EA73430078E733 /* assembleEuler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = assembleEuler.h; sourceTree = "<group>"; };
 		EBE3222F16EA73430078E733 /* euler_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = euler_elem_base.cpp; sourceTree = "<group>"; };
@@ -66,6 +69,8 @@
 				EBE3223116EA73430078E733 /* frequency_domain_linearized_euler.cpp */,
 				EBE3223216EA73430078E733 /* frequency_domain_linearized_euler.h */,
 				EBE3223916EA73430078E733 /* run_euler.cpp */,
+				6938C00716FA967B00231032 /* surface_motion.cpp */,
+				6938C00816FA967B00231032 /* surface_motion.h */,
 			);
 			name = euler;
 			path = FESystem/applications/euler;
@@ -145,6 +150,7 @@
 				EBE3223F16EA73430078E733 /* euler_elem_base.cpp in Sources */,
 				EBE3224016EA73430078E733 /* frequency_domain_linearized_euler.cpp in Sources */,
 				EBE3224416EA73430078E733 /* run_euler.cpp in Sources */,
+				6938C00916FA967B00231032 /* surface_motion.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
