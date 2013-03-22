@@ -21,6 +21,7 @@
 #include "libmesh/exodusII_io.h"
 #include "libmesh/vtk_io.h"
 #include "libmesh/gmsh_io.h"
+#include "libmesh/xdr_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/euler_solver.h"
 #include "libmesh/twostep_time_solver.h"
@@ -113,6 +114,8 @@ int main (int argc, char* const argv[])
     
     // Create a mesh.
     Mesh mesh;
+    // Create an equation systems object.
+    EquationSystems equation_systems (mesh);
     
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -129,6 +132,8 @@ int main (int argc, char* const argv[])
     
     Real mesh_dx, mesh_dy, mesh_dz;
     
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     if (if_panel_mesh)
     {
         // first calculate the distributed points
@@ -395,22 +400,23 @@ int main (int argc, char* const argv[])
                 }
         }
     }
-    else
+    if (if_panel_mesh)
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
         GmshIO gmsh_io(mesh);
         gmsh_io.read(gmsh_input_file);
         mesh.prepare_for_use();
-        
-        // Print information about the mesh to the screen.
     }
+#else
+
+    mesh.read("saved_mesh.xdr");
     
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     // Print information about the mesh to the screen.
     mesh.print_info();
-
-    // Create an equation systems object.
-    EquationSystems equation_systems (mesh);
+    
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // Declare the system "EulerSystem"
@@ -419,6 +425,13 @@ int main (int argc, char* const argv[])
     
     system.attach_init_function (init_euler_variables);
 
+    FluidPostProcessSystem& fluid_post =
+    equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
+    System& delta_val_system =
+    equation_systems.add_system<System> ("DeltaValSystem");
+    delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
+
+    
 //    TwostepTimeSolver *timesolver =
 //    new TwostepTimeSolver(system);
 //    
@@ -435,24 +448,26 @@ int main (int argc, char* const argv[])
     
 
     system.time_solver = AutoPtr<UnsteadySolver>(new EulerSolver(system));
-    
+
+    equation_systems.init ();
+
 #else
     // Declare the system "EulerSystem"
     FrequencyDomainLinearizedEuler & system =
     equation_systems.add_system<FrequencyDomainLinearizedEuler> ("FrequencyDomainLinearizedEuler");
-    
+
+    FluidPostProcessSystem& fluid_post =
+    equation_systems.add_system<FluidPostProcessSystem> ("DeltaFluidPostProcessSystem");
+
     system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(system));
     libmesh_assert_equal_to (n_timesteps, 1);
-#endif
-    FluidPostProcessSystem& fluid_post =
-    equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
-    System& delta_val_system =
-    equation_systems.add_system<System> ("DeltaValSystem");
-    delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
     
-    // Initialize the system
-    equation_systems.init ();
+    equation_systems.read<Real>("saved_solution.xdr", libMeshEnums::DECODE);
+    VTKIO(mesh).write_equation_systems("steady_solution.pvtu", equation_systems);
+
+#endif
+    
     
     system.print_residual_norms = infile("print_residual_norms", false);
     system.print_residuals = infile("print_residuals", false);
@@ -509,8 +524,10 @@ int main (int argc, char* const argv[])
         for (; a_step != max_adaptivesteps; ++a_step)
         {
             system.solve();
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
             delta_val_system.solution->close();
             delta_val_system.update();
+#endif
             fluid_post.postprocess();
             
             ErrorVector error;
@@ -611,8 +628,10 @@ int main (int argc, char* const argv[])
         {
             system.solve();
             
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
             delta_val_system.solution->close();
             delta_val_system.update();
+#endif
             fluid_post.postprocess();
         }
         
@@ -643,6 +662,12 @@ int main (int argc, char* const argv[])
         }
 #endif // #ifdef LIBMESH_HAVE_EXODUS_API
     }
+
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    XdrIO xdr(mesh, true);
+    xdr.write("saved_mesh.xdr");
+    equation_systems.write("saved_solution.xdr", libMeshEnums::ENCODE);
+#endif
     
     // All done.
     return 0;

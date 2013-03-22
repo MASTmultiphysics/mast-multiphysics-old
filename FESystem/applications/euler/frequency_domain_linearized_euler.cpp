@@ -44,10 +44,9 @@ void FrequencyDomainLinearizedEuler::init_data()
     surface_motion.reset(new SurfaceMotion(this->get_mesh()));
     
     surface_motion->frequency = infile("frequency",0.);
-    surface_motion->pitch_amplitude.real() = infile("pitch_ampl_real",0.);
-    surface_motion->pitch_amplitude.imag() = infile("pitch_ampl_imag",0.);
-    surface_motion->plunge_amplitude.real() = infile("plunge_ampl_real",0.);
-    surface_motion->plunge_amplitude.imag() = infile("plunge_ampl_imag",0.);
+    surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
+    surface_motion->pitch_phase = infile("pitch_phase",0.);
+    surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
 
     surface_motion->pitch_axis(0) = infile("pitch_axis_x",0.);
     surface_motion->pitch_axis(1) = infile("pitch_axis_y",0.);
@@ -61,7 +60,7 @@ void FrequencyDomainLinearizedEuler::init_data()
     surface_motion->plunge_vector(1) = infile("plunge_vec_y",0.);
     surface_motion->plunge_vector(2) = infile("plunge_vec_z",0.);
     
-
+    surface_motion->init();
     
     // set parameter values
     Parameters& params = this->get_equation_systems().parameters;
@@ -191,15 +190,18 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     Real diff_val=0.;
     
     PrimitiveSolution primitive_sol;
+
+    System& euler = this->get_equation_systems().get_system<System>("EulerSystem");
     
-    this->get_infinity_vars(conservative_sol);
     for (unsigned int i_vars=0; i_vars<n1; i_vars++)
         for (unsigned int i_nodes=0; i_nodes<c.elem->n_nodes(); i_nodes++)
-            ref_sol(i_vars*c.elem->n_nodes()+i_nodes) = conservative_sol(i_vars);
-            
+            ref_sol(i_vars*c.elem->n_nodes()+i_nodes) = real(euler.current_solution(c.elem->get_node(i_nodes)->dof_number(euler.number(), i_vars, 0)));
+
     Number iota(0, 1.), scaling = iota*surface_motion->frequency;
 
-    
+    System& delta_val_system = this->get_equation_systems().get_system<System>("DeltaValSystem");
+    NumericVector<Number>& diff_val_vec = (*delta_val_system.solution.get());
+
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
@@ -216,13 +218,8 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         }
         
         this->calculate_differential_operator_matrix(vars, qp, c, elem_sol_magnitude, primitive_sol, B_mat, dB_mat, Ai_advection, Ai_Bi_advection, A_inv_entropy, LS_mat, diff_val);
-        // diff_val = 0.;
         
-        //        if (this->if_update_discont_values)
-        //            (*this->discontinuity_capturing_value)[i] = diff_val;
-        //        else
-        //            diff_val = (*this->discontinuity_capturing_value)[i];
-        
+        diff_val = real(diff_val_vec.el(c.elem->dof_number(delta_val_system.number(), 0, 0)));
 
         // calculate the interpolated solution value at this quadrature point
         mat_complex.copy_matrix(B_mat);
@@ -366,20 +363,22 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     
     DenseVector<Real>  normal, normal_local, tmp_vec1, U_vec_interpolated, conservative_sol, ref_sol;
     DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2, B_mat, A_mat;
-    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2, surf_vel;
+    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2, surf_vel, dnormal;
     DenseMatrix<Number> mat_complex1, mat_complex2;
     
     conservative_sol.resize(dim+2);
     normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs); U_vec_interpolated.resize(n1);
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1); tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
-    B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2); surf_vel.resize(dim);
+    B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2); surf_vel.resize(dim); dnormal.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     
 
-    this->get_infinity_vars(conservative_sol);
+    System& euler = this->get_equation_systems().get_system<System>("EulerSystem");
+    
     for (unsigned int i_vars=0; i_vars<n1; i_vars++)
         for (unsigned int i_nodes=0; i_nodes<c.elem->n_nodes(); i_nodes++)
-            ref_sol(i_vars*c.elem->n_nodes()+i_nodes) = conservative_sol(i_vars);
+            ref_sol(i_vars*c.elem->n_nodes()+i_nodes) = real(euler.current_solution(c.elem->get_node(i_nodes)->dof_number(euler.number(), i_vars, 0)));
+
     
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
@@ -387,22 +386,34 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     if ( if_wall_bc )
     {
         Real xini=0.;
-        Number perturbed_xini;
+        Number dui_normali, ui_dnormali;
         
         for (unsigned int qp=0; qp<qpoint.size(); qp++)
         {
-            if (this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 10))
-            {
-                surface_motion->surface_velocity(qpoint[qp], surf_vel);
-                perturbed_xini = Number(0.,0.);
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    perturbed_xini += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
-            }
-            else
-                perturbed_xini = 0.;
-            
             // first update the variables at the current quadrature point
             this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat);
+            
+            // calculate the surface velocity perturbations
+            if (this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 10))
+            {
+                surface_motion->surface_velocity(qpoint[qp], dnormal, surf_vel);
+                dui_normali = Number(0.,0.); ui_dnormali = Number(0.,0.);
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    dui_normali += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
+                // calculate the factor due to surface normal perturbation
+                ui_dnormali = p_sol.u1 * dnormal(0);
+                if (dim > 1)
+                    ui_dnormali += p_sol.u2 * dnormal(1);
+                if (dim > 2)
+                    ui_dnormali += p_sol.u3 * dnormal(2);
+            }
+            else
+            {
+                dui_normali = 0.;
+                ui_dnormali = 0.;
+                dnormal.zero();
+            }
+            
             mat_complex1.copy_matrix(B_mat);
             mat_complex1.vector_mult(flux, c.elem_solution); // initialize flux to interpolated sol for initialized of perturbed vars
             
@@ -415,13 +426,18 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             switch (dim)
             {
                 case 3:
-                    flux(3) = p_sol.u3*p_sol.rho*perturbed_xini+delta_p_sol.dp*face_normals[qp](2);
+                    flux(3) = p_sol.u3*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](2) + // dfi ni^0
+                              p_sol.u3*p_sol.rho*ui_dnormali+      p_sol.p *dnormal(2); // fi^0 dni
                 case 2:
-                    flux(2) = p_sol.u2*p_sol.rho*perturbed_xini+delta_p_sol.dp*face_normals[qp](1);
+                    flux(2) = p_sol.u2*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](1) + // dfi ni^0
+                              p_sol.u2*p_sol.rho*ui_dnormali+      p_sol.p *dnormal(1); // fi^0 dni
                 case 1:
-                    flux(0) = p_sol.rho*perturbed_xini;
-                    flux(1) = p_sol.u1*p_sol.rho*perturbed_xini+delta_p_sol.dp*face_normals[qp](0);
-                    flux(n1-1) = perturbed_xini*(p_sol.rho*p_sol.e_tot+p_sol.p);
+                    flux(0) = p_sol.rho*dui_normali + // dfi ni^0
+                              p_sol.rho*ui_dnormali; // fi^0 dni
+                    flux(1) = p_sol.u1*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](0) + // dfi ni^0
+                              p_sol.u1*p_sol.rho*ui_dnormali+      p_sol.p *dnormal(0); // fi^0 dni
+                    flux(n1-1) = dui_normali*(p_sol.rho*p_sol.e_tot+p_sol.p) + // dfi ni^0
+                                 ui_dnormali*(p_sol.rho*p_sol.e_tot+p_sol.p); // fi^0 dni
                     break;
             }
             

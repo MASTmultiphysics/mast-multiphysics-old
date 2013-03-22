@@ -35,9 +35,11 @@ public:
     
     Point hinge_location;
     
-    Number plunge_amplitude;
+    Real plunge_amplitude;
     
-    Number pitch_amplitude;
+    Real pitch_amplitude;
+    
+    Real pitch_phase;
     
     Real frequency; // rad/sec
     
@@ -46,7 +48,7 @@ public:
     void init();
 
     // calculation in frequency domain
-    void surface_velocity(const Point& p, DenseVector<Number>& vel);
+    void surface_velocity(const Point& p, DenseVector<Number>& dnormal, DenseVector<Number>& vel);
     
 private:
     

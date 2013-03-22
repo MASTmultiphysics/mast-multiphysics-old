@@ -213,6 +213,7 @@ void FluidPostProcessSystem::init_data()
 
     const Order order = static_cast<Order>(1);
     FEFamily fefamily = LAGRANGE;
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     u = this->add_variable("u", order, fefamily);
     if (dim > 1)
         v = this->add_variable("v", order, fefamily);
@@ -225,18 +226,31 @@ void FluidPostProcessSystem::init_data()
     a = this->add_variable("a", order, fefamily);
     M = this->add_variable("M", order, fefamily);
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-    u_im = this->add_variable("u_im", order, fefamily);
+#else
+
+    u = this->add_variable("du_re", order, fefamily);
     if (dim > 1)
-        v_im = this->add_variable("v_im", order, fefamily);
+        v = this->add_variable("dv_re", order, fefamily);
     if (dim > 2)
-        w_im = this->add_variable("w_im", order, fefamily);
-    T_im = this->add_variable("T_im", order, fefamily);
-    s_im = this->add_variable("s_im", order, fefamily);
-    p_im = this->add_variable("p_im", order, fefamily);
-    cp_im = this->add_variable("cp_im", order, fefamily);
-    a_im = this->add_variable("a_im", order, fefamily);
-    M_im = this->add_variable("M_im", order, fefamily);
+        w = this->add_variable("dw_re", order, fefamily);
+    T = this->add_variable("dT_re", order, fefamily);
+    s = this->add_variable("ds_re", order, fefamily);
+    p = this->add_variable("dp_re", order, fefamily);
+    cp = this->add_variable("dcp_re", order, fefamily);
+    a = this->add_variable("da_re", order, fefamily);
+    M = this->add_variable("dM_re", order, fefamily);
+
+    u_im = this->add_variable("du_im", order, fefamily);
+    if (dim > 1)
+        v_im = this->add_variable("dv_im", order, fefamily);
+    if (dim > 2)
+        w_im = this->add_variable("dw_im", order, fefamily);
+    T_im = this->add_variable("dT_im", order, fefamily);
+    s_im = this->add_variable("ds_im", order, fefamily);
+    p_im = this->add_variable("dp_im", order, fefamily);
+    cp_im = this->add_variable("dcp_im", order, fefamily);
+    a_im = this->add_variable("da_im", order, fefamily);
+    M_im = this->add_variable("dM_im", order, fefamily);
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
     
     System::init_data();
@@ -272,41 +286,41 @@ Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol, Re
 
 Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPrimitiveSolution<Number>& delta_p_sol, Real q0)
 {
-    if (var_name == "u")
+    if (var_name == "du_re")
         return std::real(delta_p_sol.du1);
-    else if (var_name == "v")
+    else if (var_name == "dv_re")
         return std::real(delta_p_sol.du2);
-    else if (var_name == "w")
+    else if (var_name == "dw_re")
         return std::real(delta_p_sol.du3);
-    else if (var_name == "T")
+    else if (var_name == "dT_re")
         return std::real(delta_p_sol.dT);
-    else if (var_name == "s")
+    else if (var_name == "ds_re")
         return std::real(delta_p_sol.dentropy);
-    else if (var_name == "p")
+    else if (var_name == "dp_re")
         return std::real(delta_p_sol.dp);
-    else if (var_name == "cp")
+    else if (var_name == "dcp_re")
         return std::real(delta_p_sol.c_pressure(q0));
-    else if (var_name == "a")
+    else if (var_name == "da_re")
         return std::real(delta_p_sol.da);
-    else if (var_name == "M")
+    else if (var_name == "dM_re")
         return std::real(delta_p_sol.dmach);
-    else if (var_name == "u_im")
+    else if (var_name == "du_im")
         return std::imag(delta_p_sol.du1);
-    else if (var_name == "v_im")
+    else if (var_name == "dv_im")
         return std::imag(delta_p_sol.du2);
-    else if (var_name == "w_im")
+    else if (var_name == "dw_im")
         return std::imag(delta_p_sol.du3);
-    else if (var_name == "T_im")
+    else if (var_name == "dT_im")
         return std::imag(delta_p_sol.dT);
-    else if (var_name == "s_im")
+    else if (var_name == "ds_im")
         return std::imag(delta_p_sol.dentropy);
-    else if (var_name == "p_im")
+    else if (var_name == "dp_im")
         return std::imag(delta_p_sol.dp);
-    else if (var_name == "cp_im")
+    else if (var_name == "dcp_im")
         return std::imag(delta_p_sol.c_pressure(q0));
-    else if (var_name == "a_im")
+    else if (var_name == "da_im")
         return std::imag(delta_p_sol.da);
-    else if (var_name == "M_im")
+    else if (var_name == "dM_im")
         return std::imag(delta_p_sol.dmach);
     else
         libmesh_assert(false);

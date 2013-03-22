@@ -14,8 +14,9 @@
 
 SurfaceMotion::SurfaceMotion(MeshBase& m):
 mesh(m),
-plunge_amplitude(Number(0.,0.)),
-pitch_amplitude(Number(0.,0.)),
+plunge_amplitude(0.),
+pitch_amplitude(0.),
+pitch_phase(0.),
 frequency(0.)
 {
     
@@ -33,8 +34,9 @@ void SurfaceMotion::zero()
     pitch_axis.zero();
     hinge_location.zero();
     
-    plunge_amplitude = Number(0.,0.);
-    pitch_amplitude = Number(0.,0.);
+    plunge_amplitude = 0.;
+    pitch_amplitude = 0.;
+    pitch_phase = 0.;
     frequency = 0.;
 }
 
@@ -50,22 +52,30 @@ void SurfaceMotion::init()
 
 
 
-void SurfaceMotion::surface_velocity(const Point& p, DenseVector<Number>& vel)
+void SurfaceMotion::surface_velocity(const Point& p, DenseVector<Number>& dnormal, DenseVector<Number>& vel)
 {
-    vel.zero();
+    dnormal.zero(); vel.zero();
     const Number iota(0., 1.);
     
-    if (abs(pitch_amplitude) > 0.)
+    if (fabs(pitch_amplitude) > 0.)
     {
         // normal distance from pitching axis to the given point
+        Number pitch_scale;
+        pitch_scale.real() = cos(pitch_phase);
+        pitch_scale.imag() = sin(pitch_phase);
+        pitch_scale *= pitch_amplitude;
+        
         Point r(p); r -= hinge_location;
         Point tmp(pitch_axis.cross(r)); // omega x r
 
         for (unsigned int i=0; i<vel.size(); i++)
-            vel(i) += tmp(i) * pitch_amplitude;
+        {
+            vel(i) = tmp(i) * pitch_scale;
+            dnormal(i) = tmp(i) * pitch_scale; // same value, but will not be multiplied by omega
+        }
     }
     
-    if (abs(plunge_amplitude) > 0.)
+    if (fabs(plunge_amplitude) > 0.)
     {
         for (unsigned int i=0; i<vel.size(); i++)
             vel(i) += plunge_vector(i) * plunge_amplitude;
