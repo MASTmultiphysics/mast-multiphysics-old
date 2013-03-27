@@ -96,13 +96,22 @@ public:
     EulerElemBase():
     aoa(0.), rho_inf(0.), mach_inf(0.), temp_inf(0.), cp(0.), cv(0.), R(0.), gamma(0.), a_inf(0.), u1_inf(0.), u2_inf(0.), u3_inf(0.), q0_inf(0.), p_inf(0.)
     {}
+
+    virtual ~EulerElemBase();
+
     
     void init_data();
 
     
     void get_infinity_vars( DenseVector<Real>& vars_inf ) const;
     
+
+    void print_integrated_lift_drag(std::ostream& o);
     
+
+    DenseVector<Number>* integrated_force;
+    
+
 protected:
     
     
@@ -160,10 +169,12 @@ protected:
                                                 const DenseMatrix<Real>& A_inv_entropy,
                                                 DenseMatrix<Real>& LS_operator, Real& discontinuity_val);
     
+    
     unsigned int dim;
     
 public:
-    
+
+        
     Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
     
 };

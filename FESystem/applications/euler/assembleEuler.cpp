@@ -78,15 +78,14 @@ void init_euler_variables(EquationSystems& es,
 
 void EulerSystem::init_data ()
 {
-    // initialize the fluid values
-    EulerElemBase::init_data();
-
     this->use_fixed_solution = true;
     
     dim = this->get_mesh().mesh_dimension();
     
     vars.resize(dim+2);
-    
+ 
+    // initialize the fluid values
+    EulerElemBase::init_data();
 
     // Check the input file for Reynolds number, application type,
     // approximation type
@@ -366,11 +365,11 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
 
 
     
-    DenseVector<Real>  normal, normal_local, tmp_vec1, flux, U_vec_interpolated, tmp_vec1_n2, conservative_sol;
+    DenseVector<Real> tmp_vec1, flux, U_vec_interpolated, tmp_vec1_n2, conservative_sol;
     DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2, B_mat, A_mat;
 
     conservative_sol.resize(dim+2);
-    normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs); U_vec_interpolated.resize(n1);
+    tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs); U_vec_interpolated.resize(n1);
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1); tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
     B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2);
 
@@ -405,6 +404,10 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
             
             B_mat.vector_mult_transpose(tmp_vec1, flux);
             Fvec.add(-JxW[qp], tmp_vec1);
+            
+            // update the force vector
+            for (unsigned int i=0; i<dim; i++)
+                (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
             
             if ( request_jacobian && c.get_elem_solution_derivative() )
             {

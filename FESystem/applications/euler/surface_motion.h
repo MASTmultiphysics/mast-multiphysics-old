@@ -48,7 +48,9 @@ public:
     void init();
 
     // calculation in frequency domain
-    void surface_velocity(const Point& p, DenseVector<Number>& dnormal, DenseVector<Number>& vel);
+    void surface_velocity(const Point& p, DenseVector<Number>& vel);
+    
+    void surface_normal_perturbation(const Point& n, DenseVector<Number>& dnormal);
     
 private:
     

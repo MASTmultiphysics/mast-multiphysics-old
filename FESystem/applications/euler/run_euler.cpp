@@ -19,8 +19,11 @@
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/mesh_generation.h"
 #include "libmesh/exodusII_io.h"
+#include "libmesh/ensight_io.h"
 #include "libmesh/vtk_io.h"
+#include "libmesh/tecplot_io.h"
 #include "libmesh/gmsh_io.h"
+#include "libmesh/gmv_io.h"
 #include "libmesh/xdr_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/euler_solver.h"
@@ -400,7 +403,7 @@ int main (int argc, char* const argv[])
                 }
         }
     }
-    if (if_panel_mesh)
+    else 
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
@@ -524,6 +527,8 @@ int main (int argc, char* const argv[])
         for (; a_step != max_adaptivesteps; ++a_step)
         {
             system.solve();
+            system.print_integrated_lift_drag(std::cout);
+            system.integrated_force->zero();
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
             delta_val_system.solution->close();
             delta_val_system.update();
@@ -627,7 +632,8 @@ int main (int argc, char* const argv[])
         if (a_step == max_adaptivesteps)
         {
             system.solve();
-            
+            system.print_integrated_lift_drag(std::cout);
+            system.integrated_force->zero();
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
             delta_val_system.solution->close();
             delta_val_system.update();
@@ -653,7 +659,7 @@ int main (int argc, char* const argv[])
             << ".pvtu";
             
             VTKIO(mesh).write_equation_systems(file_name.str(),
-                                               equation_systems);
+                                                   equation_systems);
 //            ExodusII_IO(mesh).write_timestep(file_name.str(),
 //                                             equation_systems,
 //                                             1, /* This number indicates how many time steps

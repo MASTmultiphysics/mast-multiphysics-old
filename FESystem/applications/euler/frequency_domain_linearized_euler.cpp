@@ -25,14 +25,14 @@
 
 void FrequencyDomainLinearizedEuler::init_data()
 {
-    // initialize the fluid values
-    EulerElemBase::init_data();
-    
     this->use_fixed_solution = true;
     
     dim = this->get_mesh().mesh_dimension();
     
     vars.resize(dim+2);
+    
+    // initialize the fluid values
+    EulerElemBase::init_data();
     
     // Check the input file for Reynolds number, application type,
     // approximation type
@@ -390,29 +390,27 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
         
         for (unsigned int qp=0; qp<qpoint.size(); qp++)
         {
+            dui_normali = 0.;
+            ui_dnormali = 0.;
+            dnormal.zero();
+            
             // first update the variables at the current quadrature point
             this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat);
             
             // calculate the surface velocity perturbations
-            if (this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 10))
-            {
-                surface_motion->surface_velocity(qpoint[qp], dnormal, surf_vel);
-                dui_normali = Number(0.,0.); ui_dnormali = Number(0.,0.);
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    dui_normali += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
-                // calculate the factor due to surface normal perturbation
-                ui_dnormali = p_sol.u1 * dnormal(0);
-                if (dim > 1)
-                    ui_dnormali += p_sol.u2 * dnormal(1);
-                if (dim > 2)
-                    ui_dnormali += p_sol.u3 * dnormal(2);
-            }
-            else
-            {
-                dui_normali = 0.;
-                ui_dnormali = 0.;
-                dnormal.zero();
-            }
+            surface_motion->surface_velocity(qpoint[qp], surf_vel);
+            surface_motion->surface_normal_perturbation(face_normals[qp], dnormal);
+            dui_normali = Number(0.,0.); ui_dnormali = Number(0.,0.);
+            for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                dui_normali += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
+            // calculate the factor due to surface normal perturbation
+            ui_dnormali = p_sol.u1 * dnormal(0);
+            if (dim > 1)
+                ui_dnormali += p_sol.u2 * dnormal(1);
+            if (dim > 2)
+                ui_dnormali += p_sol.u3 * dnormal(2);
+            
+            dui_normali -= ui_dnormali;
             
             mat_complex1.copy_matrix(B_mat);
             mat_complex1.vector_mult(flux, c.elem_solution); // initialize flux to interpolated sol for initialized of perturbed vars
@@ -426,24 +424,23 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             switch (dim)
             {
                 case 3:
-                    flux(3) = p_sol.u3*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](2) + // dfi ni^0
-                              p_sol.u3*p_sol.rho*ui_dnormali+      p_sol.p *dnormal(2); // fi^0 dni
+                    flux(3) = p_sol.u3*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](2); // dfi ni^0
                 case 2:
-                    flux(2) = p_sol.u2*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](1) + // dfi ni^0
-                              p_sol.u2*p_sol.rho*ui_dnormali+      p_sol.p *dnormal(1); // fi^0 dni
+                    flux(2) = p_sol.u2*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](1); // dfi ni^0
                 case 1:
-                    flux(0) = p_sol.rho*dui_normali + // dfi ni^0
-                              p_sol.rho*ui_dnormali; // fi^0 dni
-                    flux(1) = p_sol.u1*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](0) + // dfi ni^0
-                              p_sol.u1*p_sol.rho*ui_dnormali+      p_sol.p *dnormal(0); // fi^0 dni
-                    flux(n1-1) = dui_normali*(p_sol.rho*p_sol.e_tot+p_sol.p) + // dfi ni^0
-                                 ui_dnormali*(p_sol.rho*p_sol.e_tot+p_sol.p); // fi^0 dni
+                    flux(0) = p_sol.rho*dui_normali; // dfi ni^0
+                    flux(1) = p_sol.u1*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](0); // dfi ni^0
+                    flux(n1-1) = dui_normali*(p_sol.rho*p_sol.e_tot+p_sol.p); // dfi ni^0
                     break;
             }
             
             mat_complex1.vector_mult_transpose(tmp_vec1_n2, flux);
             Fvec.add(JxW[qp], tmp_vec1_n2);
             
+            // update the force vector
+            for (unsigned int i=0; i<dim; i++)
+                (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*delta_p_sol.dp;
+
             if ( request_jacobian && c.get_elem_solution_derivative() )
             {
                 xini = 0.; // for the steady case

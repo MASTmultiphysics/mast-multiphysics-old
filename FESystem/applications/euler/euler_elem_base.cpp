@@ -382,6 +382,12 @@ void FluidPostProcessSystem::postprocess()
 
 
 
+EulerElemBase::~EulerElemBase()
+{
+    delete this->integrated_force;
+}
+
+
 void EulerElemBase::init_data ()
 {
     // Check the input file for Reynolds number, application type,
@@ -405,6 +411,9 @@ void EulerElemBase::init_data ()
     u3_inf = 0.0;
     q0_inf = 0.5*rho_inf*(u1_inf*u1_inf+u2_inf*u2_inf+u3_inf*u3_inf);
     p_inf = R*rho_inf*temp_inf;
+    
+    integrated_force = new DenseVector<Number>;
+    integrated_force->resize(dim);
 }
 
 
@@ -1375,6 +1384,35 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     this->calculate_artificial_diffusion_operator(vars, qp, c, sol, tmp_mat_n1n1);
     LS_operator.left_multiply(tmp_mat_n1n1);
 }
+
+
+
+void EulerElemBase::print_integrated_lift_drag(std::ostream& o)
+{
+    const Real pi = acos(-1.);
+
+    DenseVector<Number> lift_vec, drag_vec;
+    lift_vec.resize(dim); drag_vec.resize(dim);
+
+    Number val;
+    
+    for (unsigned int i=0; i<dim; i++)
+    {
+        val = (*integrated_force)(i);
+        Parallel::sum(val);
+        (*integrated_force)(i) = val;
+    }
+    
+    lift_vec(0) = -sin(aoa*pi/180.);
+    lift_vec(1) =  cos(aoa*pi/180.);
+
+    drag_vec(0) =  cos(aoa*pi/180.);
+    drag_vec(1) =  sin(aoa*pi/180.);
+
+    o << "Lift: " << std::setw(25) << std::setprecision(14) << integrated_force->dot(lift_vec) << std::endl;
+    o << "Drag: " << std::setw(25) << std::setprecision(14) << integrated_force->dot(drag_vec) << std::endl;
+}
+
 
 
 
