@@ -100,12 +100,13 @@ int main (int argc, char* const argv[])
     // Read in parameters from the input file
     const Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
-    const bool transient                 = infile("transient", true);
     const Real deltat                    = infile("deltat", 0.005);
     unsigned int n_timesteps             = infile("n_timesteps", 20);
     unsigned int n_timesteps_delta_const = infile("n_timesteps_const_delta", 150);
     const unsigned int write_interval    = infile("write_interval", 5);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
+    const unsigned int amr_interval      = infile("amr_interval", 1);
+    const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
     
@@ -117,8 +118,6 @@ int main (int argc, char* const argv[])
     
     // Create a mesh.
     Mesh mesh;
-    // Create an equation systems object.
-    EquationSystems equation_systems (mesh);
     
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -136,7 +135,7 @@ int main (int argc, char* const argv[])
     Real mesh_dx, mesh_dy, mesh_dz;
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-
+    
     if (if_panel_mesh)
     {
         // first calculate the distributed points
@@ -185,7 +184,7 @@ int main (int argc, char* const argv[])
             relative_mesh_size_at_div.assign(vals, vals+4); }
         distributePoints(3, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, x_points);
         mesh_dx = 1./(1.*(n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs));
-
+        
         if (dim == 2)
         {
             {   double vals[] = {0., y_length};
@@ -213,7 +212,7 @@ int main (int argc, char* const argv[])
             for (; n_it != n_end; n_it++)
             {
                 Node& n =  **n_it;
-
+                
                 x_val = n(0);
                 y_val = n(1);
                 
@@ -230,7 +229,7 @@ int main (int argc, char* const argv[])
                     }
                 libmesh_assert(found_id);
                 x_id = correct_id;
-                    
+                
                 found_id = false;
                 correct_id = 0;
                 y_id = floor(y_val/mesh_dy);
@@ -247,7 +246,7 @@ int main (int argc, char* const argv[])
                 n(0) = x_points[x_id];
                 n(1) = y_points[y_id];
             }
-
+            
         }
         
         else if (dim == 3)
@@ -259,8 +258,8 @@ int main (int argc, char* const argv[])
             {   double vals[] = {dx_spanwise_inlet, dx_spanwise_le, dx_spanwise_te, dx_spanwise_outlet};
                 relative_mesh_size_at_div.assign(vals, vals+4); }
             distributePoints(3, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, y_points);
-
-
+            
+            
             {   double vals[] = {0., z_length};
                 div_locations.assign(vals, vals+2); }
             {   unsigned int vals[] = {n_vertical_divs};
@@ -268,10 +267,10 @@ int main (int argc, char* const argv[])
             {   double vals[] = {dx_vert_surface, dx_vert_inf};
                 relative_mesh_size_at_div.assign(vals, vals+2); }
             distributePoints(1, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, z_points);
-
+            
             mesh_dy = 1./(1.*(n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs));
             mesh_dz = 1./(1.*n_vertical_divs);
-
+            
             MeshTools::Generation::build_cube (mesh,
                                                n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs,
@@ -296,7 +295,7 @@ int main (int argc, char* const argv[])
                 x_id = floor(x_val/mesh_dx);
                 y_id = floor(y_val/mesh_dy);
                 z_id = floor(z_val/mesh_dz);
-
+                
                 // find the correct id
                 bool found_id = false;
                 unsigned int correct_id = 0;
@@ -321,7 +320,7 @@ int main (int argc, char* const argv[])
                     }
                 libmesh_assert(found_id);
                 y_id = correct_id;
-
+                
                 found_id = false;
                 correct_id = 0;
                 for (unsigned int i=0; i<3; i++)
@@ -333,12 +332,12 @@ int main (int argc, char* const argv[])
                     }
                 libmesh_assert(found_id);
                 z_id = correct_id;
-
+                
                 n(0) = x_points[x_id];
                 n(1) = y_points[y_id];
                 n(2) = z_points[z_id];
             }
-
+            
         }
         
         //march over all the elmeents and tag the sides that all lie on the panel suface
@@ -398,12 +397,12 @@ int main (int argc, char* const argv[])
                     x_val = n(0);
                     y_val = n(1);
                     z_val = n(2);
-
+                    
                     n(2) += thickness*(1.0-z_val/z_length)*sin(pi*(x_val-x0)/chord)*sin(pi*(y_val-y0)/span);
                 }
         }
     }
-    else 
+    else
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
@@ -412,14 +411,21 @@ int main (int argc, char* const argv[])
         mesh.prepare_for_use();
     }
 #else
-
+    
     mesh.read("saved_mesh.xdr");
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
-
+    
+    // uniformly refine the mesh
+    for (unsigned int i=0; i<n_uniform_refine; i++)
+        mesh_refinement.uniformly_refine();
+    
     // Print information about the mesh to the screen.
     mesh.print_info();
     
+    
+    // Create an equation systems object.
+    EquationSystems equation_systems (mesh);
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // Declare the system "EulerSystem"
@@ -427,48 +433,48 @@ int main (int argc, char* const argv[])
     equation_systems.add_system<EulerSystem> ("EulerSystem");
     
     system.attach_init_function (init_euler_variables);
-
+    
     FluidPostProcessSystem& fluid_post =
     equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
     System& delta_val_system =
     equation_systems.add_system<System> ("DeltaValSystem");
     delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
-
     
-//    TwostepTimeSolver *timesolver =
-//    new TwostepTimeSolver(system);
-//    
-////    timesolver->max_growth       = infile("timesolver_maxgrowth",);
-////    timesolver->target_tolerance = infile("timesolver_tolerance",);
-////    timesolver->upper_tolerance  = infile("timesolver_upper_tolerance",);
-////    timesolver->component_norm   = SystemNorm(infile("timesolver_norm",));
-//    timesolver->quiet = infile("solver_quiet", true);
-//    
-//    timesolver->core_time_solver =
-//    AutoPtr<EulerSolver>(new EulerSolver(system));
-//    system.time_solver =
-//    AutoPtr<UnsteadySolver>(timesolver);
     
-
+    //    TwostepTimeSolver *timesolver =
+    //    new TwostepTimeSolver(system);
+    //
+    ////    timesolver->max_growth       = infile("timesolver_maxgrowth",);
+    ////    timesolver->target_tolerance = infile("timesolver_tolerance",);
+    ////    timesolver->upper_tolerance  = infile("timesolver_upper_tolerance",);
+    ////    timesolver->component_norm   = SystemNorm(infile("timesolver_norm",));
+    //    timesolver->quiet = infile("solver_quiet", true);
+    //
+    //    timesolver->core_time_solver =
+    //    AutoPtr<EulerSolver>(new EulerSolver(system));
+    //    system.time_solver =
+    //    AutoPtr<UnsteadySolver>(timesolver);
+    
+    
     system.time_solver = AutoPtr<UnsteadySolver>(new EulerSolver(system));
-
+    
     equation_systems.init ();
-
+    
 #else
     // Declare the system "EulerSystem"
     FrequencyDomainLinearizedEuler & system =
     equation_systems.add_system<FrequencyDomainLinearizedEuler> ("FrequencyDomainLinearizedEuler");
-
+    
     FluidPostProcessSystem& fluid_post =
     equation_systems.add_system<FluidPostProcessSystem> ("DeltaFluidPostProcessSystem");
-
+    
     system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(system));
     libmesh_assert_equal_to (n_timesteps, 1);
     
     equation_systems.read<Real>("saved_solution.xdr", libMeshEnums::DECODE);
     VTKIO(mesh).write_equation_systems("steady_solution.pvtu", equation_systems);
-
+    
 #endif
     
     
@@ -524,110 +530,111 @@ int main (int argc, char* const argv[])
         
         // Adaptively solve the timestep
         unsigned int a_step = 0;
-        for (; a_step != max_adaptivesteps; ++a_step)
-        {
-            system.solve();
-            system.print_integrated_lift_drag(std::cout);
-            system.integrated_force->zero();
+        if ((t_step+1)%amr_interval == 0)
+            for (; a_step != max_adaptivesteps; ++a_step)
+            {
+                system.solve();
+                system.print_integrated_lift_drag(std::cout);
+                system.integrated_force->zero();
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-            delta_val_system.solution->close();
-            delta_val_system.update();
+                delta_val_system.solution->close();
+                delta_val_system.update();
 #endif
-            fluid_post.postprocess();
-            
-            ErrorVector error;
-            
-            AutoPtr<ErrorEstimator> error_estimator;
-            
-            // To solve to a tolerance in this problem we
-            // need a better estimator than Kelly
-            if (error_norm == "uniform")
-            {
-                // We can't adapt to both a tolerance and a mesh
-                // size at once
-                libmesh_assert_greater (global_tolerance, 0);
-                libmesh_assert_equal_to (nelem_target, 0);
+                fluid_post.postprocess();
                 
-                UniformRefinementEstimator *u = new UniformRefinementEstimator;
-                u->error_norm = L2;
-                error_estimator.reset(u);
-            }
-            else if (error_norm == "kelly")
-            {
-                // If we aren't adapting to a tolerance we need a
-                // target mesh size
-                libmesh_assert_greater (nelem_target, 0);
+                ErrorVector error;
                 
-                // Kelly is a lousy estimator to use for a problem
-                // not in H1 - if we were doing more than a few
-                // timesteps we'd need to turn off or limit the
-                // maximum level of our adaptivity eventually
-                error_estimator.reset(new KellyErrorEstimator);
-            }
-            else if (error_norm == "patch")
-            {
-                error_estimator.reset(new PatchRecoveryErrorEstimator);
-            }
-            else
-                libmesh_assert(false);
-            
-            // Calculate error based on u and v (and w?) but not p
-            std::vector<Real> weights(dim+2,0.0);  // all set to 1.0
-            weights[0] = 1.0;
-            // Keep the same default norm type.
-            std::vector<FEMNormType>
-            norms(1, error_estimator->error_norm.type(0));
-            error_estimator->error_norm = SystemNorm(norms, weights);
-            
-            error_estimator->estimate_error(system, error);
-            
-            // Print out status at each adaptive step.
-            Real global_error = error.l2_norm();
-            std::cout << "Adaptive step " << a_step << ": " << std::endl;
-            if (global_tolerance != 0.)
-                std::cout << "Global_error = " << global_error
-                << std::endl;
-            if (global_tolerance != 0.)
-                std::cout << "Worst element error = " << error.maximum()
-                << ", mean = " << error.mean() << std::endl;
-            
-            if (strategy == "error_fraction")
-                mesh_refinement.flag_elements_by_error_fraction(error);
-            else if (strategy == "error_tolerance")
-            {
-                // If we've reached our desired tolerance, we
-                // don't need any more adaptive steps
-                if (global_error < global_tolerance)
-                    break;
-                mesh_refinement.flag_elements_by_error_tolerance(error);
-            }
-            else if (strategy == "nelem_target")
-            {
-                if (mesh_refinement.flag_elements_by_nelem_target(error))
+                AutoPtr<ErrorEstimator> error_estimator;
+                
+                // To solve to a tolerance in this problem we
+                // need a better estimator than Kelly
+                if (error_norm == "uniform")
                 {
-                    mesh_refinement.refine_and_coarsen_elements();
-                    equation_systems.reinit();
-                    a_step = max_adaptivesteps;
-                    break;
+                    // We can't adapt to both a tolerance and a mesh
+                    // size at once
+                    libmesh_assert_greater (global_tolerance, 0);
+                    libmesh_assert_equal_to (nelem_target, 0);
+                    
+                    UniformRefinementEstimator *u = new UniformRefinementEstimator;
+                    u->error_norm = L2;
+                    error_estimator.reset(u);
                 }
+                else if (error_norm == "kelly")
+                {
+                    // If we aren't adapting to a tolerance we need a
+                    // target mesh size
+                    libmesh_assert_greater (nelem_target, 0);
+                    
+                    // Kelly is a lousy estimator to use for a problem
+                    // not in H1 - if we were doing more than a few
+                    // timesteps we'd need to turn off or limit the
+                    // maximum level of our adaptivity eventually
+                    error_estimator.reset(new KellyErrorEstimator);
+                }
+                else if (error_norm == "patch")
+                {
+                    error_estimator.reset(new PatchRecoveryErrorEstimator);
+                }
+                else
+                    libmesh_assert(false);
+                
+                // Calculate error based on u and v (and w?) but not p
+                std::vector<Real> weights(dim+2,0.0);  // all set to 1.0
+                weights[0] = 1.0;
+                // Keep the same default norm type.
+                std::vector<FEMNormType>
+                norms(1, error_estimator->error_norm.type(0));
+                error_estimator->error_norm = SystemNorm(norms, weights);
+                
+                error_estimator->estimate_error(system, error);
+                
+                // Print out status at each adaptive step.
+                Real global_error = error.l2_norm();
+                std::cout << "Adaptive step " << a_step << ": " << std::endl;
+                if (global_tolerance != 0.)
+                    std::cout << "Global_error = " << global_error
+                    << std::endl;
+                if (global_tolerance != 0.)
+                    std::cout << "Worst element error = " << error.maximum()
+                    << ", mean = " << error.mean() << std::endl;
+                
+                if (strategy == "error_fraction")
+                    mesh_refinement.flag_elements_by_error_fraction(error);
+                else if (strategy == "error_tolerance")
+                {
+                    // If we've reached our desired tolerance, we
+                    // don't need any more adaptive steps
+                    if (global_error < global_tolerance)
+                        break;
+                    mesh_refinement.flag_elements_by_error_tolerance(error);
+                }
+                else if (strategy == "nelem_target")
+                {
+                    if (mesh_refinement.flag_elements_by_nelem_target(error))
+                    {
+                        mesh_refinement.refine_and_coarsen_elements();
+                        equation_systems.reinit();
+                        a_step = max_adaptivesteps;
+                        break;
+                    }
+                }
+                else if (strategy == "elem_fraction")
+                    mesh_refinement.flag_elements_by_elem_fraction(error);
+                else if (strategy == "mean_stddev")
+                    mesh_refinement.flag_elements_by_mean_stddev(error);
+                else
+                    libmesh_assert(false);
+                
+                // Carry out the adaptive mesh refinement/coarsening
+                mesh_refinement.refine_and_coarsen_elements();
+                equation_systems.reinit();
+                
+                std::cout << "Refined mesh to "
+                << mesh.n_active_elem()
+                << " active elements and "
+                << equation_systems.n_active_dofs()
+                << " active dofs." << std::endl;
             }
-            else if (strategy == "elem_fraction")
-                mesh_refinement.flag_elements_by_elem_fraction(error);
-            else if (strategy == "mean_stddev")
-                mesh_refinement.flag_elements_by_mean_stddev(error);
-            else
-                libmesh_assert(false);
-            
-            // Carry out the adaptive mesh refinement/coarsening
-            mesh_refinement.refine_and_coarsen_elements();
-            equation_systems.reinit();
-            
-            std::cout << "Refined mesh to "
-            << mesh.n_active_elem()
-            << " active elements and "
-            << equation_systems.n_active_dofs()
-            << " active dofs." << std::endl;
-        }
         // Do one last solve if necessary
         if (a_step == max_adaptivesteps)
         {
@@ -648,7 +655,7 @@ int main (int argc, char* const argv[])
         // Write out this timestep if we're requested to
         if ((t_step+1)%write_interval == 0)
         {
-            std::ostringstream file_name;
+            std::ostringstream file_name, b_file_name;
             
             // We write the file in the ExodusII format.
             file_name << "out_"
@@ -659,16 +666,28 @@ int main (int argc, char* const argv[])
             << ".pvtu";
             
             VTKIO(mesh).write_equation_systems(file_name.str(),
-                                                   equation_systems);
-//            ExodusII_IO(mesh).write_timestep(file_name.str(),
-//                                             equation_systems,
-//                                             1, /* This number indicates how many time steps
-//                                                 are being written to the file */
-//                                             system.time);
+                                               equation_systems);
+
+            b_file_name << "b_out_"
+            << std::setw(3)
+            << std::setfill('0')
+            << std::right
+            << t_step+1
+            << ".pvtu";
+            
+            std::set<unsigned int> bc_ids; bc_ids.insert(0);
+            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
+                                               equation_systems);
+            
+            //            ExodusII_IO(mesh).write_timestep(file_name.str(),
+            //                                             equation_systems,
+            //                                             1, /* This number indicates how many time steps
+            //                                                 are being written to the file */
+            //                                             system.time);
         }
 #endif // #ifdef LIBMESH_HAVE_EXODUS_API
     }
-
+    
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     XdrIO xdr(mesh, true);
     xdr.write("saved_mesh.xdr");

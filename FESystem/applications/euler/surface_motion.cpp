@@ -95,14 +95,11 @@ void SurfaceMotion::surface_normal_perturbation(const Point& n, DenseVector<Numb
         pitch_scale.real() = cos(pitch_phase);
         pitch_scale.imag() = sin(pitch_phase);
         
-        if (dnormal.size() == 2)
-        {
-            // for small angles, this is the same as dnormal = pitch_amplitude * (pitch_axis x n)
-            dnormal(0) = (cos(pitch_amplitude)-1.) * n(0) - sin(pitch_amplitude) * n(1);
-            dnormal(1) = sin(pitch_amplitude) * n(0) + (cos(pitch_amplitude)-1.) * n(1);
-        }
-        
-        dnormal.scale(pitch_scale); // will not be multiplied by omega
+        Point tmp(pitch_axis.cross(n));
+        for (unsigned int i=0; i<dnormal.size(); i++)
+            dnormal(i) = tmp(i);
+
+        dnormal.scale(pitch_scale * pitch_amplitude); // will not be multiplied by omega
     }
 }
 
