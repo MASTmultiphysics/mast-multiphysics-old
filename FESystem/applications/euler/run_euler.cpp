@@ -16,6 +16,7 @@
 // libmesh includes
 #include "libmesh/getpot.h"
 #include "libmesh/mesh.h"
+#include "libmesh/parallel_mesh.h"
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/mesh_generation.h"
 #include "libmesh/exodusII_io.h"
@@ -117,8 +118,9 @@ int main (int argc, char* const argv[])
     libmesh_assert (dim == 2 || dim == 3);
     
     // Create a mesh.
-    Mesh mesh;
-    
+    //Mesh mesh;
+     ParallelMesh mesh;    
+
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
     mesh_refinement.coarsen_by_parents() = true;
@@ -636,7 +638,7 @@ int main (int argc, char* const argv[])
                 << " active dofs." << std::endl;
             }
         // Do one last solve if necessary
-        if (a_step == max_adaptivesteps)
+       if ((a_step == max_adaptivesteps) || ((t_step+1)%amr_interval != 0))
         {
             system.solve();
             system.print_integrated_lift_drag(std::cout);
@@ -651,7 +653,6 @@ int main (int argc, char* const argv[])
         // Advance to the next timestep in a transient problem
         system.time_solver->advance_timestep();
         
-#ifdef LIBMESH_HAVE_EXODUS_API
         // Write out this timestep if we're requested to
         if ((t_step+1)%write_interval == 0)
         {
@@ -685,7 +686,6 @@ int main (int argc, char* const argv[])
             //                                                 are being written to the file */
             //                                             system.time);
         }
-#endif // #ifdef LIBMESH_HAVE_EXODUS_API
     }
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
