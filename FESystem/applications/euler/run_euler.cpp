@@ -16,6 +16,7 @@
 // libmesh includes
 #include "libmesh/getpot.h"
 #include "libmesh/mesh.h"
+#include "libmesh/serial_mesh.h"
 #include "libmesh/parallel_mesh.h"
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/mesh_generation.h"
@@ -107,6 +108,7 @@ int main (int argc, char* const argv[])
     const unsigned int write_interval    = infile("write_interval", 5);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
     const unsigned int amr_interval      = infile("amr_interval", 1);
+    const Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
@@ -118,8 +120,8 @@ int main (int argc, char* const argv[])
     libmesh_assert (dim == 2 || dim == 3);
     
     // Create a mesh.
-    //Mesh mesh;
-     ParallelMesh mesh;    
+    SerialMesh mesh;
+   // ParallelMesh mesh;    
 
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -443,22 +445,19 @@ int main (int argc, char* const argv[])
     delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
     
     
-    //    TwostepTimeSolver *timesolver =
-    //    new TwostepTimeSolver(system);
-    //
-    ////    timesolver->max_growth       = infile("timesolver_maxgrowth",);
-    ////    timesolver->target_tolerance = infile("timesolver_tolerance",);
-    ////    timesolver->upper_tolerance  = infile("timesolver_upper_tolerance",);
-    ////    timesolver->component_norm   = SystemNorm(infile("timesolver_norm",));
-    //    timesolver->quiet = infile("solver_quiet", true);
-    //
-    //    timesolver->core_time_solver =
-    //    AutoPtr<EulerSolver>(new EulerSolver(system));
-    //    system.time_solver =
-    //    AutoPtr<UnsteadySolver>(timesolver);
+    TwostepTimeSolver *timesolver = new TwostepTimeSolver(system);
     
+    //    timesolver->target_tolerance = infile("timesolver_tolerance",);
+    //    timesolver->upper_tolerance  = infile("timesolver_upper_tolerance",);
+    //    timesolver->component_norm   = SystemNorm(infile("timesolver_norm",));
+    timesolver->quiet = infile("timesolver_solver_quiet", true);
+    timesolver->min_deltat = infile("timesolver_min_deltat", 1.0e-3);
+    timesolver->global_tolerance = infile("timesolver_global_tolerance", false);
+    timesolver->max_growth       = infile("timesolver_maxgrowth", 1.5);
+    timesolver->core_time_solver = AutoPtr<EulerSolver>(new EulerSolver(system));
+    system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
     
-    system.time_solver = AutoPtr<UnsteadySolver>(new EulerSolver(system));
+    //system.time_solver = AutoPtr<UnsteadySolver>(new EulerSolver(system));
     
     equation_systems.init ();
     
@@ -630,6 +629,9 @@ int main (int argc, char* const argv[])
                 // Carry out the adaptive mesh refinement/coarsening
                 mesh_refinement.refine_and_coarsen_elements();
                 equation_systems.reinit();
+                
+                // reduce the time step size by a factor
+                system.deltat *= amr_time_shrink_factor;
                 
                 std::cout << "Refined mesh to "
                 << mesh.n_active_elem()
