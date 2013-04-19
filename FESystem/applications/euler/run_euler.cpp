@@ -454,6 +454,7 @@ int main (int argc, char* const argv[])
     timesolver->min_deltat = infile("timesolver_min_deltat", 1.0e-3);
     timesolver->global_tolerance = infile("timesolver_global_tolerance", false);
     timesolver->max_growth       = infile("timesolver_maxgrowth", 1.5);
+    timesolver->max_deltat       = infile("timesolver_max_deltat", 5.0e2);
     timesolver->core_time_solver = AutoPtr<EulerSolver>(new EulerSolver(system));
     system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
     
