@@ -120,7 +120,7 @@ int main (int argc, char* const argv[])
     libmesh_assert (dim == 2 || dim == 3);
     
     // Create a mesh.
-    SerialMesh mesh;
+    SerialMesh mesh(init.comm());
    // ParallelMesh mesh;    
 
     // And an object to refine it
@@ -456,7 +456,7 @@ int main (int argc, char* const argv[])
     timesolver->global_tolerance = infile("timesolver_global_tolerance", false);
     timesolver->max_growth       = infile("timesolver_maxgrowth", 1.5);
     timesolver->max_deltat       = infile("timesolver_max_deltat", 5.0e2);
-    timesolver->reduce_deltat_on_diffsolver_failure = infile("timesolver_reduce_deltat_on_diffsolver_failure", 8);
+    timesolver->reduce_deltat_on_diffsolver_failure = infile("timesolver_reduce_deltat_on_diffsolver_failure", 0);
 
     core_time_solver->theta      = infile("timesolver_theta", 1.0);
     

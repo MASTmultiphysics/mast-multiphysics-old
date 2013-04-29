@@ -78,6 +78,9 @@ void init_euler_variables(EquationSystems& es,
 
 void EulerSystem::init_data ()
 {
+    // initialize the system communicator for use by the Euler element base class
+    this->system_comm = &this->comm();
+    
     this->use_fixed_solution = true;
     
     dim = this->get_mesh().mesh_dimension();

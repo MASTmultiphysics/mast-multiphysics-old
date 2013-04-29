@@ -1399,7 +1399,7 @@ void EulerElemBase::print_integrated_lift_drag(std::ostream& o)
     for (unsigned int i=0; i<dim; i++)
     {
         val = (*integrated_force)(i);
-        Parallel::sum(val);
+        this->system_comm->sum(val);
         (*integrated_force)(i) = val;
     }
     

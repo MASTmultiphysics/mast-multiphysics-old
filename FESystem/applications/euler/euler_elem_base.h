@@ -19,6 +19,7 @@
 #include "libmesh/fem_context.h"
 #include "libmesh/system.h"
 #include "libmesh/analytic_function.h"
+#include "libmesh/parallel.h"
 
 
 using namespace libMesh;
@@ -94,6 +95,7 @@ class EulerElemBase
 public:
     // Constructor
     EulerElemBase():
+    system_comm(NULL),
     aoa(0.), rho_inf(0.), mach_inf(0.), temp_inf(0.), cp(0.), cv(0.), R(0.), gamma(0.), a_inf(0.), u1_inf(0.), u2_inf(0.), u3_inf(0.), q0_inf(0.), p_inf(0.)
     {}
 
@@ -171,6 +173,8 @@ protected:
     
     
     unsigned int dim;
+    
+    const Parallel::Communicator* system_comm;
     
 public:
 

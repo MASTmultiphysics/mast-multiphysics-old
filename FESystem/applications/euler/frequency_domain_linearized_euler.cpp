@@ -25,6 +25,9 @@
 
 void FrequencyDomainLinearizedEuler::init_data()
 {
+    // initialize the system communicator for use by the Euler element base class
+    this->system_comm = &this->comm();
+
     this->use_fixed_solution = true;
     
     dim = this->get_mesh().mesh_dimension();
@@ -222,7 +225,7 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         diff_val = real(diff_val_vec.el(c.elem->dof_number(delta_val_system.number(), 0, 0)));
 
         // calculate the interpolated solution value at this quadrature point
-        mat_complex.copy_matrix(B_mat);
+        mat_complex = B_mat;
         mat_complex.vector_mult(elem_interpolated_sol, c.elem_solution);  // B dU
 
         // Galerkin contribution to solution
@@ -230,7 +233,7 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         Fvec.add(JxW[qp]*scaling, tmp_vec3_n2); // mass term
         
         // Galerkin contribution to solution
-        mat_complex.copy_matrix(LS_mat);
+        mat_complex = LS_mat;
         mat_complex.vector_mult_transpose(tmp_vec3_n2, elem_interpolated_sol); // LS^T tau B dU
         Fvec.add(JxW[qp]*scaling, tmp_vec3_n2); // mass term
 
@@ -240,9 +243,9 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         {
             // Galerkin contribution from the advection flux terms
             // linearized advection flux is obtained using the Ai dU  product
-            mat_complex.copy_matrix(Ai_advection[i_dim]);
+            mat_complex = Ai_advection[i_dim];
             mat_complex.vector_mult(flux, elem_interpolated_sol); // dF^adv_i
-            mat_complex.copy_matrix(dB_mat[i_dim]);
+            mat_complex = dB_mat[i_dim];
             mat_complex.vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i dF^adv_i
             Fvec.add(-JxW[qp], tmp_vec3_n2);
             
@@ -253,9 +256,9 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         }
         
         // Least square contribution from flux
-        mat_complex.copy_matrix(Ai_Bi_advection);
+        mat_complex = Ai_Bi_advection;
         mat_complex.vector_mult(flux, c.elem_solution); // d dF^adv_i / dxi
-        mat_complex.copy_matrix(LS_mat);
+        mat_complex = LS_mat;
         mat_complex.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau dF^adv_i
         Fvec.add(JxW[qp], tmp_vec3_n2);
         
@@ -412,7 +415,7 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             
             dui_normali -= ui_dnormali;
             
-            mat_complex1.copy_matrix(B_mat);
+            mat_complex1 = B_mat;
             mat_complex1.vector_mult(flux, c.elem_solution); // initialize flux to interpolated sol for initialized of perturbed vars
             
             delta_p_sol.zero();
@@ -483,9 +486,9 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             
             tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
             
-            mat_complex1.copy_matrix(B_mat);
+            mat_complex1 = B_mat;
             mat_complex1.vector_mult(elem_interpolated_sol, c.elem_solution); // B dU
-            mat_complex2.copy_matrix(tmp_mat1);
+            mat_complex2 = tmp_mat1;
             mat_complex2.vector_mult(flux, elem_interpolated_sol); // f_{+} = A_{+} B dU
             
             mat_complex1.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
