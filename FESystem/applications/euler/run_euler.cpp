@@ -12,6 +12,7 @@
 // FESystem includes
 #include "euler/assembleEuler.h"
 #include "euler/frequency_domain_linearized_euler.h"
+#include "solvers/time_solvers/residual_based_adaptive_time_solver.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -29,7 +30,6 @@
 #include "libmesh/xdr_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/euler_solver.h"
-#include "libmesh/twostep_time_solver.h"
 #include "libmesh/steady_solver.h"
 #include "libmesh/newton_solver.h"
 #include "libmesh/error_vector.h"
@@ -103,8 +103,8 @@ int main (int argc, char* const argv[])
     const Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
     const Real deltat                    = infile("deltat", 0.005);
+    const Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
     unsigned int n_timesteps             = infile("n_timesteps", 20);
-    unsigned int n_timesteps_delta_const = infile("n_timesteps_const_delta", 150);
     const unsigned int write_interval    = infile("write_interval", 5);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
     const unsigned int amr_interval      = infile("amr_interval", 1);
@@ -445,25 +445,22 @@ int main (int argc, char* const argv[])
     delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
     
     
-    TwostepTimeSolver *timesolver = new TwostepTimeSolver(system);
+    ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(system);
     EulerSolver *core_time_solver = new EulerSolver(system);
     
-    //    timesolver->target_tolerance = infile("timesolver_tolerance",);
-    //    timesolver->upper_tolerance  = infile("timesolver_upper_tolerance",);
-    //    timesolver->component_norm   = SystemNorm(infile("timesolver_norm",));
-    timesolver->quiet = infile("timesolver_solver_quiet", true);
-    timesolver->min_deltat = infile("timesolver_min_deltat", 1.0e-3);
-    timesolver->global_tolerance = infile("timesolver_global_tolerance", false);
-    timesolver->max_growth       = infile("timesolver_maxgrowth", 1.5);
-    timesolver->max_deltat       = infile("timesolver_max_deltat", 5.0e2);
-    timesolver->reduce_deltat_on_diffsolver_failure = infile("timesolver_reduce_deltat_on_diffsolver_failure", 0);
+    timesolver->quiet              = infile("timesolver_solver_quiet", true);
+    timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
+    timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
+    timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
+    timesolver->max_growth         = infile("timesolver_maxgrowth", 3.0);
+    timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
 
-    core_time_solver->theta      = infile("timesolver_theta", 1.0);
+    core_time_solver->theta        = infile("timesolver_theta", 1.0);
     
     timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
     system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
     
-    //system.time_solver = AutoPtr<UnsteadySolver>(new EulerSolver(system));
+    system.dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
     
     equation_systems.init ();
     
@@ -525,11 +522,13 @@ int main (int argc, char* const argv[])
     
     // Now we begin the timestep loop to compute the time-accurate
     // solution of the equations.
-    for (unsigned int t_step=0; t_step != n_timesteps; ++t_step)
+    bool continue_iterations = true;
+    unsigned int t_step=0;
+    
+    while (continue_iterations)
     {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        if (t_step > n_timesteps_delta_const)
-            system.if_use_stored_delta = true;
+        system.evaluate_recalculate_dc_flag();
 #endif
         // A pretty update message
         std::cout << "\n\nSolving time step " << t_step << ", time = "
@@ -568,14 +567,7 @@ int main (int argc, char* const argv[])
                 }
                 else if (error_norm == "kelly")
                 {
-                    // If we aren't adapting to a tolerance we need a
-                    // target mesh size
                     libmesh_assert_greater (nelem_target, 0);
-                    
-                    // Kelly is a lousy estimator to use for a problem
-                    // not in H1 - if we were doing more than a few
-                    // timesteps we'd need to turn off or limit the
-                    // maximum level of our adaptivity eventually
                     error_estimator.reset(new KellyErrorEstimator);
                 }
                 else if (error_norm == "patch")
@@ -687,12 +679,14 @@ int main (int argc, char* const argv[])
             std::set<unsigned int> bc_ids; bc_ids.insert(0);
             VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
                                                equation_systems);
-            
-            //            ExodusII_IO(mesh).write_timestep(file_name.str(),
-            //                                             equation_systems,
-            //                                             1, /* This number indicates how many time steps
-            //                                                 are being written to the file */
-            //                                             system.time);
+        }
+        
+        // check for termination criteria
+        t_step++;
+        if ((t_step > n_timesteps) || (system.rhs->l1_norm() < terminate_tolerance))
+        {
+            libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
+            continue_iterations = false;
         }
     }
     

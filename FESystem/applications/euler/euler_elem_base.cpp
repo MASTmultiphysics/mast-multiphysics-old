@@ -1237,8 +1237,8 @@ EulerElemBase::calculate_artificial_diffusion_operator(const std::vector<unsigne
     
     // now set the value of streamwise dissipation
     tau_rho = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
-    tau_m = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
-    tau_e = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
+    tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
+    tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
     
     streamline_operator(0, 0) = tau_rho;
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)

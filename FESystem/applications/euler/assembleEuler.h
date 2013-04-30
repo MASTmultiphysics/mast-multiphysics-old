@@ -44,7 +44,10 @@ public:
                 const unsigned int number_in)
     : FEMSystem(es, name_in, number_in),
     EulerElemBase(),
-    if_use_stored_delta(false)
+    _rho_norm_old(1.),
+    _rho_norm_curr(1.),
+    dc_recalculate_tolerance(1.0e-8),
+    _if_use_stored_dc_coeff(false)
     {}
     
     void init_data();
@@ -60,11 +63,25 @@ public:
     virtual bool mass_residual (bool request_jacobian,
                                 DiffContext& context);
 
-    bool if_use_stored_delta;
-
+    void evaluate_recalculate_dc_flag();
+    
+    /*!
+     *    tolerance threshold for turning on/off the stored dc coeff flag
+     */
+    Real dc_recalculate_tolerance;
+    
 protected:
     
-    
+    /*!
+     *    Current and old norms of density in the flow-field
+     */
+    Real _rho_norm_old, _rho_norm_curr;
+
+    /*!
+     *     flag to tell the system to use the stored discontinuity capturing terms
+     */
+    bool _if_use_stored_dc_coeff;
+
     std::vector<unsigned int> vars;
 };
 
