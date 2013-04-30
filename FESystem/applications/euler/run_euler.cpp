@@ -637,12 +637,14 @@ int main (int argc, char* const argv[])
             
             // decrement the amr counter
             amr_steps--;
+
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+            // tell the solver to recalculte the dc coeffs post refinement
+            system.if_use_stored_dc_coeff = false;
+#endif
         }
 
         // Do one last solve before the time step increment
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        system.if_use_stored_dc_coeff = false;
-#endif
         system.solve();
         system.print_integrated_lift_drag(std::cout);
         system.integrated_force->zero();
