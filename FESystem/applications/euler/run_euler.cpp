@@ -108,7 +108,7 @@ int main (int argc, char* const argv[])
     const unsigned int write_interval    = infile("write_interval", 5);
     const bool if_use_amr                = infile("if_use_amr", false);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
-    const unsigned int amr_interval      = infile("amr_interval", 1);
+    const Real amr_threshold             = infile("amr_threshold", 1.0e1);
     const Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
@@ -526,6 +526,7 @@ int main (int argc, char* const argv[])
     // solution of the equations.
     bool continue_iterations = true;
     unsigned int t_step=0, amr_steps = max_adaptivesteps;
+    Real sol_norm = 1.0e10;
     if (!if_use_amr) amr_steps = 0;
     
     while (continue_iterations)
@@ -536,7 +537,7 @@ int main (int argc, char* const argv[])
         
         // Adaptively solve the timestep
         unsigned int a_step = 0;
-        if (if_use_amr && (amr_steps > 0) && ((t_step+1)%amr_interval == 0))
+        if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
         {
             system.solve();
             system.print_integrated_lift_drag(std::cout);
@@ -689,7 +690,8 @@ int main (int argc, char* const argv[])
         
         // check for termination criteria
         t_step++;
-        if (((t_step > n_timesteps) || (system.rhs->l1_norm() < terminate_tolerance)) &&
+        sol_norm = system.rhs->l1_norm();
+        if (((t_step > n_timesteps) || (sol_norm < terminate_tolerance)) &&
             (amr_steps == 0))
         {
             libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
