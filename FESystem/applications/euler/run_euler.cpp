@@ -104,7 +104,7 @@ int main (int argc, char* const argv[])
     const unsigned int nelem_target      = infile("n_elements", 400);
     const Real deltat                    = infile("deltat", 0.005);
     const Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
-    unsigned int n_timesteps             = infile("n_timesteps", 20);
+    unsigned int n_timesteps             = infile("n_timesteps", 1);
     const unsigned int write_interval    = infile("write_interval", 5);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
     const unsigned int amr_interval      = infile("amr_interval", 1);
