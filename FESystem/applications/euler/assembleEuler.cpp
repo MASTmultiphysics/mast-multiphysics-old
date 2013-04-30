@@ -218,7 +218,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     System& delta_val_system = this->get_equation_systems().get_system<System>("DeltaValSystem");
     NumericVector<Real>& diff_val_vec = (*delta_val_system.solution.get());
     
-    if (_if_use_stored_dc_coeff)
+    if (if_use_stored_dc_coeff)
     {
         diff_val = diff_val_vec.el(c.elem->dof_number(delta_val_system.number(), 0, 0));
         for (unsigned int qp=0; qp<n_qpoints; qp++)
@@ -245,7 +245,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                 
         this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat, dB_mat, Ai_advection, Ai_Bi_advection, A_inv_entropy, LS_mat, diff_val);
 
-        if (_if_use_stored_dc_coeff)
+        if (if_use_stored_dc_coeff)
             diff_val = delta_vals(qp);
         else
             delta_vals(qp) = diff_val;
@@ -293,7 +293,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         }
     } // end of the quadrature point qp-loop
     
-    if (!_if_use_stored_dc_coeff)
+    if (!if_use_stored_dc_coeff)
     {
         diff_val = 0.;
         for (unsigned int qp=0; qp<n_qpoints; qp++)
@@ -627,12 +627,12 @@ void EulerSystem::evaluate_recalculate_dc_flag()
     if ((relative_change0 < this->dc_recalculate_tolerance) &&
         (relative_change1 < this->dc_recalculate_tolerance))
     {
-        this->_if_use_stored_dc_coeff = true;
+        this->if_use_stored_dc_coeff = true;
         libMesh::out << "Using stored dc coeff" << std::endl;
     }
     else
     {
-        _if_use_stored_dc_coeff = false;
+        if_use_stored_dc_coeff = false;
         libMesh::out << "Recalculating dc coeff" << std::endl;
     }
     

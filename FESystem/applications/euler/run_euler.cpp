@@ -528,9 +528,6 @@ int main (int argc, char* const argv[])
     
     while (continue_iterations)
     {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        system.evaluate_recalculate_dc_flag();
-#endif
         // A pretty update message
         std::cout << "\n\nSolving time step " << t_step << ", time = "
         << system.time << std::endl;
@@ -642,10 +639,14 @@ int main (int argc, char* const argv[])
         }
 
         // Do one last solve before the time step increment
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        system.if_use_stored_dc_coeff = false;
+#endif
         system.solve();
         system.print_integrated_lift_drag(std::cout);
         system.integrated_force->zero();
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        system.evaluate_recalculate_dc_flag();
         delta_val_system.solution->close();
         delta_val_system.update();
 #endif

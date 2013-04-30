@@ -47,7 +47,7 @@ public:
     _rho_norm_old(1.),
     _rho_norm_curr(1.),
     dc_recalculate_tolerance(1.0e-8),
-    _if_use_stored_dc_coeff(false)
+    if_use_stored_dc_coeff(false)
     {}
     
     void init_data();
@@ -70,17 +70,17 @@ public:
      */
     Real dc_recalculate_tolerance;
     
+    /*!
+     *     flag to tell the system to use the stored discontinuity capturing terms
+     */
+    bool if_use_stored_dc_coeff;
+
 protected:
     
     /*!
      *    Current and old norms of density in the flow-field
      */
     Real _rho_norm_old, _rho_norm_curr;
-
-    /*!
-     *     flag to tell the system to use the stored discontinuity capturing terms
-     */
-    bool _if_use_stored_dc_coeff;
 
     std::vector<unsigned int> vars;
 };
