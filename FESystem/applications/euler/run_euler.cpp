@@ -526,6 +526,7 @@ int main (int argc, char* const argv[])
     // solution of the equations.
     bool continue_iterations = true;
     unsigned int t_step=0, amr_steps = max_adaptivesteps;
+    if (!if_use_amr) amr_steps = 0;
     
     while (continue_iterations)
     {
@@ -688,7 +689,8 @@ int main (int argc, char* const argv[])
         
         // check for termination criteria
         t_step++;
-        if ((t_step > n_timesteps) || (system.rhs->l1_norm() < terminate_tolerance))
+        if (((t_step > n_timesteps) || (system.rhs->l1_norm() < terminate_tolerance)) &&
+            (amr_steps == 0))
         {
             libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
             continue_iterations = false;
