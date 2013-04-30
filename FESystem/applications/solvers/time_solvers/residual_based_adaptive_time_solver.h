@@ -48,7 +48,7 @@ public:
 
     unsigned int n_iters_per_update, _iter_counter;
 
-    Real growth_exponent;
+    Real growth_exponent, min_growth;
 
     Real _t1, _sol_xinf_t1;
 

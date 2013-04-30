@@ -18,6 +18,7 @@ AdaptiveTimeSolver(s),
 n_iters_per_update(10),
 _iter_counter(n_iters_per_update),
 growth_exponent(1.2),
+min_growth(0.25),
 _t1(0.),
 _t2(0.),
 _t3(0.),
@@ -76,7 +77,15 @@ void ResidualBaseAdaptiveTimeSolver::solve()
                 libMesh::out << " Growth factor constrained by max allowable: "
                 << growth_factor << std::endl;
         }
-        
+
+        if (growth_factor < this->min_growth)
+        {
+            growth_factor = this->min_growth;
+            if (!quiet)
+                libMesh::out << " Growth factor constrained by min allowable: "
+                << growth_factor << std::endl;
+        }
+
         this->_system.deltat *= growth_factor;
 
         // look for the maximum and minimum dt

@@ -453,7 +453,8 @@ int main (int argc, char* const argv[])
     timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
     timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
     timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
-    timesolver->max_growth         = infile("timesolver_maxgrowth", 3.0);
+    timesolver->max_growth         = infile("timesolver_maxgrowth", 4.0);
+    timesolver->min_growth         = infile("timesolver_mingrowth", 0.25);
     timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
 
     core_time_solver->theta        = infile("timesolver_theta", 1.0);
