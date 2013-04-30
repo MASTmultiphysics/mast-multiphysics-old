@@ -659,9 +659,16 @@ int main (int argc, char* const argv[])
         
         // Advance to the next timestep in a transient problem
         system.time_solver->advance_timestep();
+        sol_norm = system.rhs->l1_norm();
+        if (((t_step > n_timesteps) || (sol_norm < terminate_tolerance)) &&
+            (amr_steps == 0))
+        {
+            libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
+            continue_iterations = false;
+        }
         
         // Write out this timestep if we're requested to
-        if ((t_step+1)%write_interval == 0)
+        if (((t_step+1)%write_interval == 0) || !continue_iterations)
         {
             std::ostringstream file_name, b_file_name;
             
@@ -690,13 +697,6 @@ int main (int argc, char* const argv[])
         
         // check for termination criteria
         t_step++;
-        sol_norm = system.rhs->l1_norm();
-        if (((t_step > n_timesteps) || (sol_norm < terminate_tolerance)) &&
-            (amr_steps == 0))
-        {
-            libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
-            continue_iterations = false;
-        }
     }
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
