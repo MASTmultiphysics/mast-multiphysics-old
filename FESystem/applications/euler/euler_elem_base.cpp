@@ -414,6 +414,27 @@ void EulerElemBase::init_data ()
     
     integrated_force = new DenseVector<Number>;
     integrated_force->resize(dim);
+    entropy_error = 0.0; total_volume = 0.0;
+    
+    // prepare the variable vector
+    _active_primitive_vars.push_back(RHO_PRIM);
+    _active_primitive_vars.push_back(VEL1);
+    _active_conservative_vars.push_back(RHO_CONS);
+    _active_conservative_vars.push_back(RHOVEL1);
+
+    if (dim > 1)
+    {
+        _active_primitive_vars.push_back(VEL2);
+        _active_conservative_vars.push_back(RHOVEL2);
+    }
+
+    if (dim > 2)
+    {
+        _active_primitive_vars.push_back(VEL3);
+        _active_conservative_vars.push_back(RHOVEL3);
+    }
+    _active_primitive_vars.push_back(TEMP);
+    _active_conservative_vars.push_back(ETOT);
 }
 
 
@@ -575,6 +596,94 @@ EulerElemBase::calculate_advection_flux(const unsigned int calculate_dim,
 
 
 
+void
+EulerElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution& sol,
+                                                        DenseMatrix<Real>& dcons_dprim,
+                                                        DenseMatrix<Real>& dprim_dcons)
+{
+    // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
+    
+    const unsigned int n1 = 2 + dim;
+    //    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
+    //
+    //    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
+    //    FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
+    
+    dcons_dprim.zero();
+    dprim_dcons.zero();
+    
+    const Real u1 = sol.u1,
+    u2 = sol.u2,
+    u3 = sol.u3,
+    rho = sol.rho,
+    k = sol.k,
+    e_tot = sol.e_tot;
+    
+    switch (dim)
+    {
+        case 3:
+        {
+            dcons_dprim(3, 0) = u3;
+            dcons_dprim(3, 3) = rho;
+            
+            dcons_dprim(n1-1, 3) = rho*u3;
+        }
+            
+        case 2:
+        {
+            dcons_dprim(2, 0) = u2;
+            dcons_dprim(2, 2) = rho;
+            
+            dcons_dprim(n1-1, 2) = rho*u2;
+        }
+            
+        case 1:
+        {
+            dcons_dprim(0, 0) = 1.;
+            
+            dcons_dprim(1, 0) = u1;
+            dcons_dprim(1, 1) = rho;
+            
+            dcons_dprim(n1-1, 0) = e_tot;
+            dcons_dprim(n1-1, 1) = rho*u1;
+            dcons_dprim(n1-1, n1-1) = rho*cv;
+        }
+    }
+
+    switch (dim)
+    {
+        case 3:
+        {
+            dprim_dcons(3, 0) = -u3/rho;
+            dprim_dcons(3, 3) = 1./rho;
+            
+            dprim_dcons(n1-1, 3) = -u3/cv/rho;
+        }
+            
+        case 2:
+        {
+            dprim_dcons(2, 0) = -u2/rho;
+            dprim_dcons(2, 2) = 1./rho;
+            
+            dprim_dcons(n1-1, 2) = -u2/cv/rho;
+        }
+            
+        case 1:
+        {
+            dprim_dcons(0, 0) = 1.;
+            
+            dprim_dcons(1, 0) = -u1/rho;
+            dprim_dcons(1, 1) = 1./rho;
+            
+            dprim_dcons(n1-1, 0) = (-e_tot+2*k)/cv/rho;
+            dprim_dcons(n1-1, 1) = -u1/cv/rho;
+            dprim_dcons(n1-1, n1-1) = 1./cv/rho;
+        }
+    }
+
+}
+
+
 
 void
 EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_dim,
@@ -584,10 +693,6 @@ EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_di
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
     const unsigned int n1 = 2 + dim;
-    //    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
-    //
-    //    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
-    //    FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
     
     mat.zero();
     
@@ -717,6 +822,308 @@ EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_di
             break;
     }
 }
+
+
+
+void
+EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable(const unsigned int calculate_dim,
+                                                                                       const PrimitiveSolution& sol,
+                                                                                       std::vector<DenseMatrix<Real> >& mat)
+{
+    const unsigned int n1 = 2 + dim;
+    
+    DenseMatrix<Real> dprim_dcons, tmp_mat;
+    dprim_dcons.resize(n1, n1); tmp_mat.resize(n1, n1);
+
+    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        mat[i_cvar].zero();
+
+    this->calculate_conservative_variable_jacobian(sol, tmp_mat, dprim_dcons);
+    
+    // calculate based on chain rule of the primary variables
+    for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++) // iterate over the primitive variables for chain rule
+    {
+        this->calculate_advection_flux_jacobian_sensitivity_for_primitive_variable(calculate_dim, i_pvar, sol, tmp_mat);
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        {
+            if (fabs(dprim_dcons(i_pvar, i_cvar)) > 0.0)
+                mat[i_cvar].add(dprim_dcons(i_pvar, i_cvar), tmp_mat);
+        }
+    }
+}
+
+
+
+void
+EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_variable(const unsigned int calculate_dim,
+                                                                                    const unsigned int primitive_var,
+                                                                                    const PrimitiveSolution& sol,
+                                                                                    DenseMatrix<Real>& mat)
+{
+    // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
+    
+    const unsigned int n1 = 2 + dim;
+    
+    mat.zero();
+    
+    const Real u1 = sol.u1,
+    u2 = sol.u2,
+    u3 = sol.u3,
+    k = sol.k,
+    e_tot = sol.e_tot;
+    
+    switch (calculate_dim)
+    {
+        case 0:  // Ax
+        {
+            switch (_active_primitive_vars[primitive_var])
+            {
+                case RHO_PRIM:
+                {
+                    // nothing to be done for density; matrix is zero
+                }
+                    break;
+
+                case VEL1:
+                {
+                    switch (dim)
+                    {
+                        case 3:
+                        {
+                            mat(3, 0) = -u3;
+                            mat(3, 3) = 1.0;
+                            
+                            mat(n1-1, 3) = -u3*R/cv;
+                        }
+                            
+                        case 2:
+                        {
+                            mat(2, 0) = -u2;
+                            mat(2, 2) = 1.0;
+                            
+                            mat(n1-1, 2) = -u2*R/cv;
+                        }
+                            
+                        case 1:
+                        {
+                            mat(1, 0) = -u1*(2.0-R/cv);
+                            mat(1, 1) =     (2.0-R/cv);
+                            
+                            mat(n1-1, 0) = (-e_tot*(cv+R)+2.0*R*k + u1*u1*(-cv+R))/cv;
+                            mat(n1-1, 1) = u1*(1.0-2.0*R/cv);
+                            mat(n1-1, n1-1) = (cv+R)/cv;
+                        }
+                            break;
+                    }
+                }
+                    break;
+
+                case VEL2:
+                {
+                    mat(1, 0) =  u2*R/cv;
+                    mat(1, 2) =    -R/cv;
+                    
+                    mat(2, 0) = -u1;
+                    mat(2, 1) = 1.0;
+                    
+                    mat(n1-1, 0) = (-cv+R)*u1*u2/cv;
+                    mat(n1-1, 1) = u2;
+                    mat(n1-1, 2) = -u1*R/cv;
+                }
+                    break;
+
+                case VEL3:
+                {
+                    mat(1, 0) =  u3*R/cv;
+                    mat(1, 3) =    -R/cv;
+                    
+                    mat(3, 0) = -u1;
+                    mat(3, 1) = 1.0;
+                    
+                    mat(n1-1, 0) = (-cv+R)*u1*u3/cv;
+                    mat(n1-1, 1) = u3;
+                    mat(n1-1, 3) = -u1*R/cv;
+                }
+                    break;
+
+                case TEMP:
+                {
+                    // all dimensions have the same format
+                    mat(n1-1, 0) = -u1*(cv+R);
+                    mat(n1-1, 1) = cv+R;
+                }
+                    break;
+
+                default:
+                    libmesh_assert_msg(false, "Invalid primitive variable number");
+                    break;
+            }
+        }
+            break;
+            
+        case 1:  // Ay
+        {
+            switch (_active_primitive_vars[primitive_var])
+            {
+                case RHO_PRIM:
+                {
+                    // nothing to be done for density; matrix is zero
+                }
+                    break;
+                    
+                case VEL1:
+                {
+                    mat(1, 0) = -u2;
+                    mat(1, 2) = 1.0;
+                    
+                    mat(2, 0) =  u1*R/cv;
+                    mat(2, 1) =    -R/cv;
+                    
+                    
+                    mat(n1-1, 0) = (-cv+R)*u1*u2/cv;
+                    mat(n1-1, 1) = -u2*R/cv;
+                    mat(n1-1, 2) = u1;
+                }
+                    break;
+                    
+                case VEL2:
+                {
+                    switch (dim)
+                    {
+                        case 3:
+                        {
+                            mat(3, 0) = -u3;
+                            mat(3, 3) = 1.0;
+                            
+                            mat(n1-1, 3) = -u3*R/cv;
+                        }
+                            
+                        case 1:
+                        case 2:
+                        {
+                            mat(1, 0) = -u1;
+                            mat(1, 1) = 1.0;
+
+                            mat(2, 0) = -u2*(2.0-R/cv);
+                            mat(2, 2) =     (2.0-R/cv);
+                            
+                            mat(n1-1, 0) = (-e_tot*(cv+R)+2.0*R*k + u2*u2*(-cv+R))/cv;
+                            mat(n1-1, 1) = -u1*R/cv;
+                            mat(n1-1, 2) = u2*(1.0-2.0*R/cv);
+                            mat(n1-1, n1-1) = (cv+R)/cv;
+                        }
+                            break;
+                    }
+                }
+                    break;
+                    
+                case VEL3:
+                {
+                    mat(2, 0) =  u3*R/cv;
+                    mat(2, 3) =    -R/cv;
+                    
+                    mat(3, 0) = -u2;
+                    mat(3, 2) = 1.0;
+                    
+                    mat(n1-1, 0) = (-cv+R)*u2*u3/cv;
+                    mat(n1-1, 2) = u3;
+                    mat(n1-1, 3) = -u2*R/cv;
+                }
+                    break;
+                    
+                case TEMP:
+                {
+                    // all dimensions have the same format
+                    mat(n1-1, 0) = -u2*(cv+R);
+                    mat(n1-1, 2) = cv+R;
+                }
+                    break;
+                    
+                default:
+                    libmesh_assert_msg(false, "Invalid primitive variable number");
+                    break;
+            }
+        }
+            break;
+            
+        case 2:  // Az
+        {
+            switch (_active_primitive_vars[primitive_var])
+            {
+                case RHO_PRIM:
+                {
+                    // nothing to be done for density; matrix is zero
+                }
+                    break;
+                    
+                case VEL1:
+                {
+                    mat(1, 0) = -u3;
+                    mat(1, 3) = 1.0;
+
+                    mat(3, 0) = u1*R/cv;
+                    mat(3, 1) =   -R/cv;
+                    
+                    mat(n1-1, 0) = (-cv+R)*u1*u3/cv;
+                    mat(n1-1, 1) = -u3*R/cv;
+                    mat(n1-1, 3) =  u1;
+                }
+                    break;
+                    
+                case VEL2:
+                {
+                    mat(2, 0) = -u3;
+                    mat(2, 3) = 1.0;
+
+                    mat(3, 0) =  u2*R/cv;
+                    mat(3, 2) =    -R/cv;
+
+                    mat(n1-1, 0) = (-cv+R)*u2*u3/cv;
+                    mat(n1-1, 2) = -u3*R/cv;
+                    mat(n1-1, 3) = u2;
+                }
+                    break;
+                    
+                case VEL3:
+                {
+                    mat(1, 0) = -u1;
+                    mat(1, 1) = 1.0;
+
+                    mat(2, 0) = -u2;
+                    mat(2, 2) = 1.0;
+
+                    mat(3, 0) =  -u3*(2.0-R/cv);
+                    mat(3, 3) =      (2.0-R/cv);
+                    
+                    mat(n1-1, 0) = (-e_tot*(cv+R)+2.0*R*k + u3*u3*(-cv+R))/cv;
+                    mat(n1-1, 1) = -u1*R/cv;
+                    mat(n1-1, 2) = -u2*R/cv;
+                    mat(n1-1, 3) = u3*(1.0-2.0*R/cv);
+                    mat(n1-1, n1-1) = (cv+R)/cv;
+                }
+                    break;
+                    
+                case TEMP:
+                {
+                    // all dimensions have the same format
+                    mat(n1-1, 0) = -u3*(cv+R);
+                    mat(n1-1, 3) = cv+R;
+                }
+                    break;
+                    
+                default:
+                    libmesh_assert_msg(false, "Invalid primitive variable number");
+                    break;
+            }
+        }
+            break;
+            
+        default:
+            libmesh_assert_msg(false, "invalid dim");
+            break;
+    }
+}
+
 
 
 void
@@ -1184,7 +1591,7 @@ EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
 void
 EulerElemBase::calculate_artificial_diffusion_operator(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
                                                        const PrimitiveSolution& sol,
-                                                       DenseMatrix<Real>& streamline_operator)
+                                                       DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
 {
     const unsigned int n1 = 2 + dim;
     
@@ -1201,7 +1608,7 @@ EulerElemBase::calculate_artificial_diffusion_operator(const std::vector<unsigne
     a = sol.a,
     dt = c.get_deltat_value();
     
-    streamline_operator.zero();
+    tau.zero();
     
     // calculate the gradients
     switch (dim)
@@ -1240,10 +1647,62 @@ EulerElemBase::calculate_artificial_diffusion_operator(const std::vector<unsigne
     tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
     tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
     
-    streamline_operator(0, 0) = tau_rho;
+    tau(0, 0) = tau_rho;
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-        streamline_operator(1+i_dim, 1+i_dim) = tau_m;
-    streamline_operator(n1-1, n1-1) = tau_e;
+        tau(1+i_dim, 1+i_dim) = tau_m;
+    tau(n1-1, n1-1) = tau_e;
+    
+    // calculation sensitivity of the tau matrix for each conservative variable
+    std::vector<Real> primitive_sens, cons_sens;
+    primitive_sens.resize(n1); cons_sens.resize(n1);
+    // sensitivity wrt primitive variables
+    for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
+    {
+        switch (_active_primitive_vars[i_pvar])
+        {
+            case RHO_PRIM:
+                primitive_sens[i_pvar] = 0.;
+                break;
+
+            case VEL1:
+                primitive_sens[i_pvar] = 2.0*u1/sqrt(2.0*sol.k)/h;
+                break;
+
+            case VEL2:
+                primitive_sens[i_pvar] = 2.0*u2/sqrt(2.0*sol.k)/h;
+                break;
+
+            case VEL3:
+                primitive_sens[i_pvar] = 2.0*u3/sqrt(2.0*sol.k)/h;
+                break;
+
+            case TEMP:
+                primitive_sens[i_pvar] = sqrt(gamma*R/sol.T)/h;
+                break;
+
+            default:
+                break;
+        }
+    }
+    
+    DenseMatrix<Real> dprim_dcons, dcons_dprim;
+    dprim_dcons.resize(n1, n1); dcons_dprim.resize(n1, n1);
+    std::fill(cons_sens.begin(), cons_sens.end(), 0.);
+    
+    // apply chain rule
+    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+    {
+        for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
+            cons_sens[i_cvar] += primitive_sens[i_pvar] * dprim_dcons(i_pvar, i_cvar);
+    }
+    
+    // set the values in the sensitivity matrices
+    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+    {
+        tau_sens[i_cvar].zero();
+        for (unsigned int i=0; i<n1; i++)
+            tau_sens[i_cvar](i,i) = cons_sens[i_cvar];
+    }
 }
 
 
@@ -1319,24 +1778,35 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
 void EulerElemBase::calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
                                                            const DenseMatrix<Real>& B_mat, const std::vector<DenseMatrix<Real> >& dB_mat,
                                                            const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
-                                                           const DenseMatrix<Real>& A_inv_entropy,
-                                                           DenseMatrix<Real>& LS_operator, Real& discontinuity_val )
+                                                           const DenseMatrix<Real>& A_inv_entropy, const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
+                                                           DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens, Real& discontinuity_val )
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
     std::vector<DenseVector<Real> > diff_vec(3);
-    DenseMatrix<Real> tmp_mat, tmp_mat_n1n1, dxi_dX;
-    DenseVector<Real> vec1, vec2;
-    tmp_mat.resize(n1, n2); tmp_mat_n1n1.resize(n1, n1); dxi_dX.resize(dim, dim);
-    vec1.resize(n1); vec2.resize(n1);
+    DenseMatrix<Real> tmp_mat, tau, dxi_dX;
+    DenseVector<Real> vec1, vec2, vec3, vec4_n2;
+    tmp_mat.resize(n1, n2); tau.resize(n1, n1); dxi_dX.resize(dim, dim);
+    vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
     for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
     this->calculate_dxidX (vars, qp, c, dxi_dX);
-    
+
+    FEBase* elem_fe;
+    c.get_element_fe(vars[0], elem_fe);
+    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const unsigned int n_phi = phi.size();
+    std::vector<DenseMatrix<Real> > tau_sens(n1);
+    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        tau_sens[i_cvar].resize(n1, n1);
+
     // contribution of unsteady term
     LS_operator.zero();
+    LS_sens.zero();
     
     vec2.zero();
+    Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
+    this->calculate_artificial_diffusion_operator(vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
@@ -1346,11 +1816,28 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         LS_operator.add(1.0, tmp_mat);  // A_i^T dB/dx_i
         
         dB_mat[i].vector_mult(diff_vec[i], elem_solution);
-        
-        Ai_advection[i].vector_mult(vec1, diff_vec[i]);
-        
-        vec2.add(1.0, vec1); // sum A_i dU/dx_i
+
+        // Bi^T dAi/dalpha tau
+        tau.vector_mult(vec1, vec2);
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        {
+            Ai_sens[i][i_cvar].vector_mult(vec3, vec1);
+            dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
+            for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+        }
+
+        // Bi^T Ai dtau/dalpha
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        {
+            tau_sens[i_cvar].vector_mult(vec1, vec2);
+            Ai_advection[i].vector_mult(vec3, vec1);
+            dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
+            for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+        }
     }
+    
     
     // add the velocity and calculate the numerator of the discontinuity capturing term coefficient
     //vec2 += c.elem_solution; // add velocity TODO: how to get the velocity for all calls to this method
@@ -1380,9 +1867,10 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     else
         discontinuity_val = 0.0;
     
+    discontinuity_val = 0.;
+    
     // scale the LS matrix with the correct factor
-    this->calculate_artificial_diffusion_operator(vars, qp, c, sol, tmp_mat_n1n1);
-    LS_operator.left_multiply(tmp_mat_n1n1);
+    LS_operator.left_multiply(tau);
 }
 
 
@@ -1411,6 +1899,11 @@ void EulerElemBase::print_integrated_lift_drag(std::ostream& o)
 
     o << "Lift: " << std::setw(25) << std::setprecision(14) << integrated_force->dot(lift_vec) << std::endl;
     o << "Drag: " << std::setw(25) << std::setprecision(14) << integrated_force->dot(drag_vec) << std::endl;
+
+    
+    this->system_comm->sum(entropy_error);
+    this->system_comm->sum(total_volume);
+    std::cout << entropy_error << " , " << total_volume << " , " << sqrt(entropy_error/total_volume) << " , " << std::endl;
 }
 
 

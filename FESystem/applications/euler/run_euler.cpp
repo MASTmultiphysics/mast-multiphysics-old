@@ -205,53 +205,56 @@ int main (int argc, char* const argv[])
             MeshTools::Generation::build_square (mesh,
                                                  n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                  n_vertical_divs,
-                                                 0., 1.,
-                                                 0., 1.,
+                                                 0., 1.*x_length,
+                                                 0., 1.*y_length,
                                                  Utility::string_to_enum<ElemType>(elem_type));
             
-            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
-            const Mesh::node_iterator n_end = mesh.nodes_end();
-            Real x_val, y_val;
-            unsigned int x_id, y_id;
-            
-            for (; n_it != n_end; n_it++)
-            {
-                Node& n =  **n_it;
-                
-                x_val = n(0);
-                y_val = n(1);
-                
-                x_id = floor(x_val/mesh_dx);
-                // find the correct id
-                bool found_id = false;
-                unsigned int correct_id = 0;
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = x_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                x_id = correct_id;
-                
-                found_id = false;
-                correct_id = 0;
-                y_id = floor(y_val/mesh_dy);
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = y_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                y_id = correct_id;
-                
-                n(0) = x_points[x_id];
-                n(1) = y_points[y_id];
-            }
-            
+//            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
+//            const Mesh::node_iterator n_end = mesh.nodes_end();
+//            Real x_val, y_val;
+//            unsigned int x_id, y_id;
+//            
+//            // the mesh created by the MeshTool has uniform points. Iterate over all nodes
+//            // and find the corresponding point in the non-uniform distributed points. Use
+//            // that to assign the point location.
+//            for (; n_it != n_end; n_it++)
+//            {
+//                Node& n =  **n_it;
+//                
+//                x_val = n(0);
+//                y_val = n(1);
+//                
+//                x_id = floor(x_val/mesh_dx);
+//                // find the correct id
+//                bool found_id = false;
+//                unsigned int correct_id = 0;
+//                for (unsigned int i=0; i<3; i++)
+//                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
+//                    {
+//                        found_id = true;
+//                        correct_id = x_id+i;
+//                        break;
+//                    }
+//                libmesh_assert(found_id);
+//                x_id = correct_id;
+//                
+//                found_id = false;
+//                correct_id = 0;
+//                y_id = floor(y_val/mesh_dy);
+//                for (unsigned int i=0; i<3; i++)
+//                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
+//                    {
+//                        found_id = true;
+//                        correct_id = y_id+i;
+//                        break;
+//                    }
+//                libmesh_assert(found_id);
+//                y_id = correct_id;
+//                
+//                n(0) = x_points[x_id];
+//                n(1) = y_points[y_id];
+//            }
+//            
         }
         
         else if (dim == 3)
@@ -289,6 +292,10 @@ int main (int argc, char* const argv[])
             const Mesh::node_iterator n_end = mesh.nodes_end();
             Real x_val, y_val, z_val;
             unsigned int x_id, y_id, z_id;
+
+            // the mesh created by the MeshTool has uniform points. Iterate over all nodes
+            // and find the corresponding point in the non-uniform distributed points. Use
+            // that to assign the point location.
             
             for (; n_it != n_end; n_it++)
             {
@@ -387,13 +394,19 @@ int main (int argc, char* const argv[])
             Node& n =  **n_it;
             
             if (dim == 2)
-                if ((n(0) >= x0) && (n(0) <= x1))
-                {
-                    x_val = n(0);
-                    y_val = n(1);
-                    
-                    n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
-                }
+            {
+                x_val = n(0);
+                y_val = n(1);
+                
+                n(1) += (1.0-y_val/y_length) * 0.0625 * exp(-25.*pow(x_val-x_length*0.5,2.0));
+            }
+//                if ((n(0) >= x0) && (n(0) <= x1))
+//                {
+//                    x_val = n(0);
+//                    y_val = n(1);
+//                    
+//                    n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
+//                }
             
             if (dim == 3)
                 if ((n(0) >= x0) && (n(0) <= x1) &&
@@ -488,6 +501,7 @@ int main (int argc, char* const argv[])
     system.print_residuals = infile("print_residuals", false);
     system.print_jacobian_norms = infile("print_jacobian_norms", false);
     system.print_jacobians = infile("print_jacobians", false);
+    //system.verify_analytic_jacobians = 1.0e-3;
     
     // Set the time stepping options
     system.deltat = deltat;
@@ -546,8 +560,6 @@ int main (int argc, char* const argv[])
             delta_val_system.solution->close();
             delta_val_system.update();
 #endif
-            fluid_post.postprocess();
-            
             ErrorVector error;
             
             AutoPtr<ErrorEstimator> error_estimator;
@@ -650,16 +662,17 @@ int main (int argc, char* const argv[])
         system.solve();
         system.print_integrated_lift_drag(std::cout);
         system.integrated_force->zero();
+        system.entropy_error = 0.; system.total_volume = 0.;
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
         system.evaluate_recalculate_dc_flag();
         delta_val_system.solution->close();
         delta_val_system.update();
 #endif
-        fluid_post.postprocess();
-        
+
         // Advance to the next timestep in a transient problem
         system.time_solver->advance_timestep();
-        sol_norm = system.rhs->l1_norm();
+        sol_norm = timesolver->_xdot_linf_approx;
+        libMesh::out << " Convergence monitor: L-infty norm: " << sol_norm << std::endl;
         if (((t_step > n_timesteps) || (sol_norm < terminate_tolerance)) &&
             (amr_steps == 0))
         {
@@ -670,6 +683,8 @@ int main (int argc, char* const argv[])
         // Write out this timestep if we're requested to
         if (((t_step+1)%write_interval == 0) || !continue_iterations)
         {
+            //fluid_post.postprocess();
+
             std::ostringstream file_name, b_file_name;
             
             // We write the file in the ExodusII format.

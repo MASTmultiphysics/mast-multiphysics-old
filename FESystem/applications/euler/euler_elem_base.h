@@ -24,6 +24,9 @@
 
 using namespace libMesh;
 
+enum FluidPrimitiveVars {RHO_PRIM, VEL1, VEL2, VEL3, TEMP };
+enum FluidConservativeVars {RHO_CONS, RHOVEL1, RHOVEL2, RHOVEL3, ETOT };
+
 
 class PrimitiveSolution
 {
@@ -113,6 +116,7 @@ public:
 
     DenseVector<Number>* integrated_force;
     
+    Real entropy_error, total_volume;
 
 protected:
     
@@ -137,10 +141,24 @@ protected:
                                   const PrimitiveSolution& sol,
                                   DenseVector<Real>& flux);
     
+    void calculate_conservative_variable_jacobian(const PrimitiveSolution& sol,
+                                                  DenseMatrix<Real>& dcons_dprim,
+                                                  DenseMatrix<Real>& dprim_dcons);
+
     void calculate_advection_flux_jacobian(const unsigned int calculate_dim,
                                            const PrimitiveSolution& sol,
                                            DenseMatrix<Real>& mat);
     
+    void calculate_advection_flux_jacobian_sensitivity_for_conservative_variable(const unsigned int calculate_dim,
+                                                                                 const PrimitiveSolution& sol,
+                                                                                 std::vector<DenseMatrix<Real> >& mat);
+    
+    
+    void calculate_advection_flux_jacobian_sensitivity_for_primitive_variable(const unsigned int calculate_dim,
+                                                                              const unsigned int primitive_var,
+                                                                              const PrimitiveSolution& sol,
+                                                                              DenseMatrix<Real>& mat);
+
     void calculate_advection_left_eigenvector_and_inverse_for_normal(const PrimitiveSolution& sol,
                                                                      const Point& normal, DenseMatrix<Real>& eig_vals,
                                                                      DenseMatrix<Real>& l_eig_mat, DenseMatrix<Real>& l_eig_mat_inv_tr);
@@ -162,17 +180,22 @@ protected:
     
     void calculate_artificial_diffusion_operator(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
                                                  const PrimitiveSolution& sol,
-                                                 DenseMatrix<Real>& streamline_operator);
+                                                 DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens);
     
     
     void calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
                                                 const DenseMatrix<Real>& B_mat, const std::vector<DenseMatrix<Real> >& dB_mat,
                                                 const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
-                                                const DenseMatrix<Real>& A_inv_entropy,
-                                                DenseMatrix<Real>& LS_operator, Real& discontinuity_val);
+                                                const DenseMatrix<Real>& A_inv_entropy, const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
+                                                DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens, Real& discontinuity_val);
     
     
     unsigned int dim;
+    
+    std::vector<FluidPrimitiveVars> _active_primitive_vars;
+
+    std::vector<FluidConservativeVars> _active_conservative_vars;
+    
     
     const Parallel::Communicator* system_comm;
     

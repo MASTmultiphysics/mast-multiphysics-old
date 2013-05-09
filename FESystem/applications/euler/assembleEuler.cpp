@@ -200,10 +200,10 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     const unsigned int n_qpoints = (c.get_element_qrule())->n_points(), n1 = dim+2;
 
     std::vector<DenseMatrix<Real> > dB_mat(dim), Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat, tmp_mat2;
+    DenseMatrix<Real> LS_mat, LS_sens, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat, tmp_mat2, A_sens;
     DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, conservative_sol, delta_vals;
-    LS_mat.resize(n1, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs); A_inv_entropy.resize(dim+2, dim+2);
-    A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2);
+    LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs);
+    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2); A_sens.resize(n1, n_dofs);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
     delta_vals.resize(n_qpoints);
     for (unsigned int i=0; i<dim; i++)
@@ -211,7 +211,16 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         dB_mat[i].resize(dim+2, n_dofs);
         Ai_advection[i].resize(dim+2, dim+2);
     }
-    
+
+    std::vector<std::vector<DenseMatrix<Real> > > flux_jacobian_sens;
+    flux_jacobian_sens.resize(dim);
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+    {
+        flux_jacobian_sens[i_dim].resize(n1); // number of variables for sensitivity
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+            flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
+    }
+
     
     Real diff_val=0.;
 
@@ -227,12 +236,19 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     
 
     PrimitiveSolution primitive_sol;
+    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const unsigned int n_phi = phi.size();
     
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
-        this->update_solution_at_quadrature_point(vars, qp, c, true, c.elem_solution, conservative_sol, primitive_sol, B_mat);
-        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat, Ai_advection, A_entropy, A_inv_entropy );
+        this->update_solution_at_quadrature_point(vars, qp, c, true, c.elem_solution,
+                                                  conservative_sol, primitive_sol, B_mat);
+        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat,
+                                                  Ai_advection, A_entropy, A_inv_entropy);
+
+        total_volume += JxW[qp];
+        entropy_error += JxW[qp]*pow( primitive_sol.p/p_inf * pow(rho_inf/primitive_sol.rho,gamma) - 1.0, 2);
         
         Ai_Bi_advection.zero();
         
@@ -243,7 +259,12 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             Ai_Bi_advection.add(1.0, tmp_mat);
         }
                 
-        this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat, dB_mat, Ai_advection, Ai_Bi_advection, A_inv_entropy, LS_mat, diff_val);
+        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+            this->calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
+            (i_dim, primitive_sol, flux_jacobian_sens[i_dim]);
+        this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat,
+                                                     dB_mat, Ai_advection, Ai_Bi_advection,
+                                                     A_inv_entropy, flux_jacobian_sens, LS_mat, LS_sens, diff_val);
 
         if (if_use_stored_dc_coeff)
             diff_val = delta_vals(qp);
@@ -271,6 +292,8 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         
         if (request_jacobian && c.elem_solution_derivative)
         {
+            A_sens.zero();
+
             for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             {
                 // Galerkin contribution from the advection flux terms
@@ -284,15 +307,31 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                 dB_mat[i_dim].get_transpose(tmp_mat);
                 tmp_mat.right_multiply(dB_mat[i_dim]);
                 Kmat.add(-JxW[qp]*diff_val, tmp_mat);
+                
+                // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
+                dB_mat[i_dim].vector_mult(tmp_vec2_n1, c.elem_solution);
+                for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+                {
+                    flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1, tmp_vec2_n1);
+                    for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                        A_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                }
             }
             
             // Lease square contribution of flux gradient
             LS_mat.get_transpose(tmp_mat);
-            tmp_mat.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU
+            tmp_mat.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU   (Ai constant)
             Kmat.add(-JxW[qp], tmp_mat);
+            
+            LS_mat.get_transpose(tmp_mat);
+            tmp_mat.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
+            Kmat.add(-JxW[qp], tmp_mat);
+
+            // contribution sensitivity of the LS.tau matrix
+            Kmat.add(-JxW[qp], LS_sens);
         }
     } // end of the quadrature point qp-loop
-    
+
     if (!if_use_stored_dc_coeff)
     {
         diff_val = 0.;
@@ -373,7 +412,8 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
 
     conservative_sol.resize(dim+2);
     tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs); U_vec_interpolated.resize(n1);
-    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1); tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
+    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1);
+    tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
     B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2);
 
     
@@ -537,9 +577,10 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     const unsigned int n_qpoints = (c.get_element_qrule())->n_points(), n1 = dim+2;
     
     std::vector<DenseMatrix<Real> > dB_mat(dim), Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat;
+    DenseMatrix<Real> LS_mat, LS_sens, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat;
     DenseVector<Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol;
-    LS_mat.resize(n1, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs); A_inv_entropy.resize(dim+2, dim+2);
+    LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs); B_mat.resize(dim+2, n_dofs);
+    Ai_Bi_advection.resize(dim+2, n_dofs); A_inv_entropy.resize(dim+2, dim+2);
     A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
     for (unsigned int i=0; i<dim; i++)
@@ -548,6 +589,14 @@ bool EulerSystem::mass_residual (bool request_jacobian,
         Ai_advection[i].resize(dim+2, dim+2);
     }
     
+    std::vector<std::vector<DenseMatrix<Real> > > flux_jacobian_sens;
+    flux_jacobian_sens.resize(dim);
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+    {
+        flux_jacobian_sens[i_dim].resize(n1); // number of variables for sensitivity
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+            flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
+    }
     
     Real diff_val=0.;
     
@@ -556,8 +605,10 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
-        this->update_solution_at_quadrature_point(vars, qp, c, true, c.elem_fixed_solution, conservative_sol, primitive_sol, B_mat);
-        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat, Ai_advection, A_entropy, A_inv_entropy );
+        this->update_solution_at_quadrature_point(vars, qp, c, true, c.elem_fixed_solution,
+                                                  conservative_sol, primitive_sol, B_mat);
+        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat,
+                                                  Ai_advection, A_entropy, A_inv_entropy );
         
         Ai_Bi_advection.zero();
         
@@ -568,7 +619,9 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             Ai_Bi_advection.add(1.0, tmp_mat);
         }
         
-        this->calculate_differential_operator_matrix(vars, qp, c, c.elem_fixed_solution, primitive_sol, B_mat, dB_mat, Ai_advection, Ai_Bi_advection, A_inv_entropy, LS_mat, diff_val);
+        this->calculate_differential_operator_matrix(vars, qp, c, c.elem_fixed_solution, primitive_sol, B_mat, dB_mat,
+                                                     Ai_advection, Ai_Bi_advection, A_inv_entropy,
+                                                     flux_jacobian_sens, LS_mat, LS_sens, diff_val);
         
         //        if (this->if_update_discont_values)
         //            (*this->discontinuity_capturing_value)[i] = diff_val;
