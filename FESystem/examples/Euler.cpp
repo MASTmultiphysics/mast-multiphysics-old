@@ -25,8 +25,8 @@ enum AnalysisCase
 
 
 // speed of sound = 347.2926 m/s
-const FESystemDouble aoa=0.0, rho=1.05, uval=347.2926*4.0, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), u3 =0.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
-const FESystemDouble x_length = 4.5, y_length = 1.00, nonlin_tol = 1.0e-6, fd_delta = 1.0e-7;
+const FESystemDouble aoa=0.0, rho=1.05, uval=347.2926*0.5, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), u3 =0.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
+const FESystemDouble x_length = 3.0, y_length = 0.80, nonlin_tol = 1.0e-10, fd_delta = 1.0e-7;
 const FESystemDouble t_by_c = 0.10, chord = 1.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
@@ -63,9 +63,9 @@ void initMeshParameters()
             x_relative_mesh_size_in_div[2] = 1.0;
             x_relative_mesh_size_in_div[3] = 1.0;
             
-            x_n_subdivs_in_div[0] = 8;
-            x_n_subdivs_in_div[1] = 8;
-            x_n_subdivs_in_div[2] = 8;
+            x_n_subdivs_in_div[0] = 64;
+            x_n_subdivs_in_div[1] = 64;
+            x_n_subdivs_in_div[2] = 64;
 
             y_n_divs = 1;
             y_div_locations.resize(y_n_divs+1);
@@ -78,7 +78,7 @@ void initMeshParameters()
             y_relative_mesh_size_in_div[0] = 1.0;
             y_relative_mesh_size_in_div[1] = 1.0;
             
-            y_n_subdivs_in_div[0] = 24;
+            y_n_subdivs_in_div[0] = 64;
         }
             break;
 
@@ -165,12 +165,13 @@ void modifyMeshForCase(FESystem::Mesh::MeshBase& mesh)
             {
                 for ( ; it!=end; it++)
                 {
-                    if (((*it)->getVal(0) >= x0) && ((*it)->getVal(0) <= x1))
+                    //if (((*it)->getVal(0) >= x0) && ((*it)->getVal(0) <= x1))
                     {
                         x_val = (*it)->getVal(0);
                         y_val = (*it)->getVal(1);
                         
-                        y_val += thickness*(1.0-y_val/y_length)*sin(PI_VAL*(x_val-x0)/chord);
+                        //y_val += thickness*(1.0-y_val/y_length)*sin(PI_VAL*(x_val-x0)/chord);
+                        y_val +=  (1.0-y_val/y_length) * 0.0625 * exp(-25.*pow(x_val-x_length*0.5,2.0));
                         
                         (*it)->setVal(1, y_val);
                     }
@@ -264,7 +265,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, const unsigned int 
             for (unsigned int i=0; i<nx-1; i++)
             {
                 elems[              i]->setTagForBoundary(0, 1);
-                elems[i+(ny-1)*(nx-2)]->setTagForBoundary(2, 2);
+                elems[i+(ny-2)*(nx-1)]->setTagForBoundary(2, 2);
             }
 
             for (unsigned int i=0; i<ny-1; i++)
@@ -282,7 +283,7 @@ void setBoundaryConditionTag(FESystem::Mesh::MeshBase& mesh, const unsigned int 
             for (unsigned int i=0; i<nx-1; i++)
             {
                 elems[              i]->setTagForBoundary(0, 2);
-                elems[i+(ny-1)*(nx-2)]->setTagForBoundary(2, 2);
+                elems[i+(ny-2)*(nx-1)]->setTagForBoundary(2, 2);
             }
             
             for (unsigned int i=0; i<ny-1; i++)
