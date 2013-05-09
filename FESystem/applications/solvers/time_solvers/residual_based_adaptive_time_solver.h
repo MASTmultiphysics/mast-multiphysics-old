@@ -55,6 +55,8 @@ public:
     Real _t2, _sol_xinf_t2;
 
     Real _t3, _sol_xinf_t3;
+    
+    Real _xdot_linf_approx;
 
     bool _first_solve;
 };

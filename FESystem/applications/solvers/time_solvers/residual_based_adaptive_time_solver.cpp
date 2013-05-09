@@ -25,6 +25,7 @@ _t3(0.),
 _sol_xinf_t1(0.),
 _sol_xinf_t2(0.),
 _sol_xinf_t3(0.),
+_xdot_linf_approx(1.0e10),
 _first_solve(true)
 {
     // We start with a reasonable time solver: implicit Euler
@@ -59,6 +60,8 @@ void ResidualBaseAdaptiveTimeSolver::solve()
     _sol_xinf_t1 = _sol_xinf_t2;
     _sol_xinf_t2 = _sol_xinf_t3;
     _sol_xinf_t3 = this->_system.solution->linfty_norm();
+    if ((_t3-_t2) > 0.)
+        _xdot_linf_approx = fabs( (_sol_xinf_t3-_sol_xinf_t2) / (_t3-_t2) );
     
     // if the time step update is needed, do that now
     if (_iter_counter == 0)
