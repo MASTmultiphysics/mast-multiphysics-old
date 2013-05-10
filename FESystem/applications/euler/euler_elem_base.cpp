@@ -1589,9 +1589,59 @@ EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
 
 
 void
-EulerElemBase::calculate_artificial_diffusion_operator(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                                       const PrimitiveSolution& sol,
-                                                       DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
+EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+                                          const PrimitiveSolution& sol,
+                                          DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
+{
+    const unsigned int n1 = 2 + dim;
+
+    Point nvec;
+    DenseMatrix<Real> eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp1;
+    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1);
+    tmp1.resize(n1, n1);
+    
+    Real nval;
+    FEBase* fe;
+    c.get_element_fe(vars[0], fe);
+    std::vector<std::vector<RealVectorValue> > dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
+    
+    for (unsigned int i_node=0; i_node<dphi.size(); i_node++)
+    {
+        nvec = dphi[i_node][qp];
+        nval = nvec.size();
+        if (nval > 0.)
+        {
+            nvec /= nval;
+            this->calculate_advection_left_eigenvector_and_inverse_for_normal(sol, nvec, eig_val, l_eig_vec, l_eig_vec_inv_tr);
+            
+            for (unsigned int i_var=0; i_var<n1; i_var++)
+                l_eig_vec_inv_tr.scale_column(i_var, fabs(eig_val(i_var, i_var))); // L^-T [omaga]
+            
+            l_eig_vec_inv_tr.right_multiply_transpose(l_eig_vec); // A = L^-T [omaga] L^T
+            
+            tmp1.add(nval, l_eig_vec_inv_tr);  // sum_inode  | A_i |
+        }
+    }
+    
+
+    // now invert the tmp matrix to get the tau matrix
+    DenseVector<Real> x,b;
+    x.resize(n1); b.resize(n1);
+    for (unsigned int i_var=0; i_var<n1; i_var++)
+    {
+        tau_sens[i_var].zero(); // zero the sensitivity matrix for now
+        b.zero(); b(i_var) = 1.;
+        tmp1.lu_solve(b, x);
+        tau.set_column(i_var, x);
+    }
+}
+
+
+
+void
+EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+                                             const PrimitiveSolution& sol,
+                                             DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
 {
     const unsigned int n1 = 2 + dim;
     
@@ -1700,6 +1750,7 @@ EulerElemBase::calculate_artificial_diffusion_operator(const std::vector<unsigne
     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
     {
         tau_sens[i_cvar].zero();
+        cons_sens[i_cvar] *= -pow(2.0/h*(u_val+a),-2.0);
         for (unsigned int i=0; i<n1; i++)
             tau_sens[i_cvar](i,i) = cons_sens[i_cvar];
     }
@@ -1806,7 +1857,8 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
-    this->calculate_artificial_diffusion_operator(vars, qp, c, sol, tau, tau_sens);
+    //this->calculate_aliabadi_tau_matrix(vars, qp, c, sol, tau, tau_sens);
+    this->calculate_barth_tau_matrix(vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
@@ -1815,7 +1867,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         tmp_mat.right_multiply(dB_mat[i]);
         LS_operator.add(1.0, tmp_mat);  // A_i^T dB/dx_i
         
-        dB_mat[i].vector_mult(diff_vec[i], elem_solution);
+        dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
 
         // Bi^T dAi/dalpha tau
         tau.vector_mult(vec1, vec2);
@@ -1837,7 +1889,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
                 LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
         }
     }
-    
+        
     
     // add the velocity and calculate the numerator of the discontinuity capturing term coefficient
     //vec2 += c.elem_solution; // add velocity TODO: how to get the velocity for all calls to this method
@@ -1870,7 +1922,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     discontinuity_val = 0.;
     
     // scale the LS matrix with the correct factor
-    LS_operator.left_multiply(tau);
+    LS_operator.left_multiply_transpose(tau);
 }
 
 

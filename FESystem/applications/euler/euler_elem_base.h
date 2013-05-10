@@ -178,9 +178,13 @@ protected:
     void calculate_diffusive_flux_jacobian(unsigned int div_coord, unsigned int flux_coord, DenseMatrix<Real>& mat);
     
     
-    void calculate_artificial_diffusion_operator(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                                 const PrimitiveSolution& sol,
-                                                 DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens);
+    void calculate_barth_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+                                    const PrimitiveSolution& sol,
+                                    DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens);
+    
+    void calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+                                       const PrimitiveSolution& sol,
+                                       DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens);
     
     
     void calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
