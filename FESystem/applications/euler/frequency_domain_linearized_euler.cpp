@@ -440,12 +440,12 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             mat_complex1.vector_mult_transpose(tmp_vec1_n2, flux);
             Fvec.add(JxW[qp], tmp_vec1_n2);
             
-            // update the force vector
-            for (unsigned int i=0; i<dim; i++)
-                (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*delta_p_sol.dp;
-
             if ( request_jacobian && c.get_elem_solution_derivative() )
             {
+                // update the force vector
+                for (unsigned int i=0; i<dim; i++)
+                    (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*delta_p_sol.dp;
+
                 xini = 0.; // for the steady case
                 this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
                 
