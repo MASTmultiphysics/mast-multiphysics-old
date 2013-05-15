@@ -155,7 +155,7 @@ FESystem::Fluid::FluidElementBase::clear()
 
 void
 FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                                              FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
+                                              FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, FESystemDouble p_inf, FESystemDouble T_inf, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
                                               const FESystem::Numerics::VectorBase<FESystemDouble>& vel, FESystemBoolean if_update_dc, std::vector<FESystemDouble>& dc_vals_at_q_pts)
 {
     FESystemAssert0(!this->if_initialized, FESystem::Exception::InvalidState);
@@ -176,8 +176,8 @@ FESystem::Fluid::FluidElementBase::initialize(const FESystem::Mesh::ElemBase& el
     
     // arbitrary reference values
     this->s0 = 0.0;
-    this->p0 = 1.01335e3; // STP
-    this->T0 = 273.0;  // STP
+    this->p0 = p_inf;
+    this->T0 = T_inf;
     
     FESystemUInt dim = this->geometric_elem->getDimension(), n1 = 2 + dim, n2=n1*this->geometric_elem->getNNodes();
     this->interpolated_sol->resize(n1);

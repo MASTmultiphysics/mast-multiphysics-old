@@ -27,7 +27,7 @@ enum AnalysisCase
 // speed of sound = 347.2926 m/s
 const FESystemDouble aoa=0.0, rho=1.05, uval=347.2926*0.5, u1=uval*cos(aoa*PI_VAL/180.0), u2=uval*sin(aoa*PI_VAL/180.0), u3 =0.0, temp = 300.0, cp= 1.003e3, cv = 0.716e3, R=cp-cv, q0 = 0.5*rho*u1*u1, p = R*rho*temp, time_step=1.0e-4, final_t=1.0e6;
 const FESystemDouble x_length = 3.0, y_length = 0.80, nonlin_tol = 1.0e-10, fd_delta = 1.0e-7;
-const FESystemDouble t_by_c = 0.10, chord = 1.5, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
+const FESystemDouble t_by_c = 0.10, chord = 1.0, thickness = 0.5*t_by_c*chord, x0=x_length/2-chord/2, x1=x0+chord; // airfoilf data
 const FESystemDouble rc = 0.5, rx= 1.5, ry = 3.0, theta = 5.0*PI_VAL/12.0; // hypersonic cylinder data
 const FESystemDouble x_init = 0.2, ramp_slope = 0.05; // ramp data
 const FESystemUInt dim = 2, max_nonlin_iters = 0, n_vars=dim+2, dc_freeze_iter_num = 250;
@@ -63,9 +63,9 @@ void initMeshParameters()
             x_relative_mesh_size_in_div[2] = 1.0;
             x_relative_mesh_size_in_div[3] = 1.0;
             
-            x_n_subdivs_in_div[0] = 64;
-            x_n_subdivs_in_div[1] = 64;
-            x_n_subdivs_in_div[2] = 64;
+            x_n_subdivs_in_div[0] = 8;
+            x_n_subdivs_in_div[1] = 8;
+            x_n_subdivs_in_div[2] = 8;
 
             y_n_divs = 1;
             y_div_locations.resize(y_n_divs+1);
@@ -78,7 +78,7 @@ void initMeshParameters()
             y_relative_mesh_size_in_div[0] = 1.0;
             y_relative_mesh_size_in_div[1] = 1.0;
             
-            y_n_subdivs_in_div[0] = 64;
+            y_n_subdivs_in_div[0] = 8;
         }
             break;
 
@@ -487,7 +487,7 @@ public:
             dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
             
             fluid_elem.clear();
-            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, if_update_elem_dc_vals, elem_dc_vals[i]);
+            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, p, temp, elem_sol, elem_vel, if_update_elem_dc_vals, elem_dc_vals[i]);
             
             if (if_calculate_jacobian && !if_fd)
                 evaluateBoundaryConditionData(*elems[i], q_boundary, fluid_elem, sol_inf, momentum_flux_tensor, mass_flux, energy_flux, true, tmp_vec, tmp_mat, bc_vec, bc_mat);
@@ -557,7 +557,7 @@ public:
             
             // now calculate the residual
             fluid_elem.clear();
-            fluid_elem.initialize(elem, fe, q_rule, dt, cp, cv, delta_sol, elem_vel, false, elem_dc); // reuse the specified dc vals
+            fluid_elem.initialize(elem, fe, q_rule, dt, cp, cv, p, temp, delta_sol, elem_vel, false, elem_dc); // reuse the specified dc vals
             
             evaluateBoundaryConditionData(elem, q_boundary, fluid_elem, sol_inf, momentum_flux_tensor, mass_flux, energy_flux, false, tmp_vec, tmp_mat, delta_res, tmp_mat2);
             fluid_elem.calculateResidualVector(tmp_vec);
@@ -650,7 +650,7 @@ public:
             dof_map.getFromGlobalVector(*(elems[i]), vel, elem_vel);
             
             fluid_elem.clear();
-            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, false, elem_dc_vals[i]);
+            fluid_elem.initialize(*(elems[i]), fe, q_rule, dt, cp, cv, p, temp, elem_sol, elem_vel, false, elem_dc_vals[i]);
             
             
             if (elems[i]->checkForTag(4))
@@ -729,7 +729,7 @@ public:
         fe.reinit(*(elems[0]));
         FESystem::Quadrature::initializeQRuleForElem(*(elems[0]), fe, q_rule);
         fluid_elem.clear();
-        fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, false, elem_dc_vals[0]);
+        fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, p, temp, elem_sol, elem_vel, false, elem_dc_vals[0]);
         
         FESystemComplexDouble complex_cp;
         
@@ -803,7 +803,7 @@ public:
         fe.reinit(*(elems[0]));
         FESystem::Quadrature::initializeQRuleForElem(*(elems[0]), fe, q_rule);
         fluid_elem.clear();
-        fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, elem_sol, elem_vel, false, elem_dc_vals[0]);
+        fluid_elem.initialize(*(elems[0]), fe, q_rule, dt, cp, cv, p, temp, elem_sol, elem_vel, false, elem_dc_vals[0]);
 
         FESystemDouble press, entropy, mach, cp;
         
@@ -863,12 +863,12 @@ void calculateEulerQuantities(const FESystem::DegreeOfFreedom::DegreeOfFreedomMa
     FESystemBoolean if_update_dc_vals = true;
     if (iter_num > dc_freeze_iter_num) if_update_dc_vals = false;
     
-//    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
-//                      AssembleElementMatrices(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat));
+    tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, elems.size()),
+                      AssembleElementMatrices(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat));
     
     
-    AssembleElementMatrices a(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat);
-    a.assembleAll();
+//    AssembleElementMatrices a(elems, dt, dof_map, sol, vel, dc_vals, if_update_dc_vals, if_calculate_jacobian, residual, global_stiffness_mat, global_mass_mat);
+//    a.assembleAll();
     
     tbb::parallel_for(tbb::blocked_range<FESystemUInt>(0, nodes.size()),
                       EvaluatePrimitiveVariables(elems, nodes, dt, dof_map, sol, vel, dc_vals,if_update_dc_vals, primitive_sol, additional_sol));

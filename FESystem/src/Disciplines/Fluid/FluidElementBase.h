@@ -42,7 +42,8 @@ namespace FESystem
             
             
             void initialize(const FESystem::Mesh::ElemBase& elem, const FESystem::FiniteElement::FiniteElementBase& fe, const FESystem::Quadrature::QuadratureBase& q_rule,
-                            FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
+                            FESystemDouble dt_val, FESystemDouble cp_val, FESystemDouble cv_val, FESystemDouble p_inf, FESystemDouble T_inf,
+                            const FESystem::Numerics::VectorBase<FESystemDouble>& sol, const FESystem::Numerics::VectorBase<FESystemDouble>& vel,
                             FESystemBoolean if_update_dc, std::vector<FESystemDouble>& dc_vals_at_q_pts);
             
             void calculateMixedBoundaryCondition(const FESystemUInt b_id, const FESystem::Quadrature::QuadratureBase& q_boundary, const FESystem::Numerics::VectorBase<FESystemDouble>& U_vec,
