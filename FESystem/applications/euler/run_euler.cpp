@@ -205,56 +205,57 @@ int main (int argc, char* const argv[])
             MeshTools::Generation::build_square (mesh,
                                                  n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                  n_vertical_divs,
-                                                 0., 1.*x_length,
-                                                 0., 1.*y_length,
+                                                 0., x_length,
+                                                 0., y_length,
                                                  Utility::string_to_enum<ElemType>(elem_type));
+
+
             
-//            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
-//            const Mesh::node_iterator n_end = mesh.nodes_end();
-//            Real x_val, y_val;
-//            unsigned int x_id, y_id;
-//            
-//            // the mesh created by the MeshTool has uniform points. Iterate over all nodes
-//            // and find the corresponding point in the non-uniform distributed points. Use
-//            // that to assign the point location.
-//            for (; n_it != n_end; n_it++)
-//            {
-//                Node& n =  **n_it;
-//                
-//                x_val = n(0);
-//                y_val = n(1);
-//                
-//                x_id = floor(x_val/mesh_dx);
-//                // find the correct id
-//                bool found_id = false;
-//                unsigned int correct_id = 0;
-//                for (unsigned int i=0; i<3; i++)
-//                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
-//                    {
-//                        found_id = true;
-//                        correct_id = x_id+i;
-//                        break;
-//                    }
-//                libmesh_assert(found_id);
-//                x_id = correct_id;
-//                
-//                found_id = false;
-//                correct_id = 0;
-//                y_id = floor(y_val/mesh_dy);
-//                for (unsigned int i=0; i<3; i++)
-//                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
-//                    {
-//                        found_id = true;
-//                        correct_id = y_id+i;
-//                        break;
-//                    }
-//                libmesh_assert(found_id);
-//                y_id = correct_id;
-//                
-//                n(0) = x_points[x_id];
-//                n(1) = y_points[y_id];
-//            }
-//            
+            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
+            const Mesh::node_iterator n_end = mesh.nodes_end();
+            Real x_val, y_val;
+            unsigned int x_id, y_id;
+            
+            // the mesh created by the MeshTool has uniform points. Iterate over all nodes
+            // and find the corresponding point in the non-uniform distributed points. Use
+            // that to assign the point location.
+            for (; n_it != n_end; n_it++)
+            {
+                Node& n =  **n_it;
+                
+                x_val = n(0);
+                y_val = n(1);
+                
+                x_id = floor(x_val/mesh_dx);
+                // find the correct id
+                bool found_id = false;
+                unsigned int correct_id = 0;
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = x_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                x_id = correct_id;
+                
+                found_id = false;
+                correct_id = 0;
+                y_id = floor(y_val/mesh_dy);
+                for (unsigned int i=0; i<3; i++)
+                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
+                    {
+                        found_id = true;
+                        correct_id = y_id+i;
+                        break;
+                    }
+                libmesh_assert(found_id);
+                y_id = correct_id;
+                
+                n(0) = x_points[x_id];
+                n(1) = y_points[y_id];
+            }
         }
         
         else if (dim == 3)
@@ -395,18 +396,52 @@ int main (int argc, char* const argv[])
             
             if (dim == 2)
             {
-                x_val = n(0);
-                y_val = n(1);
+                // this is for sine bump
+                if ((n(0) >= x0) && (n(0) <= x1))
+                {
+                    x_val = n(0);
+                    y_val = n(1);
+                    
+                    n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
+                }
+
+//                // this is for gaussian bump
+//                x_val = n(0);
+//                y_val = n(1);
+//                
+//                n(1) += (1.0-y_val/y_length) * 0.0625 * exp(-25.*pow(x_val-x_length*0.5,2.0));
+
                 
-                n(1) += (1.0-y_val/y_length) * 0.0625 * exp(-25.*pow(x_val-x_length*0.5,2.0));
+//            // this is for ringleb problem
+//            if (dim == 2)
+//            {
+//                x_val = n(0);
+//                if (x_val <= 0.5)
+//                    x_val *= 2.;
+//                else
+//                    x_val = (0.5-x_val)*2.+1.;
+//                
+//                double exp_val = 0.2, x_break=0.7;
+//                if (x_val <= x_break)
+//                    x_val = x_val/x_break*pow(x_break, exp_val);
+//                else
+//                    x_val = pow(x_val,exp_val);
+//                
+//                y_val = n(1);
+//                double kval, qval, aval, gammaval =1.4, rhoval, pval, Jval;
+//                kval = y_val * 0.8 + 0.7; // linear variation from 0.7 to 1.5
+//                qval = x_val * (kval-0.5) + 0.5; // linear variation from 0.5 to kval
+//                aval = sqrt(1.-0.5*(gammaval-1.)*qval*qval);
+//                rhoval = pow(aval, 2./(gammaval-1.));
+//                pval = pow(aval, 2.*gammaval/(gammaval-1.))/gammaval;
+//                Jval = 1./aval + pow(aval,-3.)/3. + pow(aval,-5.)/5. - 0.5*log((1.+aval)/(1.-aval));
+//                
+//                n(1) = sqrt(1.-pow(qval/kval,2.))/kval/rhoval/qval;
+//                if (n(0) > 0.5)
+//                    n(1) *= -1.;
+//                n(0) = (2./kval/kval - 1./qval/qval)/2./rhoval - Jval/2.;
             }
-//                if ((n(0) >= x0) && (n(0) <= x1))
-//                {
-//                    x_val = n(0);
-//                    y_val = n(1);
-//                    
-//                    n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
-//                }
+
             
             if (dim == 3)
                 if ((n(0) >= x0) && (n(0) <= x1) &&
@@ -683,7 +718,7 @@ int main (int argc, char* const argv[])
         // Write out this timestep if we're requested to
         if (((t_step+1)%write_interval == 0) || !continue_iterations)
         {
-            //fluid_post.postprocess();
+            fluid_post.postprocess();
 
             std::ostringstream file_name, b_file_name;
             
