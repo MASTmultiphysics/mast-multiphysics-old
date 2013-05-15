@@ -24,6 +24,8 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/parameters.h"
+#include "libmesh/mesh_function.h"
+#include "libmesh/fem_function_base.h"
 
 
 // Bring in everything from the libMesh namespace
@@ -211,8 +213,18 @@ void FluidPostProcessSystem::init_data()
 {
     const unsigned int dim = this->get_mesh().mesh_dimension();
 
-    const Order order = static_cast<Order>(1);
-    FEFamily fefamily = LAGRANGE;
+    GetPot infile("euler.in");
+    
+    // set parameter values
+    Parameters& params = this->get_equation_systems().parameters;
+    
+    unsigned int o = infile("fe_order", 1);
+    std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
+    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
+
+    
+    const Order order = static_cast<Order>(fmin(2, o));
+
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     u = this->add_variable("u", order, fefamily);
     if (dim > 1)
@@ -330,6 +342,68 @@ Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPri
 
 
 
+class PostProcessFunction : public FEMFunctionBase<Number>
+{
+public:
+    // Constructor
+    PostProcessFunction(MeshFunction& fluid_func, std::vector<std::string>& vars,
+                        Real cp, Real cv, Real p0, Real q0):
+    FEMFunctionBase<Number>(),
+    _fluid_function(fluid_func),
+    _vars(vars), _cp(cp), _cv(cv), _p0(p0), _q0(q0)
+    {}
+    
+    // Destructor
+    virtual ~PostProcessFunction () {}
+    
+    virtual AutoPtr<FEMFunctionBase<Number> > clone () const
+    {return AutoPtr<FEMFunctionBase<Number> >( new PostProcessFunction
+                                              (_fluid_function, _vars, _cp, _cv,
+                                               _p0, _q0) ); }
+    
+    virtual void operator() (const FEMContext& c, const Point& p,
+                             const Real t, DenseVector<Number>& val)
+    {
+        DenseVector<Number> fluid_sol;
+        _fluid_function(p, t, fluid_sol);
+        PrimitiveSolution p_sol;
+        SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+        
+        p_sol.init(c.dim, fluid_sol, _cp, _cv);
+        
+        for (unsigned int i=0; i<_vars.size(); i++)
+            val(i) = get_var_val(_vars[i], p_sol, _p0, _q0);
+    }
+    
+    
+    virtual Number component(const FEMContext& c, unsigned int i_comp,
+                             const Point& p, Real t=0.)
+    {
+        DenseVector<Number> fluid_sol;
+        _fluid_function(p, t, fluid_sol);
+        PrimitiveSolution p_sol;
+        SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+        
+        p_sol.init(c.dim, fluid_sol, _cp, _cv);
+        
+        return get_var_val(_vars[i_comp], p_sol, _p0, _q0);
+    }
+
+    
+    virtual Number operator() (const FEMContext&, const Point& p,
+                               const Real time = 0.)
+    {libmesh_error();}
+    
+private:
+    
+    MeshFunction& _fluid_function;
+    std::vector<std::string>& _vars;
+    Real _cp, _cv, _p0, _q0;
+};
+
+
+
+
 void FluidPostProcessSystem::postprocess()
 {
     // get the solution vector from
@@ -342,38 +416,59 @@ void FluidPostProcessSystem::postprocess()
     const NumericVector<Number>& euler_sol = (*euler.solution.get());
     NumericVector<Number>& local_sol = (*this->solution.get());
     
-    MeshBase& m = this->get_mesh();
+//    MeshBase& m = this->get_mesh();
+//    
+    std::vector<unsigned int> euler_vars(euler.n_vars());
+    std::vector<std::string> post_process_var_names(this->n_vars());
+
+    for (unsigned int i=0; i<euler_vars.size(); i++)
+        euler_vars[i] = i;
+    for (unsigned int i=0; i<this->n_vars(); i++)
+        post_process_var_names[i] = this->variable_name(i);
     
-    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());
-    MeshBase::node_iterator n_end       = m.pid_nodes_end(libMesh::processor_id());
+    AutoPtr<MeshFunction> mesh_function
+    (new MeshFunction(this->get_equation_systems(), euler_sol,
+                      euler.get_dof_map(), euler_vars));
+    mesh_function->init();
     
-    PrimitiveSolution p_sol;
-    SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
-    DenseVector<Real> sol; sol.resize(euler.n_vars());
-    DenseVector<Number> delta_sol; delta_sol.resize(euler.n_vars());
+    AutoPtr<FEMFunctionBase<Number> > post_process_function
+    (new PostProcessFunction(*mesh_function, post_process_var_names, euler.cp, euler.cv,
+                             euler.p_inf, euler.q0_inf));
     
-    for ( ; n_begin != n_end; n_begin++)
-    {
-        p_sol.zero();
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
-            sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
-        p_sol.init(m.mesh_dimension(), sol, euler.cp, euler.cv);
-        // now init the values
-        for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
-            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_var_val(this->variable_name(i_var), p_sol, euler.p_inf, euler.q0_inf));
-#else //LIBMESH_USE_COMPLEX_NUMBERS
-        euler.get_infinity_vars(sol);
-        p_sol.init(m.mesh_dimension(), sol, euler.cp, euler.cv);
-        for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
-            delta_sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
-        delta_p_sol.zero();
-        delta_p_sol.init(p_sol, delta_sol);
-        // now init the values
-        for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
-            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_complex_var_val(this->variable_name(i_var), delta_p_sol, euler.q0_inf));
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
-    }
+    this->project_solution(post_process_function.get());
+    
+    
+    //    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());
+//    MeshBase::node_iterator n_end       = m.pid_nodes_end(libMesh::processor_id());
+//    
+//    PrimitiveSolution p_sol;
+//    SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+//    DenseVector<Real> sol; sol.resize(euler.n_vars());
+//    DenseVector<Number> delta_sol; delta_sol.resize(euler.n_vars());
+//    
+//    for ( ; n_begin != n_end; n_begin++)
+//    {
+//        p_sol.zero();
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//        for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
+//            sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
+//        p_sol.init(m.mesh_dimension(), sol, euler.cp, euler.cv);
+//        p_sol.print(std::cout);
+//        // now init the values
+//        for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
+//            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_var_val(this->variable_name(i_var), p_sol, euler.p_inf, euler.q0_inf));
+//#else //LIBMESH_USE_COMPLEX_NUMBERS
+//        euler.get_infinity_vars(sol);
+//        p_sol.init(m.mesh_dimension(), sol, euler.cp, euler.cv);
+//        for (unsigned int i_var=0; i_var<euler.n_vars(); i_var++)
+//            delta_sol(i_var) = euler_sol.el((*n_begin)->dof_number(euler.number(), i_var, 0));
+//        delta_p_sol.zero();
+//        delta_p_sol.init(p_sol, delta_sol);
+//        // now init the values
+//        for (unsigned int i_var=0; i_var<this->n_vars(); i_var++)
+//            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_complex_var_val(this->variable_name(i_var), delta_p_sol, euler.q0_inf));
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//    }
     
     local_sol.close();
     this->update();
@@ -1857,8 +1952,8 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
-    //this->calculate_aliabadi_tau_matrix(vars, qp, c, sol, tau, tau_sens);
-    this->calculate_barth_tau_matrix(vars, qp, c, sol, tau, tau_sens);
+    this->calculate_aliabadi_tau_matrix(vars, qp, c, sol, tau, tau_sens);
+    //this->calculate_barth_tau_matrix(vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
