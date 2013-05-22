@@ -48,6 +48,8 @@ PrimitiveSolution::zero()
     cp = 0.; cv = 0.;
     rho = 0.; u1 = 0.; u2 = 0.; u3 = 0.; T = 0.; p = 0.; a = 0.; e_tot = 0.; k = 0.;
     entropy = 0.; mach = 0.;
+    // viscous values
+    Pr = 0.72; k_thermal = 0.; mu = 0.; lambda = 0.;
 }
 
 
@@ -90,6 +92,11 @@ void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &co
     a = sqrt(gamma*R*T);
     mach = sqrt(2.0*k)/a;
     entropy = log(p/pow(rho,gamma));
+    
+    // viscous quantities
+    mu = 1.458e-6 * pow(T, 1.5)/(T+110.4);
+    lambda = -2./3.*mu;
+    k_thermal = mu*cp/Pr;
 }
 
 
@@ -116,7 +123,12 @@ PrimitiveSolution::print(std::ostream& out) const
     << std::setw(15) <<  " p: " << p << std::endl
     << std::setw(15) <<  " e_tot: " << e_tot << std::endl
     << std::setw(15) <<  " k: " << k << std::endl
-    << std::setw(15) <<  " entropy: " << entropy << std::endl << std::endl;
+    << std::setw(15) <<  " entropy: " << entropy << std::endl 
+    << std::setw(15) <<  " Pr: " << Pr << std::endl
+    << std::setw(15) <<  " mu: " << mu << std::endl
+    << std::setw(15) <<  " lambda: " << lambda << std::endl
+    << std::setw(15) <<  " k_thermal: " << k_thermal << std::endl << std::endl;
+    
 }
 
 
@@ -414,10 +426,7 @@ void FluidPostProcessSystem::postprocess()
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 
     const NumericVector<Number>& euler_sol = (*euler.solution.get());
-    NumericVector<Number>& local_sol = (*this->solution.get());
     
-//    MeshBase& m = this->get_mesh();
-//    
     std::vector<unsigned int> euler_vars(euler.n_vars());
     std::vector<std::string> post_process_var_names(this->n_vars());
 
@@ -438,7 +447,7 @@ void FluidPostProcessSystem::postprocess()
     this->project_solution(post_process_function.get());
     
     
-    //    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());
+//    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());
 //    MeshBase::node_iterator n_end       = m.pid_nodes_end(libMesh::processor_id());
 //    
 //    PrimitiveSolution p_sol;
@@ -469,8 +478,6 @@ void FluidPostProcessSystem::postprocess()
 //            local_sol.set((*n_begin)->dof_number(this->number(), i_var, 0), get_complex_var_val(this->variable_name(i_var), delta_p_sol, euler.q0_inf));
 //#endif // LIBMESH_USE_COMPLEX_NUMBERS
 //    }
-    
-    local_sol.close();
     this->update();
 }
 
@@ -497,6 +504,84 @@ void EulerElemBase::init_data ()
     cp = infile("cp",1.003e3);
     cv = infile("cv",0.716e3);
     
+    // check if the simulation is viscous or inviscid
+    _if_viscous = infile("if_viscous", false);
+
+    // read the boundary conditions
+    unsigned int n_bc, bc_id;
+    // first the inviscid conditions
+    // slip wall bc
+    n_bc = infile("n_slip_wall_bc", 0);
+    if (n_bc > 0)
+    {
+        for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+        {
+            bc_id = infile("slip_wall_bc", 0, i_bc);
+            _boundary_condition.insert
+            (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+             (bc_id, SLIP_WALL));
+        }
+    }
+    
+    
+    // far field bc
+    n_bc = infile("n_far_field_bc", 0);
+    if (n_bc > 0)
+    {
+        for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+        {
+            bc_id = infile("far_field_bc", 0, i_bc);
+            _boundary_condition.insert
+            (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+             (bc_id, FAR_FIELD));
+        }
+    }
+    
+    // now the viscous boundary conditions
+    if (_if_viscous)
+    {
+        // no-slip wall
+        n_bc = infile("n_no_slip_bc", 0);
+        if (n_bc > 0)
+        {
+            for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+            {
+                bc_id = infile("no_slip_bc", 0, i_bc);
+                _boundary_condition.insert
+                (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+                 (bc_id, NO_SLIP_WALL));
+            }
+        }
+
+        // isothermal bc
+        n_bc = infile("n_isothermal_bc", 0);
+        if (n_bc > 0)
+        {
+            for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+            {
+                bc_id = infile("isothermal_bc", 0, i_bc);
+                _boundary_condition.insert
+                (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+                 (bc_id, ISOTHERMAL));
+            }
+        }
+
+        // adiabatic wall
+        n_bc = infile("n_adiabatic_bc", 0);
+        if (n_bc > 0)
+        {
+            for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+            {
+                bc_id = infile("adiabatic_bc", 0, i_bc);
+                _boundary_condition.insert
+                (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+                 (bc_id, ADIABATIC));
+            }
+        }
+    }
+    
+
+    // now calculate the necessary properties
     gamma = cp/cv;
     R = cp-cv;
     a_inf = sqrt(gamma*R*temp_inf);
@@ -560,10 +645,12 @@ void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, 
                                                         const bool if_elem_domain, const DenseVector<Real>& elem_solution,
                                                         DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
-                                                        DenseMatrix<Real>& B_mat)
+                                                        DenseMatrix<Real>& B_mat, std::vector<DenseMatrix<Real> >& dB_mat)
 {
     conservative_sol.zero();
     B_mat.zero();
+    for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
+        dB_mat[ i_dim ].zero();
     
     FEBase* fe;
 
@@ -579,43 +666,18 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
 
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
             B_mat( i_var, i_var*n_phi+i_nd ) = phi[i_nd][qp];
+        
+        const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
+        
+        for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
+            for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+                dB_mat[i_dim]( i_var, i_var*n_phi+i_nd ) = dphi[i_nd][qp](i_dim);
     }
     
     B_mat.vector_mult( conservative_sol, elem_solution );
     
     primitive_sol.zero();
     primitive_sol.init(dim, conservative_sol, cp, cv);
-}
-
-
-
-
-void EulerElemBase::update_jacobian_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, PrimitiveSolution& primitive_sol,
-                                                        std::vector<DenseMatrix<Real> >& dB_mat,
-                                                        std::vector<DenseMatrix<Real> >& Ai_advection,
-                                                        DenseMatrix<Real>& A_entropy, DenseMatrix<Real>& A_inv_entropy )
-{
-    for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
-        dB_mat[ i_dim ].zero();
-    
-    FEBase* fe;
-
-    for ( unsigned int i_var=0; i_var<c.n_vars(); i_var++ )
-    {
-        c.get_element_fe(vars[0], fe); // assuming that all variables have same interpolation
-        
-        const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
-        const unsigned int n_phi = dphi.size();
-
-        for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
-            for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-                dB_mat[i_dim]( i_var, i_var*n_phi+i_nd ) = dphi[i_nd][qp](i_dim);
-    }
-    
-    for ( unsigned int i_dim=0; i_dim < dim; i_dim++)
-        this->calculate_advection_flux_jacobian ( i_dim, primitive_sol, Ai_advection[i_dim] );
-    
-    this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy, A_inv_entropy );
 }
 
 
@@ -688,6 +750,73 @@ EulerElemBase::calculate_advection_flux(const unsigned int calculate_dim,
             break;
     }
 }
+
+
+
+
+void
+EulerElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
+                                        const PrimitiveSolution& sol,
+                                        const DenseMatrix<Real>& stress_tensor,
+                                        const DenseVector<Real>& temp_gradient,
+                                        DenseVector<Real>& flux)
+{
+    const unsigned int n1 = 2 + dim;
+    
+    DenseVector<Real> uvec;
+    uvec.resize(3);
+    uvec(0) = sol.u1;
+    uvec(1) = sol.u2;
+    uvec(2) = sol.u3;
+    
+    flux.zero();
+    
+    // the momentum flux is obtained from the stress tensor
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+    {
+        flux(1+i_dim) = stress_tensor(calculate_dim, i_dim); // tau_ij
+
+        flux(n1-1) =
+        (sol.k_thermal * temp_gradient(i_dim) +
+         uvec(i_dim) * stress_tensor(calculate_dim, i_dim));
+    }
+}
+
+
+
+void
+EulerElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
+                                           const std::vector<DenseMatrix<Real> >& dB_mat,
+                                           const DenseMatrix<Real>& dprim_dcons,
+                                           const PrimitiveSolution& psol,
+                                           DenseMatrix<Real>& stress_tensor,
+                                           DenseVector<Real>& temp_gradient)
+{
+    const unsigned int n1 = dim+2;
+    
+    DenseVector<Real> dprim_dx, dcons_dx;
+    dprim_dx.resize(n1); dcons_dx.resize(n1);
+    
+    stress_tensor.zero();
+    temp_gradient.zero();
+    
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+    {
+        dB_mat[i_dim].vector_mult(dcons_dx, elem_sol); // dUcons/dx_i
+        dprim_dcons.vector_mult(dprim_dx, dcons_dx); // dUprim/dx_i
+
+        for (unsigned int j_dim=0; j_dim<dim; j_dim++)
+        {
+            stress_tensor(i_dim, j_dim) += psol.mu * dprim_dx(j_dim+1); // mu * duj/dxi
+            stress_tensor(j_dim, i_dim) += psol.mu * dprim_dx(j_dim+1); // mu * dui/dxj
+
+            stress_tensor(j_dim, j_dim) += psol.lambda * dprim_dx(i_dim+1);  // + delta_ij lambda duk/dxk
+        }
+
+        temp_gradient(i_dim) = dprim_dx(n1-1); // dT/dx_i
+    }
+}
+
 
 
 
@@ -914,6 +1043,221 @@ EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_di
             
         default:
             libmesh_assert_msg(false, "invalid dim");
+            break;
+    }
+}
+
+
+
+
+
+void
+EulerElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
+                                                 const unsigned int deriv_dim,
+                                                 const PrimitiveSolution& sol,
+                                                 DenseMatrix<Real>& mat)
+{
+    const unsigned int n1 = 2 + dim;
+    
+    mat.zero();
+    
+    const Real rho = sol.rho,
+    u1 = sol.u1,
+    u2 = sol.u2,
+    u3 = sol.u3,
+    k = sol.k,
+    e_tot = sol.e_tot,
+    mu = sol.mu,
+    lambda = sol.lambda,
+    kth = sol.k_thermal;
+    
+    switch (flux_dim)
+    {
+        case 0:
+        {
+            switch (deriv_dim)
+            {
+                case 0: // K11
+                {
+                    switch (dim)
+                    {
+                        case 3:
+                        {
+                            mat(3,0) = -u3*mu/rho;
+                            mat(3,3) = mu/rho;
+                            
+                            mat(n1-1,3) = u3*(-kth+cv*mu)/cv/rho;
+                        }
+                            
+                        case 2:
+                        {
+                            mat(2,0) = -u2*mu/rho;
+                            mat(2,2) = mu/rho;
+                            
+                            mat(n1-1,2) = u2*(-kth+cv*mu)/cv/rho;
+                        }
+                            
+                        case 1:
+                        {
+                            mat(1,0) = -u1*(lambda+2.*mu)/rho;
+                            mat(1,1) = (lambda+2.*mu)/rho;
+                            
+                            mat(n1-1,0) = (kth*(2.*k-e_tot)-cv*(2.*k*mu+u1*u1*(mu+lambda)))/cv/rho;
+                            mat(n1-1,1) = u1*(-kth+cv*(lambda+2.*mu))/cv/rho;
+                            mat(n1-1,n1-1) = kth/cv/rho;
+                        }
+                    }
+                }
+                    break;
+
+                case 1: // K12
+                {
+                    mat(1,0) = -u2*lambda/rho;
+                    mat(1,2) = lambda/rho;
+
+                    mat(2,0) = -u1*mu/rho;
+                    mat(2,1) = mu/rho;
+                    
+                    mat(n1-1,0) = -u1*u2*(lambda+mu)/rho;
+                    mat(n1-1,1) = u2*mu/rho;
+                    mat(n1-1,2) = u1*lambda/rho;
+                }
+                    break;
+
+                case 2: // K13
+                {
+                    mat(1,0) = -u3*lambda/rho;
+                    mat(1,3) = lambda/rho;
+                    
+                    mat(3,0) = -u1*mu/rho;
+                    mat(3,1) = mu/rho;
+                    
+                    mat(n1-1,0) = -u1*u3*(lambda+mu)/rho;
+                    mat(n1-1,1) = u3*mu/rho;
+                    mat(n1-1,3) = u1*lambda/rho;
+                }
+                    break;
+            }
+        }
+            break;
+
+        case 1:
+        {
+            switch (deriv_dim)
+            {
+                case 0: // K21
+                {
+                    mat(1,0) = -u2*mu/rho;
+                    mat(1,2) = mu/rho;
+                    
+                    mat(2,0) = -u1*lambda/rho;
+                    mat(2,1) = lambda/rho;
+                    
+                    mat(n1-1,0) = -u1*u2*(lambda+mu)/rho;
+                    mat(n1-1,1) = u2*lambda/rho;
+                    mat(n1-1,2) = u1*mu/rho;
+                }
+                    break;
+                
+                case 1: // K22
+                {
+                    switch (dim)
+                    {
+                        case 3:
+                        {
+                            mat(3,0) = -u3*mu/rho;
+                            mat(3,3) = mu/rho;
+                            
+                            mat(n1-1,3) = u3*(-kth+cv*mu)/cv/rho;
+                        }
+                            
+                        case 2:
+                        case 1:
+                        {
+                            mat(1,0) = -u1*mu/rho;
+                            mat(1,1) = mu/rho;
+
+                            mat(2,0) = -u2*(lambda+2.*mu)/rho;
+                            mat(2,2) = (lambda+2.*mu)/rho;
+                            
+                            mat(n1-1,0) = (kth*(2.*k-e_tot)-cv*(2.*k*mu+u2*u2*(mu+lambda)))/cv/rho;
+                            mat(n1-1,1) = u1*(-kth+cv*mu)/cv/rho;
+                            mat(n1-1,2) = u2*(-kth+cv*(lambda+2.*mu))/cv/rho;
+                            mat(n1-1,n1-1) = kth/cv/rho;
+                        }
+                    }
+                }
+                    break;
+                    
+                case 2: // K23
+                {
+                    mat(2,0) = -u3*lambda/rho;
+                    mat(2,3) = lambda/rho;
+                    
+                    mat(3,0) = -u2*mu/rho;
+                    mat(3,2) = mu/rho;
+                    
+                    mat(n1-1,0) = -u2*u3*(lambda+mu)/rho;
+                    mat(n1-1,2) = u3*mu/rho;
+                    mat(n1-1,3) = u2*lambda/rho;
+                }
+                    break;
+            }
+        }
+            break;
+
+        case 2:
+        {
+            switch (deriv_dim)
+            {
+                case 0: // K31
+                {
+                    mat(1,0) = -u3*mu/rho;
+                    mat(1,3) = mu/rho;
+                    
+                    mat(3,0) = -u1*lambda/rho;
+                    mat(3,1) = lambda/rho;
+                    
+                    mat(n1-1,0) = -u1*u3*(lambda+mu)/rho;
+                    mat(n1-1,1) = u3*lambda/rho;
+                    mat(n1-1,3) = u1*mu/rho;
+                }
+                    break;
+                    
+                case 1: // K32
+                {
+                    mat(2,0) = -u3*mu/rho;
+                    mat(2,3) = mu/rho;
+                    
+                    mat(3,0) = -u2*lambda/rho;
+                    mat(3,2) = lambda/rho;
+                    
+                    mat(n1-1,0) = -u2*u3*(lambda+mu)/rho;
+                    mat(n1-1,2) = u3*lambda/rho;
+                    mat(n1-1,3) = u2*mu/rho;
+                }
+                    break;
+
+                case 2: // K33
+                {
+                    mat(1,0) = -u1*mu/rho;
+                    mat(1,1) = mu/rho;
+                    
+                    mat(2,0) = -u2*mu/rho;
+                    mat(2,2) = mu/rho;
+
+                    mat(3,0) = -u3*(lambda+2.*mu)/rho;
+                    mat(3,3) = (lambda+2.*mu)/rho;
+                    
+                    mat(n1-1,0) = (kth*(2.*k-e_tot)-cv*(2.*k*mu+u3*u3*(mu+lambda)))/cv/rho;
+                    mat(n1-1,1) = u1*(-kth+cv*mu)/cv/rho;
+                    mat(n1-1,2) = u2*(-kth+cv*mu)/cv/rho;
+                    mat(n1-1,3) = u3*(-kth+cv*(lambda+2.*mu))/cv/rho;
+                    mat(n1-1,n1-1) = kth/cv/rho;
+                }
+                    break;
+            }
+        }
             break;
     }
 }
@@ -1789,8 +2133,16 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
     
     // now set the value of streamwise dissipation
     tau_rho = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
-    tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
-    tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
+    if (!_if_viscous)
+    {
+        tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
+        tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2));
+    }
+    else
+    {
+        tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2) + pow(4.0*sol.mu/sol.rho/h/h, 2));
+        tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2)+ pow(4.0*sol.k_thermal/sol.rho/cp/h/h, 2));
+    }
     
     tau(0, 0) = tau_rho;
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -1921,7 +2273,8 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
 }
 
 
-void EulerElemBase::calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
+void EulerElemBase::calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+                                                           const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
                                                            const DenseMatrix<Real>& B_mat, const std::vector<DenseMatrix<Real> >& dB_mat,
                                                            const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
                                                            const DenseMatrix<Real>& A_inv_entropy, const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
@@ -1964,6 +2317,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         
         dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
 
+        // sensitivity of the LS operator times strong form of residual
         // Bi^T dAi/dalpha tau
         tau.vector_mult(vec1, vec2);
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
@@ -1984,7 +2338,9 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
                 LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
         }
     }
-        
+    
+    
+    // TODO: divergence of diffusive flux
     
     // add the velocity and calculate the numerator of the discontinuity capturing term coefficient
     //vec2 += c.elem_solution; // add velocity TODO: how to get the velocity for all calls to this method
@@ -2013,8 +2369,6 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         discontinuity_val = sqrt(discontinuity_val/val1);
     else
         discontinuity_val = 0.0;
-    
-    discontinuity_val = 0.;
     
     // scale the LS matrix with the correct factor
     LS_operator.left_multiply_transpose(tau);

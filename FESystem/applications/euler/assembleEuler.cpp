@@ -18,6 +18,10 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/parameters.h"
 #include "libmesh/quadrature.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/zero_function.h"
+#include "libmesh/dirichlet_boundaries.h"
+
 
 
 // Bring in everything from the libMesh namespace
@@ -134,6 +138,38 @@ void EulerSystem::init_data ()
     this->print_jacobians = infile("print_jacobians", false);
     this->print_element_jacobians = infile("print_element_jacobians", false);
     
+    // initialize the Dirichlet boundary conditions
+    std::multimap<unsigned, FluidBoundaryConditionType>::const_iterator
+    bc_it = _boundary_condition.begin(), bc_end = _boundary_condition.end();
+    
+    std::set<boundary_id_type> no_slip_boundary, isothermal_boundary;
+    
+    for ( ; bc_it!=bc_end; bc_it++)
+    {
+        switch (bc_it->second)
+        {
+            case NO_SLIP_WALL: // rho vi = 0
+                no_slip_boundary.insert(bc_it->first);
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
+    if (_if_viscous && (no_slip_boundary.size() > 0))
+    {
+        // Dirichlet Boundary condition for the no-slip wall
+        ZeroFunction<Real> zero_function;
+        std::vector<unsigned int> rho_ui_vars(dim);
+        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+            rho_ui_vars[i_dim] = vars[i_dim+1];
+        
+        this->get_dof_map().add_dirichlet_boundary(DirichletBoundary(no_slip_boundary, rho_ui_vars,
+                                                                     &zero_function));
+    }
+
+    
     // Do the parent's initialization after variables and boundary constraints are defined
     FEMSystem::init_data();
 }
@@ -153,6 +189,8 @@ void EulerSystem::init_context(DiffContext &context)
         elem_fe[i]->get_phi();
         elem_fe[i]->get_dphi();
         elem_fe[i]->get_xyz();
+        if (_if_viscous)
+            elem_fe[i]->get_d2phi();
     }
     
     std::vector<FEBase*> elem_side_fe(dim+2);
@@ -163,6 +201,8 @@ void EulerSystem::init_context(DiffContext &context)
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
         elem_fe[i]->get_xyz();
+        if (_if_viscous)
+            elem_fe[i]->get_dphi();
     }
 }
 
@@ -200,12 +240,18 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     const unsigned int n_qpoints = (c.get_element_qrule())->n_points(), n1 = dim+2;
 
     std::vector<DenseMatrix<Real> > dB_mat(dim), Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, LS_sens, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat, tmp_mat2, A_sens;
-    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, conservative_sol, delta_vals;
+    DenseMatrix<Real> LS_mat, LS_sens, B_mat, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat, tmp_mat2, A_sens,
+    stress_tensor, dprim_dcons, dcons_dprim;
+    
+    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, conservative_sol, delta_vals, temp_grad;
+    
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs); B_mat.resize(dim+2, n_dofs); Ai_Bi_advection.resize(dim+2, n_dofs);
     A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2); tmp_mat.resize(dim+2, dim+2); A_sens.resize(n1, n_dofs);
+    stress_tensor.resize(dim, dim); dprim_dcons.resize(dim+2, dim+2); dcons_dprim.resize(dim+2, dim+2);
+    
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
-    delta_vals.resize(n_qpoints);
+    delta_vals.resize(n_qpoints); temp_grad.resize(dim);
+    
     for (unsigned int i=0; i<dim; i++)
     {
         dB_mat[i].resize(dim+2, n_dofs);
@@ -234,7 +280,6 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             delta_vals(qp) = diff_val;
     }
     
-
     PrimitiveSolution primitive_sol;
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = phi.size();
@@ -243,12 +288,22 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     {
         // first update the variables at the current quadrature point
         this->update_solution_at_quadrature_point(vars, qp, c, true, c.elem_solution,
-                                                  conservative_sol, primitive_sol, B_mat);
-        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat,
-                                                  Ai_advection, A_entropy, A_inv_entropy);
+                                                  conservative_sol, primitive_sol,
+                                                  B_mat, dB_mat);
 
-        total_volume += JxW[qp];
-        entropy_error += JxW[qp]*pow( primitive_sol.p/p_inf * pow(rho_inf/primitive_sol.rho,gamma) - 1.0, 2);
+        for ( unsigned int i_dim=0; i_dim < dim; i_dim++)
+            this->calculate_advection_flux_jacobian ( i_dim, primitive_sol, Ai_advection[i_dim] );
+        
+        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy, A_inv_entropy );
+
+
+        if (_if_viscous)
+        {
+            // stress tensor and temperature gradient
+            this->calculate_conservative_variable_jacobian(primitive_sol, dcons_dprim, dprim_dcons);
+            this->calculate_diffusion_tensors(c.elem_solution, dB_mat, dprim_dcons,
+                                              primitive_sol, stress_tensor, temp_grad);
+        }
         
         Ai_Bi_advection.zero();
         
@@ -278,20 +333,34 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^adv_i
             Fvec.add(JxW[qp], tmp_vec3_n2);
             
+            if (_if_viscous)
+            {
+                // Galerkin contribution from the diffusion flux terms
+                this->calculate_diffusion_flux(i_dim, primitive_sol, stress_tensor, temp_grad, flux); // F^diff_i
+                dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^diff_i
+                Fvec.add(-JxW[qp], tmp_vec3_n2);
+            }
+            
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.elem_solution);
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
             Fvec.add(-JxW[qp]*diff_val, tmp_vec3_n2);
         }
         
-        // Least square contribution from flux
+        // Least square contribution from divergence of advection flux
         Ai_Bi_advection.vector_mult(flux, c.elem_solution); // d F^adv_i / dxi
         LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau F^adv_i
         Fvec.add(-JxW[qp], tmp_vec3_n2);
         
+        // Least square contribution from divergence of diffusion flux
+        // TODO: this requires a 2nd order differential of the flux
+        
         
         if (request_jacobian && c.elem_solution_derivative)
         {
+            total_volume += JxW[qp];
+            entropy_error +=  JxW[qp] * pow((primitive_sol.p/p_inf * pow(rho_inf/primitive_sol.rho,gamma) - 1.0), 2);
+
             A_sens.zero();
 
             for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -316,9 +385,23 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                     for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
                         A_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
                 }
+                
+                if (_if_viscous)
+                {
+                    for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
+                    {
+                        tmp_mat.resize(n1, n1);
+                        this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, primitive_sol, tmp_mat); // Kij
+                        tmp_mat.right_multiply(dB_mat[deriv_dim]); // Kij dB/dx_j
+                        dB_mat[i_dim].get_transpose(tmp_mat2); // dB/dx_i
+                        tmp_mat2.right_multiply(tmp_mat); // dB/dx_i^T Kij dB/dx_j
+                        Kmat.add(-JxW[qp], tmp_mat2);
+                    }
+
+                }
             }
             
-            // Lease square contribution of flux gradient
+            // Least square contribution of flux gradient
             LS_mat.get_transpose(tmp_mat);
             tmp_mat.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU   (Ai constant)
             Kmat.add(-JxW[qp], tmp_mat);
@@ -360,21 +443,65 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
 
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
     
-    bool if_wall_bc = false, if_inf_bc = false;
+    FluidBoundaryConditionType mechanical_bc_type, thermal_bc_type;
     
-    if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 0) ) // wall bc: both in 2D and 3D, this is the solid wall
-        if_wall_bc = true;
-    if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 1) ||
-         this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 2) ||
-         this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 3) ||
-         this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 4) ||
-         this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, 5) ) // infinite bc (1, 2, 3) for 2D and (1, 2, 3, 4, 5) for 3D
-        if_inf_bc = true;
+    unsigned int n_mechanical_bc = 0, n_thermal_bc = 0;
+
+    std::multimap<unsigned int, FluidBoundaryConditionType>::const_iterator
+    bc_it     = this->_boundary_condition.begin(),
+    bc_end    = this->_boundary_condition.end();
     
-    if ( !if_wall_bc && !if_inf_bc )
+    
+    for ( ; bc_it != bc_end; bc_it++)
+    {
+        if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, bc_it->first))
+        {
+            switch (bc_it->second)
+            {
+                case SLIP_WALL:
+                    mechanical_bc_type = SLIP_WALL;
+                    n_mechanical_bc++;
+                    break;
+                    
+                case NO_SLIP_WALL:
+                    libmesh_assert(_if_viscous);
+                    mechanical_bc_type = NO_SLIP_WALL;
+                    n_mechanical_bc++;
+                    break;
+                    
+                case FAR_FIELD:
+                    mechanical_bc_type = FAR_FIELD;
+                    n_mechanical_bc++;
+                    break;
+                    
+                case ISOTHERMAL:
+                    libmesh_assert(_if_viscous);
+                    libmesh_assert_equal_to(mechanical_bc_type, NO_SLIP_WALL);
+                    thermal_bc_type = ISOTHERMAL;
+                    n_thermal_bc++;
+                    break;
+
+                case ADIABATIC:
+                    libmesh_assert(_if_viscous);
+                    libmesh_assert_equal_to(mechanical_bc_type, NO_SLIP_WALL);
+                    thermal_bc_type = ADIABATIC;
+                    n_thermal_bc++;
+                    break;
+
+            }
+        }
+    }
+    
+    // return if no boundary condition is applied
+    if (n_mechanical_bc == 0)
         return request_jacobian;
-    else
-        libmesh_assert_equal_to(if_wall_bc, !if_inf_bc); // make sure that only one is active
+    
+        
+    libmesh_assert_equal_to(n_mechanical_bc, 1); // make sure that only one is active
+    libmesh_assert(n_thermal_bc <= 1);           // make sure that only one is active
+    if (n_thermal_bc == 1)                       // thermal bc must be accompanied with mechanical bc
+        libmesh_assert_equal_to(mechanical_bc_type, NO_SLIP_WALL);
+    
     
     
     const unsigned int n1 = dim+2;
@@ -387,7 +514,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
     libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
 
     FEBase * side_fe;
-    c.get_side_fe(vars[0], side_fe);
+    c.get_side_fe(vars[0], side_fe); // assuming all variables have the same FE
     
     // Element Jacobian * quadrature weights for interior integration
     const std::vector<Real> &JxW = side_fe->get_JxW();
@@ -407,111 +534,203 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
 
 
     
-    DenseVector<Real> tmp_vec1, flux, U_vec_interpolated, tmp_vec1_n2, conservative_sol;
-    DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2, B_mat, A_mat;
+    DenseVector<Real> tmp_vec1_n2, flux, U_vec_interpolated, tmp_vec2_n1, conservative_sol, temp_grad;
+    DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat1, tmp_mat2, B_mat, A_mat,
+    dcons_dprim, dprim_dcons, stress_tensor;
 
-    conservative_sol.resize(dim+2);
-    tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs); U_vec_interpolated.resize(n1);
+    conservative_sol.resize(dim+2); temp_grad.resize(dim);
+    tmp_vec1_n2.resize(n_dofs); flux.resize(n1); tmp_vec2_n1.resize(n1); U_vec_interpolated.resize(n1);
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1);
     tmp_mat1.resize(n1, n1); tmp_mat2.resize(n1, n1);
     B_mat.resize(dim+2, n_dofs); A_mat.resize(dim+2, dim+2);
+    dcons_dprim.resize(n1, n1); dprim_dcons.resize(n1, n1); stress_tensor.resize(dim, dim);
 
+    std::vector<DenseMatrix<Real> > dB_mat(dim), Ai_advection(dim);
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+    {
+        dB_mat[i_dim].resize(n1, n_dofs);
+        Ai_advection[i_dim].resize(n1, n1);
+    }
     
     PrimitiveSolution p_sol;
     
-    if ( if_wall_bc )
+    
+    
+    switch (mechanical_bc_type)
+    // adiabatic and isothermal are handled in the no-slip wall BC
     {
-        Real xini = 0.;
-
-        for (unsigned int qp=0; qp<qpoint.size(); qp++)
+        case NO_SLIP_WALL: // only for viscous flows
+            // conditions enforced are
+            // vi ni = 0, vi = 0 = rho.vi      (no-slip wall, Dirichlet BC)
+            // thermal BC is handled here
         {
-            xini = face_normals[qp] * vel;
+
+            Real xini = 0.;
             
-            // first update the variables at the current quadrature point
-            this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol, B_mat);
-            
-            flux.zero();
-            
-            switch (dim)
+            for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
-                case 3:
-                    flux(3) = p_sol.u3*p_sol.rho*xini+p_sol.p*face_normals[qp](2);
-                case 2:
-                    flux(2) = p_sol.u2*p_sol.rho*xini+p_sol.p*face_normals[qp](1);
-                case 1:
-                    flux(0) = p_sol.rho*xini;
-                    flux(1) = p_sol.u1*p_sol.rho*xini+p_sol.p*face_normals[qp](0);
-                    flux(n1-1) = xini*(p_sol.rho*(cv*p_sol.T+p_sol.k)+p_sol.p);
-                    break;
-            }
-            
-            B_mat.vector_mult_transpose(tmp_vec1, flux);
-            Fvec.add(-JxW[qp], tmp_vec1);
-            
-            // update the force vector
-            for (unsigned int i=0; i<dim; i++)
-                (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
-            
-            if ( request_jacobian && c.get_elem_solution_derivative() )
-            {
-                this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
+                xini = face_normals[qp] * vel;
                 
-                tmp_mat2 = A_mat;
-                tmp_mat2.right_multiply(B_mat);
-                B_mat.get_transpose(tmp_mat1);
-                tmp_mat1.right_multiply(tmp_mat2);
-                Kmat.add(-JxW[qp], tmp_mat1);
+                // first update the variables at the current quadrature point
+                this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
+                                                          B_mat, dB_mat);
+
+                // stress tensor and temperature gradient
+                this->calculate_conservative_variable_jacobian(p_sol, dcons_dprim, dprim_dcons);
+                this->calculate_diffusion_tensors(c.elem_solution, dB_mat, dprim_dcons,
+                                                  p_sol, stress_tensor, temp_grad);
+                
+                if (thermal_bc_type == ADIABATIC)
+                    temp_grad.zero();
+
+                flux.zero();
+                
+                // since vi=0, vi ni = 0, so the advection flux gets evaluated using the slip wall condition
+                switch (dim)
+                {
+                    case 3:
+                        flux(3) = p_sol.u3*p_sol.rho*xini+p_sol.p*face_normals[qp](2);
+                    case 2:
+                        flux(2) = p_sol.u2*p_sol.rho*xini+p_sol.p*face_normals[qp](1);
+                    case 1:
+                        flux(0) = p_sol.rho*xini;
+                        flux(1) = p_sol.u1*p_sol.rho*xini+p_sol.p*face_normals[qp](0);
+                        flux(n1-1) = xini*(p_sol.rho*(cv*p_sol.T+p_sol.k)+p_sol.p);
+                        break;
+                }
+                
+                // contribution from advection flux
+                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
+                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                
+                // contribution from diffusion flux
+                flux.zero();
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                {
+                    this->calculate_diffusion_flux(i_dim, p_sol, stress_tensor,
+                                                   temp_grad, tmp_vec2_n1);
+                    flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
+                }
+                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
+                Fvec.add(JxW[qp], tmp_vec1_n2);
+                
+                
+                if ( request_jacobian && c.get_elem_solution_derivative() )
+                {
+                    // update the force vector
+                    for (unsigned int i=0; i<dim; i++)
+                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
+                    
+                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
+                    
+                    // contribution from advection flux
+                    tmp_mat2 = A_mat;
+                    tmp_mat2.right_multiply(B_mat);
+                    B_mat.get_transpose(tmp_mat1);
+                    tmp_mat1.right_multiply(tmp_mat2);
+                    Kmat.add(-JxW[qp], tmp_mat1);
+
+                    // contribution from diffusion flux
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                        for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
+                        {
+                            tmp_mat1.resize(n1, n1);
+                            this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat1); // Kij
+                            tmp_mat1.right_multiply(dB_mat[deriv_dim]); // Kij dB/dx_j
+                            B_mat.get_transpose(tmp_mat2); // B
+                            tmp_mat2.right_multiply(tmp_mat1); // B^T Kij dB/dx_j
+                            Kmat.add(JxW[qp], tmp_mat2);
+                        }
+                }
             }
         }
-    }
-
-    
-    if ( if_inf_bc )
-    {
-        for (unsigned int qp=0; qp<qpoint.size(); qp++)
+            break;
+            
+        case SLIP_WALL: // inviscid boundary condition without any diffusive component
+            // conditions enforced are
+            // vi ni = 0       (slip wall)
+            // tau_ij nj = 0   (because velocity gradient at wall = 0)
+            // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            // first update the variables at the current quadrature point
-            this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol, B_mat);
-
-            this->calculate_advection_left_eigenvector_and_inverse_for_normal(p_sol, face_normals[qp], eig_val, l_eig_vec, l_eig_vec_inv_tr);
+            Real xini = 0.;
             
-            // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
-            // evaluate them using the given solution.
-            tmp_mat1 = l_eig_vec_inv_tr;
-            for (unsigned int j=0; j<n1; j++)
-                if (eig_val(j, j) < 0)
-                    tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
-                else
-                    tmp_mat1.scale_column(j, 0.0);
-            
-            tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
-            this->get_infinity_vars( U_vec_interpolated );
-            tmp_mat1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
-            
-            B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-            Fvec.add(-JxW[qp], tmp_vec1_n2);
-            
-            // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
-            // the flux is evaluated using the local solution
-            tmp_mat1 = l_eig_vec_inv_tr;
-            for (unsigned int j=0; j<n1; j++)
-                if (eig_val(j, j) > 0)
-                    tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
-                else
-                    tmp_mat1.scale_column(j, 0.0);
-
-            tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-            tmp_mat1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
-            
-            B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-            Fvec.add(-JxW[qp], tmp_vec1_n2);
-
-            
-            if ( request_jacobian && c.get_elem_solution_derivative() )
+            for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
-                // terms with negative eigenvalues do not contribute to the Jacobian
+                xini = face_normals[qp] * vel;
                 
-                // now calculate the Jacobian for eigenvalues greater than 0, the characteristics go out of the domain, so that
+                // first update the variables at the current quadrature point
+                this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
+                                                          B_mat, dB_mat);
+                
+                flux.zero();
+                
+                switch (dim)
+                {
+                    case 3:
+                        flux(3) = p_sol.u3*p_sol.rho*xini+p_sol.p*face_normals[qp](2);
+                    case 2:
+                        flux(2) = p_sol.u2*p_sol.rho*xini+p_sol.p*face_normals[qp](1);
+                    case 1:
+                        flux(0) = p_sol.rho*xini;
+                        flux(1) = p_sol.u1*p_sol.rho*xini+p_sol.p*face_normals[qp](0);
+                        flux(n1-1) = xini*(p_sol.rho*(cv*p_sol.T+p_sol.k)+p_sol.p);
+                        break;
+                }
+                
+                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
+                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                
+                if ( request_jacobian && c.get_elem_solution_derivative() )
+                {
+                    // update the force vector
+                    for (unsigned int i=0; i<dim; i++)
+                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
+                    
+                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
+                    
+                    tmp_mat2 = A_mat;
+                    tmp_mat2.right_multiply(B_mat);
+                    B_mat.get_transpose(tmp_mat1);
+                    tmp_mat1.right_multiply(tmp_mat2);
+                    Kmat.add(-JxW[qp], tmp_mat1);
+                }
+            }
+        }
+            break;
+            
+            
+        case FAR_FIELD:
+            // conditions enforced are:
+            // -- f_adv_i ni =  f_adv = f_adv(+) + f_adv(-)     (flux vector splitting for advection)
+            // -- f_diff_i ni  = f_diff                         (evaluation of diffusion flux based on domain solution)
+        {
+            for (unsigned int qp=0; qp<qpoint.size(); qp++)
+            {
+                // first update the variables at the current quadrature point
+                this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
+                                                          B_mat, dB_mat);
+                
+                this->calculate_advection_left_eigenvector_and_inverse_for_normal(p_sol, face_normals[qp], eig_val,
+                                                                                  l_eig_vec, l_eig_vec_inv_tr);
+                
+                // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
+                // evaluate them using the given solution.
+                tmp_mat1 = l_eig_vec_inv_tr;
+                for (unsigned int j=0; j<n1; j++)
+                    if (eig_val(j, j) < 0)
+                        tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
+                    else
+                        tmp_mat1.scale_column(j, 0.0);
+                
+                tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
+                this->get_infinity_vars( U_vec_interpolated );
+                tmp_mat1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
+                
+                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
+                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                
+                // now calculate the flux for eigenvalues greater than 0,
+                // the characteristics go out of the domain, so that
                 // the flux is evaluated using the local solution
                 tmp_mat1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
@@ -519,16 +738,73 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                         tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                     else
                         tmp_mat1.scale_column(j, 0.0);
-                tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                tmp_mat1.right_multiply(B_mat);
-                B_mat.get_transpose(tmp_mat2);
-                tmp_mat2.right_multiply(tmp_mat1); // B^T A_{+} B   (this is flux going out of the solution domain)
                 
-                Kmat.add(-JxW[qp], tmp_mat2);
+                tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                tmp_mat1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
+                
+                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
+                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                
+                
+                if (_if_viscous) // evaluate the viscous flux using the domain solution
+                {
+                    // stress tensor and temperature gradient
+                    this->calculate_conservative_variable_jacobian(p_sol, dcons_dprim, dprim_dcons);
+                    this->calculate_diffusion_tensors(c.elem_solution, dB_mat, dprim_dcons,
+                                                      p_sol, stress_tensor, temp_grad);
+                    
+                    // contribution from diffusion flux
+                    flux.zero();
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    {
+                        this->calculate_diffusion_flux(i_dim, p_sol, stress_tensor,
+                                                       temp_grad, tmp_vec2_n1);
+                        flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
+                    }
+                    B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
+                    Fvec.add(JxW[qp], tmp_vec1_n2);
+                }
+                
+            
+                if ( request_jacobian && c.get_elem_solution_derivative() )
+                {
+                    // terms with negative eigenvalues do not contribute to the Jacobian
+                    
+                    // now calculate the Jacobian for eigenvalues greater than 0,
+                    // the characteristics go out of the domain, so that
+                    // the flux is evaluated using the local solution
+                    tmp_mat1 = l_eig_vec_inv_tr;
+                    for (unsigned int j=0; j<n1; j++)
+                        if (eig_val(j, j) > 0)
+                            tmp_mat1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                        else
+                            tmp_mat1.scale_column(j, 0.0);
+                    tmp_mat1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                    tmp_mat1.right_multiply(B_mat);
+                    B_mat.get_transpose(tmp_mat2);
+                    tmp_mat2.right_multiply(tmp_mat1); // B^T A_{+} B   (this is flux going out of the solution domain)
+                    
+                    Kmat.add(-JxW[qp], tmp_mat2);
+                    
+                    if (_if_viscous)
+                    {
+                        // contribution from diffusion flux
+                        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                            for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
+                            {
+                                tmp_mat1.resize(n1, n1);
+                                this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat1); // Kij
+                                tmp_mat1.right_multiply(dB_mat[deriv_dim]); // Kij dB/dx_j
+                                B_mat.get_transpose(tmp_mat2); // B
+                                tmp_mat2.right_multiply(tmp_mat1); // B^T Kij dB/dx_j
+                                Kmat.add(JxW[qp], tmp_mat2);
+                            }
+                    }
+                }
             }
         }
-        
     }
+
     
 //    std::cout << "inside side constraint " << std::endl;
 //    std::cout << "elem solution" << std::endl; c.elem_solution.print(std::cout);
@@ -606,9 +882,13 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     {
         // first update the variables at the current quadrature point
         this->update_solution_at_quadrature_point(vars, qp, c, true, c.elem_fixed_solution,
-                                                  conservative_sol, primitive_sol, B_mat);
-        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat,
-                                                  Ai_advection, A_entropy, A_inv_entropy );
+                                                  conservative_sol, primitive_sol,
+                                                  B_mat, dB_mat);
+
+        for ( unsigned int i_dim=0; i_dim < dim; i_dim++)
+            this->calculate_advection_flux_jacobian ( i_dim, primitive_sol, Ai_advection[i_dim] );
+        
+        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy, A_inv_entropy );
         
         Ai_Bi_advection.zero();
         
@@ -623,17 +903,12 @@ bool EulerSystem::mass_residual (bool request_jacobian,
                                                      Ai_advection, Ai_Bi_advection, A_inv_entropy,
                                                      flux_jacobian_sens, LS_mat, LS_sens, diff_val);
         
-        //        if (this->if_update_discont_values)
-        //            (*this->discontinuity_capturing_value)[i] = diff_val;
-        //        else
-        //            diff_val = (*this->discontinuity_capturing_value)[i];
-        
-        // Galerkin contribution to solution
+        // Galerkin contribution to velocity
         B_mat.vector_mult( tmp_vec1_n1, c.elem_solution );
         B_mat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
         Fvec.add(JxW[qp], tmp_vec3_n2);
         
-        // Galerkin contribution to solution
+        // LS contribution to velocity
         B_mat.vector_mult( tmp_vec1_n1, c.elem_solution );
         LS_mat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
         Fvec.add(JxW[qp], tmp_vec3_n2);

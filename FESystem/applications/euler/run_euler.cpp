@@ -205,8 +205,8 @@ int main (int argc, char* const argv[])
             MeshTools::Generation::build_square (mesh,
                                                  n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                  n_vertical_divs,
-                                                 0., x_length,
-                                                 0., y_length,
+                                                 0., 1.,
+                                                 0., 1.,
                                                  Utility::string_to_enum<ElemType>(elem_type));
 
 
@@ -380,7 +380,7 @@ int main (int argc, char* const argv[])
                         }
                 }
                 if (side_on_panel)
-                    mesh.boundary_info->add_side(*e_it, i_side, 10);
+                    mesh.boundary_info->add_side(*e_it, 0, 10);
             }
         }
         
@@ -464,7 +464,8 @@ int main (int argc, char* const argv[])
         mesh.prepare_for_use();
     }
 #else
-    
+
+    mesh.prepare_for_use();
     mesh.read("saved_mesh.xdr");
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

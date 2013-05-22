@@ -208,9 +208,14 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
-        this->update_solution_at_quadrature_point(vars, qp, c, true, ref_sol, conservative_sol, primitive_sol, B_mat);
-        this->update_jacobian_at_quadrature_point(vars, qp, c, primitive_sol, dB_mat, Ai_advection, A_entropy, A_inv_entropy );
+        this->update_solution_at_quadrature_point(vars, qp, c, true, ref_sol, conservative_sol, primitive_sol,
+                                                  B_mat, dB_mat);
+
+        for ( unsigned int i_dim=0; i_dim < dim; i_dim++)
+            this->calculate_advection_flux_jacobian ( i_dim, primitive_sol, Ai_advection[i_dim] );
         
+        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy, A_inv_entropy );
+
         Ai_Bi_advection.zero();
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
