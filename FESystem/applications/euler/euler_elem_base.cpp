@@ -444,7 +444,7 @@ void FluidPostProcessSystem::postprocess()
     (new PostProcessFunction(*mesh_function, post_process_var_names, euler.cp, euler.cv,
                              euler.p_inf, euler.q0_inf));
     
-    this->project_solution(post_process_function.get());
+    //this->project_solution(post_process_function.get());
     
     
 //    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());

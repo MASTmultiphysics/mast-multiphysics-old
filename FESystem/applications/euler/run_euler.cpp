@@ -361,17 +361,23 @@ int main (int argc, char* const argv[])
         {
             for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
             {
-                bool side_on_panel = true;
+                bool side_on_panel = false, side_on_slip_wall=false;
                 AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
                 for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
                 {
                     const Node& n = *(side_elem->get_node(i_node));
                     if (dim == 2)
-                        if ((n(1)>0.) || (n(0) < x0) || (n(0)>x1))
+                    {
+                        if ((n(1)==0.) && (n(0) >= x0))
+                            side_on_panel = true;
+                        else if ((n(1)==0.) && (n(0) > 0.) && (n(0) < x_length))
+                            side_on_slip_wall = true;
+                        else
                         {
                             side_on_panel = false;
-                            break;
+                            side_on_slip_wall = false;
                         }
+                    }
                     if (dim == 3)
                         if ((n(2)>0.) || (n(0) < x0) || (n(0)>x1) || (n(1) < y0) || (n(1)>y1))
                         {
@@ -381,6 +387,8 @@ int main (int argc, char* const argv[])
                 }
                 if (side_on_panel)
                     mesh.boundary_info->add_side(*e_it, 0, 10);
+                if (side_on_slip_wall)
+                    mesh.boundary_info->add_side(*e_it, 0, 11);
             }
         }
         
