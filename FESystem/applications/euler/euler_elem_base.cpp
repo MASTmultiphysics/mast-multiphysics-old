@@ -425,8 +425,6 @@ void FluidPostProcessSystem::postprocess()
     const FrequencyDomainLinearizedEuler& euler = this->get_equation_systems().get_system<FrequencyDomainLinearizedEuler>("FrequencyDomainLinearizedEuler");
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 
-    const NumericVector<Number>& euler_sol = (*euler.solution.get());
-    
     std::vector<unsigned int> euler_vars(euler.n_vars());
     std::vector<std::string> post_process_var_names(this->n_vars());
 
@@ -435,8 +433,15 @@ void FluidPostProcessSystem::postprocess()
     for (unsigned int i=0; i<this->n_vars(); i++)
         post_process_var_names[i] = this->variable_name(i);
     
+    
+    AutoPtr<NumericVector<Number> > soln = NumericVector<Number>::build(this->get_equation_systems().comm());
+    std::vector<Number> global_soln;
+    euler.update_global_solution(global_soln);
+    soln->init(euler.solution->size(), true, SERIAL);
+    (*soln) = global_soln;
+
     AutoPtr<MeshFunction> mesh_function
-    (new MeshFunction(this->get_equation_systems(), euler_sol,
+    (new MeshFunction(this->get_equation_systems(), *soln,
                       euler.get_dof_map(), euler_vars));
     mesh_function->init();
     
@@ -444,7 +449,7 @@ void FluidPostProcessSystem::postprocess()
     (new PostProcessFunction(*mesh_function, post_process_var_names, euler.cp, euler.cv,
                              euler.p_inf, euler.q0_inf));
     
-    //this->project_solution(post_process_function.get());
+    this->project_solution(post_process_function.get());
     
     
 //    MeshBase::node_iterator n_begin     = m.pid_nodes_begin(libMesh::processor_id());
