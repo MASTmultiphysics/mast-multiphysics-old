@@ -17,6 +17,7 @@
 // DiffSystem framework files
 #include "libmesh/fem_system.h"
 #include "libmesh/auto_ptr.h"
+#include "libmesh/mesh_function.h"
 
 // FEsystem includes
 #include "euler/euler_elem_base.h"
@@ -51,9 +52,34 @@ public:
     
     AutoPtr<SurfaceMotion> surface_motion;
     
-protected:
     
+    AutoPtr<NumericVector<Number> > fluid_sol;
+    AutoPtr<MeshFunction> fluid_mesh_function;
+
     std::vector<unsigned int> vars;
+
+};
+
+
+
+
+class FrequencyDomainFluidPostProcessSystem : public System
+{
+public:
+    // Constructor
+    FrequencyDomainFluidPostProcessSystem(EquationSystems& es,
+                                          const std::string& name_in,
+                                          const unsigned int number_in)
+    : System(es, name_in, number_in)
+    {}
+    
+    virtual void init_data();
+    
+    virtual void postprocess();
+    
+    unsigned int u, v, w, T, s, p, cp, a, M, // real part of the variables
+    // imaginary part of the variables
+    rho_im, u_im, v_im, w_im, T_im, s_im, p_im, cp_im, a_im, M_im;
 };
 
 

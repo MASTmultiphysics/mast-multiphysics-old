@@ -83,8 +83,32 @@ protected:
     Real _rho_norm_old, _rho_norm_curr;
 
     std::vector<unsigned int> vars;
+    
+public:
+    
+    Real total_volume, entropy_error;
 };
 
+
+
+
+
+class FluidPostProcessSystem : public System
+{
+public:
+    // Constructor
+    FluidPostProcessSystem(EquationSystems& es,
+                           const std::string& name_in,
+                           const unsigned int number_in)
+    : System(es, name_in, number_in)
+    {}
+    
+    virtual void init_data();
+    
+    virtual void postprocess();
+    
+    unsigned int u, v, w, T, s, p, cp, a, M;
+};
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 

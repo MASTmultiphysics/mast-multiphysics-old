@@ -71,27 +71,6 @@ public:
 
 
 
-class FluidPostProcessSystem : public System
-{
-public:
-    // Constructor
-    FluidPostProcessSystem(EquationSystems& es,
-                const std::string& name_in,
-                const unsigned int number_in)
-    : System(es, name_in, number_in)
-    {}
-    
-    virtual void init_data();
-    
-    virtual void postprocess();
-
-    unsigned int u, v, w, T, s, p, cp, a, M;
-
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-    unsigned int rho_im, u_im, v_im, w_im, T_im, s_im, p_im, cp_im, a_im, M_im;
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
-
-};
 
 
 // The Navier-Stokes system class.
@@ -122,8 +101,6 @@ public:
 
     DenseVector<Number>* integrated_force;
     
-    Real entropy_error, total_volume;
-
 protected:
     
     
@@ -226,15 +203,14 @@ protected:
 
     std::vector<FluidConservativeVars> _active_conservative_vars;
     
-    
-    const Parallel::Communicator* system_comm;
-    
     bool _if_viscous;
     
     std::multimap<unsigned int, FluidBoundaryConditionType> _boundary_condition;
     
 public:
     
+    const Parallel::Communicator* system_comm;
+
     Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
 
 };

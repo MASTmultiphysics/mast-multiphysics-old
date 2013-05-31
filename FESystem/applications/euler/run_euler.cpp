@@ -28,6 +28,7 @@
 #include "libmesh/gmsh_io.h"
 #include "libmesh/gmv_io.h"
 #include "libmesh/xdr_io.h"
+#include "libmesh/nemesis_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/euler_solver.h"
 #include "libmesh/steady_solver.h"
@@ -40,6 +41,7 @@
 #include "libmesh/string_to_enum.h"
 
 
+#include "libmesh/exodusII.h"
 
 
 void distributePoints(const unsigned int n_divs, const std::vector<double>& div_locations, const std::vector<unsigned int>& n_subdivs_in_div, const std::vector<double>& relative_mesh_size_at_div, std::vector<double>& points)
@@ -121,8 +123,8 @@ int main (int argc, char* const argv[])
     libmesh_assert (dim == 2 || dim == 3);
     
     // Create a mesh.
-    SerialMesh mesh(init.comm());
-   // ParallelMesh mesh;    
+    //SerialMesh mesh(init.comm());
+    ParallelMesh mesh(init.comm());
 
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -467,7 +469,9 @@ int main (int argc, char* const argv[])
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
-        GmshIO gmsh_io(mesh);
+        // GmshIO gmsh_io(mesh);
+        // ExodusII_IO gmsh_io(mesh);
+        Nemesis_IO gmsh_io(mesh);
         gmsh_io.read(gmsh_input_file);
         mesh.prepare_for_use();
     }
@@ -528,8 +532,8 @@ int main (int argc, char* const argv[])
     FrequencyDomainLinearizedEuler & system =
     equation_systems.add_system<FrequencyDomainLinearizedEuler> ("FrequencyDomainLinearizedEuler");
     
-    FluidPostProcessSystem& fluid_post =
-    equation_systems.add_system<FluidPostProcessSystem> ("DeltaFluidPostProcessSystem");
+    FrequencyDomainFluidPostProcessSystem& fluid_post =
+    equation_systems.add_system<FrequencyDomainFluidPostProcessSystem> ("DeltaFluidPostProcessSystem");
     
     system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(system));
@@ -706,8 +710,12 @@ int main (int argc, char* const argv[])
         system.solve();
         system.print_integrated_lift_drag(std::cout);
         system.integrated_force->zero();
-        system.entropy_error = 0.; system.total_volume = 0.;
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        system.system_comm->sum(system.entropy_error);
+        system.system_comm->sum(system.total_volume);
+        std::cout << system.entropy_error << " , " << system.total_volume << " , "
+        << sqrt(system.entropy_error/system.total_volume) << " , " << std::endl;
+        system.entropy_error = 0.; system.total_volume = 0.;
         system.evaluate_recalculate_dc_flag();
         delta_val_system.solution->close();
         delta_val_system.update();
@@ -715,7 +723,9 @@ int main (int argc, char* const argv[])
 
         // Advance to the next timestep in a transient problem
         system.time_solver->advance_timestep();
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
         sol_norm = timesolver->_xdot_linf_approx;
+#endif
         libMesh::out << " Convergence monitor: L-infty norm: " << sol_norm << std::endl;
         if (((t_step > n_timesteps) || (sol_norm < terminate_tolerance)) &&
             (amr_steps == 0))

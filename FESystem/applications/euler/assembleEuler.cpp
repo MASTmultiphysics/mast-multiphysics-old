@@ -21,6 +21,8 @@
 #include "libmesh/dof_map.h"
 #include "libmesh/zero_function.h"
 #include "libmesh/dirichlet_boundaries.h"
+#include "libmesh/mesh_function.h"
+#include "libmesh/fem_function_base.h"
 
 
 
@@ -358,8 +360,8 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         
         if (request_jacobian && c.elem_solution_derivative)
         {
-            total_volume += JxW[qp];
-            entropy_error +=  JxW[qp] * pow((primitive_sol.p/p_inf * pow(rho_inf/primitive_sol.rho,gamma) - 1.0), 2);
+//            total_volume += JxW[qp];
+//            entropy_error +=  JxW[qp] * pow((primitive_sol.p/p_inf * pow(rho_inf/primitive_sol.rho,gamma) - 1.0), 2);
 
             A_sens.zero();
 
@@ -966,6 +968,162 @@ void EulerSystem::evaluate_recalculate_dc_flag()
     
     _rho_norm_old = _rho_norm_curr;
     _rho_norm_curr = norm;
+}
+
+
+
+
+
+Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol, Real p0, Real q0)
+{
+    if (var_name == "u")
+        return p_sol.u1;
+    else if (var_name == "v")
+        return p_sol.u2;
+    else if (var_name == "w")
+        return p_sol.u3;
+    else if (var_name == "T")
+        return p_sol.T;
+    else if (var_name == "s")
+        return p_sol.entropy;
+    else if (var_name == "p")
+        return p_sol.p;
+    else if (var_name == "cp")
+        return p_sol.c_pressure(p0, q0);
+    else if (var_name == "a")
+        return p_sol.a;
+    else if (var_name == "M")
+        return p_sol.mach;
+    else
+        libmesh_assert(false);
+}
+
+
+
+class PrimitiveFEMFunction : public FEMFunctionBase<Number>
+{
+public:
+    // Constructor
+    PrimitiveFEMFunction(MeshFunction& fluid_func, std::vector<std::string>& vars,
+                        Real cp, Real cv, Real p0, Real q0):
+    FEMFunctionBase<Number>(),
+    _fluid_function(fluid_func),
+    _vars(vars), _cp(cp), _cv(cv), _p0(p0), _q0(q0)
+    {}
+    
+    // Destructor
+    virtual ~PrimitiveFEMFunction () {}
+    
+    virtual AutoPtr<FEMFunctionBase<Number> > clone () const
+    {return AutoPtr<FEMFunctionBase<Number> >( new PrimitiveFEMFunction
+                                              (_fluid_function, _vars, _cp, _cv,
+                                               _p0, _q0) ); }
+    
+    virtual void operator() (const FEMContext& c, const Point& p,
+                             const Real t, DenseVector<Number>& val)
+    {
+        DenseVector<Number> fluid_sol;
+        _fluid_function(p, t, fluid_sol);
+        PrimitiveSolution p_sol;
+        
+        p_sol.init(c.dim, fluid_sol, _cp, _cv);
+        
+        for (unsigned int i=0; i<_vars.size(); i++)
+            val(i) = get_var_val(_vars[i], p_sol, _p0, _q0);
+    }
+    
+    
+    virtual Number component(const FEMContext& c, unsigned int i_comp,
+                             const Point& p, Real t=0.)
+    {
+        DenseVector<Number> fluid_sol;
+        _fluid_function(p, t, fluid_sol);
+        PrimitiveSolution p_sol;
+        
+        p_sol.init(c.dim, fluid_sol, _cp, _cv);
+        
+        return get_var_val(_vars[i_comp], p_sol, _p0, _q0);
+    }
+    
+    
+    virtual Number operator() (const FEMContext&, const Point& p,
+                               const Real time = 0.)
+    {libmesh_error();}
+    
+private:
+    
+    MeshFunction& _fluid_function;
+    std::vector<std::string>& _vars;
+    Real _cp, _cv, _p0, _q0;
+};
+
+
+
+
+void FluidPostProcessSystem::init_data()
+{
+    const unsigned int dim = this->get_mesh().mesh_dimension();
+    
+    GetPot infile("euler.in");
+    
+    unsigned int o = infile("fe_order", 1);
+    std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
+    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
+    
+    
+    const Order order = static_cast<Order>(fmin(2, o));
+    
+    u = this->add_variable("u", order, fefamily);
+    if (dim > 1)
+        v = this->add_variable("v", order, fefamily);
+    if (dim > 2)
+        w = this->add_variable("w", order, fefamily);
+    T = this->add_variable("T", order, fefamily);
+    s = this->add_variable("s", order, fefamily);
+    p = this->add_variable("p", order, fefamily);
+    cp = this->add_variable("cp", order, fefamily);
+    a = this->add_variable("a", order, fefamily);
+    M = this->add_variable("M", order, fefamily);
+    
+    System::init_data();
+}
+
+
+
+
+
+void FluidPostProcessSystem::postprocess()
+{
+    // get the solution vector from
+    const EulerSystem& fluid = this->get_equation_systems().get_system<EulerSystem>("EulerSystem");
+    
+    std::vector<unsigned int> fluid_vars(fluid.n_vars());
+    std::vector<std::string> post_process_var_names(this->n_vars());
+    
+    for (unsigned int i=0; i<fluid_vars.size(); i++)
+        fluid_vars[i] = i;
+    for (unsigned int i=0; i<this->n_vars(); i++)
+        post_process_var_names[i] = this->variable_name(i);
+    
+    
+    AutoPtr<NumericVector<Number> > soln = NumericVector<Number>::build(this->get_equation_systems().comm());
+    std::vector<Number> global_soln;
+    fluid.update_global_solution(global_soln);
+    soln->init(fluid.solution->size(), true, SERIAL);
+    (*soln) = global_soln;
+    
+    AutoPtr<MeshFunction> mesh_function
+    (new MeshFunction(this->get_equation_systems(), *soln,
+                      fluid.get_dof_map(), fluid_vars));
+    mesh_function->init();
+    
+    AutoPtr<FEMFunctionBase<Number> > post_process_function
+    (new PrimitiveFEMFunction(*mesh_function, post_process_var_names, fluid.cp, fluid.cv,
+                              fluid.p_inf, fluid.q0_inf));
+    
+    this->project_solution(post_process_function.get());
+    
+    this->update();
 }
 
 
