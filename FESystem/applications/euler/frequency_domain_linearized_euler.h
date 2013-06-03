@@ -49,15 +49,9 @@ public:
     virtual bool side_time_derivative (bool request_jacobian,
                                        DiffContext &context);
     
-    
     AutoPtr<SurfaceMotion> surface_motion;
     
-    
-    AutoPtr<NumericVector<Number> > fluid_sol;
-    AutoPtr<MeshFunction> fluid_mesh_function;
-
     std::vector<unsigned int> vars;
-
 };
 
 

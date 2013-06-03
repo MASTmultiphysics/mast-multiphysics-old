@@ -41,9 +41,6 @@
 #include "libmesh/string_to_enum.h"
 
 
-#include "libmesh/exodusII.h"
-
-
 void distributePoints(const unsigned int n_divs, const std::vector<double>& div_locations, const std::vector<unsigned int>& n_subdivs_in_div, const std::vector<double>& relative_mesh_size_at_div, std::vector<double>& points)
 {
     libmesh_assert(div_locations.size() == n_divs+1);
@@ -123,8 +120,8 @@ int main (int argc, char* const argv[])
     libmesh_assert (dim == 2 || dim == 3);
     
     // Create a mesh.
-    //SerialMesh mesh(init.comm());
-    ParallelMesh mesh(init.comm());
+    SerialMesh mesh(init.comm());
+    //ParallelMesh mesh(init.comm());
 
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -469,15 +466,14 @@ int main (int argc, char* const argv[])
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
-        // GmshIO gmsh_io(mesh);
+        GmshIO gmsh_io(mesh);
         // ExodusII_IO gmsh_io(mesh);
-        Nemesis_IO gmsh_io(mesh);
+        // Nemesis_IO gmsh_io(mesh);
         gmsh_io.read(gmsh_input_file);
         mesh.prepare_for_use();
     }
 #else
 
-    mesh.prepare_for_use();
     mesh.read("saved_mesh.xdr");
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
@@ -726,8 +722,12 @@ int main (int argc, char* const argv[])
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
         sol_norm = timesolver->_xdot_linf_approx;
 #endif
+
+        // check for termination criteria
+        t_step++;
+
         libMesh::out << " Convergence monitor: L-infty norm: " << sol_norm << std::endl;
-        if (((t_step > n_timesteps) || (sol_norm < terminate_tolerance)) &&
+        if (((t_step >= n_timesteps) || (sol_norm < terminate_tolerance)) &&
             (amr_steps == 0))
         {
             libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
@@ -764,8 +764,6 @@ int main (int argc, char* const argv[])
                                                equation_systems);
         }
         
-        // check for termination criteria
-        t_step++;
     }
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS

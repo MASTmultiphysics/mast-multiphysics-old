@@ -619,9 +619,9 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
-                    // update the force vector
-                    for (unsigned int i=0; i<dim; i++)
-                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
+//                    // update the force vector
+//                    for (unsigned int i=0; i<dim; i++)
+//                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
                     
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
                     
@@ -684,9 +684,9 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
-                    // update the force vector
-                    for (unsigned int i=0; i<dim; i++)
-                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
+//                    // update the force vector
+//                    for (unsigned int i=0; i<dim; i++)
+//                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
                     
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
                     
