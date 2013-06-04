@@ -1060,20 +1060,15 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     fluid_sol = NumericVector<Number>::build(this->get_equation_systems().comm()),  // for the nonlinear system
     sd_fluid_sol = NumericVector<Number>::build(this->get_equation_systems().comm());  // for the small-disturbance system
 
-    std::vector<Number> global_fluid_sol, global_sd_fluid_sol; // localized euler solution, localized small-disturbance solution
-
-
     // ask systems to localize their solutions
-    fluid.update_global_solution(global_fluid_sol);
     fluid_sol->init(fluid.solution->size(), true, SERIAL);
-    (*fluid_sol) = global_fluid_sol;
-    global_fluid_sol.clear();
+    fluid.solution->localize(*fluid_sol,
+                             fluid.get_dof_map().get_send_list());
     
     // now the small-disturbance solution
-    sd_fluid.update_global_solution(global_sd_fluid_sol);
     sd_fluid_sol->init(sd_fluid.solution->size(), true, SERIAL);
-    (*sd_fluid_sol) = global_sd_fluid_sol;
-    global_sd_fluid_sol.clear();
+    sd_fluid.solution->localize(*sd_fluid_sol,
+                                sd_fluid.get_dof_map().get_send_list());
 
     // create the mesh functions to interpolate solutions
     AutoPtr<MeshFunction>

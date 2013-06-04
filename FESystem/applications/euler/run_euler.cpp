@@ -737,7 +737,7 @@ int main (int argc, char* const argv[])
         }
         
         // Write out this timestep if we're requested to
-        if (((t_step+1)%write_interval == 0) || !continue_iterations)
+        if ((t_step%write_interval == 0) || !continue_iterations)
         {
             fluid_post.postprocess();
 
@@ -748,7 +748,7 @@ int main (int argc, char* const argv[])
             << std::setw(3)
             << std::setfill('0')
             << std::right
-            << t_step+1
+            << t_step
             << ".pvtu";
             
             VTKIO(mesh).write_equation_systems(file_name.str(),
@@ -758,7 +758,7 @@ int main (int argc, char* const argv[])
             << std::setw(3)
             << std::setfill('0')
             << std::right
-            << t_step+1
+            << t_step
             << ".pvtu";
             
             std::set<unsigned int> bc_ids; bc_ids.insert(0);
