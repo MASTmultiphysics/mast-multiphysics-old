@@ -91,7 +91,7 @@ void SurfaceMotion::surface_normal_perturbation(const Point& n, DenseVector<Numb
     {
         // normal distance from pitching axis to the given point
         Number pitch_scale;
-        pitch_scale = (cos(pitch_phase), sin(pitch_phase));
+        pitch_scale = Number(cos(pitch_phase), sin(pitch_phase));
         
         Point tmp(pitch_axis.cross(n));
         for (unsigned int i=0; i<dnormal.size(); i++)

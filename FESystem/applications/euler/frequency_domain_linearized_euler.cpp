@@ -847,12 +847,12 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     }
 
     
-    //    std::cout << "inside side constraint " << std::endl;
-    //    std::cout << "elem solution" << std::endl; c.elem_solution.print(std::cout);
-    //    std::cout << if_inf_bc << "  " << if_wall_bc << std::endl;
-    //    std::cout << "bc vec: " << std::endl; Fvec.print(std::cout);
-    //    if (request_jacobian && c.elem_solution_derivative)
-    //        Kmat.print(std::cout);
+//    std::cout << "inside side constraint " << std::endl;
+//    std::cout << "elem solution" << std::endl; c.elem_solution.print(std::cout);
+//    std::cout << mechanical_bc_type << std::endl;
+//    std::cout << "bc vec: " << std::endl; Fvec.print(std::cout);
+//    if (request_jacobian && c.elem_solution_derivative)
+//        Kmat.print(std::cout);
     
     return request_jacobian;
 }
