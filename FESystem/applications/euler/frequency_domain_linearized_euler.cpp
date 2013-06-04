@@ -24,6 +24,7 @@
 #include "libmesh/quadrature.h"
 #include "libmesh/mesh_function.h"
 #include "libmesh/fem_function_base.h"
+#include "libmesh/dof_map.h"
 
 
 
@@ -141,9 +142,32 @@ void FrequencyDomainLinearizedEuler::init_context(libMesh::DiffContext &context)
 }
 
 
+
+void FrequencyDomainLinearizedEuler::localize_fluid_solution()
+{
+    libmesh_assert(!_if_localized_sol);
+    
+    _local_fluid_solution =
+    NumericVector<Number>::build(this->get_equation_systems().comm());
+    
+    
+    System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
+
+    _local_fluid_solution->init(fluid.solution->size(), true, SERIAL);
+    fluid.solution->localize(*_local_fluid_solution,
+                             fluid.get_dof_map().get_send_list());
+    
+    _if_localized_sol = true;
+}
+
+
+
+
 bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacobian,
                                                               DiffContext &context)
 {
+    libmesh_assert(_if_localized_sol);
+    
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     FEBase* elem_fe;
@@ -208,8 +232,11 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     // element dofs from steady solution to calculate the linearized quantities
     System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
     
+    std::vector<dof_id_type> fluid_dof_indices;
+    fluid.get_dof_map().dof_indices(c.elem, fluid_dof_indices);
+    
     for (unsigned int i=0; i<c.dof_indices.size(); i++)
-        ref_sol(i) = real((*fluid.solution)(c.dof_indices[i]));
+        ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
     
     Number iota(0, 1.), scaling = iota*surface_motion->frequency;
 
@@ -400,6 +427,8 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
 bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian,
                                                            DiffContext &context)
 {
+    libmesh_assert(_if_localized_sol);
+
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
@@ -516,9 +545,11 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     // element dofs from steady solution to calculate the linearized quantities
     System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
     
+    std::vector<dof_id_type> fluid_dof_indices;
+    fluid.get_dof_map().dof_indices(c.elem, fluid_dof_indices);
+    
     for (unsigned int i=0; i<c.dof_indices.size(); i++)
-        ref_sol(i) = real((*fluid.solution)(c.dof_indices[i]));
-
+        ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
     
     
     PrimitiveSolution p_sol;

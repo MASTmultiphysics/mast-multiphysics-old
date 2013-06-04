@@ -536,7 +536,9 @@ int main (int argc, char* const argv[])
     libmesh_assert_equal_to (n_timesteps, 1);
     
     equation_systems.read<Real>("saved_solution.xdr", libMeshEnums::DECODE);
-    VTKIO(mesh).write_equation_systems("steady_solution.pvtu", equation_systems);
+    
+    // now initilaize the nonlinear solution
+    system.localize_fluid_solution();
     
 #endif
     

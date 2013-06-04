@@ -35,13 +35,17 @@ public:
                                    const std::string& name_in,
                                    const unsigned int number_in):
     FEMSystem(es, name_in, number_in),
-    EulerElemBase()
+    EulerElemBase(),
+    _if_localized_sol(false)
     { }
     
     void init_data();
     
     virtual void init_context(DiffContext &context);
 
+    
+    void localize_fluid_solution();
+    
     
     virtual bool element_time_derivative (bool request_jacobian,
                                           DiffContext &context);
@@ -52,6 +56,13 @@ public:
     AutoPtr<SurfaceMotion> surface_motion;
     
     std::vector<unsigned int> vars;
+    
+protected:
+
+    bool _if_localized_sol;
+    
+    AutoPtr<NumericVector<Number> > _local_fluid_solution;
+
 };
 
 
