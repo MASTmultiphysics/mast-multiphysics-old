@@ -98,6 +98,7 @@ endif
 
 GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
 GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments   
+GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments   
 #GCC_FLAGS_OPT = -g0 -Os 
 
 D      = cd
@@ -174,13 +175,19 @@ euler-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOUR
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
 
 euler-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+
+euler-oprof-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
 
 euler-dbg-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
 
 euler-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+
+euler-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
 
 fesystem-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES})  libfesystem-dbg.a 
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
@@ -204,11 +211,17 @@ fesystem-opt: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_EXAMPLE_SO
 %-opt-real-cpp.o: %.cpp
 	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
+%-oprof-real-cpp.o: %.cpp
+	${GCC_COMP} -c ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+
 %-dbg-complex-cpp.o: %.cpp
 	${GCC_COMP} -c ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 %-opt-complex-cpp.o: %.cpp
 	${GCC_COMP} -c ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
+
+%-oprof-complex-cpp.o: %.cpp
+	${GCC_COMP} -c ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 
 libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
