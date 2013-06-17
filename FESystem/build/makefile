@@ -70,20 +70,31 @@ ifeq (${PLATFORM},Linux)
     GCC_PRE = g++
     GCC_COMP = g++
     PYTHON = python
-    ARPACK_LIB_DIR=/home/bhatiam/usr/lib/
-    ARPACK_LIB=-larpack
-    LAPACK_BLAS_LIBS=-llapack -lblas
-    LAPACK_BLAS_LIB_DIR=/home/bhatiam/usr/lib/
-    GFORT_SYSTEM_LIB_DIR=/apps/global/oss/TOOLCHAIN/Linux/apps/gcc-4.7.0/lib/
-    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
+    ARPACK_LIB_DIR=./
+    ARPACK_LIB=./
+    LAPACK_BLAS_LIBS=./
+    LAPACK_BLAS_LIB_DIR=./
+    GFORT_SYSTEM_LIB_DIR=./
+    GFORT_SYSTEM_LIBS=./
+    PLPLOT_INCLUDE_DIR=./
     HAVE_PLPLOT_LIBS=0
-    METIS_INCLUDE_DIR=/home/bhatiam/usr/metis/include
-    METIS_LIB_DIR=/home/bhatiam/usr/metis/lib
-    METIS_LIBS=-lmetis
-    TBB_LIB_DIR=/home/bhatiam/usr/tbb/tbb41_20121003oss/lib/intel64/cc4.1.0_libc2.4_kernel2.6.16.21
-    TBB_INCLUDE_DIR=/home/bhatiam/usr/tbb/tbb41_20121003oss/include
+    PLPLOT_LIB_DIR=./
+    PLPLOT_LIBS=./
+    METIS_INCLUDE_DIR=./
+    METIS_LIB_DIR=./
+    METIS_LIBS=./
+    HDF_LIB_DIR=/apps/global/oss/hdf5/1.8.0/lib
+    TBB_LIB_DIR=/usr/local/intel/2013-u1/tbb/lib/intel64
+    TBB_INCLUDE_DIR=/usr/local/intel/2013-u1/tbb/include
     TBB_LIBS=-ltbb -ltbbmalloc
-    BOOST_DIR=/home/bhatia/usr/include
+    BOOST_DIR=./
+    LIBMESH_DIR=../../../libmesh
+    TRILINOS_DIR=./
+    VTK_LIB_DIR=/home/bhatiam/usr/vtk/lib/vtk-5.10
+    VTK_LIBS=-lvtkIO -lvtkCommon -lvtkFiltering
+    VTK_INCLUDE_DIR=/home/bhatiam/usr/vtk/include/vtk-5.10
+    MPI_INCLUDE_DIR=/usr/local/openmpi/openmpi-1.6.3/x86_64/ib/gcc/include
+    MPI_LIB_DIR=/usr/local/openmpi/openmpi-1.6.3/x86_64/ib/gcc/lib
 endif
 
 ifeq (${PLATFORM},script)
@@ -96,9 +107,9 @@ ifeq (${PLATFORM},script)
 endif
 
 
-GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
-GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments   
-GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments   
+GCC_FLAGS_DEBUG = -g3 -O0 -Wall -std=c++0x
+GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments -std=c++0x
+GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments -std=c++0x
 #GCC_FLAGS_OPT = -g0 -Os 
 
 D      = cd
@@ -136,9 +147,10 @@ EXTERNAL_LIB_DIRS=-L${SOURCE_DIR}
 EXTERNAL_LIB_DIRS+=-L${ARPACK_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${METIS_LIB_DIR}
-EXTERNAL_LIB_DIRS+=-L${TBB_LIB_DIR}
+EXTERNAL_LIB_DIRS+=-L${TBB_LIB_DIR} -Wl,-rpath,${TBB_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${GFORT_SYSTEM_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${MPI_LIB_DIR}
+EXTERNAL_LIB_DIRS+=-Wl,-rpath,${VTK_LIB_DIR}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
 endif
