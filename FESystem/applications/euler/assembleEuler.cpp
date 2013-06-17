@@ -316,13 +316,17 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             dB_mat[i_dim].left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
             Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
         }
-                
-        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-            this->calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
-            (i_dim, primitive_sol, flux_jacobian_sens[i_dim]);
-        this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat,
-                                                     dB_mat, Ai_advection, Ai_Bi_advection,
-                                                     A_inv_entropy, flux_jacobian_sens, LS_mat, LS_sens, diff_val);
+        
+        if (_if_full_linearization)
+        {
+            for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                this->calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
+                (i_dim, primitive_sol, flux_jacobian_sens[i_dim]);
+        }
+        if (_if_update_stabilization_per_quadrature_point || (qp == 0))
+            this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat,
+                                                         dB_mat, Ai_advection, Ai_Bi_advection,
+                                                         A_inv_entropy, flux_jacobian_sens, LS_mat, LS_sens, diff_val);
 
         if (if_use_stored_dc_coeff)
             diff_val = delta_vals(qp);
@@ -374,13 +378,16 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2, dB_mat[i_dim]);
                 Kmat.add(-JxW[qp]*diff_val, tmp_mat2_n2n2);
                 
-                // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
-                dB_mat[i_dim].vector_mult(tmp_vec2_n1, c.elem_solution);
-                for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+                if (_if_full_linearization)
                 {
-                    flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1, tmp_vec2_n1);
-                    for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                        A_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                    // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
+                    dB_mat[i_dim].vector_mult(tmp_vec2_n1, c.elem_solution);
+                    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+                    {
+                        flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1, tmp_vec2_n1);
+                        for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                            A_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                    }
                 }
                 
                 if (_if_viscous)
@@ -400,13 +407,16 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             LS_mat.get_transpose(tmp_mat3);
             tmp_mat3.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU   (Ai constant)
             Kmat.add(-JxW[qp], tmp_mat3);
-            
-            LS_mat.get_transpose(tmp_mat3);
-            tmp_mat3.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
-            Kmat.add(-JxW[qp], tmp_mat3);
 
-            // contribution sensitivity of the LS.tau matrix
-            Kmat.add(-JxW[qp], LS_sens);
+            if (_if_full_linearization)
+            {
+                LS_mat.get_transpose(tmp_mat3);
+                tmp_mat3.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
+                Kmat.add(-JxW[qp], tmp_mat3);
+                
+                // contribution sensitivity of the LS.tau matrix
+                Kmat.add(-JxW[qp], LS_sens);
+            }
         }
     } // end of the quadrature point qp-loop
 
@@ -874,9 +884,10 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
         }
         
-        this->calculate_differential_operator_matrix(vars, qp, c, c.elem_fixed_solution, primitive_sol, B_mat, dB_mat,
-                                                     Ai_advection, Ai_Bi_advection, A_inv_entropy,
-                                                     flux_jacobian_sens, LS_mat, LS_sens, diff_val);
+        if (_if_update_stabilization_per_quadrature_point || (qp == 0))
+            this->calculate_differential_operator_matrix(vars, qp, c, c.elem_fixed_solution, primitive_sol, B_mat, dB_mat,
+                                                         Ai_advection, Ai_Bi_advection, A_inv_entropy,
+                                                         flux_jacobian_sens, LS_mat, LS_sens, diff_val);
         
         // Galerkin contribution to velocity
         B_mat.vector_mult( tmp_vec1_n1, c.elem_solution );
@@ -1015,7 +1026,7 @@ public:
         _fluid_function(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
-        p_sol.init(c.dim, fluid_sol, _cp, _cv);
+        p_sol.init(c.dim, fluid_sol, _cp, _cv, false);
         
         for (unsigned int i=0; i<_vars.size(); i++)
             val(i) = get_var_val(_vars[i], p_sol, _p0, _q0);
@@ -1029,7 +1040,7 @@ public:
         _fluid_function(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
-        p_sol.init(c.dim, fluid_sol, _cp, _cv);
+        p_sol.init(c.dim, fluid_sol, _cp, _cv, false);
         
         return get_var_val(_vars[i_comp], p_sol, _p0, _q0);
     }

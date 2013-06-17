@@ -51,7 +51,8 @@ PrimitiveSolution::zero()
 }
 
 
-void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &conservative_sol, const Real cp_val, const Real cv_val)
+void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &conservative_sol, const Real cp_val, const Real cv_val,
+                             bool if_viscous)
 {
     dimension = dim;
     const unsigned int n1 = dim+2;
@@ -92,9 +93,12 @@ void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &co
     entropy = log(p/pow(rho,gamma));
     
     // viscous quantities
-    mu = 1.458e-6 * pow(T, 1.5)/(T+110.4);
-    lambda = -2./3.*mu;
-    k_thermal = mu*cp/Pr;
+    if (if_viscous)
+    {
+        mu = 1.458e-6 * pow(T, 1.5)/(T+110.4);
+        lambda = -2./3.*mu;
+        k_thermal = mu*cp/Pr;
+    }
 }
 
 
@@ -254,7 +258,9 @@ void EulerElemBase::init_data ()
     
     // check if the simulation is viscous or inviscid
     _if_viscous = infile("if_viscous", false);
-
+    _if_full_linearization = infile("if_full_linearization", true);
+    _if_update_stabilization_per_quadrature_point = infile("if_update_stabilization_per_quadrature_point", true);
+    
     // read the boundary conditions
     unsigned int n_bc, bc_id;
     // first the inviscid conditions
@@ -420,7 +426,6 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
 
         for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
         {
-            phi_vals.zero();
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
                 phi_vals(i_nd) = dphi[i_nd][qp](i_dim);
             dB_mat[i_dim].reinit(c.n_vars(), phi_vals);
@@ -430,7 +435,7 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
     B_mat.vector_mult( conservative_sol, elem_solution );
     
     primitive_sol.zero();
-    primitive_sol.init(dim, conservative_sol, cp, cv);
+    primitive_sol.init(dim, conservative_sol, cp, cv, _if_viscous);
 }
 
 
@@ -1780,7 +1785,7 @@ EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
 
 
 
-void
+bool
 EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
                                           const PrimitiveSolution& sol,
                                           DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
@@ -1826,11 +1831,13 @@ EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
         tmp1.lu_solve(b, x);
         tau.set_column(i_var, x);
     }
+    
+    return false;
 }
 
 
 
-void
+bool
 EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
                                              const PrimitiveSolution& sol,
                                              DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
@@ -1902,58 +1909,63 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
         tau(1+i_dim, 1+i_dim) = tau_m;
     tau(n1-1, n1-1) = tau_e;
     
-    // calculation sensitivity of the tau matrix for each conservative variable
-    std::vector<Real> primitive_sens, cons_sens;
-    primitive_sens.resize(n1); cons_sens.resize(n1);
-    // sensitivity wrt primitive variables
-    for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
+    if (_if_full_linearization)
     {
-        switch (_active_primitive_vars[i_pvar])
+        // calculation sensitivity of the tau matrix for each conservative variable
+        std::vector<Real> primitive_sens, cons_sens;
+        primitive_sens.resize(n1); cons_sens.resize(n1);
+        // sensitivity wrt primitive variables
+        for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
         {
-            case RHO_PRIM:
-                primitive_sens[i_pvar] = 0.;
-                break;
-
-            case VEL1:
-                primitive_sens[i_pvar] = 2.0*u1/sqrt(2.0*sol.k)/h;
-                break;
-
-            case VEL2:
-                primitive_sens[i_pvar] = 2.0*u2/sqrt(2.0*sol.k)/h;
-                break;
-
-            case VEL3:
-                primitive_sens[i_pvar] = 2.0*u3/sqrt(2.0*sol.k)/h;
-                break;
-
-            case TEMP:
-                primitive_sens[i_pvar] = sqrt(gamma*R/sol.T)/h;
-                break;
-
-            default:
-                break;
+            switch (_active_primitive_vars[i_pvar])
+            {
+                case RHO_PRIM:
+                    primitive_sens[i_pvar] = 0.;
+                    break;
+                    
+                case VEL1:
+                    primitive_sens[i_pvar] = 2.0*u1/sqrt(2.0*sol.k)/h;
+                    break;
+                    
+                case VEL2:
+                    primitive_sens[i_pvar] = 2.0*u2/sqrt(2.0*sol.k)/h;
+                    break;
+                    
+                case VEL3:
+                    primitive_sens[i_pvar] = 2.0*u3/sqrt(2.0*sol.k)/h;
+                    break;
+                    
+                case TEMP:
+                    primitive_sens[i_pvar] = sqrt(gamma*R/sol.T)/h;
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        
+        DenseMatrix<Real> dprim_dcons, dcons_dprim;
+        dprim_dcons.resize(n1, n1); dcons_dprim.resize(n1, n1);
+        std::fill(cons_sens.begin(), cons_sens.end(), 0.);
+        
+        // apply chain rule
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        {
+            for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
+                cons_sens[i_cvar] += primitive_sens[i_pvar] * dprim_dcons(i_pvar, i_cvar);
+        }
+        
+        // set the values in the sensitivity matrices
+        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        {
+            tau_sens[i_cvar].zero();
+            cons_sens[i_cvar] *= -pow(2.0/h*(u_val+a),-2.0);
+            for (unsigned int i=0; i<n1; i++)
+                tau_sens[i_cvar](i,i) = cons_sens[i_cvar];
         }
     }
     
-    DenseMatrix<Real> dprim_dcons, dcons_dprim;
-    dprim_dcons.resize(n1, n1); dcons_dprim.resize(n1, n1);
-    std::fill(cons_sens.begin(), cons_sens.end(), 0.);
-    
-    // apply chain rule
-    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
-    {
-        for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
-            cons_sens[i_cvar] += primitive_sens[i_pvar] * dprim_dcons(i_pvar, i_cvar);
-    }
-    
-    // set the values in the sensitivity matrices
-    for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
-    {
-        tau_sens[i_cvar].zero();
-        cons_sens[i_cvar] *= -pow(2.0/h*(u_val+a),-2.0);
-        for (unsigned int i=0; i<n1; i++)
-            tau_sens[i_cvar](i,i) = cons_sens[i_cvar];
-    }
+    return true;
 }
 
 
@@ -2056,10 +2068,12 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     LS_operator.zero();
     LS_sens.zero();
     
+    bool if_diagonal_tau = false;
+    
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
-    this->calculate_aliabadi_tau_matrix(vars, qp, c, sol, tau, tau_sens);
-    //this->calculate_barth_tau_matrix(vars, qp, c, sol, tau, tau_sens);
+    if_diagonal_tau = this->calculate_aliabadi_tau_matrix(vars, qp, c, sol, tau, tau_sens);
+    //if_diagonal_tau = this->calculate_barth_tau_matrix(vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
@@ -2070,25 +2084,28 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         
         dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
 
-        // sensitivity of the LS operator times strong form of residual
-        // Bi^T dAi/dalpha tau
-        tau.vector_mult(vec1, vec2);
-        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+        if (_if_full_linearization)
         {
-            Ai_sens[i][i_cvar].vector_mult(vec3, vec1);
-            dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
-            for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
-        }
-
-        // Bi^T Ai dtau/dalpha
-        for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
-        {
-            tau_sens[i_cvar].vector_mult(vec1, vec2);
-            Ai_advection[i].vector_mult(vec3, vec1);
-            dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
-            for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+            // sensitivity of the LS operator times strong form of residual
+            // Bi^T dAi/dalpha tau
+            tau.vector_mult(vec1, vec2);
+            for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+            {
+                Ai_sens[i][i_cvar].vector_mult(vec3, vec1);
+                dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
+                for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                    LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+            }
+            
+            // Bi^T Ai dtau/dalpha
+            for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+            {
+                tau_sens[i_cvar].vector_mult(vec1, vec2);
+                Ai_advection[i].vector_mult(vec3, vec1);
+                dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
+                for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                    LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+            }
         }
     }
     
@@ -2124,7 +2141,13 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         discontinuity_val = 0.0;
     
     // scale the LS matrix with the correct factor
-    LS_operator.left_multiply_transpose(tau);
+    if (if_diagonal_tau)
+    {
+        for (unsigned int i=0; i<n1; i++)
+            LS_operator.scale_row(i, tau(i,i));
+    }
+    else
+        LS_operator.left_multiply_transpose(tau);
 }
 
 

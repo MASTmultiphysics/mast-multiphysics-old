@@ -271,10 +271,11 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
             this->calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
             (i_dim, primitive_sol, flux_jacobian_sens[i_dim]);
         
-        this->calculate_differential_operator_matrix(vars, qp, c, ref_sol, primitive_sol, B_mat,
-                                                     dB_mat, Ai_advection, Ai_Bi_advection,
-                                                     A_inv_entropy, flux_jacobian_sens,
-                                                     LS_mat, LS_sens, diff_val);
+        if (_update_stabilization_per_quadrature_point || (qp == 0))
+            this->calculate_differential_operator_matrix(vars, qp, c, ref_sol, primitive_sol, B_mat,
+                                                         dB_mat, Ai_advection, Ai_Bi_advection,
+                                                         A_inv_entropy, flux_jacobian_sens,
+                                                         LS_mat, LS_sens, diff_val);
         
         // the discontinuity capturing term is reused from the steady solution
         diff_val = real(diff_val_vec.el(c.elem->dof_number(delta_val_system.number(), 0, 0)));

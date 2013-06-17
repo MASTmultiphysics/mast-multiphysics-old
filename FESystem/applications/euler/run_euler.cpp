@@ -818,8 +818,8 @@ int main (int argc, char* const argv[])
 
         // Do one last solve before the time step increment
         system.solve();
-        system.assemble_qoi(); // calculate the quantities of interest
-        system.postprocess(); // set the qois to the post-process variables
+        //system.assemble_qoi(); // calculate the quantities of interest
+        //system.postprocess(); // set the qois to the post-process variables
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
         system.evaluate_recalculate_dc_flag();
@@ -848,6 +848,8 @@ int main (int argc, char* const argv[])
         if ((t_step%write_interval == 0) || !continue_iterations)
         {
             fluid_post.postprocess();
+            system.assemble_qoi(); // calculate the quantities of interest
+            system.postprocess(); // set the qois to the post-process variables
 
             std::ostringstream file_name, b_file_name;
             
