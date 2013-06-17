@@ -223,7 +223,7 @@ SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real q0) const
 
 EulerElemBase::~EulerElemBase()
 {
-    delete this->integrated_force;
+
 }
 
 
@@ -240,6 +240,17 @@ void EulerElemBase::init_data ()
     temp_inf = infile("temp",300.0);
     cp = infile("cp",1.003e3);
     cv = infile("cv",0.716e3);
+
+    // initialize the force vectors
+    _lift_normal.resize(dim);
+    _drag_normal.resize(dim);
+    
+    _lift_normal(0) = -sin(aoa*pi/180.);
+    _lift_normal(1) =  cos(aoa*pi/180.);
+    
+    _drag_normal(0) =  cos(aoa*pi/180.);
+    _drag_normal(1) =  sin(aoa*pi/180.);
+
     
     // check if the simulation is viscous or inviscid
     _if_viscous = infile("if_viscous", false);
@@ -329,9 +340,6 @@ void EulerElemBase::init_data ()
     q0_inf = 0.5*rho_inf*(u1_inf*u1_inf+u2_inf*u2_inf+u3_inf*u3_inf);
     p_inf = R*rho_inf*temp_inf;
     
-    integrated_force = new DenseVector<Number>;
-    integrated_force->resize(dim);
-    
     // prepare the variable vector
     _active_primitive_vars.push_back(RHO_PRIM);
     _active_primitive_vars.push_back(VEL1);
@@ -381,16 +389,16 @@ void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, 
                                                         const bool if_elem_domain, const DenseVector<Real>& elem_solution,
                                                         DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
-                                                        DenseMatrix<Real>& B_mat, std::vector<DenseMatrix<Real> >& dB_mat)
+                                                        FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat)
 {
     conservative_sol.zero();
-    B_mat.zero();
-    for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
-        dB_mat[ i_dim ].zero();
-    
+
     FEBase* fe;
 
-    for ( unsigned int i_var=0; i_var<c.n_vars(); i_var++ )
+    DenseVector<Real> phi_vals;
+    
+//    for ( unsigned int i_var=0; i_var<c.n_vars(); i_var++ )
+    unsigned int i_var = 0; // assuming that all FE are same
     {
         if (if_elem_domain)
             c.get_element_fe(vars[i_var], fe);
@@ -400,14 +408,23 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
         const std::vector<std::vector<Real> >& phi = fe->get_phi();
         const unsigned int n_phi = phi.size();
 
+        phi_vals.resize(n_phi);
+
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-            B_mat( i_var, i_var*n_phi+i_nd ) = phi[i_nd][qp];
+            phi_vals(i_nd) = phi[i_nd][qp];
+        
+        B_mat.reinit(c.n_vars(), phi_vals); // initialize the operator matrix
         
         const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
         
+
         for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
+        {
+            phi_vals.zero();
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-                dB_mat[i_dim]( i_var, i_var*n_phi+i_nd ) = dphi[i_nd][qp](i_dim);
+                phi_vals(i_nd) = dphi[i_nd][qp](i_dim);
+            dB_mat[i_dim].reinit(c.n_vars(), phi_vals);
+        }
     }
     
     B_mat.vector_mult( conservative_sol, elem_solution );
@@ -522,7 +539,7 @@ EulerElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
 
 void
 EulerElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
-                                           const std::vector<DenseMatrix<Real> >& dB_mat,
+                                           const std::vector<FEMOperatorMatrix>& dB_mat,
                                            const DenseMatrix<Real>& dprim_dcons,
                                            const PrimitiveSolution& psol,
                                            DenseMatrix<Real>& stress_tensor,
@@ -1778,7 +1795,7 @@ EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
     Real nval;
     FEBase* fe;
     c.get_element_fe(vars[0], fe);
-    std::vector<std::vector<RealVectorValue> > dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
     
     for (unsigned int i_node=0; i_node<dphi.size(); i_node++)
     {
@@ -1822,7 +1839,7 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
     
     FEBase* fe;
     c.get_element_fe(vars[0], fe);
-    std::vector<std::vector<RealVectorValue> > dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
     
     DenseVector<Real> u, dN;
     u.resize(dim); dN.resize(dim);
@@ -2011,7 +2028,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
 
 void EulerElemBase::calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
                                                            const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
-                                                           const DenseMatrix<Real>& B_mat, const std::vector<DenseMatrix<Real> >& dB_mat,
+                                                           const FEMOperatorMatrix& B_mat, const std::vector<FEMOperatorMatrix>& dB_mat,
                                                            const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
                                                            const DenseMatrix<Real>& A_inv_entropy, const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
                                                            DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens, Real& discontinuity_val )
@@ -2019,9 +2036,9 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
     std::vector<DenseVector<Real> > diff_vec(3);
-    DenseMatrix<Real> tmp_mat, tau, dxi_dX;
+    DenseMatrix<Real> tmp_mat, tmp_mat2, tau, dxi_dX;
     DenseVector<Real> vec1, vec2, vec3, vec4_n2;
-    tmp_mat.resize(n1, n2); tau.resize(n1, n1); dxi_dX.resize(dim, dim);
+    tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1); dxi_dX.resize(dim, dim);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
     for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
@@ -2048,8 +2065,8 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     for (unsigned int i=0; i<dim; i++)
     {
         Ai_advection[i].get_transpose(tmp_mat);
-        tmp_mat.right_multiply(dB_mat[i]);
-        LS_operator.add(1.0, tmp_mat);  // A_i^T dB/dx_i
+        dB_mat[i].left_multiply(tmp_mat2, tmp_mat);
+        LS_operator.add(1.0, tmp_mat2);  // A_i^T dB/dx_i
         
         dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
 
@@ -2109,35 +2126,6 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     // scale the LS matrix with the correct factor
     LS_operator.left_multiply_transpose(tau);
 }
-
-
-
-void EulerElemBase::print_integrated_lift_drag(std::ostream& o)
-{
-    const Real pi = acos(-1.);
-
-    DenseVector<Number> lift_vec, drag_vec;
-    lift_vec.resize(dim); drag_vec.resize(dim);
-
-    Number val;
-    
-    for (unsigned int i=0; i<dim; i++)
-    {
-        val = (*integrated_force)(i);
-        this->system_comm->sum(val);
-        (*integrated_force)(i) = val;
-    }
-    
-    lift_vec(0) = -sin(aoa*pi/180.);
-    lift_vec(1) =  cos(aoa*pi/180.);
-
-    drag_vec(0) =  cos(aoa*pi/180.);
-    drag_vec(1) =  sin(aoa*pi/180.);
-
-    o << "Lift: " << std::setw(25) << std::setprecision(14) << integrated_force->dot(lift_vec) << std::endl;
-    o << "Drag: " << std::setw(25) << std::setprecision(14) << integrated_force->dot(drag_vec) << std::endl;
-}
-
 
 
 

@@ -62,6 +62,9 @@ public:
     
     virtual bool mass_residual (bool request_jacobian,
                                 DiffContext& context);
+    
+    virtual void postprocess();
+    
 
     void evaluate_recalculate_dc_flag();
     
@@ -75,18 +78,14 @@ public:
      */
     bool if_use_stored_dc_coeff;
 
+    std::vector<unsigned int> vars;
+
 protected:
     
     /*!
      *    Current and old norms of density in the flow-field
      */
     Real _rho_norm_old, _rho_norm_curr;
-
-    std::vector<unsigned int> vars;
-    
-public:
-    
-    Real total_volume, entropy_error;
 };
 
 

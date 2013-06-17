@@ -1,0 +1,68 @@
+//
+//  aerodynamic_qoi.h
+//  RealSolver
+//
+//  Created by Manav Bhatia on 6/11/13.
+//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
+//
+
+#ifndef __FESystem__aerodynamic_qoi__
+#define __FESystem__aerodynamic_qoi__
+
+// libMesh includes
+#include "libmesh/diff_qoi.h"
+
+// FESystem includes
+#include "euler/euler_elem_base.h"
+
+
+// Bring in everything from the libMesh namespace
+using namespace libMesh;
+
+class AerodynamicQoI : public EulerElemBase, public DifferentiableQoI
+{
+public:
+    AerodynamicQoI(const unsigned int dimension):
+    DifferentiableQoI()
+    {
+        // set the dimension
+        this->dim = dimension;
+        
+        // initialize the variable vector
+        _fluid_vars.resize(dim+2);
+        for (unsigned int i=0; i<dim+2; i++)
+            _fluid_vars[i] = i;
+            
+        // this object calculates the lift, which are calculated on the side
+        assemble_qoi_sides = true;
+        assemble_qoi_internal_sides = false;
+        assemble_qoi_elements = true;
+        
+        EulerElemBase::init_data();
+    }
+    
+    virtual ~AerodynamicQoI(){}
+    
+    virtual void init_qoi( std::vector<Number>& sys_qoi);
+
+    virtual void element_qoi_derivative (DiffContext&, const QoISet& qois);
+
+    virtual void element_qoi (DiffContext&, const QoISet& qois);
+
+    virtual void side_qoi_derivative(DiffContext &context, const QoISet & qois);
+    
+    virtual void side_qoi(DiffContext &context, const QoISet & qois);
+    
+    virtual AutoPtr<DifferentiableQoI> clone( )
+    { AutoPtr<DifferentiableQoI> my_clone( new AerodynamicQoI(dim) );
+        *my_clone = *this;
+        return my_clone;
+    }
+
+private:
+    
+    std::vector<unsigned int> _fluid_vars;
+};
+
+
+#endif /* defined(__FESystem__aerodynamic_qoi__) */

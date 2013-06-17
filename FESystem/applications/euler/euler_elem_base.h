@@ -13,6 +13,8 @@
 #include <ostream>
 #include <map>
 
+// FESystem includes
+#include "numerics/fem_operator_matrix.h"
 
 // libMesh includes
 #include "libmesh/dense_vector.h"
@@ -96,11 +98,6 @@ public:
     void get_infinity_vars( DenseVector<Real>& vars_inf ) const;
     
 
-    void print_integrated_lift_drag(std::ostream& o);
-    
-
-    DenseVector<Number>* integrated_force;
-    
 protected:
     
     
@@ -111,8 +108,8 @@ protected:
     void update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp,
                                              FEMContext& c, const bool if_elem_domain,
                                              const DenseVector<Real>& elem_solution, DenseVector<Real>& conservative_sol,
-                                             PrimitiveSolution& primitive_sol, DenseMatrix<Real>& B_mat,
-                                             std::vector<DenseMatrix<Real> >& dB_mat);
+                                             PrimitiveSolution& primitive_sol, FEMOperatorMatrix& B_mat,
+                                             std::vector<FEMOperatorMatrix>& dB_mat);
     
     
     
@@ -130,7 +127,7 @@ protected:
      *    calculates and returns the stress tensor in \p stress_tensor.
      */
     void calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
-                                     const std::vector<DenseMatrix<Real> >& dB_mat,
+                                     const std::vector<FEMOperatorMatrix>& dB_mat,
                                      const DenseMatrix<Real>& dprim_dcons,
                                      const PrimitiveSolution& psol,
                                      DenseMatrix<Real>& stress_tensor,
@@ -189,8 +186,8 @@ protected:
     
     void calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp,
                                                 FEMContext& c, const DenseVector<Real>& elem_solution,
-                                                const PrimitiveSolution& sol, const DenseMatrix<Real>& B_mat,
-                                                const std::vector<DenseMatrix<Real> >& dB_mat,
+                                                const PrimitiveSolution& sol, const FEMOperatorMatrix& B_mat,
+                                                const std::vector<FEMOperatorMatrix>& dB_mat,
                                                 const std::vector<DenseMatrix<Real> >& Ai_advection,
                                                 const DenseMatrix<Real>& Ai_Bi_advection, const DenseMatrix<Real>& A_inv_entropy,
                                                 const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
@@ -213,6 +210,7 @@ public:
 
     Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
 
+    DenseVector<Real> _lift_normal, _drag_normal;
 };
 
 

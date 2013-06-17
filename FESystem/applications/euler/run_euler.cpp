@@ -13,6 +13,7 @@
 #include "euler/assembleEuler.h"
 #include "euler/frequency_domain_linearized_euler.h"
 #include "solvers/time_solvers/residual_based_adaptive_time_solver.h"
+#include "euler/aerodynamic_qoi.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -39,6 +40,12 @@
 #include "libmesh/uniform_refinement_estimator.h"
 #include "libmesh/kelly_error_estimator.h"
 #include "libmesh/string_to_enum.h"
+
+//#include "libmesh/../../libmesh/include/mesh/exodusII_io_helper.h"
+//#include "libmesh/../../libmesh/include/mesh/nemesis_io_helper.h"
+//
+//#include "libmesh/../../libmesh/contrib/exodusii/Lib/include/exodusII.h"
+//#include "libmesh/../../libmesh/contrib/nemesis/Lib/ne_nemesisI.h"
 
 
 void distributePoints(const unsigned int n_divs, const std::vector<double>& div_locations, const std::vector<unsigned int>& n_subdivs_in_div, const std::vector<double>& relative_mesh_size_at_div, std::vector<double>& points)
@@ -85,6 +92,108 @@ void distributePoints(const unsigned int n_divs, const std::vector<double>& div_
         n += n_subdivs_in_div[i];
     }
 }
+
+
+int main_test (int argc, char* const argv[])
+{
+
+    LibMeshInit init(argc, argv);
+    
+    std::string file = "/Users/bhatiam/Documents/Projects/run_cases/HTV3/htv3_exodus.exo";
+    
+    ParallelMesh mesh(init.comm());
+    
+    ExodusII_IO exodus_reader(mesh);
+    
+    sleep(0);
+    
+    exodus_reader.read_parallel(file);
+    
+    return 0;
+}
+
+
+
+#include "numerics/fem_operator_matrix.h"
+
+int main_fem_operator (int argc, char* const argv[])
+{
+    DenseVector<Real> vec1, vec2, shp;
+    DenseMatrix<Real> mat1, mat2;
+    
+    vec1.resize(12); shp.resize(4);
+    
+    for (unsigned int i=0; i<shp.size(); i++)
+        shp(i) = i+1;
+
+    for (unsigned int i=0; i<vec1.size(); i++)
+        vec1(i) = i+100;
+    
+    shp.print(std::cout);
+    vec1.print(std::cout);
+    mat1.print(std::cout);
+
+    FEMOperatorMatrix b1, b2;
+    b1.reinit(3, shp); b2.reinit(3, shp);
+    
+    vec2.resize(3);
+    b1.vector_mult(vec2, vec1);
+    vec2.print(std::cout);
+    
+    vec1.resize(3);
+    for (unsigned int i=0; i<vec1.size(); i++)
+        vec1(i) = 100+i;
+    vec2.resize(12);
+    b1.vector_mult_transpose(vec2, vec1);
+    vec2.print(std::cout);
+    
+
+    mat1.resize(5,3);
+    mat2.resize(5, 12);
+    for (unsigned int i=0; i<5; i++)
+        for (unsigned int j=0; j<3; j++)
+            mat1(i,j) = (i+1)*(j+1);
+    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    b1.left_multiply(mat2, mat1);
+    std::cout << "Result " << std::endl;  mat2.print();
+
+
+    mat1.resize(5,12);
+    mat2.resize(5, 3);
+    for (unsigned int i=0; i<5; i++)
+        for (unsigned int j=0; j<12; j++)
+            mat1(i,j) = (i+1)*(j+1);
+    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    b1.left_multiply_transpose(mat2, mat1);
+    std::cout << "Result " << std::endl;  mat2.print();
+    
+    
+    mat1.resize(12,5);
+    mat2.resize(3, 5);
+    for (unsigned int i=0; i<12; i++)
+        for (unsigned int j=0; j<5; j++)
+            mat1(i,j) = (i+1)*(j+1);
+    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    b1.right_multiply(mat2, mat1);
+    std::cout << "Result " << std::endl;  mat2.print();
+    
+    
+    mat1.resize(3, 5);
+    mat2.resize(12, 5);
+    for (unsigned int i=0; i<3; i++)
+        for (unsigned int j=0; j<5; j++)
+            mat1(i,j) = (i+1)*(j+1);
+    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    b1.right_multiply_transpose(mat2, mat1);
+    std::cout << "Result " << std::endl;  mat2.print();
+
+
+    mat2.resize(12, 12);
+    b1.right_multiply_transpose(mat2, b1);
+    std::cout << "Result " << std::endl;  mat2.print();
+    
+}
+
 
 
 
@@ -518,10 +627,14 @@ int main (int argc, char* const argv[])
     
     timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
     system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
-    
+
     system.dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
     
     equation_systems.init ();
+    
+    AerodynamicQoI aero_qoi(dim);
+    
+    system.attach_qoi(&aero_qoi);
     
 #else
     // Declare the system "EulerSystem"
@@ -556,7 +669,7 @@ int main (int argc, char* const argv[])
     NewtonSolver &solver = dynamic_cast<NewtonSolver&>(*(system.time_solver->diff_solver().get()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
-    solver.brent_line_search = true;
+    solver.brent_line_search = false;
     solver.max_nonlinear_iterations =
     infile("max_nonlinear_iterations", 15);
     solver.relative_step_tolerance =
@@ -600,8 +713,7 @@ int main (int argc, char* const argv[])
         if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
         {
             system.solve();
-            system.print_integrated_lift_drag(std::cout);
-            system.integrated_force->zero();
+            
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
             delta_val_system.solution->close();
             delta_val_system.update();
@@ -706,14 +818,10 @@ int main (int argc, char* const argv[])
 
         // Do one last solve before the time step increment
         system.solve();
-        system.print_integrated_lift_drag(std::cout);
-        system.integrated_force->zero();
+        system.assemble_qoi(); // calculate the quantities of interest
+        system.postprocess(); // set the qois to the post-process variables
+
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        system.system_comm->sum(system.entropy_error);
-        system.system_comm->sum(system.total_volume);
-        std::cout << system.entropy_error << " , " << system.total_volume << " , "
-        << sqrt(system.entropy_error/system.total_volume) << " , " << std::endl;
-        system.entropy_error = 0.; system.total_volume = 0.;
         system.evaluate_recalculate_dc_flag();
         delta_val_system.solution->close();
         delta_val_system.update();
