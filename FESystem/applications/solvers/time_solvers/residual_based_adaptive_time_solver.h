@@ -13,7 +13,9 @@
 // Local includes
 #include "libmesh/adaptive_time_solver.h"
 
-// C++ includes
+// Forward declerations
+class EulerSystem;
+
 
 /**
  * This class wraps another UnsteadySolver derived class, and uses the
@@ -59,6 +61,8 @@ public:
     Real _xdot_linf_approx;
 
     bool _first_solve;
+    
+    EulerSystem& _euler_sys;
 };
 
 
