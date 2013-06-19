@@ -136,8 +136,11 @@ void EulerSystem::init_data ()
     this->time_evolving(vars[dim+2-1]);
     params.set<Real> ("rhoe_inf") = rho_inf*temp_inf*cv + q0_inf;
     
+    
+    // read the solver flags
+    _if_local_time_stepping = infile("if_local_time_stepping", false);
+
     // Useful debugging options
-    // Set verify_analytic_jacobians to 1e-6 to use
     this->verify_analytic_jacobians = infile("verify_analytic_jacobians", 0.);
     this->print_jacobians = infile("print_jacobians", false);
     this->print_element_jacobians = infile("print_element_jacobians", false);
@@ -295,6 +298,16 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                                                   conservative_sol, primitive_sol,
                                                   B_mat, dB_mat);
 
+        // calculate local time step value if needed, only for the first qp
+        if (qp == 0)
+        {
+            if (_if_local_time_stepping)
+                _local_time_step = _cfl * c.elem->hmax()/primitive_sol.max_characteristic_speed();
+            else
+                _local_time_step = 1.;
+        }
+
+        
         for ( unsigned int i_dim=0; i_dim < dim; i_dim++)
             this->calculate_advection_flux_jacobian ( i_dim, primitive_sol, Ai_advection[i_dim] );
         
@@ -338,26 +351,26 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             // Galerkin contribution from the advection flux terms
             this->calculate_advection_flux(i_dim, primitive_sol, flux); // F^adv_i
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^adv_i
-            Fvec.add(JxW[qp], tmp_vec3_n2);
+            Fvec.add(JxW[qp]*_local_time_step, tmp_vec3_n2);
             
             if (_if_viscous)
             {
                 // Galerkin contribution from the diffusion flux terms
                 this->calculate_diffusion_flux(i_dim, primitive_sol, stress_tensor, temp_grad, flux); // F^diff_i
                 dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^diff_i
-                Fvec.add(-JxW[qp], tmp_vec3_n2);
+                Fvec.add(-JxW[qp]*_local_time_step, tmp_vec3_n2);
             }
             
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.elem_solution);
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-            Fvec.add(-JxW[qp]*diff_val, tmp_vec3_n2);
+            Fvec.add(-JxW[qp]*diff_val*_local_time_step, tmp_vec3_n2);
         }
         
         // Least square contribution from divergence of advection flux
         Ai_Bi_advection.vector_mult(flux, c.elem_solution); // d F^adv_i / dxi
         LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau F^adv_i
-        Fvec.add(-JxW[qp], tmp_vec3_n2);
+        Fvec.add(-JxW[qp]*_local_time_step, tmp_vec3_n2);
         
         // Least square contribution from divergence of diffusion flux
         // TODO: this requires a 2nd order differential of the flux
@@ -372,11 +385,11 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                 // Galerkin contribution from the advection flux terms
                 B_mat.left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2, tmp_mat_n1n2);// dBw/dx_i^T  dF^adv_i/ dU
-                Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                Kmat.add(JxW[qp]*_local_time_step, tmp_mat2_n2n2);
                 
                 // discontinuity capturing term
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2, dB_mat[i_dim]);
-                Kmat.add(-JxW[qp]*diff_val, tmp_mat2_n2n2);
+                Kmat.add(-JxW[qp]*diff_val*_local_time_step, tmp_mat2_n2n2);
                 
                 if (_if_full_linearization)
                 {
@@ -397,7 +410,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
                         this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
                         dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
                         dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2, tmp_mat_n1n2); // dB/dx_i^T Kij dB/dx_j
-                        Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                        Kmat.add(-JxW[qp]*_local_time_step, tmp_mat2_n2n2);
                     }
 
                 }
@@ -406,16 +419,16 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             // Least square contribution of flux gradient
             LS_mat.get_transpose(tmp_mat3);
             tmp_mat3.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU   (Ai constant)
-            Kmat.add(-JxW[qp], tmp_mat3);
+            Kmat.add(-JxW[qp]*_local_time_step, tmp_mat3);
 
             if (_if_full_linearization)
             {
                 LS_mat.get_transpose(tmp_mat3);
                 tmp_mat3.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
-                Kmat.add(-JxW[qp], tmp_mat3);
+                Kmat.add(-JxW[qp]*_local_time_step, tmp_mat3);
                 
                 // contribution sensitivity of the LS.tau matrix
-                Kmat.add(-JxW[qp], LS_sens);
+                Kmat.add(-JxW[qp]*_local_time_step, LS_sens);
             }
         }
     } // end of the quadrature point qp-loop
@@ -578,6 +591,15 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
                                                           B_mat, dB_mat);
 
+                // calculate local time step value if needed, only for the first qp
+                if (qp == 0)
+                {
+                    if (_if_local_time_stepping)
+                        _local_time_step = _cfl * c.elem->hmax()/p_sol.max_characteristic_speed();
+                    else
+                        _local_time_step = 1.;
+                }
+
                 // stress tensor and temperature gradient
                 this->calculate_conservative_variable_jacobian(p_sol, dcons_dprim, dprim_dcons);
                 this->calculate_diffusion_tensors(c.elem_solution, dB_mat, dprim_dcons,
@@ -604,7 +626,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 
                 // contribution from advection flux
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                Fvec.add(-JxW[qp]*_local_time_step, tmp_vec1_n2);
                 
                 // contribution from diffusion flux
                 flux.zero();
@@ -615,7 +637,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                     flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
                 }
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(JxW[qp], tmp_vec1_n2);
+                Fvec.add(JxW[qp]*_local_time_step, tmp_vec1_n2);
                 
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
@@ -625,7 +647,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                     // contribution from advection flux
                     B_mat.left_multiply(tmp_mat1_n1n2, A_mat);
                     B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    Kmat.add(-JxW[qp]*_local_time_step, tmp_mat2_n2n2);
 
                     // contribution from diffusion flux
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -634,7 +656,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                             this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
                             dB_mat[deriv_dim].left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
                             B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T Kij dB/dx_j
-                            Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                            Kmat.add(JxW[qp]*_local_time_step, tmp_mat2_n2n2);
                         }
                 }
             }
@@ -656,6 +678,13 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 // first update the variables at the current quadrature point
                 this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
                                                           B_mat, dB_mat);
+                if (qp == 0)
+                {
+                    if (_if_local_time_stepping)
+                        _local_time_step = _cfl * c.elem->hmax()/p_sol.max_characteristic_speed();
+                    else
+                        _local_time_step = 1.;
+                }
                 
                 flux.zero();
                 
@@ -673,7 +702,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 }
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                Fvec.add(-JxW[qp]*_local_time_step, tmp_vec1_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
@@ -681,7 +710,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                     
                     B_mat.left_multiply(tmp_mat1_n1n2, A_mat);
                     B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    Kmat.add(-JxW[qp]*_local_time_step, tmp_mat2_n2n2);
                 }
             }
         }
@@ -699,6 +728,14 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 this->update_solution_at_quadrature_point(vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
                                                           B_mat, dB_mat);
                 
+                if (qp == 0)
+                {
+                    if (_if_local_time_stepping)
+                        _local_time_step = _cfl * c.elem->hmax()/p_sol.max_characteristic_speed();
+                    else
+                        _local_time_step = 1.;
+                }
+
                 this->calculate_advection_left_eigenvector_and_inverse_for_normal(p_sol, face_normals[qp], eig_val,
                                                                                   l_eig_vec, l_eig_vec_inv_tr);
                 
@@ -716,7 +753,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                Fvec.add(-JxW[qp]*_local_time_step, tmp_vec1_n2);
                 
                 // now calculate the flux for eigenvalues greater than 0,
                 // the characteristics go out of the domain, so that
@@ -732,7 +769,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 tmp_mat_n1n1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                Fvec.add(-JxW[qp]*_local_time_step, tmp_vec1_n2);
                 
                 
                 if (_if_viscous) // evaluate the viscous flux using the domain solution
@@ -751,7 +788,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                         flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
                     }
                     B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                    Fvec.add(JxW[qp], tmp_vec1_n2);
+                    Fvec.add(JxW[qp]*_local_time_step, tmp_vec1_n2);
                 }
                 
             
@@ -772,7 +809,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                     B_mat.left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1);
                     B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
                     
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    Kmat.add(-JxW[qp]*_local_time_step, tmp_mat2_n2n2);
                     
                     if (_if_viscous)
                     {
@@ -783,7 +820,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                                 this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
                                 dB_mat[deriv_dim].left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
                                 B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T Kij dB/dx_j
-                                Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                                Kmat.add(JxW[qp]*_local_time_step, tmp_mat2_n2n2);
                             }
                     }
                 }

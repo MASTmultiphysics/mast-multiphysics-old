@@ -94,18 +94,67 @@ void distributePoints(const unsigned int n_divs, const std::vector<double>& div_
 }
 
 
-int main_test (int argc, char* const argv[])
-{
+#include "libmesh/mesh_communication.h"
 
+int main_exodus (int argc, char* const argv[])
+{
     LibMeshInit init(argc, argv);
     
     std::string file = "/Users/bhatiam/Documents/Projects/run_cases/HTV3/htv3_exodus.exo";
     
+    sleep(0);
+
     ParallelMesh mesh(init.comm());
     
-    ExodusII_IO exodus_reader(mesh);
+    if (init.comm().rank() == 0)
+    {
+        mesh.add_point(Point(0, 0, 0), 1, 0);
+        mesh.add_point(Point(1, 0, 0), 2, 0);
+        mesh.add_point(Point(1, 1, 0), 3, 0);
+        mesh.add_point(Point(0, 1, 0), 4, 0);
+        Elem* elem = Elem::build(QUAD4).release();
+        elem->processor_id(0);
+        elem->set_id(1);
+        elem->set_node(0) = mesh.query_node_ptr(1);
+        elem->set_node(1) = mesh.query_node_ptr(2);
+        elem->set_node(2) = mesh.query_node_ptr(3);
+        elem->set_node(3) = mesh.query_node_ptr(4);
+        mesh.add_elem(elem);
+    }
+    else if (init.comm().rank() == 1)
+    {
+        mesh.add_point(Point(1, 0, 0), 2, 1);
+        mesh.add_point(Point(2, 0, 0), 6, 1);
+        mesh.add_point(Point(2, 1, 0), 7, 1);
+        mesh.add_point(Point(1, 1, 0), 3, 1);
+        Elem* elem = Elem::build(QUAD4).release();
+        elem->processor_id(1);
+        elem->set_id(2);
+        elem->set_node(0) = mesh.query_node_ptr(2);
+        elem->set_node(1) = mesh.query_node_ptr(6);
+        elem->set_node(2) = mesh.query_node_ptr(7);
+        elem->set_node(3) = mesh.query_node_ptr(3);
+        mesh.add_elem(elem);
+    }
+
+    mesh.delete_remote_elements();
+    MeshCommunication().redistribute(mesh);
+    mesh.update_post_partitioning();
+    mesh.delete_remote_elements();
     
-    sleep(0);
+    // And if that didn't work, then we're actually reading into a
+    // SerialMesh, so forget about gathering neighboring elements
+//    if (mesh.is_serial())
+//        return 0;
+    
+    // Gather neighboring elements so that the mesh has the proper "ghost" neighbor information.
+    MeshCommunication().gather_neighboring_elements(libmesh_cast_ref<ParallelMesh&>(mesh));
+
+    mesh.prepare_for_use();
+    
+    return 0;
+    
+    ExodusII_IO exodus_reader(mesh);
     
     exodus_reader.read_parallel(file);
     
