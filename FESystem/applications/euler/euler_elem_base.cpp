@@ -109,6 +109,13 @@ PrimitiveSolution::c_pressure(const Real p0, const Real q0) const
 }
 
 
+Real
+PrimitiveSolution::max_characteristic_speed() const
+{
+    return sqrt(2.*k)+a;
+}
+
+
 void
 PrimitiveSolution::print(std::ostream& out) const
 {
@@ -1855,7 +1862,7 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
     u2 = sol.u2,
     u3 = sol.u3,
     a = sol.a,
-    dt = c.get_deltat_value();
+    dt = _if_local_time_stepping? _local_time_step : c.get_deltat_value();
     
     tau.zero();
     

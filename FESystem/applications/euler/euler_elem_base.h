@@ -44,6 +44,8 @@ public:
     
     Real c_pressure(const Real p0, const Real q0) const;
     
+    Real max_characteristic_speed() const;
+    
     DenseVector<Real> primitive_sol;
     unsigned int dimension;
     Real cp, cv;
@@ -87,7 +89,8 @@ public:
     aoa(0.), rho_inf(0.), mach_inf(0.), temp_inf(0.), cp(0.), cv(0.), R(0.), gamma(0.),
     a_inf(0.), u1_inf(0.), u2_inf(0.), u3_inf(0.), q0_inf(0.), p_inf(0.),
     _if_viscous(false), _if_full_linearization(false),
-    _if_update_stabilization_per_quadrature_point(true)
+    _if_update_stabilization_per_quadrature_point(true),
+    _if_local_time_stepping(false), _local_time_step(0.), _cfl(1.)
     {}
 
     virtual ~EulerElemBase();
@@ -201,12 +204,16 @@ protected:
 
     std::vector<FluidConservativeVars> _active_conservative_vars;
     
-    bool _if_viscous, _if_full_linearization, _if_update_stabilization_per_quadrature_point;
-;
+    bool _if_viscous, _if_full_linearization, _if_update_stabilization_per_quadrature_point,
+    _if_local_time_stepping;
+
+    Real _local_time_step;
     
     std::multimap<unsigned int, FluidBoundaryConditionType> _boundary_condition;
     
 public:
+
+    Real _cfl;
     
     Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
 
