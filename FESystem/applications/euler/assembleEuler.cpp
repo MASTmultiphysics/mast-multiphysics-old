@@ -86,9 +86,6 @@ void init_euler_variables(EquationSystems& es,
 
 void EulerSystem::init_data ()
 {
-    // initialize the system communicator for use by the Euler element base class
-    this->system_comm = &this->comm();
-    
     this->use_fixed_solution = true;
     
     dim = this->get_mesh().mesh_dimension();
@@ -201,7 +198,7 @@ void EulerSystem::init_context(DiffContext &context)
     
     for (unsigned int i=0; i<dim+2; i++)
     {
-        c.get_element_fe( vars[i], elem_side_fe[i]);
+        c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
         elem_fe[i]->get_xyz();
