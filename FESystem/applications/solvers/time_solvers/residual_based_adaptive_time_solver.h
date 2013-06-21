@@ -61,8 +61,6 @@ public:
     Real _xdot_linf_approx;
 
     bool _first_solve;
-    
-    EulerSystem& _euler_sys;
 };
 
 
