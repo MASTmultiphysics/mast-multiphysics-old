@@ -8,8 +8,6 @@
 
 // FESystem includes
 #include "solvers/time_solvers/residual_based_adaptive_time_solver.h"
-#include "euler/assembleEuler.h"
-
 
 #include "libmesh/diff_system.h"
 #include "libmesh/euler_solver.h"
@@ -29,8 +27,7 @@ _sol_xinf_t1(0.),
 _sol_xinf_t2(0.),
 _sol_xinf_t3(0.),
 _xdot_linf_approx(1.0e10),
-_first_solve(true),
-_euler_sys(dynamic_cast<EulerSystem&>(s))
+_first_solve(true)
 {
     // We start with a reasonable time solver: implicit Euler
     core_time_solver.reset(new EulerSolver(s));
@@ -93,26 +90,25 @@ void ResidualBaseAdaptiveTimeSolver::solve()
                 << growth_factor << std::endl;
         }
 
-        //this->_system.deltat *= growth_factor;
-        _euler_sys._cfl *= growth_factor;
+        this->_system.deltat *= growth_factor;
 
         // look for the maximum and minimum dt
-        if (_euler_sys._cfl > this->max_deltat)
+        if (this->_system.deltat > this->max_deltat)
         {
-            _euler_sys._cfl = this->max_deltat;
+            this->_system.deltat = this->max_deltat;
             if (!quiet)
-                libMesh::out << " CFL constrained by max allowable: " << std::endl;
+                libMesh::out << " deltat constrained by max allowable: " << std::endl;
         }
 
         // look for the maximum and minimum dt
-        if (_euler_sys._cfl < this->min_deltat)
+        if (this->_system.deltat < this->min_deltat)
         {
-            _euler_sys._cfl = this->min_deltat;
+            this->_system.deltat = this->min_deltat;
             if (!quiet)
-                libMesh::out << " CFL constrained by min allowable: " << std::endl;
+                libMesh::out << " deltat constrained by min allowable: " << std::endl;
         }
         
-        libMesh::out << " new CFL :  " << _euler_sys._cfl << std::endl;
+        libMesh::out << " new deltat :  " << this->_system.deltat << std::endl;
 
         _iter_counter = this->n_iters_per_update;
     }
