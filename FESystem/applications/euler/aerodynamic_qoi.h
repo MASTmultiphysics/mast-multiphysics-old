@@ -1,6 +1,6 @@
 //
 //  aerodynamic_qoi.h
-//  RealSolver
+//  FESystem
 //
 //  Created by Manav Bhatia on 6/11/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
@@ -36,7 +36,7 @@ public:
         // this object calculates the lift, which are calculated on the side
         assemble_qoi_sides = true;
         assemble_qoi_internal_sides = false;
-        assemble_qoi_elements = true;
+        assemble_qoi_elements = false;
         
         EulerElemBase::init_data();
     }

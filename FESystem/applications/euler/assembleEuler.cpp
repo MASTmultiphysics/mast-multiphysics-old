@@ -86,9 +86,6 @@ void init_euler_variables(EquationSystems& es,
 
 void EulerSystem::init_data ()
 {
-    // initialize the system communicator for use by the Euler element base class
-    this->system_comm = &this->comm();
-    
     this->use_fixed_solution = true;
     
     dim = this->get_mesh().mesh_dimension();
@@ -200,12 +197,12 @@ void EulerSystem::init_context(DiffContext &context)
     
     for (unsigned int i=0; i<dim+2; i++)
     {
-        c.get_element_fe( vars[i], elem_side_fe[i]);
+        c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
         elem_fe[i]->get_xyz();
         if (_if_viscous)
-            elem_fe[i]->get_dphi();
+            elem_side_fe[i]->get_dphi();
     }
 }
 
@@ -325,7 +322,8 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         if (_if_update_stabilization_per_quadrature_point || (qp == 0))
             this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat,
                                                          dB_mat, Ai_advection, Ai_Bi_advection,
-                                                         A_inv_entropy, flux_jacobian_sens, LS_mat, LS_sens, diff_val);
+                                                         A_inv_entropy, flux_jacobian_sens,
+                                                         LS_mat, LS_sens, diff_val);
 
         if (if_use_stored_dc_coeff)
             diff_val = delta_vals(qp);

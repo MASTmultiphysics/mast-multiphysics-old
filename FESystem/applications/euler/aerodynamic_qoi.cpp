@@ -1,6 +1,6 @@
 //
 //  aerodynamic_qoi.cpp
-//  RealSolver
+//  FESystem
 //
 //  Created by Manav Bhatia on 6/11/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
@@ -35,6 +35,8 @@ void AerodynamicQoI::element_qoi_derivative (DiffContext& context, const QoISet&
 
 void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
 
     const unsigned int n1 = dim+2;
@@ -81,12 +83,15 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     for (unsigned int i=2; i<4; i++)
         if (qois.has_index(i))
             c.elem_qoi[i] += vals[i-2];
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
 void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
                                           const QoISet& qois)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
@@ -203,6 +208,8 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
         }
             break;
     }
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -211,6 +218,8 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
 // This function computes the actual QoI
 void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
@@ -303,5 +312,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     for (unsigned int i=0; i<2; i++)
         if (qois.has_index(i))
             c.elem_qoi[i] += vals[i];
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
