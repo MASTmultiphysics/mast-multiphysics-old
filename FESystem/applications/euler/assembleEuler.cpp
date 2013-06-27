@@ -202,7 +202,7 @@ void EulerSystem::init_context(DiffContext &context)
         elem_side_fe[i]->get_phi();
         elem_fe[i]->get_xyz();
         if (_if_viscous)
-            elem_fe[i]->get_dphi();
+            elem_side_fe[i]->get_dphi();
     }
 }
 
@@ -322,7 +322,8 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
         if (_if_update_stabilization_per_quadrature_point || (qp == 0))
             this->calculate_differential_operator_matrix(vars, qp, c, c.elem_solution, primitive_sol, B_mat,
                                                          dB_mat, Ai_advection, Ai_Bi_advection,
-                                                         A_inv_entropy, flux_jacobian_sens, LS_mat, LS_sens, diff_val);
+                                                         A_inv_entropy, flux_jacobian_sens,
+                                                         LS_mat, LS_sens, diff_val);
 
         if (if_use_stored_dc_coeff)
             diff_val = delta_vals(qp);

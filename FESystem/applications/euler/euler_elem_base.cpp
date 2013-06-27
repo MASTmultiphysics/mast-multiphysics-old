@@ -421,14 +421,17 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
         
         B_mat.reinit(c.n_vars(), phi_vals); // initialize the operator matrix
         
-        const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
-        
-
-        for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
+        if (if_elem_domain || _if_viscous)
         {
-            for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-                phi_vals(i_nd) = dphi[i_nd][qp](i_dim);
-            dB_mat[i_dim].reinit(c.n_vars(), phi_vals);
+            const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
+            
+            
+            for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
+            {
+                for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+                    phi_vals(i_nd) = dphi[i_nd][qp](i_dim);
+                dB_mat[i_dim].reinit(c.n_vars(), phi_vals);
+            }
         }
     }
     
