@@ -1978,7 +1978,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
 {
     // initialize dxi_dX and dX_dxi
     dxi_dX.zero(); dX_dxi.zero();
-    Real val=0.;
+    Real val=0., val2=0.;
     FEBase* fe;
     c.get_element_fe(vars[0], fe); // assuming that all elements have the same interpolation fe
     
@@ -1992,16 +1992,18 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
                     switch (j_dim)
                     {
                         case 0:
-                            val = fe->get_dxidx()[qp];
+                            val  = fe->get_dxidx()[qp];
+                            val2 = fe->get_dxyzdxi()[qp](i_dim);
                             break;
                         case 1:
                             val = fe->get_dxidy()[qp];
+                            val2 = fe->get_dxyzdeta()[qp](i_dim);
                             break;
                         case 2:
                             val = fe->get_dxidz()[qp];
+                            val2 = fe->get_dxyzdzeta()[qp](i_dim);
                             break;
                     }
-                    dX_dxi(i_dim, j_dim) = fe->get_dxyzdxi()[qp](i_dim);
                 }
                     break;
                 case 1:
@@ -2010,15 +2012,17 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
                     {
                         case 0:
                             val = fe->get_detadx()[qp];
+                            val2 = fe->get_dxyzdxi()[qp](i_dim);
                             break;
                         case 1:
                             val = fe->get_detady()[qp];
+                            val2 = fe->get_dxyzdeta()[qp](i_dim);
                             break;
                         case 2:
                             val = fe->get_detadz()[qp];
+                            val2 = fe->get_dxyzdzeta()[qp](i_dim);
                             break;
                     }
-                    dX_dxi(i_dim, j_dim) = fe->get_dxyzdeta()[qp](i_dim);
                 }
                     break;
                 case 2:
@@ -2027,19 +2031,22 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
                     {
                         case 0:
                             val = fe->get_dzetadx()[qp];
+                            val2 = fe->get_dxyzdxi()[qp](i_dim);
                             break;
                         case 1:
                             val = fe->get_dzetady()[qp];
+                            val2 = fe->get_dxyzdeta()[qp](i_dim);
                             break;
                         case 2:
                             val = fe->get_dzetadz()[qp];
+                            val2 = fe->get_dxyzdzeta()[qp](i_dim);
                             break;
                     }
-                    dX_dxi(i_dim, j_dim) = fe->get_dxyzdzeta()[qp](i_dim);
                 }
                     break;
             }
             dxi_dX(i_dim, j_dim) = val;
+            dX_dxi(i_dim, j_dim) = val2;
         }
 }
 
