@@ -1974,10 +1974,10 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
 
 void
 EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                DenseMatrix<Real>& dxi_dX)
+                                DenseMatrix<Real>& dxi_dX, DenseMatrix<Real>& dX_dxi)
 {
-    // initialize dxi_dX
-    dxi_dX.zero();
+    // initialize dxi_dX and dX_dxi
+    dxi_dX.zero(); dX_dxi.zero();
     Real val=0.;
     FEBase* fe;
     c.get_element_fe(vars[0], fe); // assuming that all elements have the same interpolation fe
@@ -2001,6 +2001,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
                             val = fe->get_dxidz()[qp];
                             break;
                     }
+                    dX_dxi(i_dim, j_dim) = fe->get_dxyzdxi()[qp](i_dim);
                 }
                     break;
                 case 1:
@@ -2017,6 +2018,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
                             val = fe->get_detadz()[qp];
                             break;
                     }
+                    dX_dxi(i_dim, j_dim) = fe->get_dxyzdeta()[qp](i_dim);
                 }
                     break;
                 case 2:
@@ -2033,6 +2035,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
                             val = fe->get_dzetadz()[qp];
                             break;
                     }
+                    dX_dxi(i_dim, j_dim) = fe->get_dxyzdzeta()[qp](i_dim);
                 }
                     break;
             }
@@ -2051,13 +2054,13 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
     std::vector<DenseVector<Real> > diff_vec(3);
-    DenseMatrix<Real> tmp_mat, tmp_mat2, tau, dxi_dX;
+    DenseMatrix<Real> tmp_mat, tmp_mat2, tau, dxi_dX, dX_dxi;
     DenseVector<Real> vec1, vec2, vec3, vec4_n2;
-    tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1); dxi_dX.resize(dim, dim);
+    tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1); dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
     for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
-    this->calculate_dxidX (vars, qp, c, dxi_dX);
+    this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
 
     FEBase* elem_fe;
     c.get_element_fe(vars[0], elem_fe);
@@ -2130,7 +2133,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         tmp_mat.zero();
         
         for (unsigned int j=0; j<dim; j++)
-            vec1.add(dxi_dX(i, j), diff_vec[j]);
+            vec1.add(dX_dxi(j, i), diff_vec[j]);
         
         // calculate the value of denominator
         A_inv_entropy.vector_mult(vec2, vec1);

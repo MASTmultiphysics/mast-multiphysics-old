@@ -103,7 +103,7 @@ protected:
     
     
     void calculate_dxidX (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                          DenseMatrix<Real>& dxi_dX);
+                          DenseMatrix<Real>& dxi_dX, DenseMatrix<Real>& dX_dxi);
     
     
     void update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp,
