@@ -2140,7 +2140,7 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
         tmp_mat.zero();
         
         for (unsigned int j=0; j<dim; j++)
-            vec1.add(dX_dxi(j, i), diff_vec[j]);
+            vec1.add(dxi_dX(i, j), diff_vec[j]);
         
         // calculate the value of denominator
         A_inv_entropy.vector_mult(vec2, vec1);
