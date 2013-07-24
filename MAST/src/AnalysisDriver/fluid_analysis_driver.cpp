@@ -14,6 +14,7 @@
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Solvers/residual_based_adaptive_time_solver.h"
 #include "FluidElems/aerodynamic_qoi.h"
+#include "FluidElems/fluid_newton_solver.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"

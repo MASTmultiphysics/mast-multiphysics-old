@@ -30,11 +30,15 @@ ifeq (${PLATFORM},Darwin)
     TBB_INCLUDE_DIR=/opt/local/tbb41_20121003oss/include
     TBB_LIBS=-ltbb -ltbbmalloc
     BOOST_DIR=/opt/local/include
+    FESYSTEM_DIR=../../../FESystem/FESystem/
     LIBMESH_DIR=../../../libmesh
     TRILINOS_DIR=/usr/local/trilinos
     VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
     MPI_INCLUDE_DIR=/opt/local/include/openmpi
     MPI_LIB_DIR=/opt/local/lib/openmpi
+    GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
+    GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments 
+    GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments 
 endif
 
 ifeq (${PLATFORM},Darwinhome)
@@ -64,6 +68,9 @@ ifeq (${PLATFORM},Darwinhome)
     VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
     MPI_INCLUDE_DIR=/opt/local/include/openmpi
     MPI_LIB_DIR=/opt/local/lib/openmpi
+    GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
+    GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments 
+    GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments 
 endif
 
 ifeq (${PLATFORM},Linux)
@@ -95,6 +102,9 @@ ifeq (${PLATFORM},Linux)
     VTK_INCLUDE_DIR=/home/bhatiam/usr/vtk/include/vtk-5.10
     MPI_INCLUDE_DIR=/usr/local/openmpi/openmpi-1.6.3/x86_64/ib/gcc/include
     MPI_LIB_DIR=/usr/local/openmpi/openmpi-1.6.3/x86_64/ib/gcc/lib
+    GCC_FLAGS_DEBUG = -g3 -O0 -Wall -std=c++0x
+    GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments -std=c++0x
+    GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments -std=c++0x
 endif
 
 ifeq (${PLATFORM},script)
@@ -107,10 +117,6 @@ ifeq (${PLATFORM},script)
 endif
 
 
-GCC_FLAGS_DEBUG = -g3 -O0 -Wall -std=c++0x
-GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments -std=c++0x
-GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments -std=c++0x
-#GCC_FLAGS_OPT = -g0 -Os 
 
 D      = cd
 ECHO    = echo
@@ -126,15 +132,13 @@ AR = ar
 
 
 SRC_SUBDIR=../src
-APP_SUBDIR=../applications
 BUILD_DIR=${PWD}
 
+EXTERNAL_INCLUDE_DIRS+=-I${FESYSTEM_DIR}/src
 EXTERNAL_INCLUDE_DIRS+=-I${BOOST_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${TBB_INCLUDE_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${METIS_INCLUDE_DIR}
 EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}
-EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}/../examples
-EXTERNAL_INCLUDE_DIRS+=-I${SRC_SUBDIR}/../applications
 EXTERNAL_INCLUDE_DIRS+=-I${LIBMESH_DIR}/${SCALAR}/include
 EXTERNAL_INCLUDE_DIRS+=-I${TRILINOS_DIR}/include
 EXTERNAL_INCLUDE_DIRS+=-I${MPI_INCLUDE_DIR}
@@ -143,7 +147,8 @@ ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_INCLUDE_DIRS+=-I${PLPLOT_INCLUDE_DIR}
 endif
 
-EXTERNAL_LIB_DIRS=-L${SOURCE_DIR}
+EXTERNAL_LIB_DIRS=-L${FESYSTEM_DIR}/build
+EXTERNAL_LIB_DIRS+=-L${SOURCE_DIR}
 EXTERNAL_LIB_DIRS+=-L${ARPACK_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${LAPACK_BLAS_LIB_DIR}
 EXTERNAL_LIB_DIRS+=-L${METIS_LIB_DIR}
@@ -154,6 +159,7 @@ EXTERNAL_LIB_DIRS+=-Wl,-rpath,${VTK_LIB_DIR}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIB_DIRS+=-L${PLPLOT_LIB_DIR}
 endif
+FESYSTEM_LIB_DIR=-L${FESYSTEM_DIR}/build
 LIBMESH_LIB_DIR=-L${LIBMESH_DIR}/${SCALAR}/lib
 
 EXTERNAL_LIBS=-lfesystem-${METHOD}
@@ -165,6 +171,7 @@ EXTERNAL_LIBS+=${GFORT_SYSTEM_LIBS}
 ifeq (${HAVE_PLPLOT_LIBS},1)
     EXTERNAL_LIBS+=${PLPLOT_LIBS}
 endif
+FESYSTEM_LIBS=-lfesystem-${METHOD}
 LIBMESH_LIBS=-lmesh_${METHOD}
 MPI_LIBS=-lmpi_cxx -lmpi
 
@@ -177,35 +184,27 @@ endif
 
 
 FESYSTEM_LIB_SOURCES = $(wildcard ${SRC_SUBDIR}/*.cpp ${SRC_SUBDIR}/*/*.cpp ${SRC_SUBDIR}/*/*/*.cpp)
-FESYSTEM_APP_SOURCES = $(wildcard ${APP_SUBDIR}/*.cpp ${APP_SUBDIR}/*/*.cpp ${APP_SUBDIR}/*/*/*.cpp)
-FESYSTEM_EXAMPLE_SOURCES = $(wildcard ${SRC_SUBDIR}/../examples/*.cpp)
-DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${FESYSTEM_LIB_SOURCES} ${FESYSTEM_APP_SOURCES} ${FESYSTEM_EXAMPLE_SOURCES})
+DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${FESYSTEM_LIB_SOURCES})
 
 all: fesystem-${METHOD} euler-${METHOD}-${SCALAR}
 
-euler-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+euler-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} ${FESYSTEM_LIBS}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+euler-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} ${FESYSTEM_LIBS}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-oprof-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+euler-oprof-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} ${FESYSTEM_LIBS} ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-dbg-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+euler-dbg-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} ${FESYSTEM_LIBS} ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
+euler-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} ${FESYSTEM_LIBS} ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES}) 
-	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
-
-fesystem-dbg: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES})  libfesystem-dbg.a 
-	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${MPI_LIBS} -o $@
-
-fesystem-opt: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES})  libfesystem-opt.a 
-	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
+euler-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} ${FESYSTEM_LIBS}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} $^ ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
 	${GCC_PRE} -M  ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp > $@
@@ -240,8 +239,7 @@ libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_LIB_SOURC
 	ar -rv $@ $^ 
 
 clean:
-	rm -rf $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_EXAMPLE_SOURCES}) $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_LIB_SOURCES})  libfesystem-${METHOD}.a  fesystem-${METHOD}
-	rm -rf $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_APP_SOURCES})  euler-${METHOD}-${SCALAR}
+	rm -rf $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES})  euler-${METHOD}-${SCALAR}
 
 clean-deps:
 	rm -f ${DEP_FILES}
