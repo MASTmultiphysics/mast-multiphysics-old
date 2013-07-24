@@ -94,12 +94,11 @@ void distributePoints(const unsigned int n_divs, const std::vector<double>& div_
 }
 
 
-#include "libmesh/mesh_communication.h"
 
-int main_exodusII (int argc, char* const argv[])
+int main_exodus (int argc, char* const argv[])
 {
     LibMeshInit init(argc, argv);
-    
+        
     std::string file = "/Users/bhatiam/Documents/Projects/run_cases/HTV3/htv3_exodus.exo";
     //file = "/Users/bhatiam/Documents/tmp/airfoil.exo";
     
@@ -617,8 +616,9 @@ int main_program (int argc, char* const argv[])
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
-        // GmshIO gmsh_io(mesh);
-         ExodusII_IO gmsh_io(mesh);
+//        GmshIO gmsh_io(mesh);
+//        gmsh_io.read(gmsh_input_file);
+        ExodusII_IO gmsh_io(mesh);
         // Nemesis_IO gmsh_io(mesh);
         gmsh_io.read_parallel(gmsh_input_file);
         mesh.prepare_for_use();
@@ -668,6 +668,7 @@ int main_program (int argc, char* const argv[])
     core_time_solver->theta        = infile("timesolver_theta", 1.0);
     
     timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
+    timesolver->diff_solver().reset(new FluidNewtonSolver(system));
     system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
 
     system.dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
@@ -901,21 +902,21 @@ int main_program (int argc, char* const argv[])
             << std::setfill('0')
             << std::right
             << t_step
-            << ".pvtu";
+            << ".exo";
             
-            VTKIO(mesh).write_equation_systems(file_name.str(),
+            Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                     equation_systems);
 
-            b_file_name << "b_out_"
-            << std::setw(3)
-            << std::setfill('0')
-            << std::right
-            << t_step
-            << ".pvtu";
-            
-            std::set<unsigned int> bc_ids; bc_ids.insert(0);
-            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
-                                               equation_systems);
+//            b_file_name << "b_out_"
+//            << std::setw(3)
+//            << std::setfill('0')
+//            << std::right
+//            << t_step
+//            << ".pvtu";
+//            
+//            std::set<unsigned int> bc_ids; bc_ids.insert(0);
+//            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
+//                                               equation_systems);
         }
         
     }
