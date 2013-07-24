@@ -705,6 +705,7 @@ int main_program (int argc, char* const argv[])
     system.print_jacobian_norms = infile("print_jacobian_norms", false);
     system.print_jacobians = infile("print_jacobians", false);
     //system.verify_analytic_jacobians = 1.0e-3;
+    system.extra_quadrature_order = 2;
     
     // Set the time stepping options
     system.deltat = deltat;

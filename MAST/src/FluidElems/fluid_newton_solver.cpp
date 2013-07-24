@@ -7,8 +7,8 @@
 //
 
 // FESystem includes
-#include "euler/fluid_newton_solver.h"
-#include "euler/assembleEuler.h"
+#include "FluidElems/fluid_newton_solver.h"
+#include "FluidElems/assembleEuler.h"
 
 // libMesh includes
 #include "libmesh/numeric_vector.h"
