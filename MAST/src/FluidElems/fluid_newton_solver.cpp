@@ -6,8 +6,9 @@
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-// MAST includes
-#include "FluidElems/fluid_newton_solver.h"
+// FESystem includes
+#include "euler/fluid_newton_solver.h"
+#include "euler/assembleEuler.h"
 
 // libMesh includes
 #include "libmesh/numeric_vector.h"
@@ -29,7 +30,8 @@ FluidNewtonSolver::line_search(Real& current_residual,
                                NumericVector<Number> &newton_iterate,
                                const NumericVector<Number> &linear_solution)
 {
-    const Real tol = 1.0e-6, max_relative_change = 0.1;
+  const Real cp =  dynamic_cast<const EulerSystem&>(this->system()).cp;
+  const Real min_density = 1.0e-3, min_cpT = 1.*cp, max_relative_change = 0.1;
     
     const unsigned int sys_id = this->system().number();
     dof_id_type dof_num;
@@ -65,7 +67,7 @@ FluidNewtonSolver::line_search(Real& current_residual,
                     if (var0-dvar > 0)
                         eta = 1.;
                     else
-                        eta = (var0-tol)/dvar;
+                        eta = (var0-min_density)/dvar;
                     // check the max relative change
                     if (fabs(eta*dvar/var0) > max_relative_change)
                         eta = fabs(var0*max_relative_change/dvar);
@@ -83,10 +85,10 @@ FluidNewtonSolver::line_search(Real& current_residual,
                 {
                     // make sure that the kinetic energy is less than total energy
                     // for a positive temperature
-                    if ((var0-dvar)/rho-kval > tol)
+                    if ((var0-dvar)/rho-kval > min_cpT)
                         eta = 1.;
                     else
-                        eta = (var0-rho*(tol+kval))/dvar;
+                        eta = (var0-rho*(min_cpT+kval))/dvar;
                     var0 -= eta*dvar;
                 }
                 
