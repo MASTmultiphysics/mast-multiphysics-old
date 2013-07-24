@@ -7,11 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6938C00916FA967B00231032 /* surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6938C00716FA967B00231032 /* surface_motion.cpp */; };
-		EBE3223D16EA73430078E733 /* assembleEuler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3222B16EA73430078E733 /* assembleEuler.cpp */; };
-		EBE3223F16EA73430078E733 /* euler_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3222F16EA73430078E733 /* euler_elem_base.cpp */; };
-		EBE3224016EA73430078E733 /* frequency_domain_linearized_euler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3223116EA73430078E733 /* frequency_domain_linearized_euler.cpp */; };
-		EBE3224416EA73430078E733 /* run_euler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE3223916EA73430078E733 /* run_euler.cpp */; };
 		EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224616EA7FC80078E733 /* libmpi.1.dylib */; };
 		EBF96DF216EA6C9200316D86 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF96DF116EA6C9200316D86 /* libmesh_dbg.0.dylib */; };
@@ -30,15 +25,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		6938C00716FA967B00231032 /* surface_motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = surface_motion.cpp; sourceTree = "<group>"; };
-		6938C00816FA967B00231032 /* surface_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface_motion.h; sourceTree = "<group>"; };
-		EBE3222B16EA73430078E733 /* assembleEuler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = assembleEuler.cpp; sourceTree = "<group>"; };
-		EBE3222C16EA73430078E733 /* assembleEuler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = assembleEuler.h; sourceTree = "<group>"; };
-		EBE3222F16EA73430078E733 /* euler_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = euler_elem_base.cpp; sourceTree = "<group>"; };
-		EBE3223016EA73430078E733 /* euler_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = euler_elem_base.h; sourceTree = "<group>"; };
-		EBE3223116EA73430078E733 /* frequency_domain_linearized_euler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = frequency_domain_linearized_euler.cpp; sourceTree = "<group>"; };
-		EBE3223216EA73430078E733 /* frequency_domain_linearized_euler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = frequency_domain_linearized_euler.h; sourceTree = "<group>"; };
-		EBE3223916EA73430078E733 /* run_euler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = run_euler.cpp; sourceTree = "<group>"; };
 		EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3224616EA7FC80078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBF96DAD16EA6B3300316D86 /* ComplexSolver */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ComplexSolver; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -59,29 +45,11 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		EBE3222616EA73430078E733 /* euler */ = {
-			isa = PBXGroup;
-			children = (
-				EBE3222B16EA73430078E733 /* assembleEuler.cpp */,
-				EBE3222C16EA73430078E733 /* assembleEuler.h */,
-				EBE3222F16EA73430078E733 /* euler_elem_base.cpp */,
-				EBE3223016EA73430078E733 /* euler_elem_base.h */,
-				EBE3223116EA73430078E733 /* frequency_domain_linearized_euler.cpp */,
-				EBE3223216EA73430078E733 /* frequency_domain_linearized_euler.h */,
-				EBE3223916EA73430078E733 /* run_euler.cpp */,
-				6938C00716FA967B00231032 /* surface_motion.cpp */,
-				6938C00816FA967B00231032 /* surface_motion.h */,
-			);
-			name = euler;
-			path = FESystem/applications/euler;
-			sourceTree = "<group>";
-		};
 		EBF96DA216EA6B3200316D86 = {
 			isa = PBXGroup;
 			children = (
 				EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */,
 				EBE3224616EA7FC80078E733 /* libmpi.1.dylib */,
-				EBE3222616EA73430078E733 /* euler */,
 				EBF96DF116EA6C9200316D86 /* libmesh_dbg.0.dylib */,
 				EBF96DAE16EA6B3300316D86 /* Products */,
 			);
@@ -146,11 +114,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBE3223D16EA73430078E733 /* assembleEuler.cpp in Sources */,
-				EBE3223F16EA73430078E733 /* euler_elem_base.cpp in Sources */,
-				EBE3224016EA73430078E733 /* frequency_domain_linearized_euler.cpp in Sources */,
-				EBE3224416EA73430078E733 /* run_euler.cpp in Sources */,
-				6938C00916FA967B00231032 /* surface_motion.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

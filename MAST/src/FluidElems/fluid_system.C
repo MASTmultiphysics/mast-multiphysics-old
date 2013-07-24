@@ -10,7 +10,7 @@
 #include <iomanip>
 
 // FESystem includes
-#include "euler/assembleEuler.h"
+#include "FluidElems/fluid_system.h"
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
@@ -45,17 +45,17 @@ Real euler_solution_value(const Point& p,
     {
         return parameters.get<Real> ("rho_inf");
     }
-    else if (var_name == "rhou")
+    else if (var_name == "rhoux")
     {
-        return parameters.get<Real> ("rhou_inf");
+        return parameters.get<Real> ("rhoux_inf");
     }
-    else if (var_name == "rhov")
+    else if (var_name == "rhouy")
     {
-        return parameters.get<Real> ("rhov_inf");
+        return parameters.get<Real> ("rhouy_inf");
     }
-    else if (var_name == "rhow")
+    else if (var_name == "rhouz")
     {
-        return parameters.get<Real> ("rhow_inf");
+        return parameters.get<Real> ("rhouz_inf");
     }
     else if (var_name == "rhoe")
     {
@@ -111,22 +111,22 @@ void EulerSystem::init_data ()
     this->time_evolving(vars[0]);
     params.set<Real> ("rho_inf") = rho_inf;
 
-    vars[1] = this->add_variable ("rhou", static_cast<Order>(o), fefamily);
+    vars[1] = this->add_variable ("rhoux", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[1]);
-    params.set<Real> ("rhou_inf") = rho_inf*u1_inf;
+    params.set<Real> ("rhoux_inf") = rho_inf*u1_inf;
     
     if (dim > 1)
     {
-        vars[2] = this->add_variable ("rhov", static_cast<Order>(o), fefamily);
+        vars[2] = this->add_variable ("rhouy", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[2]);
-        params.set<Real> ("rhov_inf") = rho_inf*u2_inf;
+        params.set<Real> ("rhouy_inf") = rho_inf*u2_inf;
     }
     
     if (dim > 2)
     {
-        vars[3] = this->add_variable ("rhow", static_cast<Order>(o), fefamily);
+        vars[3] = this->add_variable ("rhouz", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[3]);
-        params.set<Real> ("rhow_inf") = rho_inf*u3_inf;
+        params.set<Real> ("rhouz_inf") = rho_inf*u3_inf;
     }
     
     vars[dim+2-1] = this->add_variable ("rhoe", static_cast<Order>(o), fefamily);
@@ -200,7 +200,7 @@ void EulerSystem::init_context(DiffContext &context)
         c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
-        elem_fe[i]->get_xyz();
+        elem_side_fe[i]->get_xyz();
         if (_if_viscous)
             elem_side_fe[i]->get_dphi();
     }
@@ -973,11 +973,11 @@ void EulerSystem::evaluate_recalculate_dc_flag()
 
 Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol, Real p0, Real q0)
 {
-    if (var_name == "u")
+    if (var_name == "ux")
         return p_sol.u1;
-    else if (var_name == "v")
+    else if (var_name == "uy")
         return p_sol.u2;
-    else if (var_name == "w")
+    else if (var_name == "uz")
         return p_sol.u3;
     else if (var_name == "T")
         return p_sol.T;
@@ -1070,11 +1070,11 @@ void FluidPostProcessSystem::init_data()
     
     const Order order = static_cast<Order>(fmin(2, o));
     
-    u = this->add_variable("u", order, fefamily);
+    u = this->add_variable("ux", order, fefamily);
     if (dim > 1)
-        v = this->add_variable("v", order, fefamily);
+        v = this->add_variable("uy", order, fefamily);
     if (dim > 2)
-        w = this->add_variable("w", order, fefamily);
+        w = this->add_variable("uz", order, fefamily);
     T = this->add_variable("T", order, fefamily);
     s = this->add_variable("s", order, fefamily);
     p = this->add_variable("p", order, fefamily);

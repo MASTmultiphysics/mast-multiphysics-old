@@ -8,7 +8,7 @@
 
 
 // FESystem includes
-#include "aerodynamic_qoi.h"
+#include "FluidElems/aerodynamic_qoi.h"
 
 
 // Here we define the functions to compute the QoI (side_qoi)

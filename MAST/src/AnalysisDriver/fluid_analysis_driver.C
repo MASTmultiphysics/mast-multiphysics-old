@@ -10,10 +10,10 @@
 #include <iomanip>
 
 // FESystem includes
-#include "euler/assembleEuler.h"
-#include "euler/frequency_domain_linearized_euler.h"
-#include "solvers/time_solvers/residual_based_adaptive_time_solver.h"
-#include "euler/aerodynamic_qoi.h"
+#include "FluidElems/fluid_system.h"
+#include "FluidElems/frequency_domain_linearized_fluid_system.h"
+#include "Solvers/residual_based_adaptive_time_solver.h"
+#include "FluidElems/aerodynamic_qoi.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -156,7 +156,7 @@ int main_exodusII (int argc, char* const argv[])
 
 
 
-#include "numerics/fem_operator_matrix.h"
+#include "Numerics/fem_operator_matrix.h"
 
 int main_fem_operator (int argc, char* const argv[])
 {
@@ -241,7 +241,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main (int argc, char* const argv[])
+int main_program (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);

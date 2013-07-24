@@ -7,7 +7,7 @@
 //
 
 // FEsystem includes
-#include "euler/frequency_domain_linearized_euler.h"
+#include "FluidElems/frequency_domain_linearized_fluid_system.h"
 
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
@@ -79,22 +79,22 @@ void FrequencyDomainLinearizedEuler::init_data()
     this->time_evolving(vars[0]);
     params.set<Real> ("rho_inf") = rho_inf;
     
-    vars[1] = this->add_variable ("drhou", static_cast<Order>(o), fefamily);
+    vars[1] = this->add_variable ("drhoux", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[1]);
-    params.set<Real> ("rhou_inf") = rho_inf*u1_inf;
+    params.set<Real> ("rhoux_inf") = rho_inf*u1_inf;
     
     if (dim > 1)
     {
-        vars[2] = this->add_variable ("drhov", static_cast<Order>(o), fefamily);
+        vars[2] = this->add_variable ("drhouy", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[2]);
-        params.set<Real> ("rhov_inf") = rho_inf*u2_inf;
+        params.set<Real> ("rhouy_inf") = rho_inf*u2_inf;
     }
     
     if (dim > 2)
     {
-        vars[3] = this->add_variable ("drhow", static_cast<Order>(o), fefamily);
+        vars[3] = this->add_variable ("drhouz", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[3]);
-        params.set<Real> ("rhow_inf") = rho_inf*u3_inf;
+        params.set<Real> ("rhouz_inf") = rho_inf*u3_inf;
     }
     
     vars[dim+2-1] = this->add_variable ("drhoe", static_cast<Order>(o), fefamily);

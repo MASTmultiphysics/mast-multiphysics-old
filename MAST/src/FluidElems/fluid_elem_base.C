@@ -8,9 +8,9 @@
 
 
 // FESystem includes
-#include "euler/euler_elem_base.h"
-#include "euler/assembleEuler.h"
-#include "euler/frequency_domain_linearized_euler.h"
+#include "FluidElems/fluid_elem_base.h"
+#include "FluidElems/fluid_system.h"
+#include "FluidElems/frequency_domain_linearized_fluid_system.h"
 
 // C++ includes
 #include <iomanip>

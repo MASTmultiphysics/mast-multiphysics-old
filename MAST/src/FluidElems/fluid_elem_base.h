@@ -14,7 +14,7 @@
 #include <map>
 
 // FESystem includes
-#include "numerics/fem_operator_matrix.h"
+#include "Numerics/fem_operator_matrix.h"
 
 // libMesh includes
 #include "libmesh/dense_vector.h"

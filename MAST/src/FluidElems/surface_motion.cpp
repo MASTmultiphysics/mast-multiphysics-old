@@ -7,7 +7,7 @@
 //
 
 // FESystem includes
-#include "euler/surface_motion.h"
+#include "FluidElems/surface_motion.h"
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 

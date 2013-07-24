@@ -7,7 +7,7 @@
 //
 
 // FESystem includes
-#include "solvers/time_solvers/residual_based_adaptive_time_solver.h"
+#include "Solvers/residual_based_adaptive_time_solver.h"
 
 #include "libmesh/diff_system.h"
 #include "libmesh/euler_solver.h"

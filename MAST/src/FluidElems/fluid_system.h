@@ -18,7 +18,7 @@
 #include "libmesh/fem_system.h"
 
 // FESystem includes
-#include "euler/euler_elem_base.h"
+#include "FluidElems/fluid_elem_base.h"
 
 using namespace libMesh;
 

@@ -6,8 +6,10 @@
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-// FESystem includes
-#include "euler/fluid_newton_solver.h"
+// MAST includes
+#include "FluidElems/fluid_newton_solver.h"
+
+// libMesh includes
 #include "libmesh/numeric_vector.h"
 #include "libmesh/diff_system.h"
 #include "libmesh/mesh_base.h"
@@ -70,9 +72,9 @@ FluidNewtonSolver::line_search(Real& current_residual,
                     var0 -= eta*dvar;
                     rho = var0;
                 }
-                else if (this->system().variable_name(ivar) == "rhou" ||
-                         this->system().variable_name(ivar) == "rhov" ||
-                         this->system().variable_name(ivar) == "rhow")
+                else if (this->system().variable_name(ivar) == "rhoux" ||
+                         this->system().variable_name(ivar) == "rhouy" ||
+                         this->system().variable_name(ivar) == "rhouz")
                 {
                     var0 -= eta*dvar;
                     kval += pow(var0/rho,2)/2.;
