@@ -25,6 +25,8 @@
 #include "Numerics/LocalVector.h"
 #include "Disciplines/Structure/DKTPlate.h"
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
 void StructuralSystemBase::init_data ()
 {
@@ -277,3 +279,4 @@ bool StructuralSystemBase::mass_residual (bool request_jacobian,
 }
 
 
+#endif // LIBMESH_USE_COMPLEX_NUMBERS

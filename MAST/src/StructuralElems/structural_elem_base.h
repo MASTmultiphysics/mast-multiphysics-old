@@ -16,6 +16,7 @@
 #include "libmesh/elem.h"
 #include "libmesh/fe_base.h"
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 class StructuralElementBase
 {
@@ -60,6 +61,7 @@ protected:
     const StructuralSystemBase* _system;
 };
 
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 
 #endif // __mast_structural_element_base_h__

@@ -13,9 +13,9 @@
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 // FESystem includes
-#include "euler/surface_motion.h"
-#include "euler/assembleEuler.h"
-#include "numerics/fem_operator_matrix.h"
+#include "FluidElems/surface_motion.h"
+#include "FluidElems/fluid_system.h"
+#include "Numerics/fem_operator_matrix.h"
 
 // Basic include files
 #include "libmesh/equation_systems.h"

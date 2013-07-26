@@ -2,6 +2,7 @@
 // MAST includes
 #include "StructuralElems/structural_elem_base.h"
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 StructuralElementBase::StructuralElementBase():
 _if_initialized(false),
@@ -38,4 +39,5 @@ StructuralElementBase::initialize(const Elem& elem, const StructuralSystemBase& 
     _system = &system;
 }
 
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 

@@ -14,6 +14,8 @@
 
 using namespace libMesh;
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 enum StructuralBoundaryConditionType
 {
     DIRICHLET,
@@ -54,5 +56,7 @@ protected:
     std::map<unsigned int, StructuralBoundaryConditionType> _boundary_condition;
 };
 
+
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 #endif /* defined(__MAST__structural_system_base_h__) */

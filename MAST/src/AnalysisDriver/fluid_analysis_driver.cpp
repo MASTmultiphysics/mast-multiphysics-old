@@ -241,7 +241,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main_program (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -617,11 +617,11 @@ int main_program (int argc, char* const argv[])
     {
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
-//        GmshIO gmsh_io(mesh);
-//        gmsh_io.read(gmsh_input_file);
-        ExodusII_IO gmsh_io(mesh);
+        GmshIO gmsh_io(mesh);
+        gmsh_io.read(gmsh_input_file);
+        // ExodusII_IO gmsh_io(mesh);
         // Nemesis_IO gmsh_io(mesh);
-        gmsh_io.read_parallel(gmsh_input_file);
+        // gmsh_io.read_parallel(gmsh_input_file);
         mesh.prepare_for_use();
     }
 #else
@@ -909,16 +909,16 @@ int main_program (int argc, char* const argv[])
             Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                     equation_systems);
 
-//            b_file_name << "b_out_"
-//            << std::setw(3)
-//            << std::setfill('0')
-//            << std::right
-//            << t_step
-//            << ".pvtu";
-//            
-//            std::set<unsigned int> bc_ids; bc_ids.insert(0);
-//            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
-//                                               equation_systems);
+            b_file_name << "b_out_"
+            << std::setw(3)
+            << std::setfill('0')
+            << std::right
+            << t_step
+            << ".pvtu";
+            
+            std::set<unsigned int> bc_ids; bc_ids.insert(0);
+            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
+                                               equation_systems);
         }
         
     }

@@ -26,9 +26,10 @@
 #include "libmesh/string_to_enum.h"
 
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 // The main program.
-int main (int argc, char* const argv[])
+int main_str (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -78,3 +79,4 @@ int main (int argc, char* const argv[])
     return 0;
 }
 
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
