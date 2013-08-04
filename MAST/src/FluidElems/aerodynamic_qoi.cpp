@@ -11,9 +11,6 @@
 #include "FluidElems/aerodynamic_qoi.h"
 
 
-// Here we define the functions to compute the QoI (side_qoi)
-// and supply the right hand side for the associated adjoint problem (side_qoi_derivative)
-
 using namespace libMesh;
 
 void AerodynamicQoI::init_qoi( std::vector<Number>& sys_qoi)
@@ -26,7 +23,8 @@ void AerodynamicQoI::init_qoi( std::vector<Number>& sys_qoi)
 
 
 
-void AerodynamicQoI::element_qoi_derivative (DiffContext& context, const QoISet& qois)
+void AerodynamicQoI::element_qoi_derivative (DiffContext& context,
+                                             const QoISet& qois)
 {
     
 }
@@ -42,7 +40,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     const unsigned int n1 = dim+2;
     
     // The number of local degrees of freedom for this element
-    unsigned int n_dofs = c.dof_indices.size();
+    unsigned int n_dofs = c.get_dof_indices().size();
     
     FEBase* elem_fe;
     
@@ -67,12 +65,18 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
         // first update the variables at the current quadrature point
-        this->update_solution_at_quadrature_point(_fluid_vars, qp, c, true, c.elem_solution, conservative_sol, p_sol,
-                                                  B_mat, dB_mat);
+        this->update_solution_at_quadrature_point
+        (_fluid_vars, qp, c,
+         true, c.get_elem_solution(),
+         conservative_sol, p_sol,
+         B_mat, dB_mat);
         
         
         total_volume += JxW[qp];
-        entropy_error +=  JxW[qp] * pow((p_sol.p/p_inf * pow(rho_inf/p_sol.rho,gamma) - 1.0), 2);
+        entropy_error +=
+        JxW[qp] * pow((p_sol.p/flight_condition->p0() *
+                       pow(flight_condition->rho()/p_sol.rho,
+                           flight_condition->gas_property.gamma) - 1.0), 2);
     }
     
     std::vector<Number> vals(2);
@@ -82,7 +86,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     // the third qoi is total volume, and the fourth is the entropy
     for (unsigned int i=2; i<4; i++)
         if (qois.has_index(i))
-            c.elem_qoi[i] += vals[i-2];
+            c.get_qois()[i] += vals[i-2];
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
@@ -135,7 +139,7 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
     const unsigned int n1 = dim+2;
     
     // The number of local degrees of freedom for this element
-    unsigned int n_dofs = c.dof_indices.size();
+    unsigned int n_dofs = c.get_dof_indices().size();
     
     FEBase * side_fe;
     c.get_side_fe(_fluid_vars[0], side_fe); // assuming all variables have the same FE
@@ -158,55 +162,63 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
     
     PrimitiveSolution p_sol;
     
-    std::vector<DenseVector<Number> >& deriv = c.elem_qoi_derivative;
+    std::vector<DenseVector<Number> >& deriv = c.get_qoi_derivatives();
     Real scalar = 0.;
+    
+    const Real R = flight_condition->gas_property.R,
+    cv = flight_condition->gas_property.cv;
+    
     
     switch (mechanical_bc_type)
     {
-        case NO_SLIP_WALL: // both slip and no-slip wall have the same force integration
-        case SLIP_WALL:
-        {
-            for (unsigned int qp=0; qp<qpoint.size(); qp++)
-            {
-                // first update the variables at the current quadrature point
-                this->update_solution_at_quadrature_point(_fluid_vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
-                                                          B_mat, dB_mat);
-                
-                p_deriv.zero();
-                
-                switch (dim)
-                {
-                    case 3:
-                        p_deriv(3) = -p_sol.u3;
-                    case 2:
-                        p_deriv(2) = -p_sol.u2;
-                    case 1:
-                        p_deriv(0) = p_sol.k;
-                        p_deriv(1) = -p_sol.u1;
-                        p_deriv(n1-1) = 1;
-                }
-                p_deriv.scale(R/cv);
-                B_mat.vector_mult_transpose(tmp_vec, p_deriv);
-                
-                // the first qoi is lift, and the second is drag
-                if (qois.has_index(0)) // lift
-                {
-                    scalar = 0.;
-                    for (unsigned int i=0; i<dim; i++)
-                        scalar += face_normals[qp](i) * _lift_normal(i);
-                    c.elem_qoi_derivative[0].add(scalar*JxW[qp], tmp_vec);
-                }
-                if (qois.has_index(1)) // drag
-                {
-                    scalar = 0.;
-                    for (unsigned int i=0; i<dim; i++)
-                        scalar += face_normals[qp](i) * _drag_normal(i);
-                    c.elem_qoi_derivative[1].add(scalar*JxW[qp], tmp_vec);
-                }
-
-            }
-        }
-            break;
+//        case NO_SLIP_WALL: // both slip and no-slip wall have the same force integration
+//        case SLIP_WALL:
+//        {
+//            for (unsigned int qp=0; qp<qpoint.size(); qp++)
+//            {
+//                // first update the variables at the current quadrature point
+//                this->update_solution_at_quadrature_point
+//                (_fluid_vars, qp, c,
+//                 false, c.get_elem_solution(),
+//                 conservative_sol, p_sol,
+//                 B_mat, dB_mat);
+//                
+//                p_deriv.zero();
+//                
+//                switch (dim)
+//                {
+//                    case 3:
+//                        p_deriv(3) = -p_sol.u3;
+//                    case 2:
+//                        p_deriv(2) = -p_sol.u2;
+//                    case 1:
+//                        p_deriv(0) = p_sol.k;
+//                        p_deriv(1) = -p_sol.u1;
+//                        p_deriv(n1-1) = 1;
+//                }
+//                p_deriv.scale(R/cv);
+//                B_mat.vector_mult_transpose(tmp_vec, p_deriv);
+//                
+//                // the first qoi is lift, and the second is drag
+//                if (qois.has_index(0)) // lift
+//                {
+//                    scalar = 0.;
+//                    for (unsigned int i=0; i<dim; i++)
+//                        scalar += face_normals[qp](i) *
+//                        flight_condition->lift_normal(i);
+//                    c.get_qoi_derivatives()[0].add(scalar*JxW[qp], tmp_vec);
+//                }
+//                if (qois.has_index(1)) // drag
+//                {
+//                    scalar = 0.;
+//                    for (unsigned int i=0; i<dim; i++)
+//                        scalar += face_normals[qp](i) *
+//                        flight_condition->drag_normal(i);
+//                    c.get_qoi_derivatives()[1].add(scalar*JxW[qp], tmp_vec);
+//                }
+//            }
+//        }
+//            break;
     }
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
@@ -263,7 +275,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     const unsigned int n1 = dim+2;
     
     // The number of local degrees of freedom for this element
-    unsigned int n_dofs = c.dof_indices.size();
+    unsigned int n_dofs = c.get_dof_indices().size();
     
     FEBase * side_fe;
     c.get_side_fe(_fluid_vars[0], side_fe); // assuming all variables have the same FE
@@ -277,9 +289,11 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     // boundary normals
     const std::vector<Point>& face_normals = side_fe->get_normals();
     
-    DenseVector<Real> conservative_sol, integrated_force;
+    DenseVector<Real> conservative_sol;
     FEMOperatorMatrix  B_mat;
-    integrated_force.resize(dim); conservative_sol.resize(dim+2); 
+    conservative_sol.resize(dim+2);
+    
+    RealVector3 integrated_force;
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     
@@ -293,8 +307,11 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
                 // first update the variables at the current quadrature point
-                this->update_solution_at_quadrature_point(_fluid_vars, qp, c, false, c.elem_solution, conservative_sol, p_sol,
-                                                          B_mat, dB_mat);
+                this->update_solution_at_quadrature_point
+                (_fluid_vars, qp, c,
+                 false, c.get_elem_solution(),
+                 conservative_sol, p_sol,
+                 B_mat, dB_mat);
                 
                 // update the force vector
                 for (unsigned int i=0; i<dim; i++)
@@ -305,13 +322,13 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     }
     
     std::vector<Number> vals(2);
-    vals[0] = integrated_force.dot(_lift_normal);
-    vals[1] = integrated_force.dot(_drag_normal);
+    vals[0] = integrated_force.dot(flight_condition->lift_normal);
+    vals[1] = integrated_force.dot(flight_condition->drag_normal);
     
     // the first qoi is lift, and the second is drag
     for (unsigned int i=0; i<2; i++)
         if (qois.has_index(i))
-            c.elem_qoi[i] += vals[i];
+            c.get_qois()[i] += vals[i];
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }

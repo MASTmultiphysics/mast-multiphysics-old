@@ -32,7 +32,8 @@ FluidNewtonSolver::line_search(Real& current_residual,
                                NumericVector<Number> &newton_iterate,
                                const NumericVector<Number> &linear_solution)
 {
-  const Real cp =  dynamic_cast<const EulerSystem&>(this->system()).cp;
+  const Real cp =  dynamic_cast<const EulerSystem&>
+    (this->system()).flight_condition->gas_property.cp;
   const Real min_density = 1.0e-3, min_cpT = 1.*cp, max_relative_change = 0.1;
     
     const unsigned int sys_id = this->system().number();

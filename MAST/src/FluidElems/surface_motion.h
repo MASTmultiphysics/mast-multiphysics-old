@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __FESystem__surface_motion__
-#define __FESystem__surface_motion__
+#ifndef __FESystem__surface_motion_base__
+#define __FESystem__surface_motion_base__
 
 // libmesh includes
 #include "libmesh/mesh.h"
@@ -18,45 +18,73 @@
 using namespace libMesh;
 
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-
-class SurfaceMotion
+class SurfaceMotionBase
 {
 public:
-    SurfaceMotion(MeshBase& m);
+    SurfaceMotionBase():
+    frequency(0.),
+    phase_offset(0.)
+    { }
     
-    ~SurfaceMotion();
+    virtual ~SurfaceMotionBase()
+    { }
     
-    MeshBase& mesh;
+    virtual void zero()
+    {
+        frequency    = 0.;
+        phase_offset = 0.;
+    }
+    
+    /*!
+     *   frequency of oscillation. If the reference chord, \p b_ref and 
+     *   reference velocity, \p V_ref are left to unity, then this is the
+     *   dimensional frequency in rad/sec, otherwise this is the reduced
+     *   frequency
+     */
+    Real frequency;
+    
 
-    Point plunge_vector;
+    /*!
+     *    All transient motion data is based on a sine function that 
+     *    multiplies the motion amplitudes, so that the motion starts with 
+     *    zero amplitude at t=0. This constant can be set to pi/2
+     *    to use a consine multiplier.
+     */
+    Real phase_offset;
     
-    Point pitch_axis;
-    
-    Point hinge_location;
-    
-    Real plunge_amplitude;
-    
-    Real pitch_amplitude;
-    
-    Real pitch_phase;
-    
-    Real frequency; // rad/sec
-    
-    void zero();
-    
-    void init();
+    /*!
+     *   calculation of surface velocity in frequency domain. \p u_trans is 
+     *   the pure translation velocity component, while \p dn_rot defines the
+     *   surface normal perturbation
+     */
+    virtual void surface_velocity_frequency_domain(const Point& p,
+                                                   const Point& n,
+                                                   DenseVector<Complex>& u_trans,
+                                                   DenseVector<Complex>& dn_rot) = 0;
 
-    // calculation in frequency domain
-    void surface_velocity(const Point& p, DenseVector<Number>& vel);
-    
-    void surface_normal_perturbation(const Point& n, DenseVector<Number>& dnormal);
-    
-private:
-    
+    /*!
+     *   calculation of surface velocity in time domain. \p u_trans is
+     *   the pure translation velocity component, while \p dn_rot defines the
+     *   surface normal perturbation
+     */
+    virtual void surface_velocity_time_domain(const Real t,
+                                              const Point& p,
+                                              const Point& n,
+                                              DenseVector<Real>& u_trans,
+                                              DenseVector<Real>& dn_rot) = 0;
+
+protected:
+
+    /*!
+     *   initialization function for this object
+     */
+    virtual void init(Real freq, Real phase)
+    {
+        frequency = freq;
+        phase_offset = phase;
+    }
     
 };
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 #endif /* defined(__FESystem__surface_motion__) */

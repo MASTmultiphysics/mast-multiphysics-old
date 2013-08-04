@@ -25,7 +25,6 @@
 #include "Numerics/LocalVector.h"
 #include "Disciplines/Structure/DKTPlate.h"
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
 void StructuralSystemBase::init_data ()
@@ -100,7 +99,7 @@ void StructuralSystemBase::init_data ()
     if (dirichlet_boundary.size() > 0)
     {
         // Dirichlet Boundary condition
-        ZeroFunction<Real> zero_function;
+        ZeroFunction<Number> zero_function;
         this->get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary,
                                                                      vars,
                                                                      &zero_function));
@@ -165,7 +164,7 @@ bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
     {
         nodes[i] = new FESystem::Mesh::Node(cs);
         for (unsigned int j=0; j<3; j++)
-            nodes[i]->setVal(j, c.elem->point(i)(j));
+            nodes[i]->setVal(j, c.get_elem().point(i)(j));
         elem->setNode(i, *nodes[i]);
     }
     fe.reinit(*elem);
@@ -205,14 +204,14 @@ bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
 
     //    for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
-        DenseMatrix<Real> tmpmat; tmpmat.resize(18, 18);
-        DenseVector<Real> tmp; tmp.resize(18);
+        DenseMatrix<Number> tmpmat; tmpmat.resize(18, 18);
+        DenseVector<Number> tmp; tmp.resize(18);
         
         for (unsigned int i=0; i<18; i++)
             for (unsigned int j=0; j<18; j++)
                 tmpmat(i, j) = elem_mat.getVal(i, j);
 
-        tmpmat.vector_mult(tmp, c.elem_solution);
+        tmpmat.vector_mult(tmp, c.get_elem_solution());
         Fvec.add(1.0, tmp);
         
         for (unsigned int i=0; i<18; i++)
@@ -279,4 +278,3 @@ bool StructuralSystemBase::mass_residual (bool request_jacobian,
 }
 
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS

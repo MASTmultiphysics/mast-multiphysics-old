@@ -107,6 +107,8 @@ public:
     virtual void postprocess();
     
     unsigned int u, v, w, T, s, p, cp, a, M;
+    
+    FlightCondition* flight_condition;
 };
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

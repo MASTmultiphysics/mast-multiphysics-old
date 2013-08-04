@@ -1,6 +1,6 @@
 //
 //  euler_elem_base.h
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/6/13.
 //
@@ -13,8 +13,10 @@
 #include <ostream>
 #include <map>
 
-// FESystem includes
+// MAST includes
 #include "Numerics/fem_operator_matrix.h"
+#include "Flight/flight_condition.h"
+#include "FluidElems/surface_motion.h"
 
 // libMesh includes
 #include "libmesh/dense_vector.h"
@@ -27,9 +29,12 @@
 
 using namespace libMesh;
 
-enum FluidPrimitiveVars                   {RHO_PRIM, VEL1, VEL2, VEL3, TEMP };
-enum FluidConservativeVars                {RHO_CONS, RHOVEL1, RHOVEL2, RHOVEL3, ETOT };
-enum FluidBoundaryConditionType           {NO_SLIP_WALL, SLIP_WALL, FAR_FIELD, ISOTHERMAL, ADIABATIC};
+enum FluidPrimitiveVars
+{ RHO_PRIM, VEL1, VEL2, VEL3, TEMP };
+enum FluidConservativeVars
+{ RHO_CONS, RHOVEL1, RHOVEL2, RHOVEL3, ETOT };
+enum FluidBoundaryConditionType
+{ NO_SLIP_WALL, SYMMETRY_WALL, SLIP_WALL, FAR_FIELD, ISOTHERMAL, ADIABATIC };
 
 
 class PrimitiveSolution
@@ -43,6 +48,7 @@ public:
     void print(std::ostream& out) const;
     
     Real c_pressure(const Real p0, const Real q0) const;
+    void get_uvec(DenseVector<Real>& u) const;
     
     DenseVector<Real> primitive_sol;
     unsigned int dimension;
@@ -64,6 +70,7 @@ public:
     void print(std::ostream& out) const;
     
     ValType c_pressure(const Real q0) const;
+    void get_duvec(DenseVector<ValType>& du) const;
     
     DenseVector<ValType> perturb_primitive_sol;
     ValType drho, du1, du2, du3, dT, dp, da, de_tot, dk, dentropy, dmach;
@@ -84,8 +91,6 @@ class EulerElemBase
 public:
     // Constructor
     EulerElemBase():
-    aoa(0.), rho_inf(0.), mach_inf(0.), temp_inf(0.), cp(0.), cv(0.), R(0.), gamma(0.),
-    a_inf(0.), u1_inf(0.), u2_inf(0.), u3_inf(0.), q0_inf(0.), p_inf(0.),
     _if_viscous(false), _if_full_linearization(false),
     _if_update_stabilization_per_quadrature_point(true)
     {}
@@ -98,19 +103,30 @@ public:
     
     void get_infinity_vars( DenseVector<Real>& vars_inf ) const;
     
+    /*!
+     *    This defines the surface motion for use with the nonlinear 
+     *    fluid solver. This can be used to define either a time-dependent
+     *    motion, or a steady-state motion.
+     */
+    AutoPtr<SurfaceMotionBase> surface_motion;
+    
+    FlightCondition* flight_condition;
 
 protected:
     
     
-    void calculate_dxidX (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                          DenseMatrix<Real>& dxi_dX, DenseMatrix<Real>& dX_dxi);
+    void calculate_dxidX (const std::vector<unsigned int>& vars,
+                          const unsigned int qp, FEMContext& c,
+                          DenseMatrix<Real>& dxi_dX,
+                          DenseMatrix<Real>& dX_dxi);
     
     
-    void update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp,
-                                             FEMContext& c, const bool if_elem_domain,
-                                             const DenseVector<Real>& elem_solution, DenseVector<Real>& conservative_sol,
-                                             PrimitiveSolution& primitive_sol, FEMOperatorMatrix& B_mat,
-                                             std::vector<FEMOperatorMatrix>& dB_mat);
+    void update_solution_at_quadrature_point
+    ( const std::vector<unsigned int>& vars, const unsigned int qp,
+     FEMContext& c, const bool if_elem_domain,
+     const DenseVector<Real>& elem_solution, DenseVector<Real>& conservative_sol,
+     PrimitiveSolution& primitive_sol, FEMOperatorMatrix& B_mat,
+     std::vector<FEMOperatorMatrix>& dB_mat);
     
     
     
@@ -147,52 +163,68 @@ protected:
                                            const PrimitiveSolution& sol,
                                            DenseMatrix<Real>& mat);
 
-    void calculate_advection_flux_jacobian_sensitivity_for_conservative_variable(const unsigned int calculate_dim,
-                                                                                 const PrimitiveSolution& sol,
-                                                                                 std::vector<DenseMatrix<Real> >& mat);
+    void calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
+    (const unsigned int calculate_dim,
+     const PrimitiveSolution& sol,
+     std::vector<DenseMatrix<Real> >& mat);
     
     
-    void calculate_advection_flux_jacobian_sensitivity_for_primitive_variable(const unsigned int calculate_dim,
-                                                                              const unsigned int primitive_var,
-                                                                              const PrimitiveSolution& sol,
-                                                                              DenseMatrix<Real>& mat);
+    void calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
+    (const unsigned int calculate_dim, const unsigned int primitive_var,
+     const PrimitiveSolution& sol, DenseMatrix<Real>& mat);
+    
 
-    void calculate_advection_left_eigenvector_and_inverse_for_normal(const PrimitiveSolution& sol,
-                                                                     const Point& normal, DenseMatrix<Real>& eig_vals,
-                                                                     DenseMatrix<Real>& l_eig_mat, DenseMatrix<Real>& l_eig_mat_inv_tr);
+    void calculate_advection_left_eigenvector_and_inverse_for_normal
+    (const PrimitiveSolution& sol, const Point& normal,
+     DenseMatrix<Real>& eig_vals, DenseMatrix<Real>& l_eig_mat,
+     DenseMatrix<Real>& l_eig_mat_inv_tr);
     
     void calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
-                                             DenseMatrix<Real>& dUdV, DenseMatrix<Real>& dVdU);
+                                             DenseMatrix<Real>& dUdV,
+                                             DenseMatrix<Real>& dVdU);
     
     
-    void calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(const PrimitiveSolution& sol,
-                                                                          const Real xi_ni, const Point& nvec, DenseMatrix<Real>& mat);
+    void calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+    (const PrimitiveSolution& sol,
+     const Real ui_ni, const Point& nvec,
+     const DenseVector<Real>& dnvec, DenseMatrix<Real>& mat);
     
     
-    void calculate_advection_flux_spatial_derivative(const unsigned int i, DenseVector<Real>* flux, DenseMatrix<Real>* dflux_dU);
+    void calculate_advection_flux_spatial_derivative
+    (const unsigned int i, DenseVector<Real>* flux,
+     DenseMatrix<Real>* dflux_dU);
     
     
     
-    void calculate_diffusive_flux_jacobian(unsigned int div_coord, unsigned int flux_coord, DenseMatrix<Real>& mat);
+    void calculate_diffusive_flux_jacobian(unsigned int div_coord,
+                                           unsigned int flux_coord,
+                                           DenseMatrix<Real>& mat);
     
     
-    bool calculate_barth_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+    bool calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
+                                    const unsigned int qp, FEMContext& c,
                                     const PrimitiveSolution& sol,
-                                    DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens);
+                                    DenseMatrix<Real>& tau,
+                                    std::vector<DenseMatrix<Real> >& tau_sens);
     
-    bool calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+    bool calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars,
+                                       const unsigned int qp, FEMContext& c,
                                        const PrimitiveSolution& sol,
-                                       DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens);
+                                       DenseMatrix<Real>& tau,
+                                       std::vector<DenseMatrix<Real> >& tau_sens);
     
     
-    void calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp,
-                                                FEMContext& c, const DenseVector<Real>& elem_solution,
-                                                const PrimitiveSolution& sol, const FEMOperatorMatrix& B_mat,
-                                                const std::vector<FEMOperatorMatrix>& dB_mat,
-                                                const std::vector<DenseMatrix<Real> >& Ai_advection,
-                                                const DenseMatrix<Real>& Ai_Bi_advection, const DenseMatrix<Real>& A_inv_entropy,
-                                                const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
-                                                DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens, Real& discontinuity_val);
+    void calculate_differential_operator_matrix
+    (const std::vector<unsigned int>& vars, const unsigned int qp,
+     FEMContext& c, const DenseVector<Real>& elem_solution,
+     const PrimitiveSolution& sol, const FEMOperatorMatrix& B_mat,
+     const std::vector<FEMOperatorMatrix>& dB_mat,
+     const std::vector<DenseMatrix<Real> >& Ai_advection,
+     const DenseMatrix<Real>& Ai_Bi_advection,
+     const DenseMatrix<Real>& A_inv_entropy,
+     const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
+     DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
+     Real& discontinuity_val);
     
     
     unsigned int dim;
@@ -201,16 +233,12 @@ protected:
 
     std::vector<FluidConservativeVars> _active_conservative_vars;
     
-    bool _if_viscous, _if_full_linearization, _if_update_stabilization_per_quadrature_point;
+    bool _if_viscous, _if_full_linearization,
+    _if_update_stabilization_per_quadrature_point;
 ;
     
     std::multimap<unsigned int, FluidBoundaryConditionType> _boundary_condition;
-    
-public:
-    
-    Real aoa, rho_inf, mach_inf, temp_inf, cp, cv, R, gamma, a_inf, u1_inf, u2_inf, u3_inf, q0_inf, p_inf;
 
-    DenseVector<Real> _lift_normal, _drag_normal;
 };
 
 

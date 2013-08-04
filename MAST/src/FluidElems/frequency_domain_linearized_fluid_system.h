@@ -25,15 +25,15 @@
 
 using namespace libMesh;
 
-class SurfaceMotion;
+class SurfaceMotionBase;
 
 
-class FrequencyDomainLinearizedEuler: public FEMSystem, public EulerElemBase
+class FrequencyDomainLinearizedFluidSystem: public FEMSystem, public EulerElemBase
 {
 public:
-    FrequencyDomainLinearizedEuler(EquationSystems& es,
-                                   const std::string& name_in,
-                                   const unsigned int number_in):
+    FrequencyDomainLinearizedFluidSystem(EquationSystems& es,
+                                         const std::string& name_in,
+                                         const unsigned int number_in):
     FEMSystem(es, name_in, number_in),
     EulerElemBase(),
     _if_localized_sol(false)
@@ -42,7 +42,7 @@ public:
     void init_data();
     
     virtual void init_context(DiffContext &context);
-
+    
     
     void localize_fluid_solution();
     
@@ -53,16 +53,20 @@ public:
     virtual bool side_time_derivative (bool request_jacobian,
                                        DiffContext &context);
     
-    AutoPtr<SurfaceMotion> surface_motion;
-    
     std::vector<unsigned int> vars;
+
+    /*!
+     *   this defines the small disturbance surface motion on top of the 
+     *   steady surface motion that the body might have seen.
+     */
+    AutoPtr<SurfaceMotionBase> perturbed_surface_motion;
     
 protected:
-
+    
     bool _if_localized_sol;
     
     AutoPtr<NumericVector<Number> > _local_fluid_solution;
-
+    
 };
 
 
@@ -83,8 +87,10 @@ public:
     virtual void postprocess();
     
     unsigned int u, v, w, T, s, p, cp, a, M, // real part of the variables
-    // imaginary part of the variables
+                                             // imaginary part of the variables
     rho_im, u_im, v_im, w_im, T_im, s_im, p_im, cp_im, a_im, M_im;
+    
+    FlightCondition* flight_condition;
 };
 
 

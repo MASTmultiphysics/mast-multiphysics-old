@@ -14,7 +14,6 @@
 
 using namespace libMesh;
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 enum StructuralBoundaryConditionType
 {
@@ -57,6 +56,5 @@ protected:
 };
 
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 #endif /* defined(__MAST__structural_system_base_h__) */
