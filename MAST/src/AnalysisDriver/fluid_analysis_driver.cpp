@@ -15,6 +15,7 @@
 #include "Solvers/residual_based_adaptive_time_solver.h"
 #include "FluidElems/aerodynamic_qoi.h"
 #include "FluidElems/fluid_newton_solver.h"
+#include "FluidElems/rigid_surface_motion.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -24,11 +25,8 @@
 #include "libmesh/mesh_refinement.h"
 #include "libmesh/mesh_generation.h"
 #include "libmesh/exodusII_io.h"
-#include "libmesh/ensight_io.h"
 #include "libmesh/vtk_io.h"
-#include "libmesh/tecplot_io.h"
 #include "libmesh/gmsh_io.h"
-#include "libmesh/gmv_io.h"
 #include "libmesh/xdr_io.h"
 #include "libmesh/nemesis_io.h"
 #include "libmesh/equation_systems.h"
@@ -41,12 +39,6 @@
 #include "libmesh/uniform_refinement_estimator.h"
 #include "libmesh/kelly_error_estimator.h"
 #include "libmesh/string_to_enum.h"
-
-//#include "libmesh/../../libmesh/include/mesh/exodusII_io_helper.h"
-//#include "libmesh/../../libmesh/include/mesh/nemesis_io_helper.h"
-//
-//#include "libmesh/../../libmesh/contrib/exodusii/Lib/include/exodusII.h"
-//#include "libmesh/../../libmesh/contrib/nemesis/Lib/ne_nemesisI.h"
 
 
 void distributePoints(const unsigned int n_divs, const std::vector<double>& div_locations, const std::vector<unsigned int>& n_subdivs_in_div, const std::vector<double>& relative_mesh_size_at_div, std::vector<double>& points)
@@ -95,64 +87,6 @@ void distributePoints(const unsigned int n_divs, const std::vector<double>& div_
 }
 
 
-
-int main_exodus (int argc, char* const argv[])
-{
-    LibMeshInit init(argc, argv);
-        
-    std::string file = "/Users/bhatiam/Documents/Projects/run_cases/HTV3/htv3_exodus.exo";
-    //file = "/Users/bhatiam/Documents/tmp/airfoil.exo";
-    
-    sleep(0);
-
-    ParallelMesh mesh(init.comm());
-    
-//    if (init.comm().rank() == 0)
-//    {
-//        mesh.add_point(Point(0, 0, 0), 1, 0);
-//        mesh.add_point(Point(1, 0, 0), 2, 0);
-//        mesh.add_point(Point(1, 1, 0), 3, 0);
-//        mesh.add_point(Point(0, 1, 0), 4, 0);
-//        Elem* elem = Elem::build(QUAD4).release();
-//        elem->processor_id(0);
-//        elem->set_id(1);
-//        elem->set_node(0) = mesh.query_node_ptr(1);
-//        elem->set_node(1) = mesh.query_node_ptr(2);
-//        elem->set_node(2) = mesh.query_node_ptr(3);
-//        elem->set_node(3) = mesh.query_node_ptr(4);
-//        mesh.add_elem(elem);
-//    }
-//    else if (init.comm().rank() == 1)
-//    {
-//        mesh.add_point(Point(1, 0, 0), 2, 0);
-//        mesh.add_point(Point(2, 0, 0), 6, 1);
-//        mesh.add_point(Point(2, 1, 0), 7, 1);
-//        mesh.add_point(Point(1, 1, 0), 3, 0);
-//        Elem* elem = Elem::build(QUAD4).release();
-//        elem->processor_id(1);
-//        elem->set_id(2);
-//        elem->set_node(0) = mesh.query_node_ptr(2);
-//        elem->set_node(1) = mesh.query_node_ptr(6);
-//        elem->set_node(2) = mesh.query_node_ptr(7);
-//        elem->set_node(3) = mesh.query_node_ptr(3);
-//        mesh.add_elem(elem);
-//    }
-//
-//    // Gather neighboring elements so that the mesh has the proper "ghost" neighbor information.
-//    MeshCommunication().gather_neighboring_elements(libmesh_cast_ref<ParallelMesh&>(mesh));
-//    mesh.prepare_for_use();
-//    
-//    return 0;
-    
-    ExodusII_IO exodus_reader(mesh);
-    
-    exodus_reader.read_parallel(file);
-    
-    mesh.prepare_for_use();
-    mesh.print_info();
-//    Nemesis_IO(mesh).write("mesh.exo");
-    return 0;
-}
 
 
 
@@ -241,7 +175,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main (int argc, char* const argv[])
+int main_fluid (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -681,12 +615,14 @@ int main (int argc, char* const argv[])
     system.attach_qoi(&aero_qoi);
     
 #else
-    // Declare the system "EulerSystem"
-    FrequencyDomainLinearizedEuler & system =
-    equation_systems.add_system<FrequencyDomainLinearizedEuler> ("FrequencyDomainLinearizedEuler");
+    // Declare the system fluid system
+    FrequencyDomainLinearizedFluidSystem & system =
+    equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
+    ("FrequencyDomainLinearizedFluidSystem");
     
     FrequencyDomainFluidPostProcessSystem& fluid_post =
-    equation_systems.add_system<FrequencyDomainFluidPostProcessSystem> ("DeltaFluidPostProcessSystem");
+    equation_systems.add_system<FrequencyDomainFluidPostProcessSystem>
+    ("DeltaFluidPostProcessSystem");
     
     system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(system));
@@ -696,6 +632,26 @@ int main (int argc, char* const argv[])
     
     // now initilaize the nonlinear solution
     system.localize_fluid_solution();
+    
+    // initialize the surface motion definition
+    RigidSurfaceMotion* surface_motion = new RigidSurfaceMotion;
+    system.perturbed_surface_motion.reset(surface_motion);
+    
+    surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
+    surface_motion->pitch_phase = infile("pitch_phase",0.);
+    surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
+
+    for (unsigned int i=0; i<3; i++)
+        surface_motion->pitch_axis(i) = infile("pitch_axis", 0., i);
+    
+    for (unsigned int i=0; i<3; i++)
+        surface_motion->hinge_location(i) = infile("hinge", 0., i);
+    
+    for (unsigned int i=0; i<3; i++)
+        surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
+    
+    Real frequency = infile("frequency",0.);
+    surface_motion->init(frequency, 0.);
     
 #endif
     
@@ -711,7 +667,8 @@ int main (int argc, char* const argv[])
     system.deltat = deltat;
     
     // And the nonlinear solver options
-    NewtonSolver &solver = dynamic_cast<NewtonSolver&>(*(system.time_solver->diff_solver().get()));
+    NewtonSolver &solver = dynamic_cast<NewtonSolver&>
+    (*(system.time_solver->diff_solver().get()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
     solver.brent_line_search = false;

@@ -26,10 +26,9 @@
 #include "libmesh/string_to_enum.h"
 
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 // The main program.
-int main_str (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -53,7 +52,7 @@ int main_str (int argc, char* const argv[])
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
     
-    // Declare the system "EulerSystem"
+    // Declare the system
     StructuralSystemBase & system =
     equation_systems.add_system<StructuralSystemBase> ("StructuralSystem");
     
@@ -79,4 +78,3 @@ int main_str (int argc, char* const argv[])
     return 0;
 }
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
