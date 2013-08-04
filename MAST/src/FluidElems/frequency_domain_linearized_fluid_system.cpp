@@ -13,7 +13,6 @@
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 // FESystem includes
-#include "FluidElems/surface_motion.h"
 #include "FluidElems/fluid_system.h"
 #include "Numerics/fem_operator_matrix.h"
 
@@ -29,7 +28,7 @@
 
 
 
-void FrequencyDomainLinearizedEuler::init_data()
+void FrequencyDomainLinearizedFluidSystem::init_data()
 {
     this->use_fixed_solution = true;
     
@@ -45,29 +44,6 @@ void FrequencyDomainLinearizedEuler::init_data()
     
     GetPot infile("euler.in");
     
-    
-    // initialize the surface motion definition
-    surface_motion.reset(new SurfaceMotion(this->get_mesh()));
-    
-    surface_motion->frequency = infile("frequency",0.);
-    surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
-    surface_motion->pitch_phase = infile("pitch_phase",0.);
-    surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
-
-    surface_motion->pitch_axis(0) = infile("pitch_axis_x",0.);
-    surface_motion->pitch_axis(1) = infile("pitch_axis_y",0.);
-    surface_motion->pitch_axis(2) = infile("pitch_axis_z",0.);
-
-    surface_motion->hinge_location(0) = infile("hinge_x",0.);
-    surface_motion->hinge_location(1) = infile("hinge_y",0.);
-    surface_motion->hinge_location(2) = infile("hinge_z",0.);
-    
-    surface_motion->plunge_vector(0) = infile("plunge_vec_x",0.);
-    surface_motion->plunge_vector(1) = infile("plunge_vec_y",0.);
-    surface_motion->plunge_vector(2) = infile("plunge_vec_z",0.);
-    
-    surface_motion->init();
-    
     // set parameter values
     Parameters& params = this->get_equation_systems().parameters;
     
@@ -77,29 +53,29 @@ void FrequencyDomainLinearizedEuler::init_data()
     
     vars[0]  = this->add_variable ( "drho", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[0]);
-    params.set<Real> ("rho_inf") = rho_inf;
+    params.set<Real> ("rho_inf") = flight_condition->rho();
     
     vars[1] = this->add_variable ("drhoux", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[1]);
-    params.set<Real> ("rhoux_inf") = rho_inf*u1_inf;
+    params.set<Real> ("rhoux_inf") = flight_condition->rho_u1();
     
     if (dim > 1)
     {
         vars[2] = this->add_variable ("drhouy", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[2]);
-        params.set<Real> ("rhouy_inf") = rho_inf*u2_inf;
+        params.set<Real> ("rhouy_inf") = flight_condition->rho_u2();
     }
     
     if (dim > 2)
     {
         vars[3] = this->add_variable ("drhouz", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[3]);
-        params.set<Real> ("rhouz_inf") = rho_inf*u3_inf;
+        params.set<Real> ("rhouz_inf") = flight_condition->rho_u3();
     }
     
     vars[dim+2-1] = this->add_variable ("drhoe", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[dim+2-1]);
-    params.set<Real> ("rhoe_inf") = rho_inf*temp_inf*cv + q0_inf;
+    params.set<Real> ("rhoe_inf") = flight_condition->rho_e();
     
     // Useful debugging options
     // Set verify_analytic_jacobians to 1e-6 to use
@@ -113,7 +89,7 @@ void FrequencyDomainLinearizedEuler::init_data()
 
 
 
-void FrequencyDomainLinearizedEuler::init_context(libMesh::DiffContext &context)
+void FrequencyDomainLinearizedFluidSystem::init_context(libMesh::DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
@@ -145,7 +121,7 @@ void FrequencyDomainLinearizedEuler::init_context(libMesh::DiffContext &context)
 
 
 
-void FrequencyDomainLinearizedEuler::localize_fluid_solution()
+void FrequencyDomainLinearizedFluidSystem::localize_fluid_solution()
 {
     libmesh_assert(!_if_localized_sol);
     
@@ -153,7 +129,8 @@ void FrequencyDomainLinearizedEuler::localize_fluid_solution()
     NumericVector<Number>::build(this->get_equation_systems().comm());
     
     
-    System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
+    System& fluid =
+    this->get_equation_systems().get_system<System>("EulerSystem");
 
     _local_fluid_solution->init(fluid.solution->size(), true, SERIAL);
     fluid.solution->localize(*_local_fluid_solution,
@@ -165,8 +142,8 @@ void FrequencyDomainLinearizedEuler::localize_fluid_solution()
 
 
 
-bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacobian,
-                                                              DiffContext &context)
+bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
+(bool request_jacobian, DiffContext &context)
 {
     libmesh_assert(_if_localized_sol);
     
@@ -196,25 +173,32 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     // calculated at each quadrature point by summing the
     // solution degree-of-freedom values by the appropriate
     // weight functions.
-    const unsigned int n_qpoints = (c.get_element_qrule())->n_points(), n1 = dim+2;
+    const unsigned int n_qpoints = c.get_element_qrule().n_points(), n1 = dim+2;
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseMatrix<Real> > Ai_advection(dim);
     FEMOperatorMatrix B_mat;
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat_n1n2, tmp_mat_n2n2,
+    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, A_entropy,
+    A_inv_entropy, tmp_mat_n1n2, tmp_mat_n2n2,
     tmp_mat_n2n1, tmp_mat_n1n1, A_sens, stress_tensor, dcons_dprim, dprim_dcons;
-    DenseVector<Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol, temp_grad, flux_real, tmp_vec3_n2_real;
-    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1, tmp_vec5_n1;
+    DenseVector<Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
+    temp_grad, flux_real, tmp_vec3_n2_real;
+    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1,
+    tmp_vec5_n1;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
-    Ai_Bi_advection.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs); stress_tensor.resize(dim, dim);
+    Ai_Bi_advection.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
+    stress_tensor.resize(dim, dim);
     A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
+    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
+    tmp_vec3_n2.resize(n_dofs);
     conservative_sol.resize(dim+2); temp_grad.resize(dim); tmp_vec4_n1.resize(dim+2);
-    tmp_vec5_n1.resize(dim+2); tmp_mat_n1n2.resize(dim+2, n_dofs); tmp_mat_n2n2.resize(n_dofs, n_dofs);
+    tmp_vec5_n1.resize(dim+2); tmp_mat_n1n2.resize(dim+2, n_dofs);
+    tmp_mat_n2n2.resize(n_dofs, n_dofs);
     tmp_mat_n2n1.resize(n_dofs, dim+2); tmp_mat_n1n1.resize(dim+2, dim+2);
     dcons_dprim.resize(dim+2, dim+2); dprim_dcons.resize(dim+2, dim+2);
-    elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs); tmp_vec3_n2_real.resize(n_dofs);
+    elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
+    tmp_vec3_n2_real.resize(n_dofs);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -233,17 +217,19 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     PrimitiveSolution primitive_sol;
 
     // element dofs from steady solution to calculate the linearized quantities
-    System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
+    System& fluid =
+    this->get_equation_systems().get_system<System>("EulerSystem");
     
     std::vector<dof_id_type> fluid_dof_indices;
-    fluid.get_dof_map().dof_indices(c.elem, fluid_dof_indices);
+    fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
     
-    for (unsigned int i=0; i<c.dof_indices.size(); i++)
+    for (unsigned int i=0; i<c.get_dof_indices().size(); i++)
         ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
     
-    Number iota(0, 1.), scaling = iota*surface_motion->frequency;
+    Number iota(0, 1.), scaling = iota*perturbed_surface_motion->frequency;
 
-    System& delta_val_system = this->get_equation_systems().get_system<System>("DeltaValSystem");
+    System& delta_val_system =
+    this->get_equation_systems().get_system<System>("DeltaValSystem");
     NumericVector<Number>& diff_val_vec = (*delta_val_system.solution.get());
     
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
@@ -254,13 +240,16 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
     {
         // first update the variables at the current quadrature point
         this->update_solution_at_quadrature_point(vars, qp, c, true, ref_sol,
-                                                  conservative_sol, primitive_sol,
+                                                  conservative_sol,
+                                                  primitive_sol,
                                                   B_mat, dB_mat);
 
         for ( unsigned int i_dim=0; i_dim < dim; i_dim++)
-            this->calculate_advection_flux_jacobian ( i_dim, primitive_sol, Ai_advection[i_dim] );
+            this->calculate_advection_flux_jacobian( i_dim, primitive_sol,
+                                                    Ai_advection[i_dim] );
         
-        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy, A_inv_entropy );
+        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy,
+                                                   A_inv_entropy );
 
         Ai_Bi_advection.zero();
         
@@ -278,16 +267,18 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
         }
         
         if (_if_update_stabilization_per_quadrature_point || (qp == 0))
-            this->calculate_differential_operator_matrix(vars, qp, c, ref_sol, primitive_sol, B_mat,
-                                                         dB_mat, Ai_advection, Ai_Bi_advection,
-                                                         A_inv_entropy, flux_jacobian_sens,
-                                                         LS_mat, LS_sens, diff_val);
+            this->calculate_differential_operator_matrix
+            (vars, qp, c, ref_sol, primitive_sol, B_mat,
+             dB_mat, Ai_advection, Ai_Bi_advection,
+             A_inv_entropy, flux_jacobian_sens,
+             LS_mat, LS_sens, diff_val);
         
         // the discontinuity capturing term is reused from the steady solution
-        diff_val = real(diff_val_vec.el(c.elem->dof_number(delta_val_system.number(), 0, 0)));
+        diff_val = real(diff_val_vec.el(c.get_elem().dof_number
+                                        (delta_val_system.number(), 0, 0)));
 
         // calculate the interpolated solution value at this quadrature point
-        B_mat.vector_mult(elem_interpolated_sol, c.elem_solution);  // B dU
+        B_mat.vector_mult(elem_interpolated_sol, c.get_elem_solution());  // B dU
 
         // Galerkin contribution to solution
         B_mat.vector_mult_transpose(tmp_vec3_n2, elem_interpolated_sol); // B^T B dU
@@ -314,11 +305,13 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
                 dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol);
                 for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
                 {
-                    flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1, tmp_vec2_n1);
+                    flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1,
+                                                                  tmp_vec2_n1);
                     for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                        A_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                        A_sens.add_column((n_phi*i_cvar)+i_phi,
+                                          phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
                 }
-                A_sens.vector_mult(flux, c.elem_solution);
+                A_sens.vector_mult(flux, c.get_elem_solution());
                 LS_mat.vector_mult_transpose(tmp_vec3_n2 , flux);
                 Fvec.add(JxW[qp], tmp_vec3_n2); // contribution from sensitivity of Ai Jacobians
             }
@@ -328,36 +321,39 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
                 // Galerkin contribution from the diffusion flux terms
                 for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                 {
-                    dB_mat[deriv_dim].vector_mult(tmp_vec4_n1, c.elem_solution); // dU/dx_j
-                    this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
+                    dB_mat[deriv_dim].vector_mult(tmp_vec4_n1,
+                                                  c.get_elem_solution()); // dU/dx_j
+                    this->calculate_diffusion_flux_jacobian
+                    (i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
                     tmp_mat_n1n1.vector_mult(tmp_vec5_n1, tmp_vec4_n1); // Kij dB/dx_j
-                    dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, tmp_vec5_n1); // dB/dx_i Kij dB/dx_j
+                    dB_mat[i_dim].vector_mult_transpose
+                    (tmp_vec3_n2, tmp_vec5_n1); // dB/dx_i Kij dB/dx_j
                     Fvec.add(JxW[qp], tmp_vec3_n2);
                 }
             }
 
             // discontinuity capturing operator
-            dB_mat[i_dim].vector_mult(flux, c.elem_solution);  // d dU/ dx_i
+            dB_mat[i_dim].vector_mult(flux, c.get_elem_solution());  // d dU/ dx_i
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dB/dx_i d dU/ dx_i
             Fvec.add(JxW[qp]*diff_val, tmp_vec3_n2);
         }
         
         // Least square contribution from flux
-        Ai_Bi_advection.vector_mult(flux, c.elem_solution); // d dF^adv_i / dxi
+        Ai_Bi_advection.vector_mult(flux, c.get_elem_solution()); // d dF^adv_i / dxi
         LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau dF^adv_i
         Fvec.add(JxW[qp], tmp_vec3_n2);
 
         if (_if_full_linearization)
         {
             // sensitivity of LS term
-            LS_sens.vector_mult(tmp_vec3_n2, c.elem_solution);
+            LS_sens.vector_mult(tmp_vec3_n2, c.get_elem_solution());
             Fvec.add(JxW[qp], tmp_vec3_n2); // contribution from sensitivity of LS matrix
         }
 
         // Least square contribution from divergence of diffusion flux
         // TODO: this requires a 2nd order differential of the flux
 
-        if (request_jacobian && c.elem_solution_derivative)
+        if (request_jacobian && c.get_elem_solution_derivative())
         {
             // contribution from unsteady term
             // Galerkin contribution of velocity
@@ -376,11 +372,13 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
             {
                 // Galerkin contribution from the advection flux terms
                 B_mat.left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
-                dB_mat[i_dim].right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // dBw/dx_i^T  d dF^adv_i/ dU
+                dB_mat[i_dim].right_multiply_transpose
+                (tmp_mat_n2n2, tmp_mat_n1n2); // dBw/dx_i^T  d dF^adv_i/ dU
                 Kmat.add(-JxW[qp], tmp_mat_n2n2);
                 
                 // discontinuity capturing term
-                dB_mat[i_dim].right_multiply_transpose(tmp_mat_n2n2, dB_mat[i_dim]);
+                dB_mat[i_dim].right_multiply_transpose(tmp_mat_n2n2,
+                                                       dB_mat[i_dim]);
                 Kmat.add(JxW[qp]*diff_val, tmp_mat_n2n2);
 
                 if (_if_full_linearization)
@@ -389,9 +387,11 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
                     dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol);
                     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
                     {
-                        flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1, tmp_vec2_n1);
+                        flux_jacobian_sens[i_dim][i_cvar].vector_mult
+                        (tmp_vec1_n1, tmp_vec2_n1);
                         for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                            A_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                            A_sens.add_column((n_phi*i_cvar)+i_phi,
+                                              phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
                     }
                 }
 
@@ -399,9 +399,12 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
                 {
                     for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                     {
-                        this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
-                        dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
-                        dB_mat[i_dim].right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // dB/dx_i^T Kij dB/dx_j
+                        this->calculate_diffusion_flux_jacobian
+                        (i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
+                        dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2,
+                                                        tmp_mat_n1n1); // Kij dB/dx_j
+                        dB_mat[i_dim].right_multiply_transpose
+                        (tmp_mat_n2n2, tmp_mat_n1n2); // dB/dx_i^T Kij dB/dx_j
                         Kmat.add(-JxW[qp], tmp_mat_n2n2);
                     }
                 }
@@ -436,8 +439,8 @@ bool FrequencyDomainLinearizedEuler::element_time_derivative (bool request_jacob
 
 
 
-bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian,
-                                                           DiffContext &context)
+bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
+(bool request_jacobian, DiffContext &context)
 {
     libmesh_assert(_if_localized_sol);
 
@@ -456,7 +459,8 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     
     for ( ; bc_it != bc_end; bc_it++)
     {
-        if ( this->get_mesh().boundary_info->has_boundary_id(c.elem, c.side, bc_it->first))
+        if ( this->get_mesh().boundary_info->has_boundary_id
+            (&c.get_elem(), c.side, bc_it->first))
         {
             switch (bc_it->second)
             {
@@ -465,6 +469,11 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                     n_mechanical_bc++;
                     break;
                     
+                case SYMMETRY_WALL:
+                    mechanical_bc_type = SYMMETRY_WALL;
+                    n_mechanical_bc++;
+                    break;
+
                 case NO_SLIP_WALL:
                     libmesh_assert(_if_viscous);
                     mechanical_bc_type = NO_SLIP_WALL;
@@ -537,37 +546,49 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     FEMOperatorMatrix B_mat;
 
-    DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1, tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
+    DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
+    tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
-    DenseVector<Real>  normal, normal_local, tmp_vec1, U_vec_interpolated, conservative_sol, ref_sol,
-    temp_grad;
-    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2, surf_vel, dnormal;
+    DenseVector<Real>  normal, normal_local, tmp_vec1, U_vec_interpolated,
+    conservative_sol, ref_sol, temp_grad, uvec,
+    surface_steady_vel, dnormal_steady;
+    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2,
+    surface_unsteady_vel, dnormal_unsteady, duvec;
     
-    conservative_sol.resize(dim+2);
-    normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs); flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
-    U_vec_interpolated.resize(n1); temp_grad.resize(dim); elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
-    dnormal.resize(dim); surf_vel.resize(dim);
+    conservative_sol.resize(dim+2); uvec.resize(dim); duvec.resize(dim);
+    normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
+    flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
+    U_vec_interpolated.resize(n1); temp_grad.resize(dim);
+    elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
+    dnormal_steady.resize(dim); surface_steady_vel.resize(dim);
+    dnormal_unsteady.resize(dim); surface_unsteady_vel.resize(dim);
     
-    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1);
-    tmp_mat_n1n1.resize(n1, n1); tmp_mat_n1n2.resize(n1, n_dofs); tmp_mat_n2n2.resize(n_dofs, n_dofs);
-    dcons_dprim.resize(n1, n1); dprim_dcons.resize(n1, n1); Kmat_viscous.resize(n1, n_dofs);
+    
+    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
+    l_eig_vec_inv_tr.resize(n1, n1);
+    tmp_mat_n1n1.resize(n1, n1); tmp_mat_n1n2.resize(n1, n_dofs);
+    tmp_mat_n2n2.resize(n_dofs, n_dofs);
+    dcons_dprim.resize(n1, n1); dprim_dcons.resize(n1, n1);
+    Kmat_viscous.resize(n1, n_dofs);
     A_mat.resize(dim+2, dim+2); stress_tensor.resize(dim, dim);
 
 
     
     // element dofs from steady solution to calculate the linearized quantities
-    System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
+    System& fluid =
+    this->get_equation_systems().get_system<System>("EulerSystem");
     
     std::vector<dof_id_type> fluid_dof_indices;
-    fluid.get_dof_map().dof_indices(c.elem, fluid_dof_indices);
+    fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
     
-    for (unsigned int i=0; i<c.dof_indices.size(); i++)
+    for (unsigned int i=0; i<c.get_dof_indices().size(); i++)
         ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
     
     
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
     
+    const DenseVector<Number>& elem_sol = c.get_elem_solution();
     
     switch (mechanical_bc_type)
     // adiabatic and isothermal are handled in the no-slip wall BC
@@ -578,62 +599,89 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             // thermal BC is handled here
         {
             
-            Real xini = 0.;
-            Number dui_normali, ui_dnormali;
+            Number dui_ni_unsteady = 0.; Real ui_ni_steady = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
-                dui_normali = Number(0.,0.); ui_dnormali = Number(0.,0.);
-                dnormal.zero();
-                
                 // first update the variables at the current quadrature point
-                this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat, dB_mat);
+                this->update_solution_at_quadrature_point
+                (vars, qp, c, false,
+                 ref_sol, conservative_sol,
+                 p_sol, B_mat, dB_mat);
                 
                 // stress tensor and temperature gradient
-                this->calculate_conservative_variable_jacobian(p_sol, dcons_dprim, dprim_dcons);
-                this->calculate_diffusion_tensors(ref_sol, dB_mat, dprim_dcons,
-                                                  p_sol, stress_tensor, temp_grad);
+                this->calculate_conservative_variable_jacobian
+                (p_sol, dcons_dprim, dprim_dcons);
+                this->calculate_diffusion_tensors
+                (ref_sol, dB_mat, dprim_dcons,
+                 p_sol, stress_tensor, temp_grad);
                 
                 if (thermal_bc_type == ADIABATIC)
                     temp_grad.zero();
                 
-                
-                // calculate the surface velocity perturbations
-                surface_motion->surface_velocity(qpoint[qp], surf_vel);
-                surface_motion->surface_normal_perturbation(face_normals[qp], dnormal);
-
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    dui_normali += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
-                // calculate the factor due to surface normal perturbation
-                ui_dnormali = p_sol.u1 * dnormal(0);
-                if (dim > 1)
-                    ui_dnormali += p_sol.u2 * dnormal(1);
-                if (dim > 2)
-                    ui_dnormali += p_sol.u3 * dnormal(2);
-                
-                dui_normali -= ui_dnormali;
-                
-                B_mat.vector_mult(flux, c.elem_solution); // initialize flux to interpolated sol for initialized of perturbed vars
+                // initialize flux to interpolated sol for initialization
+                // of perturbed vars
+                B_mat.vector_mult(flux, elem_sol);
                 
                 delta_p_sol.zero();
-                delta_p_sol.init(p_sol, flux); // flux is actually the elem interpolated perturbed sol
+                // flux is actually the elem interpolated perturbed sol
+                delta_p_sol.init(p_sol, flux);
+
+                dui_ni_unsteady = 0.; ui_ni_steady = 0.;
+                p_sol.get_uvec(uvec);
+                delta_p_sol.get_duvec(duvec);
                 
-                
-                flux.zero(); // now that the perturbed sol has been initialized, zero the flux.
-                
-                switch (dim)
+                // calculate the surface velocity perturbations
+                perturbed_surface_motion->surface_velocity_frequency_domain
+                (qpoint[qp], face_normals[qp],
+                 surface_unsteady_vel, dnormal_unsteady);
+
+                // now check if the surface deformation is defined and
+                // needs to be applied through transpiration boundary
+                // condition
+                if (surface_motion.get()) // get the surface motion data
                 {
-                    case 3:
-                        flux(3) = p_sol.u3*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](2); // dfi ni^0
-                    case 2:
-                        flux(2) = p_sol.u2*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](1); // dfi ni^0
-                    case 1:
-                        flux(0) = p_sol.rho*dui_normali; // dfi ni^0
-                        flux(1) = p_sol.u1*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](0); // dfi ni^0
-                        flux(n1-1) = dui_normali*(p_sol.rho*p_sol.e_tot+p_sol.p); // dfi ni^0
-                        break;
+                    surface_motion->surface_velocity_time_domain
+                    (0., qpoint[qp], face_normals[qp],
+                     surface_steady_vel, dnormal_steady);
+                    
+                    // now initialize the surface velocity
+                    // note that the perturbed local normal is used here
+                    // since it resembles the normal of the surface that
+                    // has undergone a static deformation, even though the
+                    // surface_vel might be identically zero for a static
+                    // body.
+                    dui_ni_unsteady  =
+                    surface_steady_vel.dot(dnormal_unsteady); // wi_dot * delta_ni
+                    dui_ni_unsteady +=
+                    surface_unsteady_vel.dot(dnormal_steady); // delta_wi_dot * dni
+                    dui_ni_unsteady -= duvec.dot(dnormal_steady);
+                    
+                    // also the steady part
+                    ui_ni_steady  = surface_steady_vel.dot(dnormal_steady);
+                    ui_ni_steady -= uvec.dot(dnormal_steady);
+
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    {
+                        dui_ni_unsteady += // delta_wi_dot * ni
+                        surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
+                        ui_ni_steady    += // wi_dot * ni
+                        surface_steady_vel(i_dim) * face_normals[qp](i_dim);
+                    }
                 }
+
+
+                // now add the contribution from unsteady normal perturbation
+                dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni                
                 
+                // now prepare the flux vector
+                flux.zero();
+                flux.add(dui_ni_unsteady, ref_sol);
+                flux.add(ui_ni_steady, elem_sol);
+                flux(n1-1) += dui_ni_unsteady*p_sol.p + ui_ni_steady*delta_p_sol.dp;
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
+
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // inviscid flux contribution
                 Fvec.add(JxW[qp], tmp_vec1_n2);
                 
@@ -643,24 +691,22 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                     {
-                        this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
-                        dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                        this->calculate_diffusion_flux_jacobian
+                        (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                        dB_mat[deriv_dim].left_multiply
+                        (tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
                         Kmat_viscous.add(1.0, tmp_mat_n1n2);
                     }
                 
-                Kmat_viscous.vector_mult(flux, c.elem_solution);  // Kij dB/dx_j dU
+                Kmat_viscous.vector_mult(flux, elem_sol);  // Kij dB/dx_j dU
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux);   // B^T Kij dB/dx_j dU
                 Fvec.add(-JxW[qp], tmp_vec1_n2);
 
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
-//                    // update the force vector
-//                    for (unsigned int i=0; i<dim; i++)
-//                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*delta_p_sol.dp;
-                    
-                    xini = 0.; // for the steady case
-                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
+                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+                    (p_sol, ui_ni_steady, face_normals[qp], dnormal_steady, A_mat);
                     
                     B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
                     B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T A B
@@ -668,11 +714,15 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                     
                     // contribution from diffusion flux
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                        for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
+                        for (unsigned int deriv_dim=0;
+                             deriv_dim<dim; deriv_dim++)
                         {
-                            this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
-                            dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
-                            B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T Kij dB/dx_j
+                            this->calculate_diffusion_flux_jacobian
+                            (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                            dB_mat[deriv_dim].left_multiply
+                            (tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                            B_mat.right_multiply_transpose
+                            (tmp_mat_n2n2, tmp_mat_n1n2); // B^T Kij dB/dx_j
                             Kmat.add(-JxW[qp], tmp_mat_n2n2);
                         }
                 }
@@ -682,73 +732,142 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             
             
             
-        case SLIP_WALL: // inviscid boundary condition without any diffusive component
-            // conditions enforced are
-            // vi ni = 0       (slip wall)
-            // tau_ij nj = 0   (because velocity gradient at wall = 0)
-            // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
+        case SYMMETRY: // inviscid boundary condition without any diffusive component
+                        // conditions enforced are
+                        // vi ni = 0       (slip wall)
+                        // tau_ij nj = 0   (because velocity gradient at wall = 0)
+                        // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            Real xini=0.;
-            Number dui_normali, ui_dnormali;
-            
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
-                dui_normali = Number(0.,0.); ui_dnormali = Number(0.,0.);
-                dnormal.zero();
-                
                 // first update the variables at the current quadrature point
-                this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat, dB_mat);
+                this->update_solution_at_quadrature_point
+                (vars, qp, c, false,
+                 ref_sol, conservative_sol,
+                 p_sol, B_mat, dB_mat);
                 
-                // calculate the surface velocity perturbations
-                surface_motion->surface_velocity(qpoint[qp], surf_vel);
-                surface_motion->surface_normal_perturbation(face_normals[qp], dnormal);
-
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    dui_normali += surf_vel(i_dim)*face_normals[qp](i_dim);//face_normals[qp] * vel;
-                // calculate the factor due to surface normal perturbation
-                ui_dnormali = p_sol.u1 * dnormal(0);
-                if (dim > 1)
-                    ui_dnormali += p_sol.u2 * dnormal(1);
-                if (dim > 2)
-                    ui_dnormali += p_sol.u3 * dnormal(2);
-                
-                dui_normali -= ui_dnormali;
-                
-                B_mat.vector_mult(flux, c.elem_solution); // initialize flux to interpolated sol for initialized of perturbed vars
+                // initialize flux to interpolated sol for initialization
+                // of perturbed vars
+                B_mat.vector_mult(flux, elem_sol);
                 
                 delta_p_sol.zero();
-                delta_p_sol.init(p_sol, flux); // flux is actually the elem interpolated perturbed sol
+                // flux is actually the elem interpolated perturbed sol
+                delta_p_sol.init(p_sol, flux);
                 
-                
-                flux.zero(); // now that the perturbed sol has been initialized, zero the flux.
-                
-                switch (dim)
-                {
-                    case 3:
-                        flux(3) = p_sol.u3*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](2); // dfi ni^0
-                    case 2:
-                        flux(2) = p_sol.u2*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](1); // dfi ni^0
-                    case 1:
-                        flux(0) = p_sol.rho*dui_normali; // dfi ni^0
-                        flux(1) = p_sol.u1*p_sol.rho*dui_normali+delta_p_sol.dp*face_normals[qp](0); // dfi ni^0
-                        flux(n1-1) = dui_normali*(p_sol.rho*p_sol.e_tot+p_sol.p); // dfi ni^0
-                        break;
-                }
+                // now prepare the flux vector
+                flux.zero();
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
                 Fvec.add(JxW[qp], tmp_vec1_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
-//                    // update the force vector
-//                    for (unsigned int i=0; i<dim; i++)
-//                        (*integrated_force)(i) += face_normals[qp](i)*JxW[qp]*delta_p_sol.dp;
-                    
-                    xini = 0.; // for the steady case
-                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(p_sol, xini, face_normals[qp], A_mat);
+                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+                    (p_sol, ui_ni_steady, face_normals[qp], dnormal_steady, A_mat);
                     
                     B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
-                    B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T A B
+                    B_mat.right_multiply_transpose(tmp_mat_n2n2,
+                                                   tmp_mat_n1n2); // B^T A B
+                    Kmat.add(JxW[qp], tmp_mat_n2n2);
+                }
+            }
+        }
+            break;
+
+        
+        case SLIP_WALL: // inviscid boundary condition without any diffusive component
+            // conditions enforced are
+            // vi ni = wi_dot (ni + dni) - ui dni       (slip wall)
+            // tau_ij nj = 0   (because velocity gradient at wall = 0)
+            // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
+        {
+            Number dui_ni_unsteady = 0.; Real ui_ni_steady = 0.;
+            
+            for (unsigned int qp=0; qp<qpoint.size(); qp++)
+            {
+                // first update the variables at the current quadrature point
+                this->update_solution_at_quadrature_point
+                (vars, qp, c, false,
+                 ref_sol, conservative_sol,
+                 p_sol, B_mat, dB_mat);
+                
+                // initialize flux to interpolated sol for initialization
+                // of perturbed vars
+                B_mat.vector_mult(flux, elem_sol);
+                
+                delta_p_sol.zero();
+                // flux is actually the elem interpolated perturbed sol
+                delta_p_sol.init(p_sol, flux);
+                
+                dui_ni_unsteady = 0.; ui_ni_steady = 0.;
+                p_sol.get_uvec(uvec);
+                delta_p_sol.get_duvec(duvec);
+
+                // calculate the surface velocity perturbations
+                perturbed_surface_motion->surface_velocity_frequency_domain
+                (qpoint[qp], face_normals[qp],
+                 surface_unsteady_vel, dnormal_unsteady);
+
+                // now check if the surface deformation is defined and
+                // needs to be applied through transpiration boundary
+                // condition
+                if (surface_motion.get()) // get the surface motion data
+                {
+                    surface_motion->surface_velocity_time_domain
+                    (0., qpoint[qp], face_normals[qp],
+                     surface_steady_vel, dnormal_steady);
+                    
+                    // now initialize the surface velocity
+                    // note that the perturbed local normal is used here
+                    // since it resembles the normal of the surface that
+                    // has undergone a static deformation, even though the
+                    // surface_vel might be identically zero for a static
+                    // body.
+                    dui_ni_unsteady  =
+                    surface_steady_vel.dot(dnormal_unsteady); // wi_dot * delta_ni
+                    dui_ni_unsteady +=
+                    surface_unsteady_vel.dot(dnormal_steady); // delta_wi_dot * dni
+                    dui_ni_unsteady -= duvec.dot(dnormal_steady);
+                    
+                    // also the steady part
+                    ui_ni_steady  = surface_steady_vel.dot(dnormal_steady);
+                    ui_ni_steady -= uvec.dot(dnormal_steady);
+                    
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    {
+                        dui_ni_unsteady += // delta_wi_dot * ni
+                        surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
+                        ui_ni_steady    += // wi_dot * ni
+                        surface_steady_vel(i_dim) * face_normals[qp](i_dim);
+                    }
+                }
+                
+                
+                // now add the contribution from unsteady normal perturbation
+                dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
+
+                
+                // now prepare the flux vector
+                flux.zero();
+                flux.add(dui_ni_unsteady, ref_sol);
+                flux.add(ui_ni_steady, elem_sol);
+                flux(n1-1) += dui_ni_unsteady*p_sol.p + ui_ni_steady*delta_p_sol.dp;
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
+
+                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
+                Fvec.add(JxW[qp], tmp_vec1_n2);
+                
+                if ( request_jacobian && c.get_elem_solution_derivative() )
+                {
+                    this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+                    (p_sol, ui_ni_steady, face_normals[qp], dnormal_steady, A_mat);
+                    
+                    B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
+                    B_mat.right_multiply_transpose(tmp_mat_n2n2,
+                                                   tmp_mat_n1n2); // B^T A B
                     Kmat.add(JxW[qp], tmp_mat_n2n2);
                 }
             }
@@ -767,7 +886,9 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
                 // first update the variables at the current quadrature point
-                this->update_solution_at_quadrature_point(vars, qp, c, false, ref_sol, conservative_sol, p_sol, B_mat, dB_mat);
+                this->update_solution_at_quadrature_point
+                (vars, qp, c, false,
+                 ref_sol, conservative_sol, p_sol, B_mat, dB_mat);
                 
                 this->calculate_advection_left_eigenvector_and_inverse_for_normal
                 (p_sol, face_normals[qp], eig_val, l_eig_vec, l_eig_vec_inv_tr);
@@ -788,7 +909,7 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                 
                 tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
                 
-                B_mat.vector_mult(elem_interpolated_sol, c.elem_solution); // B dU
+                B_mat.vector_mult(elem_interpolated_sol, c.get_elem_solution()); // B dU
                 tmp_mat_n1n1.vector_mult(flux, elem_interpolated_sol); // f_{+} = A_{+} B dU
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
@@ -798,9 +919,11 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                 if (_if_viscous) // evaluate the viscous flux using the domain solution
                 {
                     // stress tensor and temperature gradient
-                    this->calculate_conservative_variable_jacobian(p_sol, dcons_dprim, dprim_dcons);
-                    this->calculate_diffusion_tensors(ref_sol, dB_mat, dprim_dcons,
-                                                      p_sol, stress_tensor, temp_grad);
+                    this->calculate_conservative_variable_jacobian
+                    (p_sol, dcons_dprim, dprim_dcons);
+                    this->calculate_diffusion_tensors
+                    (ref_sol, dB_mat, dprim_dcons,
+                     p_sol, stress_tensor, temp_grad);
                     
                     // contribution from diffusion flux
                     flux.zero();
@@ -838,9 +961,12 @@ bool FrequencyDomainLinearizedEuler::side_time_derivative (bool request_jacobian
                         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                             for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                             {
-                                this->calculate_diffusion_flux_jacobian(i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
-                                dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
-                                B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T Kij dB/dx_j
+                                this->calculate_diffusion_flux_jacobian
+                                (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                                dB_mat[deriv_dim].left_multiply
+                                (tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                                B_mat.right_multiply_transpose
+                                (tmp_mat_n2n2, tmp_mat_n1n2); // B^T Kij dB/dx_j
                                 Kmat.add(-JxW[qp], tmp_mat_n2n2);
                             }
                     }
@@ -951,7 +1077,7 @@ public:
         SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
 
         // now initialize the primitive variable contexts
-        p_sol.init(c.dim, fluid_sol, _cp, _cv, false);
+        p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
         delta_p_sol.init(p_sol, sd_fluid_sol);
         
         for (unsigned int i=0; i<_vars.size(); i++)
@@ -978,7 +1104,7 @@ public:
         SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
         
         // now initialize the primitive variable contexts
-        p_sol.init(c.dim, fluid_sol, _cp, _cv, false);
+        p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
         delta_p_sol.init(p_sol, sd_fluid_sol);
         
         return get_complex_var_val(_vars[i_comp], delta_p_sol, _q0);
@@ -1050,9 +1176,11 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
 
     // initialize the mesh function for the fluid solution,
     // this will be used for calculation of the element solution
-    const System& fluid = this->get_equation_systems().get_system<System>("EulerSystem");
-    const FrequencyDomainLinearizedEuler& sd_fluid =
-    this->get_equation_systems().get_system<FrequencyDomainLinearizedEuler>("FrequencyDomainLinearizedEuler");
+    const System& fluid = this->get_equation_systems().get_system<System>
+    ("EulerSystem");
+    const FrequencyDomainLinearizedFluidSystem& sd_fluid =
+    this->get_equation_systems().get_system<FrequencyDomainLinearizedFluidSystem>
+    ("FrequencyDomainLinearizedFluidSystem");
     
     std::vector<std::string> post_process_var_names(this->n_vars());
     for (unsigned int i=0; i<this->n_vars(); i++)
@@ -1060,8 +1188,10 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     
     
     AutoPtr<NumericVector<Number> >
-    fluid_sol = NumericVector<Number>::build(this->get_equation_systems().comm()),  // for the nonlinear system
-    sd_fluid_sol = NumericVector<Number>::build(this->get_equation_systems().comm());  // for the small-disturbance system
+    fluid_sol =
+    NumericVector<Number>::build(this->get_equation_systems().comm()),  // for the nonlinear system
+    sd_fluid_sol =
+    NumericVector<Number>::build(this->get_equation_systems().comm());  // for the small-disturbance system
 
     // ask systems to localize their solutions
     fluid_sol->init(fluid.solution->size(), true, SERIAL);
@@ -1087,9 +1217,12 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
 
     
     AutoPtr<FEMFunctionBase<Number> > post_process_function
-    (new FrequencyDomainPrimitiveFEMFunction(*fluid_mesh_function, *sd_fluid_mesh_function,
-                                             post_process_var_names, sd_fluid.cp, sd_fluid.cv,
-                                             sd_fluid.q0_inf));
+    (new FrequencyDomainPrimitiveFEMFunction
+     (*fluid_mesh_function, *sd_fluid_mesh_function,
+      post_process_var_names,
+      flight_condition->gas_property.cp,
+      flight_condition->gas_property.cv,
+      flight_condition->q0()));
     
     this->project_solution(post_process_function.get());
     
