@@ -44,14 +44,16 @@ PrimitiveSolution::zero()
     this->primitive_sol.zero();
     dimension = 0;
     cp = 0.; cv = 0.;
-    rho = 0.; u1 = 0.; u2 = 0.; u3 = 0.; T = 0.; p = 0.; a = 0.; e_tot = 0.; k = 0.;
-    entropy = 0.; mach = 0.;
+    rho = 0.; u1 = 0.; u2 = 0.; u3 = 0.; T = 0.; p = 0.; a = 0.; e_tot = 0.;
+    k = 0.; entropy = 0.; mach = 0.;
     // viscous values
     Pr = 0.72; k_thermal = 0.; mu = 0.; lambda = 0.;
 }
 
 
-void PrimitiveSolution::init(const unsigned int dim, const DenseVector<Real> &conservative_sol, const Real cp_val, const Real cv_val,
+void PrimitiveSolution::init(const unsigned int dim,
+                             const DenseVector<Real> &conservative_sol,
+                             const Real cp_val, const Real cv_val,
                              bool if_viscous)
 {
     dimension = dim;
@@ -110,6 +112,21 @@ PrimitiveSolution::c_pressure(const Real p0, const Real q0) const
 
 
 void
+PrimitiveSolution::get_uvec(DenseVector<Real> &u) const
+{
+    u.zero();
+    switch (dimension) {
+        case 3:
+            u(2) = u3;
+        case 2:
+            u(1) = u2;
+        case 1:
+            u(0) = u1;
+    }
+}
+
+
+void
 PrimitiveSolution::print(std::ostream& out) const
 {
     out << "Primitive Solution:" << std::endl;
@@ -147,14 +164,16 @@ template <typename ValType>
 void SmallPerturbationPrimitiveSolution<ValType>::zero()
 {
     perturb_primitive_sol.zero();
-    drho = 0.; du1 = 0.; du2 = 0.; du3 = 0.; dT = 0.; dp = 0.; da = 0.; de_tot = 0.; dk = 0.;
+    drho = 0.; du1 = 0.; du2 = 0.; du3 = 0.; dT = 0.; dp = 0.; da = 0.;
+    de_tot = 0.; dk = 0.;
     dentropy = 0.; dmach = 0.;
 }
 
 
 template <typename ValType>
 void
-SmallPerturbationPrimitiveSolution<ValType>::init(const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol)
+SmallPerturbationPrimitiveSolution<ValType>::init
+(const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol)
 {
     const unsigned int n1 = sol.dimension+2;
     const Real R = sol.cp-sol.cv, gamma = sol.cp/sol.cv;
@@ -189,7 +208,8 @@ SmallPerturbationPrimitiveSolution<ValType>::init(const PrimitiveSolution& sol, 
     dp = R*(dT*sol.rho + sol.T*drho);
     da = 0.5*sqrt(gamma*R/sol.T)*dT;
     dmach =  dk/sqrt(2.0*sol.k)/sol.a - sqrt(2.*sol.k)/pow(sol.a,2) * da;
-    dentropy = (dp/pow(sol.rho,gamma) - gamma*sol.p/pow(sol.rho,gamma+1.)*drho) / (sol.p/pow(sol.rho,gamma)) ;
+    dentropy = (dp/pow(sol.rho,gamma) - gamma*sol.p/pow(sol.rho,gamma+1.)*drho)
+    / (sol.p/pow(sol.rho,gamma)) ;
 }
 
 
@@ -222,6 +242,20 @@ SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real q0) const
 }
     
 
+template <typename ValType>
+void
+SmallPerturbationPrimitiveSolution<ValType>::get_duvec(DenseVector<ValType>& du) const
+{
+    du.zero();
+    switch (primitive_sol->dimension) {
+        case 3:
+            du(2) = du3;
+        case 2:
+            du(1) = du2;
+        case 1:
+            du(0) = du1;
+    }
+}
 
 
 
@@ -235,31 +269,14 @@ void EulerElemBase::init_data ()
 {
     // Check the input file for Reynolds number, application type,
     // approximation type
-    const Real pi = acos(-1.);
 
     GetPot infile("euler.in");
-    aoa = infile("aoa",0.0);
-    rho_inf = infile("rho",1.05);
-    mach_inf = infile("mach",0.5);
-    temp_inf = infile("temp",300.0);
-    cp = infile("cp",1.003e3);
-    cv = infile("cv",0.716e3);
-
-    // initialize the force vectors
-    _lift_normal.resize(dim);
-    _drag_normal.resize(dim);
-    
-    _lift_normal(0) = -sin(aoa*pi/180.);
-    _lift_normal(1) =  cos(aoa*pi/180.);
-    
-    _drag_normal(0) =  cos(aoa*pi/180.);
-    _drag_normal(1) =  sin(aoa*pi/180.);
-
     
     // check if the simulation is viscous or inviscid
     _if_viscous = infile("if_viscous", false);
     _if_full_linearization = infile("if_full_linearization", true);
-    _if_update_stabilization_per_quadrature_point = infile("if_update_stabilization_per_quadrature_point", true);
+    _if_update_stabilization_per_quadrature_point =
+    infile("if_update_stabilization_per_quadrature_point", true);
     
     // read the boundary conditions
     unsigned int n_bc, bc_id;
@@ -334,17 +351,6 @@ void EulerElemBase::init_data ()
         }
     }
     
-
-    // now calculate the necessary properties
-    gamma = cp/cv;
-    R = cp-cv;
-    a_inf = sqrt(gamma*R*temp_inf);
-    
-    u1_inf = mach_inf*a_inf*cos(aoa*pi/180.0);
-    u2_inf = mach_inf*a_inf*sin(aoa*pi/180.0);
-    u3_inf = 0.0;
-    q0_inf = 0.5*rho_inf*(u1_inf*u1_inf+u2_inf*u2_inf+u3_inf*u3_inf);
-    p_inf = R*rho_inf*temp_inf;
     
     // prepare the variable vector
     _active_primitive_vars.push_back(RHO_PRIM);
@@ -373,29 +379,21 @@ void EulerElemBase::init_data ()
 
 void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 {
-    Real k = 0.0;
-    vars_inf(0) = rho_inf;
-    vars_inf(1) = rho_inf*u1_inf; k += u1_inf*u1_inf;
-    if (dim > 1)
-    {
-        vars_inf(2) = rho_inf*u2_inf;
-        k += u2_inf*u2_inf;
-    }
-    if (dim > 2)
-    {
-        vars_inf(3) = rho_inf*u3_inf;
-        k += u3_inf*u3_inf;
-    }
-    vars_inf(dim+2-1) = rho_inf*(cv*temp_inf+0.5*k);
+    vars_inf(0) = flight_condition->rho();
+    vars_inf(1) = flight_condition->rho_u1();
+    if (dim > 1) vars_inf(2) = flight_condition->rho_u2();
+    if (dim > 2) vars_inf(3) = flight_condition->rho_u3();
+    vars_inf(dim+2-1) = flight_condition->rho_e();
 }
 
 
 
 
-void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c, 
-                                                        const bool if_elem_domain, const DenseVector<Real>& elem_solution,
-                                                        DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
-                                                        FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat)
+void EulerElemBase::update_solution_at_quadrature_point
+( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+ const bool if_elem_domain, const DenseVector<Real>& elem_solution,
+ DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
+ FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat)
 {
     conservative_sol.zero();
 
@@ -423,7 +421,8 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
         
         if (if_elem_domain || _if_viscous)
         {
-            const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
+            const std::vector<std::vector<RealVectorValue> >& dphi =
+            fe->get_dphi();
             
             
             for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
@@ -438,7 +437,10 @@ void EulerElemBase::update_solution_at_quadrature_point( const std::vector<unsig
     B_mat.vector_mult( conservative_sol, elem_solution );
     
     primitive_sol.zero();
-    primitive_sol.init(dim, conservative_sol, cp, cv, _if_viscous);
+    primitive_sol.init(dim, conservative_sol,
+                       flight_condition->gas_property.cp,
+                       flight_condition->gas_property.cv,
+                       _if_viscous);
 }
 
 
@@ -589,10 +591,6 @@ EulerElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution&
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
     const unsigned int n1 = 2 + dim;
-    //    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
-    //
-    //    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
-    //    FESystemAssert0(div_coord < dim, FESystem::Exception::InvalidValue);
     
     dcons_dprim.zero();
     dprim_dcons.zero();
@@ -602,7 +600,8 @@ EulerElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution&
     u3 = sol.u3,
     rho = sol.rho,
     k = sol.k,
-    e_tot = sol.e_tot;
+    e_tot = sol.e_tot,
+    cv = flight_condition->gas_property.cv;
     
     switch (dim)
     {
@@ -686,7 +685,10 @@ EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_di
     u3 = sol.u3,
     k = sol.k,
     e_tot = sol.e_tot,
-    T = sol.T;
+    T = sol.T,
+    gamma = flight_condition->gas_property.gamma,
+    R = flight_condition->gas_property.R,
+    cv = flight_condition->gas_property.cv;
     
     switch (calculate_dim)
     {
@@ -830,7 +832,8 @@ EulerElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
     e_tot = sol.e_tot,
     mu = sol.mu,
     lambda = sol.lambda,
-    kth = sol.k_thermal;
+    kth = sol.k_thermal,
+    cv = flight_condition->gas_property.cv;
     
     switch (flux_dim)
     {
@@ -1026,9 +1029,9 @@ EulerElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable(const unsigned int calculate_dim,
-                                                                                       const PrimitiveSolution& sol,
-                                                                                       std::vector<DenseMatrix<Real> >& mat)
+EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
+(const unsigned int calculate_dim, const PrimitiveSolution& sol,
+ std::vector<DenseMatrix<Real> >& mat)
 {
     const unsigned int n1 = 2 + dim;
     
@@ -1043,7 +1046,8 @@ EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_va
     // calculate based on chain rule of the primary variables
     for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++) // iterate over the primitive variables for chain rule
     {
-        this->calculate_advection_flux_jacobian_sensitivity_for_primitive_variable(calculate_dim, i_pvar, sol, tmp_mat);
+        this->calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
+        (calculate_dim, i_pvar, sol, tmp_mat);
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
         {
             if (fabs(dprim_dcons(i_pvar, i_cvar)) > 0.0)
@@ -1055,10 +1059,11 @@ EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_va
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_variable(const unsigned int calculate_dim,
-                                                                                    const unsigned int primitive_var,
-                                                                                    const PrimitiveSolution& sol,
-                                                                                    DenseMatrix<Real>& mat)
+EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
+(const unsigned int calculate_dim,
+ const unsigned int primitive_var,
+ const PrimitiveSolution& sol,
+ DenseMatrix<Real>& mat)
 {
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
@@ -1070,7 +1075,9 @@ EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_varia
     u2 = sol.u2,
     u3 = sol.u3,
     k = sol.k,
-    e_tot = sol.e_tot;
+    e_tot = sol.e_tot,
+    R = flight_condition->gas_property.R,
+    cv = flight_condition->gas_property.cv;
     
     switch (calculate_dim)
     {
@@ -1327,17 +1334,11 @@ EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_varia
 
 
 void
-EulerElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal(const PrimitiveSolution& sol,
-                                                                           const Point& normal, DenseMatrix<Real>& eig_vals,
-                                                                           DenseMatrix<Real>& l_eig_mat, DenseMatrix<Real>& l_eig_mat_inv_tr)
+EulerElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal
+(const PrimitiveSolution& sol, const Point& normal, DenseMatrix<Real>& eig_vals,
+ DenseMatrix<Real>& l_eig_mat, DenseMatrix<Real>& l_eig_mat_inv_tr)
 {
     const unsigned int n1 = 2 + dim;
-    
-    //    const std::pair<FESystemUInt, FESystemUInt> s_eig_val = eig_vals.getSize(), s_l_eig_mat = l_eig_mat.getSize(), s_l_eig_mat_inv_tr = l_eig_mat_inv_tr.getSize();
-    //
-    //    FESystemAssert4((s_eig_val.first == n1) && (s_eig_val.first == n1), FESystem::Numerics::MatrixSizeMismatch, s_eig_val.first, s_eig_val.second, n1, n1);
-    //    FESystemAssert4((s_l_eig_mat.first == n1) && (s_l_eig_mat.first == n1), FESystem::Numerics::MatrixSizeMismatch, s_l_eig_mat.first, s_l_eig_mat.second, n1, n1);
-    //    FESystemAssert4((s_l_eig_mat_inv_tr.first == n1) && (s_l_eig_mat_inv_tr.first == n1), FESystem::Numerics::MatrixSizeMismatch, s_l_eig_mat_inv_tr.first, s_l_eig_mat_inv_tr.second, n1, n1);
     
     eig_vals.zero(); l_eig_mat.zero(); l_eig_mat_inv_tr.zero();
     
@@ -1349,7 +1350,9 @@ EulerElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal(const
     u3 = sol.u3,
     k = sol.k,
     T = sol.T,
-    a = sol.a;
+    a = sol.a,
+    gamma = flight_condition->gas_property.gamma,
+    cv = flight_condition->gas_property.cv;
     
     // initialize the values
     switch (dim)
@@ -1586,21 +1589,25 @@ EulerElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal(const
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(const PrimitiveSolution& sol,
-                                                                                const Real xi_ni, const Point& nvec, DenseMatrix<Real>& mat)
+EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+(const PrimitiveSolution& sol,
+ const Real ui_ni, const Point& nvec,
+ const DenseVector<Real>& dnormal, DenseMatrix<Real>& mat)
 {
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
     const unsigned int n1 = 2 + dim;
-    //    const std::pair<FESystemUInt, FESystemUInt> s = mat.getSize();
-    //
-    //    FESystemAssert4((s.first == n1) && (s.second == n1), FESystem::Numerics::MatrixSizeMismatch, s.first, s.second, n1, n1);
     
     mat.zero();
-    const Real u1 = sol.u1,
+    const Real rho = sol.rho,
+    u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
-    k = sol.k;
+    k = sol.k,
+    R = flight_condition->gas_property.R,
+    cv= flight_condition->gas_property.cv,
+    e = sol.e_tot,
+    p = sol.p;
     
     switch (dim)
     {
@@ -1613,10 +1620,10 @@ EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(
             mat(3, 0) = nvec(2)*R/cv*k;
             mat(3, 1) = -R/cv*nvec(2)*u1;
             mat(3, 2) = -R/cv*nvec(2)*u2;
-            mat(3, 3) = xi_ni-R/cv*nvec(2)*u3;
+            mat(3, 3) = ui_ni-R/cv*nvec(2)*u3;
             mat(3, n1-1) = R/cv*nvec(2);
             
-            mat(n1-1, 3) = xi_ni*R/cv*u3;
+            mat(n1-1, 3) = -ui_ni*R/cv*u3;
         }
             
         case 2:
@@ -1625,25 +1632,69 @@ EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(
             
             mat(2, 0) = nvec(1)*R/cv*k;
             mat(2, 1) = -R/cv*nvec(1)*u1;
-            mat(2, 2) = xi_ni-R/cv*nvec(1)*u2;
+            mat(2, 2) = ui_ni-R/cv*nvec(1)*u2;
             mat(2, n1-1) = R/cv*nvec(1);
             
-            mat(n1-1, 2) = xi_ni*R/cv*u2;
+            mat(n1-1, 2) = -ui_ni*R/cv*u2;
         }
             
         case 1:
         {
-            mat(0, 1) = xi_ni; // d U / d (rho u1)
+            mat(0, 0) = ui_ni;
             
             mat(1, 0) = nvec(0)*R/cv*k;
-            mat(1, 1) = xi_ni-R/cv*nvec(0)*u1;
+            mat(1, 1) = ui_ni-R/cv*nvec(0)*u1;
             mat(1, n1-1) = R/cv*nvec(0);
             
-            mat(n1-1, 0) = xi_ni*R/cv*k;
-            mat(n1-1, 1) = xi_ni*R/cv*u1;
-            mat(n1-1, n1-1) = xi_ni*(R+cv)/cv;
+            mat(n1-1, 0) = ui_ni*R/cv*k;
+            mat(n1-1, 1) =  -ui_ni*R/cv*u1;
+            mat(n1-1, n1-1) = ui_ni*(1.+R/cv);
         }
             break;
+    }
+    
+    
+    if (dnormal.l2_norm() > 0.)
+    {
+        //
+        // note that
+        // ui * ni = wi_dot * (ni + dni) - (ui * dni)
+        // hence,
+        // d (ui * ni)/d U = - d ui / dU * dni
+        //
+        DenseVector<Real> duini_dU, tmp;
+        duini_dU.resize(n1); tmp.resize(n1);
+        
+        // initialze the Jacobian of ui_ni wrt sol variables
+        tmp(0)    = 1.;
+        tmp(n1-1) = e+p/rho;
+        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+        {
+            switch (i_dim) {
+                case 0:
+                {
+                    duini_dU(0) -=  u1 * dnormal(0);
+                    tmp(1)       =  u1;
+                }
+                case 1:
+                {
+                    duini_dU(0) -=  u2 * dnormal(1);
+                    tmp(2)       =  u2;
+                }
+                case 2:
+                {
+                    duini_dU(0) -=  u3 * dnormal(2);
+                    tmp(3)       =  u3;
+                }
+            }
+            duini_dU(i_dim+1) = dnormal(i_dim);
+        }
+        
+        // now add to the Jacobian matrix
+        for (unsigned int i=0; i<n1; i++)
+            for (unsigned int j=0; j<n1; j++)
+                // look at the note above to see reason for negative sign
+                mat(i,j) -= tmp(i)*duini_dU(j);
     }
 }
 
@@ -1652,12 +1703,15 @@ EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary(
 
 void
 EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
-                                                   DenseMatrix<Real>& dUdV, DenseMatrix<Real>& dVdU)
+                                                   DenseMatrix<Real>& dUdV,
+                                                   DenseMatrix<Real>& dVdU)
 {
     // calculates dU/dV where V is the Entropy variable vector
     
-    // calculate A0 = d U / d Y , where U = conservation variable vector, and Y = unknown variable vector
-    // note that for conservation variables as the unknown, this is an identity matrix
+    // calculate A0 = d U / d Y , where U = conservation variable vector,
+    // and Y = unknown variable vector
+    // note that for conservation variables as the unknown, this is an
+    // identity matrix
     
     const unsigned int n1 = 2 + dim;
     const Real rho = sol.rho,
@@ -1666,7 +1720,9 @@ EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
     u3 = sol.u3,
     k = sol.k,
     T = sol.T,
-    e_tot = sol.e_tot;
+    e_tot = sol.e_tot,
+    gamma = flight_condition->gas_property.gamma,
+    cv = flight_condition->gas_property.cv;
     
     dUdV.zero(); dVdU.zero();
     
@@ -1789,16 +1845,17 @@ EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
 
 
 bool
-EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                          const PrimitiveSolution& sol,
-                                          DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
+EulerElemBase::calculate_barth_tau_matrix
+(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+ const PrimitiveSolution& sol,
+ DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
 {
     const unsigned int n1 = 2 + dim;
 
     Point nvec;
     DenseMatrix<Real> eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp1;
-    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1); l_eig_vec_inv_tr.resize(n1, n1);
-    tmp1.resize(n1, n1);
+    eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
+    l_eig_vec_inv_tr.resize(n1, n1); tmp1.resize(n1, n1);
     
     Real nval;
     FEBase* fe;
@@ -1812,10 +1869,12 @@ EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
         if (nval > 0.)
         {
             nvec /= nval;
-            this->calculate_advection_left_eigenvector_and_inverse_for_normal(sol, nvec, eig_val, l_eig_vec, l_eig_vec_inv_tr);
+            this->calculate_advection_left_eigenvector_and_inverse_for_normal
+            (sol, nvec, eig_val, l_eig_vec, l_eig_vec_inv_tr);
             
             for (unsigned int i_var=0; i_var<n1; i_var++)
-                l_eig_vec_inv_tr.scale_column(i_var, fabs(eig_val(i_var, i_var))); // L^-T [omaga]
+                l_eig_vec_inv_tr.scale_column
+                (i_var, fabs(eig_val(i_var, i_var))); // L^-T [omaga]
             
             l_eig_vec_inv_tr.right_multiply_transpose(l_eig_vec); // A = L^-T [omaga] L^T
             
@@ -1841,9 +1900,10 @@ EulerElemBase::calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
 
 
 bool
-EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                             const PrimitiveSolution& sol,
-                                             DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
+EulerElemBase::calculate_aliabadi_tau_matrix
+(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+ const PrimitiveSolution& sol,
+ DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
 {
     const unsigned int n1 = 2 + dim;
     
@@ -1858,7 +1918,10 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
     u2 = sol.u2,
     u3 = sol.u3,
     a = sol.a,
-    dt = c.get_deltat_value();
+    dt = c.get_deltat_value(),
+    cp = flight_condition->gas_property.cp,
+    R = flight_condition->gas_property.R,
+    gamma = flight_condition->gas_property.gamma;
     
     tau.zero();
     
@@ -1903,8 +1966,10 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
     }
     else
     {
-        tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2) + pow(4.0*sol.mu/sol.rho/h/h, 2));
-        tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2)+ pow(4.0*sol.k_thermal/sol.rho/cp/h/h, 2));
+        tau_m   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2) +
+                           pow(4.0*sol.mu/sol.rho/h/h, 2));
+        tau_e   = 1.0/sqrt(pow(2.0/dt, 2)+ pow(2.0/h*(u_val+a), 2)+
+                           pow(4.0*sol.k_thermal/sol.rho/cp/h/h, 2));
     }
     
     tau(0, 0) = tau_rho;
@@ -1955,7 +2020,8 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
         {
             for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
-                cons_sens[i_cvar] += primitive_sens[i_pvar] * dprim_dcons(i_pvar, i_cvar);
+                cons_sens[i_cvar] += primitive_sens[i_pvar] *
+                dprim_dcons(i_pvar, i_cvar);
         }
         
         // set the values in the sensitivity matrices
@@ -1973,8 +2039,10 @@ EulerElemBase::calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& va
 
 
 void
-EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                DenseMatrix<Real>& dxi_dX, DenseMatrix<Real>& dX_dxi)
+EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
+                                const unsigned int qp, FEMContext& c,
+                                DenseMatrix<Real>& dxi_dX,
+                                DenseMatrix<Real>& dX_dxi)
 {
     // initialize dxi_dX and dX_dxi
     dxi_dX.zero(); dX_dxi.zero();
@@ -2051,19 +2119,24 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars, const uns
 }
 
 
-void EulerElemBase::calculate_differential_operator_matrix(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-                                                           const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
-                                                           const FEMOperatorMatrix& B_mat, const std::vector<FEMOperatorMatrix>& dB_mat,
-                                                           const std::vector<DenseMatrix<Real> >& Ai_advection, const DenseMatrix<Real>& Ai_Bi_advection,
-                                                           const DenseMatrix<Real>& A_inv_entropy, const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
-                                                           DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens, Real& discontinuity_val )
+void EulerElemBase::calculate_differential_operator_matrix
+(const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+ const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
+ const FEMOperatorMatrix& B_mat, const std::vector<FEMOperatorMatrix>& dB_mat,
+ const std::vector<DenseMatrix<Real> >& Ai_advection,
+ const DenseMatrix<Real>& Ai_Bi_advection,
+ const DenseMatrix<Real>& A_inv_entropy,
+ const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
+ DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
+ Real& discontinuity_val )
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
     std::vector<DenseVector<Real> > diff_vec(3);
     DenseMatrix<Real> tmp_mat, tmp_mat2, tau, dxi_dX, dX_dxi;
     DenseVector<Real> vec1, vec2, vec3, vec4_n2;
-    tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1); dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
+    tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1);
+    dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
     for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
@@ -2085,8 +2158,10 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
-    if_diagonal_tau = this->calculate_aliabadi_tau_matrix(vars, qp, c, sol, tau, tau_sens);
-    //if_diagonal_tau = this->calculate_barth_tau_matrix(vars, qp, c, sol, tau, tau_sens);
+    if_diagonal_tau = this->calculate_aliabadi_tau_matrix
+    (vars, qp, c, sol, tau, tau_sens);
+    //if_diagonal_tau = this->calculate_barth_tau_matrix
+    //(vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
@@ -2107,7 +2182,8 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
                 Ai_sens[i][i_cvar].vector_mult(vec3, vec1);
                 dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
                 for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                    LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+                    LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp],
+                                       vec4_n2);
             }
             
             // Bi^T Ai dtau/dalpha
@@ -2117,7 +2193,8 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
                 Ai_advection[i].vector_mult(vec3, vec1);
                 dB_mat[i].vector_mult_transpose(vec4_n2, vec3);
                 for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
-                    LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp], vec4_n2);
+                    LS_sens.add_column((n_phi*i_cvar)+i_phi, phi[i_phi][qp],
+                                       vec4_n2);
             }
         }
     }
@@ -2125,8 +2202,10 @@ void EulerElemBase::calculate_differential_operator_matrix(const std::vector<uns
     
     // TODO: divergence of diffusive flux
     
-    // add the velocity and calculate the numerator of the discontinuity capturing term coefficient
-    //vec2 += c.elem_solution; // add velocity TODO: how to get the velocity for all calls to this method
+    // add the velocity and calculate the numerator of the discontinuity
+    // capturing term coefficient
+    //vec2 += c.elem_solution; // add velocity TODO: how to get the
+    // velocity for all calls to this method
     A_inv_entropy.vector_mult(vec1, vec2);
     discontinuity_val = vec1.dot(vec2); // this is the numerator term
     
