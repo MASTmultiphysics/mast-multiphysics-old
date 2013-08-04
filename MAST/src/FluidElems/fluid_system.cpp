@@ -752,7 +752,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
         
         case SLIP_WALL: // inviscid boundary condition without any diffusive component
                         // conditions enforced are
-                        // vi ni = wi_dot ni - ui dni   (moving slip wall with deformation)
+                        // vi ni = wi_dot (ni + dni) - ui dni   (moving slip wall with deformation)
                         // tau_ij nj = 0   (because velocity gradient at wall = 0)
                         // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
