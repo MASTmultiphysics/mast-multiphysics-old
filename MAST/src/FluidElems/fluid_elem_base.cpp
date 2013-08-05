@@ -293,7 +293,21 @@ void EulerElemBase::init_data ()
              (bc_id, SLIP_WALL));
         }
     }
+
     
+    // symmetry wall bc
+    n_bc = infile("n_symmetry_wall_bc", 0);
+    if (n_bc > 0)
+    {
+        for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+        {
+            bc_id = infile("symmetry_wall_bc", 0, i_bc);
+            _boundary_condition.insert
+            (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+             (bc_id, SYMMETRY_WALL));
+        }
+    }
+
     
     // far field bc
     n_bc = infile("n_far_field_bc", 0);

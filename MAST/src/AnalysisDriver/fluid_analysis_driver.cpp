@@ -222,6 +222,9 @@ int main (int argc, char* const argv[])
         
         for ( ; e_it != e_end; e_it++)
         {
+            // iterate over the sides of each element and check if all
+            // nodes satisfy the requirement
+            
             for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
             {
                 bool side_on_panel = false, side_on_slip_wall=false;
@@ -231,14 +234,15 @@ int main (int argc, char* const argv[])
                     const Node& n = *(side_elem->get_node(i_node));
                     if (dim == 2)
                     {
-                        if ((n(1)==0.) && (n(0) >= x0))
+                        if ((n(1)==0.) && (n(0) >= x0) && (n(0) <= x0+chord))
                             side_on_panel = true;
-                        else if ((n(1)==0.) && (n(0) > 0.) && (n(0) < x_length))
+                        else if (n(1)==0.)
                             side_on_slip_wall = true;
                         else
                         {
                             side_on_panel = false;
                             side_on_slip_wall = false;
+                            break;
                         }
                     }
                     if (dim == 3)
@@ -249,9 +253,9 @@ int main (int argc, char* const argv[])
                         }
                 }
                 if (side_on_panel)
-                    mesh.boundary_info->add_side(*e_it, 0, 10);
-                if (side_on_slip_wall)
-                    mesh.boundary_info->add_side(*e_it, 0, 11);
+                    mesh.boundary_info->add_side(*e_it, i_side, 10);
+                else if (side_on_slip_wall)
+                    mesh.boundary_info->add_side(*e_it, i_side, 11);
             }
         }
         
