@@ -26,6 +26,11 @@ public:
     virtual ~FEMStructuralModel()
     { }
     
+    /*!
+     *    initializes the data strucutres. The eigen values must be available
+     *    in both the eigen_vals vector and the modes in structural_system
+     */
+    void init();
     
     /*!
      *    updates the matrix to the mass matrix for the structural model.
@@ -33,7 +38,12 @@ public:
      */
     virtual bool get_mass_matrix(RealMatrixX& m)
     {
-        libmesh_assert(false);
+        unsigned int n_eig = eigen_vals.size();
+        m.Zero(n_eig, n_eig);
+        for (unsigned i=0; i<n_eig; i++)
+            m(i,i) = 1.;
+        
+        return true;
     }
     
     /*!
@@ -42,7 +52,12 @@ public:
      */
     virtual bool get_stiffness_matrix(RealMatrixX& k)
     {
-        libmesh_assert(false);
+        unsigned int n_eig = eigen_vals.size();
+        k.Zero(n_eig, n_eig);
+        for (unsigned i=0; i<n_eig; i++)
+            k(i,i) = eigen_vals(i);
+        
+        return true;
     }
     
     /*!
@@ -59,16 +74,47 @@ public:
      */
     virtual BasisMatrix<Number>& get_basis_matrix()
     {
-        libmesh_assert(false);
+        return *basis_matrix;
     }
 
+    
+    /*!
+     *    vector of eigenvalues
+     */
+    RealVectorX  eigen_vals;
 
     /*!
      *    the structural system that provides the basis of
      *    calculations for this model
      */
     System& structural_system;
+    
+    /*!
+     *    returns the basis matrix using the modal data in structural system
+     */
+    std::auto_ptr<BasisMatrix<Number> > basis_matrix;
 };
+
+
+
+inline
+void
+FEMStructuralModel::init()
+{
+    libmesh_assert(eigen_vals.size() > 0);
+    
+    unsigned int n_eig = eigen_vals.size();
+    
+    basis_matrix.reset(new BasisMatrix<Number>(structural_system.comm()));
+    basis_matrix->modes.resize(n_eig);
+    
+    for (unsigned int i=0; i<n_eig; i++)
+    {
+        std::ostringstream oss;
+        oss << "mode_" << i;
+        basis_matrix->modes[i] = &structural_system.get_vector(oss.str());
+    }
+}
 
 
 #endif

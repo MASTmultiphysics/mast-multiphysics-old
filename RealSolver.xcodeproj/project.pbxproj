@@ -14,8 +14,8 @@
 		696C08191796CF9200B77C5C /* structural_system_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C08171796CF9200B77C5C /* structural_system_base.cpp */; };
 		696C081B1796ED8200B77C5C /* structural_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C081A1796ED8200B77C5C /* structural_driver.cpp */; };
 		698C603217ADEBE5009E6058 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698C603017ADEBE5009E6058 /* rigid_surface_motion.cpp */; };
-		69A7A4C017ADF3090053F9D4 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69A7A4BF17ADF3090053F9D4 /* FESystem.dylib */; };
 		69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A98AC317A5A77400789481 /* flutter_driver.cpp */; };
+		EBAAA56617AFDA8A0046ED0E /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBAAA56517AFDA8A0046ED0E /* FESystem.dylib */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
 		EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */; };
@@ -61,7 +61,6 @@
 		698C603017ADEBE5009E6058 /* rigid_surface_motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rigid_surface_motion.cpp; sourceTree = "<group>"; };
 		698C603117ADEBE5009E6058 /* rigid_surface_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rigid_surface_motion.h; sourceTree = "<group>"; };
 		698C603317ADEBFE009E6058 /* surface_pressure_load.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface_pressure_load.h; sourceTree = "<group>"; };
-		69A7A4BF17ADF3090053F9D4 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gmksdmnuhuepyfgusmjxcfxzfgzy/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		69A98AA917A30F1D00789481 /* flight_condition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flight_condition.h; sourceTree = "<group>"; };
 		69A98AB217A3143700789481 /* MAST_data_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAST_data_types.h; sourceTree = "<group>"; };
 		69A98AB517A31E3F00789481 /* gas_property.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gas_property.h; sourceTree = "<group>"; };
@@ -74,6 +73,7 @@
 		69A98ABE17A58DA300789481 /* fem_structural_model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fem_structural_model.h; sourceTree = "<group>"; };
 		69A98ABF17A5929E00789481 /* basis_matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basis_matrix.h; sourceTree = "<group>"; };
 		69A98AC317A5A77400789481 /* flutter_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flutter_driver.cpp; sourceTree = "<group>"; };
+		EBAAA56517AFDA8A0046ED0E /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fluid_analysis_driver.cpp; sourceTree = "<group>"; };
@@ -92,7 +92,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69A7A4C017ADF3090053F9D4 /* FESystem.dylib in Frameworks */,
+				EBAAA56617AFDA8A0046ED0E /* FESystem.dylib in Frameworks */,
 				EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */,
 				EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */,
@@ -233,7 +233,7 @@
 		EBF96D8A16EA6B1100316D86 = {
 			isa = PBXGroup;
 			children = (
-				69A7A4BF17ADF3090053F9D4 /* FESystem.dylib */,
+				EBAAA56517AFDA8A0046ED0E /* FESystem.dylib */,
 				EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */,
 				EBE3222216EA72430078E733 /* libmpi.1.dylib */,
 				EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */,

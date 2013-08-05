@@ -40,6 +40,29 @@ int main (int argc, char* const argv[])
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
 
+    GetPot infile("system_input.in");
+
+    // set data for flight condition
+    FlightCondition flight_cond;
+    for (unsigned int i=0; i<3; i++)
+    {
+        flight_cond.body_roll_axis(i)     = infile(    "body_roll_axis", 0., i);
+        flight_cond.body_pitch_axis(i)    = infile(   "body_pitch_axis", 0., i);
+        flight_cond.body_yaw_axis(i)      = infile(     "body_yaw_axis", 0., i);
+        flight_cond.body_euler_angles(i)  = infile( "body_euler_angles", 0., i);
+        flight_cond.body_angular_rates(i) = infile("body_angular_rates", 0., i);
+    }
+    flight_cond.ref_chord       = infile("ref_c",   1.);
+    flight_cond.altitude        = infile( "alt",    0.);
+    flight_cond.mach            = infile("mach",    .5);
+    flight_cond.gas_property.cp = infile(  "cp", 1003.);
+    flight_cond.gas_property.cv = infile(  "cv",  716.);
+    flight_cond.gas_property.T  = infile("temp",  300.);
+    flight_cond.gas_property.rho= infile( "rho",  1.05);
+    
+    flight_cond.init();
+
+    
     // *****************************************
     // initialize the fluid system
     // *****************************************
@@ -49,6 +72,7 @@ int main (int argc, char* const argv[])
     FrequencyDomainLinearizedFluidSystem & fluid_system =
     fluid_equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem");
+    fluid_system.flight_condition = &flight_cond;
     fluid_system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(fluid_system));
     // read the fluid system from the saved file
@@ -67,66 +91,40 @@ int main (int argc, char* const argv[])
     // now initialize the structural system
     // *****************************************
     SerialMesh structural_mesh(init.comm());
-    structural_mesh.set_mesh_dimension(1);
-    MeshTools::Generation::build_square (structural_mesh,
-                                         10,
-                                         0., 1.,
-                                         EDGE2);
-    
-    structural_mesh.prepare_for_use();
+    structural_mesh.read("saved_structural_mesh.xdr");
     
     EquationSystems structural_equation_systems (structural_mesh);
     CondensedEigenSystem & structural_system =
     structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
-    
-    structural_system.add_variable ( "ux", FIRST, LAGRANGE);
-    structural_system.add_variable ( "uy", FIRST, LAGRANGE);
-    structural_system.add_variable ( "uz", FIRST, LAGRANGE);
-    structural_system.add_variable ( "tx", FIRST, LAGRANGE);
-    structural_system.add_variable ( "ty", FIRST, LAGRANGE);
-    structural_system.add_variable ( "tz", FIRST, LAGRANGE);
-
-    // Give the system a pointer to the matrix assembly
-    // function defined below.
-    structural_system.attach_assemble_function (assemble_matrices);
-    
-    // Set the type of the problem, here we deal with
-    // a generalized Hermitian problem.
-    structural_system.set_eigenproblem_type(GHEP);
-    
-    // Order the eigenvalues "smallest first"
-    structural_system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
-    
-    // Set the number of requested eigenpairs \p n_evals and the number
-    // of basis vectors used in the solution algorithm.
-    structural_equation_systems.parameters.set<unsigned int>("eigenpairs")    = 10;
-    structural_equation_systems.parameters.set<unsigned int>("basis vectors") = 10*3;
-    
-    // Initialize the data structures for the equation system.
-    structural_equation_systems.init();
+    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
+                                           libMeshEnums::DECODE,
+                                           (EquationSystems::READ_HEADER |
+                                            EquationSystems::READ_DATA |
+                                            EquationSystems::READ_ADDITIONAL_DATA));
     
     // Prints information about the system to the screen.
+    structural_mesh.print_info();
     structural_equation_systems.print_info();
     
-    // Pass the Dirichlet dof IDs to the CondensedEigenSystem
-    std::set<unsigned int> dirichlet_dof_ids;
-    get_dirichlet_dofs(structural_equation_systems,
-                       "Eigensystem", dirichlet_dof_ids);
-    structural_system.initialize_condensed_dofs(dirichlet_dof_ids);
-    
-    // Solve the system "Eigensystem".
-    structural_system.solve();
 
-    // Get the number of converged eigen pairs.
-    unsigned int nconv = structural_system.get_n_converged();
+    // read the eigenvalues
+    FEMStructuralModel structural_model(structural_system);
+    GetPot modal_data("modal_data.in");
+    unsigned int neig = modal_data("n_eig", 0);
+    structural_model.eigen_vals.resize(neig);
+    for (unsigned int i=0; i<neig; i++)
+    {
+        std::ostringstream oss;
+        oss << "eig_" << i;
+        structural_model.eigen_vals(i) = modal_data(oss.str(), 0.);
+    }
+    structural_model.init();
 
     // create the solvers
     UGFlutterSolver flutter_solver;
-    FlightCondition flight_cond;
     
     // attach the fluid and structural systems to the models
     CFDAerodynamicModel aero_model(fluid_system);
-    FEMStructuralModel structural_model(structural_system);
     CoupledFluidStructureSystem
     coupled_system(aero_model, structural_model);
     

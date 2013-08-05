@@ -27,8 +27,9 @@
 #include "libmesh/eigen_solver.h"
 #include "libmesh/string_to_enum.h"
 #include "libmesh/condensed_eigen_system.h"
+#include "libmesh/xdr_io.h"
 
-
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 // The main program.
 int main_static (int argc, char* const argv[])
@@ -158,9 +159,22 @@ int main_modal (int argc, char* const argv[])
     // Get the number of converged eigen pairs.
     unsigned int nconv = eigen_system.get_n_converged();
 
+    std::ofstream file;
+    file.open("modal_data.in", std::ofstream::out);
+
+    file << "n_eig = " << nconv << std::endl;
+    
     for (unsigned int i=0; i<nconv; i++)
     {
         std::pair<Real, Real> val = eigen_system.get_eigenpair(i);
+        
+        // also add the solution as an independent vector, which will have to
+        // be read in
+        std::ostringstream vec_name;
+        file << "eig_"  << i << " = " << 1./val.first << std::endl;
+        vec_name << "mode_" << i;
+        NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
+        vec = *eigen_system.solution;
         
         std::cout << std::setw(5) << i
         << std::setw(10) << val.first
@@ -181,7 +195,18 @@ int main_modal (int argc, char* const argv[])
         Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                 equation_systems);
     }
+    
+    file.close();
+    
+    XdrIO xdr(mesh, true);
+    xdr.write("saved_structural_mesh.xdr");
+    equation_systems.write("saved_structural_solution.xdr",
+                           libMeshEnums::ENCODE,
+                           (EquationSystems::WRITE_DATA |
+                            EquationSystems::WRITE_ADDITIONAL_DATA));
+
     // All done.
     return 0;
 }
 
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
