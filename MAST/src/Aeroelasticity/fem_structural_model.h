@@ -18,7 +18,7 @@
 class FEMStructuralModel: public StructuralModel
 {
 public:
-    FEMStructuralModel(StructuralSystemBase& system):
+    FEMStructuralModel(System& system):
     StructuralModel(),
     structural_system(system)
     { }
@@ -67,7 +67,7 @@ public:
      *    the structural system that provides the basis of
      *    calculations for this model
      */
-    StructuralSystemBase& structural_system;
+    System& structural_system;
 };
 
 

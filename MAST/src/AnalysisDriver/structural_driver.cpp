@@ -91,7 +91,7 @@ void get_dirichlet_dofs(EquationSystems& es,
                         std::set<unsigned int>& dirichlet_dof_ids);
 
 
-int main (int argc, char* const argv[])
+int main_modal (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -117,8 +117,6 @@ int main (int argc, char* const argv[])
     
     CondensedEigenSystem & eigen_system =
     equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
-    
-    GetPot infile("structural.in");
     
     eigen_system.add_variable ( "ux", FIRST, LAGRANGE);
     eigen_system.add_variable ( "uy", FIRST, LAGRANGE);

@@ -41,55 +41,6 @@
 #include "libmesh/string_to_enum.h"
 
 
-void distributePoints(const unsigned int n_divs, const std::vector<double>& div_locations, const std::vector<unsigned int>& n_subdivs_in_div, const std::vector<double>& relative_mesh_size_at_div, std::vector<double>& points)
-{
-    libmesh_assert(div_locations.size() == n_divs+1);
-    libmesh_assert(relative_mesh_size_at_div.size() == n_divs+1);
-    libmesh_assert(n_subdivs_in_div.size() == n_divs);
-    
-    // calculate total number of points
-    unsigned int n_total_points = 1;
-    for (unsigned int i=0; i<n_divs; i++)
-        n_total_points += n_subdivs_in_div[i];
-    
-    // resize the points vector and set the first and last points of each division
-    points.resize(n_total_points);
-    
-    unsigned int n=1;
-    points[0] = div_locations[0];
-    for (unsigned int i=0; i<n_divs; i++)
-    {
-        n += n_subdivs_in_div[i];
-        points[n-1] = div_locations[i+1];
-    }
-    
-    n=1;
-    double dx=0.0, growth_factor = 0.0;
-    // now calculate the base mesh size, and calculate the nodal points
-    for (unsigned int i=0; i<n_divs; i++)
-    {
-        growth_factor = pow(relative_mesh_size_at_div[i+1]/relative_mesh_size_at_div[i], 1.0/(n_subdivs_in_div[i]-1.0));
-        if (fabs(growth_factor-1.0)>1.0e-10)
-            dx = (div_locations[i+1]-div_locations[i]) * (1.0-growth_factor)/(1.0-pow(growth_factor, n_subdivs_in_div[i]));
-        else
-        {
-            growth_factor = 1.0;
-            dx = (div_locations[i+1]-div_locations[i]) / n_subdivs_in_div[i];
-        }
-        
-        for (unsigned int n_pt=1; n_pt<n_subdivs_in_div[i]; n_pt++)
-        {
-            points[n+n_pt-1] = points[n+n_pt-2] + dx;
-            dx *= growth_factor;
-        }
-        n += n_subdivs_in_div[i];
-    }
-}
-
-
-
-
-
 #include "Numerics/fem_operator_matrix.h"
 
 int main_fem_operator (int argc, char* const argv[])
@@ -175,7 +126,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main_fluid (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -197,12 +148,6 @@ int main_fluid (int argc, char* const argv[])
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
-    
-    // Skip higher-dimensional examples on a lower-dimensional libMesh build
-    libmesh_example_assert(dim <= LIBMESH_DIM, "2D/3D support");
-    
-    // We have only defined 2 and 3 dimensional problems
-    libmesh_assert (dim == 2 || dim == 3);
     
     // Create a mesh.
     //SerialMesh mesh(init.comm());
@@ -238,16 +183,6 @@ int main_fluid (int argc, char* const argv[])
         t_by_c =  infile("t_by_c", 0.05),
         chord =   infile("chord", 1.0),
         span =    infile("span", 1.0),
-        dx_chordwise_inlet =  infile("dx_chordwise_inlet", 1.0), // these are relative sizes
-        dx_chordwise_le =     infile("dx_chordwise_le", 1.0),
-        dx_chordwise_te =     infile("dx_chordwise_te", 1.0),
-        dx_chordwise_outlet = infile("dx_chordwise_outlet", 1.0),
-        dx_spanwise_inlet =   infile("dx_spanwise_inlet", 1.0),
-        dx_spanwise_le =      infile("dx_spanwise_le", 1.0),
-        dx_spanwise_te =      infile("dx_spanwise_te", 1.0),
-        dx_spanwise_outlet =  infile("dx_spanwise_outlet", 1.0),
-        dx_vert_surface =     infile("dx_vert_surface", 1.0),
-        dx_vert_inf =         infile("dx_vert_inf", 1.0),
         thickness = 0.5*t_by_c*chord,
         x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
         
@@ -260,110 +195,17 @@ int main_fluid (int argc, char* const argv[])
         n_spanwise_te_divs     = infile("n_spanwise_te_divs", 10),
         n_vertical_divs        = infile("n_vertical_divs", 10);
         
-        // Use the MeshTools::Generation mesh generator to create a uniform
-        // grid on the square [-1,1]^D.  We instruct the mesh generator
-        // to build a mesh of 8x8 \p Quad9 elements in 2D, or \p Hex27
-        // elements in 3D.  Building these higher-order elements allows
-        // us to use higher-order approximation, as in example 3.
-        {   double vals[] = {0., (x_length-chord)/2., (x_length+chord)/2. , x_length};
-            div_locations.assign(vals, vals+4); }
-        {   unsigned int vals[] = {n_chordwise_le_divs, n_chordwise_panel_divs, n_chordwise_te_divs};
-            n_subdivs_in_div.assign(vals, vals+3); }
-        {   double vals[] = {dx_chordwise_inlet, dx_chordwise_le, dx_chordwise_te, dx_chordwise_outlet};
-            relative_mesh_size_at_div.assign(vals, vals+4); }
-        distributePoints(3, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, x_points);
-        mesh_dx = 1./(1.*(n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs));
-        
         if (dim == 2)
         {
-            {   double vals[] = {0., y_length};
-                div_locations.assign(vals, vals+2); }
-            {   unsigned int vals[] = {n_vertical_divs};
-                n_subdivs_in_div.assign(vals, vals+1); }
-            {   double vals[] = {dx_vert_surface, dx_vert_inf};
-                relative_mesh_size_at_div.assign(vals, vals+2); }
-            distributePoints(1, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, y_points);
-            
-            mesh_dy = 1./(1.*n_vertical_divs);
-            
             MeshTools::Generation::build_square (mesh,
                                                  n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                  n_vertical_divs,
                                                  0., 1.,
                                                  0., 1.,
                                                  Utility::string_to_enum<ElemType>(elem_type));
-
-
-            
-            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
-            const Mesh::node_iterator n_end = mesh.nodes_end();
-            Real x_val, y_val;
-            unsigned int x_id, y_id;
-            
-            // the mesh created by the MeshTool has uniform points. Iterate over all nodes
-            // and find the corresponding point in the non-uniform distributed points. Use
-            // that to assign the point location.
-            for (; n_it != n_end; n_it++)
-            {
-                Node& n =  **n_it;
-                
-                x_val = n(0);
-                y_val = n(1);
-                
-                x_id = floor(x_val/mesh_dx);
-                // find the correct id
-                bool found_id = false;
-                unsigned int correct_id = 0;
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = x_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                x_id = correct_id;
-                
-                found_id = false;
-                correct_id = 0;
-                y_id = floor(y_val/mesh_dy);
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = y_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                y_id = correct_id;
-                
-                n(0) = x_points[x_id];
-                n(1) = y_points[y_id];
-            }
         }
-        
         else if (dim == 3)
         {
-            {   double vals[] = {0., (y_length-span)/2., (y_length+span)/2. , y_length};
-                div_locations.assign(vals, vals+4); }
-            {   unsigned int vals[] = {n_spanwise_le_divs, n_spanwise_panel_divs, n_spanwise_te_divs};
-                n_subdivs_in_div.assign(vals, vals+3); }
-            {   double vals[] = {dx_spanwise_inlet, dx_spanwise_le, dx_spanwise_te, dx_spanwise_outlet};
-                relative_mesh_size_at_div.assign(vals, vals+4); }
-            distributePoints(3, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, y_points);
-            
-            
-            {   double vals[] = {0., z_length};
-                div_locations.assign(vals, vals+2); }
-            {   unsigned int vals[] = {n_vertical_divs};
-                n_subdivs_in_div.assign(vals, vals+1); }
-            {   double vals[] = {dx_vert_surface, dx_vert_inf};
-                relative_mesh_size_at_div.assign(vals, vals+2); }
-            distributePoints(1, div_locations, n_subdivs_in_div, relative_mesh_size_at_div, z_points);
-            
-            mesh_dy = 1./(1.*(n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs));
-            mesh_dz = 1./(1.*n_vertical_divs);
-            
             MeshTools::Generation::build_cube (mesh,
                                                n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs,
@@ -372,69 +214,6 @@ int main_fluid (int argc, char* const argv[])
                                                0., 1.,
                                                0., 1.,
                                                Utility::string_to_enum<ElemType>(elem_type));
-            
-            MeshBase::node_iterator   n_it  = mesh.nodes_begin();
-            const Mesh::node_iterator n_end = mesh.nodes_end();
-            Real x_val, y_val, z_val;
-            unsigned int x_id, y_id, z_id;
-
-            // the mesh created by the MeshTool has uniform points. Iterate over all nodes
-            // and find the corresponding point in the non-uniform distributed points. Use
-            // that to assign the point location.
-            
-            for (; n_it != n_end; n_it++)
-            {
-                Node& n =  **n_it;
-                x_val = n(0);
-                y_val = n(1);
-                z_val = n(2);
-                
-                x_id = floor(x_val/mesh_dx);
-                y_id = floor(y_val/mesh_dy);
-                z_id = floor(z_val/mesh_dz);
-                
-                // find the correct id
-                bool found_id = false;
-                unsigned int correct_id = 0;
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((x_id+i)*mesh_dx-x_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = x_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                x_id = correct_id;
-                
-                found_id = false;
-                correct_id = 0;
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((y_id+i)*mesh_dy-y_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = y_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                y_id = correct_id;
-                
-                found_id = false;
-                correct_id = 0;
-                for (unsigned int i=0; i<3; i++)
-                    if (fabs((z_id+i)*mesh_dz-z_val) <= 1.0e-8)
-                    {
-                        found_id = true;
-                        correct_id = z_id+i;
-                        break;
-                    }
-                libmesh_assert(found_id);
-                z_id = correct_id;
-                
-                n(0) = x_points[x_id];
-                n(1) = y_points[y_id];
-                n(2) = z_points[z_id];
-            }
-            
         }
         
         //march over all the elmeents and tag the sides that all lie on the panel suface
@@ -550,7 +329,8 @@ int main_fluid (int argc, char* const argv[])
     else
     {
         mesh.set_mesh_dimension(dim);
-        const std::string gmsh_input_file = infile("gmsh_input", std::string("mesh.msh"));
+        const std::string gmsh_input_file =
+        infile("gmsh_input", std::string("mesh.msh"));
         GmshIO gmsh_io(mesh);
         gmsh_io.read(gmsh_input_file);
         // ExodusII_IO gmsh_io(mesh);

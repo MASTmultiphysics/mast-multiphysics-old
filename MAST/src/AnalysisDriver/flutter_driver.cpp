@@ -22,10 +22,20 @@
 #include "libmesh/steady_solver.h"
 #include "libmesh/newton_solver.h"
 #include "libmesh/string_to_enum.h"
+#include "libmesh/condensed_eigen_system.h"
+
+
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
+void assemble_matrices(EquationSystems& es,
+                       const std::string& system_name);
 
-int main_flutter (int argc, char* const argv[])
+void get_dirichlet_dofs(EquationSystems& es,
+                        const std::string& system_name,
+                        std::set<unsigned int>& dirichlet_dof_ids);
+
+
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -64,21 +74,52 @@ int main_flutter (int argc, char* const argv[])
                                          EDGE2);
     
     structural_mesh.prepare_for_use();
+    
     EquationSystems structural_equation_systems (structural_mesh);
-    StructuralSystemBase & structural_system =
-    structural_equation_systems.add_system<StructuralSystemBase>
-    ("StructuralSystem");
+    CondensedEigenSystem & structural_system =
+    structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
     
-    structural_system.time_solver =
-    AutoPtr<TimeSolver>(new SteadySolver(structural_system));
-    structural_equation_systems.init ();
+    structural_system.add_variable ( "ux", FIRST, LAGRANGE);
+    structural_system.add_variable ( "uy", FIRST, LAGRANGE);
+    structural_system.add_variable ( "uz", FIRST, LAGRANGE);
+    structural_system.add_variable ( "tx", FIRST, LAGRANGE);
+    structural_system.add_variable ( "ty", FIRST, LAGRANGE);
+    structural_system.add_variable ( "tz", FIRST, LAGRANGE);
+
+    // Give the system a pointer to the matrix assembly
+    // function defined below.
+    structural_system.attach_assemble_function (assemble_matrices);
     
-    // print information for structural system
-    structural_mesh.print_info();
+    // Set the type of the problem, here we deal with
+    // a generalized Hermitian problem.
+    structural_system.set_eigenproblem_type(GHEP);
+    
+    // Order the eigenvalues "smallest first"
+    structural_system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+    
+    // Set the number of requested eigenpairs \p n_evals and the number
+    // of basis vectors used in the solution algorithm.
+    structural_equation_systems.parameters.set<unsigned int>("eigenpairs")    = 10;
+    structural_equation_systems.parameters.set<unsigned int>("basis vectors") = 10*3;
+    
+    // Initialize the data structures for the equation system.
+    structural_equation_systems.init();
+    
+    // Prints information about the system to the screen.
     structural_equation_systems.print_info();
     
+    // Pass the Dirichlet dof IDs to the CondensedEigenSystem
+    std::set<unsigned int> dirichlet_dof_ids;
+    get_dirichlet_dofs(structural_equation_systems,
+                       "Eigensystem", dirichlet_dof_ids);
+    structural_system.initialize_condensed_dofs(dirichlet_dof_ids);
     
-    
+    // Solve the system "Eigensystem".
+    structural_system.solve();
+
+    // Get the number of converged eigen pairs.
+    unsigned int nconv = structural_system.get_n_converged();
+
     // create the solvers
     UGFlutterSolver flutter_solver;
     FlightCondition flight_cond;

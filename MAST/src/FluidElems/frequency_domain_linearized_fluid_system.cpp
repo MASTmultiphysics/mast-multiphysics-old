@@ -732,12 +732,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
             
             
             
-        case SYMMETRY: // inviscid boundary condition without any diffusive component
+        case SYMMETRY_WALL: // inviscid boundary condition without any diffusive component
                         // conditions enforced are
                         // vi ni = 0       (slip wall)
                         // tau_ij nj = 0   (because velocity gradient at wall = 0)
                         // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
+            dnormal_steady.zero();
+            
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
                 // first update the variables at the current quadrature point
@@ -765,7 +767,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
-                    (p_sol, ui_ni_steady, face_normals[qp], dnormal_steady, A_mat);
+                    (p_sol, 0., face_normals[qp], dnormal_steady, A_mat);
                     
                     B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
                     B_mat.right_multiply_transpose(tmp_mat_n2n2,
