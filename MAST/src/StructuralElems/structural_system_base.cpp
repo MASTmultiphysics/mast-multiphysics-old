@@ -13,7 +13,9 @@
 #include "libmesh/dirichlet_boundaries.h"
 #include "libmesh/mesh_function.h"
 #include "libmesh/fem_function_base.h"
-
+#include "libmesh/eigen_system.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/fe_interface.h"
 
 // FESystem includes
 #include "Quadrature/TrapezoidQuadrature.h"
@@ -42,18 +44,15 @@ void StructuralSystemBase::init_data ()
     std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
-    vars[0]  = this->add_variable ( "ux", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[0]);
-    vars[1]  = this->add_variable ( "uy", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[1]);
-    vars[2]  = this->add_variable ( "uz", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[2]);
-    vars[3]  = this->add_variable ( "tx", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[3]);
-    vars[4]  = this->add_variable ( "ty", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[4]);
-    vars[5]  = this->add_variable ( "tz", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[5]);
+    vars.push_back(this->add_variable ( "ux", static_cast<Order>(o), fefamily));
+    vars.push_back(this->add_variable ( "uy", static_cast<Order>(o), fefamily));
+    vars.push_back(this->add_variable ( "uz", static_cast<Order>(o), fefamily));
+    vars.push_back(this->add_variable ( "tx", static_cast<Order>(o), fefamily));
+    vars.push_back(this->add_variable ( "ty", static_cast<Order>(o), fefamily));
+    vars.push_back(this->add_variable ( "tz", static_cast<Order>(o), fefamily));
+    
+    for (unsigned int i=0; i<vars.size(); i++)
+        this->time_evolving(vars[i]);
     
     // Useful debugging options
     this->verify_analytic_jacobians = infile("verify_analytic_jacobians", 0.);
@@ -141,7 +140,7 @@ void StructuralSystemBase::init_context(DiffContext &context)
 
 
 bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
-                                           DiffContext &context)
+                                                    DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
@@ -169,7 +168,8 @@ bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
     }
     fe.reinit(*elem);
     
-    dkt_plate.initialize(*elem, fe, fe_tri6, q_rule_bending, q_rule_bending, 72.0e9, 0.33, 2700., 0.002);
+    dkt_plate.initialize(*elem, fe, fe_tri6, q_rule_bending, q_rule_bending,
+                         72.0e9, 0.33, 2700., 0.002);
 
     FESystem::Numerics::DenseMatrix<Real> plate_elem_mat, elem_mat;
     FESystem::Numerics::LocalVector<Real> plate_elem_vec, elem_vec;
@@ -185,9 +185,9 @@ bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
     // set small values for the u, v, and tz dof stiffness
     for (unsigned int i=0; i<3; i++)
     {
-        elem_mat.setVal(   i,     i, 1.0e-6);
-        elem_mat.setVal( i+3,   i+3, 1.0e-6);
-        elem_mat.setVal(i+15,  i+15, 1.0e-6);
+        elem_mat.setVal(   i,     i, 1.0e16);
+        elem_mat.setVal( i+3,   i+3, 1.0e16);
+        elem_mat.setVal(i+15,  i+15, 1.0e16);
     }
     
     
@@ -196,12 +196,6 @@ bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
     dkt_plate.transformVectorToGlobalSystem(plate_elem_vec, elem_vec);
     
     
-    
-    // mass
-//    dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
-//    dkt_plate.getActiveElementMatrixIndices(elem_dof_indices);
-    
-
     //    for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         DenseMatrix<Number> tmpmat; tmpmat.resize(18, 18);
@@ -258,14 +252,78 @@ bool StructuralSystemBase::mass_residual (bool request_jacobian,
                                           DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
+    DenseVector<Number>& Fvec = c.get_elem_residual();
     
+    FESystem::Quadrature::TrapezoidQuadrature q_rule_shear, q_rule_bending;
+    FESystem::FiniteElement::FELagrange fe, fe_tri6;
+    FESystem::Structures::DKTPlate dkt_plate;
+    q_rule_bending.init(2, 9);
     
-//    for (unsigned int qp=0; qp != n_qpoints; qp++)
+    // initialize the geometric element
+    std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Tri3(false));
+    
+    FESystem::Numerics::DenseMatrix<Real> basis; basis.resize(3, 3); basis.setToIdentity();
+    FESystem::Geometry::Point origin(3);
+    FESystem::Geometry::RectangularCoordinateSystem cs(origin, basis);
+    std::vector<FESystem::Mesh::Node*> nodes(3);
+    
+    for (unsigned int i=0; i<3; i++)
     {
+        nodes[i] = new FESystem::Mesh::Node(cs);
+        for (unsigned int j=0; j<3; j++)
+            nodes[i]->setVal(j, c.get_elem().point(i)(j));
+        elem->setNode(i, *nodes[i]);
+    }
+    fe.reinit(*elem);
+    
+    dkt_plate.initialize(*elem, fe, fe_tri6, q_rule_bending, q_rule_bending, 72.0e9, 0.33, 2700., 0.002);
+    
+    FESystem::Numerics::DenseMatrix<Real> plate_elem_mat, elem_mat;
+    FESystem::Numerics::LocalVector<Real> plate_elem_vec, elem_vec;
+    plate_elem_mat.resize(dkt_plate.getNElemDofs(), dkt_plate.getNElemDofs());
+    elem_mat.resize(18, 18);
+    plate_elem_vec.resize(dkt_plate.getNElemDofs());
+    elem_vec.resize(18);
+    
+    // stiffness matrix
+    dkt_plate.calculateConsistentMassMatrix(plate_elem_mat);
+    dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+    
+    // set small values for the u, v, and tz dof mass
+    for (unsigned int i=0; i<3; i++)
+    {
+        elem_mat.setVal(   i,     i, 1.0e-6);
+        elem_mat.setVal( i+3,   i+3, 1.0e-6);
+        elem_mat.setVal(i+15,  i+15, 1.0e-6);
+    }
+    
+    //    for (unsigned int qp=0; qp != n_qpoints; qp++)
+    {
+        DenseMatrix<Number> tmpmat; tmpmat.resize(18, 18);
+        DenseVector<Number> tmp; tmp.resize(18);
+        
+        for (unsigned int i=0; i<18; i++)
+            for (unsigned int j=0; j<18; j++)
+                tmpmat(i, j) = elem_mat.getVal(i, j);
+        
+        tmpmat.vector_mult(tmp, c.get_elem_solution());
+        Fvec.add(1.0, tmp);
+        
         if (request_jacobian && c.elem_solution_derivative)
         {
+            // now copy the matrix values to the stiffness mat
+            for (unsigned int i=0; i<18; i++)
+                for (unsigned int j=0; j<18; j++)
+                    Kmat(i, j) += elem_mat.getVal(i, j);
         }
     } // end of the quadrature point qp-loop
+    
+    // clear the pointers
+    elem.reset();
+    for (unsigned int i=0; i<3; i++)
+        delete nodes[i];
+    
     
     //    std::cout << "inside mass residual " << std::endl;
     //    std::cout << "elem velocity" << std::endl; c.elem_solution.print(std::cout);
@@ -275,6 +333,182 @@ bool StructuralSystemBase::mass_residual (bool request_jacobian,
     //        Kmat.print(std::cout);
     
     return request_jacobian;
+}
+
+
+
+void assemble_matrices(EquationSystems& es,
+                       const std::string& system_name)
+{
+    // Get a constant reference to the mesh object.
+    const MeshBase& mesh = es.get_mesh();
+    
+    // The dimension that we are running.
+    const unsigned int dim = mesh.mesh_dimension();
+    
+    // Get a reference to our system.
+    EigenSystem & eigen_system = es.get_system<EigenSystem> (system_name);
+    
+    // A reference to the two system matrices
+    SparseMatrix<Number>&  matrix_A = *eigen_system.matrix_A;
+    SparseMatrix<Number>&  matrix_B = *eigen_system.matrix_B;
+    
+    // A reference to the \p DofMap object for this system.  The \p DofMap
+    // object handles the index translation from node and element numbers
+    // to degree of freedom numbers.
+    const DofMap& dof_map = eigen_system.get_dof_map();
+    
+    // The element mass and stiffness matrices.
+    DenseMatrix<Number>   Me;
+    DenseMatrix<Number>   Ke;
+    
+    // This vector will hold the degree of freedom indices for
+    // the element.  These define where in the global system
+    // the element degrees of freedom get mapped.
+    std::vector<dof_id_type> dof_indices;
+    
+    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+    
+    for ( ; el != end_el; ++el)
+    {
+        dof_map.dof_indices (*el, dof_indices);
+        Ke.resize (dof_indices.size(), dof_indices.size());
+        Me.resize (dof_indices.size(), dof_indices.size());
+        
+        FESystem::Quadrature::TrapezoidQuadrature q_rule_shear, q_rule_bending;
+        FESystem::FiniteElement::FELagrange fe, fe_tri6;
+        FESystem::Structures::DKTPlate dkt_plate;
+        q_rule_bending.init(2, 9);
+        
+        // initialize the geometric element
+        std::auto_ptr<FESystem::Mesh::ElemBase> elem(new FESystem::Mesh::Tri3(false));
+        
+        FESystem::Numerics::DenseMatrix<Real> basis; basis.resize(3, 3); basis.setToIdentity();
+        FESystem::Geometry::Point origin(3);
+        FESystem::Geometry::RectangularCoordinateSystem cs(origin, basis);
+        std::vector<FESystem::Mesh::Node*> nodes(3);
+        
+        for (unsigned int i=0; i<3; i++)
+        {
+            nodes[i] = new FESystem::Mesh::Node(cs);
+            for (unsigned int j=0; j<3; j++)
+                nodes[i]->setVal(j, (*el)->point(i)(j));
+            elem->setNode(i, *nodes[i]);
+        }
+        fe.reinit(*elem);
+        
+        dkt_plate.initialize(*elem, fe, fe_tri6, q_rule_bending, q_rule_bending,
+                             72.0e9, 0.33, 2700., 0.002);
+        
+        FESystem::Numerics::DenseMatrix<Real> plate_elem_mat, elem_mat;
+        FESystem::Numerics::LocalVector<Real> plate_elem_vec, elem_vec;
+        plate_elem_mat.resize(dkt_plate.getNElemDofs(), dkt_plate.getNElemDofs());
+        elem_mat.resize(18, 18);
+        plate_elem_vec.resize(dkt_plate.getNElemDofs());
+        elem_vec.resize(18);
+        
+        dkt_plate.calculateStiffnessMatrix(plate_elem_mat);
+        dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+        for (unsigned int i=0; i<18; i++)
+            for (unsigned int j=0; j<18; j++)
+                Ke(i, j) = elem_mat.getVal(i, j);
+        
+        dkt_plate.calculateConsistentMassMatrix(plate_elem_mat);
+        // put small values on the diagonal for rotation dofs
+        for (unsigned int i=0; i<6; i++)
+            plate_elem_mat.setVal(3+i, 3+i, 1.0);
+        dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
+        for (unsigned int i=0; i<18; i++)
+            for (unsigned int j=0; j<18; j++)
+                Me(i, j) = elem_mat.getVal(i, j);
+        
+        // clear the pointers
+        elem.reset();
+        for (unsigned int i=0; i<3; i++)
+            delete nodes[i];
+        
+        matrix_A.add_matrix (Me, dof_indices);
+        matrix_B.add_matrix (Ke, dof_indices);
+    }
+}
+
+
+
+void get_dirichlet_dofs(EquationSystems& es,
+                        const std::string& system_name,
+                        std::set<unsigned int>& dirichlet_dof_ids)
+{
+    dirichlet_dof_ids.clear();
+    
+    // Get a constant reference to the mesh object.
+    const MeshBase& mesh = es.get_mesh();
+    
+    // The dimension that we are running.
+    const unsigned int dim = mesh.mesh_dimension();
+    
+    // Get a reference to our system.
+    EigenSystem & eigen_system = es.get_system<EigenSystem> (system_name);
+    
+    // Get a constant reference to the Finite Element type
+    // for the first (and only) variable in the system.
+    FEType fe_type = eigen_system.get_dof_map().variable_type(0);
+    
+    const DofMap& dof_map = eigen_system.get_dof_map();
+    
+    // This vector will hold the degree of freedom indices for
+    // the element.  These define where in the global system
+    // the element degrees of freedom get mapped.
+    std::vector<dof_id_type> dof_indices;
+    
+    
+    // Now we will loop over all the elements in the mesh that
+    // live on the local processor. We will compute the element
+    // matrix and right-hand-side contribution.  In case users
+    // later modify this program to include refinement, we will
+    // be safe and will only consider the active elements;
+    // hence we use a variant of the \p active_elem_iterator.
+    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+    
+    for ( ; el != end_el; ++el)
+    {
+        dof_map.dof_indices (*el, dof_indices, 2); // uz
+
+        // All boundary dofs are Dirichlet dofs in this case
+        for (unsigned int s=0; s<(*el)->n_sides(); s++)
+            if ((*el)->neighbor(s) == NULL)
+            {
+                std::vector<unsigned int> side_dofs;
+                FEInterface::dofs_on_side(*el, dim, fe_type,
+                                          s, side_dofs);
+                
+                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
+                    dirichlet_dof_ids.insert(dof_indices[side_dofs[ii]]);
+            }
+        
+        // also add the dofs for variable u, v and tz
+        dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 0); // ux
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dirichlet_dof_ids.insert(dof_indices[i]);
+        
+        dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 1); // uy
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dirichlet_dof_ids.insert(dof_indices[i]);
+        
+        dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 5); // tz
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dirichlet_dof_ids.insert(dof_indices[i]);
+    } // end of element loop
+
+    /**
+     * All done!
+     */
+    return;
+    
 }
 
 
