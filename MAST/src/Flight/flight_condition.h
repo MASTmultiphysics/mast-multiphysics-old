@@ -63,6 +63,11 @@ public:
     RealVector3 body_angular_rates;
 
     /*!
+     *   Flight Mach number
+     */
+    Real mach;
+    
+    /*!
      *  Velocity magnitude, whose direction is evaluated from the Euler angles.
      */
     Real velocity_magnitude;
@@ -101,32 +106,28 @@ public:
         return gas_property.rho;
     }
 
-    
+    /*!
+     *    initializes the data structures
+     */
+    void init();
     
 protected:
     
-    /*!
-     *    defines the lift and drag vectors that are calculated based on the 
-     *    body axis and Euler angles specified in the input
-     */
-    RealVector3 _flight_vector;
-
-
 public:
 
     Real rho_u1() const
     {
-        return gas_property.rho * velocity_magnitude * _flight_vector(0);
+        return gas_property.rho * velocity_magnitude * drag_normal(0);
     }
     
     Real rho_u2() const
     {
-        return gas_property.rho * velocity_magnitude * _flight_vector(1);
+        return gas_property.rho * velocity_magnitude * drag_normal(1);
     }
     
     Real rho_u3() const
     {
-        return gas_property.rho * velocity_magnitude * _flight_vector(2);
+        return gas_property.rho * velocity_magnitude * drag_normal(2);
     }
     
     Real rho_e() const
@@ -134,35 +135,65 @@ public:
         return gas_property.rho * gas_property.cv * gas_property.T + q0();
     }
     
+    /*!
+     *    defines the lift and drag vectors that are calculated based on the
+     *    body axis and Euler angles specified in the input
+     */
     RealVector3 lift_normal, drag_normal;
-
 };
 
 
-//    gamma = cp/cv;
-//    R = cp-cv;
-//    a_inf = sqrt(gamma*R*temp_inf);
-//
-//    u1_inf = mach_inf*a_inf*cos(aoa*pi/180.0);
-//    u2_inf = mach_inf*a_inf*sin(aoa*pi/180.0);
-//    u3_inf = 0.0;
-//    q0_inf = 0.5*rho_inf*(u1_inf*u1_inf+u2_inf*u2_inf+u3_inf*u3_inf);
-//    p_inf = R*rho_inf*temp_inf;
-//
-//    Real k = 0.0;
-//    vars_inf(0) = rho_inf;
-//    vars_inf(1) = rho_inf*u1_inf; k += u1_inf*u1_inf;
-//    if (dim > 1)
-//    {
-//        vars_inf(2) = rho_inf*u2_inf;
-//        k += u2_inf*u2_inf;
-//    }
-//    if (dim > 2)
-//    {
-//        vars_inf(3) = rho_inf*u3_inf;
-//        k += u3_inf*u3_inf;
-//    }
-//    vars_inf(dim+2-1) = rho_inf*(cv*temp_inf+0.5*k);
+
+inline
+void
+FlightCondition::init()
+{
+    gas_property.init();
+    
+    // make sure that the data has been initialized
+    libmesh_assert(body_roll_axis.norm()  == 1.);
+    libmesh_assert(body_pitch_axis.norm() == 1.);
+    libmesh_assert(body_yaw_axis.norm()   == 1.);
+    libmesh_assert(mach > 0.);
+    
+    velocity_magnitude = mach * gas_property.a;
+    
+    // prepare the transformation matrix from body to inertial axis
+    RealMatrix3 tmat; tmat.Zero();
+    tmat.col(0) = body_roll_axis;
+    tmat.col(1) = body_pitch_axis;
+    tmat.col(2) = body_yaw_axis;
+    
+    // prepare the rotation matrices in the body coordinate system.
+    // We will rotate the body vectors, and then transform the
+    // resulting vector to the inertial frame.
+    RealMatrix3 roll, pitch, yaw;
+    roll.Zero(); pitch.Zero(); yaw.Zero();
+    
+    roll  << 1., 0., 0.,
+             0., cos(body_euler_angles(0)), -sin(body_euler_angles(0)),
+             0., sin(body_euler_angles(0)),  cos(body_euler_angles(0));
+    
+    pitch << cos(body_euler_angles(1)), 0., sin(body_euler_angles(1)),
+             0., 1., 0.,
+             -sin(body_euler_angles(1)), 0., cos(body_euler_angles(1));
+    
+    yaw   << cos(body_euler_angles(2)), -sin(body_euler_angles(2)), 0.,
+             sin(body_euler_angles(2)),  cos(body_euler_angles(2)), 0.,
+             0., 0., 1.;
+    
+    // drag normal is the same as flight direction, and is obtained by applying
+    // the rotation matrices to the roll-axis
+    RealVector3 tmp, tmpunit;
+    tmpunit << 1., 0., 0.; // body roll axis
+    tmp = roll * pitch * yaw * tmpunit;
+    drag_normal = tmat * tmp;
+    
+    // lift normal is obtained by applying the rotation matrices to yaw-axis
+    tmpunit << 0., 0., 1.; // body yaw axis
+    tmp = roll * pitch * yaw * tmpunit;
+    lift_normal = tmat * tmp;
+}
 
 
 #endif

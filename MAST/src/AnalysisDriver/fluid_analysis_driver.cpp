@@ -200,8 +200,8 @@ int main (int argc, char* const argv[])
             MeshTools::Generation::build_square (mesh,
                                                  n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                  n_vertical_divs,
-                                                 0., 1.,
-                                                 0., 1.,
+                                                 0., x_length,
+                                                 0., y_length,
                                                  Utility::string_to_enum<ElemType>(elem_type));
         }
         else if (dim == 3)
@@ -210,9 +210,9 @@ int main (int argc, char* const argv[])
                                                n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
                                                n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs,
                                                n_vertical_divs,
-                                               0., 1.,
-                                               0., 1.,
-                                               0., 1.,
+                                               0., x_length,
+                                               0., y_length,
+                                               0., z_length,
                                                Utility::string_to_enum<ElemType>(elem_type));
         }
         
@@ -355,15 +355,38 @@ int main (int argc, char* const argv[])
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
     
+    // set data for flight condition
+    FlightCondition flight_cond;
+    for (unsigned int i=0; i<3; i++)
+    {
+        flight_cond.body_roll_axis(i)     = infile(    "body_roll_axis", 0., i);
+        flight_cond.body_pitch_axis(i)    = infile(   "body_pitch_axis", 0., i);
+        flight_cond.body_yaw_axis(i)      = infile(     "body_yaw_axis", 0., i);
+        flight_cond.body_euler_angles(i)  = infile( "body_euler_angles", 0., i);
+        flight_cond.body_angular_rates(i) = infile("body_angular_rates", 0., i);
+    }
+    flight_cond.ref_chord       = infile("ref_c",   1.);
+    flight_cond.altitude        = infile( "alt",    0.);
+    flight_cond.mach            = infile("mach",    .5);
+    flight_cond.gas_property.cp = infile(  "cp", 1003.);
+    flight_cond.gas_property.cv = infile(  "cv",  716.);
+    flight_cond.gas_property.T  = infile("temp",  300.);
+    flight_cond.gas_property.rho= infile( "rho",  1.05);
+    
+    flight_cond.init();
+    
+    
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // Declare the system "EulerSystem"
     EulerSystem & system =
     equation_systems.add_system<EulerSystem> ("EulerSystem");
+    system.flight_condition = &flight_cond;
     
     system.attach_init_function (init_euler_variables);
     
     FluidPostProcessSystem& fluid_post =
     equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
+    fluid_post.flight_condition = &flight_cond;
     System& delta_val_system =
     equation_systems.add_system<System> ("DeltaValSystem");
     delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
@@ -391,6 +414,7 @@ int main (int argc, char* const argv[])
     equation_systems.init ();
     
     AerodynamicQoI aero_qoi(dim);
+    aero_qoi.flight_condition = &flight_cond;
     
     system.attach_qoi(&aero_qoi);
     
@@ -399,7 +423,8 @@ int main (int argc, char* const argv[])
     FrequencyDomainLinearizedFluidSystem & system =
     equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem");
-    
+    system.flight_condition = &flight_cond;
+
     FrequencyDomainFluidPostProcessSystem& fluid_post =
     equation_systems.add_system<FrequencyDomainFluidPostProcessSystem>
     ("DeltaFluidPostProcessSystem");

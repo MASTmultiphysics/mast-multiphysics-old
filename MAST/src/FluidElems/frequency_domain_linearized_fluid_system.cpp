@@ -553,11 +553,12 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     conservative_sol, ref_sol, temp_grad, uvec,
     surface_steady_vel, dnormal_steady;
     DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2,
-    surface_unsteady_vel, dnormal_unsteady, duvec;
+    surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol;
     
     conservative_sol.resize(dim+2); uvec.resize(dim); duvec.resize(dim);
     normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
     flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
+    conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     dnormal_steady.resize(dim); surface_steady_vel.resize(dim);
@@ -621,11 +622,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // initialize flux to interpolated sol for initialization
                 // of perturbed vars
-                B_mat.vector_mult(flux, elem_sol);
+                B_mat.vector_mult(conservative_deltasol, elem_sol);
                 
                 delta_p_sol.zero();
-                // flux is actually the elem interpolated perturbed sol
-                delta_p_sol.init(p_sol, flux);
+                delta_p_sol.init(p_sol, conservative_deltasol);
 
                 dui_ni_unsteady = 0.; ui_ni_steady = 0.;
                 p_sol.get_uvec(uvec);
@@ -676,8 +676,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // now prepare the flux vector
                 flux.zero();
-                flux.add(dui_ni_unsteady, ref_sol);
-                flux.add(ui_ni_steady, elem_sol);
+                flux.add(dui_ni_unsteady, conservative_sol);
+                flux.add(ui_ni_steady, conservative_deltasol);
                 flux(n1-1) += dui_ni_unsteady*p_sol.p + ui_ni_steady*delta_p_sol.dp;
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
@@ -750,11 +750,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // initialize flux to interpolated sol for initialization
                 // of perturbed vars
-                B_mat.vector_mult(flux, elem_sol);
+                B_mat.vector_mult(conservative_deltasol, elem_sol);
                 
                 delta_p_sol.zero();
-                // flux is actually the elem interpolated perturbed sol
-                delta_p_sol.init(p_sol, flux);
+                delta_p_sol.init(p_sol, conservative_deltasol);
                 
                 // now prepare the flux vector
                 flux.zero();
@@ -797,11 +796,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // initialize flux to interpolated sol for initialization
                 // of perturbed vars
-                B_mat.vector_mult(flux, elem_sol);
+                B_mat.vector_mult(conservative_deltasol, elem_sol);
                 
                 delta_p_sol.zero();
-                // flux is actually the elem interpolated perturbed sol
-                delta_p_sol.init(p_sol, flux);
+                delta_p_sol.init(p_sol, conservative_deltasol);
                 
                 dui_ni_unsteady = 0.; ui_ni_steady = 0.;
                 p_sol.get_uvec(uvec);
@@ -853,8 +851,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // now prepare the flux vector
                 flux.zero();
-                flux.add(dui_ni_unsteady, ref_sol);
-                flux.add(ui_ni_steady, elem_sol);
+                flux.add(dui_ni_unsteady, conservative_sol);
+                flux.add(ui_ni_steady, conservative_deltasol);
                 flux(n1-1) += dui_ni_unsteady*p_sol.p + ui_ni_steady*delta_p_sol.dp;
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);

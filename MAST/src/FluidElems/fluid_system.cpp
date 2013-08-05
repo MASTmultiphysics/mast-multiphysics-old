@@ -664,7 +664,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 }
                 
                 flux.zero();
-                flux.add(ui_ni, c.get_elem_solution());
+                flux.add(ui_ni, conservative_sol);
                 flux(n1-1) += p_sol.p*ui_ni;
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += p_sol.p * face_normals[qp](i_dim);
@@ -803,7 +803,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 }
                 
                 flux.zero();
-                flux.add(ui_ni, c.get_elem_solution());
+                flux.add(ui_ni, conservative_sol);
                 flux(n1-1) += p_sol.p*ui_ni;
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += p_sol.p * face_normals[qp](i_dim);
@@ -1230,7 +1230,6 @@ void FluidPostProcessSystem::init_data()
     unsigned int o = infile("fe_order", 1);
     std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
-    
     
     const Order order = static_cast<Order>(fmin(2, o));
     

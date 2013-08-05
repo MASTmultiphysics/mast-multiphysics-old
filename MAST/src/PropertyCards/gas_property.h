@@ -57,8 +57,30 @@ public:
      *   Properties for viscous analysis
      */
     Real Pr, k_thermal, mu, lambda;
+
+    /*!
+     *   initializes the data
+     */
+    void init();
     
 };
+
+
+
+inline void
+GasProperty::init()
+{
+    // the following data should have been set
+    libmesh_assert(rho > 0.);
+    libmesh_assert(T  >  0.);
+    libmesh_assert(cp  > 0.);
+    libmesh_assert(cv  > 0.);
+    
+    R        = cp-cv;
+    gamma    = cp/cv;
+    pressure = rho*R*T;
+    a        = sqrt(gamma*R*T);
+}
 
 
 #endif

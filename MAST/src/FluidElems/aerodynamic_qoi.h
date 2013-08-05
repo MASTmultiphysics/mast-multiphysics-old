@@ -54,8 +54,13 @@ public:
     virtual void side_qoi(DiffContext &context, const QoISet & qois);
     
     virtual AutoPtr<DifferentiableQoI> clone( )
-    { AutoPtr<DifferentiableQoI> my_clone( new AerodynamicQoI(dim) );
+    {
+        AerodynamicQoI* new_qoi = new AerodynamicQoI(dim);
+        new_qoi->flight_condition = this->flight_condition;
+        
+        AutoPtr<DifferentiableQoI> my_clone(new_qoi);
         *my_clone = *this;
+        
         return my_clone;
     }
 
