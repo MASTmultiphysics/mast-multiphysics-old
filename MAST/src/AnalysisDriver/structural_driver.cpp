@@ -84,15 +84,21 @@ int main_static (int argc, char* const argv[])
 }
 
 
-void assemble_matrices(EquationSystems& es,
-                       const std::string& system_name);
+void assemble_plate_matrices(EquationSystems& es,
+                             const std::string& system_name);
+void assemble_beam_matrices(EquationSystems& es,
+                            const std::string& system_name);
 
-void get_dirichlet_dofs(EquationSystems& es,
-                        const std::string& system_name,
-                        std::set<unsigned int>& dirichlet_dof_ids);
+void get_plate_dirichlet_dofs(EquationSystems& es,
+                              const std::string& system_name,
+                              std::set<unsigned int>& dirichlet_dof_ids);
+
+void get_beam_dirichlet_dofs(EquationSystems& es,
+                             const std::string& system_name,
+                             std::set<unsigned int>& dirichlet_dof_ids);
 
 
-int main_modal (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -100,13 +106,18 @@ int main_modal (int argc, char* const argv[])
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
     
-    MeshTools::Generation::build_square (mesh,
-                                         10,
-                                         10,
-                                         0., 1.,
-                                         0., 1.,
-                                         TRI3);
-    
+//    MeshTools::Generation::build_square (mesh,
+//                                         10,
+//                                         10,
+//                                         0., 1.,
+//                                         0., 1.,
+//                                         TRI3);
+
+    MeshTools::Generation::build_line (mesh,
+                                       10,
+                                       0., 1.,
+                                       EDGE2);
+
     mesh.prepare_for_use();
     
     // Print information about the mesh to the screen.
@@ -128,7 +139,7 @@ int main_modal (int argc, char* const argv[])
     
     // Give the system a pointer to the matrix assembly
     // function defined below.
-    eigen_system.attach_assemble_function (assemble_matrices);
+    eigen_system.attach_assemble_function (assemble_beam_matrices);
     
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
@@ -139,8 +150,9 @@ int main_modal (int argc, char* const argv[])
 
     // Set the number of requested eigenpairs \p n_evals and the number
     // of basis vectors used in the solution algorithm.
-    equation_systems.parameters.set<unsigned int>("eigenpairs")    = 10;
-    equation_systems.parameters.set<unsigned int>("basis vectors") = 10*3;
+    const unsigned int n_eig_request = 10;
+    equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
+    equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
     
     // Initialize the data structures for the equation system.
     equation_systems.init();
@@ -150,14 +162,15 @@ int main_modal (int argc, char* const argv[])
     
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
     std::set<unsigned int> dirichlet_dof_ids;
-    get_dirichlet_dofs(equation_systems, "Eigensystem", dirichlet_dof_ids);
+    get_beam_dirichlet_dofs(equation_systems, "Eigensystem", dirichlet_dof_ids);
     eigen_system.initialize_condensed_dofs(dirichlet_dof_ids);
     
     // Solve the system "Eigensystem".
     eigen_system.solve();
 
     // Get the number of converged eigen pairs.
-    unsigned int nconv = eigen_system.get_n_converged();
+    unsigned int nconv = std::min(eigen_system.get_n_converged(),
+                                  n_eig_request);
 
     std::ofstream file;
     file.open("modal_data.in", std::ofstream::out);

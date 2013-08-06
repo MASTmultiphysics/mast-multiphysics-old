@@ -35,7 +35,7 @@ void get_dirichlet_dofs(EquationSystems& es,
                         std::set<unsigned int>& dirichlet_dof_ids);
 
 
-int main (int argc, char* const argv[])
+int main_flutter (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -106,7 +106,7 @@ int main (int argc, char* const argv[])
     structural_mesh.print_info();
     structural_equation_systems.print_info();
     
-
+    
     // read the eigenvalues
     FEMStructuralModel structural_model(structural_system);
     GetPot modal_data("modal_data.in");
