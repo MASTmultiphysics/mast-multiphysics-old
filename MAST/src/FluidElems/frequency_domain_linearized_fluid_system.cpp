@@ -550,19 +550,20 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
     DenseVector<Real>  normal, normal_local, tmp_vec1, U_vec_interpolated,
-    conservative_sol, ref_sol, temp_grad, uvec,
-    surface_steady_vel, dnormal_steady;
+    conservative_sol, ref_sol, temp_grad, uvec, dnormal_steady_real;
     DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2,
-    surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol;
+    surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol,
+    dnormal_steady, surface_steady_vel;
     
-    conservative_sol.resize(dim+2); uvec.resize(dim); duvec.resize(dim);
+    conservative_sol.resize(dim+2);
     normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
     flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
     conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
-    dnormal_steady.resize(dim); surface_steady_vel.resize(dim);
-    dnormal_unsteady.resize(dim); surface_unsteady_vel.resize(dim);
+    dnormal_steady.resize(3); dnormal_steady_real.resize(3);
+    surface_steady_vel.resize(3); uvec.resize(3); duvec.resize(3);
+    dnormal_unsteady.resize(3); surface_unsteady_vel.resize(3);
     
     
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
@@ -600,7 +601,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
             // thermal BC is handled here
         {
             
-            Number dui_ni_unsteady = 0.; Real ui_ni_steady = 0.;
+            Number dui_ni_unsteady = 0., ui_ni_steady = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -639,7 +640,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 // now check if the surface deformation is defined and
                 // needs to be applied through transpiration boundary
                 // condition
-                if (surface_motion.get()) // get the surface motion data
+                if (surface_motion) // get the surface motion data
                 {
                     surface_motion->surface_velocity_time_domain
                     (0., qpoint[qp], face_normals[qp],
@@ -705,8 +706,12 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
+                    for (unsigned int i=0; i<dim; i++)
+                        dnormal_steady_real(i) = std::real(dnormal_steady(i));
+                    
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
-                    (p_sol, ui_ni_steady, face_normals[qp], dnormal_steady, A_mat);
+                    (p_sol, std::real(ui_ni_steady), face_normals[qp],
+                     dnormal_steady_real, A_mat);
                     
                     B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
                     B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T A B
@@ -738,7 +743,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                         // tau_ij nj = 0   (because velocity gradient at wall = 0)
                         // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            dnormal_steady.zero();
+            dnormal_steady_real.zero();
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -766,7 +771,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
-                    (p_sol, 0., face_normals[qp], dnormal_steady, A_mat);
+                    (p_sol, 0., face_normals[qp], dnormal_steady_real, A_mat);
                     
                     B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
                     B_mat.right_multiply_transpose(tmp_mat_n2n2,
@@ -784,7 +789,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
             // tau_ij nj = 0   (because velocity gradient at wall = 0)
             // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            Number dui_ni_unsteady = 0.; Real ui_ni_steady = 0.;
+            Number dui_ni_unsteady = 0., ui_ni_steady = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -813,7 +818,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 // now check if the surface deformation is defined and
                 // needs to be applied through transpiration boundary
                 // condition
-                if (surface_motion.get()) // get the surface motion data
+                if (surface_motion) // get the surface motion data
                 {
                     surface_motion->surface_velocity_time_domain
                     (0., qpoint[qp], face_normals[qp],
@@ -862,8 +867,12 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
+                    for (unsigned int i=0; i<dim; i++)
+                        dnormal_steady_real(i) = std::real(dnormal_steady(i));
+
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
-                    (p_sol, ui_ni_steady, face_normals[qp], dnormal_steady, A_mat);
+                    (p_sol, std::real(ui_ni_steady), face_normals[qp],
+                     dnormal_steady_real, A_mat);
                     
                     B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
                     B_mat.right_multiply_transpose(tmp_mat_n2n2,

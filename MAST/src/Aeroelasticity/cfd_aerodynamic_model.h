@@ -47,13 +47,7 @@ public:
     virtual bool get_stiffness_matrix(ComplexMatrixX& a)
     { libmesh_assert(false); }
     
-    
-    /*!
-     *    method to solve for the fluid states given the forcing vector
-     */
-    void solve(Real k_ref, NumericVector<Number>& f);
 
-    
     /*!
      *   The small-disturbance fluid system object that provides the basis
      *   of calculations for this model.
@@ -62,17 +56,6 @@ public:
     
 };
 
-
-
-inline
-void
-CFDAerodynamicModel::solve(Real k_ref, NumericVector<Number>& f)
-{
-    // set the solution vector to the flexible surface motion
-    dynamic_cast<FlexibleSurfaceMotion*>
-    (fluid_system.perturbed_surface_motion.get())->init(k_ref, 0., f);
-    fluid_system.solve();
-}
 
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

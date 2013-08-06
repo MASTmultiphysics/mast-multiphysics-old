@@ -53,8 +53,8 @@ public:
     virtual void surface_velocity_time_domain(const Real t,
                                               const Point& p,
                                               const Point& n,
-                                              DenseVector<Real>& u_trans,
-                                              DenseVector<Real>& dn_rot);
+                                              DenseVector<Number>& u_trans,
+                                              DenseVector<Number>& dn_rot);
 };
 
 #endif

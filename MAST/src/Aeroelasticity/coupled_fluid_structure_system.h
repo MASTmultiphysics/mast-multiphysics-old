@@ -25,7 +25,9 @@ class CoupledFluidStructureSystem: public CoupledAeroStructuralModel
 public:
     CoupledFluidStructureSystem(CFDAerodynamicModel& aero,
                                 FEMStructuralModel& structure):
-    CoupledAeroStructuralModel(aero, structure)
+    CoupledAeroStructuralModel(aero, structure),
+    surface_pressure(new SurfacePressureLoad),
+    surface_motion(new FlexibleSurfaceMotion(structure.structural_system))
     { }
 
     
@@ -42,10 +44,25 @@ public:
     virtual bool get_aero_operator_matrix(Real k_ref, ComplexMatrixX& a);
 
 protected:
+
     
+    /*!
+     *   this provides interpolation of the surface pressure
+     */
+    std::auto_ptr<SurfacePressureLoad> surface_pressure;
+    
+    
+    /*!
+     *   this provides the surface motion description
+     */
+    std::auto_ptr<FlexibleSurfaceMotion> surface_motion;
 };
 
 
+void assemble_beam_force_vec(System& sys,
+                             SurfacePressureLoad& press,
+                             SurfaceMotionBase& motion,
+                             NumericVector<Number>& fvec);
 
 
 bool
@@ -60,15 +77,29 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
 
     // get the structural basis
     BasisMatrix<Number>& structural_basis = structure.get_basis_matrix();
-    
+
+    AutoPtr<NumericVector<Number> > f_vec
+    (NumericVector<Number>::build(structure.structural_system.comm()).release());
+
     ComplexVectorX projected_force;
     
     for (unsigned int j_basis=0; j_basis<structural_basis.n(); j_basis++)
     {
         projected_force.Zero(structural_basis.n());
-        aero.solve(k_ref, structural_basis.basis(j_basis)); // J_FF^{-1} F_A A_SF X_S
-        structure.project_aero_force(*aero.fluid_system.solution,
-                                     projected_force); // Phi^T A_FS X_F
+        
+        surface_motion->init(k_ref, 0., structural_basis.basis(j_basis));
+        aero.fluid_system.perturbed_surface_motion = surface_motion.get();
+        aero.fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
+
+        surface_pressure->init(aero.fluid_system);
+        
+        assemble_beam_force_vec(structure.structural_system,
+                                *surface_pressure,
+                                *surface_motion,
+                                *f_vec); // A_FS X_F
+        structure.basis_matrix->vector_mult_transpose
+        (projected_force, *f_vec); // Phi^T A_FS X_F
+
         a.col(j_basis) = projected_force;
     }
     

@@ -105,6 +105,8 @@ int main_modal (int argc, char* const argv[])
     
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
+
+    GetPot infile("system_input.in");
     
 //    MeshTools::Generation::build_square (mesh,
 //                                         10,
@@ -113,9 +115,19 @@ int main_modal (int argc, char* const argv[])
 //                                         0., 1.,
 //                                         TRI3);
 
+    const Real pi = acos(-1.),
+    x_length= infile("x_length", 10.),
+    y_length= infile("y_length", 10.),
+    z_length= infile("z_length", 10.),
+    t_by_c =  infile("t_by_c", 0.05),
+    chord =   infile("chord", 1.0),
+    span =    infile("span", 1.0),
+    thickness = 0.5*t_by_c*chord,
+    x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
+
     MeshTools::Generation::build_line (mesh,
                                        10,
-                                       0., 1.,
+                                       x0, x0+chord,
                                        EDGE2);
 
     mesh.prepare_for_use();

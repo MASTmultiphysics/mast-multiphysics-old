@@ -75,17 +75,17 @@ RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
         
         Point r(p); r -= hinge_location;
         Point r_rot(pitch_axis.cross(r)); // omega x r
-        for (unsigned int i=0; i<p.size(); i++)
+        for (unsigned int i=0; i<3; i++)
             u_trans(i) = r_rot(i) * pitch_scale;
         
 
         Point n_rotvec(pitch_axis.cross(n));
-        for (unsigned int i=0; i<p.size(); i++)
+        for (unsigned int i=0; i<3; i++)
             dn_rot(i) = n_rotvec(i) * pitch_scale;
     }
     
     if (fabs(plunge_amplitude) > 0.)
-        for (unsigned int i=0; i<u_trans.size(); i++)
+        for (unsigned int i=0; i<3; i++)
             u_trans(i) += plunge_vector(i) * plunge_amplitude;
 
     // u_trans is in phase with velocity
@@ -98,8 +98,8 @@ void
 RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
                                                  const Point& p,
                                                  const Point& n,
-                                                 DenseVector<Real>& u_trans,
-                                                 DenseVector<Real>& dn_rot)
+                                                 DenseVector<Number>& u_trans,
+                                                 DenseVector<Number>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();
@@ -110,19 +110,19 @@ RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
         // normal distance from pitching axis to the given point
         Point r(p); r -= hinge_location;
         Point r_rot(pitch_axis.cross(r)); // omega x r
-        for (unsigned int i=0; i<p.size(); i++)
+        for (unsigned int i=0; i<3; i++)
             u_trans(i) = r_rot(i) * pitch_amplitude *
             cos(frequency*t + pitch_phase + phase_offset); // cosine for velocity
         
         
         Point n_rotvec(pitch_axis.cross(n));
-        for (unsigned int i=0; i<p.size(); i++)
+        for (unsigned int i=0; i<3; i++)
             dn_rot(i) = n_rotvec(i) * pitch_amplitude *
             sin(frequency*t + pitch_phase + phase_offset); // sine for position
     }
     
     if (fabs(plunge_amplitude) > 0.)
-        for (unsigned int i=0; i<u_trans.size(); i++)
+        for (unsigned int i=0; i<3; i++)
             u_trans(i) += plunge_vector(i) * plunge_amplitude *
             cos(frequency*t + phase_offset); // cosine for velocity
     

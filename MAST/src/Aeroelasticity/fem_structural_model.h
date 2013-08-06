@@ -9,9 +9,13 @@
 #ifndef MAST_fem_structural_model_h
 #define MAST_fem_structural_model_h
 
+// C++ includes
+#include <memory>
+
 // MAST includes
 #include "Aeroelasticity/structural_model.h"
 #include "StructuralElems/structural_system_base.h"
+#include "StructuralElems/surface_pressure_load.h"
 #include "Numerics/basis_matrix.h"
 
 
@@ -65,9 +69,7 @@ public:
      *    Returns false if the matrix does not exist for this model
      */
     virtual bool get_damping_matrix(RealMatrixX& c)
-    {
-        libmesh_assert(false);
-    }
+    { libmesh_assert(false); }
     
     /*!
      *     returns the basis matrix for this structural model
@@ -79,23 +81,17 @@ public:
 
     
     /*!
-     *    calculates the force vector from this given aerodynamic solution, 
-     *    and projects it onto the structural modes
-     */
-    void project_aero_force(NumericVector<Number>& aero_sol,
-                            ComplexVectorX& projected_f_vec);
-    
-    
-    /*!
      *    vector of eigenvalues
      */
     RealVectorX  eigen_vals;
 
+    
     /*!
      *    the structural system that provides the basis of
      *    calculations for this model
      */
     System& structural_system;
+    
     
     /*!
      *    returns the basis matrix using the modal data in structural system
@@ -124,13 +120,5 @@ FEMStructuralModel::init()
     }
 }
 
-
-inline
-void
-FEMStructuralModel::project_aero_force(NumericVector<Number>& aero_sol,
-                                       ComplexVectorX& projected_f_vec)
-{
-    
-}
 
 #endif

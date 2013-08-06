@@ -36,6 +36,7 @@ public:
                                          const unsigned int number_in):
     FEMSystem(es, name_in, number_in),
     EulerElemBase(),
+    perturbed_surface_motion(NULL),
     _if_localized_sol(false)
     { }
     
@@ -59,7 +60,7 @@ public:
      *   this defines the small disturbance surface motion on top of the 
      *   steady surface motion that the body might have seen.
      */
-    AutoPtr<SurfaceMotionBase> perturbed_surface_motion;
+    SurfaceMotionBase* perturbed_surface_motion;
     
 protected:
     

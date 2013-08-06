@@ -638,7 +638,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 ui_ni = 0.;
                 p_sol.get_uvec(uvec);
                 
-                if (surface_motion.get()) // get the surface motion data
+                if (surface_motion) // get the surface motion data
                 {
                     surface_motion->surface_velocity_time_domain
                     (this->time, qpoint[qp], face_normals[qp],
@@ -777,7 +777,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
                 ui_ni = 0.;
                 p_sol.get_uvec(uvec);
                 
-                if (surface_motion.get()) // get the surface motion data
+                if (surface_motion) // get the surface motion data
                 {
                     surface_motion->surface_velocity_time_domain
                     (this->time, qpoint[qp], face_normals[qp],

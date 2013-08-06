@@ -92,7 +92,9 @@ public:
     // Constructor
     EulerElemBase():
     _if_viscous(false), _if_full_linearization(false),
-    _if_update_stabilization_per_quadrature_point(true)
+    _if_update_stabilization_per_quadrature_point(true),
+    surface_motion(NULL),
+    flight_condition(NULL)
     {}
 
     virtual ~EulerElemBase();
@@ -108,7 +110,7 @@ public:
      *    fluid solver. This can be used to define either a time-dependent
      *    motion, or a steady-state motion.
      */
-    AutoPtr<SurfaceMotionBase> surface_motion;
+    SurfaceMotionBase* surface_motion;
     
     FlightCondition* flight_condition;
 

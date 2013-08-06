@@ -443,8 +443,8 @@ int main_fluid (int argc, char* const argv[])
     system.localize_fluid_solution();
     
     // initialize the surface motion definition
-    RigidSurfaceMotion* surface_motion = new RigidSurfaceMotion;
-    system.perturbed_surface_motion.reset(surface_motion);
+    std::auto_ptr<RigidSurfaceMotion> surface_motion(new RigidSurfaceMotion);
+    system.perturbed_surface_motion = surface_motion.get();
     
     surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
     surface_motion->pitch_phase = infile("pitch_phase",0.);

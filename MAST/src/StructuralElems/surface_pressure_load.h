@@ -11,40 +11,26 @@
 
 // MAST includes
 #include "Flight/flight_condition.h"
+#include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "FluidElems/fluid_elem_base.h"
 
 // libMesh includes
 #include "libmesh/mesh_function.h"
 #include "libmesh/system.h"
 #include "libmesh/dof_map.h"
+#include "libmesh/equation_systems.h"
 
 
 class SurfacePressureLoad
 {
 public:
-    SurfacePressureLoad(System& sys_nonlinar,
-                        System& sys_linear):
-    nonlinear_fluid_system(sys_nonlinar),
-    linearized_fluid_system(sys_linear)
+    SurfacePressureLoad()
     { }
     
     virtual ~SurfacePressureLoad()
     { }
-        
-    /*!
-     *   nonlinear fluid system associated with the mesh and solution vector
-     */
-    System& nonlinear_fluid_system;
-
-    /*!
-     *   linearized fluid system to provide the small disturbance solution
-     */
-    System& linearized_fluid_system;
-
     
-    virtual void init(FlightCondition& flight,
-                      NumericVector<Number>& sol_nonlinear,
-                      NumericVector<Number>& sol_linear);
+    virtual void init(System& linearized_sys);
     
     // calculation in frequency domain
     virtual void surface_pressure(const Point& p,
@@ -76,71 +62,101 @@ protected:
      *    this provides the fluid values for calculation of cp
      */
     FlightCondition* _flt_cond;
-
-
+    
 };
 
 
 
+inline
 void
-SurfacePressureLoad::init(FlightCondition& flight,
-                            NumericVector<Number>& sol_nonlinear,
-                            NumericVector<Number>& sol_linear)
+SurfacePressureLoad::init(System& linearized_sys)
 {
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    System& nonlin_sys =
+    linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
+
+    
     // copy the pointer for flight condition data
-    _flt_cond = &flight;
+    _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>
+    (linearized_sys).flight_condition;
     
     // first initialize the solution to the given vector
     if (!_sol_nonlinear.get())
     {
         // vector to store the nonlinear solution
         _sol_nonlinear.reset
-        (NumericVector<Number>::build(nonlinear_fluid_system.comm()).release());
-        _sol_nonlinear->init(sol_nonlinear.size(), true, SERIAL);
+        (NumericVector<Number>::build(nonlin_sys.comm()).release());
+        _sol_nonlinear->init(nonlin_sys.solution->size(), true, SERIAL);
 
         // vector to store the linear solution
         _sol_linear.reset
-        (NumericVector<Number>::build(linearized_fluid_system.comm()).release());
-        _sol_linear->init(sol_linear.size(), true, SERIAL);
+        (NumericVector<Number>::build(linearized_sys.comm()).release());
+        _sol_linear->init(linearized_sys.solution->size(), true, SERIAL);
     }
     
     // now localize the give solution to this objects's vector
-    sol_nonlinear.localize(*_sol_nonlinear,
-                           nonlinear_fluid_system.get_dof_map().get_send_list());
-    sol_linear.localize(*_sol_linear,
-                        linearized_fluid_system.get_dof_map().get_send_list());
+    nonlin_sys.solution->localize
+    (*nonlin_sys.solution, nonlin_sys.get_dof_map().get_send_list());
+    linearized_sys.solution->localize
+    (*linearized_sys.solution, linearized_sys.get_dof_map().get_send_list());
     
     // if the mesh function has not been created so far, initialize it
     if (!_function_nonlinear.get())
     {
         // initialize the nonlinear solution
-        std::vector<unsigned int> vars;
-        nonlinear_fluid_system.get_all_variable_numbers(vars);
+        unsigned int n_vars = nonlin_sys.n_vars();
+        libmesh_assert(linearized_sys.n_vars() == n_vars);
+        
+        std::vector<unsigned int> vars(n_vars);
+        vars[0] = nonlin_sys.variable_number("rho");
+        vars[1] = nonlin_sys.variable_number("rhoux");
+        if (vars.size() > 3)
+            vars[2] = nonlin_sys.variable_number("rhouy");
+        if (vars.size() > 4)
+            vars[3] = nonlin_sys.variable_number("rhouz");
+        vars[n_vars-1] = nonlin_sys.variable_number("rhoe");
+        
+        
         _function_nonlinear.reset
-        (new MeshFunction( nonlinear_fluid_system.get_equation_systems(),
-                          *_sol_nonlinear, nonlinear_fluid_system.get_dof_map(),
+        (new MeshFunction( nonlin_sys.get_equation_systems(),
+                          *nonlin_sys.solution, nonlin_sys.get_dof_map(),
                           vars));
         _function_nonlinear->init();
         
         // now initialize the linearized fluid system
-        vars.clear();
-        linearized_fluid_system.get_all_variable_numbers(vars);
+        vars.resize(n_vars);
+        vars[0] = nonlin_sys.variable_number("drho");
+        vars[1] = nonlin_sys.variable_number("drhoux");
+        if (vars.size() > 3)
+            vars[2] = nonlin_sys.variable_number("drhouy");
+        if (vars.size() > 4)
+            vars[3] = nonlin_sys.variable_number("drhouz");
+        vars[n_vars-1] = nonlin_sys.variable_number("drhoe");
+
+        linearized_sys.get_all_variable_numbers(vars);
         _function_linear.reset
-        (new MeshFunction( linearized_fluid_system.get_equation_systems(),
-                          *_sol_linear, linearized_fluid_system.get_dof_map(),
+        (new MeshFunction( linearized_sys.get_equation_systems(),
+                          *linearized_sys.solution,
+                          linearized_sys.get_dof_map(),
                           vars));
         _function_linear->init();
     }
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
 
+inline
 void
 SurfacePressureLoad::surface_pressure(const Point& p,
                                         Number& cp, Number& dcp)
 {
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_function_nonlinear.get()); // should be initialized before this call
 
+    
+    cp = 0.; dcp = 0.;
+    
     // get the nonlinear and linearized solution
     DenseVector<Number> v_nonlin, v_lin;
     DenseVector<Real> v_nonlin_real;
@@ -152,7 +168,7 @@ SurfacePressureLoad::surface_pressure(const Point& p,
     
     v_nonlin_real.resize(v_nonlin.size());
     for (unsigned int i=0; i<v_nonlin.size(); i++)
-        v_nonlin_real(i) = real(v_nonlin(i));
+        v_nonlin_real(i) = std::real(v_nonlin(i));
     
     // now initialize the primitive variable contexts
     p_sol.init(p.size(), v_nonlin_real,
@@ -164,6 +180,7 @@ SurfacePressureLoad::surface_pressure(const Point& p,
     cp = p_sol.c_pressure(_flt_cond->gas_property.pressure,
                           _flt_cond->q0());
     dcp = delta_p_sol.c_pressure(_flt_cond->q0());
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 

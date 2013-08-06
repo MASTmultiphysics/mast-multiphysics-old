@@ -17,6 +17,8 @@
 #include "libmesh/eigen_system.h"
 #include "libmesh/sparse_matrix.h"
 #include "libmesh/fe_interface.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/fe.h"
 
 // FESystem includes
 #include "Quadrature/TrapezoidQuadrature.h"
@@ -697,9 +699,12 @@ void get_beam_dirichlet_dofs(EquationSystems& es,
 
 
 
-void assemble_beam_force_vec(System& sys, SurfacePressureLoad& press,
+void assemble_beam_force_vec(System& sys,
+                             SurfacePressureLoad& surf_press,
+                             SurfaceMotionBase& surf_motion,
                              NumericVector<Number>& fvec)
 {
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     // Get a constant reference to the mesh object.
     const MeshBase& mesh = sys.get_mesh();
     
@@ -710,28 +715,45 @@ void assemble_beam_force_vec(System& sys, SurfacePressureLoad& press,
     // object handles the index translation from node and element numbers
     // to degree of freedom numbers.
     const DofMap& dof_map = sys.get_dof_map();
-    
-    // The element mass and stiffness matrices.
-    DenseVector<Number>   fe;
-    
-    // This vector will hold the degree of freedom indices for
-    // the element.  These define where in the global system
-    // the element degrees of freedom get mapped.
     std::vector<dof_id_type> dof_indices;
+
+    // The element mass and stiffness matrices.
+    DenseVector<Number>   fvec_e;
+    
+    FEType fe_type(FIRST, LAGRANGE);
+    AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+    QGauss qrule (dim, FIFTH);
+    fe->attach_quadrature_rule (&qrule);
+    const std::vector<Real>& JxW = fe->get_JxW();
+    const std::vector<Point>& q_point = fe->get_xyz();
+    const std::vector<std::vector<Real> >& phi = fe->get_phi();
+    
     
     MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+    Number press, dpress;
+    DenseVector<Number> utrans, dn_rot; utrans.resize(3); dn_rot.resize(3);
+    Point normal; normal.zero(); normal(1) = 1.; // y_vec
     
     for ( ; el != end_el; ++el)
     {
         dof_map.dof_indices (*el, dof_indices);
-        fe.resize (dof_indices.size());
+        fvec_e.resize (dof_indices.size());
+        fe->reinit (*el);
+        for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+        {
+            surf_press.surface_pressure(q_point[qp], press, dpress);
+            surf_motion.surface_velocity_frequency_domain(q_point[qp], normal,
+                                                          utrans, dn_rot);
+            for (unsigned int i=0; i<3; i++)
+                fvec_e(i) += JxW[qp] * ( press * dn_rot(i) + // steady pressure
+                                        dpress * normal(i)); // unsteady pressure
+        }
         
-        
-        
-        fvec.add_vector (fe, dof_indices);
+        fvec.add_vector (fvec_e, dof_indices);
     }
     fvec.close();
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
