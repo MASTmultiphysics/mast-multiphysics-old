@@ -98,7 +98,7 @@ void get_beam_dirichlet_dofs(EquationSystems& es,
                              std::set<unsigned int>& dirichlet_dof_ids);
 
 
-int main (int argc, char* const argv[])
+int main_modal (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);

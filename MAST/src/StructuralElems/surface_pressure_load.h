@@ -10,21 +10,25 @@
 #define MAST_surface_pressure_load_h
 
 // MAST includes
+#include "Flight/flight_condition.h"
+#include "FluidElems/fluid_elem_base.h"
 
 // libMesh includes
 #include "libmesh/mesh_function.h"
+#include "libmesh/system.h"
+#include "libmesh/dof_map.h"
 
 
 class SurfacePressureLoad
 {
 public:
-    FlexibleSurfaceMotion(System& sys_nonlinar,
-                          System& sys_linear):
+    SurfacePressureLoad(System& sys_nonlinar,
+                        System& sys_linear):
     nonlinear_fluid_system(sys_nonlinar),
     linearized_fluid_system(sys_linear)
     { }
     
-    virtual ~FlexibleSurfaceMotion()
+    virtual ~SurfacePressureLoad()
     { }
         
     /*!
@@ -79,7 +83,7 @@ protected:
 
 
 void
-FlexibleSurfaceMotion::init(FlightCondition& flight,
+SurfacePressureLoad::init(FlightCondition& flight,
                             NumericVector<Number>& sol_nonlinear,
                             NumericVector<Number>& sol_linear)
 {
@@ -91,14 +95,12 @@ FlexibleSurfaceMotion::init(FlightCondition& flight,
     {
         // vector to store the nonlinear solution
         _sol_nonlinear.reset
-        (NumericVector<Number>::build
-         (nonlinear_fluid_system.get_equation_systems().comm()));
+        (NumericVector<Number>::build(nonlinear_fluid_system.comm()).release());
         _sol_nonlinear->init(sol_nonlinear.size(), true, SERIAL);
 
         // vector to store the linear solution
         _sol_linear.reset
-        (NumericVector<Number>::build
-         (linearized_fluid_system.get_equation_systems().comm()));
+        (NumericVector<Number>::build(linearized_fluid_system.comm()).release());
         _sol_linear->init(sol_linear.size(), true, SERIAL);
     }
     
@@ -106,7 +108,7 @@ FlexibleSurfaceMotion::init(FlightCondition& flight,
     sol_nonlinear.localize(*_sol_nonlinear,
                            nonlinear_fluid_system.get_dof_map().get_send_list());
     sol_linear.localize(*_sol_linear,
-                        linear_fluid_system.get_dof_map().get_send_list());
+                        linearized_fluid_system.get_dof_map().get_send_list());
     
     // if the mesh function has not been created so far, initialize it
     if (!_function_nonlinear.get())
@@ -116,7 +118,7 @@ FlexibleSurfaceMotion::init(FlightCondition& flight,
         nonlinear_fluid_system.get_all_variable_numbers(vars);
         _function_nonlinear.reset
         (new MeshFunction( nonlinear_fluid_system.get_equation_systems(),
-                          _sol_nonlinear, nonlinear_fluid_system.get_dof_map(),
+                          *_sol_nonlinear, nonlinear_fluid_system.get_dof_map(),
                           vars));
         _function_nonlinear->init();
         
@@ -125,7 +127,7 @@ FlexibleSurfaceMotion::init(FlightCondition& flight,
         linearized_fluid_system.get_all_variable_numbers(vars);
         _function_linear.reset
         (new MeshFunction( linearized_fluid_system.get_equation_systems(),
-                          _sol_linear, linearized_fluid_system.get_dof_map(),
+                          *_sol_linear, linearized_fluid_system.get_dof_map(),
                           vars));
         _function_linear->init();
     }
@@ -134,21 +136,26 @@ FlexibleSurfaceMotion::init(FlightCondition& flight,
 
 
 void
-FlexibleSurfaceMotion::surface_pressure(const Point& p,
+SurfacePressureLoad::surface_pressure(const Point& p,
                                         Number& cp, Number& dcp)
 {
     libmesh_assert(_function_nonlinear.get()); // should be initialized before this call
 
     // get the nonlinear and linearized solution
     DenseVector<Number> v_nonlin, v_lin;
-    _function_nonlinear->(p, 0., v_nonlin);
-    _function_linear->(p, 0., v_lin);
+    DenseVector<Real> v_nonlin_real;
+    (*_function_nonlinear)(p, 0., v_nonlin);
+    (*_function_linear)(p, 0., v_lin);
     
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
     
+    v_nonlin_real.resize(v_nonlin.size());
+    for (unsigned int i=0; i<v_nonlin.size(); i++)
+        v_nonlin_real(i) = real(v_nonlin(i));
+    
     // now initialize the primitive variable contexts
-    p_sol.init(p.size(), v_nonlin,
+    p_sol.init(p.size(), v_nonlin_real,
                _flt_cond->gas_property.cp,
                _flt_cond->gas_property.cv,
                false);

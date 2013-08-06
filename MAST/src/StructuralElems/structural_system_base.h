@@ -5,7 +5,7 @@
 // C++ includes
 #include <iostream>
 #include <map>
-
+#include <memory>
 
 // libmesh includes
 #include "libmesh/libmesh_config.h"
@@ -48,6 +48,7 @@ public:
                                 DiffContext& context);
 
     std::vector<unsigned int> vars;
+    
     
 protected:
     

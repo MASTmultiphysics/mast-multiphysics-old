@@ -58,35 +58,18 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
     CFDAerodynamicModel& aero =
     dynamic_cast<CFDAerodynamicModel&> (aerodynamic_model);
 
-    ComplexVectorX projected_vec;
-    
     // get the structural basis
     BasisMatrix<Number>& structural_basis = structure.get_basis_matrix();
     
-    // temporary vectors for fluid and structre
-    AutoPtr<NumericVector<Number> > fluid_tmp_vec =
-    NumericVector<Number>::build
-    (aero.fluid_system.get_equation_systems().comm());
-
-    AutoPtr<NumericVector<Number> > structural_tmp_vec =
-    NumericVector<Number>::build
-    (structure.structural_system.get_equation_systems().comm());
-    
+    ComplexVectorX projected_force;
     
     for (unsigned int j_basis=0; j_basis<structural_basis.n(); j_basis++)
     {
-        NumericVector<Number>& basis_vec = structural_basis.basis(j_basis);
-        
-//        structure_to_fluid_mapping->vector_mult
-//        ( *fluid_tmp_vec, basis_vec ); // F_A = A_SF X_S
-        aero.solve(*fluid_tmp_vec); // X_S = J_FF^{-1} F_A
-//        fluid_to_structure_mapping->vector_mult
-//        ( *structural_tmp_vec, *aero.fluid_system.solution ); // F_S = A_FS X_S
-        
-        // now calculate the dot product
-        for (unsigned int i_basis=0; i_basis<structural_basis.n(); i_basis++)
-            a(i_basis, j_basis) = structural_basis.basis(i_basis).dot
-            (*structural_tmp_vec); // Phi^T F_S
+        projected_force.Zero(structural_basis.n());
+        aero.solve(k_ref, structural_basis.basis(j_basis)); // J_FF^{-1} F_A A_SF X_S
+        structure.project_aero_force(*aero.fluid_system.solution,
+                                     projected_force); // Phi^T A_FS X_F
+        a.col(j_basis) = projected_force;
     }
     
     return true;

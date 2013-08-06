@@ -1,6 +1,7 @@
 
 // MAST includes
 #include "StructuralElems/structural_system_base.h"
+#include "StructuralElems/surface_pressure_load.h"
 
 // libMesh include files
 #include "libmesh/equation_systems.h"
@@ -517,9 +518,6 @@ void assemble_beam_matrices(EquationSystems& es,
                 Ke(i, j) = elem_mat.getVal(i, j);
         
         beam.calculateConsistentMassMatrix(beam_elem_mat);
-        // put small values on the diagonal for rotation dofs
-//        for (unsigned int i=0; i<4; i++)
-//            beam_elem_mat.setVal(4+i, 4+i, 1.0);
         beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
         for (unsigned int i=0; i<12; i++)
             for (unsigned int j=0; j<12; j++)
@@ -697,6 +695,44 @@ void get_beam_dirichlet_dofs(EquationSystems& es,
     
 }
 
+
+
+void assemble_beam_force_vec(System& sys, SurfacePressureLoad& press,
+                             NumericVector<Number>& fvec)
+{
+    // Get a constant reference to the mesh object.
+    const MeshBase& mesh = sys.get_mesh();
+    
+    // The dimension that we are running.
+    const unsigned int dim = mesh.mesh_dimension();
+    
+    // A reference to the \p DofMap object for this system.  The \p DofMap
+    // object handles the index translation from node and element numbers
+    // to degree of freedom numbers.
+    const DofMap& dof_map = sys.get_dof_map();
+    
+    // The element mass and stiffness matrices.
+    DenseVector<Number>   fe;
+    
+    // This vector will hold the degree of freedom indices for
+    // the element.  These define where in the global system
+    // the element degrees of freedom get mapped.
+    std::vector<dof_id_type> dof_indices;
+    
+    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+    
+    for ( ; el != end_el; ++el)
+    {
+        dof_map.dof_indices (*el, dof_indices);
+        fe.resize (dof_indices.size());
+        
+        
+        
+        fvec.add_vector (fe, dof_indices);
+    }
+    fvec.close();
+}
 
 
 

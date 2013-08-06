@@ -15,6 +15,7 @@
 // MAST includes
 #include "Aeroelasticity/aerodynamic_model.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
+#include "FluidElems/flexible_surface_motion.h"
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
@@ -50,8 +51,7 @@ public:
     /*!
      *    method to solve for the fluid states given the forcing vector
      */
-    void solve(NumericVector<Number>& f)
-    { libmesh_assert(false); }
+    void solve(Real k_ref, NumericVector<Number>& f);
 
     
     /*!
@@ -60,9 +60,19 @@ public:
      */
     FrequencyDomainLinearizedFluidSystem& fluid_system;
     
-    
 };
 
+
+
+inline
+void
+CFDAerodynamicModel::solve(Real k_ref, NumericVector<Number>& f)
+{
+    // set the solution vector to the flexible surface motion
+    dynamic_cast<FlexibleSurfaceMotion*>
+    (fluid_system.perturbed_surface_motion.get())->init(k_ref, 0., f);
+    fluid_system.solve();
+}
 
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

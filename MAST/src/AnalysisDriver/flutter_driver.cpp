@@ -27,15 +27,8 @@
 
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
-void assemble_matrices(EquationSystems& es,
-                       const std::string& system_name);
 
-void get_dirichlet_dofs(EquationSystems& es,
-                        const std::string& system_name,
-                        std::set<unsigned int>& dirichlet_dof_ids);
-
-
-int main_flutter (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);

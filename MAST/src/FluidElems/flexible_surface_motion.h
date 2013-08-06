@@ -14,6 +14,7 @@
 
 // libMesh includes
 #include "libmesh/mesh_function.h"
+#include "libmesh/dof_map.h"
 
 
 class FlexibleSurfaceMotion: public SurfaceMotionBase
@@ -88,8 +89,7 @@ FlexibleSurfaceMotion::init(Real freq, Real phase,
     // first initialize the solution to the given vector
     if (!_sol.get())
     {
-        _sol.reset(NumericVector<Number>::build
-                   (system.get_equation_systems().comm()));
+        _sol.reset(NumericVector<Number>::build(system.comm()).release());
         _sol->init(sol.size(), true, SERIAL);
     }
     
@@ -102,7 +102,7 @@ FlexibleSurfaceMotion::init(Real freq, Real phase,
         std::vector<unsigned int> vars;
         system.get_all_variable_numbers(vars);
         _function.reset(new MeshFunction( system.get_equation_systems(),
-                                         _sol, system.get_dof_map(), vars));
+                                         *_sol, system.get_dof_map(), vars));
         _function->init();
     }
     
@@ -124,7 +124,7 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
     
     // translation is obtained by direct interpolation of the u,v,w vars
     DenseVector<Complex> v;
-    _function->(p, 0., v);
+    (*_function)(p, 0., v);
 
     // now copy the values to u_trans
     Complex iota(0., 1.);
@@ -139,21 +139,22 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
     // TODO: these need to be mapped from local 2D to 3D space
     
     // now prepare the rotation vector
-    Point rot;
+    DenseVector<Complex> rot;
+    rot.resize(3); 
     rot(0) = gradients[2](1) - gradients[1](2); // dwz/dy - dwy/dz
     rot(1) = gradients[0](2) - gradients[2](0); // dwx/dz - dwz/dx
     rot(2) = gradients[1](0) - gradients[0](1); // dwy/dx - dwx/dy
     
     // now do the cross-products
-    Point tmp(rot.cross(n));
-    for (unsigned int i=0; i<n.size(); i++)
-        dn_rot(i) = tmp(i);
+    dn_rot(0) =   rot(1) * n(2) - rot(2) * n(1);
+    dn_rot(1) = -(rot(0) * n(2) - rot(2) * n(0));
+    dn_rot(2) =   rot(0) * n(1) - rot(1) * n(0);
 }
 
 
 
 void
-RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
+FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
                                                  const Point& p,
                                                  const Point& n,
                                                  DenseVector<Real>& u_trans,
@@ -165,12 +166,13 @@ RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
     libmesh_assert(_function.get()); // should be initialized before this call
     
     // translation is obtained by direct interpolation of the u,v,w vars
-    DenseVector<Real> v;
-    _function->(p, 0., v);
+    DenseVector<Number> v;
+    (*_function)(p, 0., v);
     
     // now copy the values to u_trans
     for (unsigned int i=0; i<p.size(); i++)
-        u_trans(i) = v(i) * frequency * cos(frequency*t + phase_offset);
+        u_trans(i) = std::real(v(i)) * frequency * cos(frequency*t +
+                                                       phase_offset);
     
     // perturbation of the normal requires calculation of the curl of
     // displacement at the given point
@@ -180,15 +182,17 @@ RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
     // TODO: these need to be mapped from local 2D to 3D space
     
     // now prepare the rotation vector
-    Point rot;
+    DenseVector<Number> rot;
     rot(0) = gradients[2](1) - gradients[1](2); // dwz/dy - dwy/dz
     rot(1) = gradients[0](2) - gradients[2](0); // dwx/dz - dwz/dx
     rot(2) = gradients[1](0) - gradients[0](1); // dwy/dx - dwx/dy
     
     // now do the cross-products
-    Point tmp(rot.cross(n));
-    for (unsigned int i=0; i<n.size(); i++)
-        dn_rot(i) = tmp(i) * sin(frequency*t + phase_offset);
+    dn_rot(0) =   std::real(rot(1) * n(2) - rot(2) * n(1));
+    dn_rot(1) =  -std::real((rot(0) * n(2) - rot(2) * n(0)));
+    dn_rot(2) =   std::real(rot(0) * n(1) - rot(1) * n(0));
+    
+    dn_rot.scale(sin(frequency*t + phase_offset));
 }
 
 

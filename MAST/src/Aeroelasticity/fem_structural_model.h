@@ -79,6 +79,14 @@ public:
 
     
     /*!
+     *    calculates the force vector from this given aerodynamic solution, 
+     *    and projects it onto the structural modes
+     */
+    void project_aero_force(NumericVector<Number>& aero_sol,
+                            ComplexVectorX& projected_f_vec);
+    
+    
+    /*!
      *    vector of eigenvalues
      */
     RealVectorX  eigen_vals;
@@ -116,5 +124,13 @@ FEMStructuralModel::init()
     }
 }
 
+
+inline
+void
+FEMStructuralModel::project_aero_force(NumericVector<Number>& aero_sol,
+                                       ComplexVectorX& projected_f_vec)
+{
+    
+}
 
 #endif
