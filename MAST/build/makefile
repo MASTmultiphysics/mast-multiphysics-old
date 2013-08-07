@@ -186,24 +186,24 @@ endif
 FESYSTEM_LIB_SOURCES = $(wildcard ${SRC_SUBDIR}/*.cpp ${SRC_SUBDIR}/*/*.cpp ${SRC_SUBDIR}/*/*/*.cpp)
 DEP_FILES= $(patsubst %.cpp,%-cpp.dep,${FESYSTEM_LIB_SOURCES})
 
-all: fesystem-${METHOD} euler-${METHOD}-${SCALAR}
+all: mast-${METHOD}-${SCALAR}
 
-euler-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+mast-dbg-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} $^ ${FESYSTEM_LIBS}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+mast-opt-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} $^ ${FESYSTEM_LIBS}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-oprof-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+mast-oprof-real: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} $^ ${FESYSTEM_LIBS} ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-dbg-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+mast-dbg-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_DEBUG} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} $^ ${FESYSTEM_LIBS} ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+mast-opt-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_OPT} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} $^ ${FESYSTEM_LIBS} ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
-euler-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
+mast-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
 	${GCC_COMP} ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} ${LIBMESH_LIB_DIR} $^ ${FESYSTEM_LIBS}  ${LIBMESH_LIBS}  ${EXTERNAL_LIB_DIRS} ${EXTERNAL_LIBS} ${MPI_LIBS} -o $@
 
 %-cpp.dep: %.cpp 
@@ -235,11 +235,8 @@ euler-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB
 	${GCC_COMP} -c ${GCC_FLAGS_PRO} ${COMPILATION_DEFINES} ${EXTERNAL_INCLUDE_DIRS} $*.cpp -o $@
 
 
-libfesystem-${METHOD}.a: $(patsubst %.cpp,%-${METHOD}-cpp.o,${FESYSTEM_LIB_SOURCES}) 
-	ar -rv $@ $^ 
-
 clean:
-	rm -rf $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES})  euler-${METHOD}-${SCALAR}
+	rm -rf $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES})  mast-${METHOD}-${SCALAR}
 
 clean-deps:
 	rm -f ${DEP_FILES}
