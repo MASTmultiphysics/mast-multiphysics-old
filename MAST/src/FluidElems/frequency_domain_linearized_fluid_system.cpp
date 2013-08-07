@@ -405,7 +405,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                                                         tmp_mat_n1n1); // Kij dB/dx_j
                         dB_mat[i_dim].right_multiply_transpose
                         (tmp_mat_n2n2, tmp_mat_n1n2); // dB/dx_i^T Kij dB/dx_j
-                        Kmat.add(-JxW[qp], tmp_mat_n2n2);
+                        Kmat.add(JxW[qp], tmp_mat_n2n2);
                     }
                 }
             }
