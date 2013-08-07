@@ -748,8 +748,10 @@ void assemble_beam_force_vec(System& sys,
             surf_motion.surface_velocity_frequency_domain(q_point[qp], normal,
                                                           utrans, dn_rot);
             for (unsigned int i=0; i<3; i++)
-                fvec_e(i) += JxW[qp] * ( press * dn_rot(i) + // steady pressure
-                                        dpress * normal(i)); // unsteady pressure
+                for (unsigned int iphi=0; iphi<phi.size(); iphi++)
+                    fvec_e(i*phi.size()+iphi) += JxW[qp] * phi[iphi][qp] *
+                    ( press * dn_rot(i) + // steady pressure
+                     dpress * normal(i)); // unsteady pressure
         }
         
         fvec.add_vector (fvec_e, dof_indices);

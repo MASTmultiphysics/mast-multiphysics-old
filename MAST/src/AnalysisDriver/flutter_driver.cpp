@@ -28,7 +28,7 @@
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
-int main_flutter (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -149,6 +149,7 @@ int main_flutter (int argc, char* const argv[])
     
     ComplexMatrixX a;
     coupled_system.get_aero_operator_matrix(0.1, a);
+
 }
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
