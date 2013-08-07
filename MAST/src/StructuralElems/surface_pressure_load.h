@@ -125,13 +125,13 @@ SurfacePressureLoad::init(System& linearized_sys)
         
         // now initialize the linearized fluid system
         vars.resize(n_vars);
-        vars[0] = nonlin_sys.variable_number("drho");
-        vars[1] = nonlin_sys.variable_number("drhoux");
+        vars[0] = linearized_sys.variable_number("drho");
+        vars[1] = linearized_sys.variable_number("drhoux");
         if (vars.size() > 3)
-            vars[2] = nonlin_sys.variable_number("drhouy");
+            vars[2] = linearized_sys.variable_number("drhouy");
         if (vars.size() > 4)
-            vars[3] = nonlin_sys.variable_number("drhouz");
-        vars[n_vars-1] = nonlin_sys.variable_number("drhoe");
+            vars[3] = linearized_sys.variable_number("drhouz");
+        vars[n_vars-1] = linearized_sys.variable_number("drhoe");
 
         linearized_sys.get_all_variable_numbers(vars);
         _function_linear.reset

@@ -78,15 +78,16 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
     // get the structural basis
     BasisMatrix<Number>& structural_basis = structure.get_basis_matrix();
 
-    AutoPtr<NumericVector<Number> > f_vec
-    (NumericVector<Number>::build(structure.structural_system.comm()).release());
-
+    if (!structure.structural_system.have_vector("fvec"))
+        structure.structural_system.add_vector("fvec");
+    NumericVector<Number>& f_vec = structure.structural_system.get_vector("fvec");
+    
     ComplexVectorX projected_force;
+    a.setZero(structural_basis.n(), structural_basis.n());
     
     for (unsigned int j_basis=0; j_basis<structural_basis.n(); j_basis++)
     {
-        projected_force.Zero(structural_basis.n());
-        
+        projected_force.setZero(structural_basis.n());
         surface_motion->init(k_ref, 0., structural_basis.basis(j_basis));
         aero.fluid_system.perturbed_surface_motion = surface_motion.get();
         aero.fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
@@ -96,9 +97,9 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
         assemble_beam_force_vec(structure.structural_system,
                                 *surface_pressure,
                                 *surface_motion,
-                                *f_vec); // A_FS X_F
+                                f_vec); // A_FS X_F
         structure.basis_matrix->vector_mult_transpose
-        (projected_force, *f_vec); // Phi^T A_FS X_F
+        (projected_force, f_vec); // Phi^T A_FS X_F
 
         a.col(j_basis) = projected_force;
     }

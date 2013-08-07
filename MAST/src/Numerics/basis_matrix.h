@@ -90,7 +90,7 @@ public:
         libmesh_assert_equal_to(m(), arg.size());
         libmesh_assert_equal_to(n(), dest.size());
         
-        dest.Zero(n());
+        dest.setZero(n());
         for (unsigned int i=0; i<n(); i++)
             dest(i) = arg.dot(*(modes[i]));
     }

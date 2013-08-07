@@ -735,6 +735,8 @@ void assemble_beam_force_vec(System& sys,
     DenseVector<Number> utrans, dn_rot; utrans.resize(3); dn_rot.resize(3);
     Point normal; normal.zero(); normal(1) = 1.; // y_vec
     
+    fvec.zero(); fvec.close();
+    
     for ( ; el != end_el; ++el)
     {
         dof_map.dof_indices (*el, dof_indices);

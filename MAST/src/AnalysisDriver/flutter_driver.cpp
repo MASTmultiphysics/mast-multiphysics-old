@@ -68,6 +68,7 @@ int main (int argc, char* const argv[])
     fluid_system.flight_condition = &flight_cond;
     fluid_system.time_solver =
     AutoPtr<TimeSolver>(new SteadySolver(fluid_system));
+    fluid_system.time_solver->quiet = false;
     // read the fluid system from the saved file
     fluid_equation_systems.read<Real>("saved_solution.xdr",
                                       libMeshEnums::DECODE);
@@ -79,6 +80,31 @@ int main (int argc, char* const argv[])
     fluid_mesh.print_info();
     fluid_equation_systems.print_info();
     
+    NewtonSolver &solver = dynamic_cast<NewtonSolver&>
+    (*(fluid_system.time_solver->diff_solver()));
+    solver.quiet = infile("solver_quiet", true);
+    solver.verbose = !solver.quiet;
+    solver.brent_line_search = false;
+    solver.max_nonlinear_iterations =
+    infile("max_nonlinear_iterations", 15);
+    solver.relative_step_tolerance =
+    infile("relative_step_tolerance", 1.e-3);
+    solver.relative_residual_tolerance =
+    infile("relative_residual_tolerance", 0.0);
+    solver.absolute_residual_tolerance =
+    infile("absolute_residual_tolerance", 0.0);
+    solver.continue_after_backtrack_failure =
+    infile("continue_after_backtrack_failure", false);
+    solver.continue_after_max_iterations =
+    infile("continue_after_max_iterations", false);
+    solver.require_residual_reduction =
+    infile("require_residual_reduction", true);
+    
+    // And the linear solver options
+    solver.max_linear_iterations =
+    infile("max_linear_iterations", 50000);
+    solver.initial_linear_tolerance =
+    infile("initial_linear_tolerance", 1.e-3);
 
     // *****************************************
     // now initialize the structural system

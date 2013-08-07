@@ -43,7 +43,7 @@ public:
     virtual bool get_mass_matrix(RealMatrixX& m)
     {
         unsigned int n_eig = eigen_vals.size();
-        m.Zero(n_eig, n_eig);
+        m.setZero(n_eig, n_eig);
         for (unsigned i=0; i<n_eig; i++)
             m(i,i) = 1.;
         
@@ -57,7 +57,7 @@ public:
     virtual bool get_stiffness_matrix(RealMatrixX& k)
     {
         unsigned int n_eig = eigen_vals.size();
-        k.Zero(n_eig, n_eig);
+        k.setZero(n_eig, n_eig);
         for (unsigned i=0; i<n_eig; i++)
             k(i,i) = eigen_vals(i);
         

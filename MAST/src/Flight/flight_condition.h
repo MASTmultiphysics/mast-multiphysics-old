@@ -159,7 +159,7 @@ FlightCondition::init()
     velocity_magnitude = mach * gas_property.a;
     
     // prepare the transformation matrix from body to inertial axis
-    RealMatrix3 tmat; tmat.Zero();
+    RealMatrix3 tmat; tmat.setZero();
     tmat.col(0) = body_roll_axis;
     tmat.col(1) = body_pitch_axis;
     tmat.col(2) = body_yaw_axis;
@@ -168,7 +168,7 @@ FlightCondition::init()
     // We will rotate the body vectors, and then transform the
     // resulting vector to the inertial frame.
     RealMatrix3 roll, pitch, yaw;
-    roll.Zero(); pitch.Zero(); yaw.Zero();
+    roll.setZero(); pitch.setZero(); yaw.setZero();
     
     roll  << 1., 0., 0.,
              0., cos(body_euler_angles(0)), -sin(body_euler_angles(0)),
