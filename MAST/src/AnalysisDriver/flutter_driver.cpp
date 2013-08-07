@@ -28,7 +28,7 @@
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
-int main (int argc, char* const argv[])
+int main_flutter (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);

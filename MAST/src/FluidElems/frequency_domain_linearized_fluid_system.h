@@ -26,7 +26,7 @@
 using namespace libMesh;
 
 class SurfaceMotionBase;
-
+class FlightCondition;
 
 class FrequencyDomainLinearizedFluidSystem: public FEMSystem, public EulerElemBase
 {
@@ -90,7 +90,7 @@ public:
     unsigned int u, v, w, T, s, p, cp, a, M, // real part of the variables
                                              // imaginary part of the variables
     rho_im, u_im, v_im, w_im, T_im, s_im, p_im, cp_im, a_im, M_im;
-    
+
     FlightCondition* flight_condition;
 };
 
