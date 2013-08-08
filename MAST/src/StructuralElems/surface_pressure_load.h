@@ -24,7 +24,9 @@
 class SurfacePressureLoad
 {
 public:
-    SurfacePressureLoad()
+    SurfacePressureLoad():
+    _flt_cond(NULL),
+    _dim(0)
     { }
     
     virtual ~SurfacePressureLoad()
@@ -62,7 +64,12 @@ protected:
      *    this provides the fluid values for calculation of cp
      */
     FlightCondition* _flt_cond;
-    
+  
+    /*!
+     *    dimension of the analysis mesh
+     */
+    unsigned int _dim;
+
 };
 
 
@@ -75,6 +82,7 @@ SurfacePressureLoad::init(System& linearized_sys)
     System& nonlin_sys =
     linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
 
+    _dim = linearized_sys.n_vars()-2;
     
     // copy the pointer for flight condition data
     _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>
@@ -107,14 +115,14 @@ SurfacePressureLoad::init(System& linearized_sys)
         unsigned int n_vars = nonlin_sys.n_vars();
         libmesh_assert(linearized_sys.n_vars() == n_vars);
         
-        std::vector<unsigned int> vars(n_vars);
+        std::vector<unsigned int> vars(_dim+2);
         vars[0] = nonlin_sys.variable_number("rho");
         vars[1] = nonlin_sys.variable_number("rhoux");
-        if (vars.size() > 3)
+        if (_dim > 1)
             vars[2] = nonlin_sys.variable_number("rhouy");
-        if (vars.size() > 4)
+        if (_dim > 2)
             vars[3] = nonlin_sys.variable_number("rhouz");
-        vars[n_vars-1] = nonlin_sys.variable_number("rhoe");
+        vars[_dim+2-1] = nonlin_sys.variable_number("rhoe");
         
         
         _function_nonlinear.reset
@@ -124,14 +132,14 @@ SurfacePressureLoad::init(System& linearized_sys)
         _function_nonlinear->init();
         
         // now initialize the linearized fluid system
-        vars.resize(n_vars);
+        vars.resize(_dim+2);
         vars[0] = linearized_sys.variable_number("drho");
         vars[1] = linearized_sys.variable_number("drhoux");
-        if (vars.size() > 3)
+        if (_dim > 1)
             vars[2] = linearized_sys.variable_number("drhouy");
-        if (vars.size() > 4)
+        if (_dim > 2)
             vars[3] = linearized_sys.variable_number("drhouz");
-        vars[n_vars-1] = linearized_sys.variable_number("drhoe");
+        vars[_dim +2-1] = linearized_sys.variable_number("drhoe");
 
         linearized_sys.get_all_variable_numbers(vars);
         _function_linear.reset
@@ -171,13 +179,13 @@ SurfacePressureLoad::surface_pressure(const Point& p,
         v_nonlin_real(i) = std::real(v_nonlin(i));
     
     // now initialize the primitive variable contexts
-    p_sol.init(p.size(), v_nonlin_real,
+    p_sol.init(_dim, v_nonlin_real,
                _flt_cond->gas_property.cp,
                _flt_cond->gas_property.cv,
                false);
     delta_p_sol.init(p_sol, v_lin);
     
-    cp = p_sol.c_pressure(_flt_cond->gas_property.pressure,
+    cp = p_sol.c_pressure(_flt_cond->p0(),
                           _flt_cond->q0());
     dcp = delta_p_sol.c_pressure(_flt_cond->q0());
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

@@ -676,17 +676,16 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     ui_ni_steady -= uvec.dot(dnormal_steady);
 
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    {
-                        dui_ni_unsteady += // delta_wi_dot * ni
-                        surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                         ui_ni_steady    += // wi_dot * ni
                         surface_steady_vel(i_dim) * face_normals[qp](i_dim);
-                    }
                 }
 
 
                 // now add the contribution from unsteady normal perturbation
-                dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni                
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    dui_ni_unsteady += // delta_wi_dot * ni
+                    surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
+                dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
                 
                 // now prepare the flux vector
                 flux.zero();
@@ -858,16 +857,15 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     ui_ni_steady -= uvec.dot(dnormal_steady);
                     
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    {
-                        dui_ni_unsteady += // delta_wi_dot * ni
-                        surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                         ui_ni_steady    += // wi_dot * ni
                         surface_steady_vel(i_dim) * face_normals[qp](i_dim);
-                    }
                 }
                 
                 
                 // now add the contribution from unsteady normal perturbation
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    dui_ni_unsteady += // delta_wi_dot * ni
+                    surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
 
                 

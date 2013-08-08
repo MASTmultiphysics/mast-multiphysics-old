@@ -94,8 +94,9 @@ public:
     _if_viscous(false), _if_full_linearization(false),
     _if_update_stabilization_per_quadrature_point(true),
     surface_motion(NULL),
-    flight_condition(NULL)
-    {}
+    flight_condition(NULL),
+    dim(0)
+    { }
 
     virtual ~EulerElemBase();
 
@@ -113,6 +114,8 @@ public:
     SurfaceMotionBase* surface_motion;
     
     FlightCondition* flight_condition;
+
+    unsigned int dim;
 
 protected:
     
@@ -227,9 +230,6 @@ protected:
      const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
      DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
      Real& discontinuity_val);
-    
-    
-    unsigned int dim;
     
     std::vector<FluidPrimitiveVars> _active_primitive_vars;
 
