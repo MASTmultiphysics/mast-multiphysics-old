@@ -149,6 +149,8 @@ int main_modal (int argc, char* const argv[])
     eigen_system.add_variable ( "ty", FIRST, LAGRANGE);
     eigen_system.add_variable ( "tz", FIRST, LAGRANGE);
     
+    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
+    
     // Give the system a pointer to the matrix assembly
     // function defined below.
     eigen_system.attach_assemble_function (assemble_beam_matrices);
@@ -162,7 +164,7 @@ int main_modal (int argc, char* const argv[])
 
     // Set the number of requested eigenpairs \p n_evals and the number
     // of basis vectors used in the solution algorithm.
-    const unsigned int n_eig_request = 10;
+    const unsigned int n_eig_request = 5;
     equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
     equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
     
@@ -196,15 +198,23 @@ int main_modal (int argc, char* const argv[])
         // also add the solution as an independent vector, which will have to
         // be read in
         std::ostringstream vec_name;
-        file << "eig_"  << i << " = " << 1./val.first << std::endl;
         vec_name << "mode_" << i;
         NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
         vec = *eigen_system.solution;
-        
+        if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
+        {
+            file << "eig_"  << i << " = " << 1./val.first << std::endl;
+            vec.scale(1./sqrt(val.first));
+            vec.close();
+        }
+        else
+            file << "eig_"  << i << " = " << val.first << std::endl;
+
         std::cout << std::setw(5) << i
         << std::setw(10) << val.first
         << " + i  "
         << std::setw(10) << val.second << std::endl;
+        
         
         std::ostringstream file_name;
         

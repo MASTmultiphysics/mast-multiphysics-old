@@ -167,6 +167,7 @@ void SmallPerturbationPrimitiveSolution<ValType>::zero()
     drho = 0.; du1 = 0.; du2 = 0.; du3 = 0.; dT = 0.; dp = 0.; da = 0.;
     de_tot = 0.; dk = 0.;
     dentropy = 0.; dmach = 0.;
+    primitive_sol = NULL;
 }
 
 
@@ -175,6 +176,8 @@ void
 SmallPerturbationPrimitiveSolution<ValType>::init
 (const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol)
 {
+    primitive_sol = &sol;
+    
     const unsigned int n1 = sol.dimension+2;
     const Real R = sol.cp-sol.cv, gamma = sol.cp/sol.cv;
     perturb_primitive_sol.resize(n1);

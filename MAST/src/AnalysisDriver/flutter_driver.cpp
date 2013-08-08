@@ -28,7 +28,7 @@
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
-int main (int argc, char* const argv[])
+int main_flutter (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -75,6 +75,8 @@ int main (int argc, char* const argv[])
     // now initilaize the nonlinear solution
     fluid_system.localize_fluid_solution();
     fluid_system.extra_quadrature_order = 2;
+    fluid_equation_systems.parameters.set<bool>("if_reduced_freq") =
+    infile("if_reduced_freq", false);
     
     // print the information
     fluid_mesh.print_info();
@@ -148,8 +150,9 @@ int main (int argc, char* const argv[])
     coupled_system(aero_model, structural_model);
     
     ComplexMatrixX a;
-    coupled_system.get_aero_operator_matrix(0.1, a);
-
+    coupled_system.get_aero_operator_matrix(0.3, a);
+    std::cout << a << std::endl;
 }
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
+

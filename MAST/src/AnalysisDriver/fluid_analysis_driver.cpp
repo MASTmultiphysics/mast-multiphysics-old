@@ -126,7 +126,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main_fluid (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -150,8 +150,8 @@ int main_fluid (int argc, char* const argv[])
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
     
     // Create a mesh.
-    //SerialMesh mesh(init.comm());
-    ParallelMesh mesh(init.comm());
+    SerialMesh mesh(init.comm());
+    //ParallelMesh mesh(init.comm());
 
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -462,6 +462,8 @@ int main_fluid (int argc, char* const argv[])
     
     Real frequency = infile("frequency",0.);
     surface_motion->init(frequency, 0.);
+    equation_systems.parameters.set<bool>("if_reduced_freq") =
+    infile("if_reduced_freq", false);
     
 #endif
     
