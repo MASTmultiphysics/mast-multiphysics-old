@@ -141,7 +141,6 @@ SurfacePressureLoad::init(System& linearized_sys)
             vars[3] = linearized_sys.variable_number("drhouz");
         vars[_dim +2-1] = linearized_sys.variable_number("drhoe");
 
-        linearized_sys.get_all_variable_numbers(vars);
         _function_linear.reset
         (new MeshFunction( linearized_sys.get_equation_systems(),
                           *linearized_sys.solution,

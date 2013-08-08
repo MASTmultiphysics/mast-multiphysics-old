@@ -530,8 +530,16 @@ void assemble_beam_matrices(EquationSystems& es,
         for (unsigned int i=0; i<2; i++)
             delete nodes[i];
         
-        matrix_A.add_matrix (Me, dof_indices);
-        matrix_B.add_matrix (Ke, dof_indices);
+        if (es.parameters.get<bool>("if_exchange_AB_matrices"))
+        {
+            matrix_A.add_matrix (Me, dof_indices);
+            matrix_B.add_matrix (Ke, dof_indices);
+        }
+        else
+        {
+            matrix_A.add_matrix (Ke, dof_indices);
+            matrix_B.add_matrix (Me, dof_indices);
+        }
     }
 }
 
@@ -733,7 +741,7 @@ void assemble_beam_force_vec(System& sys,
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     Number press, dpress;
     DenseVector<Number> utrans, dn_rot; utrans.resize(3); dn_rot.resize(3);
-    Point normal; normal.zero(); normal(1) = 1.; // y_vec
+    Point normal; normal.zero(); normal(1) = -1.; // y_vec
     
     fvec.zero(); fvec.close();
     
