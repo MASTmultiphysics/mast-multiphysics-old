@@ -58,11 +58,11 @@ public:
     }
     
     
-    FlightCondition flight_condition;
+    FlightCondition* flight_condition;
     
     std::vector<FlutterRoot> flutter_roots;
     
-    std::auto_ptr<CoupledAeroStructuralModel> aero_structural_model;
+    CoupledAeroStructuralModel* aero_structural_model;
 };
 
 

@@ -140,18 +140,17 @@ int main (int argc, char* const argv[])
         structural_model.eigen_vals(i) = modal_data(oss.str(), 0.);
     }
     structural_model.init();
-
-    // create the solvers
-    UGFlutterSolver flutter_solver;
     
     // attach the fluid and structural systems to the models
     CFDAerodynamicModel aero_model(fluid_system);
     CoupledFluidStructureSystem
     coupled_system(aero_model, structural_model);
-    
-    ComplexMatrixX a;
-    coupled_system.get_aero_operator_matrix(0.3, a);
-    std::cout << a << std::endl;
+
+    // create the solvers
+    UGFlutterSolver flutter_solver;
+    flutter_solver.aero_structural_model = &coupled_system;
+    flutter_solver.flight_condition      = &flight_cond;
+    flutter_solver.find_next_root();
 }
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
