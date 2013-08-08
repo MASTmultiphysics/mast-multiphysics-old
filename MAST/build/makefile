@@ -17,7 +17,7 @@ ifeq (${PLATFORM},Darwin)
     ARPACK_LIB=-larpack
     LAPACK_BLAS_LIBS=-llapack -lblas -latlas
     LAPACK_BLAS_LIB_DIR=/usr/lib
-    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47
+    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc48
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     PLPLOT_INCLUDE_DIR=/opt/local/include
     HAVE_PLPLOT_LIBS=1
@@ -41,37 +41,6 @@ ifeq (${PLATFORM},Darwin)
     GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments 
 endif
 
-ifeq (${PLATFORM},Darwinhome)
-    GCC_PRE = g++
-    GCC_COMP = clang++
-    PYTHON = python
-    ARPACK_LIB_DIR=/opt/local/lib/
-    ARPACK_LIB=-larpack
-    LAPACK_BLAS_LIBS=-llapack -lblas -latlas
-    LAPACK_BLAS_LIB_DIR=/usr/lib
-    GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc47
-    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
-    HAVE_PLPLOT_LIBS=1
-    PLPLOT_INCLUDE_DIR=/opt/local/include
-    PLPLOT_LIB_DIR=/opt/local/lib
-    PLPLOT_LIBS=-lplplotcxxd -lplplotd
-    METIS_INCLUDE_DIR=/opt/local/include/metis
-    METIS_LIB_DIR=/opt/local/lib
-    METIS_LIBS=-lmetis
-    TBB_LIB_DIR=/opt/local/tbb41_20121003oss/lib
-    TBB_INCLUDE_DIR=/opt/local/tbb41_20121003oss/include
-    TBB_LIBS=-ltbb -ltbbmalloc
-    PLATFORM=Darwin
-    BOOST_DIR=/opt/local/include
-    LIBMESH_DIR=../../../libmesh
-    TRILINOS_DIR=/usr/local/trilinos
-    VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
-    MPI_INCLUDE_DIR=/opt/local/include/openmpi
-    MPI_LIB_DIR=/opt/local/lib/openmpi
-    GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
-    GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments 
-    GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments 
-endif
 
 ifeq (${PLATFORM},Linux)
     GCC_PRE = g++
@@ -108,14 +77,6 @@ ifeq (${PLATFORM},Linux)
     GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -std=c++0x
 endif
 
-ifeq (${PLATFORM},script)
-    ARPACK_LIB_DIR=${BASEDIR}/install/${KERNEL}-${BINTYPE}/lib
-    LAPACK_BLAS_LIB_DIR=${BASEDIR}/install/${KERNEL}-${BINTYPE}/lib
-    GFORT_SYSTEM_LIB_DIR=${GCCHOME}/lib
-    GFORT_SYSTEM_LIBS=-lgfortran -lgomp
-    HAVE_PLPLOT_LIBS=0
-    PLATFORM=linux
-endif
 
 
 
