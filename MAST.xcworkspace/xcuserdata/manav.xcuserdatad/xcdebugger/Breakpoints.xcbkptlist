@@ -348,5 +348,18 @@
          landmarkName = "EulerSystem::side_time_derivative (bool request_jacobian, DiffContext &amp;context)"
          landmarkType = "5">
       </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "MAST/src/Aeroelasticity/ug_flutter_solver.h"
+         timestampString = "397709078.267668"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "94"
+         endingLineNumber = "94"
+         landmarkName = "UGFlutterSolver::find_next_root()"
+         landmarkType = "5">
+      </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>

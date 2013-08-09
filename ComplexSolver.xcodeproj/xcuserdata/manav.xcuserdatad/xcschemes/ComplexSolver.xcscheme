@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "EBF96DAC16EA6B3200316D86"
-               BuildableName = "ComplexSolver"
+               BuildableName = "MAST"
                BlueprintName = "ComplexSolver"
                ReferencedContainer = "container:ComplexSolver.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EBF96DAC16EA6B3200316D86"
-            BuildableName = "ComplexSolver"
+            BuildableName = "MAST"
             BlueprintName = "ComplexSolver"
             ReferencedContainer = "container:ComplexSolver.xcodeproj">
          </BuildableReference>
@@ -43,7 +43,8 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
+      useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "/Users/manav/Documents/codes/tmp"
       buildConfiguration = "Debug"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -52,11 +53,18 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EBF96DAC16EA6B3200316D86"
-            BuildableName = "ComplexSolver"
+            BuildableName = "MAST"
             BlueprintName = "ComplexSolver"
             ReferencedContainer = "container:ComplexSolver.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "DYLD_LIBRARY_PATH"
+            value = "/opt/local/tbb41_20121003oss/lib/"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -70,7 +78,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EBF96DAC16EA6B3200316D86"
-            BuildableName = "ComplexSolver"
+            BuildableName = "MAST"
             BlueprintName = "ComplexSolver"
             ReferencedContainer = "container:ComplexSolver.xcodeproj">
          </BuildableReference>
