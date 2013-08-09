@@ -15,6 +15,7 @@
 // libMesh includes
 #include "libmesh/mesh_function.h"
 #include "libmesh/dof_map.h"
+#include "libmesh/mesh_serializer.h"
 
 
 class FlexibleSurfaceMotion: public SurfaceMotionBase
@@ -23,7 +24,10 @@ public:
     FlexibleSurfaceMotion(System& sys):
     SurfaceMotionBase(),
     system(sys)
-    { }
+    {
+        MeshBase& mesh = sys.get_mesh();
+        _mesh_serializer.reset(new MeshSerializer(mesh, true));
+    }
     
     virtual ~FlexibleSurfaceMotion()
     { }
@@ -70,7 +74,12 @@ protected:
      *    numeric vector that stores the solution
      */
     std::auto_ptr<NumericVector<Number> > _sol;
+
     
+    /*!
+     *   this serializes the mesh for use in interpolation
+     */
+    std::auto_ptr<MeshSerializer> _mesh_serializer;
 };
 
 
@@ -129,9 +138,9 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
     DenseVector<Complex> v;
     (*_function)(p, 0., v);
     
-    // return zero if the point is outside the mesh function
-    if (v.size() == 0)
-        return;
+//    // return zero if the point is outside the mesh function
+//    if (v.size() == 0)
+//        return;
 
     // now copy the values to u_trans
     Complex iota(0., 1.);
@@ -177,9 +186,9 @@ FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
     DenseVector<Number> v;
     (*_function)(p, 0., v);
     
-    // return zero if the point is outside the mesh function
-    if (v.size() == 0)
-        return;
+//    // return zero if the point is outside the mesh function
+//    if (v.size() == 0)
+//        return;
 
     // now copy the values to u_trans
     for (unsigned int i=0; i<3; i++)

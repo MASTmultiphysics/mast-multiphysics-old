@@ -19,6 +19,7 @@
 #include "libmesh/system.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/equation_systems.h"
+#include "libmesh/mesh_serializer.h"
 
 
 class SurfacePressureLoad
@@ -70,6 +71,11 @@ protected:
      */
     unsigned int _dim;
 
+    /*!
+     *   this serializes the mesh for use in interpolation
+     */
+    std::auto_ptr<MeshSerializer> _mesh_serializer;
+
 };
 
 
@@ -79,6 +85,10 @@ void
 SurfacePressureLoad::init(System& linearized_sys)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    
+    MeshBase& mesh = linearized_sys.get_mesh();
+    _mesh_serializer.reset(new MeshSerializer(mesh, true));
+
     System& nonlin_sys =
     linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
 
