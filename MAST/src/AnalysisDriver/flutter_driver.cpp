@@ -25,7 +25,6 @@
 #include "libmesh/condensed_eigen_system.h"
 
 
-
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 int main (int argc, char* const argv[])

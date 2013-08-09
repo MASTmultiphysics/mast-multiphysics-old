@@ -15,6 +15,7 @@
 
 // MAST includes
 #include "Aeroelasticity/flutter_solver_base.h"
+#include "Solvers/lapack_interface.h"
 
 
 class UGFlutterSolver: public FlutterSolverBase
@@ -90,7 +91,7 @@ bool UGFlutterSolver::find_next_root()
     while (current_k_ref >= active_k_ref_range.first)
     {
         initialize_matrices(current_k_ref, m, k);
-        GeneralizedEigenSolver<ComplexMatrixX> ges;
+        LAPACK_ZGGEV ges;
         ges.compute(m, k);
         evaluate_roots(current_k_ref, ges.alphas(), ges.betas());
         

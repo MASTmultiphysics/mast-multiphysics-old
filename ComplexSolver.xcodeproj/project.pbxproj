@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6996095217B08DD3003C7231 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6996095117B08DD3003C7231 /* FESystem.dylib */; };
+		690D674B17B48D0700C4AE88 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 690D674A17B48D0700C4AE88 /* vecLib.framework */; };
+		690D674C17B493F000C4AE88 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6996095117B08DD3003C7231 /* FESystem.dylib */; };
 		69C1CE1117A943DF00747A90 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C1CE1017A943DF00747A90 /* rigid_surface_motion.cpp */; };
 		EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224616EA7FC80078E733 /* libmpi.1.dylib */; };
@@ -40,12 +41,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		690D674917B475E300C4AE88 /* lapack_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lapack_interface.h; sourceTree = "<group>"; };
+		690D674A17B48D0700C4AE88 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = System/Library/Frameworks/vecLib.framework; sourceTree = SDKROOT; };
 		6918F8B717AA8F3B003771AD /* surface_pressure_load.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = surface_pressure_load.h; sourceTree = "<group>"; };
 		6996095117B08DD3003C7231 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gmksdmnuhuepyfgusmjxcfxzfgzy/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		69C1CE0E17A942C500747A90 /* rigid_surface_motion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rigid_surface_motion.h; sourceTree = "<group>"; };
 		69C1CE0F17A942D500747A90 /* flexible_surface_motion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flexible_surface_motion.h; sourceTree = "<group>"; };
 		69C1CE1017A943DF00747A90 /* rigid_surface_motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rigid_surface_motion.cpp; sourceTree = "<group>"; };
-		EBAAA56717AFDA9D0046ED0E /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3224616EA7FC80078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBE84D2617A6B3F400AEE871 /* aerodynamic_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_model.h; sourceTree = "<group>"; };
@@ -93,7 +95,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6996095217B08DD3003C7231 /* FESystem.dylib in Frameworks */,
+				690D674C17B493F000C4AE88 /* FESystem.dylib in Frameworks */,
+				690D674B17B48D0700C4AE88 /* vecLib.framework in Frameworks */,
 				EBF96DF216EA6C9200316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */,
 				EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */,
@@ -204,6 +207,7 @@
 		EBE84D5517A6B3F400AEE871 /* Solvers */ = {
 			isa = PBXGroup;
 			children = (
+				690D674917B475E300C4AE88 /* lapack_interface.h */,
 				EBE84D5717A6B3F400AEE871 /* residual_based_adaptive_time_solver.cpp */,
 				EBE84D5817A6B3F400AEE871 /* residual_based_adaptive_time_solver.h */,
 			);
@@ -234,8 +238,8 @@
 		EBF96DA216EA6B3200316D86 = {
 			isa = PBXGroup;
 			children = (
+				690D674A17B48D0700C4AE88 /* vecLib.framework */,
 				6996095117B08DD3003C7231 /* FESystem.dylib */,
-				EBAAA56717AFDA9D0046ED0E /* FESystem.dylib */,
 				EBE84D2417A6B3F400AEE871 /* src */,
 				EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */,
 				EBE3224616EA7FC80078E733 /* libmpi.1.dylib */,
