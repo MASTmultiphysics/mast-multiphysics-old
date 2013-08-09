@@ -23,7 +23,7 @@ class UGFlutterSolver: public FlutterSolverBase
 public:
     UGFlutterSolver():
     FlutterSolverBase(),
-    k_ref_range(std::pair<Real, Real>(0.1, 2.)),
+    k_ref_range(std::pair<Real, Real>(0.01, 0.75)),
     _previous_k_ref(0.)
     {}
     

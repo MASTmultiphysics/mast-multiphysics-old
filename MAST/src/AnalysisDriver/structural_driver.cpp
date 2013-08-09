@@ -126,7 +126,7 @@ int main_modal (int argc, char* const argv[])
     x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
 
     MeshTools::Generation::build_line (mesh,
-                                       10,
+                                       40,
                                        x0, x0+chord,
                                        EDGE2);
 
@@ -164,7 +164,7 @@ int main_modal (int argc, char* const argv[])
 
     // Set the number of requested eigenpairs \p n_evals and the number
     // of basis vectors used in the solution algorithm.
-    const unsigned int n_eig_request = 5;
+    const unsigned int n_eig_request = 10;
     equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
     equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
     

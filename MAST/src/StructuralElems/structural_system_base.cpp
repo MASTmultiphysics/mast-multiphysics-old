@@ -755,6 +755,18 @@ void assemble_beam_force_vec(System& sys,
             surf_press.surface_pressure(q_point[qp], press, dpress);
             surf_motion.surface_velocity_frequency_domain(q_point[qp], normal,
                                                           utrans, dn_rot);
+//            press = 0.;
+//            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
+//            std::cout << q_point[qp](0)
+//            << "  " << std::real(utrans(1))
+//            << "  " << std::imag(utrans(1))
+//            << "  " << std::real(dn_rot(0))
+//            << "  " << std::imag(dn_rot(0))
+//            << "  " << std::real(press)
+//            << "  " << std::imag(press)
+//            << "  " << std::real(dpress)
+//            << "  " << std::imag(dpress) << std::endl;
+            
             for (unsigned int i=0; i<3; i++)
                 for (unsigned int iphi=0; iphi<phi.size(); iphi++)
                     fvec_e(i*phi.size()+iphi) += JxW[qp] * phi[iphi][qp] *
