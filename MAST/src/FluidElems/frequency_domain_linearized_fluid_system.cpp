@@ -518,7 +518,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
         libmesh_assert_equal_to(mechanical_bc_type, NO_SLIP_WALL);
     
     
-    const unsigned int n1 = dim+2;
+    const unsigned int n1 = dim+2,
+    spatial_dim = this->get_mesh().spatial_dimension();
     
     // The number of local degrees of freedom for this element
     unsigned int n_dofs = 0;
@@ -560,14 +561,15 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     dnormal_steady, surface_steady_vel;
     
     conservative_sol.resize(dim+2);
-    normal.resize(3); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
+    normal.resize(spatial_dim); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
     flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
     conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
-    dnormal_steady.resize(3); dnormal_steady_real.resize(3);
-    surface_steady_vel.resize(3); uvec.resize(3); duvec.resize(3);
-    dnormal_unsteady.resize(3); surface_unsteady_vel.resize(3);
+    dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
+    surface_steady_vel.resize(spatial_dim); uvec.resize(spatial_dim);
+    duvec.resize(spatial_dim); dnormal_unsteady.resize(spatial_dim);
+    surface_unsteady_vel.resize(spatial_dim);
     
     
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);

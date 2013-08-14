@@ -83,7 +83,7 @@ protected:
 };
 
 
-
+inline
 void
 FlexibleSurfaceMotion::zero()
 {
@@ -91,6 +91,7 @@ FlexibleSurfaceMotion::zero()
 }
 
 
+inline
 void
 FlexibleSurfaceMotion::init(Real freq, Real phase,
                             NumericVector<Number>& sol)
@@ -122,6 +123,7 @@ FlexibleSurfaceMotion::init(Real freq, Real phase,
 
 
 
+inline
 void
 FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
                                                          const Point& n,
@@ -138,10 +140,6 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
     DenseVector<Complex> v;
     (*_function)(p, 0., v);
     
-//    // return zero if the point is outside the mesh function
-//    if (v.size() == 0)
-//        return;
-
     // now copy the values to u_trans
     Complex iota(0., 1.);
     for (unsigned int i=0; i<3; i++)
@@ -170,6 +168,7 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
 
 
 
+inline
 void
 FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
                                                  const Point& p,
@@ -186,10 +185,6 @@ FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
     DenseVector<Number> v;
     (*_function)(p, 0., v);
     
-//    // return zero if the point is outside the mesh function
-//    if (v.size() == 0)
-//        return;
-
     // now copy the values to u_trans
     for (unsigned int i=0; i<3; i++)
         u_trans(i) = v(i) * frequency * cos(frequency*t + phase_offset);
@@ -203,6 +198,7 @@ FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
     
     // now prepare the rotation vector
     DenseVector<Number> rot;
+    rot.resize(3);
     rot(0) = gradients[2](1) - gradients[1](2); // dwz/dy - dwy/dz
     rot(1) = gradients[0](2) - gradients[2](0); // dwx/dz - dwz/dx
     rot(2) = gradients[1](0) - gradients[0](1); // dwy/dx - dwx/dy

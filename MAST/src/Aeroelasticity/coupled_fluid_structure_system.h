@@ -64,7 +64,7 @@ void assemble_beam_force_vec(System& sys,
                              SurfaceMotionBase& motion,
                              NumericVector<Number>& fvec);
 
-
+inline
 bool
 CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
                                                       ComplexMatrixX& a)

@@ -545,7 +545,8 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
     
     
     
-    const unsigned int n1 = dim+2;
+    const unsigned int n1 = dim+2,
+    spatial_dim = this->get_mesh().spatial_dimension();
     
     // The number of local degrees of freedom for this element
     unsigned int n_dofs = 0;
@@ -580,8 +581,9 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
     
     conservative_sol.resize(dim+2); temp_grad.resize(dim);
     tmp_vec1_n2.resize(n_dofs); flux.resize(n1); tmp_vec2_n1.resize(n1);
-    U_vec_interpolated.resize(n1); dnormal.resize(dim); uvec.resize(dim);
-    surface_vel.resize(dim); local_normal.resize(dim);
+    U_vec_interpolated.resize(n1); dnormal.resize(spatial_dim);
+    uvec.resize(spatial_dim); surface_vel.resize(spatial_dim);
+    local_normal.resize(spatial_dim);
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
     l_eig_vec_inv_tr.resize(n1, n1);
     tmp_mat1_n1n2.resize(n1, n_dofs); tmp_mat2_n2n2.resize(n_dofs, n_dofs);

@@ -16,6 +16,7 @@
 #include "FluidElems/aerodynamic_qoi.h"
 #include "FluidElems/fluid_newton_solver.h"
 #include "FluidElems/rigid_surface_motion.h"
+#include "FluidElems/flexible_surface_motion.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -39,6 +40,7 @@
 #include "libmesh/uniform_refinement_estimator.h"
 #include "libmesh/kelly_error_estimator.h"
 #include "libmesh/string_to_enum.h"
+#include "libmesh/condensed_eigen_system.h"
 
 
 #include "Numerics/fem_operator_matrix.h"
@@ -126,7 +128,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main_fluid (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -227,34 +229,43 @@ int main_fluid (int argc, char* const argv[])
             
             for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
             {
-                bool side_on_panel = false, side_on_slip_wall=false;
                 AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
+                std::vector<bool> side_on_panel(side_elem->n_nodes()),
+                side_on_slip_wall(side_elem->n_nodes());
+                std::fill(side_on_panel.begin(), side_on_panel.end(), false);
+                std::fill(side_on_slip_wall.begin(), side_on_slip_wall.end(), false);
+                
                 for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
                 {
                     const Node& n = *(side_elem->get_node(i_node));
                     if (dim == 2)
                     {
-                        if ((n(1)==0.) && (n(0) >= x0) && (n(0) <= x0+chord))
-                            side_on_panel = true;
-                        else if (n(1)==0.)
-                            side_on_slip_wall = true;
-                        else
-                        {
-                            side_on_panel = false;
-                            side_on_slip_wall = false;
-                            break;
-                        }
+                        if ((n(1)==0.) && (n(0) >= x0-1.0e-6) && (n(0) <= x0+chord+1.0e-6))
+                            side_on_panel[i_node] = true;
+                        
+                        if ((n(1)==0.) && ((n(0) <= x0+1.0e-6) || (n(0) >= x0+chord-1.0e-6)))
+                            side_on_slip_wall[i_node] = true;
                     }
                     if (dim == 3)
                         if ((n(2)>0.) || (n(0) < x0) || (n(0)>x1) || (n(1) < y0) || (n(1)>y1))
                         {
-                            side_on_panel = false;
+                            side_on_slip_wall[i_node] = true;
                             break;
                         }
                 }
-                if (side_on_panel)
+                
+                // check for side on panel
+                bool if_apply_bc = true;
+                for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
+                    if_apply_bc = side_on_panel[i_node] && if_apply_bc;
+                if (if_apply_bc)
                     mesh.boundary_info->add_side(*e_it, i_side, 10);
-                else if (side_on_slip_wall)
+                
+                // now check for the slip wall
+                if_apply_bc = true;
+                for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
+                    if_apply_bc = side_on_slip_wall[i_node] && if_apply_bc;
+                if (if_apply_bc)
                     mesh.boundary_info->add_side(*e_it, i_side, 11);
             }
         }
@@ -421,6 +432,37 @@ int main_fluid (int argc, char* const argv[])
     aero_qoi.flight_condition = &flight_cond;
     
     system.attach_qoi(&aero_qoi);
+    
+//    SerialMesh structural_mesh(init.comm());
+//    structural_mesh.read("saved_structural_mesh.xdr");
+//    
+//    EquationSystems structural_equation_systems (structural_mesh);
+//    CondensedEigenSystem & structural_system =
+//    structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
+//    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
+//                                           libMeshEnums::DECODE,
+//                                           (EquationSystems::READ_HEADER |
+//                                            EquationSystems::READ_DATA |
+//                                            EquationSystems::READ_ADDITIONAL_DATA));
+//    
+//    // Prints information about the system to the screen.
+//    structural_mesh.print_info();
+//    structural_equation_systems.print_info();
+//    
+//    std::auto_ptr<FlexibleSurfaceMotion> surface_motion
+//    (new FlexibleSurfaceMotion(structural_system));
+//
+//    (*structural_system.solution) = structural_system.get_vector("mode_0");
+//    structural_system.solution->scale(16.667*.01/structural_system.solution->linfty_norm());
+//    structural_system.solution->close();
+//
+//    Nemesis_IO(structural_mesh).write_equation_systems("structural_system.exo",
+//                                                       structural_equation_systems);
+//    Nemesis_IO(mesh).write_equation_systems("fluid_system.exo",
+//                                            equation_systems);
+//
+//    surface_motion->init(0., pi/2., *structural_system.solution);
+//    //system.surface_motion = surface_motion.get();
     
 #else
     // Declare the system fluid system

@@ -1693,16 +1693,19 @@ EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
                     duini_dU(0) -=  u1 * dnormal(0);
                     tmp(1)       =  u1;
                 }
+                    break;
                 case 1:
                 {
                     duini_dU(0) -=  u2 * dnormal(1);
                     tmp(2)       =  u2;
                 }
+                    break;
                 case 2:
                 {
                     duini_dU(0) -=  u3 * dnormal(2);
                     tmp(3)       =  u3;
                 }
+                    break;
             }
             duini_dU(i_dim+1) = dnormal(i_dim);
         }
