@@ -152,8 +152,8 @@ int main (int argc, char* const argv[])
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
     
     // Create a mesh.
-    SerialMesh mesh(init.comm());
-    //ParallelMesh mesh(init.comm());
+    //SerialMesh mesh(init.comm());
+    ParallelMesh mesh(init.comm());
 
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -480,7 +480,9 @@ int main (int argc, char* const argv[])
     AutoPtr<TimeSolver>(new SteadySolver(system));
     libmesh_assert_equal_to (n_timesteps, 1);
     
-    equation_systems.read<Real>("saved_solution.xdr", libMeshEnums::DECODE);
+    equation_systems.read<Real>("saved_solution.xdr", libMeshEnums::DECODE,
+                                (EquationSystems::READ_HEADER |
+                                 EquationSystems::READ_DATA));
     
     // now initilaize the nonlinear solution
     system.localize_fluid_solution();
@@ -735,9 +737,13 @@ int main (int argc, char* const argv[])
     }
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    MeshSerializer serializer(mesh);
     XdrIO xdr(mesh, true);
+    xdr.set_write_parallel(false);
     xdr.write("saved_mesh.xdr");
-    equation_systems.write("saved_solution.xdr", libMeshEnums::ENCODE);
+    equation_systems.write("saved_solution.xdr", libMeshEnums::ENCODE,
+                           (EquationSystems::WRITE_SERIAL_FILES |
+                            EquationSystems::WRITE_DATA));
 #endif
     
     // All done.
