@@ -10,7 +10,7 @@
 #include "Solvers/residual_based_adaptive_time_solver.h"
 
 #include "libmesh/diff_system.h"
-#include "libmesh/euler_solver.h"
+#include "libmesh/euler2_solver.h"
 #include "libmesh/numeric_vector.h"
 
 ResidualBaseAdaptiveTimeSolver::ResidualBaseAdaptiveTimeSolver (sys_type& s)
@@ -30,7 +30,7 @@ _xdot_linf_approx(1.0e10),
 _first_solve(true)
 {
     // We start with a reasonable time solver: implicit Euler
-    core_time_solver.reset(new EulerSolver(s));
+    core_time_solver.reset(new Euler2Solver(s));
 }
 
 

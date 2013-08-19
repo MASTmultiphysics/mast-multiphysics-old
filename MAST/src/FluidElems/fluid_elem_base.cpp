@@ -2139,29 +2139,155 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
 }
 
 
+
+void EulerElemBase::calculate_aliabadi_discontinuity_operator
+( const std::vector<unsigned int>& vars, const unsigned int qp,
+  FEMContext& c,  const PrimitiveSolution& sol,
+  const DenseVector<Real>& elem_solution,
+  const std::vector<FEMOperatorMatrix>& dB_mat,
+  const DenseMatrix<Real>& Ai_Bi_advection,
+  double& discontinuity_val )
+{
+    const unsigned int n1 = 2 + dim;
+
+    std::vector<DenseVector<Real> > diff_vec(3);
+    DenseMatrix<Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi;
+    DenseVector<Real> vec1, vec2;
+    vec1.resize(n1); vec2.resize(n1); 
+    dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
+    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
+    for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
+    
+    
+    this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
+    this->calculate_entropy_variable_jacobian ( sol, A_entropy, A_inv_entropy );
+
+
+    for (unsigned int i=0; i<dim; i++)
+        dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
+    Ai_Bi_advection.vector_mult(vec1, elem_solution); // Ai dU/dxi
+
+    // TODO: divergence of diffusive flux
+    
+    // add the velocity and calculate the numerator of the discontinuity
+    // capturing term coefficient
+    //vec2 += c.elem_solution; // add velocity TODO: how to get the
+    A_inv_entropy.vector_mult(vec2, vec1);
+    discontinuity_val = vec1.dot(vec2);  // this is the numerator term
+    
+    // now evaluate the dissipation factor for the discontinuity capturing term
+    // this is the denominator term
+    
+    Real val1 = 0.0;
+    for (unsigned int i=0; i<dim; i++)
+    {
+        vec1.zero();
+        
+        for (unsigned int j=0; j<dim; j++)
+            vec1.add(dxi_dX(i, j), diff_vec[j]);
+        
+        // calculate the value of denominator
+        A_inv_entropy.vector_mult(vec2, vec1);
+        val1 += vec1.dot(vec2);
+    }
+    
+    //    // now calculate the discontinuity capturing operator
+    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 0.0))
+        discontinuity_val = sqrt(discontinuity_val/val1);
+    else
+        discontinuity_val = 0.0;
+}
+
+
+
+
+void EulerElemBase::calculate_yzbeta_discontinuity_operator
+(  const std::vector<unsigned int>& vars, const unsigned int qp,
+   FEMContext& c, const DenseVector<Real>& elem_solution,
+   const std::vector<FEMOperatorMatrix>& dB_mat,
+   const DenseMatrix<Real>& Ai_Bi_advection,
+   double& discontinuity_val )
+{
+    const unsigned int n1 = 2 + dim;
+    const double beta = 2.0;
+
+    DenseVector<Real> vec1, ref_sol, jvec;
+    vec1.resize(n1); ref_sol.resize(n1); jvec.resize(dim); 
+    
+    this->get_infinity_vars(ref_sol); // Y
+    for (unsigned int i_var=0; i_var<n1; i_var++)
+        if (fabs(ref_sol(i_var)) > 0.)
+            ref_sol(i_var) = 1./ref_sol(i_var); // Y^{-1}
+
+    
+    discontinuity_val = 0.;
+    for (unsigned int i=0; i<dim; i++)
+    {
+        vec1.zero();
+        dB_mat[i].vector_mult(vec1, elem_solution); // dU/dxi
+        for (unsigned int i_var=0; i_var<n1; i_var++)
+            vec1(i_var) *= ref_sol(i_var);          // Y^{-1} dU/dxi
+        discontinuity_val += vec1.dot(vec1);
+    }
+    discontinuity_val = pow(discontinuity_val, beta/2.-1.);
+
+    
+    // TODO: divergence of diffusive flux
+    Ai_Bi_advection.vector_mult(vec1, elem_solution); // Z = Ai dU/dxi
+    for (unsigned int i_var=0; i_var<n1; i_var++)
+        vec1(i_var) *= ref_sol(i_var);                // Y^{-1} Ai dU/dxi
+    discontinuity_val *= vec1.l2_norm();
+    
+    // calculate the element size along density gradient
+    FEBase* fe;
+    c.get_element_fe(vars[0], fe);
+    const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
+
+    Gradient dN,
+    drho = c.interior_gradient(vars[0], qp); // gradient of density
+    
+    Real drho_norm = drho.size(), h = 0;
+
+    if (drho_norm > 0.)
+    {
+        drho *= (1./drho_norm); // scale to unit vec
+        
+        for (unsigned int i_phi=0; i_phi<dphi.size(); i_phi++)
+        {
+            // set value of shape function gradient
+            for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                dN(i_dim) = dphi[i_phi][qp](i_dim);
+            
+            h += fabs(dN * drho);
+        }
+        
+        h = 2.0/h;
+    }
+    
+    discontinuity_val *= pow(h/2., beta);
+
+}
+
+
+
+
 void EulerElemBase::calculate_differential_operator_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
  const FEMOperatorMatrix& B_mat, const std::vector<FEMOperatorMatrix>& dB_mat,
  const std::vector<DenseMatrix<Real> >& Ai_advection,
  const DenseMatrix<Real>& Ai_Bi_advection,
- const DenseMatrix<Real>& A_inv_entropy,
  const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
  DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
  Real& discontinuity_val )
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
-    std::vector<DenseVector<Real> > diff_vec(3);
-    DenseMatrix<Real> tmp_mat, tmp_mat2, tau, dxi_dX, dX_dxi;
+    DenseMatrix<Real> tmp_mat, tmp_mat2, tau;
     DenseVector<Real> vec1, vec2, vec3, vec4_n2;
     tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1);
-    dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
-    for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
-    this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
-
     FEBase* elem_fe;
     c.get_element_fe(vars[0], elem_fe);
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
@@ -2190,7 +2316,6 @@ void EulerElemBase::calculate_differential_operator_matrix
         dB_mat[i].left_multiply(tmp_mat2, tmp_mat);
         LS_operator.add(1.0, tmp_mat2);  // A_i^T dB/dx_i
         
-        dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
 
         if (_if_full_linearization)
         {
@@ -2219,38 +2344,14 @@ void EulerElemBase::calculate_differential_operator_matrix
         }
     }
     
-    
-    // TODO: divergence of diffusive flux
-    
-    // add the velocity and calculate the numerator of the discontinuity
-    // capturing term coefficient
-    //vec2 += c.elem_solution; // add velocity TODO: how to get the
-    // velocity for all calls to this method
-    A_inv_entropy.vector_mult(vec1, vec2);
-    discontinuity_val = vec1.dot(vec2); // this is the numerator term
-    
-    // now evaluate the dissipation factor for the discontinuity capturing term
-    // this is the denominator term
-    
-    Real val1 = 0.0;
-    for (unsigned int i=0; i<dim; i++)
-    {
-        vec1.zero();
-        tmp_mat.zero();
-        
-        for (unsigned int j=0; j<dim; j++)
-            vec1.add(dxi_dX(i, j), diff_vec[j]);
-        
-        // calculate the value of denominator
-        A_inv_entropy.vector_mult(vec2, vec1);
-        val1 += vec1.dot(vec2);
-    }
-    
-    //    // now calculate the discontinuity capturing operator
-    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 0.0))
-        discontinuity_val = sqrt(discontinuity_val/val1);
-    else
-        discontinuity_val = 0.0;
+    calculate_aliabadi_discontinuity_operator(vars, qp, c, sol, elem_solution,
+                                              dB_mat, Ai_Bi_advection,
+                                              discontinuity_val);
+
+//    calculate_yzbeta_discontinuity_operator(vars, qp, c, elem_solution,
+//                                            dB_mat, Ai_Bi_advection,
+//                                            discontinuity_val);
+
     
     // scale the LS matrix with the correct factor
     if (if_diagonal_tau)

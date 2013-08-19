@@ -31,7 +31,7 @@
 #include "libmesh/xdr_io.h"
 #include "libmesh/nemesis_io.h"
 #include "libmesh/equation_systems.h"
-#include "libmesh/euler_solver.h"
+#include "libmesh/euler2_solver.h"
 #include "libmesh/steady_solver.h"
 #include "libmesh/newton_solver.h"
 #include "libmesh/error_vector.h"
@@ -408,7 +408,7 @@ int main (int argc, char* const argv[])
     
     
     ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(system);
-    EulerSolver *core_time_solver = new EulerSolver(system);
+    Euler2Solver *core_time_solver = new Euler2Solver(system);
     
     timesolver->quiet              = infile("timesolver_solver_quiet", true);
     timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);

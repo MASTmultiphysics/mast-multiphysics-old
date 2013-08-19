@@ -218,6 +218,22 @@ protected:
                                        DenseMatrix<Real>& tau,
                                        std::vector<DenseMatrix<Real> >& tau_sens);
     
+    void calculate_aliabadi_discontinuity_operator
+    (const std::vector<unsigned int>& vars, const unsigned int qp,
+     FEMContext& c,  const PrimitiveSolution& sol,
+     const DenseVector<Real>& elem_solution,
+     const std::vector<FEMOperatorMatrix>& dB_mat,
+     const DenseMatrix<Real>& Ai_Bi_advection,
+     double& discontinuity_val );
+
+    
+    void calculate_yzbeta_discontinuity_operator
+    (const std::vector<unsigned int>& vars, const unsigned int qp,
+     FEMContext& c, const DenseVector<Real>& elem_solution,
+     const std::vector<FEMOperatorMatrix>& dB_mat,
+     const DenseMatrix<Real>& Ai_Bi_advection,
+     double& discontinuity_val );
+    
     
     void calculate_differential_operator_matrix
     (const std::vector<unsigned int>& vars, const unsigned int qp,
@@ -226,7 +242,6 @@ protected:
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const std::vector<DenseMatrix<Real> >& Ai_advection,
      const DenseMatrix<Real>& Ai_Bi_advection,
-     const DenseMatrix<Real>& A_inv_entropy,
      const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
      DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
      Real& discontinuity_val);

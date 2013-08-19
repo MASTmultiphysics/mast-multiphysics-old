@@ -178,9 +178,9 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseMatrix<Real> > Ai_advection(dim);
     FEMOperatorMatrix B_mat;
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, A_entropy,
-    A_inv_entropy, tmp_mat_n1n2, tmp_mat_n2n2,
-    tmp_mat_n2n1, tmp_mat_n1n1, A_sens, stress_tensor, dcons_dprim, dprim_dcons;
+    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection,
+    tmp_mat_n1n2, tmp_mat_n2n2, tmp_mat_n2n1, tmp_mat_n1n1,
+    A_sens, stress_tensor, dcons_dprim, dprim_dcons;
     DenseVector<Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
     temp_grad, flux_real, tmp_vec3_n2_real;
     DenseVector<Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1,
@@ -189,7 +189,6 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
     Ai_Bi_advection.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
     stress_tensor.resize(dim, dim);
-    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
     tmp_vec3_n2.resize(n_dofs);
     conservative_sol.resize(dim+2); temp_grad.resize(dim); tmp_vec4_n1.resize(dim+2);
@@ -252,9 +251,6 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             this->calculate_advection_flux_jacobian( i_dim, primitive_sol,
                                                     Ai_advection[i_dim] );
         
-        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy,
-                                                   A_inv_entropy );
-
         Ai_Bi_advection.zero();
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -273,8 +269,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         if (_if_update_stabilization_per_quadrature_point || (qp == 0))
             this->calculate_differential_operator_matrix
             (vars, qp, c, ref_sol, primitive_sol, B_mat,
-             dB_mat, Ai_advection, Ai_Bi_advection,
-             A_inv_entropy, flux_jacobian_sens,
+             dB_mat, Ai_advection, Ai_Bi_advection, flux_jacobian_sens,
              LS_mat, LS_sens, diff_val);
         
         // the discontinuity capturing term is reused from the steady solution

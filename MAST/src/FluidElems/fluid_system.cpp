@@ -242,8 +242,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseMatrix<Real> >  Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, A_entropy,
-    A_inv_entropy, tmp_mat_n1n1,
+    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat2_n2n2, tmp_mat3, A_sens, stress_tensor,
     dprim_dcons, dcons_dprim;
     
@@ -252,7 +251,6 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);
-    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
     tmp_mat_n1n2.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
     stress_tensor.resize(dim, dim); dprim_dcons.resize(dim+2, dim+2);
     dcons_dprim.resize(dim+2, dim+2);
@@ -307,8 +305,6 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             this->calculate_advection_flux_jacobian ( i_dim, primitive_sol,
                                                      Ai_advection[i_dim] );
         
-        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy,
-                                                   A_inv_entropy );
         
         
         if (_if_viscous)
@@ -342,8 +338,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
             (vars, qp, c,
              c.get_elem_solution(), primitive_sol,
              B_mat, dB_mat, Ai_advection,
-             Ai_Bi_advection, A_inv_entropy,
-             flux_jacobian_sens,
+             Ai_Bi_advection, flux_jacobian_sens,
              LS_mat, LS_sens, diff_val);
         
         if (if_use_stored_dc_coeff)
@@ -990,13 +985,14 @@ bool EulerSystem::mass_residual (bool request_jacobian,
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseMatrix<Real> > Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, A_entropy, A_inv_entropy, tmp_mat_n1n2,
+    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
     tmp_mat2_n2n2, tmp_mat3;
     DenseVector<Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol;
-    LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs); tmp_mat2_n2n2.resize(n_dofs, n_dofs);
-    Ai_Bi_advection.resize(dim+2, n_dofs); A_inv_entropy.resize(dim+2, dim+2);
-    A_entropy.resize(dim+2, dim+2); tmp_mat_n1n2.resize(dim+2, n_dofs);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
+    LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
+    tmp_mat2_n2n2.resize(n_dofs, n_dofs);
+    Ai_Bi_advection.resize(dim+2, n_dofs);  tmp_mat_n1n2.resize(dim+2, n_dofs);
+    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
+    conservative_sol.resize(dim+2);
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
@@ -1026,9 +1022,6 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             this->calculate_advection_flux_jacobian ( i_dim, primitive_sol,
                                                      Ai_advection[i_dim] );
         
-        this->calculate_entropy_variable_jacobian ( primitive_sol, A_entropy,
-                                                   A_inv_entropy );
-        
         Ai_Bi_advection.zero();
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -1041,7 +1034,7 @@ bool EulerSystem::mass_residual (bool request_jacobian,
             this->calculate_differential_operator_matrix
             (vars, qp, c, c.get_elem_fixed_solution(),
              primitive_sol, B_mat, dB_mat,
-             Ai_advection, Ai_Bi_advection, A_inv_entropy,
+             Ai_advection, Ai_Bi_advection,
              flux_jacobian_sens, LS_mat, LS_sens, diff_val);
         
         // Galerkin contribution to velocity
