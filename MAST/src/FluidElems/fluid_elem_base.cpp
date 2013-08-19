@@ -2243,8 +2243,13 @@ void EulerElemBase::calculate_yzbeta_discontinuity_operator
     c.get_element_fe(vars[0], fe);
     const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
 
-    Gradient dN,
-    drho = c.interior_gradient(vars[0], qp); // gradient of density
+    Point dN, drho;
+    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+    {
+        vec1.zero();
+        dB_mat[i_dim].vector_mult(vec1, elem_solution);
+        drho(i_dim) = vec1(0);
+    }
     
     Real drho_norm = drho.size(), h = 0;
 
