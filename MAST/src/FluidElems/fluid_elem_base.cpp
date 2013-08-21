@@ -2309,10 +2309,11 @@ void EulerElemBase::calculate_differential_operator_matrix
     
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
-    if_diagonal_tau = this->calculate_aliabadi_tau_matrix
-    (vars, qp, c, sol, tau, tau_sens);
-    //if_diagonal_tau = this->calculate_barth_tau_matrix
+    
+    //if_diagonal_tau = this->calculate_aliabadi_tau_matrix
     //(vars, qp, c, sol, tau, tau_sens);
+    if_diagonal_tau = this->calculate_barth_tau_matrix
+    (vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)

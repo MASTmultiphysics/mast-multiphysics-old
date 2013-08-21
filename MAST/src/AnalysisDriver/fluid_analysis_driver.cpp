@@ -128,7 +128,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main_fluid (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -688,13 +688,12 @@ int main_fluid (int argc, char* const argv[])
         // Advance to the next timestep in a transient problem
         system.time_solver->advance_timestep();
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        sol_norm = timesolver->_xdot_linf_approx;
+        sol_norm = timesolver->_x_dot_norm_old;
 #endif
 
         // check for termination criteria
         t_step++;
 
-        libMesh::out << " Convergence monitor: L-infty norm: " << sol_norm << std::endl;
         if (((t_step >= n_timesteps) || (sol_norm < terminate_tolerance)) &&
             (amr_steps == 0))
         {

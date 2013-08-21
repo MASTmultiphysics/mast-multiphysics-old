@@ -20,15 +20,15 @@ n_iters_per_update(10),
 _iter_counter(n_iters_per_update),
 growth_exponent(1.2),
 min_growth(0.25),
-_t1(0.),
-_t2(0.),
-_t3(0.),
-_sol_xinf_t1(0.),
-_sol_xinf_t2(0.),
-_sol_xinf_t3(0.),
-_xdot_linf_approx(1.0e10),
+_t_old(s.time),
+_x_dot_norm_old(0.),
 _first_solve(true)
 {
+    // add two vectors to the system for storing old solution and
+    // velocity estimation
+    _x_old = &(s.add_vector("x_old"));
+    _x_dot = &(s.add_vector("x_dot"));
+    
     // We start with a reasonable time solver: implicit Euler
     core_time_solver.reset(new Euler2Solver(s));
 }
@@ -48,31 +48,30 @@ void ResidualBaseAdaptiveTimeSolver::solve()
     libmesh_assert(this->n_iters_per_update > 2); // need information from atleast three iterations to adapt
 
     // set the counter only for the first solve
-    if (_first_solve)
-    {
+    Real x_dot_norm = 1.0e10; // an arbitrary norm to begin with
+    if (_first_solve) {
         _iter_counter = this->n_iters_per_update;
         _first_solve = false;
     }
-    
-    // get the norms for this time step
-    _t1 = _t2;
-    _t2 = _t3;
-    _t3 = this->_system.time;
-    _sol_xinf_t1 = _sol_xinf_t2;
-    _sol_xinf_t2 = _sol_xinf_t3;
-    _sol_xinf_t3 = this->_system.solution->linfty_norm();
-    if ((_t3-_t2) > 0.)
-        _xdot_linf_approx = fabs( (_sol_xinf_t3-_sol_xinf_t2) / (_t3-_t2) );
-    
+    else { // update the solution velocity and old solution
+        *_x_dot = *_system.solution;
+        _x_dot->add(-1., *_x_old);
+        _x_dot->scale(1.0/(_system.time - _t_old));
+        _x_dot->close();
+        x_dot_norm = _x_dot->linfty_norm();
+    }
+
+    if (!quiet)
+        libMesh::out << "x_dot norm (old):  " << _x_dot_norm_old
+        << "\nx_dot norm (curr.):  " << x_dot_norm << std::endl;
+
     // if the time step update is needed, do that now
     if (_iter_counter == 0)
     {
         if (!quiet)
             libMesh::out << "\n ===  Computing new time step ====" << std::endl;
-
-        const Real dx1 = fabs(_sol_xinf_t2 - _sol_xinf_t1)/(_t2 - _t1),
-        dx2 = fabs(_sol_xinf_t3 - _sol_xinf_t2)/(_t3 - _t2);
-        Real growth_factor = pow( dx1/dx2 , growth_exponent);
+        
+        Real growth_factor = pow( _x_dot_norm_old/x_dot_norm , growth_exponent);
         
         if (growth_factor > this->max_growth)
         {
@@ -112,6 +111,13 @@ void ResidualBaseAdaptiveTimeSolver::solve()
 
         _iter_counter = this->n_iters_per_update;
     }
+    
+    // copy current values to "old"
+    _t_old = _system.time;
+    _x_dot_norm_old = x_dot_norm;
+    *_x_old = *_system.solution;
+    _x_old->close();
+    
 
     // now advance the time step
     core_time_solver->solve();

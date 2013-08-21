@@ -52,15 +52,19 @@ public:
 
     Real growth_exponent, min_growth;
 
-    Real _t1, _sol_xinf_t1;
-
-    Real _t2, _sol_xinf_t2;
-
-    Real _t3, _sol_xinf_t3;
-    
-    Real _xdot_linf_approx;
+    Real _t_old, _x_dot_norm_old;
 
     bool _first_solve;
+    
+    /*!
+     *    system solution from previous time-step
+     */
+    NumericVector<Number>* _x_old;
+    
+    /*!
+     *    system velocity estimate
+     */
+    NumericVector<Number>* _x_dot;
 };
 
 
