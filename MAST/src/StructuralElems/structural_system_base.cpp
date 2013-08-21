@@ -519,11 +519,10 @@ void assemble_beam_matrices(EquationSystems& es,
             for (unsigned int j=0; j<12; j++)
                 Ke(i, j) = elem_mat.getVal(i, j);
         
-        beam.calculateConsistentMassMatrix(beam_elem_mat);
-        beam.transformMatrixToGlobalSystem(beam_elem_mat, elem_mat);
-        for (unsigned int i=0; i<12; i++)
-            for (unsigned int j=0; j<12; j++)
-                Me(i, j) = elem_mat.getVal(i, j);
+        beam.calculateDiagonalMassMatrix(beam_elem_vec);
+        beam.transformVectorToGlobalSystem(beam_elem_vec, elem_vec);
+        for (unsigned int j=0; j<12; j++)
+            Me(j, j) = elem_vec.getVal(j);
         
         // clear the pointers
         elem.reset();
