@@ -128,7 +128,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main (int argc, char* const argv[])
+int main_fluid (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
@@ -346,11 +346,12 @@ int main (int argc, char* const argv[])
         mesh.set_mesh_dimension(dim);
         const std::string gmsh_input_file =
         infile("gmsh_input", std::string("mesh.msh"));
-        GmshIO gmsh_io(mesh);
-        gmsh_io.read(gmsh_input_file);
-        // ExodusII_IO gmsh_io(mesh);
+        //GmshIO gmsh_io(mesh);
+        //gmsh_io.read(gmsh_input_file);
+        ExodusII_IO exodus_io(mesh);
         // Nemesis_IO gmsh_io(mesh);
-        // gmsh_io.read_parallel(gmsh_input_file);
+        exodus_io.read(gmsh_input_file);
+        //exodus_io.read_parallel(gmsh_input_file);
         mesh.prepare_for_use();
     }
 #else
@@ -704,9 +705,9 @@ int main (int argc, char* const argv[])
         // Write out this timestep if we're requested to
         if ((t_step%write_interval == 0) || !continue_iterations)
         {
-            fluid_post.postprocess();
-            system.assemble_qoi(); // calculate the quantities of interest
-            system.postprocess(); // set the qois to the post-process variables
+            //fluid_post.postprocess();
+            //system.assemble_qoi(); // calculate the quantities of interest
+            //system.postprocess(); // set the qois to the post-process variables
 
             std::ostringstream file_name, b_file_name;
             

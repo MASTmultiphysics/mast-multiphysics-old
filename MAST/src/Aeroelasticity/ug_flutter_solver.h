@@ -23,7 +23,7 @@ class UGFlutterSolver: public FlutterSolverBase
 public:
     UGFlutterSolver():
     FlutterSolverBase(),
-    k_ref_range(std::pair<Real, Real>(0.01, 2.0)),
+    k_ref_range(std::pair<Real, Real>(0.00, 1.)),
     _previous_k_ref(0.)
     {}
     
@@ -83,12 +83,12 @@ bool UGFlutterSolver::find_next_root()
     
     // now march from the upper limit to the lower to find the roots
     Real current_k_ref = active_k_ref_range.second,
-    delta_k_ref = (active_k_ref_range.second-active_k_ref_range.first)/40;
+    delta_k_ref = (active_k_ref_range.second-active_k_ref_range.first)/20;
     bool continue_finding = true, found_root = false;
     
     ComplexMatrixX m, k;
     
-    while (current_k_ref >= active_k_ref_range.first)
+    while (current_k_ref - active_k_ref_range.first >= -1.0e-4)
     {
         initialize_matrices(current_k_ref, m, k);
         LAPACK_ZGGEV ges;

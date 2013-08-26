@@ -504,7 +504,7 @@ void assemble_beam_matrices(EquationSystems& es,
         fe.reinit(*elem);
         
         beam.initialize(*elem, fe, q_rule_bending,
-                        72.0e9, 0.33, 2700., 6.667e-9, 1.6667e-9, 2.0e-4);
+                        72.0e9, 0.33, 2700., 8.33333E-08, 8.33333E-08, 0.01);
         
         FESystem::Numerics::DenseMatrix<Real> beam_elem_mat, elem_mat;
         FESystem::Numerics::LocalVector<Real> beam_elem_vec, elem_vec;
