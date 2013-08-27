@@ -110,7 +110,7 @@ int main (int argc, char* const argv[])
     // *****************************************
     // now initialize the structural system
     // *****************************************
-    SerialMesh structural_mesh(init.comm());
+    ParallelMesh structural_mesh(init.comm());
     structural_mesh.read("saved_structural_mesh.xdr");
     
     EquationSystems structural_equation_systems (structural_mesh);

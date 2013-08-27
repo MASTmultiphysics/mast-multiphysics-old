@@ -74,7 +74,8 @@ protected:
     /*!
      *   this serializes the mesh for use in interpolation
      */
-    std::auto_ptr<MeshSerializer> _mesh_serializer;
+    std::auto_ptr<MeshSerializer> _nonlinear_mesh_serializer;
+    std::auto_ptr<MeshSerializer> _linear_mesh_serializer;
 
 };
 
@@ -86,12 +87,15 @@ SurfacePressureLoad::init(System& linearized_sys)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
     
-    MeshBase& mesh = linearized_sys.get_mesh();
-    _mesh_serializer.reset(new MeshSerializer(mesh, true));
+    MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
+    _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
 
     System& nonlin_sys =
     linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
-
+    MeshBase& nonlinear_sys_mesh = nonlin_sys.get_mesh();
+    _nonlinear_mesh_serializer.reset(new MeshSerializer(nonlinear_sys_mesh, true));
+    
+    
     _dim = linearized_sys.n_vars()-2;
     
     // copy the pointer for flight condition data
@@ -114,9 +118,9 @@ SurfacePressureLoad::init(System& linearized_sys)
     
     // now localize the give solution to this objects's vector
     nonlin_sys.solution->localize
-    (*nonlin_sys.solution, nonlin_sys.get_dof_map().get_send_list());
+    (*_sol_nonlinear, nonlin_sys.get_dof_map().get_send_list());
     linearized_sys.solution->localize
-    (*linearized_sys.solution, linearized_sys.get_dof_map().get_send_list());
+    (*_sol_linear, linearized_sys.get_dof_map().get_send_list());
     
     // if the mesh function has not been created so far, initialize it
     if (!_function_nonlinear.get())
@@ -137,7 +141,7 @@ SurfacePressureLoad::init(System& linearized_sys)
         
         _function_nonlinear.reset
         (new MeshFunction( nonlin_sys.get_equation_systems(),
-                          *nonlin_sys.solution, nonlin_sys.get_dof_map(),
+                          *_sol_nonlinear, nonlin_sys.get_dof_map(),
                           vars));
         _function_nonlinear->init();
         
@@ -153,7 +157,7 @@ SurfacePressureLoad::init(System& linearized_sys)
 
         _function_linear.reset
         (new MeshFunction( linearized_sys.get_equation_systems(),
-                          *linearized_sys.solution,
+                          *_sol_linear,
                           linearized_sys.get_dof_map(),
                           vars));
         _function_linear->init();
@@ -170,6 +174,7 @@ SurfacePressureLoad::surface_pressure(const Point& p,
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_function_nonlinear.get()); // should be initialized before this call
+    libmesh_assert(_function_linear.get()); // should be initialized before this call
 
     
     cp = 0.; dcp = 0.;
@@ -179,7 +184,7 @@ SurfacePressureLoad::surface_pressure(const Point& p,
     DenseVector<Real> v_nonlin_real;
     (*_function_nonlinear)(p, 0., v_nonlin);
     (*_function_linear)(p, 0., v_lin);
-    
+        
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
     
