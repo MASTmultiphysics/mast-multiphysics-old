@@ -104,7 +104,7 @@ FlexibleSurfaceMotion::init(Real freq, Real phase,
     }
     
     // now localize the give solution to this objects's vector
-    sol.localize(*_sol, system.get_dof_map().get_send_list());
+    sol.localize(*_sol);
     
     // if the mesh function has not been created so far, initialize it
     if (!_function.get())

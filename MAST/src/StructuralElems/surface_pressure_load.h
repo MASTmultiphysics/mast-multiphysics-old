@@ -117,10 +117,8 @@ SurfacePressureLoad::init(System& linearized_sys)
     }
     
     // now localize the give solution to this objects's vector
-    nonlin_sys.solution->localize
-    (*_sol_nonlinear, nonlin_sys.get_dof_map().get_send_list());
-    linearized_sys.solution->localize
-    (*_sol_linear, linearized_sys.get_dof_map().get_send_list());
+    nonlin_sys.solution->localize(*_sol_nonlinear);
+    linearized_sys.solution->localize(*_sol_linear);
     
     // if the mesh function has not been created so far, initialize it
     if (!_function_nonlinear.get())
