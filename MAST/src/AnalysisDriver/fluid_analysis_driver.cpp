@@ -247,11 +247,18 @@ int main_fluid (int argc, char* const argv[])
                             side_on_slip_wall[i_node] = true;
                     }
                     if (dim == 3)
-                        if ((n(2)>0.) || (n(0) < x0) || (n(0)>x1) || (n(1) < y0) || (n(1)>y1))
-                        {
+                    {
+                        if ((n(2)==0.) && //bottom face
+                            (n(0) >= x0-1.0e-6) && (n(0) <= x0+chord+1.0e-6) && // x-coord
+                            (n(1) >= y0-1.0e-6) && (n(1) <= y0+span+1.0e-6))
+                            side_on_panel[i_node] = true;
+                        
+                        if ((n(2)==0.) &&
+                            ((n(0) <= x0+1.0e-6) || (n(0) >= x0+chord-1.0e-6) || // x-coord
+                             (n(1) <= y0+1.0e-6) || (n(1) >= y0+span-1.0e-6)))
                             side_on_slip_wall[i_node] = true;
-                            break;
-                        }
+                        
+                    }
                 }
                 
                 // check for side on panel

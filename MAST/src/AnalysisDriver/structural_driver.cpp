@@ -104,16 +104,10 @@ int main_modal (int argc, char* const argv[])
     LibMeshInit init (argc, argv);
     
     SerialMesh mesh(init.comm());
-    mesh.set_mesh_dimension(2);
 
     GetPot infile("system_input.in");
     
-//    MeshTools::Generation::build_square (mesh,
-//                                         10,
-//                                         10,
-//                                         0., 1.,
-//                                         0., 1.,
-//                                         TRI3);
+    const unsigned int dim = infile("dimension", 0);
 
     const Real pi = acos(-1.),
     x_length= infile("x_length", 10.),
@@ -125,10 +119,32 @@ int main_modal (int argc, char* const argv[])
     thickness = 0.5*t_by_c*chord,
     x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
 
-    MeshTools::Generation::build_line (mesh,
-                                       40,
-                                       x0, x0+chord,
-                                       EDGE2);
+
+    mesh.set_mesh_dimension(dim-1);
+    
+    switch (dim-1) {
+        case 1:
+            MeshTools::Generation::build_line (mesh,
+                                               40,
+                                               x0, x0+chord,
+                                               EDGE2);
+            break;
+
+        case 2:
+            MeshTools::Generation::build_square (mesh,
+                                                 40,
+                                                 40,
+                                                 x0, x0+chord,
+                                                 y0, y0+chord,
+                                                 TRI3);
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+
+
 
     mesh.prepare_for_use();
     
@@ -153,7 +169,6 @@ int main_modal (int argc, char* const argv[])
     
     // Give the system a pointer to the matrix assembly
     // function defined below.
-    eigen_system.attach_assemble_function (assemble_beam_matrices);
     
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
@@ -176,7 +191,23 @@ int main_modal (int argc, char* const argv[])
     
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
     std::set<unsigned int> dirichlet_dof_ids;
-    get_beam_dirichlet_dofs(equation_systems, "Eigensystem", dirichlet_dof_ids);
+    
+    switch (dim-1) {
+        case 1:
+            eigen_system.attach_assemble_function (assemble_beam_matrices);
+            get_beam_dirichlet_dofs(equation_systems, "Eigensystem", dirichlet_dof_ids);
+            break;
+            
+        case 2:
+            eigen_system.attach_assemble_function (assemble_plate_matrices);
+            get_plate_dirichlet_dofs(equation_systems, "Eigensystem", dirichlet_dof_ids);
+            break;
+
+        default:
+            libmesh_error();
+            break;
+    }
+
     eigen_system.initialize_condensed_dofs(dirichlet_dof_ids);
     
     // Solve the system "Eigensystem".

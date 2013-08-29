@@ -404,7 +404,7 @@ void assemble_plate_matrices(EquationSystems& es,
         fe.reinit(*elem);
         
         dkt_plate.initialize(*elem, fe, fe_tri6, q_rule_bending, q_rule_bending,
-                             72.0e9, 0.33, 2700., 0.002);
+                             72.0e9, 0.33, 2700., 0.01);
         
         FESystem::Numerics::DenseMatrix<Real> plate_elem_mat, elem_mat;
         FESystem::Numerics::LocalVector<Real> plate_elem_vec, elem_vec;
@@ -419,22 +419,26 @@ void assemble_plate_matrices(EquationSystems& es,
             for (unsigned int j=0; j<18; j++)
                 Ke(i, j) = elem_mat.getVal(i, j);
         
-        dkt_plate.calculateConsistentMassMatrix(plate_elem_mat);
-        // put small values on the diagonal for rotation dofs
-        for (unsigned int i=0; i<6; i++)
-            plate_elem_mat.setVal(3+i, 3+i, 1.0);
-        dkt_plate.transformMatrixToGlobalSystem(plate_elem_mat, elem_mat);
-        for (unsigned int i=0; i<18; i++)
-            for (unsigned int j=0; j<18; j++)
-                Me(i, j) = elem_mat.getVal(i, j);
+        dkt_plate.calculateDiagonalMassMatrix(plate_elem_vec);
+        dkt_plate.transformVectorToGlobalSystem(plate_elem_vec, elem_vec);
+        for (unsigned int j=0; j<18; j++)
+            Me(j, j) = elem_vec.getVal(j);
         
         // clear the pointers
         elem.reset();
         for (unsigned int i=0; i<3; i++)
             delete nodes[i];
         
-        matrix_A.add_matrix (Me, dof_indices);
-        matrix_B.add_matrix (Ke, dof_indices);
+        if (es.parameters.get<bool>("if_exchange_AB_matrices"))
+        {
+            matrix_A.add_matrix (Me, dof_indices);
+            matrix_B.add_matrix (Ke, dof_indices);
+        }
+        else
+        {
+            matrix_A.add_matrix (Ke, dof_indices);
+            matrix_B.add_matrix (Me, dof_indices);
+        }
     }
 }
 
@@ -566,18 +570,9 @@ void get_plate_dirichlet_dofs(EquationSystems& es,
     
     const DofMap& dof_map = eigen_system.get_dof_map();
     
-    // This vector will hold the degree of freedom indices for
-    // the element.  These define where in the global system
-    // the element degrees of freedom get mapped.
     std::vector<dof_id_type> dof_indices;
     
     
-    // Now we will loop over all the elements in the mesh that
-    // live on the local processor. We will compute the element
-    // matrix and right-hand-side contribution.  In case users
-    // later modify this program to include refinement, we will
-    // be safe and will only consider the active elements;
-    // hence we use a variant of the \p active_elem_iterator.
     MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     
@@ -644,18 +639,9 @@ void get_beam_dirichlet_dofs(EquationSystems& es,
     
     const DofMap& dof_map = eigen_system.get_dof_map();
     
-    // This vector will hold the degree of freedom indices for
-    // the element.  These define where in the global system
-    // the element degrees of freedom get mapped.
     std::vector<dof_id_type> dof_indices;
     
     
-    // Now we will loop over all the elements in the mesh that
-    // live on the local processor. We will compute the element
-    // matrix and right-hand-side contribution.  In case users
-    // later modify this program to include refinement, we will
-    // be safe and will only consider the active elements;
-    // hence we use a variant of the \p active_elem_iterator.
     MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     
