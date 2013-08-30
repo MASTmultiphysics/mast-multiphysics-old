@@ -61,19 +61,19 @@ int main (int argc, char* const argv[])
     ParallelMesh fluid_mesh(init.comm());
     fluid_mesh.read("saved_mesh.xdr");
     EquationSystems fluid_equation_systems (fluid_mesh);
-    FrequencyDomainLinearizedFluidSystem & fluid_system =
+    FrequencyDomainLinearizedFluidSystem & linearized_fluid_system =
     fluid_equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem");
-    fluid_system.flight_condition = &flight_cond;
-    fluid_system.time_solver =
-    AutoPtr<TimeSolver>(new SteadySolver(fluid_system));
-    fluid_system.time_solver->quiet = false;
+    linearized_fluid_system.flight_condition = &flight_cond;
+    linearized_fluid_system.time_solver =
+    AutoPtr<TimeSolver>(new SteadySolver(linearized_fluid_system));
+    linearized_fluid_system.time_solver->quiet = false;
     // read the fluid system from the saved file
     fluid_equation_systems.read<Real>("saved_solution.xdr",
                                       libMeshEnums::DECODE);
     // now initilaize the nonlinear solution
-    fluid_system.localize_fluid_solution();
-    fluid_system.extra_quadrature_order = 2;
+    linearized_fluid_system.localize_fluid_solution();
+    linearized_fluid_system.extra_quadrature_order = 2;
     fluid_equation_systems.parameters.set<bool>("if_reduced_freq") =
     infile("if_reduced_freq", false);
     
@@ -82,7 +82,7 @@ int main (int argc, char* const argv[])
     fluid_equation_systems.print_info();
     
     NewtonSolver &solver = dynamic_cast<NewtonSolver&>
-    (*(fluid_system.time_solver->diff_solver()));
+    (*(linearized_fluid_system.time_solver->diff_solver()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
     solver.brent_line_search = false;
@@ -141,7 +141,10 @@ int main (int argc, char* const argv[])
     structural_model.init();
     
     // attach the fluid and structural systems to the models
-    CFDAerodynamicModel aero_model(fluid_system);
+    System& nonlinear_fluid_system =
+    fluid_equation_systems.get_system<System>("EulerSystem");
+    CFDAerodynamicModel aero_model(nonlinear_fluid_system,
+                                   linearized_fluid_system);
     CoupledFluidStructureSystem
     coupled_system(aero_model, structural_model);
 

@@ -26,7 +26,8 @@ public:
     CoupledFluidStructureSystem(CFDAerodynamicModel& aero,
                                 FEMStructuralModel& structure):
     CoupledAeroStructuralModel(aero, structure),
-    surface_pressure(new SurfacePressureLoad),
+    surface_pressure(new SurfacePressureLoad(aero.nonlinear_fluid_system,
+                                             aero.linearized_fluid_system)),
     surface_motion(new FlexibleSurfaceMotion(structure.structural_system))
     { }
 
@@ -59,10 +60,10 @@ protected:
 };
 
 
-void assemble_beam_force_vec(System& sys,
-                             SurfacePressureLoad& press,
-                             SurfaceMotionBase& motion,
-                             NumericVector<Number>& fvec);
+void assemble_force_vec(System& sys,
+                        SurfacePressureLoad& press,
+                        SurfaceMotionBase& motion,
+                        NumericVector<Number>& fvec);
 
 inline
 bool
@@ -89,15 +90,16 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
     {
         projected_force.setZero(structural_basis.n());
         surface_motion->init(k_ref, 0., structural_basis.basis(j_basis));
-        aero.fluid_system.perturbed_surface_motion = surface_motion.get();
-        aero.fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
+        aero.linearized_fluid_system.perturbed_surface_motion = surface_motion.get();
+        aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
 
-        surface_pressure->init(aero.fluid_system);
+        surface_pressure->init(*aero.nonlinear_fluid_system.solution,
+                               *aero.linearized_fluid_system.solution);
         
-        assemble_beam_force_vec(structure.structural_system,
-                                *surface_pressure,
-                                *surface_motion,
-                                f_vec); // A_FS X_F
+        assemble_force_vec(structure.structural_system,
+                           *surface_pressure,
+                           *surface_motion,
+                           f_vec); // A_FS X_F
         structure.basis_matrix->vector_mult_transpose
         (projected_force, f_vec); // Phi^T A_FS X_F
 

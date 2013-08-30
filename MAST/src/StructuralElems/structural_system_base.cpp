@@ -692,7 +692,7 @@ void get_beam_dirichlet_dofs(EquationSystems& es,
 
 
 
-void assemble_beam_force_vec(System& sys,
+void assemble_force_vec(System& sys,
                              SurfacePressureLoad& surf_press,
                              SurfaceMotionBase& surf_motion,
                              NumericVector<Number>& fvec)
@@ -726,7 +726,7 @@ void assemble_beam_force_vec(System& sys,
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     Number press, dpress;
     DenseVector<Number> utrans, dn_rot; utrans.resize(3); dn_rot.resize(3);
-    Point normal; normal.zero(); normal(1) = -1.; // y_vec
+    Point normal; normal.zero(); normal(dim) = -1.;
     
     fvec.zero(); fvec.close();
     

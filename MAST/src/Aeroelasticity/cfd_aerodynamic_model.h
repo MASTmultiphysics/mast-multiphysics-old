@@ -23,9 +23,11 @@
 class CFDAerodynamicModel: public AerodynamicModel
 {
 public:
-    CFDAerodynamicModel(FrequencyDomainLinearizedFluidSystem& system):
+    CFDAerodynamicModel(System& nl_sys,
+                        FrequencyDomainLinearizedFluidSystem& lin_sys):
     AerodynamicModel(),
-    fluid_system(system)
+    nonlinear_fluid_system(nl_sys),
+    linearized_fluid_system(lin_sys)
     { }
     
     virtual ~CFDAerodynamicModel()
@@ -49,10 +51,15 @@ public:
     
 
     /*!
+     *   Nonlinear fluid system
+     */
+    System& nonlinear_fluid_system;
+
+    /*!
      *   The small-disturbance fluid system object that provides the basis
      *   of calculations for this model.
      */
-    FrequencyDomainLinearizedFluidSystem& fluid_system;
+    FrequencyDomainLinearizedFluidSystem& linearized_fluid_system;
     
 };
 

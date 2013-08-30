@@ -25,21 +25,49 @@
 class SurfacePressureLoad
 {
 public:
-    SurfacePressureLoad():
+    SurfacePressureLoad(System& nl_sys,
+                        System& lin_sys):
+    nonlinear_sys(nl_sys),
+    linearized_sys(lin_sys),
     _flt_cond(NULL),
     _dim(0)
-    { }
+    {
+        MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
+        _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
+        
+        System& nonlin_sys =
+        linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
+        MeshBase& nonlinear_sys_mesh = nonlin_sys.get_mesh();
+        _nonlinear_mesh_serializer.reset(new MeshSerializer(nonlinear_sys_mesh, true));
+        
+        
+        _dim = linearized_sys.n_vars()-2;
+        
+        // copy the pointer for flight condition data
+        _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>
+        (lin_sys).flight_condition;
+        
+
+        
+    }
     
     virtual ~SurfacePressureLoad()
     { }
     
-    virtual void init(System& linearized_sys);
+    virtual void init(NumericVector<Number>& nonlinear_sol,
+                      NumericVector<Number>& linearized_sol);
     
     // calculation in frequency domain
     virtual void surface_pressure(const Point& p,
                                   Number& cp, Number& dcp);
     
 protected:
+    
+    /*!
+     *   systems that this is attacehd to
+     */
+    System& nonlinear_sys;
+    System& linearized_sys;
     
     /*!
      *   mesh function that interpolates the nonlinear solution
@@ -83,63 +111,54 @@ protected:
 
 inline
 void
-SurfacePressureLoad::init(System& linearized_sys)
+SurfacePressureLoad::init(NumericVector<Number>& nonlinear_sol,
+                          NumericVector<Number>& linearized_sol)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    libmesh_assert_equal_to(nonlinear_sol.size(),
+                            nonlinear_sys.solution->size());
+    libmesh_assert_equal_to(linearized_sol.size(),
+                            linearized_sys.solution->size());
     
-    MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
-    _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
-
-    System& nonlin_sys =
-    linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
-    MeshBase& nonlinear_sys_mesh = nonlin_sys.get_mesh();
-    _nonlinear_mesh_serializer.reset(new MeshSerializer(nonlinear_sys_mesh, true));
-    
-    
-    _dim = linearized_sys.n_vars()-2;
-    
-    // copy the pointer for flight condition data
-    _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>
-    (linearized_sys).flight_condition;
     
     // first initialize the solution to the given vector
     if (!_sol_nonlinear.get())
     {
         // vector to store the nonlinear solution
         _sol_nonlinear.reset
-        (NumericVector<Number>::build(nonlin_sys.comm()).release());
-        _sol_nonlinear->init(nonlin_sys.solution->size(), true, SERIAL);
+        (NumericVector<Number>::build(nonlinear_sys.comm()).release());
+        _sol_nonlinear->init(nonlinear_sol.size(), true, SERIAL);
 
         // vector to store the linear solution
         _sol_linear.reset
         (NumericVector<Number>::build(linearized_sys.comm()).release());
-        _sol_linear->init(linearized_sys.solution->size(), true, SERIAL);
+        _sol_linear->init(linearized_sol.size(), true, SERIAL);
     }
     
     // now localize the give solution to this objects's vector
-    nonlin_sys.solution->localize(*_sol_nonlinear);
-    linearized_sys.solution->localize(*_sol_linear);
+    nonlinear_sol.localize(*_sol_nonlinear);
+    linearized_sol.localize(*_sol_linear);
     
     // if the mesh function has not been created so far, initialize it
     if (!_function_nonlinear.get())
     {
         // initialize the nonlinear solution
-        unsigned int n_vars = nonlin_sys.n_vars();
+        unsigned int n_vars = nonlinear_sys.n_vars();
         libmesh_assert(linearized_sys.n_vars() == n_vars);
         
         std::vector<unsigned int> vars(_dim+2);
-        vars[0] = nonlin_sys.variable_number("rho");
-        vars[1] = nonlin_sys.variable_number("rhoux");
+        vars[0] = nonlinear_sys.variable_number("rho");
+        vars[1] = nonlinear_sys.variable_number("rhoux");
         if (_dim > 1)
-            vars[2] = nonlin_sys.variable_number("rhouy");
+            vars[2] = nonlinear_sys.variable_number("rhouy");
         if (_dim > 2)
-            vars[3] = nonlin_sys.variable_number("rhouz");
-        vars[_dim+2-1] = nonlin_sys.variable_number("rhoe");
+            vars[3] = nonlinear_sys.variable_number("rhouz");
+        vars[_dim+2-1] = nonlinear_sys.variable_number("rhoe");
         
         
         _function_nonlinear.reset
-        (new MeshFunction( nonlin_sys.get_equation_systems(),
-                          *_sol_nonlinear, nonlin_sys.get_dof_map(),
+        (new MeshFunction( nonlinear_sys.get_equation_systems(),
+                          *_sol_nonlinear, nonlinear_sys.get_dof_map(),
                           vars));
         _function_nonlinear->init();
         
