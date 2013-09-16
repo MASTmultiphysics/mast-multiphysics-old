@@ -200,7 +200,7 @@ int main_fluid (int argc, char* const argv[])
                 x_div_loc[i_div]     = infile("x_div_loc", 0., i_div);
                 x_relative_dx[i_div] = infile( "x_rel_dx", 0., i_div);
                 if (i_div < nx_divs) //  this is only till nx_divs
-                    x_divs[i_div] = infile( "x_div_nelem", 0., i_div);
+                    x_divs[i_div] = infile( "x_div_nelem", 0, i_div);
             }
             divs[0] = x_coord_divs.get();
             x_coord_divs->init(nx_divs, x_div_loc, x_relative_dx, x_divs);
@@ -214,7 +214,7 @@ int main_fluid (int argc, char* const argv[])
                 y_div_loc[i_div]     = infile("y_div_loc", 0., i_div);
                 y_relative_dx[i_div] = infile( "y_rel_dx", 0., i_div);
                 if (i_div < ny_divs) //  this is only till ny_divs
-                    y_divs[i_div] = infile( "y_div_nelem", 0., i_div);
+                    y_divs[i_div] = infile( "y_div_nelem", 0, i_div);
             }
             divs[1] = y_coord_divs.get();
             y_coord_divs->init(ny_divs, y_div_loc, y_relative_dx, y_divs);
@@ -228,7 +228,7 @@ int main_fluid (int argc, char* const argv[])
                 z_div_loc[i_div]     = infile("z_div_loc", 0., i_div);
                 z_relative_dx[i_div] = infile( "z_rel_dx", 0., i_div);
                 if (i_div < nz_divs) //  this is only till nz_divs
-                    z_divs[i_div] = infile( "z_div_nelem", 0., i_div);
+                    z_divs[i_div] = infile( "z_div_nelem", 0, i_div);
             }
             divs[2] = z_coord_divs.get();
             z_coord_divs->init(nz_divs, z_div_loc, z_relative_dx, z_divs);
@@ -440,7 +440,7 @@ int main_fluid (int argc, char* const argv[])
     system.print_jacobian_norms = infile("print_jacobian_norms", false);
     system.print_jacobians = infile("print_jacobians", false);
     //system.verify_analytic_jacobians = 1.0e-3;
-    system.extra_quadrature_order = 2;
+    system.extra_quadrature_order = infile("extra_quadrature_order", 0);
     
     // Set the time stepping options
     system.deltat = deltat;

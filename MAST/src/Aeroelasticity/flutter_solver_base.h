@@ -12,6 +12,7 @@
 // C++ includes
 #include <vector>
 #include <memory>
+#include <fstream>
 
 // MAST includes
 #include "Base/MAST_data_types.h"
@@ -25,15 +26,18 @@ public:
     FlutterRoot():
     V(0.),
     g(0.),
+    omega(0.),
     k_ref(0.),
     root(0.)
     {}
     
-    Real V, g, k_ref;
+    Real V, g, omega, k_ref;
     
     Complex root;
     
     ComplexVectorX  mode;
+    
+    RealVectorX modal_participation;
 };
 
 
@@ -42,6 +46,20 @@ class FlutterSolverBase
 {
 public:
     
+    FlightCondition* flight_condition;
+    
+    std::vector<FlutterRoot> flutter_roots;
+    
+    CoupledAeroStructuralModel* aero_structural_model;
+
+    /*!
+     *    file to which the result will be written
+     */
+    std::ofstream _output, _mode_output;
+
+    /*!
+     *    constructor for the flutter solver base object
+     */
     FlutterSolverBase()
     {}
     
@@ -58,11 +76,14 @@ public:
     }
     
     
-    FlightCondition* flight_condition;
-    
-    std::vector<FlutterRoot> flutter_roots;
-    
-    CoupledAeroStructuralModel* aero_structural_model;
+    void set_output_file(std::string& nm)
+    {
+        _output.close();
+        _output.open(nm.c_str(), std::ofstream::out);
+        std::ostringstream oss;
+        oss << "modes_" << nm;
+        _mode_output.open(oss.str().c_str(), std::ofstream::out);
+    }
 };
 
 
