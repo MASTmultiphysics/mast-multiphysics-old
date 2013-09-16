@@ -17,6 +17,7 @@
 // libMesh includes
 #include "libmesh/libmesh_config.h"
 #include "libmesh/mesh_base.h"
+#include "libmesh/mesh_generation.h"
 
 /*!
  *   This class distributes mesh points over a mesh. Input requires definition

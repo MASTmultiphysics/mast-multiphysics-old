@@ -17,6 +17,11 @@
 #include "FluidElems/fluid_newton_solver.h"
 #include "FluidElems/rigid_surface_motion.h"
 #include "FluidElems/flexible_surface_motion.h"
+#include "FluidElems/surface_motion_function.h"
+#include "Mesh/panel_mesh.h"
+#include "Mesh/gaussian_bump_mesh.h"
+#include "Mesh/ringleb_mesh.h"
+
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -44,6 +49,8 @@
 
 
 #include "Numerics/fem_operator_matrix.h"
+
+
 
 int main_fem_operator (int argc, char* const argv[])
 {
@@ -124,9 +131,6 @@ int main_fem_operator (int argc, char* const argv[])
 }
 
 
-
-
-
 // The main program.
 int main_fluid (int argc, char* const argv[])
 {
@@ -165,200 +169,126 @@ int main_fluid (int argc, char* const argv[])
     mesh_refinement.coarsen_threshold() = infile("coarsen_threshold",0.30);
     mesh_refinement.max_h_level() = infile("max_h_level",5);
     std::string strategy = infile("refine_strategy", std::string("error_fraction")),
-    error_norm = infile("error_norm", std::string("kelly")),
-    elem_type = infile("elem_type", std::string("QUAD4"));
-    
-    Real mesh_dx, mesh_dy, mesh_dz;
+    error_norm = infile("error_norm", std::string("kelly"));
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     if (if_panel_mesh)
     {
-        // first calculate the distributed points
-        std::vector<double> div_locations, relative_mesh_size_at_div, x_points, y_points, z_points;
-        std::vector<unsigned int> n_subdivs_in_div;
+        const unsigned int nx_divs = infile("nx_divs",0),
+        ny_divs = infile("ny_divs",0),
+        nz_divs = infile("nz_divs",0);
+        const Real t_by_c =  infile("t_by_c", 0.0);
+        ElemType elem_type =
+        Utility::string_to_enum<ElemType>(infile("elem_type", "QUAD4"));
+
+        std::vector<Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
+        y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
+        z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
+        std::vector<unsigned int> x_divs(nx_divs), y_divs(ny_divs), z_divs(nz_divs);
+        std::auto_ptr<MeshInitializer::CoordinateDivisions>
+        x_coord_divs (new MeshInitializer::CoordinateDivisions),
+        y_coord_divs (new MeshInitializer::CoordinateDivisions),
+        z_coord_divs (new MeshInitializer::CoordinateDivisions);
+        std::vector<MeshInitializer::CoordinateDivisions*> divs(dim);
         
-        const Real pi = acos(-1.),
-        x_length= infile("x_length", 10.),
-        y_length= infile("y_length", 10.),
-        z_length= infile("z_length", 10.),
-        t_by_c =  infile("t_by_c", 0.05),
-        chord =   infile("chord", 1.0),
-        span =    infile("span", 1.0),
-        thickness = 0.5*t_by_c*chord,
-        x0=x_length*0.5-chord*0.5, x1=x0+chord, y0=y_length*0.5-span*0.5, y1=y0+span ;
-        
-        const unsigned int
-        n_chordwise_le_divs    = infile("n_chordwise_le_divs", 10),
-        n_chordwise_panel_divs = infile("n_chordwise_panel_divs", 10),
-        n_chordwise_te_divs    = infile("n_chordwise_te_divs", 10),
-        n_spanwise_le_divs     = infile("n_spanwise_le_divs", 10),
-        n_spanwise_panel_divs  = infile("n_spanwise_panel_divs", 10),
-        n_spanwise_te_divs     = infile("n_spanwise_te_divs", 10),
-        n_vertical_divs        = infile("n_vertical_divs", 10);
-        
-        if (dim == 2)
+        // now read in the values: x-coord
+        if (nx_divs > 0)
         {
-            MeshTools::Generation::build_square (mesh,
-                                                 n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
-                                                 n_vertical_divs,
-                                                 0., x_length,
-                                                 0., y_length,
-                                                 Utility::string_to_enum<ElemType>(elem_type));
-        }
-        else if (dim == 3)
-        {
-            MeshTools::Generation::build_cube (mesh,
-                                               n_chordwise_le_divs+n_chordwise_panel_divs+n_chordwise_te_divs,
-                                               n_spanwise_le_divs+n_spanwise_panel_divs+n_spanwise_te_divs,
-                                               n_vertical_divs,
-                                               0., x_length,
-                                               0., y_length,
-                                               0., z_length,
-                                               Utility::string_to_enum<ElemType>(elem_type));
-        }
-        
-        //march over all the elmeents and tag the sides that all lie on the panel suface
-        MeshBase::element_iterator e_it = mesh.elements_begin();
-        const MeshBase::element_iterator e_end = mesh.elements_end();
-        
-        for ( ; e_it != e_end; e_it++)
-        {
-            // iterate over the sides of each element and check if all
-            // nodes satisfy the requirement
-            
-            for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
+            for (unsigned int i_div=0; i_div<nx_divs+1; i_div++)
             {
-                AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
-                std::vector<bool> side_on_panel(side_elem->n_nodes()),
-                side_on_slip_wall(side_elem->n_nodes());
-                std::fill(side_on_panel.begin(), side_on_panel.end(), false);
-                std::fill(side_on_slip_wall.begin(), side_on_slip_wall.end(), false);
-                
-                for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
-                {
-                    const Node& n = *(side_elem->get_node(i_node));
-                    if (dim == 2)
-                    {
-                        if ((n(1)==0.) && (n(0) >= x0-1.0e-6) && (n(0) <= x0+chord+1.0e-6))
-                            side_on_panel[i_node] = true;
-                        
-                        if ((n(1)==0.) && ((n(0) <= x0+1.0e-6) || (n(0) >= x0+chord-1.0e-6)))
-                            side_on_slip_wall[i_node] = true;
-                    }
-                    if (dim == 3)
-                    {
-                        if ((n(2)==0.) && //bottom face
-                            (n(0) >= x0-1.0e-6) && (n(0) <= x0+chord+1.0e-6) && // x-coord
-                            (n(1) >= y0-1.0e-6) && (n(1) <= y0+span+1.0e-6))
-                            side_on_panel[i_node] = true;
-                        
-                        if ((n(2)==0.) &&
-                            ((n(0) <= x0+1.0e-6) || (n(0) >= x0+chord-1.0e-6) || // x-coord
-                             (n(1) <= y0+1.0e-6) || (n(1) >= y0+span-1.0e-6)))
-                            side_on_slip_wall[i_node] = true;
-                        
-                    }
-                }
-                
-                // check for side on panel
-                bool if_apply_bc = true;
-                for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
-                    if_apply_bc = side_on_panel[i_node] && if_apply_bc;
-                if (if_apply_bc)
-                    mesh.boundary_info->add_side(*e_it, i_side, 10);
-                
-                // now check for the slip wall
-                if_apply_bc = true;
-                for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
-                    if_apply_bc = side_on_slip_wall[i_node] && if_apply_bc;
-                if (if_apply_bc)
-                    mesh.boundary_info->add_side(*e_it, i_side, 11);
+                x_div_loc[i_div]     = infile("x_div_loc", 0., i_div);
+                x_relative_dx[i_div] = infile( "x_rel_dx", 0., i_div);
+                if (i_div < nx_divs) //  this is only till nx_divs
+                    x_divs[i_div] = infile( "x_div_nelem", 0., i_div);
             }
+            divs[0] = x_coord_divs.get();
+            x_coord_divs->init(nx_divs, x_div_loc, x_relative_dx, x_divs);
+        }
+
+        // now read in the values: y-coord
+        if ((dim > 1) && (ny_divs > 0))
+        {
+            for (unsigned int i_div=0; i_div<ny_divs+1; i_div++)
+            {
+                y_div_loc[i_div]     = infile("y_div_loc", 0., i_div);
+                y_relative_dx[i_div] = infile( "y_rel_dx", 0., i_div);
+                if (i_div < ny_divs) //  this is only till ny_divs
+                    y_divs[i_div] = infile( "y_div_nelem", 0., i_div);
+            }
+            divs[1] = y_coord_divs.get();
+            y_coord_divs->init(ny_divs, y_div_loc, y_relative_dx, y_divs);
+        }
+
+        // now read in the values: z-coord
+        if ((dim == 3) && (nz_divs > 0))
+        {
+            for (unsigned int i_div=0; i_div<nz_divs+1; i_div++)
+            {
+                z_div_loc[i_div]     = infile("z_div_loc", 0., i_div);
+                z_relative_dx[i_div] = infile( "z_rel_dx", 0., i_div);
+                if (i_div < nz_divs) //  this is only till nz_divs
+                    z_divs[i_div] = infile( "z_div_nelem", 0., i_div);
+            }
+            divs[2] = z_coord_divs.get();
+            z_coord_divs->init(nz_divs, z_div_loc, z_relative_dx, z_divs);
         }
         
-        
-        MeshBase::node_iterator   n_it  = mesh.nodes_begin();
-        const Mesh::node_iterator n_end = mesh.nodes_end();
-        
-        Real x_val, y_val, z_val;
-        
-        for (; n_it != n_end; n_it++)
+        const std::string mesh_type = infile("mesh_type", std::string(""));
+        if (mesh_type == "panel")
         {
-            Node& n =  **n_it;
+            const bool if_cos_bump = infile("if_cos_bump", false);
+            const unsigned int n_max_bumps_x = infile("n_max_bumps_x", 1),
+            n_max_bumps_y = infile("n_max_bumps_x", 1),
+            panel_bc_id = infile("panel_bc_id", 10),
+            symmetry_bc_id = infile("symmetry_bc_id", 11);
+            
             
             if (dim == 2)
-            {
-                // this is for sine bump
-                if ((n(0) >= x0) && (n(0) <= x1))
-                {
-                    x_val = n(0);
-                    y_val = n(1);
-                    
-                    n(1) += thickness*(1.0-y_val/y_length)*sin(pi*(x_val-x0)/chord);
-                }
-
-//                // this is for gaussian bump
-//                x_val = n(0);
-//                y_val = n(1);
-//                
-//                n(1) += (1.0-y_val/y_length) * 0.0625 * exp(-25.*pow(x_val-x_length*0.5,2.0));
-
-                
-//            // this is for ringleb problem
-//            if (dim == 2)
-//            {
-//                x_val = n(0);
-//                if (x_val <= 0.5)
-//                    x_val *= 2.;
-//                else
-//                    x_val = (0.5-x_val)*2.+1.;
-//                
-//                double exp_val = 0.2, x_break=0.7;
-//                if (x_val <= x_break)
-//                    x_val = x_val/x_break*pow(x_break, exp_val);
-//                else
-//                    x_val = pow(x_val,exp_val);
-//                
-//                y_val = n(1);
-//                double kval, qval, aval, gammaval =1.4, rhoval, pval, Jval;
-//                kval = y_val * 0.8 + 0.7; // linear variation from 0.7 to 1.5
-//                qval = x_val * (kval-0.5) + 0.5; // linear variation from 0.5 to kval
-//                aval = sqrt(1.-0.5*(gammaval-1.)*qval*qval);
-//                rhoval = pow(aval, 2./(gammaval-1.));
-//                pval = pow(aval, 2.*gammaval/(gammaval-1.))/gammaval;
-//                Jval = 1./aval + pow(aval,-3.)/3. + pow(aval,-5.)/5. - 0.5*log((1.+aval)/(1.-aval));
-//                
-//                n(1) = sqrt(1.-pow(qval/kval,2.))/kval/rhoval/qval;
-//                if (n(0) > 0.5)
-//                    n(1) *= -1.;
-//                n(0) = (2./kval/kval - 1./qval/qval)/2./rhoval - Jval/2.;
-            }
-
-            
-            if (dim == 3)
-                if ((n(0) >= x0) && (n(0) <= x1) &&
-                    (n(1) >= y0) && (n(1) <= y1))
-                {
-                    x_val = n(0);
-                    y_val = n(1);
-                    z_val = n(2);
-                    
-                    n(2) += thickness*(1.0-z_val/z_length)*sin(pi*(x_val-x0)/chord)*sin(pi*(y_val-y0)/span);
-                }
+                PanelMesh2D().init(t_by_c, if_cos_bump, n_max_bumps_x,
+                                   panel_bc_id, symmetry_bc_id,
+                                    divs, mesh, elem_type);
+            else if (dim == 3)
+                PanelMesh3D().init(t_by_c, if_cos_bump,
+                                   n_max_bumps_x, n_max_bumps_y,
+                                   panel_bc_id, symmetry_bc_id,
+                                   divs, mesh, elem_type);
+            else
+                libmesh_error();
         }
+        else if (mesh_type == "gaussian")
+        {
+            if (dim == 2)
+                GaussianBumpMesh2D().init(t_by_c, divs, mesh, elem_type);
+            else if (dim == 3)
+                GaussianBumpMesh3D().init(t_by_c, divs, mesh, elem_type);
+            else
+                libmesh_error();
+        }
+        else if (mesh_type == "ringleb")
+            RinglebMesh().init(nx_divs, ny_divs, mesh, elem_type);
+        else
+            libmesh_error();
     }
     else
     {
         mesh.set_mesh_dimension(dim);
-        const std::string gmsh_input_file =
-        infile("gmsh_input", std::string("mesh.msh"));
-        //GmshIO gmsh_io(mesh);
-        //gmsh_io.read(gmsh_input_file);
-        ExodusII_IO exodus_io(mesh);
-        // Nemesis_IO gmsh_io(mesh);
-        exodus_io.read(gmsh_input_file);
-        //exodus_io.read_parallel(gmsh_input_file);
+        const std::string
+        mesh_input_file = infile("mesh_input", std::string("")),
+        mesh_type = infile("mesh_type", std::string(""));
+        
+        std::auto_ptr<MeshInput<UnstructuredMesh> > mesh_io;
+        if (mesh_type == "gmsh")
+            GmshIO(mesh).read(mesh_input_file);
+        else if (mesh_type == "exodus")
+            ExodusII_IO(mesh).read(mesh_input_file);
+        else if (mesh_type == "exodus_parallel")
+            ExodusII_IO(mesh).read_parallel(mesh_input_file);
+        else if (mesh_type == "nemesis")
+            Nemesis_IO(mesh).read(mesh_input_file);
+        else
+            libmesh_error();
+        
         mesh.prepare_for_use();
     }
 #else
@@ -441,36 +371,21 @@ int main_fluid (int argc, char* const argv[])
     
     system.attach_qoi(&aero_qoi);
     
-//    SerialMesh structural_mesh(init.comm());
-//    structural_mesh.read("saved_structural_mesh.xdr");
-//    
-//    EquationSystems structural_equation_systems (structural_mesh);
-//    CondensedEigenSystem & structural_system =
-//    structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
-//    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
-//                                           libMeshEnums::DECODE,
-//                                           (EquationSystems::READ_HEADER |
-//                                            EquationSystems::READ_DATA |
-//                                            EquationSystems::READ_ADDITIONAL_DATA));
-//    
-//    // Prints information about the system to the screen.
-//    structural_mesh.print_info();
-//    structural_equation_systems.print_info();
-//    
-//    std::auto_ptr<FlexibleSurfaceMotion> surface_motion
-//    (new FlexibleSurfaceMotion(structural_system));
-//
-//    (*structural_system.solution) = structural_system.get_vector("mode_0");
-//    structural_system.solution->scale(16.667*.01/structural_system.solution->linfty_norm());
-//    structural_system.solution->close();
-//
-//    Nemesis_IO(structural_mesh).write_equation_systems("structural_system.exo",
-//                                                       structural_equation_systems);
-//    Nemesis_IO(mesh).write_equation_systems("fluid_system.exo",
-//                                            equation_systems);
-//
-//    surface_motion->init(0., pi/2., *structural_system.solution);
+//    std::auto_ptr<SurfaceMotionFunction> surface_motion (new SurfaceMotionFunction);
 //    //system.surface_motion = surface_motion.get();
+
+//    // initialize the surface motion definition
+//    std::auto_ptr<RigidSurfaceMotion> surface_motion(new RigidSurfaceMotion);
+//    system.surface_motion = surface_motion.get();
+//    
+//    surface_motion->pitch_amplitude = 0.01745;
+//    surface_motion->pitch_phase = 0.;
+//    surface_motion->plunge_amplitude = 0.;
+//    
+//    surface_motion->pitch_axis(2) = 1.;
+//    surface_motion->hinge_location(0) = 0.;
+//    surface_motion->init(0., pi/2);
+
     
 #else
     // Declare the system fluid system
@@ -712,9 +627,9 @@ int main_fluid (int argc, char* const argv[])
         // Write out this timestep if we're requested to
         if ((t_step%write_interval == 0) || !continue_iterations)
         {
-            //fluid_post.postprocess();
-            //system.assemble_qoi(); // calculate the quantities of interest
-            //system.postprocess(); // set the qois to the post-process variables
+            fluid_post.postprocess();
+            system.assemble_qoi(); // calculate the quantities of interest
+            system.postprocess(); // set the qois to the post-process variables
 
             std::ostringstream file_name, b_file_name;
             

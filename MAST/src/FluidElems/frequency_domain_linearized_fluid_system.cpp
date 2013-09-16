@@ -52,29 +52,24 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     vars[0]  = this->add_variable ( "drho", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[0]);
     params.set<Real> ("rho_inf") = flight_condition->rho();
     
     vars[1] = this->add_variable ("drhoux", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[1]);
     params.set<Real> ("rhoux_inf") = flight_condition->rho_u1();
     
     if (dim > 1)
     {
         vars[2] = this->add_variable ("drhouy", static_cast<Order>(o), fefamily);
-        this->time_evolving(vars[2]);
         params.set<Real> ("rhouy_inf") = flight_condition->rho_u2();
     }
     
     if (dim > 2)
     {
         vars[3] = this->add_variable ("drhouz", static_cast<Order>(o), fefamily);
-        this->time_evolving(vars[3]);
         params.set<Real> ("rhouz_inf") = flight_condition->rho_u3();
     }
     
     vars[dim+2-1] = this->add_variable ("drhoe", static_cast<Order>(o), fefamily);
-    this->time_evolving(vars[dim+2-1]);
     params.set<Real> ("rhoe_inf") = flight_condition->rho_e();
     
     // Useful debugging options

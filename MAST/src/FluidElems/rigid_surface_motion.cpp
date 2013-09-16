@@ -9,8 +9,6 @@
 // FESystem includes
 #include "FluidElems/rigid_surface_motion.h"
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-
 
 RigidSurfaceMotion::RigidSurfaceMotion():
 SurfaceMotionBase(),
@@ -62,6 +60,8 @@ RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
                                                       DenseVector<Complex>& u_trans,
                                                       DenseVector<Complex>& dn_rot)
 {
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+
     u_trans.zero();
     dn_rot.zero();
     const Complex iota(0., 1.);
@@ -90,6 +90,7 @@ RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
 
     // u_trans is in phase with velocity
     u_trans.scale(iota*frequency);
+#endif
 }
 
 
@@ -130,7 +131,5 @@ RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
     u_trans.scale(frequency);
 }
 
-
-#endif
 
 
