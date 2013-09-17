@@ -163,6 +163,7 @@ int main (int argc, char* const argv[])
     flutter_solver.k_ref_range.second    = infile("ug_upper_k", 0.35);
     flutter_solver.n_k_divs              = infile("ug_k_divs", 10);
     flutter_solver.find_next_root();
+    flutter_solver.print_sorted_roots();
 }
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

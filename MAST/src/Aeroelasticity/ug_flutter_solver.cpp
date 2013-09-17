@@ -45,7 +45,7 @@ UGFlutterSolver::UGFlutterRoot::init(const Real k, const Real b_ref,
     const unsigned int nvals = (int)Bmat.rows();
     mode = eig_vec;
     ComplexVectorX k_q = Bmat * mode;
-    RealVectorX modal_participation(nvals);
+    modal_participation.resize(nvals, 1);
     for (unsigned int i=0; i<nvals; i++)
         modal_participation(i) =  std::abs(std::conj(mode(i)) * k_q(i));
     modal_participation *= (1./modal_participation.sum());
@@ -77,6 +77,8 @@ UGFlutterSolver::UGFlutterSolution::sort(const UGFlutterSolver::UGFlutterSolutio
     const unsigned int nvals = this->n_roots();
     libmesh_assert_equal_to(nvals, sol.n_roots());
     
+    // two roots with highest modal_participation dot product are sorted
+    // in the same serial order
     for (unsigned int i=0; i<nvals-1; i++)
     {
         const UGFlutterSolver::UGFlutterRoot& r = sol.get_root(i);
@@ -97,6 +99,85 @@ UGFlutterSolver::UGFlutterSolution::sort(const UGFlutterSolver::UGFlutterSolutio
 
 
 
+void
+UGFlutterSolver::UGFlutterSolution::print(std::ostream &output,
+                                          std::ostream &mode_output)
+{
+    const unsigned int nvals = this->n_roots();
+    libmesh_assert(nvals);
+    
+    output << "k = " << _k_ref << std::endl
+    << std::setw(5) << "UG #"
+    << std::setw(15) << "Re"
+    << std::setw(15) << "Im"
+    << std::setw(15) << "g"
+    << std::setw(15) << "V"
+    << std::setw(15) << "omega";
+    
+    // output the headers for flutter mode participation
+    for (unsigned int i=0; i<nvals; i++)
+        output
+        << std::setw(2) << " "
+        << std::setw(5) << "Mode "
+        << std::setw(5) << i
+        << std::setw(3) << " ";
+    output << std::endl;
+    
+    // output the headers for flutter mode
+    mode_output << "k = " << _k_ref << "  (Right Eigenvectors)  " << std::endl;
+    mode_output << std::setw(5) << "UG #";
+    for (unsigned int i=0; i<nvals; i++)
+        mode_output
+        << std::setw(10) << " "
+        << std::setw(5) << "Mode "
+        << std::setw(5) << i
+        << std::setw(10) << " ";
+    mode_output << std::endl;
+    
+    for (unsigned int i=0; i<nvals; i++)
+    {
+        const UGFlutterSolver::UGFlutterRoot& root = this->get_root(i);
+        
+        if (root.if_imag_V)
+        {
+            std::stringstream oss;
+            oss << "**" << i;
+            output << std::setw(5) << oss.str();
+            mode_output << std::setw(5) << oss.str();
+        }
+        else
+        {
+            output << std::setw(5) << i;
+            mode_output << std::setw(5) << i;
+        }
+        
+        // flutter root details
+        output
+        << std::setw(15) << std::real(root.root)
+        << std::setw(15) << std::imag(root.root)
+        << std::setw(15) << root.g
+        << std::setw(15) << root.V
+        << std::setw(15) << root.omega;
+        
+        // now write the modal participation
+        for (unsigned int j=0; j<nvals; j++)
+            output << std::setw(15) << root.modal_participation(j);
+        output << std::endl;
+        
+        // now write the flutter mode
+        for (unsigned int j=0; j<nvals; j++)
+        {
+            mode_output
+            << std::setw(13) << std::real(root.mode(j))
+            << std::setw(4) << " "
+            << std::setw(13) << std::imag(root.mode(j));
+        }
+        mode_output << std::endl;
+    }
+}
+
+
+
 UGFlutterSolver::~UGFlutterSolver()
 {
     std::map<Real, UGFlutterSolver::UGFlutterSolution*>::iterator it =
@@ -104,72 +185,278 @@ UGFlutterSolver::~UGFlutterSolver()
     
     for ( ; it != _flutter_solutions.end(); it++)
         delete it->second;
+
+    std::map<Real, UGFlutterSolver::UGFlutterRootCrossover*>::iterator cross_it =
+    _flutter_crossovers.begin();
+    
+    for ( ; cross_it != _flutter_crossovers.end(); cross_it++)
+        delete cross_it->second;
 }
 
 
 
-bool UGFlutterSolver::find_next_root()
+unsigned int
+UGFlutterSolver::n_roots_found() const
 {
-    // active range in which to search
-    std::pair<Real, Real> active_k_ref_range(0.,0.);
+    std::map<Real, UGFlutterSolver::UGFlutterRootCrossover*>::const_iterator
+    it = _flutter_crossovers.begin(),
+    end = _flutter_crossovers.end();
     
-    // if this is the first solve, then the active range is same as the
-    // k_ref range
-    if (n_roots_found() == 0)
-        active_k_ref_range = k_ref_range;
-    else
-        active_k_ref_range = std::pair<Real, Real>
-        (k_ref_range.first, _previous_k_ref);
+    unsigned int n = 0;
+    for ( ; it!=end; it++)
+        if (it->second->root) // a valid root pointer has been assigned
+            n++;
     
-    // now march from the upper limit to the lower to find the roots
-    Real current_k_ref = active_k_ref_range.second,
-    delta_k_ref = (active_k_ref_range.second-active_k_ref_range.first)/n_k_divs;
-    bool continue_finding = true, found_root = false;
+    return n;
+}
+
+
+
+const FlutterRoot&
+UGFlutterSolver::get_root(const unsigned int n) const
+{
+    libmesh_assert(n < n_roots_found());
+
+    std::map<Real, UGFlutterSolver::UGFlutterRootCrossover*>::const_iterator
+    it = _flutter_crossovers.begin(),
+    end = _flutter_crossovers.end();
     
-    std::vector<Real> k_vals(n_k_divs+1);
-    for (unsigned int i=0; i<n_k_divs+1; i++)
-    {
-        k_vals[i] = current_k_ref;
-        current_k_ref -= delta_k_ref;
+    unsigned int root_num = 0;
+    for ( ; it!=end; it++) {
+        if (it->second->root) { // a valid root pointer has been assigned
+            if (root_num == n)  // root num matches the one being requested
+                return *(it->second->root);
+            else
+                root_num++;
+        }
     }
-    k_vals[n_k_divs] = active_k_ref_range.first; // to get around finite-precision arithmetic
     
+    libmesh_assert(false); // should not get here
+}
+
+
+
+
+
+void UGFlutterSolver::scan_for_roots()
+{
+    // if the initial scanning has not been done, then do it now
+    if (!_flutter_solutions.size()) {
+        // march from the upper limit to the lower to find the roots
+        Real current_k_ref = k_ref_range.second,
+        delta_k_ref = (k_ref_range.second-k_ref_range.first)/n_k_divs;
+        
+        std::vector<Real> k_vals(n_k_divs+1);
+        for (unsigned int i=0; i<n_k_divs+1; i++)
+        {
+            k_vals[i] = current_k_ref;
+            current_k_ref -= delta_k_ref;
+        }
+        k_vals[n_k_divs] = k_ref_range.first; // to get around finite-precision arithmetic
+        
+        UGFlutterSolver::UGFlutterSolution* prev_sol = NULL;
+        for (unsigned int i=0; i<n_k_divs+1; i++)
+        {
+            current_k_ref = k_vals[i];
+            prev_sol = analyze(current_k_ref, prev_sol);
+        }
+        
+        const Real tol = 1.0e-5;
+        
+        //
+        // for some cases some roots trail along the g=0 axis
+        // and should not be considered as flutter. These are simply
+        // modes where aerodynamics do not provide any damping.
+        // These modes will not have a damping more than tolerance
+        //
+        const unsigned int nvals = prev_sol->n_roots();
+        std::vector<bool> undamped_modes_to_neglect(nvals);
+        std::fill(undamped_modes_to_neglect.begin(),
+                  undamped_modes_to_neglect.end(), false);
+
+        // look for the max g val for a mode, which will indicate if the
+        // mode is undamped or not
+        for (unsigned int i=0; i<nvals; i++) {
+            std::map<Real, UGFlutterSolver::UGFlutterSolution*>::const_iterator
+            sol_it    = _flutter_solutions.begin(),
+            sol_end   = _flutter_solutions.end();
+            Real max_g_val = 0., val = 0.;
+            for ( ; sol_it!=sol_end; sol_it++) {
+                val = fabs(sol_it->second->get_root(i).g);
+                if (val > max_g_val)
+                    max_g_val = val;
+            }
+            // check the maximum damping seen for this mode
+            if (max_g_val < tol)
+                undamped_modes_to_neglect[i] = true;
+        }
+        
+        // identify the flutter cross-overs
+        for (unsigned int i=0; i<nvals; i++) {
+            std::map<Real, UGFlutterSolver::UGFlutterSolution*>::const_iterator
+            sol_it    = _flutter_solutions.begin(), // first of the pair
+            sol_itp1  = _flutter_solutions.begin(), // second of the pair
+            sol_end   = _flutter_solutions.end();
+            sol_itp1++; // increment for the next pair of results
+            
+            while (sol_itp1 != sol_end) {
+                // special consideration for divergence, which occurs at
+                // k_ref = 0
+                if ((fabs(sol_it->second->k_ref()) < tol) && // zero reduced frequency
+                    (fabs(sol_it->second->get_root(i).g) < tol)) { // zero damping
+                    UGFlutterSolver::UGFlutterRootCrossover* cross =
+                    new UGFlutterSolver::UGFlutterRootCrossover;
+                    cross->root = &sol_it->second->get_root(i);
+                    cross->root_num = i;
+                    std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
+                    val( cross->root->V, cross);
+                    _flutter_crossovers.insert(val);
+                }
+                else if (!undamped_modes_to_neglect[i]) { // look for the flutter roots
+                    UGFlutterSolver::UGFlutterSolution *lower = sol_it->second,
+                    *upper = sol_itp1->second;
+                    
+                    if ((lower->get_root(i).g < 0.) &&
+                        (upper->get_root(i).g > 0.)) {
+                        UGFlutterSolver::UGFlutterRootCrossover* cross =
+                        new UGFlutterSolver::UGFlutterRootCrossover;
+                        cross->crossover_solutions.first  = lower; // -ve g
+                        cross->crossover_solutions.second = upper; // +ve g
+                        cross->root_num = i;
+                        std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
+                        val( cross->root->V, cross);
+                        _flutter_crossovers.insert(val);
+                    }
+                    else if ((lower->get_root(i).g > 0.) &&
+                             (upper->get_root(i).g < 0.)) {
+                        UGFlutterSolver::UGFlutterRootCrossover* cross =
+                        new UGFlutterSolver::UGFlutterRootCrossover;
+                        cross->crossover_solutions.first  = upper; // -ve g
+                        cross->crossover_solutions.second = lower; // +ve g
+                        cross->root_num = i;
+                        std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
+                        val( cross->root->V, cross);
+                        _flutter_crossovers.insert(val);
+                    }
+                }
+                
+                // increment the pointers for next pair of roots
+                sol_it++;
+                sol_itp1++;
+            }
+        }
+    }
+}
+
+
+
+
+std::pair<bool, const FlutterRoot*>
+UGFlutterSolver::find_next_root()
+{
+    // iterate over the cross-over points and calculate the next that has
+    // not been evaluated
+    std::map<Real, UGFlutterSolver::UGFlutterRootCrossover*>::iterator
+    it = _flutter_crossovers.begin(), end = _flutter_crossovers.end();
+    while ( it != end)
+    {
+        UGFlutterSolver::UGFlutterRootCrossover* cross = it->second;
+        
+        if (!cross->root) {
+            const unsigned int root_num = cross->root_num;
+            std::pair<bool, UGFlutterSolver::UGFlutterSolution*> bisection_sol =
+            bisection_search(cross->crossover_solutions,
+                             root_num, 1.0e-5, 10);
+            cross->root = &(bisection_sol.second->get_root(root_num));
+            
+            // now, remove this entry from the _flutter_crossover points and
+            // reinsert it with the actual critical velocity
+            _flutter_crossovers.erase(it);
+            std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
+            val(cross->root->V, cross);
+            _flutter_crossovers.insert(val);
+            return std::pair<bool, const FlutterRoot*> (true, cross->root);
+        }
+        
+        it++;
+    }
+    
+    // if it gets here, no new root was found
+    return std::pair<bool, FlutterRoot*> (false, NULL);
+}
+
+
+UGFlutterSolver::UGFlutterSolution*
+UGFlutterSolver::analyze(const Real k_ref,
+                         const UGFlutterSolver::UGFlutterSolution* prev_sol)
+{
     ComplexMatrixX m, k;
-    
-    UGFlutterSolver::UGFlutterSolution* prev_sol = NULL;
-    
-    for (unsigned int i=0; i<n_k_divs+1; i++)
-    {
-        current_k_ref = k_vals[i];
-        initialize_matrices(current_k_ref, m, k);
-        LAPACK_ZGGEV ges;
-        ges.compute(m, k);
-        ges.scale_eigenvectors_to_identity_innerproduct();
-        
-        // now insert the root
-        std::pair<Real, UGFlutterSolver::UGFlutterSolution*>
-        val(current_k_ref, new UGFlutterSolver::UGFlutterSolution((int)m.rows()));
-        val.second->init(current_k_ref, flight_condition->ref_chord, ges);
-        bool success = _flutter_solutions.insert(val).second;
-        libmesh_assert (success);
-        
-        if (i > 0)
-            val.second->sort(*prev_sol);
-        prev_sol = val.second;
-    }
 
+    initialize_matrices(k_ref, m, k);
+    LAPACK_ZGGEV ges;
+    ges.compute(m, k);
+    ges.scale_eigenvectors_to_identity_innerproduct();
     
-    //print_roots(current_k_ref, ges);
-
-    return found_root;
+    // now insert the root
+    std::pair<Real, UGFlutterSolver::UGFlutterSolution*>
+    val(k_ref, new UGFlutterSolver::UGFlutterSolution((int)m.rows()));
+    bool success = _flutter_solutions.insert(val).second;
+    libmesh_assert (success); // make sure that it was successfully added
+    val.second->init(k_ref, flight_condition->ref_chord, ges);
+    val.second->print(_output, _mode_output);
+    
+    if (prev_sol)
+        val.second->sort(*prev_sol);
+    
+    return val.second;
 }
 
 
-
-bool UGFlutterSolver::bisection_search(const std::pair<Real, Real>& active_k_ref_range)
+std::pair<bool, UGFlutterSolver::UGFlutterSolution*>
+UGFlutterSolver::bisection_search(const std::pair<UGFlutterSolver::UGFlutterSolution*,
+                                  UGFlutterSolver::UGFlutterSolution*>& k_ref_sol_range,
+                                  const unsigned int root_num,
+                                  const Real g_tol,
+                                  const unsigned int max_iters)
 {
-    // to be programmed
-    libmesh_assert(false);
+    // assumes that the upper k_val has +ve g val and lower k_val has -ve
+    // k_val
+    bool found = false;
+    Real lower_k = k_ref_sol_range.first->k_ref(),
+    lower_g = k_ref_sol_range.first->get_root(root_num).g,
+    upper_k = k_ref_sol_range.second->k_ref(),
+    upper_g = k_ref_sol_range.second->get_root(root_num).g,
+    new_g = 0., new_k = 0.;
+    unsigned int n_iters = 0;
+    
+    UGFlutterSolver::UGFlutterSolution* new_sol = NULL;
+    
+    while (n_iters < max_iters) {
+
+        new_k = lower_k + (upper_k-lower_k)/(upper_g-lower_g)*(0.-lower_g); // linear interpolation
+        new_sol = analyze(new_k, k_ref_sol_range.first);
+        const UGFlutterSolver::UGFlutterRoot& root = new_sol->get_root(root_num);
+        
+        // check if the new damping value
+        if (fabs(root.g) <= g_tol)
+            return std::pair<bool, UGFlutterSolver::UGFlutterSolution*>
+            (true, new_sol);
+        
+        // update the k_val
+        if (root.g < 0.) {
+            lower_k = new_k;
+            lower_g = root.g;
+        }
+        else {
+            upper_k = new_k;
+            upper_g = root.g;
+        }
+        
+        n_iters++;
+    }
+
+    return std::pair<bool, UGFlutterSolver::UGFlutterSolution*>
+    (false, new_sol); // return false, along with the latest sol
 }
 
 
@@ -200,103 +487,77 @@ void UGFlutterSolver::initialize_matrices(Real k_ref,
 
 
 void
-UGFlutterSolver::evaluate_roots(const Real k_ref,
-                                const LAPACK_ZGGEV& ges)
+UGFlutterSolver::print_sorted_roots(std::ostream* output)
 {
-    const ComplexVectorX &num = ges.alphas(), &den = ges.betas();
-    const ComplexMatrixX &vr = ges.right_eigenvectors(), &B = ges.B();
+    if (!output)
+        output = &_output;
     
-    unsigned int nvals = std::max(num.rows(), num.cols());
+    std::map<Real, UGFlutterSolver::UGFlutterSolution*>::const_iterator
+    sol_it = _flutter_solutions.begin(),
+    sol_end = _flutter_solutions.end();
     
+    libmesh_assert(sol_it != sol_end); // solutions should have been evaluated
     
-    Real g, V, omega;
-    Complex eig;
-    bool if_imag_v = false;
+    unsigned int nvals = sol_it->second->n_roots();
+    libmesh_assert(nvals); // should not be zero
     
-    _output << "k = " << k_ref << std::endl
-    << std::setw(5) << "#"
-    << std::setw(15) << "Re"
-    << std::setw(15) << "Im"
-    << std::setw(15) << "g"
-    << std::setw(15) << "V"
-    << std::setw(15) << "omega";
-    
-    // output the headers for flutter mode participation
-    for (unsigned int i=0; i<nvals; i++)
-        _output
-        << std::setw(2) << " "
-        << std::setw(5) << "Mode "
-        << std::setw(5) << i
-        << std::setw(3) << " ";
-    _output << std::endl;
-    
-    // output the headers for flutter mode
-    _mode_output << "k = " << k_ref << "  (Right Eigenvectors)  " << std::endl;
-    _mode_output << std::setw(5) << "#";
-    for (unsigned int i=0; i<nvals; i++)
-        _mode_output
-        << std::setw(10) << " "
-        << std::setw(5) << "Mode "
-        << std::setw(5) << i
-        << std::setw(10) << " ";
-    _mode_output << std::endl;
-    
+
+    // print the headers
+    std::ostringstream mode_nums, val_header;
+    mode_nums
+    << std::setw(15) << " "
+    << std::setw(3) << "|";
+    val_header << std::setw(15) << "k"
+    << std::setw(3) << "|";
     for (unsigned int i=0; i<nvals; i++)
     {
-        g = 0.; V= 0., omega = 0.;
-        eig = 0.;
-        if (std::abs(den(i)) > 0.)
-        {
-            eig = num(i)/den(i);
-            if (std::real(eig) > 0.)
-            {
-                V     = sqrt(1./std::real(eig));
-                g     = std::imag(eig)/std::real(eig);
-                omega = k_ref*V/flight_condition->ref_chord;
-            }
-            else
-                if_imag_v = true;
-        }
+        mode_nums
+        << std::setw(30) << " "
+        << std::setw(10) << "UG Root #"
+        << std::setw(5) << i
+        << std::setw(30) << " "
+        << std::setw(3) << "|";
         
-        
-        if (if_imag_v)
-        {
-            std::stringstream oss;
-            oss << "**" << i;
-            _output << std::setw(5) << oss.str();
-            _mode_output << std::setw(5) << oss.str();
-        }
-        else
-        {
-            _output << std::setw(5) << i;
-            _mode_output << std::setw(5) << i;
-        }
-        
-        // flutter root details
-        _output
-        << std::setw(15) << std::real(eig)
-        << std::setw(15) << std::imag(eig)
-        << std::setw(15) << g
-        << std::setw(15) << V
-        << std::setw(15) << omega;
-        
-        // now write the modal participation
-//        for (unsigned int j=0; j<nvals; j++)
-//            _output << std::setw(15) << modal_participation(j);
-//        _output << std::endl;
-        
-        // now write the flutter mode
-        for (unsigned int j=0; j<nvals; j++)
-        {
-            _mode_output
-            << std::setw(13) << std::real(vr(j,i))
-            << std::setw(4) << " "
-            << std::setw(13) << std::imag(vr(j,i));
-        }
-        _mode_output << std::endl;
-        
-        if_imag_v = false;
+        val_header
+        << std::setw(15) << "Re"
+        << std::setw(15) << "Im"
+        << std::setw(15) << "g"
+        << std::setw(15) << "V"
+        << std::setw(15) << "omega"
+        << std::setw(3) <<  "|";
     }
     
+    *output
+    << mode_nums.str() << std::endl
+    << val_header.str() << std::endl;
+    
+    
+    for ( ; sol_it != sol_end; sol_it++)
+    {
+        *output
+        << std::setw(15) << sol_it->first
+        << std::setw(3) << "|";
+        
+        for (unsigned int i=0; i<nvals; i++)
+        {
+            const UGFlutterSolver::UGFlutterRoot& root =
+            sol_it->second->get_root(i);
+            
+            *output
+            << std::setw(15) << std::real(root.root)
+            << std::setw(15) << std::imag(root.root)
+            << std::setw(15) << root.g;
+            
+            // check if the root might be the odd artifact of the UG method
+            if (!root.if_imag_V)
+                *output << std::setw(15) << root.V;
+            else
+                *output << "** " << std::setw(12) << root.V;
+            *output
+            << std::setw(15) << root.omega
+            << std::setw(3) << "|";
+        }
+        *output << std::endl;
+    }
 }
 

@@ -67,7 +67,7 @@ public:
     {}
     
     
-    virtual bool find_next_root() = 0;
+    virtual std::pair<bool, const FlutterRoot*> find_next_root() = 0;
     
     
     unsigned int n_roots_found() const

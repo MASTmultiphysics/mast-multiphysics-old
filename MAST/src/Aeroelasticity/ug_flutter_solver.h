@@ -17,8 +17,6 @@
 #include "Aeroelasticity/flutter_solver_base.h"
 #include "Solvers/lapack_interface.h"
 
-
-
 class UGFlutterSolver: public FlutterSolverBase
 {
 public:
@@ -44,11 +42,41 @@ public:
     unsigned int n_k_divs;
     
     /*!
-     *   Finds and appends the root to the vector of flutter roots. Returns
-     *   \p true if a root was successfully found, \p false otherwise.
+     *   Scans for flutter roots in the range specified, and identified the 
+     *   divergence (if k_ref = 0. is specified) and flutter crossover points.
+     *   The roots are organized in terms of increasing velocity.
      */
-    virtual bool find_next_root();
+    virtual void scan_for_roots();
 
+    
+    /*!
+     *    finds the number of critical points already identified in the
+     *    procedure.
+     */
+    virtual unsigned int n_roots_found() const;
+    
+    
+    /*!
+     *   returns the \par n th root in terms of ascending velocity that is
+     *   found by the solver
+     */
+    const FlutterRoot& get_root(const unsigned int n) const;
+    
+    
+    /*!
+     *   Looks through the list of flutter cross-over points and iteratively 
+     *   zooms in to find the cross-over point. This should be called only 
+     *   after scan_for_roots() has been called. Potential cross-over points
+     *   are sorted with increasing velocity, and this method will attempt to 
+     *   identify the next critical root in the order.
+     */
+    virtual std::pair<bool, const FlutterRoot*> find_next_root();
+
+    /*!
+     *   Prints the sorted roots to the \par output
+     */
+    void print_sorted_roots(std::ostream* output = NULL);
+    
     
     class UGFlutterRoot: public FlutterRoot
     {
@@ -68,8 +96,8 @@ public:
         UGFlutterSolution(unsigned int n):
         _k_ref(0.) {
             _roots.resize(n);
-            std::fill(_roots.begin(), _roots.end(),
-                      new UGFlutterSolver::UGFlutterRoot() );
+            for (unsigned int i=0; i<n; i++)
+                _roots[i] = new UGFlutterSolver::UGFlutterRoot();
         }
 
         /*!
@@ -82,6 +110,13 @@ public:
                 delete *it;
         }
 
+        /*!
+         *   the reduced frequency for this solution
+         */
+        Real k_ref() const {
+            return _k_ref;
+        }
+        
         /*!
          *   number of roots in this solution
          */
@@ -112,9 +147,32 @@ public:
          */
         void sort(const UGFlutterSolver::UGFlutterSolution& sol);
         
+        /*!
+         *    prints the data and modes from this solution
+         */
+        void print(std::ostream& output, std::ostream& mode_output);
+        
     protected:
         Real _k_ref;
         std::vector<UGFlutterSolver::UGFlutterRoot*> _roots;
+    };
+
+    
+    class UGFlutterRootCrossover
+    {
+    public:
+        UGFlutterRootCrossover():
+        crossover_solutions(NULL, NULL),
+        root_num(0),
+        root(NULL)
+        { }
+        
+        std::pair<UGFlutterSolver::UGFlutterSolution*, UGFlutterSolver::UGFlutterSolution*>
+        crossover_solutions;
+        
+        unsigned int root_num;
+        
+        const UGFlutterSolver::UGFlutterRoot* root;
     };
 
 protected:
@@ -130,9 +188,29 @@ protected:
     std::map<Real, UGFlutterSolver::UGFlutterSolution*> _flutter_solutions;
     
     /*!
+     *   the map of flutter crossover points versus average velocity of the
+     *   two bounding roots
+     */
+    std::multimap<Real, UGFlutterSolver::UGFlutterRootCrossover*> _flutter_crossovers;
+    
+    /*!
+     *   performs an eigensolution at the specified reduced frequency, and
+     *   sort the roots based on the provided solution pointer. If the
+     *   pointer is NULL, then no sorting is performed
+     */
+    UGFlutterSolver::UGFlutterSolution*
+    analyze(const Real k_ref,
+            const UGFlutterSolver::UGFlutterSolution* prev_sol=NULL);
+    
+    /*!
      *    bisection method search
      */
-    bool bisection_search(const std::pair<Real, Real>& active_k_ref_range);
+    std::pair<bool, UGFlutterSolver::UGFlutterSolution*>
+    bisection_search(const std::pair<UGFlutterSolver::UGFlutterSolution*,
+                     UGFlutterSolver::UGFlutterSolution*>& k_ref_sol_range,
+                     const unsigned int root_num,
+                     const Real g_tol,
+                     const unsigned int max_iters);
     
     /*!
      *    initializes the matrices for the specified k_ref. UG does not account
@@ -141,9 +219,6 @@ protected:
     void initialize_matrices(Real k_ref,
                              ComplexMatrixX& m, // mass & aero
                              ComplexMatrixX& k); // aero operator
-
-    void evaluate_roots(const Real k_ref,
-                        const LAPACK_ZGGEV& ges);
 };
 
 #endif

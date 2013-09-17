@@ -225,7 +225,7 @@ protected:
 };
 
 
-void
+inline void
 LAPACK_ZGGEV::compute(ComplexMatrixX &A, ComplexMatrixX &B,
                       bool computeEigenvectors)
 {
