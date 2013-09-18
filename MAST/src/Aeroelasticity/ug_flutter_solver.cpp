@@ -335,15 +335,27 @@ void UGFlutterSolver::scan_for_roots()
             while (sol_itp1 != sol_end) {
                 // special consideration for divergence, which occurs at
                 // k_ref = 0
-                if ((fabs(sol_it->second->k_ref()) < tol) && // zero reduced frequency
+                if (sol_it->second->get_root(i).if_imag_V ||
+                    sol_itp1->second->get_root(i).if_imag_V) {
+                    // do nothing
+                }
+                else if ((fabs(sol_it->second->k_ref()) < tol) && // zero reduced frequency
                     (fabs(sol_it->second->get_root(i).g) < tol)) { // zero damping
                     UGFlutterSolver::UGFlutterRootCrossover* cross =
                     new UGFlutterSolver::UGFlutterRootCrossover;
+                    cross->crossover_solutions.first = sol_it->second;
+                    cross->crossover_solutions.second = sol_it->second;
                     cross->root = &sol_it->second->get_root(i);
                     cross->root_num = i;
                     std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
                     val( cross->root->V, cross);
                     _flutter_crossovers.insert(val);
+                }
+                else if ((fabs(sol_it->second->k_ref()) < tol) && // zero reduced frequency
+                         (fabs(sol_it->second->get_root(i).g) > tol)) {
+                    // k=0 makes sense only for divergence roots. Do not use them
+                    // for crossover points if a finite damping was seen. Hence,
+                    // do nothing here, and move to the next iterator
                 }
                 else if (!undamped_modes_to_neglect[i]) { // look for the flutter roots
                     UGFlutterSolver::UGFlutterSolution *lower = sol_it->second,
