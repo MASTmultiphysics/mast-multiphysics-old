@@ -156,14 +156,18 @@ int main (int argc, char* const argv[])
     // create the solvers
     std::string nm  = infile("flutter_output", "flutter_output.txt");
     UGFlutterSolver flutter_solver;
-    flutter_solver.set_output_file(nm);
+    if (!init.comm().rank())
+        flutter_solver.set_output_file(nm);
     flutter_solver.aero_structural_model = &coupled_system;
     flutter_solver.flight_condition      = &flight_cond;
     flutter_solver.k_ref_range.first     = infile("ug_lower_k", 0.0);
     flutter_solver.k_ref_range.second    = infile("ug_upper_k", 0.35);
     flutter_solver.n_k_divs              = infile("ug_k_divs", 10);
-    flutter_solver.find_next_root();
-    flutter_solver.print_sorted_roots();
+    flutter_solver.scan_for_roots();
+    if (!flutter_solver.n_roots_found()) // only one root is needed at this point
+        flutter_solver.find_next_root();
+    if (!init.comm().rank())
+        flutter_solver.print_sorted_roots();
 }
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

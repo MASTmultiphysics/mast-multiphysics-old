@@ -495,55 +495,36 @@ UGFlutterSolver::print_sorted_roots(std::ostream* output)
     std::map<Real, UGFlutterSolver::UGFlutterSolution*>::const_iterator
     sol_it = _flutter_solutions.begin(),
     sol_end = _flutter_solutions.end();
-    
     libmesh_assert(sol_it != sol_end); // solutions should have been evaluated
     
     unsigned int nvals = sol_it->second->n_roots();
     libmesh_assert(nvals); // should not be zero
     
-
-    // print the headers
-    std::ostringstream mode_nums, val_header;
-    mode_nums
-    << std::setw(15) << " "
-    << std::setw(3) << "|";
-    val_header << std::setw(15) << "k"
-    << std::setw(3) << "|";
+    // each root is written separately one after another
     for (unsigned int i=0; i<nvals; i++)
     {
-        mode_nums
-        << std::setw(30) << " "
-        << std::setw(10) << "UG Root #"
-        << std::setw(5) << i
-        << std::setw(30) << " "
-        << std::setw(3) << "|";
-        
-        val_header
+        // print the headers
+        *output
+        << "** UG Root # "
+        << std::setw(5) << i << " **" << std::endl
+        << std::setw(15) << "k"
         << std::setw(15) << "Re"
         << std::setw(15) << "Im"
         << std::setw(15) << "g"
         << std::setw(15) << "V"
-        << std::setw(15) << "omega"
-        << std::setw(3) <<  "|";
-    }
-    
-    *output
-    << mode_nums.str() << std::endl
-    << val_header.str() << std::endl;
-    
-    
-    for ( ; sol_it != sol_end; sol_it++)
-    {
-        *output
-        << std::setw(15) << sol_it->first
-        << std::setw(3) << "|";
+        << std::setw(15) << "omega" << std::endl;
+
+        // update the iterator for this analysis
+        sol_it = _flutter_solutions.begin();
         
-        for (unsigned int i=0; i<nvals; i++)
+        // write the data from all solutions
+        for ( ; sol_it != sol_end; sol_it++)
         {
             const UGFlutterSolver::UGFlutterRoot& root =
             sol_it->second->get_root(i);
-            
+
             *output
+            << std::setw(15) << root.k_ref
             << std::setw(15) << std::real(root.root)
             << std::setw(15) << std::imag(root.root)
             << std::setw(15) << root.g;
@@ -554,10 +535,34 @@ UGFlutterSolver::print_sorted_roots(std::ostream* output)
             else
                 *output << "** " << std::setw(12) << root.V;
             *output
-            << std::setw(15) << root.omega
-            << std::setw(3) << "|";
+            << std::setw(15) << root.omega << std::endl;
         }
-        *output << std::endl;
+        *output << std::endl << std::endl;
     }
+    
+    
+    // write the roots identified using iterative search technique
+    unsigned int nroots = this->n_roots_found();
+    *output << std::endl
+    << "n critical roots identified: " << nroots << std::endl;
+    for (unsigned int i=0; i<nroots; i++)
+    {
+        const FlutterRoot& root = this->get_root(i);
+        *output
+        << "** Root : " << std::setw(5) << i << " **" << std::endl
+        << "g      = " << std::setw(15) << root.g << std::endl
+        << "V      = " << std::setw(15) << root.V << std::endl
+        << "omega  = " << std::setw(15) << root.omega << std::endl
+        << "k_ref  = " << std::setw(15) << root.k_ref << std::endl
+        << "Modal Participation : " << std::endl ;
+        for (unsigned int j=0; j<nroots; j++)
+            *output
+            << "(" << std::setw(5) << j << "): "
+            << std::setw(10) << root.modal_participation(j)
+            << std::setw(3)  << " ";
+        *output << std::endl << std::endl;
+    }
+    
+        
 }
 

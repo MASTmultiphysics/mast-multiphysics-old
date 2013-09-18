@@ -153,7 +153,7 @@ public:
             unsigned int idx = floor(eta * (_points.size()-1));
 
             if (eta == 0.)
-                return 0.;
+                return (*_points.begin());
             else if (eta == 1.)
                 return (*_points.rbegin());
             else

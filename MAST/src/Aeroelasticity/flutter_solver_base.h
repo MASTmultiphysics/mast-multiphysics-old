@@ -48,8 +48,6 @@ public:
     
     FlightCondition* flight_condition;
     
-    std::vector<FlutterRoot> flutter_roots;
-    
     CoupledAeroStructuralModel* aero_structural_model;
 
     /*!
@@ -68,12 +66,6 @@ public:
     
     
     virtual std::pair<bool, const FlutterRoot*> find_next_root() = 0;
-    
-    
-    unsigned int n_roots_found() const
-    {
-        return flutter_roots.size();
-    }
     
     
     void set_output_file(std::string& nm)

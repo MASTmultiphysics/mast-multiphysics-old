@@ -23,8 +23,7 @@ public:
     UGFlutterSolver():
     FlutterSolverBase(),
     k_ref_range(std::pair<Real, Real>(0., 0.35)),
-    n_k_divs(10),
-    _previous_k_ref(0.)
+    n_k_divs(10)
     {}
     
     
@@ -177,11 +176,6 @@ public:
 
 protected:
     
-    /*!
-     *   reduced frequency for the previous evaluation
-     */
-    Real _previous_k_ref;
-
     /*!
      *   map of reduced frequency vs flutter solutions
      */

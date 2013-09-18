@@ -132,7 +132,7 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main_fluid (int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
     // Initialize libMesh.
     LibMeshInit init (argc, argv);
