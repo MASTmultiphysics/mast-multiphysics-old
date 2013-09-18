@@ -72,10 +72,25 @@ public:
     virtual std::pair<bool, const FlutterRoot*> find_next_root();
 
     /*!
+     *   This method checks if the flutter root corresponding to the 
+     *   lowest velocity crossover has been calculated. If not, then it
+     *   attempts to find that root using an iterative approach
+     */
+    virtual std::pair<bool, const FlutterRoot*> find_critical_root();
+
+    
+    /*!
      *   Prints the sorted roots to the \par output
      */
     void print_sorted_roots(std::ostream* output = NULL);
+
     
+    /*!
+     *   Prints the crossover points output. If no pointer to output is given
+     *   then the output defined by set_output_file() is used.
+     */
+    void print_crossover_points(std::ostream* output = NULL);
+
     
     class UGFlutterRoot: public FlutterRoot
     {
@@ -165,6 +180,8 @@ public:
         root_num(0),
         root(NULL)
         { }
+        
+        void print(std::ostream& output) const;
         
         std::pair<UGFlutterSolver::UGFlutterSolution*, UGFlutterSolver::UGFlutterSolution*>
         crossover_solutions;

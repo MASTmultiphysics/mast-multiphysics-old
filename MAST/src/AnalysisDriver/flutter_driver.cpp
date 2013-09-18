@@ -164,8 +164,9 @@ int main (int argc, char* const argv[])
     flutter_solver.k_ref_range.second    = infile("ug_upper_k", 0.35);
     flutter_solver.n_k_divs              = infile("ug_k_divs", 10);
     flutter_solver.scan_for_roots();
-    if (!flutter_solver.n_roots_found()) // only one root is needed at this point
-        flutter_solver.find_next_root();
+    if (!init.comm().rank())
+        flutter_solver.print_crossover_points();
+    flutter_solver.find_critical_root();
     if (!init.comm().rank())
         flutter_solver.print_sorted_roots();
 }

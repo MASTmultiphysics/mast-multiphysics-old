@@ -178,6 +178,39 @@ UGFlutterSolver::UGFlutterSolution::print(std::ostream &output,
 
 
 
+void
+UGFlutterSolver::UGFlutterRootCrossover::print(std::ostream &output) const
+{
+    const UGFlutterSolver::UGFlutterRoot
+    &lower = crossover_solutions.first->get_root(root_num),
+    &upper = crossover_solutions.second->get_root(root_num);
+    
+    output
+    << " Lower Root: " << std::endl
+    << "    k : " << std::setw(15) << lower.k_ref << std::endl
+    << "    g : " << std::setw(15) << lower.g << std::endl
+    << "    V : " << std::setw(15) << lower.V << std::endl
+    << "omega : " << std::setw(15) << lower.omega << std::endl
+    << " Upper Root: " << std::endl
+    << "    k : " << std::setw(15) << upper.k_ref << std::endl
+    << "    g : " << std::setw(15) << upper.g << std::endl
+    << "    V : " << std::setw(15) << upper.V << std::endl
+    << "omega : " << std::setw(15) << upper.omega << std::endl;
+    
+    if (root)
+        output
+        << "Critical Root: " << std::endl
+        << "    k : " << std::setw(15) << root->k_ref << std::endl
+        << "    g : " << std::setw(15) << root->g << std::endl
+        << "    V : " << std::setw(15) << root->V << std::endl
+        << "omega : " << std::setw(15) << root->omega << std::endl;
+    else
+        output << "Critical root not yet calculated." << std::endl;
+}
+
+
+
+
 UGFlutterSolver::~UGFlutterSolver()
 {
     std::map<Real, UGFlutterSolver::UGFlutterSolution*>::iterator it =
@@ -316,7 +349,7 @@ void UGFlutterSolver::scan_for_roots()
                     UGFlutterSolver::UGFlutterSolution *lower = sol_it->second,
                     *upper = sol_itp1->second;
                     
-                    if ((lower->get_root(i).g < 0.) &&
+                    if ((lower->get_root(i).g <= 0.) &&
                         (upper->get_root(i).g > 0.)) {
                         UGFlutterSolver::UGFlutterRootCrossover* cross =
                         new UGFlutterSolver::UGFlutterRootCrossover;
@@ -324,18 +357,18 @@ void UGFlutterSolver::scan_for_roots()
                         cross->crossover_solutions.second = upper; // +ve g
                         cross->root_num = i;
                         std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
-                        val( cross->root->V, cross);
+                        val( lower->get_root(i).V, cross);
                         _flutter_crossovers.insert(val);
                     }
                     else if ((lower->get_root(i).g > 0.) &&
-                             (upper->get_root(i).g < 0.)) {
+                             (upper->get_root(i).g <= 0.)) {
                         UGFlutterSolver::UGFlutterRootCrossover* cross =
                         new UGFlutterSolver::UGFlutterRootCrossover;
                         cross->crossover_solutions.first  = upper; // -ve g
                         cross->crossover_solutions.second = lower; // +ve g
                         cross->root_num = i;
                         std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
-                        val( cross->root->V, cross);
+                        val( upper->get_root(i).V, cross);
                         _flutter_crossovers.insert(val);
                     }
                 }
@@ -384,6 +417,50 @@ UGFlutterSolver::find_next_root()
     // if it gets here, no new root was found
     return std::pair<bool, FlutterRoot*> (false, NULL);
 }
+
+
+
+std::pair<bool, const FlutterRoot*>
+UGFlutterSolver::find_critical_root()
+{
+    // iterate over the cross-over points and calculate the next that has
+    // not been evaluated
+    std::map<Real, UGFlutterSolver::UGFlutterRootCrossover*>::iterator
+    it = _flutter_crossovers.begin(), end = _flutter_crossovers.end();
+    
+    if (it == end) // no potential cross-over points were identified
+        return std::pair<bool, FlutterRoot*> (false, NULL);
+    
+    // it is possible that once the root has been found, its velocity end up
+    // putting it at a higher velocity in the map, so we need to check if
+    // the critical root has changed
+    while (!it->second->root)
+    {
+        UGFlutterSolver::UGFlutterRootCrossover* cross = it->second;
+        
+        if (!cross->root) {
+            const unsigned int root_num = cross->root_num;
+            std::pair<bool, UGFlutterSolver::UGFlutterSolution*> bisection_sol =
+            bisection_search(cross->crossover_solutions,
+                             root_num, 1.0e-5, 10);
+            cross->root = &(bisection_sol.second->get_root(root_num));
+            
+            // now, remove this entry from the _flutter_crossover points and
+            // reinsert it with the actual critical velocity
+            _flutter_crossovers.erase(it);
+            std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
+            val(cross->root->V, cross);
+            _flutter_crossovers.insert(val);
+        }
+        
+        // update the iterator to make sure that this is updated
+        it = _flutter_crossovers.begin(); end = _flutter_crossovers.end();
+    }
+
+    // if it gets here, then the root was successfully found
+    return std::pair<bool, const FlutterRoot*> (true, it->second->root);
+}
+
 
 
 UGFlutterSolver::UGFlutterSolution*
@@ -555,7 +632,7 @@ UGFlutterSolver::print_sorted_roots(std::ostream* output)
         << "omega  = " << std::setw(15) << root.omega << std::endl
         << "k_ref  = " << std::setw(15) << root.k_ref << std::endl
         << "Modal Participation : " << std::endl ;
-        for (unsigned int j=0; j<nroots; j++)
+        for (unsigned int j=0; j<nvals; j++)
             *output
             << "(" << std::setw(5) << j << "): "
             << std::setw(10) << root.modal_participation(j)
@@ -565,4 +642,29 @@ UGFlutterSolver::print_sorted_roots(std::ostream* output)
     
         
 }
+
+
+void
+UGFlutterSolver::print_crossover_points(std::ostream* output)
+{
+    if (!output)
+        output = &_output;
+
+    *output << "n crossover points found: "
+    << std::setw(5) << _flutter_crossovers.size() << std::endl;
+    
+    std::multimap<Real, UGFlutterSolver::UGFlutterRootCrossover*>::const_iterator
+    it = _flutter_crossovers.begin(), end = _flutter_crossovers.end();
+    
+    unsigned int i=0;
+    
+    for ( ; it != end; it++) {
+        *output << "** Point : " << std::setw(5) << i << " **" << std::endl;
+        it->second->print(*output);
+        *output << std::endl;
+        i++;
+    }
+}
+
+
 
