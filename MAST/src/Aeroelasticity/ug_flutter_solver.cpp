@@ -294,7 +294,7 @@ void UGFlutterSolver::scan_for_roots()
             prev_sol = analyze(current_k_ref, prev_sol);
         }
         
-        const Real tol = 1.0e-5;
+        const Real tol = 1.0e-5, max_allowable_g = 0.75;
         
         //
         // for some cases some roots trail along the g=0 axis
@@ -303,9 +303,9 @@ void UGFlutterSolver::scan_for_roots()
         // These modes will not have a damping more than tolerance
         //
         const unsigned int nvals = prev_sol->n_roots();
-        std::vector<bool> undamped_modes_to_neglect(nvals);
-        std::fill(undamped_modes_to_neglect.begin(),
-                  undamped_modes_to_neglect.end(), false);
+        std::vector<bool> modes_to_neglect(nvals);
+        std::fill(modes_to_neglect.begin(),
+                  modes_to_neglect.end(), false);
 
         // look for the max g val for a mode, which will indicate if the
         // mode is undamped or not
@@ -321,45 +321,65 @@ void UGFlutterSolver::scan_for_roots()
             }
             // check the maximum damping seen for this mode
             if (max_g_val < tol)
-                undamped_modes_to_neglect[i] = true;
+                modes_to_neglect[i] = true;
         }
         
-        // identify the flutter cross-overs
-        for (unsigned int i=0; i<nvals; i++) {
+        // identify the flutter cross-overs. For this, move from
+        // higher k to lower k, and handle the k=0 cases separately
+        {
             std::map<Real, UGFlutterSolver::UGFlutterSolution*>::const_iterator
             sol_it    = _flutter_solutions.begin(), // first of the pair
-            sol_itp1  = _flutter_solutions.begin(), // second of the pair
             sol_end   = _flutter_solutions.end();
-            sol_itp1++; // increment for the next pair of results
+            if (sol_it == sol_end)
+                return;
             
-            while (sol_itp1 != sol_end) {
-                // special consideration for divergence, which occurs at
-                // k_ref = 0
-                if (sol_it->second->get_root(i).if_imag_V ||
-                    sol_itp1->second->get_root(i).if_imag_V) {
+            // check if k=0 exists, and identify
+            if (fabs(sol_it->second->k_ref()) < tol) { // k = 0
+                
+                // k=0 makes sense only for divergence roots. Do not use them
+                // for crossover points if a finite damping was seen. Hence,
+                // do nothing here, and move to the next iterator
+                for (unsigned int i=0; i<nvals; i++) {
+                    if (!sol_it->second->get_root(i).if_imag_V &&
+                        fabs(sol_it->second->get_root(i).g) < tol) {
+                        UGFlutterSolver::UGFlutterRootCrossover* cross =
+                        new UGFlutterSolver::UGFlutterRootCrossover;
+                        cross->crossover_solutions.first = sol_it->second;
+                        cross->crossover_solutions.second = sol_it->second;
+                        cross->root = &sol_it->second->get_root(i);
+                        cross->root_num = i;
+                        std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
+                        val( cross->root->V, cross);
+                        _flutter_crossovers.insert(val);
+                    }
+                }
+            }
+        }
+        
+        // now look for oscillatory roots crossover points in decreasing
+        // order of k_ref
+        for (unsigned int i=0; i<nvals; i++) {
+            std::map<Real, UGFlutterSolver::UGFlutterSolution*>::const_reverse_iterator
+            sol_rit    = _flutter_solutions.rbegin(), // first of the pair
+            sol_ritp1    = _flutter_solutions.rbegin(), // first of the pair
+            sol_rend   = _flutter_solutions.rend();
+            if (sol_rit == sol_rend)
+                return;
+
+            sol_ritp1++; // increment for the next pair of results
+            while (sol_ritp1 != sol_rend) {
+                // do not use k_ref = 0, or if the root is invalid
+                if (sol_rit->second->get_root(i).if_imag_V ||
+                    sol_ritp1->second->get_root(i).if_imag_V ||
+                    fabs(sol_rit->second->k_ref()) < tol ||
+                    fabs(sol_ritp1->second->k_ref()) < tol ||
+                    fabs(sol_rit->second->get_root(i).g) > max_allowable_g ||
+                    fabs(sol_ritp1->second->get_root(i).g) > max_allowable_g) {
                     // do nothing
                 }
-                else if ((fabs(sol_it->second->k_ref()) < tol) && // zero reduced frequency
-                    (fabs(sol_it->second->get_root(i).g) < tol)) { // zero damping
-                    UGFlutterSolver::UGFlutterRootCrossover* cross =
-                    new UGFlutterSolver::UGFlutterRootCrossover;
-                    cross->crossover_solutions.first = sol_it->second;
-                    cross->crossover_solutions.second = sol_it->second;
-                    cross->root = &sol_it->second->get_root(i);
-                    cross->root_num = i;
-                    std::pair<Real, UGFlutterSolver::UGFlutterRootCrossover*>
-                    val( cross->root->V, cross);
-                    _flutter_crossovers.insert(val);
-                }
-                else if ((fabs(sol_it->second->k_ref()) < tol) && // zero reduced frequency
-                         (fabs(sol_it->second->get_root(i).g) > tol)) {
-                    // k=0 makes sense only for divergence roots. Do not use them
-                    // for crossover points if a finite damping was seen. Hence,
-                    // do nothing here, and move to the next iterator
-                }
-                else if (!undamped_modes_to_neglect[i]) { // look for the flutter roots
-                    UGFlutterSolver::UGFlutterSolution *lower = sol_it->second,
-                    *upper = sol_itp1->second;
+                else if (!modes_to_neglect[i]) { // look for the flutter roots
+                    UGFlutterSolver::UGFlutterSolution *lower = sol_rit->second,
+                    *upper = sol_ritp1->second;
                     
                     if ((lower->get_root(i).g <= 0.) &&
                         (upper->get_root(i).g > 0.)) {
@@ -386,8 +406,8 @@ void UGFlutterSolver::scan_for_roots()
                 }
                 
                 // increment the pointers for next pair of roots
-                sol_it++;
-                sol_itp1++;
+                sol_rit++;
+                sol_ritp1++;
             }
         }
     }
