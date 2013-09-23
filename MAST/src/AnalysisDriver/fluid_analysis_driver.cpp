@@ -132,14 +132,9 @@ int main_fem_operator (int argc, char* const argv[])
 
 
 // The main program.
-int main (int argc, char* const argv[])
+int fluid_driver (LibMeshInit& init, GetPot& infile,
+                  int argc, char* const argv[])
 {
-    // Initialize libMesh.
-    LibMeshInit init (argc, argv);
-    
-    // Parse the input file
-    GetPot infile("system_input.in");
-    
     // Read in parameters from the input file
     const Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
@@ -304,9 +299,9 @@ int main (int argc, char* const argv[])
     // Print information about the mesh to the screen.
     mesh.print_info();
     
-    
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
+    equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // set data for flight condition
     FlightCondition flight_cond;
@@ -330,9 +325,9 @@ int main (int argc, char* const argv[])
     
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-    // Declare the system "EulerSystem"
-    EulerSystem & system =
-    equation_systems.add_system<EulerSystem> ("EulerSystem");
+    // Declare the system "FluidSystem"
+    FluidSystem & system =
+    equation_systems.add_system<FluidSystem> ("FluidSystem");
     system.flight_condition = &flight_cond;
     
     system.attach_init_function (init_euler_variables);
@@ -366,7 +361,7 @@ int main (int argc, char* const argv[])
     
     equation_systems.init ();
     
-    AerodynamicQoI aero_qoi(dim);
+    AerodynamicQoI aero_qoi(infile);
     aero_qoi.flight_condition = &flight_cond;
     
     system.attach_qoi(&aero_qoi);
@@ -627,9 +622,9 @@ int main (int argc, char* const argv[])
         // Write out this timestep if we're requested to
         if ((t_step%write_interval == 0) || !continue_iterations)
         {
-            fluid_post.postprocess();
-            system.assemble_qoi(); // calculate the quantities of interest
-            system.postprocess(); // set the qois to the post-process variables
+            //fluid_post.postprocess();
+            //system.assemble_qoi(); // calculate the quantities of interest
+            //system.postprocess(); // set the qois to the post-process variables
 
             std::ostringstream file_name, b_file_name;
             
@@ -644,16 +639,16 @@ int main (int argc, char* const argv[])
             Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                     equation_systems);
 
-            b_file_name << "b_out_"
-            << std::setw(3)
-            << std::setfill('0')
-            << std::right
-            << t_step
-            << ".pvtu";
-            
-            std::set<unsigned int> bc_ids; bc_ids.insert(0);
-            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
-                                               equation_systems);
+//            b_file_name << "b_out_"
+//            << std::setw(3)
+//            << std::setfill('0')
+//            << std::right
+//            << t_step
+//            << ".pvtu";
+//            
+//            std::set<unsigned int> bc_ids; bc_ids.insert(0);
+//            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
+//                                               equation_systems);
         }
         
     }

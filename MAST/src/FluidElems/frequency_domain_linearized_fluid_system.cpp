@@ -37,7 +37,7 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     vars.resize(dim+2);
     
     // initialize the fluid values
-    EulerElemBase::init_data();
+    FluidElemBase::init_data();
     
     // Check the input file for Reynolds number, application type,
     // approximation type
@@ -125,7 +125,7 @@ void FrequencyDomainLinearizedFluidSystem::localize_fluid_solution()
     
     
     System& fluid =
-    this->get_equation_systems().get_system<System>("EulerSystem");
+    this->get_equation_systems().get_system<System>("FluidSystem");
 
     _local_fluid_solution->init(fluid.solution->size(), true, SERIAL);
     fluid.solution->localize(*_local_fluid_solution,
@@ -212,7 +212,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
 
     // element dofs from steady solution to calculate the linearized quantities
     System& fluid =
-    this->get_equation_systems().get_system<System>("EulerSystem");
+    this->get_equation_systems().get_system<System>("FluidSystem");
     
     std::vector<dof_id_type> fluid_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
@@ -574,7 +574,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     
     // element dofs from steady solution to calculate the linearized quantities
     System& fluid =
-    this->get_equation_systems().get_system<System>("EulerSystem");
+    this->get_equation_systems().get_system<System>("FluidSystem");
     
     std::vector<dof_id_type> fluid_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
@@ -1193,7 +1193,7 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     // initialize the mesh function for the fluid solution,
     // this will be used for calculation of the element solution
     const System& fluid = this->get_equation_systems().get_system<System>
-    ("EulerSystem");
+    ("FluidSystem");
     const FrequencyDomainLinearizedFluidSystem& sd_fluid =
     this->get_equation_systems().get_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem");

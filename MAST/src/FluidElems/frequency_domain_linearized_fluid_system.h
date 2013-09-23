@@ -11,6 +11,7 @@
 
 // libmesh config includes
 #include "libmesh/libmesh_config.h"
+#include "libmesh/equation_systems.h"
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
@@ -28,14 +29,14 @@ using namespace libMesh;
 class SurfaceMotionBase;
 class FlightCondition;
 
-class FrequencyDomainLinearizedFluidSystem: public FEMSystem, public EulerElemBase
+class FrequencyDomainLinearizedFluidSystem: public FEMSystem, public FluidElemBase
 {
 public:
     FrequencyDomainLinearizedFluidSystem(EquationSystems& es,
                                          const std::string& name_in,
                                          const unsigned int number_in):
     FEMSystem(es, name_in, number_in),
-    EulerElemBase(),
+    FluidElemBase(*es.parameters.get<GetPot*>("input_file")),
     perturbed_surface_motion(NULL),
     _if_localized_sol(false)
     { }

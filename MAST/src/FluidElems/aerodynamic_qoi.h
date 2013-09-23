@@ -10,6 +10,7 @@
 #define __MAST__aerodynamic_qoi__
 
 // libMesh includes
+#include "libmesh/getpot.h"
 #include "libmesh/diff_qoi.h"
 
 // FESystem includes
@@ -19,14 +20,15 @@
 // Bring in everything from the libMesh namespace
 using namespace libMesh;
 
-class AerodynamicQoI : public EulerElemBase, public DifferentiableQoI
+class AerodynamicQoI : public FluidElemBase, public DifferentiableQoI
 {
 public:
-    AerodynamicQoI(const unsigned int dimension):
+    AerodynamicQoI(GetPot& infile):
+    FluidElemBase(infile),
     DifferentiableQoI()
     {
         // set the dimension
-        this->dim = dimension;
+        this->dim = infile("dimension", 0);
         
         // initialize the variable vector
         _fluid_vars.resize(dim+2);
@@ -38,7 +40,7 @@ public:
         assemble_qoi_internal_sides = false;
         assemble_qoi_elements = false;
         
-        EulerElemBase::init_data();
+        FluidElemBase::init_data();
     }
     
     virtual ~AerodynamicQoI(){}
@@ -55,7 +57,7 @@ public:
     
     virtual AutoPtr<DifferentiableQoI> clone( )
     {
-        AerodynamicQoI* new_qoi = new AerodynamicQoI(dim);
+        AerodynamicQoI* new_qoi = new AerodynamicQoI(_infile);
         new_qoi->flight_condition = this->flight_condition;
         
         AutoPtr<DifferentiableQoI> my_clone(new_qoi);

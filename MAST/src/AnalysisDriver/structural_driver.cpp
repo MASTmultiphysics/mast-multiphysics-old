@@ -32,11 +32,9 @@
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 // The main program.
-int main_static (int argc, char* const argv[])
+int static_structural_driver (LibMeshInit& init, GetPot& infile,
+                              int argc, char* const argv[])
 {
-    // Initialize libMesh.
-    LibMeshInit init (argc, argv);
-
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
@@ -98,15 +96,11 @@ void get_beam_dirichlet_dofs(EquationSystems& es,
                              std::set<unsigned int>& dirichlet_dof_ids);
 
 
-int main_modal (int argc, char* const argv[])
+int modal_structural_driver (LibMeshInit& init, GetPot& infile,
+                             int argc, char* const argv[])
 {
-    // Initialize libMesh.
-    LibMeshInit init (argc, argv);
-    
     SerialMesh mesh(init.comm());
 
-    GetPot infile("system_input.in");
-    
     const unsigned int dim = infile("dimension", 0);
 
     const Real pi = acos(-1.),

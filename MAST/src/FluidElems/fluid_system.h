@@ -16,6 +16,8 @@
 
 // DiffSystem framework files
 #include "libmesh/fem_system.h"
+#include "libmesh/equation_systems.h"
+
 
 // FESystem includes
 #include "FluidElems/fluid_elem_base.h"
@@ -35,15 +37,15 @@ void init_euler_variables(EquationSystems& es,
 
 
 
-class EulerSystem : public FEMSystem, public EulerElemBase
+class FluidSystem : public FEMSystem, public FluidElemBase
 {
 public:
     // Constructor
-    EulerSystem(EquationSystems& es,
+    FluidSystem(EquationSystems& es,
                 const std::string& name_in,
                 const unsigned int number_in)
     : FEMSystem(es, name_in, number_in),
-    EulerElemBase(),
+    FluidElemBase(*es.parameters.get<GetPot*>("input_file")),
     _rho_norm_old(1.),
     _rho_norm_curr(1.),
     dc_recalculate_tolerance(1.0e-8),

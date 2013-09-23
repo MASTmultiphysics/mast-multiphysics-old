@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		690D674B17B48D0700C4AE88 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 690D674A17B48D0700C4AE88 /* vecLib.framework */; };
 		69C1CE1117A943DF00747A90 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C1CE1017A943DF00747A90 /* rigid_surface_motion.cpp */; };
+		EB3E4D7217C2AF0700BDFCFF /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3E4D7117C2AF0700BDFCFF /* FESystem.dylib */; };
+		EB41AEE817EA157000288448 /* pk_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB41AEE617EA157000288448 /* pk_flutter_solver.cpp */; };
+		EB69869217E79B9000E4530F /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */; };
+		EBB0998717F08F0F00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998617F08F0F00272355 /* main.cpp */; };
 		EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224616EA7FC80078E733 /* libmpi.1.dylib */; };
 		EBE84D6417A6B3F400AEE871 /* flutter_solver_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D2D17A6B3F400AEE871 /* flutter_solver_base.cpp */; };
@@ -46,6 +50,15 @@
 		69C1CE0E17A942C500747A90 /* rigid_surface_motion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rigid_surface_motion.h; sourceTree = "<group>"; };
 		69C1CE0F17A942D500747A90 /* flexible_surface_motion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flexible_surface_motion.h; sourceTree = "<group>"; };
 		69C1CE1017A943DF00747A90 /* rigid_surface_motion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rigid_surface_motion.cpp; sourceTree = "<group>"; };
+		EB3E4D7117C2AF0700BDFCFF /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
+		EB41AEE617EA157000288448 /* pk_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pk_flutter_solver.cpp; sourceTree = "<group>"; };
+		EB41AEE717EA157000288448 /* pk_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pk_flutter_solver.h; sourceTree = "<group>"; };
+		EB41AEEF17EA254A00288448 /* gaussian_bump_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gaussian_bump_mesh.h; sourceTree = "<group>"; };
+		EB41AEF017EA254A00288448 /* mesh_initializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_initializer.h; sourceTree = "<group>"; };
+		EB41AEF117EA254A00288448 /* panel_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = panel_mesh.h; sourceTree = "<group>"; };
+		EB41AEF217EA254A00288448 /* ringleb_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringleb_mesh.h; sourceTree = "<group>"; };
+		EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ug_flutter_solver.cpp; sourceTree = "<group>"; };
+		EBB0998617F08F0F00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3224616EA7FC80078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBE84D2617A6B3F400AEE871 /* aerodynamic_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_model.h; sourceTree = "<group>"; };
@@ -93,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB3E4D7217C2AF0700BDFCFF /* FESystem.dylib in Frameworks */,
 				690D674B17B48D0700C4AE88 /* vecLib.framework in Frameworks */,
 				EBF96DF216EA6C9200316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */,
@@ -103,6 +117,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		EB41AEEE17EA254A00288448 /* Mesh */ = {
+			isa = PBXGroup;
+			children = (
+				EB41AEEF17EA254A00288448 /* gaussian_bump_mesh.h */,
+				EB41AEF017EA254A00288448 /* mesh_initializer.h */,
+				EB41AEF117EA254A00288448 /* panel_mesh.h */,
+				EB41AEF217EA254A00288448 /* ringleb_mesh.h */,
+			);
+			path = Mesh;
+			sourceTree = "<group>";
+		};
 		EBE84D2417A6B3F400AEE871 /* src */ = {
 			isa = PBXGroup;
 			children = (
@@ -111,6 +136,8 @@
 				EBE84D3917A6B3F400AEE871 /* Base */,
 				EBE84D3B17A6B3F400AEE871 /* Flight */,
 				EBE84D3D17A6B3F400AEE871 /* FluidElems */,
+				EBB0998617F08F0F00272355 /* main.cpp */,
+				EB41AEEE17EA254A00288448 /* Mesh */,
 				EBE84D5017A6B3F400AEE871 /* Numerics */,
 				EBE84D5317A6B3F400AEE871 /* PropertyCards */,
 				EBE84D5517A6B3F400AEE871 /* Solvers */,
@@ -131,7 +158,10 @@
 				EBE84D2A17A6B3F400AEE871 /* fem_structural_model.h */,
 				EBE84D2D17A6B3F400AEE871 /* flutter_solver_base.cpp */,
 				EBE84D2E17A6B3F400AEE871 /* flutter_solver_base.h */,
+				EB41AEE617EA157000288448 /* pk_flutter_solver.cpp */,
+				EB41AEE717EA157000288448 /* pk_flutter_solver.h */,
 				EBE84D2F17A6B3F400AEE871 /* structural_model.h */,
+				EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */,
 				EBE84D3117A6B3F400AEE871 /* ug_flutter_solver.h */,
 			);
 			path = Aeroelasticity;
@@ -235,6 +265,7 @@
 		EBF96DA216EA6B3200316D86 = {
 			isa = PBXGroup;
 			children = (
+				EB3E4D7117C2AF0700BDFCFF /* FESystem.dylib */,
 				690D674A17B48D0700C4AE88 /* vecLib.framework */,
 				EBE84D2417A6B3F400AEE871 /* src */,
 				EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */,
@@ -308,6 +339,7 @@
 				EBE84D6617A6B3F400AEE871 /* flutter_driver.cpp in Sources */,
 				EBE84D6717A6B3F400AEE871 /* structural_driver.cpp in Sources */,
 				EBE84D6817A6B3F400AEE871 /* aerodynamic_qoi.cpp in Sources */,
+				EBB0998717F08F0F00272355 /* main.cpp in Sources */,
 				EBE84D6917A6B3F400AEE871 /* fluid_elem_base.cpp in Sources */,
 				EBE84D6A17A6B3F400AEE871 /* fluid_newton_solver.cpp in Sources */,
 				EBE84D6B17A6B3F400AEE871 /* fluid_system.cpp in Sources */,
@@ -317,6 +349,8 @@
 				EBE84D7017A6B3F400AEE871 /* structural_system_base.cpp in Sources */,
 				EBE84D7117A6B3F400AEE871 /* thermal_elem_base.cpp in Sources */,
 				69C1CE1117A943DF00747A90 /* rigid_surface_motion.cpp in Sources */,
+				EB69869217E79B9000E4530F /* ug_flutter_solver.cpp in Sources */,
+				EB41AEE817EA157000288448 /* pk_flutter_solver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -14,7 +14,7 @@
 #include "libmesh/adaptive_time_solver.h"
 
 // Forward declerations
-class EulerSystem;
+class FluidSystem;
 
 
 /**

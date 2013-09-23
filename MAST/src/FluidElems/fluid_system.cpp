@@ -37,11 +37,12 @@ Real euler_solution_value(const Point& p,
                           const std::string& sys_name,
                           const std::string& var_name)
 {
-    libmesh_assert_equal_to (sys_name, "EulerSystem");
+    libmesh_assert_equal_to (sys_name, "FluidSystem");
     
     // since we are initializing the solution, variable values at all points is same
     
     if (var_name == "rho")
+        
     {
         return parameters.get<Real> ("rho_inf");
     }
@@ -72,10 +73,10 @@ void init_euler_variables(EquationSystems& es,
 {
     // It is a good idea to make sure we are initializing
     // the proper system.
-    libmesh_assert_equal_to (system_name, "EulerSystem");
+    libmesh_assert_equal_to (system_name, "FluidSystem");
     
     // Get a reference to the Convection-Diffusion system object.
-    EulerSystem & system = es.get_system<EulerSystem>("EulerSystem");
+    FluidSystem & system = es.get_system<FluidSystem>("FluidSystem");
     
     // Project initial conditions at time 0
     libmesh_assert_equal_to(system.time, 0.);
@@ -84,7 +85,7 @@ void init_euler_variables(EquationSystems& es,
 }
 
 
-void EulerSystem::init_data ()
+void FluidSystem::init_data ()
 {
     this->use_fixed_solution = true;
     
@@ -93,7 +94,7 @@ void EulerSystem::init_data ()
     vars.resize(dim+2);
     
     // initialize the fluid values
-    EulerElemBase::init_data();
+    FluidElemBase::init_data();
     
     // Check the input file for Reynolds number, application type,
     // approximation type
@@ -176,7 +177,7 @@ void EulerSystem::init_data ()
 
 
 
-void EulerSystem::init_context(DiffContext &context)
+void FluidSystem::init_context(DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
@@ -208,7 +209,7 @@ void EulerSystem::init_context(DiffContext &context)
 
 
 
-bool EulerSystem::element_time_derivative (bool request_jacobian,
+bool FluidSystem::element_time_derivative (bool request_jacobian,
                                            DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
@@ -467,7 +468,7 @@ bool EulerSystem::element_time_derivative (bool request_jacobian,
 
 
 
-bool EulerSystem::side_time_derivative (bool request_jacobian,
+bool FluidSystem::side_time_derivative (bool request_jacobian,
                                         DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
@@ -950,7 +951,7 @@ bool EulerSystem::side_time_derivative (bool request_jacobian,
 
 
 
-bool EulerSystem::mass_residual (bool request_jacobian,
+bool FluidSystem::mass_residual (bool request_jacobian,
                                  DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
@@ -1074,7 +1075,7 @@ bool EulerSystem::mass_residual (bool request_jacobian,
 
 
 
-void EulerSystem::postprocess()
+void FluidSystem::postprocess()
 {
     for (unsigned int i=0; i<this->qoi.size(); i++)
         if (i == 0)
@@ -1095,7 +1096,7 @@ void EulerSystem::postprocess()
 
 
 
-void EulerSystem::evaluate_recalculate_dc_flag()
+void FluidSystem::evaluate_recalculate_dc_flag()
 {
     Real norm = this->calculate_norm(*(this->solution), this->vars[0], L2),
     relative_change0 = fabs(_rho_norm_curr - _rho_norm_old)/_rho_norm_curr,
@@ -1250,8 +1251,8 @@ void FluidPostProcessSystem::init_data()
 void FluidPostProcessSystem::postprocess()
 {
     // get the solution vector from
-    const EulerSystem& fluid =
-    this->get_equation_systems().get_system<EulerSystem>("EulerSystem");
+    const FluidSystem& fluid =
+    this->get_equation_systems().get_system<FluidSystem>("FluidSystem");
     
     std::vector<unsigned int> fluid_vars(fluid.n_vars());
     std::vector<std::string> post_process_var_names(this->n_vars());

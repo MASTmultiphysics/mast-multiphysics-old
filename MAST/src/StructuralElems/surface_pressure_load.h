@@ -38,7 +38,7 @@ public:
         _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
         
         System& nonlin_sys =
-        linearized_sys.get_equation_systems().get_system<System>("EulerSystem");
+        linearized_sys.get_equation_systems().get_system<System>("FluidSystem");
         MeshBase& nonlinear_sys_mesh = nonlin_sys.get_mesh();
         _nonlinear_mesh_serializer.reset(new MeshSerializer(nonlinear_sys_mesh, true));
         

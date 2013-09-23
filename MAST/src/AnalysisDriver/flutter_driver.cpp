@@ -31,13 +31,9 @@
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
-int main (int argc, char* const argv[])
+int flutter_driver (LibMeshInit& init, GetPot& infile,
+                    int argc, char* const argv[])
 {
-    // Initialize libMesh.
-    LibMeshInit init (argc, argv);
-
-    GetPot infile("system_input.in");
-
     // set data for flight condition
     FlightCondition flight_cond;
     for (unsigned int i=0; i<3; i++)
@@ -64,7 +60,10 @@ int main (int argc, char* const argv[])
     // *****************************************
     ParallelMesh fluid_mesh(init.comm());
     fluid_mesh.read("saved_mesh.xdr");
+
     EquationSystems fluid_equation_systems (fluid_mesh);
+    fluid_equation_systems.parameters.set<GetPot*>("input_file") = &infile;
+    
     FrequencyDomainLinearizedFluidSystem & linearized_fluid_system =
     fluid_equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem");
@@ -134,7 +133,8 @@ int main (int argc, char* const argv[])
     
     // read the eigenvalues
     FEMStructuralModel structural_model(structural_system);
-    GetPot modal_data("modal_data.in");
+    std::string nm = infile("modal_data", "");
+    GetPot modal_data(nm);
     unsigned int neig = modal_data("n_eig", 0);
     structural_model.eigen_vals.resize(neig);
     for (unsigned int i=0; i<neig; i++)
@@ -147,14 +147,14 @@ int main (int argc, char* const argv[])
     
     // attach the fluid and structural systems to the models
     System& nonlinear_fluid_system =
-    fluid_equation_systems.get_system<System>("EulerSystem");
+    fluid_equation_systems.get_system<System>("FluidSystem");
     CFDAerodynamicModel aero_model(nonlinear_fluid_system,
                                    linearized_fluid_system);
     CoupledFluidStructureSystem
     coupled_system(aero_model, structural_model);
 
     // create the solvers
-    std::string nm  = infile("flutter_output", "flutter_output.txt");
+    nm  = infile("flutter_output", "flutter_output.txt");
     UGFlutterSolver flutter_solver;
     if (!init.comm().rank())
         flutter_solver.set_output_file(nm);
@@ -169,6 +169,8 @@ int main (int argc, char* const argv[])
     flutter_solver.find_critical_root();
     if (!init.comm().rank())
         flutter_solver.print_sorted_roots();
+    
+    return 0;
 }
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS

@@ -1,19 +1,18 @@
 //
 //  euler_elem_base.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/6/13.
 //
 //
 
+// C++ includes
+#include <iomanip>
 
 // FESystem includes
 #include "FluidElems/fluid_elem_base.h"
 #include "FluidElems/fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
-
-// C++ includes
-#include <iomanip>
 
 // Basic include files
 #include "libmesh/getpot.h"
@@ -262,35 +261,33 @@ SmallPerturbationPrimitiveSolution<ValType>::get_duvec(DenseVector<ValType>& du)
 
 
 
-EulerElemBase::~EulerElemBase()
+FluidElemBase::~FluidElemBase()
 {
 
 }
 
 
-void EulerElemBase::init_data ()
+void FluidElemBase::init_data ()
 {
     // Check the input file for Reynolds number, application type,
     // approximation type
 
-    GetPot infile("euler.in");
-    
     // check if the simulation is viscous or inviscid
-    _if_viscous = infile("if_viscous", false);
-    _if_full_linearization = infile("if_full_linearization", true);
+    _if_viscous = _infile("if_viscous", false);
+    _if_full_linearization = _infile("if_full_linearization", true);
     _if_update_stabilization_per_quadrature_point =
-    infile("if_update_stabilization_per_quadrature_point", true);
+    _infile("if_update_stabilization_per_quadrature_point", true);
     
     // read the boundary conditions
     unsigned int n_bc, bc_id;
     // first the inviscid conditions
     // slip wall bc
-    n_bc = infile("n_slip_wall_bc", 0);
+    n_bc = _infile("n_slip_wall_bc", 0);
     if (n_bc > 0)
     {
         for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
         {
-            bc_id = infile("slip_wall_bc", 0, i_bc);
+            bc_id = _infile("slip_wall_bc", 0, i_bc);
             _boundary_condition.insert
             (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
              (bc_id, SLIP_WALL));
@@ -299,12 +296,12 @@ void EulerElemBase::init_data ()
 
     
     // symmetry wall bc
-    n_bc = infile("n_symmetry_wall_bc", 0);
+    n_bc = _infile("n_symmetry_wall_bc", 0);
     if (n_bc > 0)
     {
         for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
         {
-            bc_id = infile("symmetry_wall_bc", 0, i_bc);
+            bc_id = _infile("symmetry_wall_bc", 0, i_bc);
             _boundary_condition.insert
             (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
              (bc_id, SYMMETRY_WALL));
@@ -313,12 +310,12 @@ void EulerElemBase::init_data ()
 
     
     // far field bc
-    n_bc = infile("n_far_field_bc", 0);
+    n_bc = _infile("n_far_field_bc", 0);
     if (n_bc > 0)
     {
         for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
         {
-            bc_id = infile("far_field_bc", 0, i_bc);
+            bc_id = _infile("far_field_bc", 0, i_bc);
             _boundary_condition.insert
             (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
              (bc_id, FAR_FIELD));
@@ -329,12 +326,12 @@ void EulerElemBase::init_data ()
     if (_if_viscous)
     {
         // no-slip wall
-        n_bc = infile("n_no_slip_bc", 0);
+        n_bc = _infile("n_no_slip_bc", 0);
         if (n_bc > 0)
         {
             for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
             {
-                bc_id = infile("no_slip_bc", 0, i_bc);
+                bc_id = _infile("no_slip_bc", 0, i_bc);
                 _boundary_condition.insert
                 (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
                  (bc_id, NO_SLIP_WALL));
@@ -342,12 +339,12 @@ void EulerElemBase::init_data ()
         }
 
         // isothermal bc
-        n_bc = infile("n_isothermal_bc", 0);
+        n_bc = _infile("n_isothermal_bc", 0);
         if (n_bc > 0)
         {
             for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
             {
-                bc_id = infile("isothermal_bc", 0, i_bc);
+                bc_id = _infile("isothermal_bc", 0, i_bc);
                 _boundary_condition.insert
                 (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
                  (bc_id, ISOTHERMAL));
@@ -355,12 +352,12 @@ void EulerElemBase::init_data ()
         }
 
         // adiabatic wall
-        n_bc = infile("n_adiabatic_bc", 0);
+        n_bc = _infile("n_adiabatic_bc", 0);
         if (n_bc > 0)
         {
             for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
             {
-                bc_id = infile("adiabatic_bc", 0, i_bc);
+                bc_id = _infile("adiabatic_bc", 0, i_bc);
                 _boundary_condition.insert
                 (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
                  (bc_id, ADIABATIC));
@@ -394,7 +391,7 @@ void EulerElemBase::init_data ()
 
 
 
-void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
+void FluidElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 {
     vars_inf(0) = flight_condition->rho();
     vars_inf(1) = flight_condition->rho_u1();
@@ -406,7 +403,7 @@ void EulerElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 
 
 
-void EulerElemBase::update_solution_at_quadrature_point
+void FluidElemBase::update_solution_at_quadrature_point
 ( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const bool if_elem_domain, const DenseVector<Real>& elem_solution,
  DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
@@ -463,7 +460,7 @@ void EulerElemBase::update_solution_at_quadrature_point
 
 
 void
-EulerElemBase::calculate_advection_flux(const unsigned int calculate_dim,
+FluidElemBase::calculate_advection_flux(const unsigned int calculate_dim,
                                         const PrimitiveSolution& sol,
                                         DenseVector<Real>& flux)
 {
@@ -535,7 +532,7 @@ EulerElemBase::calculate_advection_flux(const unsigned int calculate_dim,
 
 
 void
-EulerElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
+FluidElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
                                         const PrimitiveSolution& sol,
                                         const DenseMatrix<Real>& stress_tensor,
                                         const DenseVector<Real>& temp_gradient,
@@ -565,7 +562,7 @@ EulerElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
 
 
 void
-EulerElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
+FluidElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
                                            const std::vector<FEMOperatorMatrix>& dB_mat,
                                            const DenseMatrix<Real>& dprim_dcons,
                                            const PrimitiveSolution& psol,
@@ -601,7 +598,7 @@ EulerElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
 
 
 void
-EulerElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution& sol,
+FluidElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution& sol,
                                                         DenseMatrix<Real>& dcons_dprim,
                                                         DenseMatrix<Real>& dprim_dcons)
 {
@@ -687,7 +684,7 @@ EulerElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution&
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_dim,
+FluidElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_dim,
                                                  const PrimitiveSolution& sol,
                                                  DenseMatrix<Real>& mat)
 {
@@ -832,7 +829,7 @@ EulerElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_di
 
 
 void
-EulerElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
+FluidElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
                                                  const unsigned int deriv_dim,
                                                  const PrimitiveSolution& sol,
                                                  DenseMatrix<Real>& mat)
@@ -1046,7 +1043,7 @@ EulerElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
+FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
 (const unsigned int calculate_dim, const PrimitiveSolution& sol,
  std::vector<DenseMatrix<Real> >& mat)
 {
@@ -1076,7 +1073,7 @@ EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_va
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
+FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
 (const unsigned int calculate_dim,
  const unsigned int primitive_var,
  const PrimitiveSolution& sol,
@@ -1351,7 +1348,7 @@ EulerElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_varia
 
 
 void
-EulerElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal
+FluidElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal
 (const PrimitiveSolution& sol, const Point& normal, DenseMatrix<Real>& eig_vals,
  DenseMatrix<Real>& l_eig_mat, DenseMatrix<Real>& l_eig_mat_inv_tr)
 {
@@ -1606,7 +1603,7 @@ EulerElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal
 
 
 void
-EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+FluidElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
 (const PrimitiveSolution& sol,
  const Real ui_ni, const Point& nvec,
  const DenseVector<Real>& dnormal, DenseMatrix<Real>& mat)
@@ -1722,7 +1719,7 @@ EulerElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
 
 
 void
-EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
+FluidElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
                                                    DenseMatrix<Real>& dUdV,
                                                    DenseMatrix<Real>& dVdU)
 {
@@ -1865,7 +1862,7 @@ EulerElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
 
 
 bool
-EulerElemBase::calculate_barth_tau_matrix
+FluidElemBase::calculate_barth_tau_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const PrimitiveSolution& sol,
  DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
@@ -1920,7 +1917,7 @@ EulerElemBase::calculate_barth_tau_matrix
 
 
 bool
-EulerElemBase::calculate_aliabadi_tau_matrix
+FluidElemBase::calculate_aliabadi_tau_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const PrimitiveSolution& sol,
  DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
@@ -2059,7 +2056,7 @@ EulerElemBase::calculate_aliabadi_tau_matrix
 
 
 void
-EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
+FluidElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
                                 const unsigned int qp, FEMContext& c,
                                 DenseMatrix<Real>& dxi_dX,
                                 DenseMatrix<Real>& dX_dxi)
@@ -2140,7 +2137,7 @@ EulerElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
 
 
 
-void EulerElemBase::calculate_aliabadi_discontinuity_operator
+void FluidElemBase::calculate_aliabadi_discontinuity_operator
 ( const std::vector<unsigned int>& vars, const unsigned int qp,
   FEMContext& c,  const PrimitiveSolution& sol,
   const DenseVector<Real>& elem_solution,
@@ -2201,7 +2198,7 @@ void EulerElemBase::calculate_aliabadi_discontinuity_operator
 
 
 
-void EulerElemBase::calculate_yzbeta_discontinuity_operator
+void FluidElemBase::calculate_yzbeta_discontinuity_operator
 (  const std::vector<unsigned int>& vars, const unsigned int qp,
    FEMContext& c, const DenseVector<Real>& elem_solution,
    const std::vector<FEMOperatorMatrix>& dB_mat,
@@ -2276,7 +2273,7 @@ void EulerElemBase::calculate_yzbeta_discontinuity_operator
 
 
 
-void EulerElemBase::calculate_differential_operator_matrix
+void FluidElemBase::calculate_differential_operator_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
  const FEMOperatorMatrix& B_mat, const std::vector<FEMOperatorMatrix>& dB_mat,

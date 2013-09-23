@@ -29,6 +29,9 @@
 
 using namespace libMesh;
 
+// Forward declerations
+class GetPot;
+
 enum FluidPrimitiveVars
 { RHO_PRIM, VEL1, VEL2, VEL3, TEMP };
 enum FluidConservativeVars
@@ -86,19 +89,20 @@ public:
 // The Navier-Stokes system class.
 // FEMSystem, TimeSolver and  NewtonSolver will handle most tasks,
 // but we must specify element residuals
-class EulerElemBase
+class FluidElemBase
 {
 public:
     // Constructor
-    EulerElemBase():
+    FluidElemBase(GetPot& infile):
     _if_viscous(false), _if_full_linearization(false),
     _if_update_stabilization_per_quadrature_point(true),
     surface_motion(NULL),
     flight_condition(NULL),
-    dim(0)
+    dim(0),
+    _infile(infile)
     { }
 
-    virtual ~EulerElemBase();
+    virtual ~FluidElemBase();
 
     
     void init_data();
@@ -252,7 +256,8 @@ protected:
     
     bool _if_viscous, _if_full_linearization,
     _if_update_stabilization_per_quadrature_point;
-;
+    
+    GetPot& _infile;
     
     std::multimap<unsigned int, FluidBoundaryConditionType> _boundary_condition;
 
