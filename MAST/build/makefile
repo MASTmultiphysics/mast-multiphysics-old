@@ -36,7 +36,7 @@ ifeq (${PLATFORM},Darwin)
     VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
     MPI_INCLUDE_DIR=/opt/local/include/openmpi
     MPI_LIB_DIR=/opt/local/lib/openmpi
-    GCC_FLAGS_DEBUG = -g3 -O0 -Wall 
+    GCC_FLAGS_DEBUG = -g3 -O0 -Wall -DDEBUG -felide-constructors 
     GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments 
     GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments 
 endif
@@ -198,8 +198,6 @@ mast-oprof-complex: $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_
 
 clean:
 	rm -rf $(patsubst %.cpp,%-${METHOD}-${SCALAR}-cpp.o,${FESYSTEM_LIB_SOURCES})  mast-${METHOD}-${SCALAR}
-
-clean-deps:
 	rm -f ${DEP_FILES}
 
 -include ${DEP_FILES}
