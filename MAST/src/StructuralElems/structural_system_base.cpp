@@ -42,38 +42,29 @@ void StructuralSystemBase::init_data ()
     
     vars.resize(6);
 
+    FEFamily fefamily = LAGRANGE;
+    Order order = FIRST;
     
-    GetPot infile("structural.in");
-    
-    unsigned int o = infile("fe_order", 1);
-    std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
-    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
-    
-    vars.push_back(this->add_variable ( "ux", static_cast<Order>(o), fefamily));
-    vars.push_back(this->add_variable ( "uy", static_cast<Order>(o), fefamily));
-    vars.push_back(this->add_variable ( "uz", static_cast<Order>(o), fefamily));
-    vars.push_back(this->add_variable ( "tx", static_cast<Order>(o), fefamily));
-    vars.push_back(this->add_variable ( "ty", static_cast<Order>(o), fefamily));
-    vars.push_back(this->add_variable ( "tz", static_cast<Order>(o), fefamily));
+    vars.push_back(this->add_variable ( "ux", order, fefamily));
+    vars.push_back(this->add_variable ( "uy", order, fefamily));
+    vars.push_back(this->add_variable ( "uz", order, fefamily));
+    vars.push_back(this->add_variable ( "tx", order, fefamily));
+    vars.push_back(this->add_variable ( "ty", order, fefamily));
+    vars.push_back(this->add_variable ( "tz", order, fefamily));
     
     for (unsigned int i=0; i<vars.size(); i++)
         this->time_evolving(vars[i]);
-    
-    // Useful debugging options
-    this->verify_analytic_jacobians = infile("verify_analytic_jacobians", 0.);
-    this->print_jacobians = infile("print_jacobians", false);
-    this->print_element_jacobians = infile("print_element_jacobians", false);
     
     // read in the boudnary conditions
     unsigned int n_bc, bc_id;
     // first the inviscid conditions
     // slip wall bc
-    n_bc = infile("n_dirichlet_bc", 0);
+    n_bc = _infile("n_dirichlet_bc", 0);
     if (n_bc > 0)
     {
         for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
         {
-            bc_id = infile("dirichlet_bc", 0, i_bc);
+            bc_id = _infile("dirichlet_bc", 0, i_bc);
             _boundary_condition.insert
             (std::multimap<unsigned int, StructuralBoundaryConditionType>::value_type
              (bc_id, DIRICHLET));

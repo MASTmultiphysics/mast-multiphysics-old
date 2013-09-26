@@ -10,6 +10,8 @@
 // libmesh includes
 #include "libmesh/libmesh_config.h"
 #include "libmesh/fem_system.h"
+#include "libmesh/getpot.h"
+#include "libmesh/equation_systems.h"
 
 
 using namespace libMesh;
@@ -30,6 +32,7 @@ public:
                      const std::string& name_in,
                      const unsigned int number_in)
     : FEMSystem(es, name_in, number_in),
+    _infile(*es.parameters.get<GetPot*>("input_file")),
     dim(0)
     {}
     
@@ -52,6 +55,7 @@ public:
     
 protected:
     
+    GetPot& _infile;
     unsigned int dim;
     std::map<unsigned int, StructuralBoundaryConditionType> _boundary_condition;
 };

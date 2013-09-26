@@ -99,13 +99,11 @@ void FluidSystem::init_data ()
     // Check the input file for Reynolds number, application type,
     // approximation type
     
-    GetPot infile("euler.in");
-    
     // set parameter values
     Parameters& params = this->get_equation_systems().parameters;
     
-    unsigned int o = infile("fe_order", 1);
-    std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
+    unsigned int o = _infile("fe_order", 1);
+    std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     vars[0]  = this->add_variable ( "rho", static_cast<Order>(o), fefamily);
@@ -135,9 +133,9 @@ void FluidSystem::init_data ()
     params.set<Real> ("rhoe_inf") = flight_condition->rho_e();
     
     // Useful debugging options
-    this->verify_analytic_jacobians = infile("verify_analytic_jacobians", 0.);
-    this->print_jacobians = infile("print_jacobians", false);
-    this->print_element_jacobians = infile("print_element_jacobians", false);
+    this->verify_analytic_jacobians = _infile("verify_analytic_jacobians", 0.);
+    this->print_jacobians = _infile("print_jacobians", false);
+    this->print_element_jacobians = _infile("print_element_jacobians", false);
     
     // initialize the Dirichlet boundary conditions
     std::multimap<unsigned, FluidBoundaryConditionType>::const_iterator
@@ -1221,13 +1219,8 @@ void FluidPostProcessSystem::init_data()
 {
     const unsigned int dim = this->get_mesh().mesh_dimension();
     
-    GetPot infile("euler.in");
-    
-    unsigned int o = infile("fe_order", 1);
-    std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
-    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
-    
-    const Order order = static_cast<Order>(fmin(2, o));
+    const FEFamily fefamily = LAGRANGE;
+    const Order order = FIRST;
     
     u = this->add_variable("ux", order, fefamily);
     if (dim > 1)
