@@ -354,7 +354,7 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
     core_time_solver->theta        = infile("timesolver_theta", 1.0);
     
     timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
-    timesolver->diff_solver().reset(new FluidNewtonSolver(system));
+    timesolver->diff_solver().reset(new NewtonSolver(system));
     system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
 
     system.dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
@@ -622,9 +622,9 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
         // Write out this timestep if we're requested to
         if ((t_step%write_interval == 0) || !continue_iterations)
         {
-            //fluid_post.postprocess();
-            //system.assemble_qoi(); // calculate the quantities of interest
-            //system.postprocess(); // set the qois to the post-process variables
+            fluid_post.postprocess();
+            system.assemble_qoi(); // calculate the quantities of interest
+            system.postprocess(); // set the qois to the post-process variables
 
             std::ostringstream file_name, b_file_name;
             
@@ -635,20 +635,45 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
             << std::right
             << t_step
             << ".exo";
-            
+
             Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                     equation_systems);
-
-//            b_file_name << "b_out_"
+            
+            b_file_name << "b_out_"
+            << std::setw(3)
+            << std::setfill('0')
+            << std::right
+            << t_step
+            << ".pvtu";
+            
+            std::set<unsigned int> bc_ids; bc_ids.insert(0);
+            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
+                                               equation_systems);
+            
+            // output of data along a line
+//            std::ostringstream out_name;
+//            out_name << "out_"
 //            << std::setw(3)
 //            << std::setfill('0')
 //            << std::right
 //            << t_step
-//            << ".pvtu";
+//            << ".txt";
+//            std::ofstream file;
+//            file.open(out_name.str().c_str(), std::ofstream::out);
 //            
-//            std::set<unsigned int> bc_ids; bc_ids.insert(0);
-//            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
-//                                               equation_systems);
+//            std::vector<unsigned int> v(1); v[0] = system.variable_number("rho");
+//            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
+//            m.init();
+//            unsigned int ndivs=10000; double dx=5.0/(ndivs*1.);
+//            Point p; DenseVector<Real> vals; vals.resize(4);
+//            p(0) = 0.; p(1) = .026;
+//            while (p(0) < 5.) {
+//                m(p, 0., vals);
+//                file << p(0) << "  " << vals(0) << std::endl;
+//                p(0) += dx;
+//            }
+//            file.close();
+
         }
         
     }

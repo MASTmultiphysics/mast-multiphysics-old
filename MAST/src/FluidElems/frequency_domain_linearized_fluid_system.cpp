@@ -1053,23 +1053,26 @@ class FrequencyDomainPrimitiveFEMFunction : public FEMFunctionBase<Number>
 {
 public:
     // Constructor
-    FrequencyDomainPrimitiveFEMFunction(MeshFunction& fluid_func,
-                                        MeshFunction& sd_fluid_func,
+    FrequencyDomainPrimitiveFEMFunction(AutoPtr<FunctionBase<Number> > fluid_func,
+                                        AutoPtr<FunctionBase<Number> > sd_fluid_func,
                                         std::vector<std::string>& vars,
                                         Real cp, Real cv, Real q0):
     FEMFunctionBase<Number>(),
-    _fluid_function(fluid_func),
-    _sd_fluid_function(sd_fluid_func),
+    _fluid_function(fluid_func.release()),
+    _sd_fluid_function(sd_fluid_func.release()),
     _vars(vars), _cp(cp), _cv(cv), _q0(q0)
-    {}
+    {
+        _fluid_function->init();
+        _sd_fluid_function->init();
+    }
     
     // Destructor
     virtual ~FrequencyDomainPrimitiveFEMFunction () {}
     
     virtual AutoPtr<FEMFunctionBase<Number> > clone () const
     {return AutoPtr<FEMFunctionBase<Number> >( new FrequencyDomainPrimitiveFEMFunction
-                                              (_fluid_function,
-                                               _sd_fluid_function,
+                                              (_fluid_function->clone(),
+                                               _sd_fluid_function->clone(),
                                                _vars, _cp, _cv,
                                                _q0) ); }
     
@@ -1080,8 +1083,8 @@ public:
         DenseVector<Real> fluid_sol;
         
         // get the solution values at the point
-        _fluid_function(p, t, fluid_sol_complex);
-        _sd_fluid_function(p, t, sd_fluid_sol);
+        (*_fluid_function)(p, t, fluid_sol_complex);
+        (*_sd_fluid_function)(p, t, sd_fluid_sol);
         
         // since the system returns complex, convert it into real numbers
         for (unsigned int i_var=0; i_var<fluid_sol_complex.size(); i_var++)
@@ -1106,8 +1109,8 @@ public:
         DenseVector<Real> fluid_sol;
         
         // get the solution values at the point
-        _fluid_function(p, t, fluid_sol_complex);
-        _sd_fluid_function(p, t, sd_fluid_sol);
+        (*_fluid_function)(p, t, fluid_sol_complex);
+        (*_sd_fluid_function)(p, t, sd_fluid_sol);
         
         // since the system returns complex, convert it into real numbers
         fluid_sol.resize(fluid_sol_complex.size());
@@ -1131,8 +1134,8 @@ public:
     
 private:
     
-    MeshFunction& _fluid_function;
-    MeshFunction& _sd_fluid_function;
+    AutoPtr<FunctionBase<Number> > _fluid_function;
+    AutoPtr<FunctionBase<Number> > _sd_fluid_function;
     std::vector<std::string>& _vars;
     Real _cp, _cv, _q0;
 };
@@ -1189,6 +1192,8 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     const FrequencyDomainLinearizedFluidSystem& sd_fluid =
     this->get_equation_systems().get_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem");
+    fluid.get_mesh().sub_point_locator();
+    sd_fluid.get_mesh().sub_point_locator();
     
     std::vector<std::string> post_process_var_names(this->n_vars());
     for (unsigned int i=0; i<this->n_vars(); i++)
@@ -1226,7 +1231,8 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     
     AutoPtr<FEMFunctionBase<Number> > post_process_function
     (new FrequencyDomainPrimitiveFEMFunction
-     (*fluid_mesh_function, *sd_fluid_mesh_function,
+     (fluid_mesh_function->clone(),
+      sd_fluid_mesh_function->clone(),
       post_process_var_names,
       flight_condition->gas_property.cp,
       flight_condition->gas_property.cv,

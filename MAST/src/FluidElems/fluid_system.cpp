@@ -1158,27 +1158,29 @@ class PrimitiveFEMFunction : public FEMFunctionBase<Number>
 {
 public:
     // Constructor
-    PrimitiveFEMFunction(MeshFunction& fluid_func,
+    PrimitiveFEMFunction(AutoPtr<FunctionBase<Number> > fluid_func,
                          std::vector<std::string>& vars,
                          Real cp, Real cv, Real p0, Real q0):
     FEMFunctionBase<Number>(),
-    _fluid_function(fluid_func),
+    _fluid_function(fluid_func.release()),
     _vars(vars), _cp(cp), _cv(cv), _p0(p0), _q0(q0)
-    {}
+    {
+        _fluid_function->init();
+    }
     
     // Destructor
     virtual ~PrimitiveFEMFunction () {}
     
     virtual AutoPtr<FEMFunctionBase<Number> > clone () const
     {return AutoPtr<FEMFunctionBase<Number> >( new PrimitiveFEMFunction
-                                              (_fluid_function, _vars, _cp, _cv,
+                                              (_fluid_function->clone(), _vars, _cp, _cv,
                                                _p0, _q0) ); }
     
     virtual void operator() (const FEMContext& c, const Point& p,
                              const Real t, DenseVector<Number>& val)
     {
         DenseVector<Number> fluid_sol;
-        _fluid_function(p, t, fluid_sol);
+        (*_fluid_function)(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
         p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
@@ -1192,7 +1194,7 @@ public:
                              const Point& p, Real t=0.)
     {
         DenseVector<Number> fluid_sol;
-        _fluid_function(p, t, fluid_sol);
+        (*_fluid_function)(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
         p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
@@ -1207,7 +1209,7 @@ public:
     
 private:
     
-    MeshFunction& _fluid_function;
+    AutoPtr<FunctionBase<Number> > _fluid_function;
     std::vector<std::string>& _vars;
     Real _cp, _cv, _p0, _q0;
 };
@@ -1246,6 +1248,7 @@ void FluidPostProcessSystem::postprocess()
     // get the solution vector from
     const FluidSystem& fluid =
     this->get_equation_systems().get_system<FluidSystem>("FluidSystem");
+    fluid.get_mesh().sub_point_locator();
     
     std::vector<unsigned int> fluid_vars(fluid.n_vars());
     std::vector<std::string> post_process_var_names(this->n_vars());
@@ -1262,13 +1265,14 @@ void FluidPostProcessSystem::postprocess()
     fluid.solution->localize(*soln,
                              fluid.get_dof_map().get_send_list());
     
+    
     AutoPtr<MeshFunction> mesh_function
     (new MeshFunction(this->get_equation_systems(), *soln,
                       fluid.get_dof_map(), fluid_vars));
     mesh_function->init();
     
     AutoPtr<FEMFunctionBase<Number> > post_process_function
-    (new PrimitiveFEMFunction(*mesh_function, post_process_var_names,
+    (new PrimitiveFEMFunction(mesh_function->clone(), post_process_var_names,
                               flight_condition->gas_property.cp,
                               flight_condition->gas_property.cv,
                               flight_condition->p0(),

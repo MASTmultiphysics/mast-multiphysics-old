@@ -2187,12 +2187,14 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         A_inv_entropy.vector_mult(vec2, vec1);
         val1 += vec1.dot(vec2);
     }
-    
+
     //    // now calculate the discontinuity capturing operator
-    if ((fabs(val1) > 0.0) &&  (fabs(discontinuity_val) > 0.0))
+    if ((fabs(val1) > 1.0e-2) &&  (fabs(discontinuity_val) > 1.0e-2))
         discontinuity_val = sqrt(discontinuity_val/val1);
     else
         discontinuity_val = 0.0;
+    
+    discontinuity_val = fmin(discontinuity_val, 1.);
 }
 
 
@@ -2307,10 +2309,10 @@ void FluidElemBase::calculate_differential_operator_matrix
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
     
-    //if_diagonal_tau = this->calculate_aliabadi_tau_matrix
-    //(vars, qp, c, sol, tau, tau_sens);
-    if_diagonal_tau = this->calculate_barth_tau_matrix
+    if_diagonal_tau = this->calculate_aliabadi_tau_matrix
     (vars, qp, c, sol, tau, tau_sens);
+    //if_diagonal_tau = this->calculate_barth_tau_matrix
+    //(vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
