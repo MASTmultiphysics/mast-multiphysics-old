@@ -465,8 +465,8 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
             << ".pvtu";
             
             std::set<unsigned int> bc_ids; bc_ids.insert(0);
-            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
-                                                     equation_systems);
+//            VTKIO(mesh, true).write_equation_systems(b_file_name.str(),
+//                                                     equation_systems);
             
             // output of data along a line
             //            std::ostringstream out_name;

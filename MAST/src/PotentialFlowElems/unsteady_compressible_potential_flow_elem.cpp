@@ -21,7 +21,7 @@ Real unsteady_compressible_potential_solution_value(const Point& p,
                                                     const std::string& sys_name,
                                                     const std::string& var_name)
 {
-    libmesh_assert_equal_to (sys_name, "FluidSystem");
+    libmesh_assert_equal_to (sys_name, "UnsteadyCompressiblePotentialSystem");
     
     // since we are initializing the solution, variable values at all points is same
     
@@ -104,7 +104,7 @@ void UnsteadyCompressiblePotentialFlow::init_data ()
     // density
     vars[1] = this->add_variable ("rho", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[1]);
-    params.set<Real> ("rhou_inf") = flight_condition->rho();
+    params.set<Real> ("rho_inf") = flight_condition->rho();
     
     // Useful debugging options
     this->verify_analytic_jacobians = _infile("verify_analytic_jacobians", 0.);
@@ -121,9 +121,9 @@ void UnsteadyCompressiblePotentialFlow::init_context(DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
-    std::vector<FEBase*> elem_fe(dim+2);
+    std::vector<FEBase*> elem_fe(2);
     
-    for (unsigned int i=0; i<dim+2; i++)
+    for (unsigned int i=0; i<2; i++)
     {
         c.get_element_fe( vars[i], elem_fe[i]);
         elem_fe[i]->get_JxW();
@@ -132,9 +132,9 @@ void UnsteadyCompressiblePotentialFlow::init_context(DiffContext &context)
         elem_fe[i]->get_xyz();
     }
     
-    std::vector<FEBase*> elem_side_fe(dim+2);
+    std::vector<FEBase*> elem_side_fe(2);
     
-    for (unsigned int i=0; i<dim+2; i++)
+    for (unsigned int i=0; i<2; i++)
     {
         c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
@@ -226,15 +226,19 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
 
             // diffusive: Least-Squares term neglected
             // TODO: this requires a 2nd order differential of the flux
-
+            
         }
 
         
-        // source term
+        // source term: Galerkin
         tmp_vec1_n1.zero();
         tmp_vec1_n1(0) = 0.5*pow(uinf,2) -
         pow(ainf,2)/(gamma-1.) * (pow(rho/rhoinf, gamma-1.) - 1.);
         B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+        Fvec.add(JxW[qp], tmp_vec2_n2);
+        
+        // source term: Least-Square
+        LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
         Fvec.add(JxW[qp], tmp_vec2_n2);
         
         
@@ -252,7 +256,7 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
                 
                 // convective: Least-Squares
                 LS_mat.get_transpose(tmp_mat4);
-                tmp_mat4.right_multiply_transpose(tmp_mat2_n1n2);// LS^T C1 dB/dx_i
+                tmp_mat4.right_multiply(tmp_mat2_n1n2);// LS^T C1 dB/dx_i
                 Kmat.add(-JxW[qp], tmp_mat4);
                 
                 // diffusive: Galerkin
@@ -264,6 +268,17 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
                 Kmat.add(JxW[qp], tmp_mat3_n2n2);
             }
             
+            // source term: Galerkin
+            tmp_mat1_n1n1.zero();
+            tmp_mat1_n1n1(0,1) = -pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
+            B_mat.left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
+            B_mat.right_multiply_transpose(tmp_mat3_n2n2, tmp_mat2_n1n2);
+            Kmat.add(JxW[qp], tmp_mat3_n2n2);
+            
+            // source term: Least-Squares
+            LS_mat.get_transpose(tmp_mat4);
+            tmp_mat4.right_multiply(tmp_mat2_n1n2);// LS^T C1 dB/dx_i
+            Kmat.add(JxW[qp], tmp_mat4);
         }
     } // end of the quadrature point qp-loop
     
@@ -445,7 +460,9 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
             // -- ui_ni = ui_inf ni + (ui_interior ni - ui_inf ni)
         {
             Real ui_ni = 0.;
-            
+            DenseVector<Real> local_normal;
+            local_normal.resize(spatial_dim);
+
             for (unsigned int qp=0; qp<qpoint.size(); qp++) {
                 // first update the variables at the current quadrature point
                 this->update_solution_at_quadrature_point (vars, qp, c,
@@ -455,8 +472,14 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
                                                            LS_mat);
                 rho = tmp_vec1_n1(1); // get value from the interpolated sol
                 
+                ui_ni = 0.;
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                    ui_ni += face_normals[qp](i_dim) *
+                    flight_condition->velocity_magnitude *
+                    flight_condition->drag_normal(i_dim);
+
                 tmp_vec1_n1.zero();
-                tmp_vec1_n1(1) = rho*ui_ni;
+                tmp_vec1_n1(1) = flight_condition->rho()*ui_ni;
                 
                 B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
                 Fvec.add(-JxW[qp], tmp_vec2_n2);
@@ -539,7 +562,6 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
         Fvec.add(JxW[qp], tmp_vec2_n2);
         
         // LS contribution to velocity
-        B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );
         LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
         Fvec.add(JxW[qp], tmp_vec2_n2);
         
@@ -620,24 +642,39 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     DenseMatrix<Real> mat1, mat2;
     mat1.resize(2,2); mat2.resize(B_mat.m(), B_mat.n());
     LS_mat.zero();
+    // time derivative term
+    mat1.zero();
     mat1(0,0) = 1.; mat1(1,1) = 1.;
     B_mat.left_multiply(mat2, mat1);
     LS_mat.add(1., mat2);
-    
+
+    // convective term
     mat1.zero();
     for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
-        mat1(0,0) = uvec(i_dim);
+        mat1(0,0) = 0.5*uvec(i_dim);
         dB_mat[i_dim].left_multiply(mat2, mat1);
         LS_mat.add(1., mat2);
     }
     
     // currently the diffusive term is neglected
 
+//    // source term
+//    const Real gamma = flight_condition->gas_property.gamma,
+//    ainf  = flight_condition->gas_property.a,
+//    rhoinf = flight_condition->gas_property.rho,
+//    rho = conservative_sol(1);
+//
+//    mat1.zero();
+//    mat1(0,1) = pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
+//    B_mat.left_multiply(mat2, mat1);
+//    LS_mat.add(1., mat2);
+
+    
     // calculate the tau matrix
     // calculate the dot product of velocity times gradient of shape function
     DenseVector<Real> dN; dN.resize(dim);
     Real tau = 0., h = 0, u_val = uvec.size();
-    DenseVector<Real> u;
+    DenseVector<Real> u; u.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         u(i_dim) = uvec(i_dim);
     u.scale(1.0/u_val);
@@ -656,6 +693,7 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     
     // now scale with the tau matrix
     LS_mat.scale_row(0, tau);
+    LS_mat.scale_row(1, 0.);
 }
 
 
