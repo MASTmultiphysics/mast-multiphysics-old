@@ -111,10 +111,7 @@ public:
      */
     void init();
     
-protected:
     
-public:
-
     Real rho_u1() const
     {
         return gas_property.rho * velocity_magnitude * drag_normal(0);

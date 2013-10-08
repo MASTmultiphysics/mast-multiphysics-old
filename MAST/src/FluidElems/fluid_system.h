@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __FESystem__assembleEuler__
-#define __FESystem__assembleEuler__
+#ifndef __MAST__assembleEuler__
+#define __MAST__assembleEuler__
 
 // libmesh includes
 #include "libmesh/libmesh_config.h"
@@ -115,4 +115,4 @@ public:
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 
-#endif /* defined(__FESystem__assembleEuler__) */
+#endif /* defined(__MAST__assembleEuler__) */

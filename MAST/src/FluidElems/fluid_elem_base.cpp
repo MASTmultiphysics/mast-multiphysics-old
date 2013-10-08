@@ -424,7 +424,7 @@ void FluidElemBase::update_solution_at_quadrature_point
             c.get_side_fe(vars[i_var], fe);
         
         const std::vector<std::vector<Real> >& phi = fe->get_phi();
-        const unsigned int n_phi = phi.size();
+        const unsigned int n_phi = (unsigned int)phi.size();
 
         phi_vals.resize(n_phi);
 

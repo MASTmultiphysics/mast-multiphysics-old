@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __FESystem__euler_elem_base__
-#define __FESystem__euler_elem_base__
+#ifndef __MAST__euler_elem_base__
+#define __MAST__euler_elem_base__
 
 // C++ includes
 #include <ostream>
@@ -265,4 +265,4 @@ protected:
 
 
 
-#endif /* defined(__FESystem__euler_elem_base__) */
+#endif /* defined(__MAST__euler_elem_base__) */

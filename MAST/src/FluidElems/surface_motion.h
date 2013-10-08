@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __FESystem__surface_motion_base__
-#define __FESystem__surface_motion_base__
+#ifndef __MAST__surface_motion_base__
+#define __MAST__surface_motion_base__
 
 // libmesh includes
 #include "libmesh/mesh.h"
@@ -87,4 +87,4 @@ protected:
 };
 
 
-#endif /* defined(__FESystem__surface_motion__) */
+#endif /* defined(__MAST__surface_motion__) */

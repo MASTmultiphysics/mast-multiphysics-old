@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __FESystem__frequency_domain_linearized_euler__
-#define __FESystem__frequency_domain_linearized_euler__
+#ifndef __MAST__frequency_domain_linearized_euler__
+#define __MAST__frequency_domain_linearized_euler__
 
 // libmesh config includes
 #include "libmesh/libmesh_config.h"
@@ -98,4 +98,4 @@ public:
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 
-#endif /* defined(__FESystem__frequency_domain_linearized_euler__) */
+#endif /* defined(__MAST__frequency_domain_linearized_euler__) */

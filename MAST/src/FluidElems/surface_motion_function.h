@@ -83,6 +83,7 @@ protected:
 };
 
 
+inline
 SurfaceMotionFunction::SurfaceMotionFunction():
 SurfaceMotionBase()
 {
@@ -90,6 +91,7 @@ SurfaceMotionBase()
 }
 
 
+inline
 SurfaceMotionFunction::~SurfaceMotionFunction()
 {
     
@@ -99,7 +101,7 @@ SurfaceMotionFunction::~SurfaceMotionFunction()
 
 
 
-void
+inline void
 SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
                                                       const Point& n,
                                                       DenseVector<Complex>& u_trans,
@@ -110,7 +112,7 @@ SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
 
 
 
-void
+inline void
 SurfaceMotionFunction::surface_velocity_time_domain(const Real t,
                                                  const Point& p,
                                                  const Point& n,

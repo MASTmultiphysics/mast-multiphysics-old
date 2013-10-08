@@ -13,6 +13,8 @@
 // driver functions
 int fluid_driver (LibMeshInit& init, GetPot& infile,
                   int argc, char* const argv[]);
+int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
+                            int argc, char* const argv[]);
 int static_structural_driver (LibMeshInit& init, GetPot& infile,
                               int argc, char* const argv[]);
 int modal_structural_driver (LibMeshInit& init, GetPot& infile,
@@ -36,6 +38,8 @@ int main (int argc, char* const argv[])
     std::string type = infile("analysis_type", "");
     if (type == "fluid")
         rval = fluid_driver(init, infile, argc, argv);
+    else if (type == "compressible_potential_fluid")
+        rval = potential_fluid_driver(init, infile, argc, argv);
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     else if (type == "structures_static")
         rval = static_structural_driver(init, infile, argc, argv);
