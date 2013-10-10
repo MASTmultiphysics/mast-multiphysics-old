@@ -224,16 +224,30 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
             dB_mat[i_dim].vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);  // dB/dx_i [C2] dB/dx_i V
             Fvec.add(JxW[qp], tmp_vec2_n2);
 
-            // diffusive: Least-Squares term neglected
+            // diffusive: Least-Squares: only the density derivative is included
             // TODO: this requires a 2nd order differential of the flux
-            
+            dB_mat[i_dim].vector_mult(tmp_vec1_n1, c.get_elem_solution());
+            tmp_vec1_n1(0) = 0.;
+            tmp_vec1_n1(1) *= uvec(i_dim);
+            LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+            Fvec.add(-JxW[qp], tmp_vec2_n2);
         }
+
+        
+        // reactive term: Galerkin
+        tmp_vec1_n1.zero();
+        tmp_vec1_n1(0) = pow(ainf,2)/(gamma-1.) * pow(rho/rhoinf, gamma-1.);
+        B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+        Fvec.add(-JxW[qp], tmp_vec2_n2);
+        
+        // reactive term: Least-Square
+        LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+        Fvec.add(-JxW[qp], tmp_vec2_n2);
 
         
         // source term: Galerkin
         tmp_vec1_n1.zero();
-        tmp_vec1_n1(0) = 0.5*pow(uinf,2) -
-        pow(ainf,2)/(gamma-1.) * (pow(rho/rhoinf, gamma-1.) - 1.);
+        tmp_vec1_n1(0) = 0.5*pow(uinf,2) + pow(ainf,2)/(gamma-1.);
         B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
         Fvec.add(JxW[qp], tmp_vec2_n2);
         
@@ -266,19 +280,27 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat3_n2n2,
                                                        tmp_mat2_n1n2);// dB/dx_i^T C2 dB/dx_i
                 Kmat.add(JxW[qp], tmp_mat3_n2n2);
+                
+                // diffusive: Least-Squares
+                tmp_mat1_n1n1.zero();
+                tmp_mat1_n1n1(1,1) = uvec(i_dim);
+                dB_mat[i_dim].left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
+                LS_mat.get_transpose(tmp_mat4);
+                tmp_mat4.right_multiply(tmp_mat2_n1n2);
+                Kmat.add(-JxW[qp], tmp_mat4);
             }
             
-            // source term: Galerkin
+            // reactive term: Galerkin
             tmp_mat1_n1n1.zero();
-            tmp_mat1_n1n1(0,1) = -pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
+            tmp_mat1_n1n1(0,1) = pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
             B_mat.left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
             B_mat.right_multiply_transpose(tmp_mat3_n2n2, tmp_mat2_n1n2);
-            Kmat.add(JxW[qp], tmp_mat3_n2n2);
+            Kmat.add(-JxW[qp], tmp_mat3_n2n2);
             
-            // source term: Least-Squares
+            // reactive term: Least-Squares
             LS_mat.get_transpose(tmp_mat4);
-            tmp_mat4.right_multiply(tmp_mat2_n1n2);// LS^T C1 dB/dx_i
-            Kmat.add(JxW[qp], tmp_mat4);
+            tmp_mat4.right_multiply(tmp_mat2_n1n2);// LS^T C2 B
+            Kmat.add(-JxW[qp], tmp_mat4);
         }
     } // end of the quadrature point qp-loop
     
@@ -646,28 +668,34 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     mat1.zero();
     mat1(0,0) = 1.; mat1(1,1) = 1.;
     B_mat.left_multiply(mat2, mat1);
-    LS_mat.add(1., mat2);
+    //LS_mat.add(1., mat2);
 
-    // convective term
-    mat1.zero();
     for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
+        // convective term
+        mat1.zero();
         mat1(0,0) = 0.5*uvec(i_dim);
+        dB_mat[i_dim].left_multiply(mat2, mat1);
+        //LS_mat.add(1., mat2);
+
+        // currently only the first order derivative of density from the
+        // diffusive term is included
+        mat1.zero();
+        mat1(1,1) = uvec(i_dim);
         dB_mat[i_dim].left_multiply(mat2, mat1);
         LS_mat.add(1., mat2);
     }
     
-    // currently the diffusive term is neglected
 
-//    // source term
-//    const Real gamma = flight_condition->gas_property.gamma,
-//    ainf  = flight_condition->gas_property.a,
-//    rhoinf = flight_condition->gas_property.rho,
-//    rho = conservative_sol(1);
-//
-//    mat1.zero();
-//    mat1(0,1) = pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
-//    B_mat.left_multiply(mat2, mat1);
-//    LS_mat.add(1., mat2);
+    // source term
+    const Real gamma = flight_condition->gas_property.gamma,
+    ainf  = flight_condition->gas_property.a,
+    rhoinf = flight_condition->gas_property.rho,
+    rho = conservative_sol(1);
+
+    mat1.zero();
+    mat1(1,0) = pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
+    B_mat.left_multiply(mat2, mat1);
+    //LS_mat.add(1., mat2);
 
     
     // calculate the tau matrix
@@ -689,11 +717,11 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     }
     
     h = 2.0/h;
-    tau = h/u_val;
+    tau = h/u_val/2.;
     
     // now scale with the tau matrix
     LS_mat.scale_row(0, tau);
-    LS_mat.scale_row(1, 0.);
+    LS_mat.scale_row(1, tau);
 }
 
 
