@@ -20,7 +20,7 @@ ifeq (${PLATFORM},Darwin)
     GFORT_SYSTEM_LIB_DIR=/opt/local/lib/gcc48
     GFORT_SYSTEM_LIBS=-lgfortran -lgomp
     PLPLOT_INCLUDE_DIR=/opt/local/include
-    HAVE_PLPLOT_LIBS=1
+    HAVE_PLPLOT_LIBS=0
     PLPLOT_LIB_DIR=/opt/local/lib
     PLPLOT_LIBS=-lplplotcxxd -lplplotd
     METIS_INCLUDE_DIR=/opt/local/include/metis
