@@ -24,6 +24,14 @@ enum StructuralBoundaryConditionType
 };
 
 
+enum StructuralAnalysisType {
+    STATIC,
+    DYNAMIC,
+    MODAL,
+    BUCKLING
+};
+
+
 class StructuralSystemBase : public FEMSystem
 {
 public:
@@ -49,8 +57,32 @@ public:
     
     virtual bool mass_residual (bool request_jacobian,
                                 DiffContext& context);
-
+    
+    /*!
+     *    Calculates the A and B matrices of an eigenproblem
+     *    [lambda] [A] {X} = [B] {X}
+     *    The assembly procedure of the matrices depends on the 
+     *    nature of analysis.
+     */
+    virtual bool assemble_eigenproblem_matrices();
+    
     std::vector<unsigned int> vars;
+
+    /*!
+     *   Analysis type for this structure
+     */
+    StructuralAnalysisType analysis_type;
+    
+    /*!
+     *   map of element property cards for each element
+     */
+    std::map<Elem*, ElementPropertyBase*> element_property;
+    
+    /*!
+     *   vector of material property cards
+     */
+    std::vector<MaterialPropertyBase*> material_property;
+    
     
     
 protected:

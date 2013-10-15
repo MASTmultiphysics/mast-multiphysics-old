@@ -14,6 +14,7 @@
 #include "FluidElems/surface_motion_function.h"
 #include "Solvers/residual_based_adaptive_time_solver.h"
 #include "Mesh/panel_mesh.h"
+#include "Mesh/ramp_mesh.h"
 #include "Mesh/gaussian_bump_mesh.h"
 #include "Mesh/ringleb_mesh.h"
 
@@ -160,6 +161,17 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
                                    n_max_bumps_x, n_max_bumps_y,
                                    panel_bc_id, symmetry_bc_id,
                                    divs, mesh, elem_type);
+            else
+                libmesh_error();
+        }
+        else if (mesh_type == "ramp")
+        {
+            const unsigned int panel_bc_id = infile("panel_bc_id", 10),
+            symmetry_bc_id = infile("symmetry_bc_id", 11);
+            
+            if (dim == 2)
+                RampMesh2D().init(t_by_c, panel_bc_id, symmetry_bc_id,
+                                  divs, mesh, elem_type);
             else
                 libmesh_error();
         }

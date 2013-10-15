@@ -18,6 +18,22 @@
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
+
+enum StructuralElemType {
+    // linear elements
+    AXIAL_BAR,
+    TORSION_BAR,
+    EULER_BERNOULLI_BEAM,
+    TIMOSHENKO_BEAM,
+    MEMBRANE,
+    MINDLIN_PLATE,
+    DKT_PLATE,
+    SOLID,
+    // nonlinear elements
+    VON_KARMAN_STRAIN
+};
+
+
 class StructuralElementBase
 {
 public:

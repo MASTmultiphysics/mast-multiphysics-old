@@ -675,7 +675,7 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
         mat1.zero();
         mat1(0,0) = 0.5*uvec(i_dim);
         dB_mat[i_dim].left_multiply(mat2, mat1);
-        //LS_mat.add(1., mat2);
+        LS_mat.add(1., mat2);
 
         // currently only the first order derivative of density from the
         // diffusive term is included

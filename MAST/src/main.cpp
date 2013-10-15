@@ -28,8 +28,6 @@ int main (int argc, char* const argv[])
 {
     LibMeshInit init(argc, argv);
     
-    //sleep(100);
-    
     // get the input file
     std::string nm = command_line_value("-i", std::string("system_input.in"));
     GetPot infile(nm);
