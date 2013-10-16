@@ -44,15 +44,22 @@ public:
     
     virtual ~StructuralElementBase();
     
-//    virtual void getStressTensor(const FESystem::Geometry::Point& pt, const FESystem::Numerics::VectorBase<FESystemDouble>& sol,
-//                                 FESystem::Numerics::MatrixBase<FESystemDouble>& mat) = 0;
-//    
-//    virtual void transformMatrixToGlobalSystem(const FESystem::Numerics::MatrixBase<FESystemDouble>& elem_mat, FESystem::Numerics::MatrixBase<FESystemDouble>& global_mat);
-//    
-//    virtual void transformVectorToGlobalSystem(const FESystem::Numerics::VectorBase<FESystemDouble>& elem_vec, FESystem::Numerics::VectorBase<FESystemDouble>& global_vec);
     
-    virtual void initialize(const Elem& elem, const StructuralSystemBase& system);
+    void initialize();
+    
+    
+    virtual void getStressTensor(const Point& pt,
+                                 const DenseVector<Real>& sol,
+                                 DenseMatrix<Real>& mat) = 0;
+    
+    virtual void transform_matrix_to_global_system(const DenseMatrix<Real>& local_mat,
+                                                   DenseMatrix<Real>& global_mat);
+    
+    virtual void transform_vector_to_local_system(const DenseVector<Real>& global_vec,
+                                                   DenseVector<Real>& local_vec);
 
+    virtual void transform_vector_to_global_system(const DenseVector<Real>& local_vec,
+                                                   DenseVector<Real>& global_vec);
     
     virtual bool element_time_derivative (bool request_jacobian,
                                           DenseVector<Real>& res,
@@ -66,15 +73,9 @@ public:
     
 protected:
     
-    virtual void clear();
-    
-    //void calculateDeformationTransformationMatrix(FESystem::Numerics::MatrixBase<FESystemDouble>& mat);
-    
     bool _if_initialized;
     
     const Elem* _elem;
-    
-    const StructuralSystemBase* _system;
 };
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
