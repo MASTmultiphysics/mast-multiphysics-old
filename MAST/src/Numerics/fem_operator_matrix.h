@@ -33,6 +33,9 @@ public:
     
     unsigned int n() const {return _total_dofs;}
     
+    /*!
+     *   this initializes all variables to use the same interpolation function
+     */
     void reinit(unsigned int n_vars, const DenseVector<Real>& shape_func);
     
     /*!
