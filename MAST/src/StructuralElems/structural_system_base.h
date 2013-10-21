@@ -77,7 +77,7 @@ namespace MAST
          *    The assembly procedure of the matrices depends on the
          *    nature of analysis.
          */
-        virtual bool assemble_eigenproblem_matrices();
+        //virtual bool assemble_eigenproblem_matrices();
         
         std::vector<unsigned int> vars;
         

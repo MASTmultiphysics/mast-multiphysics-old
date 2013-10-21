@@ -20,13 +20,15 @@ namespace MAST {
         
     public:
         
-        unsigned int n_qpoints() const;
+        virtual unsigned int n_qpoints() const;
         
         const std::vector<Real>& get_JxW() const;
 
-        void initialize_for_qp(unsigned int qp);
+        virtual void initialize_for_qp(unsigned int qp) = 0;
         
     protected:
+        
+        std::vector<>
         
     };
 }

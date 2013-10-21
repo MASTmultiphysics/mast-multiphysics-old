@@ -41,11 +41,11 @@ namespace MAST {
          *    adds the function to this card and returns a reference to it.
          */
         template <typename ValType>
-        MAST::FunctionBase& add(std::string& nm, MAST::FunctionType type) {
+        MAST::FunctionBase& add(const std::string& nm, MAST::FunctionType type) {
             // make sure that this funciton does not already exist
             libmesh_assert(!_properties.count(nm));
             
-            FunctionBase* ptr = MAST::build_function<ValType>(rm, type).release();
+            FunctionBase* ptr = MAST::build_function<ValType>(nm, type).release();
             
             bool success = _properties.insert(std::pair<std::string, MAST::FunctionBase*>
                                               (nm, ptr)).second;
@@ -58,21 +58,22 @@ namespace MAST {
         /*!
          *   returns a constant reference to the specified function
          */
-        const MAST::FunctionBase& get(std::string& nm) const {
+        template <typename ValType>
+        const MAST::FunctionValue<ValType>& get(const std::string& nm) const {
             std::map<std::string, MAST::FunctionBase*>::const_iterator it =
             _properties.find(nm);
             
             // make sure that this funciton exists
             libmesh_assert(it != _properties.end());
             
-            return *(it->second);
+            return dynamic_cast<MAST::FunctionValue<ValType>&>(*(it->second));
         }
         
         
         /*!
          *   returns a writable reference to the specified function
          */
-        MAST::FunctionBase& get(std::string& nm) {
+        MAST::FunctionBase& get(const std::string& nm) {
             std::map<std::string, MAST::FunctionBase*>::iterator it =
             _properties.find(nm);
             

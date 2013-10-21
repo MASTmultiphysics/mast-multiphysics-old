@@ -34,7 +34,7 @@
 
 
 
-void StructuralSystemBase::init_data ()
+void MAST::StructuralSystemBase::init_data ()
 {
     this->use_fixed_solution = true;
     
@@ -106,7 +106,7 @@ void StructuralSystemBase::init_data ()
 
 
 
-void StructuralSystemBase::init_context(DiffContext &context)
+void MAST::StructuralSystemBase::init_context(DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
@@ -135,8 +135,8 @@ void StructuralSystemBase::init_context(DiffContext &context)
 
 
 
-bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
-                                                    DiffContext &context)
+bool MAST::StructuralSystemBase::element_time_derivative (bool request_jacobian,
+                                                          DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
@@ -233,8 +233,8 @@ bool StructuralSystemBase::element_time_derivative (bool request_jacobian,
 
 
 
-bool StructuralSystemBase::side_time_derivative (bool request_jacobian,
-                                        DiffContext &context)
+bool MAST::StructuralSystemBase::side_time_derivative (bool request_jacobian,
+                                                       DiffContext &context)
 {
     
     return request_jacobian;
@@ -244,8 +244,8 @@ bool StructuralSystemBase::side_time_derivative (bool request_jacobian,
 
 
 
-bool StructuralSystemBase::mass_residual (bool request_jacobian,
-                                          DiffContext &context)
+bool MAST::StructuralSystemBase::mass_residual (bool request_jacobian,
+                                                DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     DenseMatrix<Number>& Kmat = c.get_elem_jacobian();

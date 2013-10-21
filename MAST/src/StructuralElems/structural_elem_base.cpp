@@ -8,48 +8,11 @@
 
 // MAST includes
 #include "StructuralElems/structural_elem_base.h"
-#include "StructuralElems/strain_operator.h"
 #include "PropertyCards/element_property_card_base.h"
+#include "Numerics/fem_operator_matrix.h"
 
 // libMesh includes
 #include "libmesh/quadrature.h"
-
-
-bool
-MAST::StructuralElementBase::internal_force (bool request_jacobian,
-                                       DenseVector<Real>& f,
-                                       DenseMatrix<Real>& jac)
-{
-    std::auto_ptr<MAST::StrainOperator>
-    strain_operator(MAST::build_strain_operator().release());
- 
-    const std::vector<Real>& JxW = strain_operator->get_JxW();
-    DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n2;
-    
-    _property->calculate_matrix(*_elem,
-                                MAST::SECTION_INTEGRATED_STRESS_MATERIAL_MATRIX,
-                                material_mat);
-    
-    for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        strain_operator->initialize_for_qp(qp);
-        strain_operator->left_multiply(tmp_mat1_n1n2, material_mat);
-        
-        tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, _local_solution);
-        strain_operator->vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        f.add(JxW[qp], tmp_vec2_n2);
-        
-        if (request_jacobian) {
-
-            strain_operator->right_multiply_transpose(tmp_mat2_n2n2,
-                                                      tmp_mat1_n1n2);
-            jac.add(JxW[qp], tmp_mat2_n2n2);
-        }
-        
-    }
-    
-    return request_jacobian;
-}
 
 
 
@@ -68,7 +31,7 @@ MAST::StructuralElementBase::damping_force (bool request_jacobian,
     DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
     
     _property->calculate_matrix(*_elem,
-                                MAST::SECTION_INTEGRATED_DAMPING_MATERIAL_MATRIX,
+                                MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX,
                                 material_mat);
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
@@ -113,7 +76,7 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
     
     _property->calculate_matrix(*_elem,
-                                MAST::SECTION_INTEGRATED_INERTIA_MATERIAL_MATRIX,
+                                MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                                 material_mat);
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {

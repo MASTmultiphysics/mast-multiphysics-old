@@ -36,6 +36,11 @@ namespace MAST
         _name(nm)
         { }
         
+        /*!
+         *   virtual destructor
+         */
+        virtual ~FunctionBase()
+        { }
         
         /*!
          *    returns the function kind
@@ -53,7 +58,7 @@ namespace MAST
          *   returns the value of this function
          */
         template <typename ValType>
-        ValType operator() ();
+        ValType operator() () const;
         
         /*!
          *    adds a parameter on which this function is dependent
@@ -89,13 +94,13 @@ namespace MAST
         /*!
          *    Returns the value of this function.
          */
-        virtual ValType operator() () = 0;
+        virtual ValType operator() () const = 0;
     };
     
     
     template <typename ValType>
     inline ValType
-    FunctionBase::operator() () {
+    FunctionBase::operator() () const {
         return dynamic_cast<FunctionValue<ValType>&>(*this)();
     }
     

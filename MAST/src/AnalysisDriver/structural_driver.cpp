@@ -55,8 +55,8 @@ int static_structural_driver (LibMeshInit& init, GetPot& infile,
     EquationSystems equation_systems (mesh);
     
     // Declare the system
-    StructuralSystemBase & system =
-    equation_systems.add_system<StructuralSystemBase> ("StructuralSystem");
+    MAST::StructuralSystemBase & system =
+    equation_systems.add_system<MAST::StructuralSystemBase> ("StructuralSystem");
     
     system.time_solver = AutoPtr<TimeSolver>(new SteadySolver(system));
     

@@ -78,7 +78,7 @@ namespace MAST {
         
         virtual bool internal_force (bool request_jacobian,
                                      DenseVector<Real>& f,
-                                     DenseMatrix<Real>& jac);
+                                     DenseMatrix<Real>& jac) = 0;
         
         virtual bool damping_force (bool request_jacobian,
                                     DenseVector<Real>& f,

@@ -105,6 +105,9 @@
 		EBF27860180ED3CE00DC81A3 /* element_property_card_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = element_property_card_base.h; sourceTree = "<group>"; };
 		EBF27861180ED3CE00DC81A3 /* material_property_card_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = material_property_card_base.h; sourceTree = "<group>"; };
 		EBF27863180F122000DC81A3 /* strain_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = strain_operator.h; sourceTree = "<group>"; };
+		EBF278651815995100DC81A3 /* structural_element_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_1D.h; sourceTree = "<group>"; };
+		EBF278661815996200DC81A3 /* structural_element_2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_2D.h; sourceTree = "<group>"; };
+		EBF278671815997700DC81A3 /* structural_element_3d.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_3d.h; sourceTree = "<group>"; };
 		EBF96D9516EA6B1100316D86 /* MAST */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MAST; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -203,6 +206,9 @@
 				EBF27863180F122000DC81A3 /* strain_operator.h */,
 				696C08081796CD4100B77C5C /* structural_elem_base.cpp */,
 				696C08091796CD4100B77C5C /* structural_elem_base.h */,
+				EBF278651815995100DC81A3 /* structural_element_1D.h */,
+				EBF278661815996200DC81A3 /* structural_element_2D.h */,
+				EBF278671815997700DC81A3 /* structural_element_3d.h */,
 				696C08171796CF9200B77C5C /* structural_system_base.cpp */,
 				696C08181796CF9200B77C5C /* structural_system_base.h */,
 				698C603317ADEBFE009E6058 /* surface_pressure_load.h */,
