@@ -1,13 +1,13 @@
 //
 //  residual_based_adaptive_time_solver.h
-//  RealSolver
+//  MAST
 //
 //  Created by Manav Bhatia on 4/29/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-#ifndef __RealSolver__residual_based_adaptive_time_solver__
-#define __RealSolver__residual_based_adaptive_time_solver__
+#ifndef __MAST_residual_based_adaptive_time_solver_h__
+#define __MAST_residual_based_adaptive_time_solver_h__
 
 
 // Local includes
@@ -69,4 +69,4 @@ public:
 
 
 
-#endif /* defined(__RealSolver__residual_based_adaptive_time_solver__) */
+#endif // __MAST_residual_based_adaptive_time_solver_h__

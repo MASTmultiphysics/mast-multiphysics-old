@@ -1,6 +1,6 @@
 //
 //  residual_based_adaptive_time_solver.cpp
-//  RealSolver
+//  MAST
 //
 //  Created by Manav Bhatia on 4/29/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.

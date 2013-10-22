@@ -1,13 +1,13 @@
 //
 //  fluid_newton_solver.h
-//  RealSolver
+//  MAST
 //
 //  Created by Manav Bhatia on 7/12/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-#ifndef __RealSolver__fluid_newton_solver__
-#define __RealSolver__fluid_newton_solver__
+#ifndef __MAST_fluid_newton_solver_h__
+#define __MAST_fluid_newton_solver_h__
 
 // libMesh includes
 #include "libmesh/newton_solver.h"
@@ -39,4 +39,4 @@ protected:
 
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 
-#endif /* defined(__RealSolver__fluid_newton_solver__) */
+#endif // __MAST_fluid_newton_solver_h__

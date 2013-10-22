@@ -1,6 +1,6 @@
 //
 //  main.cpp
-//  RealSolver
+//  MAST
 //
 //  Created by Manav Bhatia on 9/23/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
@@ -15,8 +15,8 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
                   int argc, char* const argv[]);
 int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
                             int argc, char* const argv[]);
-int static_structural_driver (LibMeshInit& init, GetPot& infile,
-                              int argc, char* const argv[]);
+int structural_driver (LibMeshInit& init, GetPot& infile,
+                       int argc, char* const argv[]);
 int modal_structural_driver (LibMeshInit& init, GetPot& infile,
                              int argc, char* const argv[]);
 int flutter_driver (LibMeshInit& init, GetPot& infile,
@@ -39,10 +39,10 @@ int main (int argc, char* const argv[])
     else if (type == "compressible_potential_fluid")
         rval = potential_fluid_driver(init, infile, argc, argv);
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-    else if (type == "structures_static")
-        rval = static_structural_driver(init, infile, argc, argv);
-    else if (type == "structures_modal")
-        rval = modal_structural_driver(init, infile, argc, argv);
+    else if (type == "structures")
+        rval = structural_driver(init, infile, argc, argv);
+//    else if (type == "structures_modal")
+//        rval = modal_structural_driver(init, infile, argc, argv);
 #endif
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
     else if (type == "flutter")

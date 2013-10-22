@@ -11,6 +11,7 @@
 
 // MAST includes
 #include "PropertyCards/property_card_base.h"
+#include "PropertyCards/material_property_card_base.h"
 
 // libMesh includes
 #include "libmesh/elem.h"
@@ -53,7 +54,8 @@ namespace MAST
         
     };
     
-    
+                                                    
+                                                    
     inline void
     MAST::ElementPropertyCardBase::calculate_matrix(const libMesh::Elem &elem,
                                                     MAST::ElemenetPropertyMatrixType t,

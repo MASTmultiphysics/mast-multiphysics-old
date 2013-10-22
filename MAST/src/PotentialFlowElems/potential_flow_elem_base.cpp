@@ -1,6 +1,6 @@
 //
 //  potential_flow_elem_base.cpp
-//  RealSolver
+//  MAST
 //
 //  Created by Manav Bhatia on 10/7/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.

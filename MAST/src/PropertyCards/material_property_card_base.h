@@ -21,7 +21,7 @@ namespace MAST
     public:
 
         MaterialPropertyCardBase():
-        PropertyCardBase
+        MAST::PropertyCardBase ()
         { }
 
         

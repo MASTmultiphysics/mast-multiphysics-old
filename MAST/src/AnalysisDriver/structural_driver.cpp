@@ -9,8 +9,8 @@
 // C++ includes
 #include <iomanip>
 
-// FESystem includes
-#include "StructuralElems/structural_system_base.h"
+// MAST includes
+#include "StructuralElems/structural_system_assembly.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -27,13 +27,15 @@
 #include "libmesh/eigen_solver.h"
 #include "libmesh/string_to_enum.h"
 #include "libmesh/condensed_eigen_system.h"
+#include "libmesh/nonlinear_implicit_system.h"
 #include "libmesh/xdr_io.h"
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
+
 // The main program.
-int static_structural_driver (LibMeshInit& init, GetPot& infile,
-                              int argc, char* const argv[])
+int structural_driver (LibMeshInit& init, GetPot& infile,
+                       int argc, char* const argv[])
 {
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
@@ -53,23 +55,39 @@ int static_structural_driver (LibMeshInit& init, GetPot& infile,
     
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
+    equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // Declare the system
-    MAST::StructuralSystemBase & system =
-    equation_systems.add_system<MAST::StructuralSystemBase> ("StructuralSystem");
+    NonlinearImplicitSystem & system =
+    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
     
-    system.time_solver = AutoPtr<TimeSolver>(new SteadySolver(system));
+    unsigned int o = infile("fe_order", 1);
+    std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
+    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
+    
+    system.add_variable ( "ux", static_cast<Order>(o), fefamily);
+    system.add_variable ( "uy", static_cast<Order>(o), fefamily);
+    system.add_variable ( "uz", static_cast<Order>(o), fefamily);
+    system.add_variable ( "tx", static_cast<Order>(o), fefamily);
+    system.add_variable ( "ty", static_cast<Order>(o), fefamily);
+    system.add_variable ( "tz", static_cast<Order>(o), fefamily);
+
+    //system.time_solver = AutoPtr<TimeSolver>(new SteadySolver(system));
     
     equation_systems.init ();
 
-    system.time_solver->diff_solver()->quiet = false;
-    system.time_solver->diff_solver()->verbose = true;
-    system.time_solver->diff_solver()->relative_residual_tolerance =  1.0e-8;
-    system.time_solver->diff_solver()->absolute_residual_tolerance =  1.0e-8;
+//    system.time_solver->diff_solver()->quiet = false;
+//    system.time_solver->diff_solver()->verbose = true;
+//    system.time_solver->diff_solver()->relative_residual_tolerance =  1.0e-8;
+//    system.time_solver->diff_solver()->absolute_residual_tolerance =  1.0e-8;
     
     
     // Print information about the system to the screen.
     equation_systems.print_info();
+    
+    MAST::StructuralSystemAssembly structural_assembly(system,
+                                                       MAST::STATIC,
+                                                       infile);
     
     system.solve();
 
@@ -264,7 +282,7 @@ int modal_structural_driver (LibMeshInit& init, GetPot& infile,
                            libMeshEnums::ENCODE,
                            (EquationSystems::WRITE_DATA |
                             EquationSystems::WRITE_ADDITIONAL_DATA));
-
+    
     // All done.
     return 0;
 }
