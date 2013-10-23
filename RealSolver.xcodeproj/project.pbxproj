@@ -108,6 +108,7 @@
 		EBF278651815995100DC81A3 /* structural_element_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_1D.h; sourceTree = "<group>"; };
 		EBF278661815996200DC81A3 /* structural_element_2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_2D.h; sourceTree = "<group>"; };
 		EBF278671815997700DC81A3 /* structural_element_3D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_3D.h; sourceTree = "<group>"; };
+		EBF2786818184B9D00DC81A3 /* temperature_function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = temperature_function.h; sourceTree = "<group>"; };
 		EBF96D9516EA6B1100316D86 /* MAST */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MAST; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -221,6 +222,7 @@
 			children = (
 				696C080B1796CD4100B77C5C /* thermal_elem_base.cpp */,
 				696C080C1796CD4100B77C5C /* thermal_elem_base.h */,
+				EBF2786818184B9D00DC81A3 /* temperature_function.h */,
 			);
 			path = ThermalElems;
 			sourceTree = "<group>";
