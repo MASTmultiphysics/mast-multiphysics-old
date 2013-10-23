@@ -25,6 +25,7 @@ namespace MAST {
 
     // forward declerations
     class ElementPropertyCardBase;
+    class TemperatureLoad;
     
     enum StructuralElemType {
         ELASTIC_ELEMENT_1D,
@@ -103,7 +104,7 @@ namespace MAST {
          *   These are raw pointers created using new. The pointers must be 
          *   deleted at the end of scope.
          */
-        virtual void _get_fe_and_qrule(FEBase* fe, QBase* qrule);
+        virtual void _init_fe_and_qrule();
 
         /*!
          *   returns the quadrature and finite element for element side 
@@ -111,9 +112,18 @@ namespace MAST {
          *   pointers must be deleted at the end of scope.
          */
         virtual void _get_side_fe_and_qrule(unsigned int s,
-                                           FEBase* fe, QBase* qrule);
+                                            std::auto_ptr<FEBase>& fe,
+                                            std::auto_ptr<QBase>& qrule);
 
-        
+
+        /*!
+         *    Calculates the force vector and Jacobian due to thermal stresses. 
+         *    this should be implemented for each element type
+         */
+        virtual bool thermal_force(bool request_jacobian,
+                                   DenseVector<Real>& f,
+                                   DenseMatrix<Real>& jac) = 0;
+
         /*!
          *    System to which this system belongs
          */
@@ -128,6 +138,21 @@ namespace MAST {
          *   element property
          */
         const MAST::ElementPropertyCardBase& _property;
+        
+        /*!
+         *    function that defines the temperature in the element domain
+         */
+        MAST::TemperatureLoad* _temperature;
+        
+        /*!
+         *   element finite element for computations
+         */
+        std::auto_ptr<FEBase> _fe;
+
+        /*!
+         *   element quadrature rule for computations
+         */
+        std::auto_ptr<QBase> _qrule;
     };
 
     /*!

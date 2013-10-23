@@ -43,7 +43,9 @@ MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
 
 _system(sys),
 _analysis_type(t),
-_infile(infile)
+_infile(infile),
+_if_same_property_for_all_elems(false),
+_property(NULL)
 {
     // depending on the analysis type, forward to the appropriate function
     switch (_analysis_type) {
@@ -59,6 +61,29 @@ _infile(infile)
         default:
             libmesh_error();
             break;
+    }
+}
+
+
+
+void
+MAST::StructuralSystemAssembly::set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop) {
+    _if_same_property_for_all_elems = true;
+    _element_property.clear();
+    _property = &prop;
+}
+
+
+const MAST::ElementPropertyCardBase&
+MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
+    if (_if_same_property_for_all_elems)
+        return *_property;
+    else {
+        std::map<const Elem*, const MAST::ElementPropertyCardBase*>::const_iterator
+        elem_p_it = _element_property.find(&elem);
+        libmesh_assert(elem_p_it != _element_property.end());
+        
+        return *elem_p_it->second;
     }
 }
 
@@ -84,14 +109,10 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
     for ( ; el != end_el; ++el) {
 
         const Elem* elem = *el;
-        std::map<const Elem*, MAST::ElementPropertyCardBase*>::const_iterator
-        elem_p_it = _element_property.find(elem);
-        libmesh_assert(elem_p_it != _element_property.end());
-        
-        const MAST::ElementPropertyCardBase& p_card = *elem_p_it->second;
         
         dof_map.dof_indices (elem, dof_indices);
         
+        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
         
         // create the structural element for analysis
         structural_elem.reset(MAST::build_structural_element
@@ -99,17 +120,18 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
 
         // get the solution
         sol.resize(dof_indices.size());
+        vec.resize(dof_indices.size());
+        mat.resize(dof_indices.size(), dof_indices.size());
         
-        for (unsigned int i=0; dof_indices.size(); i++)
+        for (unsigned int i=0; i<dof_indices.size(); i++)
             sol(i) = (*_system.solution)(dof_indices[i]);
         
         structural_elem->local_solution = sol;
         
         // now get the vector values
-        vec.zero();
-        mat.zero();
         structural_elem->internal_force(J!=NULL?true:false, vec, mat);
         
+        // add to the global matrices
         if (R) R->add_vector(vec, dof_indices);
         if (J) J->add_matrix(mat, dof_indices);
     }

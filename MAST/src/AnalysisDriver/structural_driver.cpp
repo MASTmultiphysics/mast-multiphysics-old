@@ -11,6 +11,8 @@
 
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
+#include "PropertyCards/element_property_card_base.h"
+#include "PropertyCards/material_property_card_base.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -40,12 +42,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh,
-                                         10,
-                                         10,
-                                         0., 1.,
-                                         0., 1.,
-                                         TRI3);
+    //MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., TRI3);
+    MeshTools::Generation::build_cube (mesh, 10, 10, 10, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
     
@@ -81,13 +79,23 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 //    system.time_solver->diff_solver()->relative_residual_tolerance =  1.0e-8;
 //    system.time_solver->diff_solver()->absolute_residual_tolerance =  1.0e-8;
     
-    
     // Print information about the system to the screen.
     equation_systems.print_info();
+    
+    MAST::MaterialPropertyCardBase mat;
+    MAST::ElementPropertyCardBase prop;
+    
+    MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
+    &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION);
+    E = 72.e9;
+    nu = 0.33;
+    
+    prop.set_material(mat);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
                                                        MAST::STATIC,
                                                        infile);
+    structural_assembly.set_property_for_all_elems(prop);
     
     system.solve();
 

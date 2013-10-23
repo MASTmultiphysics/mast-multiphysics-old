@@ -62,6 +62,16 @@ namespace MAST
         
         
         /*!
+         *    sets the same property for all cards
+         */
+        void set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop);
+        
+        /*!
+         *    get the material property for the specified element
+         */
+        const MAST::ElementPropertyCardBase& get_property_card(const Elem& elem) const;
+        
+        /*!
          *    function that assembles the matrices and vectors quantities for
          *    nonlinear solution
          */
@@ -94,7 +104,19 @@ namespace MAST
         
 
         GetPot& _infile;
-
+        
+        
+        /*!
+         *    flag to specify if the same material card is to be used for all 
+         *    elements. False by default
+         */
+        bool _if_same_property_for_all_elems;
+        
+        /*!
+         *     property card if the same card is to be used
+         */
+        const MAST::ElementPropertyCardBase* _property;
+        
         /*!
          *   boundary conditions for this analysis
          */
@@ -103,13 +125,12 @@ namespace MAST
         /*!
          *   map of element property cards for each element
          */
-        std::map<const Elem*, MAST::ElementPropertyCardBase*> _element_property;
-        
+        std::map<const Elem*, const MAST::ElementPropertyCardBase*> _element_property;
         
         /*!
          *   vector of material property cards
          */
-        std::vector<MAST::MaterialPropertyCardBase*> _material_property;
+        std::vector<const MAST::MaterialPropertyCardBase*> _material_property;
         
     };
     

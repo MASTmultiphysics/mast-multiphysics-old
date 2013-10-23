@@ -95,6 +95,11 @@ namespace MAST
          *    Returns the value of this function.
          */
         virtual ValType operator() () const = 0;
+        
+        /*!
+         *  sets the value of this function
+         */
+        virtual void operator =(const ValType& val) = 0;
     };
     
     
@@ -128,13 +133,13 @@ namespace MAST
         /*!
          *   returns the value of this function
          */
-        virtual ValType operator() ()
+        virtual ValType operator() () const
         { return _val; }
         
         /*!
          *  sets the value of this function
          */
-        void operator =(ValType& val)
+        void operator =(const ValType& val)
         { _val = val;}
         
     protected:
@@ -147,10 +152,10 @@ namespace MAST
      *    creates a function and returns it as a smart pointer
      */
     template <typename ValType>
-    std::auto_ptr<MAST::FunctionBase> build_function(const std::string& nm,
-                                                     MAST::FunctionType type) {
+    std::auto_ptr<MAST::FunctionValue<ValType> >
+    build_function(const std::string& nm, MAST::FunctionType type) {
         
-        std::auto_ptr<MAST::FunctionBase> rval;
+        std::auto_ptr<MAST::FunctionValue<ValType> > rval;
         
         switch (type) {
             case MAST::CONSTANT_FUNCTION:

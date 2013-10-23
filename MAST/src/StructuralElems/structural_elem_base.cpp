@@ -22,7 +22,9 @@ MAST::StructuralElementBase::StructuralElementBase(System& sys,
 _system(sys),
 _elem(elem),
 _property(p)
-{ }
+{
+    _init_fe_and_qrule();
+}
 
 
 
@@ -38,11 +40,8 @@ MAST::StructuralElementBase::damping_force (bool request_jacobian,
                                             DenseMatrix<Real>& jac)
 {
     FEMOperatorMatrix Bmat;
-    FEBase* fe = NULL;
-    QBase* qrule = NULL;
-    _get_fe_and_qrule(fe, qrule);
     
-    const std::vector<Real>& JxW = fe->get_JxW();
+    const std::vector<Real>& JxW = _fe->get_JxW();
     DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
     DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
     
@@ -69,9 +68,6 @@ MAST::StructuralElementBase::damping_force (bool request_jacobian,
         
     }
     
-    delete fe;
-    delete qrule;
-    
     return request_jacobian;
 }
 
@@ -83,11 +79,8 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
                                              DenseMatrix<Real>& jac)
 {
     FEMOperatorMatrix Bmat;
-    FEBase* fe = NULL;
-    QBase* qrule = NULL;
-    _get_fe_and_qrule(fe, qrule);
     
-    const std::vector<Real>& JxW = fe->get_JxW();
+    const std::vector<Real>& JxW = _fe->get_JxW();
     DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
     DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
     
@@ -114,9 +107,6 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
         
     }
     
-    delete fe;
-    delete qrule;
-    
     return request_jacobian;
 }
 
@@ -137,7 +127,14 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                    DenseVector<Real> &f,
                                                    DenseMatrix<Real> &jac) {
     
-    libmesh_assert(false);
+    bool calculate_jac = false; // start with false, and then set true if
+                                // any one of the forces provides a Jacobian
+    
+    if (_temperature)  // thermal load
+        calculate_jac = (calculate_jac ||
+                         this->thermal_force(request_jacobian, f, jac));
+    
+    return (request_jacobian && calculate_jac);
 }
 
 
@@ -167,75 +164,85 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>
 
 
 void
-MAST::StructuralElementBase::_get_fe_and_qrule(FEBase* fe, QBase* qrule) {
+MAST::StructuralElementBase::_init_fe_and_qrule( ) {
     
-    //    // We need to know which of our variables has the hardest
-    //    // shape functions to numerically integrate.
-    //
-    //    unsigned int nv = sys.n_vars();
-    //
-    //    libmesh_assert (nv);
-    //    FEType hardest_fe_type = sys.variable_type(0);
-    //
-    //    for (unsigned int i=0; i != nv; ++i)
-    //    {
-    //        FEType fe_type = sys.variable_type(i);
-    //
-    //        // FIXME - we don't yet handle mixed finite elements from
-    //        // different families which require different quadrature rules
-    //        // libmesh_assert_equal_to (fe_type.family, hardest_fe_type.family);
-    //
-    //        if (fe_type.order > hardest_fe_type.order)
-    //            hardest_fe_type = fe_type;
-    //    }
-    //
-    //    // Create an adequate quadrature rule
-    //    element_qrule = hardest_fe_type.default_quadrature_rule
-    //    (dim, sys.extra_quadrature_order).release();
-    //    side_qrule = hardest_fe_type.default_quadrature_rule
-    //    (dim-1, sys.extra_quadrature_order).release();
-    //    if (dim == 3)
-    //        edge_qrule = hardest_fe_type.default_quadrature_rule
-    //        (1, sys.extra_quadrature_order).release();
-    //
-    //    // Next, create finite element objects
-    //    // Preserving backward compatibility here for now
-    //    // Should move to the protected/FEAbstract interface
-    //    _element_fe_var.resize(nv);
-    //    _side_fe_var.resize(nv);
-    //    if (dim == 3)
-    //        _edge_fe_var.resize(nv);
-    //
-    //    for (unsigned int i=0; i != nv; ++i)
-    //    {
-    //        FEType fe_type = sys.variable_type(i);
-    //
-    //        if ( _element_fe[fe_type] == NULL )
-    //        {
-    //            _element_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
-    //            _element_fe[fe_type]->attach_quadrature_rule(element_qrule);
-    //            _side_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
-    //            _side_fe[fe_type]->attach_quadrature_rule(side_qrule);
-    //
-    //            if (dim == 3)
-    //            {
-    //                _edge_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
-    //                _edge_fe[fe_type]->attach_quadrature_rule(edge_qrule);
-    //            }
-    //        }
-    //        _element_fe_var[i] = _element_fe[fe_type];
-    //        _side_fe_var[i] = _side_fe[fe_type];
-    //        if (dim == 3)
-    //            _edge_fe_var[i] = _edge_fe[fe_type];
-    //
-    //    }
+    unsigned int nv = _system.n_vars();
+
+    libmesh_assert (nv);
+    FEType fe_type = _system.variable_type(0); // all variables are assumed to be of same type
+    
+
+    for (unsigned int i=1; i != nv; ++i)
+        libmesh_assert(fe_type == _system.variable_type(i));
+
+    // Create an adequate quadrature rule
+    _qrule.reset(fe_type.default_quadrature_rule
+    (_elem.dim(), _system.extra_quadrature_order).release());
+    _fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+    _fe->attach_quadrature_rule(_qrule.get());
+    _fe->get_phi();
+    _fe->get_JxW();
+    _fe->get_dphi();
+    
+    _fe->reinit(&_elem);
 }
 
 
 void
 MAST::StructuralElementBase::_get_side_fe_and_qrule(unsigned int s,
-                                                    FEBase* fe, QBase* qrule) {
-    
+                                                    std::auto_ptr<FEBase>& fe,
+                                                    std::auto_ptr<QBase>& qrule) {
+//    unsigned int nv = _system.n_vars();
+//    
+//    libmesh_assert (nv);
+//    FEType fe_type = _system.variable_type(0); // all variables are assumed to be of same type
+//    
+//    
+//    for (unsigned int i=1; i != nv; ++i)
+//        libmesh_assert(fe_type == _system.variable_type(i));
+//    
+//    // Create an adequate quadrature rule
+//    qrule.reset(fe_type.default_quadrature_rule
+//                (_elem.dim(), _system.extra_quadrature_order).release());
+//    fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+//    
+//    side_qrule = hardest_fe_type.default_quadrature_rule
+//    (dim-1, sys.extra_quadrature_order).release();
+//    if (dim == 3)
+//        edge_qrule = hardest_fe_type.default_quadrature_rule
+//        (1, _system.extra_quadrature_order).release();
+//    
+//    // Next, create finite element objects
+//    // Preserving backward compatibility here for now
+//    // Should move to the protected/FEAbstract interface
+//    _element_fe_var.resize(nv);
+//    _side_fe_var.resize(nv);
+//    if (dim == 3)
+//        _edge_fe_var.resize(nv);
+//    
+//    for (unsigned int i=0; i != nv; ++i)
+//    {
+//        FEType fe_type = sys.variable_type(i);
+//        
+//        if ( _element_fe[fe_type] == NULL )
+//        {
+//            _element_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
+//            _element_fe[fe_type]->attach_quadrature_rule(element_qrule);
+//            _side_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
+//            _side_fe[fe_type]->attach_quadrature_rule(side_qrule);
+//            
+//            if (dim == 3)
+//            {
+//                _edge_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
+//                _edge_fe[fe_type]->attach_quadrature_rule(edge_qrule);
+//            }
+//        }
+//        _element_fe_var[i] = _element_fe[fe_type];
+//        _side_fe_var[i] = _side_fe[fe_type];
+//        if (dim == 3)
+//            _edge_fe_var[i] = _edge_fe[fe_type];
+//        
+//    }
 }
 
 

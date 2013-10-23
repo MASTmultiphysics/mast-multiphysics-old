@@ -23,9 +23,11 @@ namespace MAST
         MATERIAL_STIFFNESS_MATRIX,
         MATERIAL_DAMPING_MATRIX,
         MATERIAL_INERTIA_MATRIX,
+        MATERIAL_THERMAL_EXPANSION_MATRIX,
         SECTION_INTEGRATED_MATERIAL_STIFFNESS_MATRIX,
         SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX,
-        SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX
+        SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
+        SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX,
     };
     
     
@@ -33,18 +35,35 @@ namespace MAST
         
     public:
         ElementPropertyCardBase():
-        MAST::PropertyCardBase()
+        MAST::PropertyCardBase(),
+        _material(NULL)
         { }
         
         
         /*!
-         *   calculates the material matrix in \par m of type \par t
+         *   calculates the material matrix in \par m of type \par t.
          */
         virtual void calculate_matrix(const Elem& elem,
                                       MAST::ElemenetPropertyMatrixType t,
                                       DenseMatrix<Real>& m) const;
         
-        
+        /*!
+         *    sets the material card
+         */
+        void set_material(MAST::MaterialPropertyCardBase& mat) {
+            _material = &mat;
+        }
+
+
+        /*!
+         *    returns a reference to the material
+         */
+        const MAST::MaterialPropertyCardBase&
+        get_material(MAST::MaterialPropertyCardBase& mat) const {
+            libmesh_assert(_material);
+            return *_material;
+        }
+
     protected:
         
         /*!
@@ -61,6 +80,8 @@ namespace MAST
                                                     MAST::ElemenetPropertyMatrixType t,
                                                     DenseMatrix<Real>& m) const
     {
+        libmesh_assert(_material); // should have been set
+        
         switch (elem.dim()) {
             case 1:
                 switch (t) {
@@ -94,10 +115,10 @@ namespace MAST
                 switch (t) {
                     case MAST::MATERIAL_STIFFNESS_MATRIX: {
                         m.resize(6,6);
-                        double E = this->get<Real>("E")(),
-                        nu = this->get<Real>("nu")();
+                        double E = this->_material->get<Real>("E")(),
+                        nu = this->_material->get<Real>("nu")();
                         for (unsigned int i=0; i<3; i++) {
-                            for (unsigned int j=0; i<3; j++)
+                            for (unsigned int j=0; j<3; j++)
                                 if (i == j) // diagonal: direct stress
                                     m(i,i) = E*(1.-nu)/(1.-nu-2.*nu*nu);
                                 else // offdiagonal: direct stress
