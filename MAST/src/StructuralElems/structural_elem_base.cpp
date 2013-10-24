@@ -14,6 +14,9 @@
 #include "PropertyCards/element_property_card_base.h"
 #include "Numerics/fem_operator_matrix.h"
 #include "StructuralElems/structural_element_3D.h"
+#include "StructuralElems/structural_element_2D.h"
+#include "StructuralElems/structural_element_1D.h"
+#include "ThermalElems/temperature_function.h"
 
 
 MAST::StructuralElementBase::StructuralElementBase(System& sys,

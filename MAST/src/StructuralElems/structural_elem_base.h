@@ -25,7 +25,7 @@ namespace MAST {
 
     // forward declerations
     class ElementPropertyCardBase;
-    class TemperatureLoad;
+    class Temperature;
     
     enum StructuralElemType {
         ELASTIC_ELEMENT_1D,
@@ -142,7 +142,7 @@ namespace MAST {
         /*!
          *    function that defines the temperature in the element domain
          */
-        MAST::TemperatureLoad* _temperature;
+        MAST::Temperature* _temperature;
         
         /*!
          *   element finite element for computations

@@ -18,7 +18,6 @@
 		6989BCA918046949007C6D9A /* potential_fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BCA718046949007C6D9A /* potential_fluid_analysis_driver.cpp */; };
 		698C603217ADEBE5009E6058 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698C603017ADEBE5009E6058 /* rigid_surface_motion.cpp */; };
 		69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A98AC317A5A77400789481 /* flutter_driver.cpp */; };
-		EBA1210017B52E3100F8F494 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBA120FF17B52E3100F8F494 /* vecLib.framework */; };
 		EBA291611804822F005B35F4 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBA291601804822F005B35F4 /* FESystem.dylib */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
@@ -83,12 +82,13 @@
 		69A98ABE17A58DA300789481 /* fem_structural_model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fem_structural_model.h; sourceTree = "<group>"; };
 		69A98ABF17A5929E00789481 /* basis_matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basis_matrix.h; sourceTree = "<group>"; };
 		69A98AC317A5A77400789481 /* flutter_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flutter_driver.cpp; sourceTree = "<group>"; };
+		69FB3B0518185F1000CEDF1D /* element_property_card_2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_2D.h; sourceTree = "<group>"; };
+		69FB3B071818D2F500CEDF1D /* element_property_card_3D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_3D.h; sourceTree = "<group>"; };
 		EB1655E9180755300037E46C /* ramp_mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ramp_mesh.h; sourceTree = "<group>"; };
 		EB41AEEA17EA253700288448 /* gaussian_bump_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gaussian_bump_mesh.h; sourceTree = "<group>"; };
 		EB41AEEB17EA253700288448 /* mesh_initializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_initializer.h; sourceTree = "<group>"; };
 		EB41AEEC17EA253700288448 /* panel_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = panel_mesh.h; sourceTree = "<group>"; };
 		EB41AEED17EA253700288448 /* ringleb_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringleb_mesh.h; sourceTree = "<group>"; };
-		EBA120FF17B52E3100F8F494 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = System/Library/Frameworks/vecLib.framework; sourceTree = SDKROOT; };
 		EBA291601804822F005B35F4 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
@@ -119,7 +119,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBA291611804822F005B35F4 /* FESystem.dylib in Frameworks */,
-				EBA1210017B52E3100F8F494 /* vecLib.framework in Frameworks */,
 				EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */,
 				EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */,
@@ -257,6 +256,8 @@
 		69A98AB317A3191E00789481 /* PropertyCards */ = {
 			isa = PBXGroup;
 			children = (
+				69FB3B0518185F1000CEDF1D /* element_property_card_2D.h */,
+				69FB3B071818D2F500CEDF1D /* element_property_card_3D.h */,
 				EBF27860180ED3CE00DC81A3 /* element_property_card_base.h */,
 				69A98AB517A31E3F00789481 /* gas_property.h */,
 				EBF27861180ED3CE00DC81A3 /* material_property_card_base.h */,
@@ -297,7 +298,6 @@
 			isa = PBXGroup;
 			children = (
 				EBA291601804822F005B35F4 /* FESystem.dylib */,
-				EBA120FF17B52E3100F8F494 /* vecLib.framework */,
 				EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */,
 				EBE3222216EA72430078E733 /* libmpi.1.dylib */,
 				EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */,

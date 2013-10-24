@@ -9,8 +9,12 @@
 #ifndef __MAST_temperature_function_h__
 #define __MAST_temperature_function_h__
 
+// libMesh includes
+#include "libmesh/point.h"
+
 // MAST includes
-#include ""
+#include "Numerics/function_base.h"
+
 
 
 namespace MAST
@@ -21,24 +25,80 @@ namespace MAST
         /*!
          *    virtual destructor
          */
-        virtual ~Temperature();
+        virtual ~Temperature() { }
         
+        /*!
+         *    initialize the value at the specified point
+         */
+        virtual void initialize(const Point& p) = 0;
+        
+        /*!
+         *    returns the temperature value
+         */
+        virtual Real value() const = 0;
+        
+        /*!
+         *    returns the reference temperature
+         */
+        virtual Real reference() const = 0;
+    };
+    
+    
+    class ConstantTemperature: public MAST::Temperature {
+    public:
+        /*!
+         *   constructor
+         */
+        ConstantTemperature():
+        _temperature(0.),
+        _reference(0.)
+        { }
+
         /*!
          *    virtual destructor
          */
-        virtual void initialize() = 0;
+        virtual ~ConstantTemperature() { }
+
+        /*!
+         *    sets the value of temperature and the reference
+         */
+        void  set_temperature(Real temp, Real ref_temp) {
+            _temperature = temp;
+            _reference = ref_temp;
+        }
         
         /*!
-         *    virtual destructor
+         *    initialize the value at the specified point
          */
-        virtual Real value() = 0;
+        virtual void initialize(const Point& p) { }
         
         /*!
-         *    virtual destructor
+         *    returns the temperature value
          */
-        virtual Real reference() = 0;
+        virtual Real value() const {
+            return _temperature;
+        }
+        
+        /*!
+         *    returns the reference temperature
+         */
+        virtual Real reference() const {
+            return _reference;
+        }
+        
+    protected:
+        
+        /*!
+         *    temperature and reference value
+         */
+        Real _temperature, _reference;
     };
 }
+
+
+
+
+
 
 
 
