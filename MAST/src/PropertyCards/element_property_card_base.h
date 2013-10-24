@@ -47,6 +47,15 @@ namespace MAST
         virtual ~ElementPropertyCardBase() { }
         
         /*!
+         *    returns the extra quadrature order (on top of the system) that 
+         *    this element should use. By default this is zero, and can be
+         *    changed by the derived classes
+         */
+        virtual unsigned int extra_quadrature_order(const Elem& elem) const {
+            return 0;
+        }
+        
+        /*!
          *   calculates the material matrix in \par m of type \par t.
          */
         virtual void calculate_matrix(const Elem& elem,
@@ -65,7 +74,7 @@ namespace MAST
         /*!
          *    returns the type of strain to be used for this element
          */
-        const MAST::StrainType get_strain_type() const {
+        const MAST::StrainType strain_type() const {
             return _strain_type;
         }
         
@@ -76,7 +85,6 @@ namespace MAST
          *    type of nonlinear strain to be used for analysis
          */
         MAST::StrainType _strain_type;
-        
     };
     
     

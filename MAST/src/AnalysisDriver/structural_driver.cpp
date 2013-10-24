@@ -12,6 +12,7 @@
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
 #include "PropertyCards/element_property_card_base.h"
+#include "PropertyCards/element_property_card_3D.h"
 #include "PropertyCards/material_property_card_base.h"
 
 // libmesh includes
@@ -82,8 +83,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     // Print information about the system to the screen.
     equation_systems.print_info();
     
-    MAST::MaterialPropertyCardBase mat;
-    MAST::ElementPropertyCardBase prop;
+    MAST::IsotropicMaterialPropertyCard mat;
+    MAST::ElementPropertyCard3D prop;
     
     MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
     &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION);

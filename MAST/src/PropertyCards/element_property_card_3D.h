@@ -73,7 +73,7 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
     switch (elem.dim()) {
         case 3:
             switch (t) {
-                case MAST::SECTION_INTEGRATED_MATERIAL_A_MATRIX:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
                     _material->calculate_3d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX, m);
                     break;
                     
@@ -81,10 +81,13 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
                     _material->calculate_3d_matrix(MAST::MATERIAL_INERTIA_MATRIX, m);
                     break;
 
-                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION:
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX:
                     _material->calculate_3d_matrix(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, m);
                     break;
-
+                    
+                default:
+                    libmesh_error(); // others need to be implemented
+                    break;
             }
             break;
             

@@ -18,7 +18,6 @@
 		6989BCA918046949007C6D9A /* potential_fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BCA718046949007C6D9A /* potential_fluid_analysis_driver.cpp */; };
 		698C603217ADEBE5009E6058 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698C603017ADEBE5009E6058 /* rigid_surface_motion.cpp */; };
 		69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A98AC317A5A77400789481 /* flutter_driver.cpp */; };
-		EBA291611804822F005B35F4 /* FESystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBA291601804822F005B35F4 /* FESystem.dylib */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
@@ -109,6 +108,7 @@
 		EBF278661815996200DC81A3 /* structural_element_2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_2D.h; sourceTree = "<group>"; };
 		EBF278671815997700DC81A3 /* structural_element_3D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_3D.h; sourceTree = "<group>"; };
 		EBF2786818184B9D00DC81A3 /* temperature_function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = temperature_function.h; sourceTree = "<group>"; };
+		EBF278691819B50600DC81A3 /* dkt_elem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dkt_elem.h; sourceTree = "<group>"; };
 		EBF96D9516EA6B1100316D86 /* MAST */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MAST; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -118,7 +118,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBA291611804822F005B35F4 /* FESystem.dylib in Frameworks */,
 				EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */,
 				EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */,
@@ -212,6 +211,7 @@
 				696C08171796CF9200B77C5C /* structural_system_assembly.cpp */,
 				696C08181796CF9200B77C5C /* structural_system_assembly.h */,
 				698C603317ADEBFE009E6058 /* surface_pressure_load.h */,
+				EBF278691819B50600DC81A3 /* dkt_elem.h */,
 			);
 			path = StructuralElems;
 			sourceTree = "<group>";

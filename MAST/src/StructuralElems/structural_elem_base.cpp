@@ -180,7 +180,9 @@ MAST::StructuralElementBase::_init_fe_and_qrule( ) {
 
     // Create an adequate quadrature rule
     _qrule.reset(fe_type.default_quadrature_rule
-    (_elem.dim(), _system.extra_quadrature_order).release());
+                 (_elem.dim(),
+                  _system.extra_quadrature_order +  // system extra quadrature
+                  _property.extra_quadrature_order(_elem)).release()); // elem extra quadrature
     _fe.reset(FEBase::build(_elem.dim(), fe_type).release());
     _fe->attach_quadrature_rule(_qrule.get());
     _fe->get_phi();
