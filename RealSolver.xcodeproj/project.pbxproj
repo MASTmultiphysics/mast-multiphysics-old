@@ -88,6 +88,8 @@
 		EB41AEEB17EA253700288448 /* mesh_initializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_initializer.h; sourceTree = "<group>"; };
 		EB41AEEC17EA253700288448 /* panel_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = panel_mesh.h; sourceTree = "<group>"; };
 		EB41AEED17EA253700288448 /* ringleb_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringleb_mesh.h; sourceTree = "<group>"; };
+		EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_1D.h; sourceTree = "<group>"; };
+		EB7D8B6D181AC0E800D275D6 /* bernoulli_beam_elem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bernoulli_beam_elem.h; sourceTree = "<group>"; };
 		EBA291601804822F005B35F4 /* FESystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = FESystem.dylib; path = "../../../Library/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug/FESystem.dylib"; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
@@ -202,6 +204,8 @@
 		696C08071796CD4100B77C5C /* StructuralElems */ = {
 			isa = PBXGroup;
 			children = (
+				EB7D8B6D181AC0E800D275D6 /* bernoulli_beam_elem.h */,
+				EBF278691819B50600DC81A3 /* dkt_elem.h */,
 				EBF27863180F122000DC81A3 /* strain_operator.h */,
 				696C08081796CD4100B77C5C /* structural_elem_base.cpp */,
 				696C08091796CD4100B77C5C /* structural_elem_base.h */,
@@ -211,7 +215,6 @@
 				696C08171796CF9200B77C5C /* structural_system_assembly.cpp */,
 				696C08181796CF9200B77C5C /* structural_system_assembly.h */,
 				698C603317ADEBFE009E6058 /* surface_pressure_load.h */,
-				EBF278691819B50600DC81A3 /* dkt_elem.h */,
 			);
 			path = StructuralElems;
 			sourceTree = "<group>";
@@ -256,6 +259,7 @@
 		69A98AB317A3191E00789481 /* PropertyCards */ = {
 			isa = PBXGroup;
 			children = (
+				EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */,
 				69FB3B0518185F1000CEDF1D /* element_property_card_2D.h */,
 				69FB3B071818D2F500CEDF1D /* element_property_card_3D.h */,
 				EBF27860180ED3CE00DC81A3 /* element_property_card_base.h */,

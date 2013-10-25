@@ -15,7 +15,7 @@
 #include "Numerics/fem_operator_matrix.h"
 #include "StructuralElems/structural_element_3D.h"
 #include "StructuralElems/structural_element_2D.h"
-#include "StructuralElems/structural_element_1D.h"
+//#include "StructuralElems/structural_element_1D.h"
 #include "ThermalElems/temperature_function.h"
 
 
@@ -24,10 +24,9 @@ MAST::StructuralElementBase::StructuralElementBase(System& sys,
                                                    const MAST::ElementPropertyCardBase& p):
 _system(sys),
 _elem(elem),
-_property(p)
-{
-    _init_fe_and_qrule();
-}
+_property(p),
+_temperature(NULL)
+{ }
 
 
 
@@ -165,9 +164,16 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>
 
 
 
+void
+MAST::StructuralElementBase::_transformation_matrix(DenseMatrix<Real>& mat) {
+    
+}
+
+
+
 
 void
-MAST::StructuralElementBase::_init_fe_and_qrule( ) {
+MAST::StructuralElementBase::_init_fe_and_qrule( const Elem& e) {
     
     unsigned int nv = _system.n_vars();
 
@@ -180,16 +186,16 @@ MAST::StructuralElementBase::_init_fe_and_qrule( ) {
 
     // Create an adequate quadrature rule
     _qrule.reset(fe_type.default_quadrature_rule
-                 (_elem.dim(),
+                 (e.dim(),
                   _system.extra_quadrature_order +  // system extra quadrature
-                  _property.extra_quadrature_order(_elem)).release()); // elem extra quadrature
-    _fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+                  _property.extra_quadrature_order(e)).release()); // elem extra quadrature
+    _fe.reset(FEBase::build(e.dim(), fe_type).release());
     _fe->attach_quadrature_rule(_qrule.get());
     _fe->get_phi();
     _fe->get_JxW();
     _fe->get_dphi();
     
-    _fe->reinit(&_elem);
+    _fe->reinit(&e);
 }
 
 
@@ -264,8 +270,11 @@ MAST::build_structural_element(System& sys,
             e.reset(new MAST::StructuralElement3D(sys, elem, p));
             break;
             
-        case 1:
         case 2:
+            e.reset(new MAST::StructuralElement2D(sys, elem, p));
+            break;
+
+        case 1:
         default:
             libmesh_error();
             break;

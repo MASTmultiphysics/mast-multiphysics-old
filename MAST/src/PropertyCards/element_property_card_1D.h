@@ -1,13 +1,14 @@
 //
-//  element_property_card_2D.h
+//  element_property_card_1D.h
 //  MAST
 //
-//  Created by Manav Bhatia on 10/23/13.
+//  Created by Manav Bhatia on 10/25/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-#ifndef __MAST_element_property_card_2D_h__
-#define __MAST_element_property_card_2D_h__
+#ifndef __MAST_element_property_card_1D_h__
+#define __MAST_element_property_card_1D_h__
+
 
 // MAST includes
 #include "PropertyCards/element_property_card_base.h"
@@ -16,33 +17,32 @@
 
 namespace MAST
 {
-    enum BendingModel2D {
-        DKT,
-        MINDLIN,
-        NO_BENDING_2D,
-        DEFAULT_BENDING_2D
+    enum BendingModel1D {
+        BERNOULLI,
+        TIMOSHENKO,
+        NO_BENDING_1D,
+        DEFAULT_BENDING_1D
     };
     
     
     
-    class ElementPropertyCard2D: public MAST::ElementPropertyCardBase {
+    class ElementPropertyCard1D: public MAST::ElementPropertyCardBase {
         
     public:
-        ElementPropertyCard2D():
+        ElementPropertyCard1D():
         MAST::ElementPropertyCardBase(),
-        _bending_model(MAST::DEFAULT_BENDING_2D),
-        _if_plane_stress(false)
+        _bending_model(MAST::DEFAULT_BENDING_1D)
         { }
         
         /*!
          *   virtual destructor
          */
-        ~ElementPropertyCard2D() { }
+        ~ElementPropertyCard1D() { }
         
         /*!
          *   returns the bending model to be used for the 2D element
          */
-        void set_bending_model(MAST::BendingModel2D b)  {
+        void set_bending_model(MAST::BendingModel1D b)  {
             _bending_model = b;
         }
         
@@ -50,7 +50,7 @@ namespace MAST
         /*!
          *   returns the bending model to be used for the 2D element.
          */
-        MAST::BendingModel2D bending_model(const Elem& elem,
+        MAST::BendingModel1D bending_model(const Elem& elem,
                                            const FEType& fe) const;
         
         
@@ -61,26 +61,11 @@ namespace MAST
          */
         virtual unsigned int extra_quadrature_order(const Elem& elem,
                                                     const FEType& fe) const {
-            if (this->bending_model(elem, fe) == MAST::DKT)
+            if (this->bending_model(elem, fe) == MAST::BERNOULLI)
                 return 2;
             else
                 return 0;
         }
-        
-        /*!
-         *   sets the flag for plane stress.
-         */
-        void set_plane_stress(bool val) {
-            _if_plane_stress = val;
-        }
-        
-        /*!
-         *   returns the flag for plane stress.
-         */
-        bool plane_stress() const {
-            return _if_plane_stress;
-        }
-        
         
     protected:
         
@@ -88,28 +73,22 @@ namespace MAST
          *   material property card. By default this chooses DKT for 3 noded
          *   triangles and Mindling for all other elements
          */
-        MAST::BendingModel2D _bending_model;
-        
-        /*!
-         *   if the analysis is plne stress, otherwise it is plane strain.
-         *   Note that this is true by default
-         */
-        bool _if_plane_stress;
+        MAST::BendingModel1D _bending_model;
         
     };
     
     
-    class Solid2DSectionElementPropertyCard : public MAST::ElementPropertyCard2D {
-    public:
-        Solid2DSectionElementPropertyCard():
-        MAST::ElementPropertyCard2D(),
+    class Solid1DSectionElementPropertyCard : public MAST::ElementPropertyCard1D {
+        
+        Solid1DSectionElementPropertyCard():
+        MAST::ElementPropertyCard1D(),
         _material(NULL)
         { }
         
         /*!
          *   virtual destructor
          */
-        ~Solid2DSectionElementPropertyCard() { }
+        ~Solid1DSectionElementPropertyCard() { }
         
         /*!
          *    sets the material card
@@ -127,7 +106,7 @@ namespace MAST
             return *_material;
         }
         
-
+        
         /*!
          *   calculates the material matrix in \par m of type \par t.
          */
@@ -147,25 +126,25 @@ namespace MAST
 
 
 inline
-MAST::BendingModel2D
-MAST::ElementPropertyCard2D::bending_model(const Elem& elem,
+MAST::BendingModel1D
+MAST::ElementPropertyCard1D::bending_model(const Elem& elem,
                                            const FEType& fe) const {
     // for a TRI3 element, default bending is DKT. For all other elements
     // the default is Mindlin. Otherwise it returns the model set for
     // this card.
     switch (elem.type()) {
-        case TRI3:
+        case EDGE2:
             if ((fe.family == LAGRANGE) &&
                 (fe.order  == FIRST) &&
-                (_bending_model == MAST::DEFAULT_BENDING_2D))
-                return MAST::DKT;
+                (_bending_model == MAST::DEFAULT_BENDING_1D))
+                return MAST::BERNOULLI;
             else
                 return _bending_model;
             break;
             
         default:
-            if (_bending_model == MAST::DEFAULT_BENDING_2D)
-                return MAST::MINDLIN;
+            if (_bending_model == MAST::DEFAULT_BENDING_1D)
+                return MAST::TIMOSHENKO;
             else
                 return _bending_model;
             break;
@@ -175,47 +154,57 @@ MAST::ElementPropertyCard2D::bending_model(const Elem& elem,
 
 
 inline void
-MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &elem,
+MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &elem,
                                                           MAST::ElemenetPropertyMatrixType t,
                                                           DenseMatrix<Real>& m) const
 {
     libmesh_assert(_material); // should have been set
     
     switch (elem.dim()) {
-
-        case 2: {
-            double h = this->get<Real>("h")();
+            
+        case 1: {
+            double h = this->get<Real>("h")(), // section height
+            b = this->get<Real>("b")(),        // section width
+            Area = b*h, Itrans = b*pow(h,3)/12., Ichord = h*pow(b,3)/12.;
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-                    _material->calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                   m, _if_plane_stress);
-                    m.scale(h);
+                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m);
+                    m.scale(Area);
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_TRANSVERSE:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_CHORDWISE:
                     // for solid sections with isotropic material this is zero
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX:
-                    _material->calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                   m, _if_plane_stress);
-                    m.scale(pow(h,3)/12.);
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_TRANSVERSE:
+                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m);
+                    m.scale(Itrans);
                     break;
 
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_CHORDWISE:
+                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m);
+                    m.scale(Ichord);
+                    break;
+
+                    
                 case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
-                    _material->calculate_2d_matrix(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-                                                   m, _if_plane_stress);
-                    m.scale(h);
+                    _material->calculate_1d_matrix(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                                   m);
+                    m.scale(Area);
                     break;
-
+                    
                 default:
                     libmesh_error();
                     break;
             }
         }
             break;
-        
-        case 1:
+            
+        case 2:
         case 3:
         default:
             libmesh_error();
@@ -224,7 +213,4 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
 }
 
 
-
-
-
-#endif // __MAST_element_property_card_2D_h__
+#endif  // __MAST_element_property_card_1D_h__

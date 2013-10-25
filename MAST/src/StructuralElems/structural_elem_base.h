@@ -104,7 +104,7 @@ namespace MAST {
          *   These are raw pointers created using new. The pointers must be 
          *   deleted at the end of scope.
          */
-        virtual void _init_fe_and_qrule();
+        virtual void _init_fe_and_qrule(const Elem& e);
 
         /*!
          *   returns the quadrature and finite element for element side 

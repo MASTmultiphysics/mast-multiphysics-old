@@ -29,7 +29,9 @@ namespace MAST {
                             const Elem& elem,
                             const MAST::ElementPropertyCardBase& p):
         StructuralElementBase(sys, elem, p)
-        { }
+        {
+            _init_fe_and_qrule(elem);
+        }
         
         /*!
          *    Calculates the internal force vector and Jacobian due to

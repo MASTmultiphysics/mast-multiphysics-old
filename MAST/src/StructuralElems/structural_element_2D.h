@@ -26,9 +26,9 @@
 
 
 namespace MAST {
-
+    
     /*!
-     *   class provides a simple mechanism to create a geometric element 
+     *   class provides a simple mechanism to create a geometric element
      *   in the local coordinate system.
      */
     class Local2DELem {
@@ -37,10 +37,14 @@ namespace MAST {
         _elem(elem),
         _local_elem(NULL)
         {
-            this->create_local_elem();
+            _create_local_elem();
         }
         
-       
+        
+        ~Local2DElem() {
+            delete _local_elem;
+        }
+        
         /*!
          *   returns a constant reference to the global element.
          */
@@ -57,9 +61,9 @@ namespace MAST {
         }
         
     protected:
-
-        void create_local_elem() {
-            libmesh_error(); // to be implemented
+        
+        void _create_local_elem() {
+            _local_elem = Elem::build(_elem.type()).release();
         }
         
         /*!
@@ -103,35 +107,29 @@ namespace MAST {
         /*!
          *   initialize membrane strain operator matrix
          */
-        void initialize_membrane_strain_operator
-        (const std::vector<std::vector<RealVectorValue> >& dphi,
-         const unsigned int qp,
-         FEMOperatorMatrix& Bmat);
-
+        void initialize_membrane_strain_operator(const unsigned int qp,
+                                                 FEMOperatorMatrix& Bmat);
+        
         /*!
-         *   initialze the bending strain operator for Mindling plate model. 
+         *   initialze the bending strain operator for Mindling plate model.
          *   The bending part is included in \par Bend_par and the transverse
          *   shear part is included in \par Bmat_trans;
          */
-        void initialize_mindlin_bending_strain_operator
-        (const std::vector<std::vector<RealVectorValue> >& dphi,
-         const unsigned int qp,
-         FEMOperatorMatrix& Bmat_bend,
-         FEMOperatorMatrix& Bmat_trans);
-
+        void initialize_mindlin_bending_strain_operator(const unsigned int qp,
+                                                        FEMOperatorMatrix& Bmat_bend,
+                                                        FEMOperatorMatrix& Bmat_trans);
+        
         
         /*!
-         *   initialze the von Karman strain in \par vK_strain, the operator 
+         *   initialze the von Karman strain in \par vK_strain, the operator
          *   matrices needed for Jacobian calculation.
          *   vk_strain = [dw/dx 0; 0 dw/dy; dw/dy dw/dx]
          *   Bmat_vk   = [dw/dx; dw/dy]
          */
-        void initialize_von_karman_strain_operator
-        (const std::vector<std::vector<RealVectorValue> >& dphi,
-         const unsigned int qp,
-         DenseVector<Real>& vk_strain,
-         DenseMatrix<Real>& vk_dwdxi_mat,
-         FEMOperatorMatrix& Bmat_vk);
+        void initialize_von_karman_strain_operator(const unsigned int qp,
+                                                   DenseVector<Real>& vk_strain,
+                                                   DenseMatrix<Real>& vk_dwdxi_mat,
+                                                   FEMOperatorMatrix& Bmat_vk);
         
         /*!
          *    DKT element, initialized if the element needs it
@@ -150,9 +148,11 @@ namespace MAST {
     MAST::StructuralElement2D::StructuralElement2D(System& sys,
                                                    const Elem& elem,
                                                    const MAST::ElementPropertyCardBase& p):
-    _local_elem(elem),
-    MAST::StructuralElementBase(sys, _local_elem.local_elem(), p)
+    MAST::StructuralElementBase(sys, elem, p),
+    _local_elem(elem)
     {
+        _init_fe_and_qrule(_local_elem.local_elem());
+        
         // if the DKT element is being used, set it up now
         MAST::BendingModel2D bending_model =
         dynamic_cast<const MAST::ElementPropertyCard2D&>
@@ -162,7 +162,7 @@ namespace MAST {
             _dkt_elem.reset(new MAST::DKTElem(_local_elem.local_elem(),
                                               *_qrule));
     }
-
+    
     
     inline
     bool
@@ -171,9 +171,6 @@ namespace MAST {
                                          DenseMatrix<Real>& jac)
     {
         FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_trans, Bmat_vk;
-        
-        // the quadrature used for this element would depend on the bending
-        // element.
         
         const std::vector<Real>& JxW = _fe->get_JxW();
         const std::vector<Point>& xyz = _fe->get_xyz();
@@ -199,22 +196,20 @@ namespace MAST {
         if_bending = (property_2D.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING_2D),
         if_dkt = (property_2D.bending_model(_elem, _fe->get_fe_type()) == MAST::DKT);
         
-        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
-        
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
-            this->initialize_membrane_strain_operator(dphi, qp, Bmat_mem);
-
+            this->initialize_membrane_strain_operator(qp, Bmat_mem);
+            
             // get the bending strain operator if needed
             tmp_vec2_n1.zero(); // used to store vk strain, if applicable
             if (if_bending) {
                 if (if_dkt)
                     _dkt_elem->initialize_dkt_bending_strain_operator(qp, Bmat_bend);
                 else
-                    this->initialize_mindlin_bending_strain_operator(dphi, qp,
+                    this->initialize_mindlin_bending_strain_operator(qp,
                                                                      Bmat_bend,
                                                                      Bmat_trans);
                 if (if_vk)  // get the vonKarman strain operator if needed
-                    this->initialize_von_karman_strain_operator(dphi, qp,
+                    this->initialize_von_karman_strain_operator(qp,
                                                                 tmp_vec2_n1,
                                                                 vk_dwdxi_mat,
                                                                 Bmat_vk);
@@ -235,6 +230,11 @@ namespace MAST {
                 _property.calculate_matrix(_elem,
                                            MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
                                            material_D_mat);
+                if (!if_dkt)
+                    _property.calculate_matrix(_elem,
+                                               MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                               material_trans_shear_mat);
+                
             }
             
             // first handle constant throught the thickness stresses: membrane and vonKarman
@@ -274,7 +274,7 @@ namespace MAST {
                 material_B_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1);
                 Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
                 f.add(-JxW[qp], tmp_vec3_n2);
-
+                
                 if (if_vk) {
                     // von Karman strain
                     vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
@@ -346,17 +346,17 @@ namespace MAST {
                         Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
                         jac.add(-JxW[qp], tmp_mat2_n2n2);
                     }
-
+                    
                     // bending - membrane
                     Bmat_mem.left_multiply(tmp_mat1_n1n2, material_B_mat);
                     Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
                     jac.add(-JxW[qp], tmp_mat2_n2n2);
-
+                    
                     // membrane - bending
                     Bmat_bend.left_multiply(tmp_mat1_n1n2, material_B_mat);
                     Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
                     jac.add(-JxW[qp], tmp_mat2_n2n2);
-
+                    
                     // bending - bending
                     Bmat_bend.left_multiply(tmp_mat1_n1n2, material_D_mat);
                     Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
@@ -404,7 +404,7 @@ namespace MAST {
         Real temperature_value, ref_temperature;
         
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
-            this->initialize_membrane_strain_operator(dphi, qp, Bmat);
+            this->initialize_membrane_strain_operator(qp, Bmat);
             
             // set the temperature vector to the value at this point
             _temperature->initialize(xyz[qp]);
@@ -437,10 +437,11 @@ namespace MAST {
     
     inline
     void
-    StructuralElement2D::initialize_membrane_strain_operator
-    (const std::vector<std::vector<RealVectorValue> >& dphi,
-     const unsigned int qp,
-     FEMOperatorMatrix& Bmat) {
+    StructuralElement2D::initialize_membrane_strain_operator(const unsigned int qp,
+                                                             FEMOperatorMatrix& Bmat) {
+        
+        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+        
         unsigned int n_phi = (unsigned int)dphi.size();
         DenseVector<Real> phi; phi.resize(n_phi);
         
@@ -461,26 +462,77 @@ namespace MAST {
     
     inline
     void
-    StructuralElement2D::initialize_mindlin_bending_strain_operator
-    (const std::vector<std::vector<RealVectorValue> >& dphi,
-     const unsigned int qp,
-     FEMOperatorMatrix& Bmat_bend,
-     FEMOperatorMatrix& Bmat_trans) {
-        libmesh_error();
+    StructuralElement2D::initialize_mindlin_bending_strain_operator(const unsigned int qp,
+                                                                    FEMOperatorMatrix& Bmat_bend,
+                                                                    FEMOperatorMatrix& Bmat_trans) {
+        
+        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+        const std::vector<std::vector<Real> >& phi = _fe->get_phi();
+
+        const unsigned int n_phi = (unsigned int)phi.size();
+        
+        DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
+
+        Bmat_bend.set_shape_function(0, 4, phi_vec); // epsilon-x: thetay
+        Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
+        phi_vec.scale(-1.0);
+        Bmat_bend.set_shape_function(2, 3, phi_vec); // gamma-xy : thetax
+        
+        
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
+        
+        Bmat_bend.set_shape_function(2, 4, phi_vec); // gamma-xy : thetay
+        Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
+        phi_vec.scale(-1.0);
+        Bmat_bend.set_shape_function(1, 3, phi_vec); // epsilon-y: thetax
+
+        
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];  // phi
+
+        Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
+        phi_vec.scale(-1.0);
+        Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
     }
     
     
     inline
     void
-    StructuralElement2D::initialize_von_karman_strain_operator
-    (const std::vector<std::vector<RealVectorValue> >& dphi,
-     const unsigned int qp,
-     DenseVector<Real>& vk_strain,
-     DenseMatrix<Real>& vk_dwdxi_mat,
-     FEMOperatorMatrix& Bmat_vk) {
-        libmesh_error();
-    }
+    StructuralElement2D::initialize_von_karman_strain_operator(const unsigned int qp,
+                                                               DenseVector<Real>& vk_strain,
+                                                               DenseMatrix<Real>& vk_dwdxi_mat,
+                                                               FEMOperatorMatrix& Bmat_vk) {
+        
+        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+        
+        const unsigned int n_phi = (unsigned int)dphi.size();
+        Real dw=0.;
+        vk_dwdxi_mat.zero();
+        
+        DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
 
+        dw = 0.;
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ ) {
+            phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
+            dw += phi_vec(i_nd)*local_solution(2*n_phi+i_nd); // dw/dx
+        }
+        Bmat_vk.set_shape_function(0, 2, phi_vec); // dw/dx
+        vk_dwdxi_mat(0, 0) = dw;  // epsilon-xx : dw/dx
+        vk_dwdxi_mat(2, 1) = dw;  // gamma-xy : dw/dx
+        
+        dw = 0.;
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ ) {
+            phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
+            dw += phi_vec(i_nd)*local_solution(2*n_phi+i_nd); // dw/dy
+        }
+        Bmat_vk.set_shape_function(1, 2, phi_vec); // dw/dy
+        vk_dwdxi_mat(1, 1) = dw;  // epsilon-yy : dw/dy
+        vk_dwdxi_mat(2, 0) = dw;  // gamma-xy : dw/dy
+    }
+    
 }
 
 

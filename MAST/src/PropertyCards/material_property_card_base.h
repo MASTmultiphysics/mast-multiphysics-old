@@ -18,21 +18,29 @@ namespace MAST
         MATERIAL_STIFFNESS_MATRIX,
         MATERIAL_DAMPING_MATRIX,
         MATERIAL_INERTIA_MATRIX,
-        MATERIAL_THERMAL_EXPANSION_MATRIX
+        MATERIAL_THERMAL_EXPANSION_MATRIX,
+        MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX
     };
 
     
     class  MaterialPropertyCardBase: public MAST::PropertyCardBase {
         
     public:
-
+        
         MaterialPropertyCardBase():
         MAST::PropertyCardBase ()
         { }
         
         /*!
          *   calculates the material matrix in \par m of type \par t for a
-         *   3D element.
+         *   1D element.
+         */
+        virtual void calculate_1d_matrix(MAST::MaterialPropertyMatrixType t,
+                                         DenseMatrix<Real>& m) const = 0;
+
+        /*!
+         *   calculates the material matrix in \par m of type \par t for a
+         *   2D element.
          */
         virtual void calculate_2d_matrix(MAST::MaterialPropertyMatrixType t,
                                          DenseMatrix<Real>& m,
@@ -61,6 +69,13 @@ namespace MAST
         { }
         
         /*!
+         *   calculates the material matrix in \par m of type \par t for a
+         *   1D element.
+         */
+        virtual void calculate_1d_matrix(MAST::MaterialPropertyMatrixType t,
+                                         DenseMatrix<Real>& m) const;
+
+        /*!
          *   calculates the material matrix in \par m of type \par t.
          */
         virtual void calculate_2d_matrix(MAST::MaterialPropertyMatrixType t,
@@ -78,6 +93,47 @@ namespace MAST
     };
 
 }
+
+
+
+
+inline
+void
+MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix(MAST::MaterialPropertyMatrixType t,
+                                                         DenseMatrix<Real> &m) const {
+    switch (t) {
+        case MAST::MATERIAL_STIFFNESS_MATRIX: {
+            m.resize(1,1);
+            double E = this->get<Real>("E")();
+            m(0,0) = E;
+        }
+            break;
+            
+        case MAST::MATERIAL_INERTIA_MATRIX: {
+            m.resize(1,1);
+            double rho = this->get<Real>("rho")();
+            m(0,0) = rho;
+        }
+            break;
+            
+        case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
+            m.resize(1,1);
+            double E = this->get<Real>("E")(),
+            nu = this->get<Real>("nu")(),
+            kappa = this->get<Real>("kappa")(),
+            G = E/2./(1.+nu);
+            m(0,0) = G*kappa;
+        }
+            break;
+
+        case MAST::MATERIAL_DAMPING_MATRIX:
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
 
 
 inline
@@ -114,6 +170,18 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix(MAST::MaterialPropertyM
         }
             break;
             
+        case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
+            m.resize(2,2);
+            double E = this->get<Real>("E")(),
+            nu = this->get<Real>("nu")(),
+            kappa = this->get<Real>("kappa")(),
+            G = E/2./(1.+nu);
+            for (unsigned int i=0; i<2; i++)
+                m(i,i) = G*kappa;
+        }
+            break;
+            
+            
         case MAST::MATERIAL_DAMPING_MATRIX:
         default:
             libmesh_error();
@@ -149,7 +217,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix(MAST::MaterialPropertyM
                 m(i,i) = rho;
         }
             break;
-            
+
         case MAST::MATERIAL_DAMPING_MATRIX:
         default:
             libmesh_error();
