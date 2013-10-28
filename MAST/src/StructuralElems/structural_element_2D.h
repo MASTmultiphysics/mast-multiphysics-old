@@ -185,8 +185,10 @@ namespace MAST {
         
         libmesh_assert(_elem.dim() == 2);
         _local_elem = Elem::build(_elem.type()).release();
+        _local_nodes.resize(_elem.n_nodes());
         for (unsigned int i=0; i<_elem.n_nodes(); i++) {
             _local_nodes[i] = new Node;
+            _local_nodes[i]->set_id() = _elem.get_node(i)->id();
             _local_elem->set_node(i) = _local_nodes[i];
         }
         
@@ -251,7 +253,7 @@ namespace MAST {
         
         const std::vector<Real>& JxW = _fe->get_JxW();
         const std::vector<Point>& xyz = _fe->get_xyz();
-        const unsigned int n_phi = (unsigned int)JxW.size();
+        const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
         const unsigned int n1=3, n2=6*n_phi;
         DenseMatrix<Real> material_A_mat, material_B_mat, material_D_mat,
         material_trans_shear_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
@@ -266,6 +268,9 @@ namespace MAST {
         
         
         Bmat_mem.reinit(3, _system.n_vars(), _elem.n_nodes()); // three stress-strain components
+        Bmat_bend.reinit(3, _system.n_vars(), _elem.n_nodes());
+        Bmat_trans.reinit(2, _system.n_vars(), _elem.n_nodes()); // only two shear stresses
+        Bmat_vk.reinit(2, _system.n_vars(), _elem.n_nodes()); // only dw/dx and dw/dy
         
         const MAST::ElementPropertyCard2D& property_2D =
         dynamic_cast<const MAST::ElementPropertyCard2D&>(_property);

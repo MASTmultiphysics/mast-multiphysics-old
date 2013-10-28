@@ -32,29 +32,33 @@ namespace MAST
             libmesh_assert(elem.type() == TRI3);
             
             _tri6 = new Tri6;
-            // first three nodes are same as that of the original element
-            for (unsigned int i=0; i<3; i++)
-                _tri6->set_node(i) = elem.get_node(i);
             
             // next three nodes are created using the corner nodes
             for (unsigned int i=0; i<3; i++)
                 _nodes[i] = new Node;
             
             // first edge
-            (*_nodes[0])  = *elem.get_node(0);
-            (*_nodes[0]) += *elem.get_node(1);
-            (*_nodes[0]) *= 0.5;
+            Point p;
+            p = *elem.get_node(0); p += *elem.get_node(1); p*= 0.5;
+            (*_nodes[0]) = p;
+            _nodes[0]->set_id(3);
             
             // second edge
-            (*_nodes[1])  = *elem.get_node(1);
-            (*_nodes[1]) += *elem.get_node(2);
-            (*_nodes[1]) *= 0.5;
+            p = *elem.get_node(1); p += *elem.get_node(2); p*= 0.5;
+            (*_nodes[1]) = p;
+            _nodes[1]->set_id(4);
             
             // third edge
-            (*_nodes[2])  = *elem.get_node(2);
-            (*_nodes[2]) += *elem.get_node(0);
-            (*_nodes[2]) *= 0.5;
-            
+            p = *elem.get_node(2); p += *elem.get_node(0); p*= 0.5;
+            (*_nodes[2]) = p;
+            _nodes[2]->set_id(5);
+
+            // first three nodes are same as that of the original element
+            for (unsigned int i=0; i<3; i++) {
+                _tri6->set_node(  i) = elem.get_node(i);
+                _tri6->set_node(i+3) = _nodes[i];
+            }
+
             // now setup the shape functions
             _fe = FEBase::build(2, FEType(SECOND, LAGRANGE)).release();
             _fe->attach_quadrature_rule(&qrule);
@@ -140,7 +144,7 @@ MAST::DKTElem::initialize_dkt_bending_strain_operator (const unsigned int qp,
     w, thetax, thetay;
     phi.resize(n_phi); dbetaxdx.resize(9); dbetaxdy.resize(9);
     dbetaydx.resize(9); dbetaydy.resize(9); w.resize(3); thetax.resize(3);
-    thetax.resize(3);
+    thetay.resize(3);
     
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi(i_nd) = dphi[i_nd][qp](0);  // dphi/dx

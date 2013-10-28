@@ -31,7 +31,7 @@ namespace MAST
         ElementPropertyCard2D():
         MAST::ElementPropertyCardBase(),
         _bending_model(MAST::DEFAULT_BENDING_2D),
-        _if_plane_stress(false)
+        _if_plane_stress(true)
         { }
         
         /*!
@@ -194,6 +194,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
                     
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
                     // for solid sections with isotropic material this is zero
+                    m.resize(3,3);
                     break;
                     
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX:
