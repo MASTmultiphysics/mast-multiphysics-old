@@ -54,10 +54,16 @@ namespace MAST {
         /*!
          *   initialize strain operator matrix
          */
-        void initialize_strain_operator
-        (const std::vector<std::vector<RealVectorValue> >& dphi,
-         const unsigned int qp,
-         FEMOperatorMatrix& Bmat);
+        void initialize_strain_operator (const unsigned int qp,
+                                         FEMOperatorMatrix& Bmat);
+        
+        /*!
+         *   matrix that transforms the global dofs to the local element coordinate
+         *   system
+         */
+        virtual const DenseMatrix<Real>& _transformation_matrix() const {
+            libmesh_error(); // should not be called for a 3D elem
+        }
     };
     
     
@@ -82,10 +88,9 @@ namespace MAST {
         
         
         Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
-        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
         
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
-            this->initialize_strain_operator(dphi, qp, Bmat);
+            this->initialize_strain_operator(qp, Bmat);
             
             // if temperature is specified, the initialize it to the current location
             if (_temperature)
@@ -140,12 +145,11 @@ namespace MAST {
         tmp_vec3_n2.resize(n2); temperature.resize(6);
         
         Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
-        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
         
         Real temperature_value, ref_temperature;
         
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
-            this->initialize_strain_operator(dphi, qp, Bmat);
+            this->initialize_strain_operator(qp, Bmat);
             
             // set the temperature vector to the value at this point
             _temperature->initialize(xyz[qp]);
@@ -178,10 +182,10 @@ namespace MAST {
     
     inline
     void
-    StructuralElement3D::initialize_strain_operator
-    (const std::vector<std::vector<RealVectorValue> >& dphi,
-     const unsigned int qp,
-     FEMOperatorMatrix& Bmat) {
+    StructuralElement3D::initialize_strain_operator(const unsigned int qp,
+                                                    FEMOperatorMatrix& Bmat) {
+        const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+     
         unsigned int n_phi = (unsigned int)dphi.size();
         DenseVector<Real> phi; phi.resize(n_phi);
         

@@ -453,6 +453,7 @@
 				CLANG_CXX_LIBRARY = "compiler-default";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					/opt/local/include/,
 					/opt/local/include/openmpi,
@@ -477,6 +478,7 @@
 				CLANG_CXX_LIBRARY = "compiler-default";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					/opt/local/include/,
 					/opt/local/include/openmpi,

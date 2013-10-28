@@ -31,9 +31,9 @@ namespace MAST {
      *   class provides a simple mechanism to create a geometric element
      *   in the local coordinate system.
      */
-    class Local2DELem {
+    class Local2DElem {
     public:
-        Local2DELem(const Elem& elem):
+        Local2DElem(const Elem& elem):
         _elem(elem),
         _local_elem(NULL)
         {
@@ -43,6 +43,8 @@ namespace MAST {
         
         ~Local2DElem() {
             delete _local_elem;
+            for (unsigned int i=0; i<_local_nodes.size(); i++)
+                delete _local_nodes[i];
         }
         
         /*!
@@ -59,12 +61,21 @@ namespace MAST {
         const Elem& local_elem() const {
             return *_local_elem;
         }
+
+        /*!
+         *    returns the transformation matrix for this element. This is used 
+         *    to map the coordinates from local to global coordinate system
+         */
+        const DenseMatrix<Real>& T_matrix() const {
+            return _T_mat;
+        }
         
     protected:
         
-        void _create_local_elem() {
-            _local_elem = Elem::build(_elem.type()).release();
-        }
+        /*!
+         *    creation of an element in the local coordinate system
+         */
+        void _create_local_elem();
         
         /*!
          *   given element in global coordinate system
@@ -75,6 +86,20 @@ namespace MAST {
          *   element created in local coordinate system
          */
         Elem* _local_elem;
+        
+        /*!
+         *   nodes for local element
+         */
+        std::vector<Node*> _local_nodes;
+        
+        /*!
+         *    Transformation matrix defines T_ij = V_i^t . Vn_j, where
+         *    V_i are the unit vectors of the global cs, and Vn_j are the 
+         *    unit vectors of the local cs. To transform a vector from global to 
+         *    local cs,    an_j = T^t a_i, and the reverse transformation is 
+         *    obtained as  a_j  = T  an_i
+         */
+        DenseMatrix<Real> _T_mat;
         
     };
     
@@ -132,6 +157,14 @@ namespace MAST {
                                                    FEMOperatorMatrix& Bmat_vk);
         
         /*!
+         *   matrix that transforms the global dofs to the local element coordinate
+         *   system
+         */
+        virtual const DenseMatrix<Real>& _transformation_matrix() const {
+            return _local_elem.T_matrix();
+        }
+            
+        /*!
          *    DKT element, initialized if the element needs it
          */
         std::auto_ptr<MAST::DKTElem> _dkt_elem;
@@ -140,9 +173,53 @@ namespace MAST {
         /*!
          *   element in local coordinate system
          */
-        MAST::Local2DELem _local_elem;
+        MAST::Local2DElem _local_elem;
+        
     };
     
+    
+    
+    inline
+    void
+    MAST::Local2DElem::_create_local_elem() {
+        
+        libmesh_assert(_elem.dim() == 2);
+        _local_elem = Elem::build(_elem.type()).release();
+        for (unsigned int i=0; i<_elem.n_nodes(); i++) {
+            _local_nodes[i] = new Node;
+            _local_elem->set_node(i) = _local_nodes[i];
+        }
+        
+        // first node is the origin of the new cs
+        // calculate the coordinate system for the plane of the element
+        Point v1, v2, v3, p;
+        v1 = *_elem.get_node(1); v1 -= *_elem.get_node(0); v1 /= v1.size(); // local x
+        v2 = *_elem.get_node(2); v2 -= *_elem.get_node(0); v2 /= v2.size();
+        v3 = v1.cross(v2); v3 /= v3.size();      // local z
+        v2 = v3.cross(v1); v2 /= v2.size();      // local y
+        
+        // now the transformation matrix from old to new cs
+        //        an_i vn_i = a_i v_i
+        //        an_j = a_i v_i.vn_j  = a_i t_ij = T^t a_i
+        //        t_ij = v_i.vn_j
+
+        _T_mat.resize(3,3);
+        for (unsigned int i=0; i<3; i++) {
+            _T_mat(i,0) = v1(i);
+            _T_mat(i,1) = v2(i);
+            _T_mat(i,2) = v3(i);
+        }
+        
+        // now calculate the new coordinates with respect to the origin
+        for (unsigned int i=0; i<_local_nodes.size(); i++) {
+            p = *_elem.get_node(i);
+            p -= *_elem.get_node(0); // local wrt origin
+            for (unsigned int j=0; j<3; j++)
+                for (unsigned int k=0; k<3; k++)
+                    (*_local_nodes[i])(j) += _T_mat(k,j)*p(k);
+        }
+    }
+
     
     
     MAST::StructuralElement2D::StructuralElement2D(System& sys,

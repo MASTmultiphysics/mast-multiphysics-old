@@ -85,19 +85,19 @@ namespace MAST {
     protected:
         
         virtual void _transform_to_global_system(const DenseMatrix<Real>& local_mat,
-                                                 DenseMatrix<Real>& global_mat);
+                                                 DenseMatrix<Real>& global_mat) const;
         
         virtual void _transform_to_local_system(const DenseVector<Real>& global_vec,
-                                                DenseVector<Real>& local_vec);
+                                                DenseVector<Real>& local_vec) const;
         
         virtual void _transform_to_global_system(const DenseVector<Real>& local_vec,
-                                                 DenseVector<Real>& global_vec);
+                                                 DenseVector<Real>& global_vec) const;
 
         /*!
          *   matrix that transforms the global dofs to the local element coordinate
          *   system
          */
-        void _transformation_matrix(DenseMatrix<Real>& mat);
+        virtual const DenseMatrix<Real>& _transformation_matrix() const = 0;
         
         /*!
          *   returns the quadrature and finite element for element integration. 

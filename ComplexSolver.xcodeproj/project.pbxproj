@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		690D674B17B48D0700C4AE88 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 690D674A17B48D0700C4AE88 /* vecLib.framework */; };
 		69C1CE1117A943DF00747A90 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C1CE1017A943DF00747A90 /* rigid_surface_motion.cpp */; };
 		EB41AEE817EA157000288448 /* pk_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB41AEE617EA157000288448 /* pk_flutter_solver.cpp */; };
 		EB69869217E79B9000E4530F /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */; };
@@ -43,7 +42,6 @@
 
 /* Begin PBXFileReference section */
 		690D674917B475E300C4AE88 /* lapack_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lapack_interface.h; sourceTree = "<group>"; };
-		690D674A17B48D0700C4AE88 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = System/Library/Frameworks/vecLib.framework; sourceTree = SDKROOT; };
 		6918F8B717AA8F3B003771AD /* surface_pressure_load.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = surface_pressure_load.h; sourceTree = "<group>"; };
 		69C1CE0E17A942C500747A90 /* rigid_surface_motion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rigid_surface_motion.h; sourceTree = "<group>"; };
 		69C1CE0F17A942D500747A90 /* flexible_surface_motion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flexible_surface_motion.h; sourceTree = "<group>"; };
@@ -101,7 +99,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				690D674B17B48D0700C4AE88 /* vecLib.framework in Frameworks */,
 				EBF96DF216EA6C9200316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */,
 				EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */,
@@ -257,7 +254,6 @@
 		EBF96DA216EA6B3200316D86 = {
 			isa = PBXGroup;
 			children = (
-				690D674A17B48D0700C4AE88 /* vecLib.framework */,
 				EBE84D2417A6B3F400AEE871 /* src */,
 				EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */,
 				EBE3224616EA7FC80078E733 /* libmpi.1.dylib */,

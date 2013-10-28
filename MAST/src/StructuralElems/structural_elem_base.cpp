@@ -142,31 +142,35 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
 
 void
 MAST::StructuralElementBase::_transform_to_global_system(const DenseMatrix<Real>& local_mat,
-                                                        DenseMatrix<Real>& global_mat) {
+                                                        DenseMatrix<Real>& global_mat) const {
+    libmesh_assert_equal_to( local_mat.m(),  local_mat.n());
+    libmesh_assert_equal_to(global_mat.m(), global_mat.n());
+    libmesh_assert_equal_to( local_mat.m(), global_mat.m());
     
+    const DenseMatrix<Real>& Tmat = _transformation_matrix();
+    libmesh_error();
 }
 
 
 
 void
 MAST::StructuralElementBase::_transform_to_local_system(const DenseVector<Real>& global_vec,
-                                                       DenseVector<Real>& local_vec) {
+                                                       DenseVector<Real>& local_vec) const {
+    libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
+    const DenseMatrix<Real>& Tmat = _transformation_matrix();
+    libmesh_error();
 }
 
 
 
 void
 MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>& local_vec,
-                                                        DenseVector<Real>& global_vec) {
+                                                        DenseVector<Real>& global_vec) const {
+    libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
-}
-
-
-
-void
-MAST::StructuralElementBase::_transformation_matrix(DenseMatrix<Real>& mat) {
-    
+    const DenseMatrix<Real>& Tmat = _transformation_matrix();
+    libmesh_error();
 }
 
 
