@@ -46,6 +46,7 @@ namespace MAST
      *    3D elements.
      */
     class StructuralSystemAssembly :
+    public System::Assembly,
     public NonlinearImplicitSystem::ComputeResidualandJacobian
     {
     public:
@@ -60,6 +61,17 @@ namespace MAST
         virtual ~StructuralSystemAssembly()
         { }
         
+        
+        /*!
+         *    assembles the matrices depending on the analysis type
+         */
+        virtual void assemble();
+        
+        /*!
+         *    fills the set \par dof_ids with the dof ids of the Dirichlet
+         *    dofs
+         */
+        void get_dirichlet_dofs(std::set<unsigned int>& dof_ids) const;
         
         /*!
          *    sets the same property for all cards
@@ -89,7 +101,7 @@ namespace MAST
          *    The assembly procedure of the matrices depends on the
          *    nature of analysis.
          */
-        
+        void _assemble_matrices_for_modal_analysis();
 
         /*!
          *    System for which analysis is to be performed
