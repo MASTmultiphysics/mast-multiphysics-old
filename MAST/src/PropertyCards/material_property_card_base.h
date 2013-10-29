@@ -165,7 +165,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix(MAST::MaterialPropertyM
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
             double rho = this->get<Real>("rho")();
-            for (unsigned int i=0; i<3; i++)
+            for (unsigned int i=0; i<6; i++)
                 m(i,i) = rho;
         }
             break;
@@ -213,7 +213,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix(MAST::MaterialPropertyM
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
             double rho = this->get<Real>("rho")();
-            for (unsigned int i=0; i<3; i++)
+            for (unsigned int i=0; i<6; i++)
                 m(i,i) = rho;
         }
             break;

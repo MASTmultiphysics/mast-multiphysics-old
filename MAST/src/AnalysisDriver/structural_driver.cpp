@@ -76,6 +76,14 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
     //system.time_solver = AutoPtr<TimeSolver>(new SteadySolver(system));
     
+    // Set the type of the problem, here we deal with
+    // a generalized Hermitian problem.
+    system.set_eigenproblem_type(GHEP);
+    
+    // Order the eigenvalues "smallest first"
+    system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+
+    
     equation_systems.init ();
 
 //    system.time_solver->diff_solver()->quiet = false;
@@ -92,9 +100,11 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
     &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION),
+    &rho = mat.add<Real>("rho", MAST::CONSTANT_FUNCTION),
     &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION);
     E  = 72.e9;
     nu = 0.33;
+    rho = 2700.;
     h  = 0.002;
     
     prop3d.set_material(mat);
@@ -108,17 +118,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                                                        infile);
     structural_assembly.set_property_for_all_elems(prop2d);
     
-    // Set the type of the problem, here we deal with
-    // a generalized Hermitian problem.
-    system.set_eigenproblem_type(GHEP);
-    
-    // Order the eigenvalues "smallest first"
-    system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
-    
     // Set the number of requested eigenpairs \p n_evals and the number
     // of basis vectors used in the solution algorithm.
-    const unsigned int n_eig_request = 10;
-    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
+    const unsigned int n_eig_request = 20;
+    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = false;
     equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
     equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
 

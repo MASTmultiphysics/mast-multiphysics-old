@@ -41,36 +41,8 @@ MAST::StructuralElementBase::damping_force (bool request_jacobian,
                                             DenseVector<Real>& f,
                                             DenseMatrix<Real>& jac)
 {
-    FEMOperatorMatrix Bmat;
+    libmesh_error(); // to be implemented
     
-    const std::vector<Real>& JxW = _fe->get_JxW();
-    DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
-    
-    _property.calculate_matrix(_elem,
-                               MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX,
-                               material_mat);
-    
-    for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        
-        Bmat.reinit(_system.n_vars(), phi);
-        
-        Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
-        
-        tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_velocity);
-        Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        f.add(JxW[qp], tmp_vec2_n2);
-        
-        if (request_jacobian) {
-            
-            Bmat.right_multiply_transpose(tmp_mat2_n2n2,
-                                          tmp_mat1_n1n2);
-            jac.add(JxW[qp], tmp_mat2_n2n2);
-        }
-        
-    }
-    
-    return request_jacobian;
 }
 
 
@@ -83,16 +55,25 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     FEMOperatorMatrix Bmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<std::vector<Real> >& phi = _fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
+    
     DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
+    DenseVector<Real>  phi_vec, tmp_vec1_n1, tmp_vec2_n2;
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     
     _property.calculate_matrix(_elem,
                                MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                                material_mat);
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
+
+        // now set the shape function values
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];
         
-        Bmat.reinit(_system.n_vars(), phi);
+        Bmat.reinit(_system.n_vars(), phi_vec);
         
         Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
         

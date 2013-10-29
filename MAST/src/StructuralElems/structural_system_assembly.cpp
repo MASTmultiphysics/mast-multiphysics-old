@@ -2,6 +2,7 @@
 // libMesh include files
 #include "libmesh/nonlinear_solver.h"
 #include "libmesh/condensed_eigen_system.h"
+#include "libmesh/fe_interface.h"
 
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
@@ -175,10 +176,16 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
             sol(i) = (*_system.solution)(dof_indices[i]);
         
         structural_elem->local_solution = sol;
+        sol.zero();
+        structural_elem->local_acceleration = sol;
+        
         
         // now get the vector values
-        structural_elem->internal_force(true, vec, mat1);
+        structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
         structural_elem->inertial_force(true, vec, mat2);
+        
+//        mat1.print();
+//        mat2.print();
         
         // add to the global matrices
         if (if_exchange_AB_matrices)
@@ -198,67 +205,63 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
 
 void
 MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_ids) const {
-    //    dirichlet_dof_ids.clear();
-    //
-    //    // Get a constant reference to the mesh object.
-    //    const MeshBase& mesh = es.get_mesh();
-    //
-    //    // The dimension that we are running.
-    //    const unsigned int dim = mesh.mesh_dimension();
-    //
-    //    // Get a reference to our system.
-    //    EigenSystem & eigen_system = es.get_system<EigenSystem> (system_name);
-    //
-    //    // Get a constant reference to the Finite Element type
-    //    // for the first (and only) variable in the system.
-    //    FEType fe_type = eigen_system.get_dof_map().variable_type(0);
-    //
-    //    const DofMap& dof_map = eigen_system.get_dof_map();
-    //
-    //    std::vector<dof_id_type> dof_indices;
-    //
-    //
-    //    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-    //    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
-    //
-    //    for ( ; el != end_el; ++el)
-    //    {
-    //        dof_map.dof_indices (*el, dof_indices, 2); // uz
-    //
-    //        // All boundary dofs are Dirichlet dofs in this case
-    //        for (unsigned int s=0; s<(*el)->n_sides(); s++)
-    //            if ((*el)->neighbor(s) == NULL)
-    //            {
-    //                std::vector<unsigned int> side_dofs;
-    //                FEInterface::dofs_on_side(*el, dim, fe_type,
-    //                                          s, side_dofs);
-    //
-    //                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
-    //                    dirichlet_dof_ids.insert(dof_indices[side_dofs[ii]]);
-    //            }
-    //
-    //        // also add the dofs for variable u, v and tz
-    //        dof_indices.clear();
-    //        dof_map.dof_indices(*el, dof_indices, 0); // ux
-    //        for (unsigned int i=0; i<dof_indices.size(); i++)
-    //            dirichlet_dof_ids.insert(dof_indices[i]);
-    //
-    //        dof_indices.clear();
-    //        dof_map.dof_indices(*el, dof_indices, 1); // uy
-    //        for (unsigned int i=0; i<dof_indices.size(); i++)
-    //            dirichlet_dof_ids.insert(dof_indices[i]);
-    //
-    //        dof_indices.clear();
-    //        dof_map.dof_indices(*el, dof_indices, 5); // tz
-    //        for (unsigned int i=0; i<dof_indices.size(); i++)
-    //            dirichlet_dof_ids.insert(dof_indices[i]);
-    //    } // end of element loop
-    //
-    //    /**
-    //     * All done!
-    //     */
-    //    return;
-    //
+    dof_ids.clear();
+    
+    // Get a constant reference to the mesh object.
+    const MeshBase& mesh = _system.get_mesh();
+    
+    // The dimension that we are running.
+    const unsigned int dim = mesh.mesh_dimension();
+    
+    // Get a constant reference to the Finite Element type
+    // for the first (and only) variable in the system.
+    FEType fe_type = _system.get_dof_map().variable_type(0);
+    
+    const DofMap& dof_map = _system.get_dof_map();
+    
+    std::vector<dof_id_type> dof_indices;
+    
+    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+    
+    for ( ; el != end_el; ++el)
+    {
+//        dof_map.dof_indices (*el, dof_indices, 2); // uz
+//        
+//        // All boundary dofs are Dirichlet dofs in this case
+//        for (unsigned int s=0; s<(*el)->n_sides(); s++)
+//            if ((*el)->neighbor(s) == NULL)
+//            {
+//                std::vector<unsigned int> side_dofs;
+//                FEInterface::dofs_on_side(*el, dim, fe_type,
+//                                          s, side_dofs);
+//                
+//                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
+//                    dof_ids.insert(dof_indices[side_dofs[ii]]);
+//            }
+        
+        // also add the dofs for variable u, v and tz
+        dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 0); // ux
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dof_ids.insert(dof_indices[i]);
+        
+        dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 1); // uy
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dof_ids.insert(dof_indices[i]);
+        
+        dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 5); // tz
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dof_ids.insert(dof_indices[i]);
+    } // end of element loop
+    
+    /**
+     * All done!
+     */
+    return;
+    
 }
 
 

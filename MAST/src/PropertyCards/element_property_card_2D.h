@@ -208,6 +208,16 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
                                                    m, _if_plane_stress);
                     m.scale(h);
                     break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
+                    _material->calculate_2d_matrix(MAST::MATERIAL_INERTIA_MATRIX,
+                                                   m, _if_plane_stress);
+                    m.scale(h);
+                    // now scale the rotation dofs with small factors
+                    for (unsigned int i=0; i<3; i++) {
+                        m(i+3, i+3) *= 1.0e-6;
+                    }
+                    break;
 
                 default:
                     libmesh_error();

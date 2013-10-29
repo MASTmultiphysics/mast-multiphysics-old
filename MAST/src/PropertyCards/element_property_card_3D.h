@@ -79,6 +79,12 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
                     
                 case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
                     _material->calculate_3d_matrix(MAST::MATERIAL_INERTIA_MATRIX, m);
+                    // now scale the rotation dofs with small factors
+                    for (unsigned int i=0; i<3; i++) {
+                        m(i+3, i+3) *= 1.0e-6;
+                    }
+                    break;
+
                     break;
 
                 case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX:
