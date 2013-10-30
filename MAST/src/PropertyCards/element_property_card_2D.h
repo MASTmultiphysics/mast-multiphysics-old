@@ -85,6 +85,36 @@ namespace MAST
     protected:
         
         /*!
+         *    initializes the vector to the prestress in the element
+         */
+        virtual void _prestress_vector(DenseVector<Real>& v) const {
+            if (_prestress.size() == 0)
+                v.resize(3); // zero, if the stress has not been defined
+            else {
+                v.resize(3);
+                v(0) = _prestress(0);
+                v(1) = _prestress(1);
+                v(2) = _prestress(3);
+            }
+        }
+        
+        
+        /*!
+         *    initializes the matrix to the prestress in the element
+         */
+        virtual void _prestress_matrix(DenseMatrix<Real>& m) const {
+            m.resize(2, 2);
+            if (_prestress.size() == 6) {
+                for (unsigned int i=0; i<2; i++)
+                    m(i,i) = _prestress(i);
+                m(0,1) = _prestress(3);  // tau_xy
+                m(1,0) = _prestress(3);  // tau_xy
+            }
+        }
+        
+
+        
+        /*!
          *   material property card. By default this chooses DKT for 3 noded
          *   triangles and Mindling for all other elements
          */
@@ -97,6 +127,8 @@ namespace MAST
         bool _if_plane_stress;
         
     };
+    
+    
     
     
     class Solid2DSectionElementPropertyCard : public MAST::ElementPropertyCard2D {
@@ -134,7 +166,21 @@ namespace MAST
         virtual void calculate_matrix(const Elem& elem,
                                       MAST::ElemenetPropertyMatrixType t,
                                       DenseMatrix<Real>& m) const;
+
+        /*!
+         *    initializes the vector to the prestress in the element
+         */
+        virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                      DenseVector<Real>& v) const;
         
+        
+        /*!
+         *    initializes the matrix to the prestress in the element
+         */
+        virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                      DenseMatrix<Real>& m) const;
+        
+
     protected:
         
         /*!
@@ -235,6 +281,55 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
 }
 
 
+
+
+
+
+inline void
+MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                                          DenseVector<Real>& v) const {
+    double h = this->get<Real>("h")();
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            _prestress_vector(v);
+            v.scale(h);
+            break;
+                    
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            // for solid sections with isotropic material this is zero
+            v.resize(3);
+            break;
+                    
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+
+
+inline void
+MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                                          DenseMatrix<Real>& m) const {
+    double h = this->get<Real>("h")();
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            _prestress_matrix(m);
+            m.scale(h);
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            // for solid sections with isotropic material this is zero
+            m.resize(2,2);
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+}
 
 
 

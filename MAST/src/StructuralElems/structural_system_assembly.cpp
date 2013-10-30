@@ -180,7 +180,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
         structural_elem->local_acceleration = sol;
         
         
-        // now get the vector values
+        // now get the matrices
         structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
         structural_elem->inertial_force(true, vec, mat2);
         
@@ -194,6 +194,76 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
         {
             matrix_A.add_matrix (mat1, dof_indices); // stiffness
             matrix_B.add_matrix (mat2, dof_indices); // mass
+        }
+    }
+}
+
+
+
+void
+MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis() {
+    
+    // iterate over each element, initialize it and get the relevant
+    // analysis quantities
+    DenseVector<Real> vec, sol;
+    DenseMatrix<Real> mat1, mat2, mat3;
+    std::vector<dof_id_type> dof_indices;
+    const DofMap& dof_map = _system.get_dof_map();
+    std::auto_ptr<MAST::StructuralElementBase> structural_elem;
+    
+    const bool if_exchange_AB_matrices =
+    _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
+    
+    SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
+    SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
+    
+    
+    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    
+    for ( ; el != end_el; ++el) {
+        
+        const Elem* elem = *el;
+        
+        dof_map.dof_indices (elem, dof_indices);
+        
+        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
+        
+        // create the structural element for analysis
+        structural_elem.reset(MAST::build_structural_element
+                              (_system, *elem, p_card).release());
+        
+        // get the solution
+        sol.resize(dof_indices.size());
+        vec.resize(dof_indices.size());
+        mat1.resize(dof_indices.size(), dof_indices.size());
+        mat2.resize(dof_indices.size(), dof_indices.size());
+        mat3.resize(dof_indices.size(), dof_indices.size());
+        
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            sol(i) = (*_system.solution)(dof_indices[i]);
+
+        // set the local solution to zero for the load INdependent stiffness matrix
+        structural_elem->local_solution.resize(sol.size());
+        structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
+
+        // now use the solution to get the load dependent stiffness matrix
+        structural_elem->local_solution = sol;
+        structural_elem->internal_force(true, vec, mat2);
+        mat2.add(1., mat1); // subtract to get the purely load dependent part
+        structural_elem->prestress_force(true, vec, mat3);
+        mat2.add(1., mat3);
+
+        // add to the global matrices
+        if (if_exchange_AB_matrices)
+        {
+            matrix_A.add_matrix (mat2, dof_indices); // load dependent
+            matrix_B.add_matrix (mat1, dof_indices); // load independent
+        }
+        else
+        {
+            matrix_A.add_matrix (mat1, dof_indices); // load independent
+            matrix_B.add_matrix (mat2, dof_indices); // load dependent
         }
     }
 }

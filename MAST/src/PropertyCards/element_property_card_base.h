@@ -102,6 +102,41 @@ namespace MAST
         }
 
         
+        /*!
+         *    returns true if the element prestress has been specified, false
+         *    otherwise
+         */
+        virtual bool if_prestressed() const {
+            if (_prestress.size())
+                return true;
+            else
+                false;
+        }
+
+        
+        /*!
+         *    initializes the prestress in the element. The vector should 
+         *    contain six stress components: sigma_xx, sigma_yy, sigma_zz,
+         *    tau_xy, tau_yz, tau_zx
+         */
+        virtual void prestress(const DenseVector<Real>& v) {
+            libmesh_assert_equal_to(v.size(), 6);
+            _prestress = v;
+        }
+
+        /*!
+         *    initializes the vector to the prestress in the element
+         */
+        virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                      DenseVector<Real>& v) const = 0;
+        
+        
+        /*!
+         *    initializes the matrix to the prestress in the element
+         */
+        virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                      DenseMatrix<Real>& m) const = 0; 
+        
     protected:
         
         /*!
@@ -113,6 +148,12 @@ namespace MAST
          *    flag to use a diagonal mass matrix. By default, this is false
          */
         bool _diagonal_mass;
+        
+        /*!
+         *   element prestress: six stress components: sigma_xx, sigma_yy, 
+         *   sigma_zz, tau_xy, tau_yz, tau_zx
+         */
+        DenseVector<Real> _prestress;
     };
     
     

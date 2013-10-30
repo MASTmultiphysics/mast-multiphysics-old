@@ -102,6 +102,14 @@ namespace MAST
          *    nature of analysis.
          */
         void _assemble_matrices_for_modal_analysis();
+        
+        /*!
+         *    Calculates the A and B matrices of an eigenproblem
+         *    [A] {X} = [B] {X} [lambda]
+         *    The assembly procedure of the matrices depends on the
+         *    nature of analysis.
+         */
+        void _assemble_matrices_for_buckling_analysis();
 
         /*!
          *    System for which analysis is to be performed

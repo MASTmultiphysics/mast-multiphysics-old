@@ -41,7 +41,11 @@ namespace MAST {
                                     DenseVector<Real>& f,
                                     DenseMatrix<Real>& jac);
         
-        
+        virtual bool prestress_force (bool request_jacobian,
+                                      DenseVector<Real>& f,
+                                      DenseMatrix<Real>& jac)
+        { libmesh_error();}
+
     protected:
         
         /*!

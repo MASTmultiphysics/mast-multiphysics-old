@@ -44,7 +44,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., TRI3);
+    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., QUAD9);
     //MeshTools::Generation::build_cube (mesh, 5, 5, 5, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
@@ -102,15 +102,17 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
     &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION),
     &rho = mat.add<Real>("rho", MAST::CONSTANT_FUNCTION),
+    &kappa = mat.add<Real>("kappa", MAST::CONSTANT_FUNCTION),
     &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION);
     E  = 72.e9;
     nu = 0.33;
     rho = 2700.;
+    kappa = 5./6.;
     h  = 0.002;
     
     prop3d.set_material(mat);
     prop2d.set_material(mat);
-    prop2d.set_diagonal_mass_matrix(true);
+    prop2d.set_diagonal_mass_matrix(false);
     
 //    MAST::StructuralSystemAssembly structural_assembly(system,
 //                                                       MAST::STATIC,
