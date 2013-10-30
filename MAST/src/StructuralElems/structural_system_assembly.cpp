@@ -187,13 +187,13 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
         // add to the global matrices
         if (if_exchange_AB_matrices)
         {
-            matrix_A.add_matrix (mat1, dof_indices);
-            matrix_B.add_matrix (mat2, dof_indices);
+            matrix_A.add_matrix (mat2, dof_indices); // mass
+            matrix_B.add_matrix (mat1, dof_indices); // stiffness
         }
         else
         {
-            matrix_A.add_matrix (mat2, dof_indices);
-            matrix_B.add_matrix (mat1, dof_indices);
+            matrix_A.add_matrix (mat1, dof_indices); // stiffness
+            matrix_B.add_matrix (mat2, dof_indices); // mass
         }
     }
 }

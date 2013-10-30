@@ -97,7 +97,7 @@ namespace MAST
         
         /*!
          *    Calculates the A and B matrices of an eigenproblem
-         *    [lambda] [A] {X} = [B] {X}
+         *    [A] {X} = [B] {X} [lambda]
          *    The assembly procedure of the matrices depends on the
          *    nature of analysis.
          */

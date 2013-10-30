@@ -122,8 +122,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     // Set the number of requested eigenpairs \p n_evals and the number
     // of basis vectors used in the solution algorithm.
-    const unsigned int n_eig_request = 20;
-    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = false;
+    const unsigned int n_eig_request = 10;
+    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
     equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
     equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
 
@@ -163,19 +163,31 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
             vec_name << "mode_" << i;
             NumericVector<Real>& vec = system.add_vector(vec_name.str());
             vec = *system.solution;
+            std::complex<Real> eigval;
             if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
             {
                 file << "eig_"  << i << " = " << 1./val.first << std::endl;
                 vec.scale(1./sqrt(val.first));
                 vec.close();
+                
+                // now write the eigenvalues
+                eigval = std::complex<Real>(val.first, val.second);
+                eigval = 1./eigval;
+
+                std::cout << std::setw(5) << i
+                << std::setw(10) << eigval.real()
+                << " + i  "
+                << std::setw(10) << eigval.imag() << std::endl;
+
             }
-            else
+            else {
                 file << "eig_"  << i << " = " << val.first << std::endl;
-            
-            std::cout << std::setw(5) << i
-            << std::setw(10) << val.first
-            << " + i  "
-            << std::setw(10) << val.second << std::endl;
+                
+                std::cout << std::setw(5) << i
+                << std::setw(10) << val.first
+                << " + i  "
+                << std::setw(10) << val.second << std::endl;
+            }
             
             
             std::ostringstream file_name;
