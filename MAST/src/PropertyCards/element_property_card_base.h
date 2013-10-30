@@ -43,7 +43,8 @@ namespace MAST
     public:
         ElementPropertyCardBase():
         MAST::PropertyCardBase(),
-        _strain_type(MAST::LINEAR_STRAIN)
+        _strain_type(MAST::LINEAR_STRAIN),
+        _diagonal_mass(false)
         { }
         
         /*!
@@ -56,7 +57,8 @@ namespace MAST
          *    this element should use. By default this is zero, and can be
          *    changed by the derived classes
          */
-        virtual unsigned int extra_quadrature_order(const Elem& elem) const {
+        virtual unsigned int extra_quadrature_order(const Elem& elem,
+                                                    const FEType& fe) const {
             return 0;
         }
         
@@ -82,7 +84,23 @@ namespace MAST
         const MAST::StrainType strain_type() const {
             return _strain_type;
         }
+
         
+        /*!
+         *    sets the mass matrix to be diagonal or consistent
+         */
+        void set_diagonal_mass_matrix(bool m) {
+            _diagonal_mass = m;
+        }
+        
+        
+        /*!
+         *    returns the type of strain to be used for this element
+         */
+        bool if_diagonal_mass_matrix() const {
+            return _diagonal_mass;
+        }
+
         
     protected:
         
@@ -90,6 +108,11 @@ namespace MAST
          *    type of nonlinear strain to be used for analysis
          */
         MAST::StrainType _strain_type;
+
+        /*!
+         *    flag to use a diagonal mass matrix. By default, this is false
+         */
+        bool _diagonal_mass;
     };
     
     

@@ -153,7 +153,7 @@ MAST::DKTElem::initialize_dkt_bending_strain_operator (const unsigned int qp,
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
     _calculate_dkt_shape_functions(phi, dbetaxdy, dbetaydy);
-
+    
     // add the shear components together
     dbetaxdy.add(1.0, dbetaydx);
 
@@ -220,7 +220,7 @@ MAST::DKTElem::_get_edge_normal_sine_cosine(unsigned int i, unsigned int j,
     vec3 = vec1.cross(vec2);
     // this is the unit vector normal to the plane of the triangle
     vec1 = vec3;
-    vec1 *= 1./vec1.size();
+    vec1 /= vec1.size();
     
     // cross product of the length vector with the surface normal will
     // give the needed vector
@@ -229,7 +229,7 @@ MAST::DKTElem::_get_edge_normal_sine_cosine(unsigned int i, unsigned int j,
     
     vec2 -= vec3;
     vec3 = vec2.cross(vec1);
-    vec3 *= 1./vec1.size();        // this is the unit vector needed
+    vec3 /= vec3.size();        // this is the unit vector needed
     
     // cos of angle between this and the x-axis is simply the
     // 0th component of this vector

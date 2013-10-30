@@ -79,6 +79,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
     system.set_eigenproblem_type(GHEP);
+    system.extra_quadrature_order = 0;
     
     // Order the eigenvalues "smallest first"
     system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
@@ -109,6 +110,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     prop3d.set_material(mat);
     prop2d.set_material(mat);
+    prop2d.set_diagonal_mass_matrix(true);
     
 //    MAST::StructuralSystemAssembly structural_assembly(system,
 //                                                       MAST::STATIC,

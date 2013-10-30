@@ -184,9 +184,6 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
         structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
         structural_elem->inertial_force(true, vec, mat2);
         
-//        mat1.print();
-//        mat2.print();
-        
         // add to the global matrices
         if (if_exchange_AB_matrices)
         {
@@ -226,19 +223,19 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     
     for ( ; el != end_el; ++el)
     {
-//        dof_map.dof_indices (*el, dof_indices, 2); // uz
-//        
-//        // All boundary dofs are Dirichlet dofs in this case
-//        for (unsigned int s=0; s<(*el)->n_sides(); s++)
-//            if ((*el)->neighbor(s) == NULL)
-//            {
-//                std::vector<unsigned int> side_dofs;
-//                FEInterface::dofs_on_side(*el, dim, fe_type,
-//                                          s, side_dofs);
-//                
-//                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
-//                    dof_ids.insert(dof_indices[side_dofs[ii]]);
-//            }
+        dof_map.dof_indices (*el, dof_indices, 2); // uz
+        
+        // All boundary dofs are Dirichlet dofs in this case
+        for (unsigned int s=0; s<(*el)->n_sides(); s++)
+            if ((*el)->neighbor(s) == NULL)
+            {
+                std::vector<unsigned int> side_dofs;
+                FEInterface::dofs_on_side(*el, dim, fe_type,
+                                          s, side_dofs);
+                
+                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
+                    dof_ids.insert(dof_indices[side_dofs[ii]]);
+            }
         
         // also add the dofs for variable u, v and tz
         dof_indices.clear();

@@ -58,38 +58,69 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     const std::vector<std::vector<Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
-    DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseVector<Real>  phi_vec, tmp_vec1_n1, tmp_vec2_n2;
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
+    DenseVector<Real>  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    local_f.resize(n2);
     
     _property.calculate_matrix(_elem,
                                MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                                material_mat);
     
-    for (unsigned int qp=0; qp<JxW.size(); qp++) {
-
-        // now set the shape function values
-        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-            phi_vec(i_nd) = phi[i_nd][qp];
+    if (_property.if_diagonal_mass_matrix()) {
+        Real vol = 0.;
+        const unsigned int nshp = _fe->n_shape_functions();
+        for (unsigned int i=0; i<JxW.size(); i++)
+            vol += JxW[i];
+        vol /= (1.* nshp);
+        for (unsigned int i_var=0; i_var<6; i_var++)
+            for (unsigned int i=0; i<nshp; i++)
+                local_jac(i_var*nshp+i, i_var*nshp+i) =
+                vol*material_mat(i_var, i_var);
+        local_jac.vector_mult(local_f, local_acceleration);
+    }
+    else {
         
-        Bmat.reinit(_system.n_vars(), phi_vec);
-        
-        Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
-        
-        tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_acceleration);
-        Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        f.add(JxW[qp], tmp_vec2_n2);
-        
-        if (request_jacobian) {
+        for (unsigned int qp=0; qp<JxW.size(); qp++) {
             
-            Bmat.right_multiply_transpose(tmp_mat2_n2n2,
-                                          tmp_mat1_n1n2);
-            jac.add(JxW[qp], tmp_mat2_n2n2);
+            // now set the shape function values
+            for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+                phi_vec(i_nd) = phi[i_nd][qp];
+            
+            Bmat.reinit(_system.n_vars(), phi_vec);
+            
+            Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
+            
+            tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_acceleration);
+            Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+            local_f.add(JxW[qp], tmp_vec2_n2);
+            
+            if (request_jacobian) {
+                
+                Bmat.right_multiply_transpose(tmp_mat2_n2n2,
+                                              tmp_mat1_n1n2);
+                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+            }
+            
         }
-        
     }
     
+    // now transform to the global coorodinate system
+    if (_elem.dim() < 3) {
+        _transform_to_global_system(local_f, tmp_vec2_n2);
+        f.add(1., tmp_vec2_n2);
+        if (request_jacobian) {
+            _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+            jac.add(1., tmp_mat2_n2n2);
+        }
+    }
+    else {
+        f.add(1., local_f);
+        if (request_jacobian)
+            jac.add(1., local_jac);
+    }
+
     return request_jacobian;
 }
 
@@ -128,8 +159,24 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseMatrix<Real>
     libmesh_assert_equal_to(global_mat.m(), global_mat.n());
     libmesh_assert_equal_to( local_mat.m(), global_mat.m());
     
+    const unsigned int n_dofs = _fe->n_shape_functions();
+    global_mat.zero();
+    DenseMatrix<Real> tmp_mat;
+    tmp_mat.resize(6*n_dofs, 6*n_dofs);
+    
     const DenseMatrix<Real>& Tmat = _transformation_matrix();
-    libmesh_error();
+    // now initialize the global T matrix
+    for (unsigned int i=0; i<n_dofs; i++)
+        for (unsigned int j=0; j<3; j++)
+            for (unsigned int k=0; k<3; k++) {
+                tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
+                tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
+            }
+    
+    // right multiply with T^T, and left multiply with T.
+    global_mat = local_mat;
+    global_mat.right_multiply_transpose(tmp_mat);
+    global_mat.left_multiply(tmp_mat);
 }
 
 
@@ -139,8 +186,22 @@ MAST::StructuralElementBase::_transform_to_local_system(const DenseVector<Real>&
                                                        DenseVector<Real>& local_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
+    const unsigned int n_dofs = _fe->n_shape_functions();
+    local_vec.zero();
+    DenseMatrix<Real> tmp_mat;
+    tmp_mat.resize(6*n_dofs, 6*n_dofs);
+    
     const DenseMatrix<Real>& Tmat = _transformation_matrix();
-    libmesh_error();
+    // now initialize the global T matrix
+    for (unsigned int i=0; i<n_dofs; i++)
+        for (unsigned int j=0; j<3; j++)
+            for (unsigned int k=0; k<3; k++) {
+                tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
+                tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
+            }
+    
+    // left multiply with T^T
+    tmp_mat.vector_mult_transpose(local_vec, global_vec);
 }
 
 
@@ -150,9 +211,24 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>
                                                         DenseVector<Real>& global_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
+    const unsigned int n_dofs = _fe->n_shape_functions();
+    global_vec.zero();
+    DenseMatrix<Real> tmp_mat;
+    tmp_mat.resize(6*n_dofs, 6*n_dofs);
+    
     const DenseMatrix<Real>& Tmat = _transformation_matrix();
-    libmesh_error();
+    // now initialize the global T matrix
+    for (unsigned int i=0; i<n_dofs; i++)
+        for (unsigned int j=0; j<3; j++)
+            for (unsigned int k=0; k<3; k++) {
+                tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
+                tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
+            }
+
+    // left multiply with T
+    tmp_mat.vector_mult(global_vec, local_vec);
 }
+
 
 
 
@@ -170,11 +246,11 @@ MAST::StructuralElementBase::_init_fe_and_qrule( const Elem& e) {
         libmesh_assert(fe_type == _system.variable_type(i));
 
     // Create an adequate quadrature rule
+    _fe.reset(FEBase::build(e.dim(), fe_type).release());
     _qrule.reset(fe_type.default_quadrature_rule
                  (e.dim(),
                   _system.extra_quadrature_order +  // system extra quadrature
-                  _property.extra_quadrature_order(e)).release()); // elem extra quadrature
-    _fe.reset(FEBase::build(e.dim(), fe_type).release());
+                  _property.extra_quadrature_order(e, fe_type)).release()); // elem extra quadrature
     _fe->attach_quadrature_rule(_qrule.get());
     _fe->get_phi();
     _fe->get_JxW();

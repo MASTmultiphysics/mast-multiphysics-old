@@ -55,7 +55,7 @@
 int main_fem_operator (int argc, char* const argv[])
 {
     DenseVector<Real> vec1, vec2, shp;
-    DenseMatrix<Real> mat1, mat2;
+    DenseMatrix<Real> mat1, mat2, bmat1, bmat2, tmp;
     
     vec1.resize(12); shp.resize(4);
     
@@ -71,17 +71,28 @@ int main_fem_operator (int argc, char* const argv[])
 
     FEMOperatorMatrix b1, b2;
     b1.reinit(3, shp); b2.reinit(3, shp);
+    bmat1.resize(3, shp.size()*3); bmat2.resize(3, shp.size()*3);
+    for (unsigned int i=0; i<3; i++)
+        for (unsigned int j=0; j<shp.size(); j++) {
+            bmat1(i, i*shp.size()+j) = shp(j);
+            bmat2(i, i*shp.size()+j) = shp(j);
+        }
+
     
     vec2.resize(3);
     b1.vector_mult(vec2, vec1);
-    vec2.print(std::cout);
+    std::cout << "FEMOperator: " << std::endl; vec2.print(std::cout);
+    bmat1.vector_mult(vec2, vec1);
+    std::cout << "Matrix:      " << std::endl; vec2.print(std::cout);
     
     vec1.resize(3);
     for (unsigned int i=0; i<vec1.size(); i++)
         vec1(i) = 100+i;
     vec2.resize(12);
     b1.vector_mult_transpose(vec2, vec1);
-    vec2.print(std::cout);
+    std::cout << "FEMOperator: " << std::endl; vec2.print(std::cout);
+    bmat1.vector_mult_transpose(vec2, vec1);
+    std::cout << "Matrix:      " << std::endl; vec2.print(std::cout);
     
 
     mat1.resize(5,3);
@@ -91,7 +102,10 @@ int main_fem_operator (int argc, char* const argv[])
             mat1(i,j) = (i+1)*(j+1);
     std::cout << "multiply matrix" << std::endl;  mat1.print();
     b1.left_multiply(mat2, mat1);
-    std::cout << "Result " << std::endl;  mat2.print();
+    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    tmp = bmat1;
+    tmp.left_multiply(mat1);
+    std::cout << "Matrix:      " << std::endl;  tmp.print();
 
 
     mat1.resize(5,12);
@@ -101,7 +115,10 @@ int main_fem_operator (int argc, char* const argv[])
             mat1(i,j) = (i+1)*(j+1);
     std::cout << "multiply matrix" << std::endl;  mat1.print();
     b1.left_multiply_transpose(mat2, mat1);
-    std::cout << "Result " << std::endl;  mat2.print();
+    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    bmat1.get_transpose(tmp);
+    tmp.left_multiply(mat1);
+    std::cout << "Matrix:      " << std::endl;  tmp.print();
     
     
     mat1.resize(12,5);
@@ -111,7 +128,10 @@ int main_fem_operator (int argc, char* const argv[])
             mat1(i,j) = (i+1)*(j+1);
     std::cout << "multiply matrix" << std::endl;  mat1.print();
     b1.right_multiply(mat2, mat1);
-    std::cout << "Result " << std::endl;  mat2.print();
+    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    tmp = bmat1;
+    tmp.right_multiply(mat1);
+    std::cout << "Matrix:      " << std::endl;  tmp.print();
     
     
     mat1.resize(3, 5);
@@ -121,12 +141,18 @@ int main_fem_operator (int argc, char* const argv[])
             mat1(i,j) = (i+1)*(j+1);
     std::cout << "multiply matrix" << std::endl;  mat1.print();
     b1.right_multiply_transpose(mat2, mat1);
-    std::cout << "Result " << std::endl;  mat2.print();
+    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    bmat1.get_transpose(tmp);
+    tmp.right_multiply(mat1);
+    std::cout << "Matrix:      " << std::endl;  tmp.print();
 
 
     mat2.resize(12, 12);
     b1.right_multiply_transpose(mat2, b1);
-    std::cout << "Result " << std::endl;  mat2.print();
+    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    bmat1.get_transpose(tmp);
+    tmp.right_multiply(bmat1);
+    std::cout << "Matrix:      " << std::endl;  tmp.print();
     
 }
 
