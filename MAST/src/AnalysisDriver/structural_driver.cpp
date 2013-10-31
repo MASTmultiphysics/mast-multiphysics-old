@@ -110,15 +110,20 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     kappa = 5./6.;
     h  = 0.002;
     
+    DenseVector<Real> prestress; prestress.resize(6);
+    prestress(3) = -100.;
+    
     prop3d.set_material(mat);
     prop2d.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false);
+    prop2d.prestress(prestress);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
     
 //    MAST::StructuralSystemAssembly structural_assembly(system,
 //                                                       MAST::STATIC,
 //                                                       infile);
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
+                                                       MAST::BUCKLING,
                                                        infile);
     structural_assembly.set_property_for_all_elems(prop2d);
     

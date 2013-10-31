@@ -395,7 +395,7 @@ namespace MAST {
                 if (if_bending) {
                     if (if_vk) {
                         // membrane - vk
-                        tmp_mat3.resize(2, n2);
+                        tmp_mat3.resize(3, n2);
                         Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
                         tmp_mat3.left_multiply(material_A_mat);
                         Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
@@ -414,6 +414,7 @@ namespace MAST {
                         Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
                         local_jac.add(-JxW[qp], tmp_mat2_n2n2);
                         
+                        tmp_mat3.resize(3, n2);
                         Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
                         tmp_mat3.left_multiply(material_A_mat);
                         tmp_mat3.left_multiply_transpose(vk_dwdxi_mat);
@@ -421,7 +422,7 @@ namespace MAST {
                         local_jac.add(-JxW[qp], tmp_mat2_n2n2);
                         
                         // bending - vk
-                        tmp_mat3.resize(2, n2);
+                        tmp_mat3.resize(3, n2);
                         Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
                         tmp_mat3.left_multiply(material_B_mat);
                         Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);

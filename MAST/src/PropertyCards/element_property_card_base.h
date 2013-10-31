@@ -135,7 +135,7 @@ namespace MAST
          *    initializes the matrix to the prestress in the element
          */
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
-                                      DenseMatrix<Real>& m) const = 0; 
+                                      DenseMatrix<Real>& m) const = 0;
         
     protected:
         

@@ -73,7 +73,11 @@ MAST::StructuralSystemAssembly::assemble() {
         case MAST::MODAL:
             _assemble_matrices_for_modal_analysis();
             break;
-            
+
+        case MAST::BUCKLING:
+            _assemble_matrices_for_buckling_analysis();
+            break;
+
         default:
             libmesh_error();
             break;
@@ -249,8 +253,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis() {
 
         // now use the solution to get the load dependent stiffness matrix
         structural_elem->local_solution = sol;
-        structural_elem->internal_force(true, vec, mat2);
-        mat2.add(1., mat1); // subtract to get the purely load dependent part
+        if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
+            structural_elem->internal_force(true, vec, mat2);
+            mat2.add(1., mat1); // subtract to get the purely load dependent part
+        }
         structural_elem->prestress_force(true, vec, mat3);
         mat2.add(1., mat3);
 
