@@ -110,7 +110,7 @@ namespace MAST
             if (_prestress.size())
                 return true;
             else
-                false;
+                return false;
         }
 
         

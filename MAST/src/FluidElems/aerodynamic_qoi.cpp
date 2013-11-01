@@ -91,6 +91,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
 }
 
 
+
 void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
                                           const QoISet& qois)
 {
@@ -124,6 +125,10 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
                     libmesh_assert(_if_viscous);
                     mechanical_bc_type = NO_SLIP_WALL;
                     n_mechanical_bc++;
+                    break;
+                    
+                default:
+                    // nothing to be done for other bc kinds
                     break;
             }
         }
@@ -261,6 +266,10 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
                     mechanical_bc_type = NO_SLIP_WALL;
                     n_mechanical_bc++;
                     break;
+                    
+                default:
+                    // nothing to be done for other BC kinds
+                    break;
             }
         }
     }
@@ -271,11 +280,6 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     
     
     libmesh_assert_equal_to(n_mechanical_bc, 1); // make sure that only one is active
-    
-    const unsigned int n1 = dim+2;
-    
-    // The number of local degrees of freedom for this element
-    unsigned int n_dofs = c.get_dof_indices().size();
     
     FEBase * side_fe;
     c.get_side_fe(_fluid_vars[0], side_fe); // assuming all variables have the same FE
@@ -318,6 +322,10 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
                     integrated_force(i) += face_normals[qp](i)*JxW[qp]*p_sol.p;
             }
         }
+            break;
+            
+        default:
+            //nothing to be done for other bc kinds
             break;
     }
     

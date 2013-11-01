@@ -136,6 +136,8 @@ namespace MAST {
         if (!_temperature) // only if a temperature load is specified
             return false;
         
+        libmesh_error(); // to be implemented
+        
         FEMOperatorMatrix Bmat;
         
         const std::vector<Real>& JxW = _fe->get_JxW();
