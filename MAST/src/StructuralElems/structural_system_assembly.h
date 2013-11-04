@@ -12,6 +12,7 @@
 #include "libmesh/getpot.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/nonlinear_implicit_system.h"
+#include "libmesh/eigen_system.h"
 #include "libmesh/numeric_vector.h"
 #include "libmesh/sparse_matrix.h"
 
@@ -47,7 +48,9 @@ namespace MAST
      */
     class StructuralSystemAssembly :
     public System::Assembly,
-    public NonlinearImplicitSystem::ComputeResidualandJacobian
+    NonlinearImplicitSystem::ComputeResidualandJacobian,
+    System::SensitivityAssembly,
+    EigenSystem::EigenproblemSensitivityAssembly
     {
     public:
         // Constructor
@@ -91,6 +94,37 @@ namespace MAST
                                             NumericVector<Number>* R,
                                             SparseMatrix<Number>*  J,
                                             NonlinearImplicitSystem& S);
+        
+        /**
+         * Assembly function.  This function will be called
+         * to assemble the sensitivity of system residual prior to a solve and must
+         * be provided by the user in a derived class. The method provides dR/dp_i
+         * for \par i ^th parameter in the vector \par parameters.
+         *
+         * If the routine is not able to provide sensitivity for this parameter,
+         * then it should return false, and the system will attempt to use
+         * finite differencing.
+         */
+        virtual bool sensitivity_assemble (const ParameterVector& parameters,
+                                           const unsigned int i,
+                                           NumericVector<Number>& sensitivity_rhs);
+
+        /**
+         * Assembly function.  This function will be called
+         * to assemble the sensitivity of eigenproblem matrices.
+         * The method provides dA/dp_i and dB/dpi for \par i ^th parameter
+         * in the vector \par parameters.
+         *
+         * If the routine is not able to provide sensitivity for this parameter,
+         * then it should return false, and the system will attempt to use
+         * finite differencing.
+         */
+        virtual bool sensitivity_assemble (const ParameterVector& parameters,
+                                           const unsigned int i,
+                                           SparseMatrix<Number>* sensitivity_A,
+                                           SparseMatrix<Number>* sensitivity_B);
+
+
         
         
     protected:

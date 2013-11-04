@@ -87,6 +87,55 @@ MAST::StructuralSystemAssembly::assemble() {
 
 
 
+bool
+MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& parameters,
+                                                      const unsigned int i,
+                                                      NumericVector<Number>& sensitivity_rhs) {
+    switch (_analysis_type) {
+        case MAST::STATIC:
+            _assemble_matrices_for_modal_analysis();
+            break;
+            
+        case MAST::DYNAMIC:
+            _assemble_matrices_for_buckling_analysis();
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+
+    // currently, all relevant parameter sensitivities are calculated
+    return true;
+}
+
+
+
+bool
+MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& parameters,
+                                                      const unsigned int i,
+                                                      SparseMatrix<Number>* sensitivity_A,
+                                                      SparseMatrix<Number>* sensitivity_B) {
+    switch (_analysis_type) {
+        case MAST::MODAL:
+            _assemble_matrices_for_modal_analysis();
+            break;
+            
+        case MAST::BUCKLING:
+            _assemble_matrices_for_buckling_analysis();
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+    // currently, all relevant parameter sensitivities are calculated
+    return true;
+}
+
+
+
+
 void
 MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Number>& X,
                                                        NumericVector<Number>* R,
