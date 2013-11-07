@@ -55,6 +55,16 @@ namespace MAST
         }
         
         /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(Real* val) const = 0;
+
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(const MAST::FunctionBase& f) const = 0;
+
+        /*!
          *   returns the value of this function
          */
         template <typename ValType>
@@ -95,7 +105,12 @@ namespace MAST
          *    Returns the value of this function.
          */
         virtual ValType operator() () const = 0;
-        
+
+        /*!
+         *    Returns the pointer to value of this function.
+         */
+        virtual ValType* ptr() = 0;
+
         /*!
          *  sets the value of this function
          */
@@ -135,7 +150,29 @@ namespace MAST
          */
         virtual ValType operator() () const
         { return _val; }
-        
+
+        /*!
+         *    Returns the pointer to value of this function.
+         */
+        virtual ValType* ptr() {
+            return &_val;
+        };
+
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(Real* val) const {
+            return (val == &_val);
+        }
+
+        /*!
+         *  returns false since a constant function does not depend on any 
+         *  function.
+         */
+        virtual bool depends_on(const FunctionBase& f) const {
+            return false;
+        }
+
         /*!
          *  sets the value of this function
          */
