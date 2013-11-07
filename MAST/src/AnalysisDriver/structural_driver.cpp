@@ -33,6 +33,8 @@
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/nonlinear_implicit_system.h"
 #include "libmesh/xdr_io.h"
+#include "libmesh/parameter_vector.h"
+
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
@@ -118,6 +120,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_diagonal_mass_matrix(false);
     prop2d.prestress(prestress);
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    ParameterVector parameters; parameters.resize(1);
+    parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
 //    MAST::StructuralSystemAssembly structural_assembly(system,
 //                                                       MAST::STATIC,
@@ -138,10 +142,13 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     std::set<unsigned int> dirichlet_dof_ids;
     
     system.attach_assemble_object(structural_assembly);
+    system.attach_sensitivity_assemble_object(structural_assembly);
+    system.attach_eigenproblem_sensitivity_assemble_object(structural_assembly);
     structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
     system.initialize_condensed_dofs(dirichlet_dof_ids);
 
     system.solve();
+    system.sensitivity_solve(parameters);
 
     if (false) {
         

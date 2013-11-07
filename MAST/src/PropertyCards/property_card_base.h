@@ -87,6 +87,44 @@ namespace MAST {
         }
         
         
+        /*!
+         *  returns true if the property card depends on this parameter
+         */
+        virtual bool depends_on(Real* val) const {
+            // check with all the properties to see if any one of them is
+            // dependent on the provided parameter
+            bool rval = false;
+            std::map<std::string, MAST::FunctionBase*>::const_iterator
+            it = _properties.begin(), end = _properties.end();
+            for ( ; it!=end; it++) {
+                rval = it->second->depends_on(val);
+                if (rval)
+                    break;
+            }
+            
+            return rval;
+        }
+
+        
+        /*!
+         *  returns true if the property card depends on the function \p f
+         */
+        virtual bool depends_on(const FunctionBase& f) const {
+            // check with all the properties to see if any one of them is
+            // dependent on the provided parameter, or is the parameter itself
+            bool rval = false;
+            std::map<std::string, MAST::FunctionBase*>::const_iterator
+            it = _properties.begin(), end = _properties.end();
+            for ( ; it!=end; it++) {
+                rval = (it->second->depends_on(f) ||
+                        it->second == &f);
+                if (rval)
+                    break;
+            }
+            
+            return rval;
+        }
+
         
     protected:
         

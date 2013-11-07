@@ -48,9 +48,9 @@ namespace MAST
      */
     class StructuralSystemAssembly :
     public System::Assembly,
-    NonlinearImplicitSystem::ComputeResidualandJacobian,
-    System::SensitivityAssembly,
-    EigenSystem::EigenproblemSensitivityAssembly
+    public NonlinearImplicitSystem::ComputeResidualandJacobian,
+    public System::SensitivityAssembly,
+    public EigenSystem::EigenproblemSensitivityAssembly
     {
     public:
         // Constructor
@@ -94,7 +94,7 @@ namespace MAST
                                             NumericVector<Number>* R,
                                             SparseMatrix<Number>*  J,
                                             NonlinearImplicitSystem& S);
-        
+
         /**
          * Assembly function.  This function will be called
          * to assemble the sensitivity of system residual prior to a solve and must
@@ -130,18 +130,14 @@ namespace MAST
     protected:
         
         /*!
-         *    Calculates the A and B matrices of an eigenproblem
+         *    Calculates the A and B matrices of a modal analysis eigenproblem
          *    [A] {X} = [B] {X} [lambda]
-         *    The assembly procedure of the matrices depends on the
-         *    nature of analysis.
          */
         void _assemble_matrices_for_modal_analysis();
         
         /*!
-         *    Calculates the A and B matrices of an eigenproblem
+         *    Calculates the A and B matrices of a buckling analysis eigenproblem
          *    [A] {X} = [B] {X} [lambda]
-         *    The assembly procedure of the matrices depends on the
-         *    nature of analysis.
          */
         void _assemble_matrices_for_buckling_analysis();
 
