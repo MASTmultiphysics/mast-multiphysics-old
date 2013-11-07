@@ -127,6 +127,92 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
 
 
 bool
+MAST::StructuralElementBase::inertial_force_sensitivity(DenseVector<Real>& f)
+{
+    const bool if_sensitivity = _if_sensitivity(),
+    if_shape_sensitivity = _if_shape_sensitivity();
+
+    // this should be true if the function is called
+    libmesh_assert(if_sensitivity);
+    libmesh_assert(!if_shape_sensitivity); // this is not implemented for now
+    libmesh_assert(_sensitivity_order() == 1); // only first order sensitivity
+    
+    // check if the material property or the provided exterior
+    // values, like temperature, are functions of the sensitivity parameter
+    const FunctionBase& func = *(this->sensitivity_params[0].second);
+    bool calculate = false;
+    if (_temperature)
+        calculate = calculate || _temperature->depends_on(func);
+    calculate = calculate || _property.depends_on(func);
+
+    // nothing to be calculated if the element does not depend on the
+    // sensitivity parameter.
+    if (!calculate)
+        return false;
+    
+    FEMOperatorMatrix Bmat;
+    
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<std::vector<Real> >& phi = _fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
+    
+    DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
+    DenseVector<Real>  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
+    phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    local_f.resize(n2);
+    
+    _property.calculate_matrix_sensitivity(_elem,
+                                           MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
+                                           material_mat,
+                                           this->sensitivity_params);
+    
+    if (_property.if_diagonal_mass_matrix()) {
+        Real vol = 0.;
+        const unsigned int nshp = _fe->n_shape_functions();
+        for (unsigned int i=0; i<JxW.size(); i++)
+            vol += JxW[i];
+        vol /= (1.* nshp);
+        for (unsigned int i_var=0; i_var<6; i_var++)
+            for (unsigned int i=0; i<nshp; i++)
+                local_jac(i_var*nshp+i, i_var*nshp+i) =
+                vol*material_mat(i_var, i_var);
+        local_jac.vector_mult(local_f, local_acceleration);
+    }
+    else {
+        
+        for (unsigned int qp=0; qp<JxW.size(); qp++) {
+            
+            // now set the shape function values
+            for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+                phi_vec(i_nd) = phi[i_nd][qp];
+            
+            Bmat.reinit(_system.n_vars(), phi_vec);
+            
+            Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
+            
+            tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_acceleration);
+            Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+            local_f.add(JxW[qp], tmp_vec2_n2);
+        }
+    }
+    
+    // now transform to the global coorodinate system
+    if (_elem.dim() < 3) {
+        _transform_to_global_system(local_f, tmp_vec2_n2);
+        f.add(1., tmp_vec2_n2);
+    }
+    else {
+        f.add(1., local_f);
+    }
+    
+    return true;
+}
+
+
+
+
+bool
 MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                                                  DenseVector<Real> &f,
                                                  DenseMatrix<Real> &jac) {
@@ -149,6 +235,41 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                          this->thermal_force(request_jacobian, f, jac));
     
     return (request_jacobian && calculate_jac);
+}
+
+
+
+
+bool
+MAST::StructuralElementBase::_if_sensitivity() const {
+    return (this->sensitivity_params.size() > 0);
+}
+
+
+
+unsigned int
+MAST::StructuralElementBase::_sensitivity_order() const {
+    unsigned int o=0;
+
+    for (unsigned int i=0; i<this->sensitivity_params.size(); i++)
+        o += this->sensitivity_params[i].first;
+    return o;
+}
+
+
+
+bool
+MAST::StructuralElementBase::_if_shape_sensitivity() const {
+    bool rval = (this->sensitivity_params.size() > 0);
+    
+    if (rval) {
+        for (unsigned int i=0; i<this->sensitivity_params.size(); i++) {
+            if (this->sensitivity_params[i].second->has_attribute(MAST::SHAPE_PARAMETER))
+                break;
+        }
+    }
+    
+    return rval;
 }
 
 

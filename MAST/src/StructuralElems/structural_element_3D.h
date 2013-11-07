@@ -159,7 +159,7 @@ namespace MAST {
             
             // set the temperature vector to the value at this point
             _temperature->initialize(xyz[qp]);
-            temperature_value = _temperature->value();
+            temperature_value = (*_temperature)();
             ref_temperature   = _temperature->reference();
             
             // this is moved inside the domain since

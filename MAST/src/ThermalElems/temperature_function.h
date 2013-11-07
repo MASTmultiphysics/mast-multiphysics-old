@@ -19,9 +19,13 @@
 
 namespace MAST
 {
-    class Temperature {
+    class Temperature: public MAST::FunctionValue<Real> {
     public:
 
+        Temperature():
+        MAST::FunctionValue<Real>("Temperature")
+        { }
+        
         /*!
          *    virtual destructor
          */
@@ -35,7 +39,7 @@ namespace MAST
         /*!
          *    returns the temperature value
          */
-        virtual Real value() const = 0;
+        virtual Real operator() () const = 0;
         
         /*!
          *    returns the reference temperature
@@ -50,6 +54,7 @@ namespace MAST
          *   constructor
          */
         ConstantTemperature():
+        MAST::Temperature(),
         _temperature(0.),
         _reference(0.)
         { }
@@ -75,7 +80,7 @@ namespace MAST
         /*!
          *    returns the temperature value
          */
-        virtual Real value() const {
+        virtual Real operator() () const {
             return _temperature;
         }
         

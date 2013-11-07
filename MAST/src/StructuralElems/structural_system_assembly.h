@@ -39,7 +39,7 @@ namespace MAST
     // Forward decleration
     class ElementPropertyCardBase;
     class MaterialPropertyCardBase;
-    
+    class FunctionBase;
     
     /*!
      *    class defies the structural analysis system and implements the
@@ -125,7 +125,15 @@ namespace MAST
                                            SparseMatrix<Number>* sensitivity_B);
 
 
+        /*!
+         *   Adds the parameter and function pairing
+         */
+        void add_parameter(Real* par, MAST::FunctionBase* f);
         
+        /*!
+         *   Returns the function corresponding to a parameter
+         */
+        MAST::FunctionBase& get_parameter(Real* par);
         
     protected:
         
@@ -182,8 +190,12 @@ namespace MAST
          */
         std::vector<const MAST::MaterialPropertyCardBase*> _material_property;
         
+        /*!
+         *   map of sensitivity parameters and the corresponding functions that
+         *   are directly dependent on these parameters
+         */
+        std::map<Real*, MAST::FunctionBase*> _parameter_map;
     };
-    
 }
 
 #endif /* defined(__MAST__structural_system_assembly_h__) */

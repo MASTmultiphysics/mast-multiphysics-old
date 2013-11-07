@@ -68,7 +68,16 @@ namespace MAST
         virtual void calculate_matrix(const Elem& elem,
                                       MAST::ElemenetPropertyMatrixType t,
                                       DenseMatrix<Real>& m) const = 0;
-        
+
+        /*!
+         *   calculates the material matrix in \par m of type \par t.
+         */
+        virtual bool calculate_matrix_sensitivity
+        (const Elem& elem,
+         MAST::ElemenetPropertyMatrixType t,
+         DenseMatrix<Real>& m,
+         const std::vector<std::pair<unsigned int, const MAST::FunctionBase*> >& params) const = 0;
+
         /*!
          *    sets the type of strain to be used, which is LINEAR_STRAIN by
          *    default

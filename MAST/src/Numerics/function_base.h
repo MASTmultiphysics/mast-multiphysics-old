@@ -25,6 +25,10 @@ namespace MAST
         MULTILINEAR_FUNCTION_1D
     };
     
+    enum FunctionAttributeType {
+        SHAPE_PARAMETER
+    };
+    
     
     class FunctionBase {
     public:
@@ -39,8 +43,7 @@ namespace MAST
         /*!
          *   virtual destructor
          */
-        virtual ~FunctionBase()
-        { }
+        virtual ~FunctionBase() { }
         
         /*!
          *    returns the function kind
@@ -63,6 +66,11 @@ namespace MAST
          *  returns true if the function depends on the provided value
          */
         virtual bool depends_on(const MAST::FunctionBase& f) const = 0;
+
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool has_attribute(MAST::FunctionAttributeType a) const = 0;
 
         /*!
          *   returns the value of this function

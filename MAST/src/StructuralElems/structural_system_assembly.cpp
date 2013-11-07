@@ -93,11 +93,11 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
                                                       NumericVector<Number>& sensitivity_rhs) {
     switch (_analysis_type) {
         case MAST::STATIC:
-            _assemble_matrices_for_modal_analysis();
-            break;
-            
         case MAST::DYNAMIC:
-            _assemble_matrices_for_buckling_analysis();
+            libmesh_assert(_system.system_type() == "NonlinearImplicit");
+            residual_and_jacobian(*_system.solution, &sensitivity_rhs,
+                                  NULL,
+                                  dynamic_cast<NonlinearImplicitSystem&>(_system));
             break;
             
         default:
@@ -460,6 +460,40 @@ void assemble_force_vec(System& sys,
 //    fvec.close();
 //#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
+
+
+void
+MAST::StructuralSystemAssembly::add_parameter(Real* par, MAST::FunctionBase* f) {
+    // make sure valid values are given
+    libmesh_assert(par);
+    libmesh_assert(f);
+    // make sure that the function is dependent on the parameters
+    libmesh_assert(f->depends_on(par));
+    // make sure it does not already exist in the map
+    libmesh_assert(!_parameter_map.count(par));
+    
+    // now add this to the map
+    bool insert_success = _parameter_map.insert
+    (std::map<Real*, MAST::FunctionBase*>::value_type(par, f)).second;
+    
+    libmesh_assert(insert_success);
+}
+
+
+
+MAST::FunctionBase&
+MAST::StructuralSystemAssembly::get_parameter(Real* par) {
+    // make sure valid values are given
+    libmesh_assert(par);
+
+    std::map<Real*, MAST::FunctionBase*>::iterator it = _parameter_map.find(par);
+    
+    // make sure it does not already exist in the map
+    libmesh_assert(it != _parameter_map.end());
+
+    return *(it->second);
+}
+
 
 
 
