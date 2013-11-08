@@ -88,7 +88,8 @@ namespace MAST {
         
         
         /*!
-         *  returns true if the property card depends on this parameter
+         *  returns true if alteast one property in this property card 
+         *  depends on this parameter
          */
         virtual bool depends_on(Real* val) const {
             // check with all the properties to see if any one of them is
@@ -120,6 +121,46 @@ namespace MAST {
                         it->second == &f);
                 if (rval)
                     break;
+            }
+            
+            return rval;
+        }
+
+        
+        /*!
+         *  returns true if the property card depends on the functions in \p p
+         */
+        virtual bool depends_on(const MAST::SensitivityParameters& p) const {
+            
+            const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
+            MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
+            it = p_map.begin(); end = p_map.end();
+            
+            std::vector<bool> rvals(p_map.size());
+            std::fill(rvals.begin(), rvals.end(), false);
+            unsigned int i=0;
+            bool rval = true;
+            
+            for ( ; it != end; it++) {
+                const MAST::FunctionBase& f = *(it->first);
+                // check with all the properties to see if any one of them is
+                // dependent on the provided parameter, or is the parameter itself
+                std::map<std::string, MAST::FunctionBase*>::const_iterator
+                it = _properties.begin(), end = _properties.end();
+                for ( ; it!=end; it++) {
+                    rvals[i] = (it->second->depends_on(f) ||
+                            it->second == &f);
+                    if (rvals[i])
+                        break;
+                }
+
+                rval = rval && rvals[i];
+
+                if (!rval)
+                    return false;
+                
+                // increment the counter
+                i++;
             }
             
             return rval;

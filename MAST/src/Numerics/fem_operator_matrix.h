@@ -144,22 +144,6 @@ protected:
 
 
 
-inline
-FEMOperatorMatrix::FEMOperatorMatrix():
-_n_interpolated_vars(0),
-_n_discrete_vars(0),
-_n_dofs_per_var(0)
-{
-    
-}
-
-
-inline
-FEMOperatorMatrix::~FEMOperatorMatrix()
-{
-    this->clear();
-}
-
 
 inline
 void

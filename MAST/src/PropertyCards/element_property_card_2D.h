@@ -161,11 +161,19 @@ namespace MAST
         
 
         /*!
-         *   calculates the material matrix in \par m of type \par t.
+         *   calculates the matrix in \par m of type \par t.
          */
         virtual void calculate_matrix(const Elem& elem,
                                       MAST::ElemenetPropertyMatrixType t,
                                       DenseMatrix<Real>& m) const;
+
+        /*!
+         *   calculates the sensitivity of matrix in \par m of type \par t.
+         */
+        virtual void calculate_matrix_sensitivity(const Elem& elem,
+                                                  MAST::ElemenetPropertyMatrixType t,
+                                                  DenseMatrix<Real>& m,
+                                                  const MAST::SensitivityParameters& p) const;
 
         /*!
          *    initializes the vector to the prestress in the element
@@ -272,6 +280,102 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
         }
             break;
         
+        case 1:
+        case 3:
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+
+inline void
+MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libMesh::Elem &elem,
+                                                                      MAST::ElemenetPropertyMatrixType t,
+                                                                      DenseMatrix<Real>& m,
+                                                                      const MAST::SensitivityParameters& p) const
+{
+    libmesh_assert(_material); // should have been set
+    
+    // only first order sensitivities are calculated at this point
+    libmesh_assert_equal_to(p.total_order(), 1);
+    
+    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
+    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
+    it = p_map.begin(); end = p_map.end();
+
+    DenseMatrix<Real> dm;
+    const MAST::FunctionBase& f = *(it->first);
+
+    switch (elem.dim()) {
+            
+        case 2: {
+            double h = this->get<Real>("h")();
+            switch (t) {
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
+                    _material->calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m, _if_plane_stress);
+                    _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                               dm, _if_plane_stress, p);
+                    if (f.name() != "h")
+                        m.scale(0.);
+                    m.add(h, dm);
+                }
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+                    // for solid sections with isotropic material this is zero
+                    m.resize(3,3);
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX: {
+                    _material->calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m, _if_plane_stress);
+                    _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                               dm, _if_plane_stress, p);
+                    if (f.name() == "h")
+                        m.scale(pow(h,2)/4.);
+                    else
+                        m.scale(0.);
+                    m.add(pow(h,3)/12., dm);
+                }
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
+                    _material->calculate_2d_matrix(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                                   m, _if_plane_stress);
+                    _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                                               dm, _if_plane_stress, p);
+                    if (f.name() != "h")
+                        m.scale(0.);
+                    m.add(h, dm);
+                }
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX: {
+                    _material->calculate_2d_matrix(MAST::MATERIAL_INERTIA_MATRIX,
+                                                   m, _if_plane_stress);
+                    _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_INERTIA_MATRIX,
+                                                               dm, _if_plane_stress, p);
+                    if (f.name() != "h")
+                        m.scale(0.);
+                    m.add(h, dm);
+                    // now scale the rotation dofs with small factors
+                    for (unsigned int i=0; i<3; i++) {
+                        m(i+3, i+3) *= 1.0e-6;
+                    }
+                }
+                    break;
+                    
+                default:
+                    libmesh_error();
+                    break;
+            }
+        }
+            break;
+            
         case 1:
         case 3:
         default:

@@ -52,6 +52,7 @@ namespace MAST
          */
         virtual ~ElementPropertyCardBase() { }
         
+        
         /*!
          *    returns the extra quadrature order (on top of the system) that 
          *    this element should use. By default this is zero, and can be
@@ -72,11 +73,10 @@ namespace MAST
         /*!
          *   calculates the material matrix in \par m of type \par t.
          */
-        virtual bool calculate_matrix_sensitivity
-        (const Elem& elem,
-         MAST::ElemenetPropertyMatrixType t,
-         DenseMatrix<Real>& m,
-         const std::vector<std::pair<unsigned int, const MAST::FunctionBase*> >& params) const = 0;
+        virtual void calculate_matrix_sensitivity(const Elem& elem,
+                                                  MAST::ElemenetPropertyMatrixType t,
+                                                  DenseMatrix<Real>& m,
+                                                  const MAST::SensitivityParameters& params) const = 0;
 
         /*!
          *    sets the type of strain to be used, which is LINEAR_STRAIN by

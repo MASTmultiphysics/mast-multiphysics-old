@@ -21,12 +21,10 @@ template <typename T>
 class BasisMatrix: public ShellMatrix<T>
 {
 public:
-    BasisMatrix(const Parallel::Communicator &comm_in):
-    ShellMatrix<T>(comm_in)
-    { }
+    BasisMatrix(const Parallel::Communicator &comm_in);
     
-    virtual ~BasisMatrix()
-    { }
+    virtual ~BasisMatrix();
+    
     
     /**
      * @returns \p m, the row-dimension of the matrix where the marix is

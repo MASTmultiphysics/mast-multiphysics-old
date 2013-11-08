@@ -108,12 +108,20 @@ namespace MAST
         
         
         /*!
-         *   calculates the material matrix in \par m of type \par t.
+         *   calculates the matrix in \par m of type \par t.
          */
         virtual void calculate_matrix(const Elem& elem,
                                       MAST::ElemenetPropertyMatrixType t,
                                       DenseMatrix<Real>& m) const;
-        
+
+        /*!
+         *   calculates the sensitivity of matrix in \par m of type \par t.
+         */
+        virtual void calculate_matrix_sensitivity(const Elem& elem,
+                                                  MAST::ElemenetPropertyMatrixType t,
+                                                  DenseMatrix<Real>& m,
+                                                  const MAST::SensitivityParameters& p) const;
+
     protected:
         
         /*!
@@ -195,6 +203,124 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
                     _material->calculate_1d_matrix(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                                                    m);
                     m.scale(Area);
+                    break;
+                    
+                default:
+                    libmesh_error();
+                    break;
+            }
+        }
+            break;
+            
+        case 2:
+        case 3:
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+inline void
+MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libMesh::Elem &elem,
+                                                                      MAST::ElemenetPropertyMatrixType t,
+                                                                      DenseMatrix<Real>& m,
+                                                                      const MAST::SensitivityParameters& p) const
+{
+    libmesh_assert(_material); // should have been set
+
+    // only first order sensitivities are calculated at this point
+    libmesh_assert_equal_to(p.total_order(), 1);
+    
+    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
+    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
+    it = p_map.begin(); end = p_map.end();
+    
+    const MAST::FunctionBase& f = *(it->first);
+
+    DenseMatrix<Real> dm;
+    
+    switch (elem.dim()) {
+            
+        case 1: {
+            double h = this->get<Real>("h")(), // section height
+            b = this->get<Real>("b")(),        // section width
+            Area = b*h, Itrans = b*pow(h,3)/12., Ichord = h*pow(b,3)/12.,
+            dAreadb = h, dAreadh = b,
+            dItransdb = pow(h,3)/12., dItransdh = b*pow(h,2)/4.,
+            dIchorddb = h*pow(b,2)/4., dIchorddh =  pow(b,3)/12.;
+            switch (t) {
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
+                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m);
+                    _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                               dm, p);
+                    if (f.name() == "h")
+                        m.scale(dAreadh);
+                    else if (f.name() == "b")
+                        m.scale(dAreadb);
+                    else
+                        m.scale(0.);
+                    
+                    m.add(Area, dm);
+                }
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_TRANSVERSE:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_CHORDWISE:
+                    // for solid sections with isotropic material this is zero
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_TRANSVERSE: {
+                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m);
+                    _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                               dm, p);
+                    
+                    if (f.name() == "h")
+                        m.scale(dItransdh);
+                    else if (f.name() == "b")
+                        m.scale(dItransdb);
+                    else
+                        m.scale(0.);
+                    
+                    m.add(Itrans, dm);
+                }
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_CHORDWISE: {
+                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                   m);
+                    _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                                               dm, p);
+                    
+                    if (f.name() == "h")
+                        m.scale(dIchorddh);
+                    else if (f.name() == "b")
+                        m.scale(dIchorddb);
+                    else
+                        m.scale(0.);
+                    
+                    m.add(Ichord, dm);
+                }
+                    break;
+                    
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
+                    _material->calculate_1d_matrix(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                                   m);
+                    _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                                               dm, p);
+                    if (f.name() == "h")
+                        m.scale(dAreadh);
+                    else if (f.name() == "b")
+                        m.scale(dAreadb);
+                    else
+                        m.scale(0.);
+                    
+                    m.add(Area, dm);
+                }
                     break;
                     
                 default:

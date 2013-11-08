@@ -40,10 +40,31 @@ namespace MAST {
         virtual bool internal_force(bool request_jacobian,
                                     DenseVector<Real>& f,
                                     DenseMatrix<Real>& jac);
+
         
+        /*!
+         *    Calculates the sensitivity of internal force vector and
+         *    Jacobian due to strain energy
+         */
+        virtual bool internal_force_sensitivity(bool request_jacobian,
+                                                DenseVector<Real>& f,
+                                                DenseMatrix<Real>& jac);
+
+        /*!
+         *    Calculates the prestress force vector and Jacobian
+         */
         virtual bool prestress_force (bool request_jacobian,
                                       DenseVector<Real>& f,
                                       DenseMatrix<Real>& jac)
+        { libmesh_error();}
+
+        
+        /*!
+         *    Calculates the sensitivity prestress force vector and Jacobian
+         */
+        virtual bool prestress_force_sensitivity (bool request_jacobian,
+                                                  DenseVector<Real>& f,
+                                                  DenseMatrix<Real>& jac)
         { libmesh_error();}
 
     protected:
@@ -54,7 +75,15 @@ namespace MAST {
         virtual bool thermal_force(bool request_jacobian,
                                    DenseVector<Real>& f,
                                    DenseMatrix<Real>& jac);
-        
+
+        /*!
+         *    Calculates the sensitivity of force vector and Jacobian due to 
+         *    thermal stresses
+         */
+        virtual bool thermal_force_sensitivity(bool request_jacobian,
+                                               DenseVector<Real>& f,
+                                               DenseMatrix<Real>& jac);
+
         /*!
          *   initialize strain operator matrix
          */
@@ -124,7 +153,79 @@ namespace MAST {
         
         return request_jacobian;
     }
+
     
+    inline
+    bool
+    StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
+                                                     DenseVector<Real>& f,
+                                                     DenseMatrix<Real>& jac)
+    {
+        // this should be true if the function is called
+        libmesh_assert(this->sensitivity_params);
+        libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
+        libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+        
+        // check if the material property or the provided exterior
+        // values, like temperature, are functions of the sensitivity parameter
+        bool calculate = false;
+        if (_temperature)
+            calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
+        calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+        
+        // nothing to be calculated if the element does not depend on the
+        // sensitivity parameter.
+        if (!calculate)
+            return false;
+
+        FEMOperatorMatrix Bmat;
+        
+        const std::vector<Real>& JxW = _fe->get_JxW();
+        const std::vector<Point>& xyz = _fe->get_xyz();
+        const unsigned int n_phi = (unsigned int)JxW.size();
+        const unsigned int n1=6, n2=6*n_phi;
+        DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
+        DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
+        
+        tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+        phi.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+        
+        
+        Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+        
+        for (unsigned int qp=0; qp<JxW.size(); qp++) {
+            this->initialize_strain_operator(qp, Bmat);
+            
+            // if temperature is specified, the initialize it to the current location
+            if (_temperature)
+                _temperature->initialize(xyz[qp]);
+            
+            // get the material matrix
+            _property.calculate_matrix_sensitivity(_elem,
+                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                                                   material_mat,
+                                                   *(this->sensitivity_params));
+            
+            // calculate the stress
+            Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
+            tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_solution); // this is stress
+            
+            // now calculate the internal force vector
+            Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
+            f.add(-JxW[qp], tmp_vec2_n2);
+            
+            // add the prestress
+            
+            if (request_jacobian) {
+                
+                Bmat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
+                jac.add(-JxW[qp], tmp_mat2_n2n2);
+            }
+        }
+        
+        return request_jacobian;
+    }
+
     
     
     inline
@@ -183,7 +284,21 @@ namespace MAST {
         
         return false;
     }
+
     
+    
+    inline
+    bool
+    StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
+                                                    DenseVector<Real>& f,
+                                                    DenseMatrix<Real>& jac)
+    {
+
+        libmesh_error(); // to be implemented
+        
+        return false;
+    }
+
     
     
     inline

@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __mast_structural_element_base_h__
-#define __mast_structural_element_base_h__
+#ifndef __MAST_structural_element_base_h__
+#define __MAST_structural_element_base_h__
 
 // C++ includes
 #include <memory>
@@ -27,6 +27,7 @@ namespace MAST {
     class ElementPropertyCardBase;
     class FunctionBase;
     class Temperature;
+    class SensitivityParameters;
     
     enum StructuralElemType {
         ELASTIC_ELEMENT_1D,
@@ -93,31 +94,43 @@ namespace MAST {
         /*!
          *   sensitivity of the internal force contribution to system residual
          */
-        virtual bool internal_force_sensitivity (DenseVector<Real>& f) = 0;
+        virtual bool internal_force_sensitivity (bool request_jacobian,
+                                                 DenseVector<Real>& f,
+                                                 DenseMatrix<Real>& jac) = 0;
         /*!
          *   sensitivity of the damping force contribution to system residual
          */
-        virtual bool damping_force_sensitivity (DenseVector<Real>& f);
+        virtual bool damping_force_sensitivity (bool request_jacobian,
+                                                DenseVector<Real>& f,
+                                                DenseMatrix<Real>& jac);
         
         /*!
          *   sensitivity of the inertial force contribution to system residual
          */
-        virtual bool inertial_force_sensitivity (DenseVector<Real>& f);
+        virtual bool inertial_force_sensitivity (bool request_jacobian,
+                                                 DenseVector<Real>& f,
+                                                 DenseMatrix<Real>& jac);
         
         /*!
          *   sensitivity of the side external force contribution to system residual
          */
-        virtual bool side_external_force_sensitivity (DenseVector<Real>& f);
+        virtual bool side_external_force_sensitivity (bool request_jacobian,
+                                                      DenseVector<Real>& f,
+                                                      DenseMatrix<Real>& jac);
         
         /*!
          *   sensitivity of the prestress force contribution to system residual
          */
-        virtual bool prestress_force_sensitivity (DenseVector<Real>& f) = 0;
+        virtual bool prestress_force_sensitivity (bool request_jacobian,
+                                                  DenseVector<Real>& f,
+                                                  DenseMatrix<Real>& jac) = 0;
         
         /*!
          *   sensitivity of the volume external force contribution to system residual
          */
-        virtual bool volume_external_force_sensitivity (DenseVector<Real>& f);
+        virtual bool volume_external_force_sensitivity (bool request_jacobian,
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac);
 
         /*!
          *   element solution in the local coordinate system
@@ -135,12 +148,9 @@ namespace MAST {
         DenseVector<Real> local_acceleration;
         
         /*!
-         *   parameters for which sensitivity has to be calculated. The first
-         *   value in the pair is the order of the derivative for parameter.
-         *   A regular analysis is performed (i.e., without sensitivity calculation)
-         *   if this vector is empty.
+         *   parameters for which sensitivity has to be calculated.
          */
-        std::vector<std::pair<unsigned int, const MAST::FunctionBase*> > sensitivity_params;
+        const MAST::SensitivityParameters* sensitivity_params;
         
     protected:
         
@@ -152,23 +162,6 @@ namespace MAST {
         
         virtual void _transform_to_global_system(const DenseVector<Real>& local_vec,
                                                  DenseVector<Real>& global_vec) const;
-
-        /*!
-         *   checks if sensitivity analysis information is requested.
-         */
-        bool _if_sensitivity() const;
-
-        /*!
-         *   returns the order of sensitivity for this calculation
-         */
-        unsigned int _sensitivity_order() const;
-        
-        /*!
-         *   checks if the sensitivity information involves shape parameters. 
-         *   This is done by working through the functions provided in
-         *   \p sensitivity_params;
-         */
-        bool _if_shape_sensitivity() const;
         
         /*!
          *   matrix that transforms the global dofs to the local element coordinate

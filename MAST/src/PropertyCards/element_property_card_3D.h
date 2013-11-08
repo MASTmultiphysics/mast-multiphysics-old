@@ -38,6 +38,14 @@ namespace MAST
                                       DenseMatrix<Real>& m) const;
         
         /*!
+         *   calculates the material matrix in \par m of type \par t.
+         */
+        virtual void calculate_matrix_sensitivity(const Elem& elem,
+                                                  MAST::ElemenetPropertyMatrixType t,
+                                                  DenseMatrix<Real>& m,
+                                                  const MAST::SensitivityParameters& params) const;
+
+        /*!
          *    sets the material card
          */
         void set_material(MAST::MaterialPropertyCardBase& mat) {
@@ -117,6 +125,55 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
             break;
     }
 }
+
+
+
+inline void
+MAST::ElementPropertyCard3D::calculate_matrix_sensitivity(const libMesh::Elem &elem,
+                                                          MAST::ElemenetPropertyMatrixType t,
+                                                          DenseMatrix<Real>& m,
+                                                          const MAST::SensitivityParameters& p) const
+{
+    libmesh_assert(_material); // should have been set
+    
+    // currently only first order sensitivity is provided
+    libmesh_assert_equal_to(p.total_order(), 1);
+    
+    switch (elem.dim()) {
+        case 3:
+            switch (t) {
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX, m, p);
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
+                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_INERTIA_MATRIX, m, p);
+                    // now scale the rotation dofs with small factors
+                    for (unsigned int i=0; i<3; i++) {
+                        m(i+3, i+3) *= 1.0e-6;
+                    }
+                    break;
+                    
+                    break;
+                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX:
+                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, m, p);
+                    break;
+                    
+                default:
+                    libmesh_error(); // others need to be implemented
+                    break;
+            }
+            break;
+            
+        case 1:
+        case 2:
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
 
 
 

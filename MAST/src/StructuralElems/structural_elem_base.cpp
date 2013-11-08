@@ -17,6 +17,7 @@
 #include "StructuralElems/structural_element_2D.h"
 //#include "StructuralElems/structural_element_1D.h"
 #include "ThermalElems/temperature_function.h"
+#include "Numerics/sensitivity_parameters.h"
 
 
 MAST::StructuralElementBase::StructuralElementBase(System& sys,
@@ -43,6 +44,16 @@ MAST::StructuralElementBase::damping_force (bool request_jacobian,
 {
     libmesh_error(); // to be implemented
     
+}
+
+
+
+bool
+MAST::StructuralElementBase::damping_force_sensitivity(bool request_jacobian,
+                                                       DenseVector<Real>& f,
+                                                       DenseMatrix<Real>& jac)
+{
+    libmesh_error(); // to be implemented
 }
 
 
@@ -127,24 +138,22 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
 
 
 bool
-MAST::StructuralElementBase::inertial_force_sensitivity(DenseVector<Real>& f)
+MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac)
 {
-    const bool if_sensitivity = _if_sensitivity(),
-    if_shape_sensitivity = _if_shape_sensitivity();
-
     // this should be true if the function is called
-    libmesh_assert(if_sensitivity);
-    libmesh_assert(!if_shape_sensitivity); // this is not implemented for now
-    libmesh_assert(_sensitivity_order() == 1); // only first order sensitivity
+    libmesh_assert(this->sensitivity_params);
+    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
+    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
     
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
-    const FunctionBase& func = *(this->sensitivity_params[0].second);
     bool calculate = false;
     if (_temperature)
-        calculate = calculate || _temperature->depends_on(func);
-    calculate = calculate || _property.depends_on(func);
-
+        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    
     // nothing to be calculated if the element does not depend on the
     // sensitivity parameter.
     if (!calculate)
@@ -165,7 +174,7 @@ MAST::StructuralElementBase::inertial_force_sensitivity(DenseVector<Real>& f)
     _property.calculate_matrix_sensitivity(_elem,
                                            MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                                            material_mat,
-                                           this->sensitivity_params);
+                                           *(this->sensitivity_params));
     
     if (_property.if_diagonal_mass_matrix()) {
         Real vol = 0.;
@@ -194,6 +203,14 @@ MAST::StructuralElementBase::inertial_force_sensitivity(DenseVector<Real>& f)
             tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_acceleration);
             Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
             local_f.add(JxW[qp], tmp_vec2_n2);
+            
+            if (request_jacobian) {
+                
+                Bmat.right_multiply_transpose(tmp_mat2_n2n2,
+                                              tmp_mat1_n1n2);
+                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+            }
+            
         }
     }
     
@@ -201,12 +218,18 @@ MAST::StructuralElementBase::inertial_force_sensitivity(DenseVector<Real>& f)
     if (_elem.dim() < 3) {
         _transform_to_global_system(local_f, tmp_vec2_n2);
         f.add(1., tmp_vec2_n2);
+        if (request_jacobian) {
+            _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+            jac.add(1., tmp_mat2_n2n2);
+        }
     }
     else {
         f.add(1., local_f);
+        if (request_jacobian)
+            jac.add(1., local_jac);
     }
     
-    return true;
+    return request_jacobian;
 }
 
 
@@ -223,9 +246,21 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
 
 
 bool
+MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobian,
+                                                             DenseVector<Real> &f,
+                                                             DenseMatrix<Real> &jac) {
+    
+    libmesh_assert(false);
+}
+
+
+
+bool
 MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                    DenseVector<Real> &f,
                                                    DenseMatrix<Real> &jac) {
+    
+    libmesh_error();
     
     bool calculate_jac = false; // start with false, and then set true if
                                 // any one of the forces provides a Jacobian
@@ -241,36 +276,23 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
 
 
 bool
-MAST::StructuralElementBase::_if_sensitivity() const {
-    return (this->sensitivity_params.size() > 0);
-}
-
-
-
-unsigned int
-MAST::StructuralElementBase::_sensitivity_order() const {
-    unsigned int o=0;
-
-    for (unsigned int i=0; i<this->sensitivity_params.size(); i++)
-        o += this->sensitivity_params[i].first;
-    return o;
-}
-
-
-
-bool
-MAST::StructuralElementBase::_if_shape_sensitivity() const {
-    bool rval = (this->sensitivity_params.size() > 0);
+MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jacobian,
+                                                               DenseVector<Real> &f,
+                                                               DenseMatrix<Real> &jac) {
     
-    if (rval) {
-        for (unsigned int i=0; i<this->sensitivity_params.size(); i++) {
-            if (this->sensitivity_params[i].second->has_attribute(MAST::SHAPE_PARAMETER))
-                break;
-        }
-    }
+    libmesh_error();
     
-    return rval;
+    bool calculate_jac = false; // start with false, and then set true if
+                                // any one of the forces provides a Jacobian
+    
+    if (_temperature)  // thermal load
+        calculate_jac = (calculate_jac ||
+                         this->thermal_force(request_jacobian, f, jac));
+    
+    return (request_jacobian && calculate_jac);
 }
+
+
 
 
 void
