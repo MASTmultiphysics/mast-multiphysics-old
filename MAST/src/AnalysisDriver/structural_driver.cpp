@@ -142,6 +142,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
     std::set<unsigned int> dirichlet_dof_ids;
+    std::vector<Real> sens;
     
     system.attach_assemble_object(structural_assembly);
     system.attach_sensitivity_assemble_object(structural_assembly);
@@ -150,7 +151,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.initialize_condensed_dofs(dirichlet_dof_ids);
 
     system.solve();
-    system.sensitivity_solve(parameters);
+    system.sensitivity_solve(parameters, sens);
 
     if (false) {
         
@@ -193,8 +194,18 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 std::cout << std::setw(5) << i
                 << std::setw(10) << eigval.real()
                 << " + i  "
-                << std::setw(10) << eigval.imag() << std::endl;
-
+                << std::setw(10) << eigval.imag();
+                
+                // write the sensitivity
+                Complex eig_sens = -sens[i]/pow(Complex(val.first, val.second),2);
+                if (sens.size())
+                    std::cout << "  deig/dp = "
+                    << std::setw(10) << eig_sens.real()
+                    << " + i  "
+                    << std::setw(10) << eig_sens.imag();
+                
+                std::cout << std::endl;
+                
             }
             else {
                 file << "eig_"  << i << " = " << val.first << std::endl;
@@ -202,7 +213,13 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 std::cout << std::setw(5) << i
                 << std::setw(10) << val.first
                 << " + i  "
-                << std::setw(10) << val.second << std::endl;
+                << std::setw(10) << val.second;
+                
+                // write the sensitivity
+                if (sens.size())
+                    std::cout << "  deig/dp = " << sens[i];
+
+                std::cout<< std::endl;
             }
             
             

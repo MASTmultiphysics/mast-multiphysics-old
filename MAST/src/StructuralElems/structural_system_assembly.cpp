@@ -160,14 +160,14 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
         case MAST::MODAL:
             _assemble_matrices_for_modal_analysis(*_system.solution,
                                                   *sensitivity_A,
-                                                  *sensitivity_A,
+                                                  *sensitivity_B,
                                                   &sens_params);
             break;
             
         case MAST::BUCKLING:
             _assemble_matrices_for_buckling_analysis(*_system.solution,
                                                      *sensitivity_A,
-                                                     *sensitivity_A,
+                                                     *sensitivity_B,
                                                      &sens_params);
             break;
             
