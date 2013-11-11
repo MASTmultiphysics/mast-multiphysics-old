@@ -123,6 +123,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
+    
 //    MAST::StructuralSystemAssembly structural_assembly(system,
 //                                                       MAST::STATIC,
 //                                                       infile);
@@ -130,6 +131,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                                                        MAST::BUCKLING,
                                                        infile);
     structural_assembly.set_property_for_all_elems(prop2d);
+    structural_assembly.add_parameter(h.ptr(), &h);
     
     // Set the number of requested eigenpairs \p n_evals and the number
     // of basis vectors used in the solution algorithm.

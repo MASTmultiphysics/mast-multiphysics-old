@@ -36,7 +36,8 @@ namespace MAST {
         /*!
          *    public constructor
          */
-        SensitivityParameters()
+        SensitivityParameters():
+        _order(0)
         { }
         
         /*!

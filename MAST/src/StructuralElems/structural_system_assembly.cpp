@@ -3,6 +3,7 @@
 #include "libmesh/nonlinear_solver.h"
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/fe_interface.h"
+#include "libmesh/parameter_vector.h"
 
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
@@ -67,17 +68,18 @@ MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
 
 
 void
-MAST::StructuralSystemAssembly::assemble() {
+MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Number>& X,
+                                                       NumericVector<Number>* R,
+                                                       SparseMatrix<Number>*  J,
+                                                       NonlinearImplicitSystem& S) {
     
     switch (_analysis_type) {
-        case MAST::MODAL:
-            _assemble_matrices_for_modal_analysis();
+        case MAST::STATIC:
+        case MAST::DYNAMIC:
+            libmesh_assert(_system.system_type() == "NonlinearImplicit");
+            _assemble_residual_and_jacobian(X, R, J, S, NULL);
             break;
-
-        case MAST::BUCKLING:
-            _assemble_matrices_for_buckling_analysis();
-            break;
-
+            
         default:
             libmesh_error();
             break;
@@ -88,41 +90,85 @@ MAST::StructuralSystemAssembly::assemble() {
 
 
 bool
-MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& parameters,
+MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
                                                       NumericVector<Number>& sensitivity_rhs) {
+    SensitivityParameters sens_params;
+    sens_params.add_parameter(this->get_parameter(params[i]), 1);
+    
     switch (_analysis_type) {
         case MAST::STATIC:
         case MAST::DYNAMIC:
             libmesh_assert(_system.system_type() == "NonlinearImplicit");
-            residual_and_jacobian(*_system.solution, &sensitivity_rhs,
-                                  NULL,
-                                  dynamic_cast<NonlinearImplicitSystem&>(_system));
+            _assemble_residual_and_jacobian(*_system.solution, &sensitivity_rhs,
+                                            NULL,
+                                            dynamic_cast<NonlinearImplicitSystem&>(_system),
+                                            &sens_params);
             break;
             
         default:
             libmesh_error();
             break;
     }
-
+    
     // currently, all relevant parameter sensitivities are calculated
     return true;
 }
 
 
 
+void
+MAST::StructuralSystemAssembly::assemble() {
+    
+    SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
+    SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
+
+    switch (_analysis_type) {
+        case MAST::MODAL:
+            _assemble_matrices_for_modal_analysis(*_system.solution,
+                                                  matrix_A,
+                                                  matrix_B,
+                                                  NULL);
+            break;
+
+        case MAST::BUCKLING:
+            _assemble_matrices_for_buckling_analysis(*_system.solution,
+                                                     matrix_A,
+                                                     matrix_B,
+                                                     NULL);
+            break;
+
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+
 bool
-MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& parameters,
+MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
                                                       SparseMatrix<Number>* sensitivity_A,
                                                       SparseMatrix<Number>* sensitivity_B) {
+    SensitivityParameters sens_params;
+    sens_params.add_parameter(this->get_parameter(params[i]), 1);
+    
+    
     switch (_analysis_type) {
         case MAST::MODAL:
-            _assemble_matrices_for_modal_analysis();
+            _assemble_matrices_for_modal_analysis(*_system.solution,
+                                                  *sensitivity_A,
+                                                  *sensitivity_A,
+                                                  &sens_params);
             break;
             
         case MAST::BUCKLING:
-            _assemble_matrices_for_buckling_analysis();
+            _assemble_matrices_for_buckling_analysis(*_system.solution,
+                                                     *sensitivity_A,
+                                                     *sensitivity_A,
+                                                     &sens_params);
             break;
             
         default:
@@ -137,10 +183,11 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 
 
 void
-MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Number>& X,
-                                                       NumericVector<Number>* R,
-                                                       SparseMatrix<Number>*  J,
-                                                       NonlinearImplicitSystem& S) {
+MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVector<Number>& X,
+                                                                 NumericVector<Number>* R,
+                                                                 SparseMatrix<Number>*  J,
+                                                                 NonlinearImplicitSystem& S,
+                                                                 const MAST::SensitivityParameters* params) {
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -166,9 +213,10 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
                               (_system, *elem, p_card).release());
         
         // get the solution
-        sol.resize(dof_indices.size());
-        vec.resize(dof_indices.size());
-        mat.resize(dof_indices.size(), dof_indices.size());
+        unsigned int ndofs = (unsigned int)dof_indices.size();
+        sol.resize(ndofs);
+        vec.resize(ndofs);
+        mat.resize(ndofs, ndofs);
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
             sol(i) = X(dof_indices[i]);
@@ -176,7 +224,13 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
         structural_elem->local_solution = sol;
         
         // now get the vector values
-        structural_elem->internal_force(J!=NULL?true:false, vec, mat);
+        if (!params) {
+            structural_elem->internal_force(J!=NULL?true:false, vec, mat);
+        }
+        else {
+            structural_elem->sensitivity_params = params;
+            structural_elem->internal_force_sensitivity(J!=NULL?true:false, vec, mat);
+        }
         
         // add to the global matrices
         if (R) R->add_vector(vec, dof_indices);
@@ -187,7 +241,10 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
+MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const NumericVector<Number>& X,
+                                                                      SparseMatrix<Number>&  matrix_A,
+                                                                      SparseMatrix<Number>&  matrix_B,
+                                                                      const MAST::SensitivityParameters* params) {
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -199,10 +256,6 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
 
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
-    
-    SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
-    SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
-
     
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
@@ -220,13 +273,14 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
                               (_system, *elem, p_card).release());
 
         // get the solution
-        sol.resize(dof_indices.size());
-        vec.resize(dof_indices.size());
-        mat1.resize(dof_indices.size(), dof_indices.size());
-        mat2.resize(dof_indices.size(), dof_indices.size());
+        unsigned int ndofs = (unsigned int)dof_indices.size();
+        sol.resize(ndofs);
+        vec.resize(ndofs);
+        mat1.resize(ndofs, ndofs);
+        mat2.resize(ndofs, ndofs);
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = (*_system.solution)(dof_indices[i]);
+            sol(i) = X(dof_indices[i]);
         
         structural_elem->local_solution = sol;
         sol.zero();
@@ -234,8 +288,15 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
         
         
         // now get the matrices
-        structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
-        structural_elem->inertial_force(true, vec, mat2);
+        if (!params) {
+            structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->inertial_force(true, vec, mat2);
+        }
+        else {
+            structural_elem->sensitivity_params = params;
+            structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->inertial_force_sensitivity(true, vec, mat2);
+        }
         
         // add to the global matrices
         if (if_exchange_AB_matrices)
@@ -254,7 +315,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis() {
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis() {
+MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const NumericVector<Number>& X,
+                                                                         SparseMatrix<Number>&  matrix_A,
+                                                                         SparseMatrix<Number>&  matrix_B,
+                                                                         const MAST::SensitivityParameters* params) {
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -266,10 +330,6 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis() {
     
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
-    
-    SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
-    SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
-    
     
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
@@ -287,27 +347,45 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis() {
                               (_system, *elem, p_card).release());
         
         // get the solution
-        sol.resize(dof_indices.size());
-        vec.resize(dof_indices.size());
-        mat1.resize(dof_indices.size(), dof_indices.size());
-        mat2.resize(dof_indices.size(), dof_indices.size());
-        mat3.resize(dof_indices.size(), dof_indices.size());
+        unsigned int ndofs = (unsigned int)dof_indices.size();
+        sol.resize(ndofs);
+        vec.resize(ndofs);
+        mat1.resize(ndofs, ndofs);
+        mat2.resize(ndofs, ndofs);
+        mat3.resize(ndofs, ndofs);
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = (*_system.solution)(dof_indices[i]);
-
-        // set the local solution to zero for the load INdependent stiffness matrix
-        structural_elem->local_solution.resize(sol.size());
-        structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
-
-        // now use the solution to get the load dependent stiffness matrix
-        structural_elem->local_solution = sol;
-        if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
-            structural_elem->internal_force(true, vec, mat2);
-            mat2.add(1., mat1); // subtract to get the purely load dependent part
+            sol(i) = X(dof_indices[i]);
+        
+        if (!params) {
+            // set the local solution to zero for the load INdependent stiffness matrix
+            structural_elem->local_solution.resize(sol.size());
+            structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
+            
+            // now use the solution to get the load dependent stiffness matrix
+            structural_elem->local_solution = sol;
+            if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
+                structural_elem->internal_force(true, vec, mat2);
+                mat2.add(1., mat1); // subtract to get the purely load dependent part
+            }
+            structural_elem->prestress_force(true, vec, mat3);
+            mat2.add(1., mat3);
         }
-        structural_elem->prestress_force(true, vec, mat3);
-        mat2.add(1., mat3);
+        else {
+            structural_elem->sensitivity_params = params;
+            // set the local solution to zero for the load INdependent stiffness matrix
+            structural_elem->local_solution.resize(sol.size());
+            structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
+            
+            // now use the solution to get the load dependent stiffness matrix
+            structural_elem->local_solution = sol;
+            if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
+                structural_elem->internal_force_sensitivity(true, vec, mat2);
+                mat2.add(1., mat1); // subtract to get the purely load dependent part
+            }
+            structural_elem->prestress_force_sensitivity(true, vec, mat3);
+            mat2.add(1., mat3);
+        }
 
         // add to the global matrices
         if (if_exchange_AB_matrices)
@@ -481,17 +559,18 @@ MAST::StructuralSystemAssembly::add_parameter(Real* par, MAST::FunctionBase* f) 
 
 
 
-MAST::FunctionBase&
-MAST::StructuralSystemAssembly::get_parameter(Real* par) {
+const MAST::FunctionBase*
+MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
     // make sure valid values are given
     libmesh_assert(par);
 
-    std::map<Real*, MAST::FunctionBase*>::iterator it = _parameter_map.find(par);
+    std::map<Real*, const MAST::FunctionBase*>::const_iterator
+    it = _parameter_map.find(par);
     
     // make sure it does not already exist in the map
     libmesh_assert(it != _parameter_map.end());
 
-    return *(it->second);
+    return it->second;
 }
 
 

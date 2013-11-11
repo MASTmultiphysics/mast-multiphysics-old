@@ -40,6 +40,7 @@ namespace MAST
     class ElementPropertyCardBase;
     class MaterialPropertyCardBase;
     class FunctionBase;
+    class SensitivityParameters;
     
     /*!
      *    class defies the structural analysis system and implements the
@@ -133,21 +134,37 @@ namespace MAST
         /*!
          *   Returns the function corresponding to a parameter
          */
-        MAST::FunctionBase& get_parameter(Real* par);
+        const MAST::FunctionBase* get_parameter(Real* par) const;
         
     protected:
+        
+        /*!
+         *    assembles the residual and Jacobian for static or dynamic analyses
+         */
+        void _assemble_residual_and_jacobian (const NumericVector<Number>& X,
+                                              NumericVector<Number>* R,
+                                              SparseMatrix<Number>*  J,
+                                              NonlinearImplicitSystem& S,
+                                              const MAST::SensitivityParameters* params);
+
         
         /*!
          *    Calculates the A and B matrices of a modal analysis eigenproblem
          *    [A] {X} = [B] {X} [lambda]
          */
-        void _assemble_matrices_for_modal_analysis();
+        void _assemble_matrices_for_modal_analysis(const NumericVector<Number>& X,
+                                                   SparseMatrix<Number>&  matrix_A,
+                                                   SparseMatrix<Number>&  matrix_B,
+                                                   const MAST::SensitivityParameters* params);
         
         /*!
          *    Calculates the A and B matrices of a buckling analysis eigenproblem
          *    [A] {X} = [B] {X} [lambda]
          */
-        void _assemble_matrices_for_buckling_analysis();
+        void _assemble_matrices_for_buckling_analysis(const NumericVector<Number>& X,
+                                                      SparseMatrix<Number>&  matrix_A,
+                                                      SparseMatrix<Number>&  matrix_B,
+                                                      const MAST::SensitivityParameters* params);
 
         /*!
          *    System for which analysis is to be performed
@@ -194,7 +211,7 @@ namespace MAST
          *   map of sensitivity parameters and the corresponding functions that
          *   are directly dependent on these parameters
          */
-        std::map<Real*, MAST::FunctionBase*> _parameter_map;
+        std::map<Real*, const MAST::FunctionBase*> _parameter_map;
     };
 }
 
