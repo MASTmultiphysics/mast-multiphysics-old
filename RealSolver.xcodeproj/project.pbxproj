@@ -108,6 +108,7 @@
 		EB81734D1832A6DA00E03740 /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = MAST/src/Optimization/gcmma/libgcmma.a; sourceTree = "<group>"; };
 		EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gcmma_optimization_interface.cpp; sourceTree = "<group>"; };
 		EB8173511832A91E00E03740 /* libgfortran.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgfortran.dylib; path = ../../../../../opt/local/lib/gcc48/libgfortran.dylib; sourceTree = "<group>"; };
+		EB8173531832DAC900E03740 /* boundary_condition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = boundary_condition.h; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
@@ -277,6 +278,7 @@
 			isa = PBXGroup;
 			children = (
 				69A98AB217A3143700789481 /* MAST_data_types.h */,
+				EB8173531832DAC900E03740 /* boundary_condition.h */,
 			);
 			path = Base;
 			sourceTree = "<group>";
