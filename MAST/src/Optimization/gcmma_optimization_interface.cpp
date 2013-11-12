@@ -157,9 +157,14 @@ MAST::GCMMAOptimizationInterface::optimize() {
      C  XMIN, XMAX, FMAX, A and C.
      C*/
     // _initi(M,N,GEPS,XVAL,XMIN,XMAX,FMAX,A,C);
-    // Assumed:  FMAX == A == C == 0
+    // Assumed:  FMAX == A
     _feval->init_dvar(XVAL, XMIN, XMAX);
-    
+    // set the value of C[i] to be very large numbers
+    Real max_x = 0.;
+    for (unsigned int i=0; i<M; i++)
+        if (max_x < fabs(XVAL[i]))
+            max_x = fabs(XVAL[i]);
+    std::fill(C.begin(), C.end(), std::max(1000.*max_x, 1000.));
     //IF(M.EQ.0) GOTO 100
     //IF(N.EQ.0) GOTO 100
     
