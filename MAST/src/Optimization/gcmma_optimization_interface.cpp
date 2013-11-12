@@ -74,7 +74,8 @@ MAST::GCMMAOptimizationInterface::optimize() {
      C    IYFREE(M)
      C*/
     
-    int N = _feval->n_vars(), M = _feval->n_eq() + _feval->n_ineq();
+    int N = _feval->n_vars(), M = _feval->n_eq() + _feval->n_ineq(),
+    n_rel_change_iters = _feval->n_iters_relative_change();
     
     libmesh_assert_greater(M, 0);
     libmesh_assert_greater(N, 0);
@@ -85,7 +86,8 @@ MAST::GCMMAOptimizationInterface::optimize() {
     A(M, 0.), B(M, 0.), C(M, 0.), Y(M, 0.), RAA(M, 0.), ULAM(M, 0.),
     FVAL(M, 0.), FAPP(M, 0.), FNEW(M, 0.), FMAX(M, 0.),
     DFDX(M*N, 0.), P(M*N, 0.), Q(M*N, 0.), P0(N, 0.), Q0(N, 0.),
-    UU(M, 0.), GRADF(M, 0.), DSRCH(M, 0.), HESSF(M*(M+1)/2, 0.);
+    UU(M, 0.), GRADF(M, 0.), DSRCH(M, 0.), HESSF(M*(M+1)/2, 0.),
+    f0_iters(n_rel_change_iters);
     
     std::vector<int> IYFREE(M, 0);
     std::vector<bool> eval_grads(M, false);
@@ -264,6 +266,8 @@ MAST::GCMMAOptimizationInterface::optimize() {
          C  The USER may now write the current solution.
          C*/
         _feval->output(ITER, XVAL, F0VAL, FVAL);
+        f0_iters[(ITE-1)%n_rel_change_iters] = F0VAL;
+        
         /*C
          C  One more outer iteration is started as long as
          C  ITE is less than MAXITE:
@@ -275,12 +279,24 @@ MAST::GCMMAOptimizationInterface::optimize() {
             terminate = true;
         }
         
-        //WRITE(*,90)
-        //90   FORMAT(' How many more iterations? (0 to stop)')
-        //READ(*,*) MAXITE
-        //IF(MAXITE.EQ.0) GOTO 100
-        //ITE=0
-        //GOTO 30
+        // relative change in objective
+        bool rel_change_conv = true;
+        Real f0_curr = f0_iters[n_rel_change_iters-1];
+        
+        for (unsigned int i=0; i<n_rel_change_iters-1; i++) {
+            if (f0_curr > sqrt(GEPS))
+                rel_change_conv = (rel_change_conv &&
+                                   fabs(f0_iters[i]-f0_curr)/fabs(f0_curr) < GEPS);
+            else
+                rel_change_conv = (rel_change_conv &&
+                                   fabs(f0_iters[i]-f0_curr) < GEPS);
+        }
+        if (rel_change_conv) {
+            libMesh::out
+            << "GCMMA: Converged relative change tolerance, terminating! "
+            << std::endl;
+            terminate = true;
+        }
         
     }//100  CONTINUE
 }

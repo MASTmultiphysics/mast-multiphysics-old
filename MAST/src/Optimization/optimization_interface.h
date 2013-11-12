@@ -30,6 +30,7 @@ namespace MAST {
         _n_eq(0),
         _n_ineq(0),
         _max_iters(0),
+        _n_rel_change_iters(5),
         _tol(1.0e-6)
         { }
         
@@ -53,6 +54,11 @@ namespace MAST {
         
         unsigned int max_iters() const{
             return _max_iters;
+        }
+        
+        
+        unsigned int n_iters_relative_change() const {
+            return _n_rel_change_iters;
         }
         
         
@@ -87,6 +93,8 @@ namespace MAST {
         unsigned int _n_ineq;
         
         unsigned int _max_iters;
+        
+        unsigned int _n_rel_change_iters;
         
         Real _tol;
     };
