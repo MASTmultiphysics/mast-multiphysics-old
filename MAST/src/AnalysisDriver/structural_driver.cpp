@@ -15,6 +15,7 @@
 #include "PropertyCards/element_property_card_3D.h"
 #include "PropertyCards/element_property_card_2D.h"
 #include "PropertyCards/material_property_card_base.h"
+#include "Optimization/gcmma_optimization_interface.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -39,14 +40,57 @@
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
+class a: public MAST::FunctionEvaluation {
+public:
+    a():
+    MAST::FunctionEvaluation() {
+        _n_vars = 1;
+        _n_eq = 0;
+        _n_ineq = 1;
+        _max_iters = 100;
+        _tol = 1.0e-6;
+    }
+    
+    virtual ~a() {}
+    
+    virtual void init_dvar(std::vector<Real>& x,
+                           std::vector<Real>& xmin,
+                           std::vector<Real>& xmax) {
+        x.resize(1); xmin.resize(1); xmax.resize(1);
+        x[0] = 10.; xmin[0] = -10.; xmax[0] = 10.;
+    }
+    
+    virtual void evaluate(const std::vector<Real>& dvars,
+                          Real& obj,
+                          bool eval_obj_grad,
+                          std::vector<Real>& obj_grad,
+                          std::vector<Real>& fvals,
+                          std::vector<bool>& eval_grads,
+                          std::vector<Real>& grads) {
+        Real x = dvars[0];
+        obj = x * x;
+        if (eval_obj_grad)
+            obj_grad[0] = 2. * x;
+        fvals[0] = 1.-x;
+        if (eval_grads[0])
+            grads[0] = -1.;
+    }
+};
+
 // The main program.
 int structural_driver (LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
+    MAST::GCMMAOptimizationInterface gcmma;
+    a mya;
+    gcmma.attach_function_evaluation_object(mya);
+    gcmma.optimize();
+    return 0;
+    
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., QUAD9);
+    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., TRI3);
     //MeshTools::Generation::build_cube (mesh, 5, 5, 5, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
@@ -110,7 +154,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     nu = 0.33;
     rho = 2700.;
     kappa = 5./6.;
-    h  = 0.002;
+    h  = 0.0021;
     
     DenseVector<Real> prestress; prestress.resize(6);
     prestress(3) = -100.;
@@ -128,7 +172,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 //                                                       MAST::STATIC,
 //                                                       infile);
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::BUCKLING,
+                                                       MAST::MODAL,
                                                        infile);
     structural_assembly.set_property_for_all_elems(prop2d);
     structural_assembly.add_parameter(h.ptr(), &h);

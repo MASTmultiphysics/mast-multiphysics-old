@@ -11,6 +11,7 @@
 
 // C++ includes
 #include <memory>
+#include <multimap>
 
 // libMesh includes
 #include "libmesh/system.h"
@@ -28,6 +29,7 @@ namespace MAST {
     class FunctionBase;
     class Temperature;
     class SensitivityParameters;
+    class BoundaryCondition;
     
     enum StructuralElemType {
         ELASTIC_ELEMENT_1D,
@@ -187,13 +189,24 @@ namespace MAST {
 
 
         /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         *    this should be implemented for each element type
+         */
+        virtual bool surface_pressure_force(bool request_jacobian,
+                                            DenseVector<Real>& f,
+                                            DenseMatrix<Real>& jac,
+                                            const unsigned int side,
+                                            const MAST::BoundaryCondition& p) = 0;
+
+        
+        /*!
          *    Calculates the force vector and Jacobian due to thermal stresses. 
          *    this should be implemented for each element type
          */
         virtual bool thermal_force(bool request_jacobian,
                                    DenseVector<Real>& f,
                                    DenseMatrix<Real>& jac) = 0;
-
+        
         /*!
          *    System to which this system belongs
          */
@@ -213,6 +226,11 @@ namespace MAST {
          *    function that defines the temperature in the element domain
          */
         MAST::Temperature* _temperature;
+        
+        /*!
+         *   side boundary condition of boundary id and load type
+         */
+        std::multimap<unsigned int, MAST::BoundaryCondition*> _side_bc_map;
         
         /*!
          *   element finite element for computations

@@ -18,6 +18,7 @@
 //#include "StructuralElems/structural_element_1D.h"
 #include "ThermalElems/temperature_function.h"
 #include "Numerics/sensitivity_parameters.h"
+#include "Base/boundary_condition.h"
 
 
 MAST::StructuralElementBase::StructuralElementBase(System& sys,
@@ -240,7 +241,40 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                                                  DenseVector<Real> &f,
                                                  DenseMatrix<Real> &jac) {
     
-    libmesh_assert(false);
+    // iterate over the boundary ids given in the provided force map
+    std::multimap<unsigned int, MAST::BoundaryCondition*>::const_iterator
+    bc_it1, bc_it2;
+    
+    const BoundaryInfo& binfo = *_system.get_mesh().boundary_info;
+    
+    // for each boundary id, check if any of the sides on the element
+    // has the associated boundary
+    boundary_id_type bc_id;
+    bool calculate_jac = false;
+    
+    for (unsigned short int n=0; n<_elem.n_sides(); n++) {
+        bc_id = binfo.boundary_id(&_elem, n);
+        if ((bc_id != BoundaryInfo::invalid_id) &&
+            _side_bc_map.count(bc_id)) {
+            // find the loads on this boundary and evaluate the f and jac
+            switch (bc_it1->second->type()) {
+                case MAST::SURFACE_PRESSURE:
+                    calculate_jac = (calculate_jac ||
+                                     surface_pressure_force(request_jacobian,
+                                                            f, jac,
+                                                            n,
+                                                            *bc_it1->second));
+                    break;
+                    
+                default:
+                    // not implemented yet
+                    libmesh_error();
+                    break;
+            }
+        }
+    }
+    
+    return (request_jacobian && calculate_jac);
 }
 
 
