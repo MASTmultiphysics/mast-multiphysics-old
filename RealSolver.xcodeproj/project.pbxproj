@@ -22,6 +22,9 @@
 		EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817340182D902300E03740 /* fem_operator_matrix.cpp */; };
 		EB817345182D902300E03740 /* function_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817341182D902300E03740 /* function_base.cpp */; };
 		EB817346182D902300E03740 /* sensitivity_parameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817342182D902300E03740 /* sensitivity_parameters.cpp */; };
+		EB81734E1832A6DA00E03740 /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB81734D1832A6DA00E03740 /* libgcmma.a */; };
+		EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */; };
+		EB8173521832A91E00E03740 /* libgfortran.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8173511832A91E00E03740 /* libgfortran.dylib */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
@@ -99,6 +102,12 @@
 		EB817340182D902300E03740 /* fem_operator_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fem_operator_matrix.cpp; sourceTree = "<group>"; };
 		EB817341182D902300E03740 /* function_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = function_base.cpp; sourceTree = "<group>"; };
 		EB817342182D902300E03740 /* sensitivity_parameters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sensitivity_parameters.cpp; sourceTree = "<group>"; };
+		EB817349183278A600E03740 /* optimization_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = optimization_interface.h; sourceTree = "<group>"; };
+		EB81734A18327CCA00E03740 /* dot_optimization_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dot_optimization_interface.h; sourceTree = "<group>"; };
+		EB81734B18327CDF00E03740 /* gcmma_optimization_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gcmma_optimization_interface.h; sourceTree = "<group>"; };
+		EB81734D1832A6DA00E03740 /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = MAST/src/Optimization/gcmma/libgcmma.a; sourceTree = "<group>"; };
+		EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gcmma_optimization_interface.cpp; sourceTree = "<group>"; };
+		EB8173511832A91E00E03740 /* libgfortran.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgfortran.dylib; path = ../../../../../opt/local/lib/gcc48/libgfortran.dylib; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
@@ -128,9 +137,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB81734E1832A6DA00E03740 /* libgcmma.a in Frameworks */,
 				EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */,
 				EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */,
+				EB8173521832A91E00E03740 /* libgfortran.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,6 +159,7 @@
 				EBB0998317F0872B00272355 /* main.cpp */,
 				EB41AEE917EA253700288448 /* Mesh */,
 				696C08021796CD4100B77C5C /* Numerics */,
+				EB8173481832789200E03740 /* Optimization */,
 				6989BC99180360AB007C6D9A /* PotentialFlowElems */,
 				69A98AB317A3191E00789481 /* PropertyCards */,
 				696C08041796CD4100B77C5C /* Solvers */,
@@ -295,6 +307,17 @@
 			path = Mesh;
 			sourceTree = "<group>";
 		};
+		EB8173481832789200E03740 /* Optimization */ = {
+			isa = PBXGroup;
+			children = (
+				EB81734A18327CCA00E03740 /* dot_optimization_interface.h */,
+				EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */,
+				EB81734B18327CDF00E03740 /* gcmma_optimization_interface.h */,
+				EB817349183278A600E03740 /* optimization_interface.h */,
+			);
+			path = Optimization;
+			sourceTree = "<group>";
+		};
 		EBE83D5A17A182BC000F013C /* Aeroelasticity */ = {
 			isa = PBXGroup;
 			children = (
@@ -314,6 +337,8 @@
 		EBF96D8A16EA6B1100316D86 = {
 			isa = PBXGroup;
 			children = (
+				EB8173511832A91E00E03740 /* libgfortran.dylib */,
+				EB81734D1832A6DA00E03740 /* libgcmma.a */,
 				EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */,
 				EBE3222216EA72430078E733 /* libmpi.1.dylib */,
 				EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */,
@@ -394,6 +419,7 @@
 				EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */,
 				EBE83D5717A021F4000F013C /* fluid_elem_base.cpp in Sources */,
 				EBB0998517F0872B00272355 /* main.cpp in Sources */,
+				EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */,
 				EBE83D5817A021F4000F013C /* fluid_system.cpp in Sources */,
 				EB817345182D902300E03740 /* function_base.cpp in Sources */,
 				EBE83D5917A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp in Sources */,
@@ -477,9 +503,11 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../libmesh/real/lib\"",
+					"$(SRCROOT)/../libmesh/real/lib",
 					/opt/local/lib,
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug",
+					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
+					/opt/local/lib/gcc48,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
@@ -502,9 +530,11 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../libmesh/real/lib\"",
+					"$(SRCROOT)/../libmesh/real/lib",
 					/opt/local/lib,
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug",
+					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
+					/opt/local/lib/gcc48,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
