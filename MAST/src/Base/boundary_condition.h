@@ -10,8 +10,8 @@
 #define __MAST_boundary_condition_h__
 
 
-// MAST includes
-#include "Numerics/function_base.h"
+// libMesh includes
+#include "libmesh/function_base.h"
 
 
 namespace MAST {
@@ -19,36 +19,38 @@ namespace MAST {
     enum BoundaryConditionType {
         SURFACE_PRESSURE,
         DISPLACEMENT,
-        INVALID_BOUNDARY_CONDITION
+        TEMPERATURE
     };
     
     
     class BoundaryCondition {
         
     public:
-        BoundaryCondition():
-        _bc_type(MAST::INVALID_BOUNDARY_CONDITION),
+        BoundaryCondition(MAST::BoundaryConditionType t):
+        _bc_type(t),
         _function(NULL)
         {}
         
         virtual ~BoundaryCondition() { }
         
-        void set_type(MAST::BoundaryConditionType t) {
-            _bc_type = t;
-        }
         
         MAST::BoundaryConditionType type() const {
             return _bc_type;
         }
         
         
-        void set_function(MAST::FunctionBase& f) {
+        void set_function(libMesh::FunctionBase<Number>& f) {
             _function = &f;
         }
         
-        const MAST::FunctionBase& function() const {
+        libMesh::FunctionBase<Number>& function() {
             libmesh_assert(_function);
-            return _function;
+            return *_function;
+        }
+
+        const libMesh::FunctionBase<Number>& function() const {
+            libmesh_assert(_function);
+            return *_function;
         }
         
     protected:
@@ -56,7 +58,7 @@ namespace MAST {
         MAST::BoundaryConditionType _bc_type;
         
         
-        MAST::FunctionBase* _function;
+        libMesh::FunctionBase<Number>* _function;
     };
 }
 

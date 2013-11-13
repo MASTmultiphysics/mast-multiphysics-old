@@ -43,6 +43,37 @@ _property(NULL)
 }
 
 
+void
+MAST::StructuralSystemAssembly::add_side_load(boundary_id_type bid,
+                                              MAST::BoundaryCondition& load) {
+    // make sure that this boundary and load haven't already been applied
+    std::pair<std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator> it =
+    _side_bc_map.equal_range(bid);
+    
+    for ( ; it.first != it.second; it.first++)
+        libmesh_assert(it.first->second != &load);
+    
+    _side_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+                        (bid, &load));
+}
+
+
+
+void
+MAST::StructuralSystemAssembly::add_volume_load(subdomain_id_type bid,
+                                                MAST::BoundaryCondition& load) {
+    std::pair<std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it =
+    _vol_bc_map.equal_range(bid);
+    
+    for ( ; it.first != it.second; it.first++)
+        libmesh_assert(it.first->second != &load);
+
+    _vol_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+                       (bid, &load));
+}
+
 
 void
 MAST::StructuralSystemAssembly::set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop) {
@@ -225,17 +256,45 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         
         // now get the vector values
         if (!params) {
-            structural_elem->internal_force(J!=NULL?true:false, vec, mat);
+            structural_elem->internal_force(J!=NULL?true:false,
+                                            vec, mat);
+            if (_analysis_type == MAST::DYNAMIC)
+                structural_elem->inertial_force(J!=NULL?true:false,
+                                                vec, mat);
+            structural_elem->side_external_force(J!=NULL?true:false,
+                                                 vec, mat,
+                                                 _side_bc_map);
+            structural_elem->volume_external_force(J!=NULL?true:false,
+                                                   vec, mat,
+                                                   _vol_bc_map);
         }
         else {
             structural_elem->sensitivity_params = params;
-            structural_elem->internal_force_sensitivity(J!=NULL?true:false, vec, mat);
+            structural_elem->internal_force_sensitivity(J!=NULL?true:false,
+                                                        vec, mat);
+            if (_analysis_type == MAST::DYNAMIC)
+                structural_elem->inertial_force_sensitivity(J!=NULL?true:false,
+                                                            vec, mat);
+            structural_elem->side_external_force_sensitivity(J!=NULL?true:false,
+                                                             vec, mat,
+                                                             _side_bc_map);
+            structural_elem->volume_external_force_sensitivity(J!=NULL?true:false,
+                                                               vec, mat,
+                                                               _vol_bc_map);
         }
         
         // add to the global matrices
         if (R) R->add_vector(vec, dof_indices);
         if (J) J->add_matrix(mat, dof_indices);
     }
+//    if (R) {
+//        R->close();
+//        R->print();
+//    }
+//    if (J) {
+//        J->close();
+//        J->print();
+//    }
 }
 
 

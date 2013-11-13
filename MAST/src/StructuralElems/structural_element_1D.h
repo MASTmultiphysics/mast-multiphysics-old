@@ -101,6 +101,15 @@ namespace MAST {
                                    DenseMatrix<Real>& jac);
         
         /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         */
+        virtual bool surface_pressure_force(bool request_jacobian,
+                                            DenseVector<Real>& f,
+                                            DenseMatrix<Real>& jac,
+                                            const unsigned int side,
+                                            MAST::BoundaryCondition& p);
+
+        /*!
          *   initialize membrane strain operator matrix
          */
         void initialize_extension_strain_operator(const unsigned int qp,
@@ -526,6 +535,18 @@ namespace MAST {
         vk_dwdxi_mat(1, 1) = dw;  // epsilon-yy : dw/dy
         vk_dwdxi_mat(2, 0) = dw;  // gamma-xy : dw/dy
     }
+    
+    
+    
+    inline bool
+    MAST::StructuralElement1D::surface_pressure_force(bool request_jacobian,
+                                                      DenseVector<Real> &f,
+                                                      DenseMatrix<Real> &jac,
+                                                      const unsigned int side,
+                                                      MAST::BoundaryCondition &p) {
+        libmesh_error(); // to be implemented
+    }
+
     
 }
 

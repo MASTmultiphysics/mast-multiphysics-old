@@ -16,6 +16,7 @@
 #include "PropertyCards/element_property_card_2D.h"
 #include "PropertyCards/material_property_card_base.h"
 #include "Optimization/gcmma_optimization_interface.h"
+#include "Base/boundary_condition.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -35,58 +36,20 @@
 #include "libmesh/nonlinear_implicit_system.h"
 #include "libmesh/xdr_io.h"
 #include "libmesh/parameter_vector.h"
+#include "libmesh/const_function.h"
+#include "libmesh/dirichlet_boundaries.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/zero_function.h"
+#include "libmesh/nonlinear_solver.h"
 
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
-class a: public MAST::FunctionEvaluation {
-public:
-    a():
-    MAST::FunctionEvaluation() {
-        _n_vars = 1;
-        _n_eq = 0;
-        _n_ineq = 1;
-        _max_iters = 100;
-        _tol = 1.0e-6;
-    }
-    
-    virtual ~a() {}
-    
-    virtual void init_dvar(std::vector<Real>& x,
-                           std::vector<Real>& xmin,
-                           std::vector<Real>& xmax) {
-        x.resize(1); xmin.resize(1); xmax.resize(1);
-        x[0] = 10.; xmin[0] = -10.; xmax[0] = 10.;
-    }
-    
-    virtual void evaluate(const std::vector<Real>& dvars,
-                          Real& obj,
-                          bool eval_obj_grad,
-                          std::vector<Real>& obj_grad,
-                          std::vector<Real>& fvals,
-                          std::vector<bool>& eval_grads,
-                          std::vector<Real>& grads) {
-        Real x = dvars[0];
-        obj = x * x;
-        if (eval_obj_grad)
-            obj_grad[0] = 2. * x;
-        fvals[0] = 1.-x;
-        if (eval_grads[0])
-            grads[0] = -1.;
-    }
-};
-
 // The main program.
 int structural_driver (LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
-    MAST::GCMMAOptimizationInterface gcmma;
-    a mya;
-    gcmma.attach_function_evaluation_object(mya);
-    gcmma.optimize();
-    return 0;
-    
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
@@ -98,17 +61,23 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     // Print information about the mesh to the screen.
     mesh.print_info();
     
-    
     // Create an equation systems object.
     EquationSystems equation_systems (mesh);
     equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // Declare the system
-//    NonlinearImplicitSystem & system =
-//    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
-    CondensedEigenSystem & system =
-    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    NonlinearImplicitSystem & system =
+    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
+    CondensedEigenSystem* eigen_system = NULL;
+    //CondensedEigenSystem & system =
+    //equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    //eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
+    
+    MAST::StructuralSystemAssembly structural_assembly(system,
+                                                       MAST::STATIC,
+                                                       infile);
+
     unsigned int o = infile("fe_order", 1);
     std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
@@ -124,11 +93,50 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
-    system.set_eigenproblem_type(GHEP);
     system.extra_quadrature_order = 0;
     
-    // Order the eigenvalues "smallest first"
-    system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+    ConstFunction<Real> press(1.e4);
+    MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
+    bc.set_function(press);
+    std::set<subdomain_id_type> ids;
+    mesh.subdomain_ids(ids);
+    structural_assembly.add_volume_load(0, bc);
+    
+    
+    system.attach_assemble_object(structural_assembly);
+    system.attach_sensitivity_assemble_object(structural_assembly);
+    
+    // Set the number of requested eigenpairs \p n_evals and the number
+    // of basis vectors used in the solution algorithm.
+    const unsigned int n_eig_request = 10;
+    std::vector<Real> sens;
+    // Pass the Dirichlet dof IDs to the CondensedEigenSystem
+
+    // apply the boundary conditions
+    if (eigen_system) {
+        eigen_system->set_eigenproblem_type(GHEP);
+        eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+
+        std::set<unsigned int> dirichlet_dof_ids;
+        equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
+        equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
+        equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
+        
+        eigen_system->attach_eigenproblem_sensitivity_assemble_object(structural_assembly);
+        structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
+        eigen_system->initialize_condensed_dofs(dirichlet_dof_ids);
+    }
+    else {
+        ZeroFunction<Real> zero_function;
+        std::vector<unsigned int> vars(6);
+        for (unsigned int i=0; i<6; i++)
+            vars[i] = i;
+        std::set<boundary_id_type> dirichlet_boundary;
+        for (unsigned int i=0; i<4; i++)
+            dirichlet_boundary.insert(i);
+        system.get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
+                                                                      &zero_function));
+    }
 
     
     equation_systems.init ();
@@ -162,42 +170,23 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop3d.set_material(mat);
     prop2d.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false);
-    prop2d.prestress(prestress);
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.prestress(prestress);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
     
-//    MAST::StructuralSystemAssembly structural_assembly(system,
-//                                                       MAST::STATIC,
-//                                                       infile);
-    MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
-                                                       infile);
     structural_assembly.set_property_for_all_elems(prop2d);
     structural_assembly.add_parameter(h.ptr(), &h);
     
-    // Set the number of requested eigenpairs \p n_evals and the number
-    // of basis vectors used in the solution algorithm.
-    const unsigned int n_eig_request = 10;
-    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
-    equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
-    equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
-
-    // Pass the Dirichlet dof IDs to the CondensedEigenSystem
-    std::set<unsigned int> dirichlet_dof_ids;
-    std::vector<Real> sens;
-    
-    system.attach_assemble_object(structural_assembly);
-    system.attach_sensitivity_assemble_object(structural_assembly);
-    system.attach_eigenproblem_sensitivity_assemble_object(structural_assembly);
-    structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
-    system.initialize_condensed_dofs(dirichlet_dof_ids);
-
     system.solve();
-    system.sensitivity_solve(parameters, sens);
+    if (eigen_system)
+        eigen_system->sensitivity_solve(parameters, sens);
+    //else
+        //system.sensitivity_solve(parameters);
+    
 
-    if (false) {
+    if (!eigen_system) {
         
         // We write the file in the ExodusII format.
         Nemesis_IO(mesh).write_equation_systems("out.exo",
@@ -206,7 +195,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     else {
         
         // Get the number of converged eigen pairs.
-        unsigned int nconv = std::min(system.get_n_converged(),
+        unsigned int nconv = std::min(eigen_system->get_n_converged(),
                                       n_eig_request);
         
         std::ofstream file;
@@ -216,7 +205,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         
         for (unsigned int i=0; i<nconv; i++)
         {
-            std::pair<Real, Real> val = system.get_eigenpair(i);
+            std::pair<Real, Real> val = eigen_system->get_eigenpair(i);
             
             // also add the solution as an independent vector, which will have to
             // be read in

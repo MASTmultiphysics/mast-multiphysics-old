@@ -41,7 +41,8 @@ namespace MAST
     class MaterialPropertyCardBase;
     class FunctionBase;
     class SensitivityParameters;
-    
+    class BoundaryCondition;
+
     /*!
      *    class defies the structural analysis system and implements the
      *    calculation of structural finite elements for a variety of 1, 2 and 
@@ -67,9 +68,17 @@ namespace MAST
         
         
         /*!
-         *    assembles the matrices depending on the analysis type
+         *   adds the specified side loads for the boudnary with tag \p b_id
          */
-        virtual void assemble();
+        void add_side_load(boundary_id_type bid, MAST::BoundaryCondition& load);
+
+        
+        /*!
+         *   adds the specified volume loads for the elements with
+         *   subdomain tag \p s_id
+         */
+        void add_volume_load(subdomain_id_type bid, MAST::BoundaryCondition& load);
+
         
         /*!
          *    fills the set \par dof_ids with the dof ids of the Dirichlet
@@ -87,6 +96,11 @@ namespace MAST
          */
         const MAST::ElementPropertyCardBase& get_property_card(const Elem& elem) const;
         
+        /*!
+         *    assembles the matrices for eigenproblem depending on the analysis type
+         */
+        virtual void assemble();
+
         /*!
          *    function that assembles the matrices and vectors quantities for
          *    nonlinear solution
@@ -212,6 +226,16 @@ namespace MAST
          *   are directly dependent on these parameters
          */
         std::map<Real*, const MAST::FunctionBase*> _parameter_map;
+        
+        /*!
+         *   side boundary condition map of boundary id and load
+         */
+        std::multimap<boundary_id_type, MAST::BoundaryCondition*> _side_bc_map;
+        
+        /*!
+         *   volume boundary condition map of boundary id and load
+         */
+        std::multimap<subdomain_id_type, MAST::BoundaryCondition*> _vol_bc_map;
     };
 }
 

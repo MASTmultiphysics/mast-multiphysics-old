@@ -18,6 +18,7 @@
 #include "PropertyCards/element_property_card_base.h"
 #include "Numerics/fem_operator_matrix.h"
 #include "ThermalElems/temperature_function.h"
+#include "Base/boundary_condition.h"
 
 
 namespace MAST {
@@ -75,6 +76,15 @@ namespace MAST {
         virtual bool thermal_force(bool request_jacobian,
                                    DenseVector<Real>& f,
                                    DenseMatrix<Real>& jac);
+
+        /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         */
+        virtual bool surface_pressure_force(bool request_jacobian,
+                                            DenseVector<Real>& f,
+                                            DenseMatrix<Real>& jac,
+                                            const unsigned int side,
+                                            MAST::BoundaryCondition& p);
 
         /*!
          *    Calculates the sensitivity of force vector and Jacobian due to 
@@ -334,7 +344,61 @@ namespace MAST {
         
     }
     
-    
+
+    bool
+    MAST::StructuralElement3D::surface_pressure_force(bool request_jacobian,
+                                                      DenseVector<Real> &f,
+                                                      DenseMatrix<Real> &jac,
+                                                      const unsigned int side,
+                                                      MAST::BoundaryCondition &p) {
+        libmesh_assert(!follower_forces); // not implemented yet for follower forces
+        
+        FEMOperatorMatrix Bmat;
+        
+        // get the function from this boundary condition
+        libMesh::FunctionBase<Number>& func = p.function();
+        std::auto_ptr<FEBase> fe;
+        std::auto_ptr<QBase> qrule;
+        _get_side_fe_and_qrule(_elem, side, fe, qrule);
+        
+        const std::vector<Real> &JxW = fe->get_JxW();
+        
+        // Physical location of the quadrature points
+        const std::vector<Point>& qpoint = fe->get_xyz();
+        const std::vector<std::vector<Real> >& phi = fe->get_phi();
+        const unsigned int n_phi = (unsigned int)phi.size();
+        const unsigned int n1=3, n2=6*n_phi;
+        
+        // boundary normals
+        const std::vector<Point>& face_normals = fe->get_normals();
+        Real press;
+        
+        DenseVector<Real> phi_vec, force, tmp_vec_n2;
+        phi_vec.resize(n_phi); force.resize(2*n1); tmp_vec_n2.resize(n2);
+        
+        for (unsigned int qp=0; qp<qpoint.size(); qp++)
+        {
+            // now set the shape function values
+            for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+                phi_vec(i_nd) = phi[i_nd][qp];
+            
+            Bmat.reinit(2*n1, phi_vec);
+            
+            // get pressure value
+            press = func(qpoint[qp], _system.time);
+            
+            // calculate force
+            for (unsigned int i_dim=0; i_dim<n1; i_dim++)
+                force(i_dim) = press * face_normals[qp](i_dim);
+            
+            Bmat.vector_mult_transpose(tmp_vec_n2, force);
+            
+            f.add(-JxW[qp], tmp_vec_n2);
+        }
+        
+        return (request_jacobian && follower_forces);
+    }
+
 }
 
 

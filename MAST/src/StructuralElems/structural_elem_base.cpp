@@ -24,6 +24,7 @@
 MAST::StructuralElementBase::StructuralElementBase(System& sys,
                                                    const Elem& elem,
                                                    const MAST::ElementPropertyCardBase& p):
+follower_forces(false),
 _system(sys),
 _elem(elem),
 _property(p),
@@ -132,7 +133,7 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
         if (request_jacobian)
             jac.add(1., local_jac);
     }
-
+    
     return request_jacobian;
 }
 
@@ -239,41 +240,48 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
 bool
 MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                                                  DenseVector<Real> &f,
-                                                 DenseMatrix<Real> &jac) {
+                                                 DenseMatrix<Real> &jac,
+                                                 std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
     // iterate over the boundary ids given in the provided force map
-    std::multimap<unsigned int, MAST::BoundaryCondition*>::const_iterator
-    bc_it1, bc_it2;
+    std::pair<std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator> it;
     
     const BoundaryInfo& binfo = *_system.get_mesh().boundary_info;
     
     // for each boundary id, check if any of the sides on the element
     // has the associated boundary
-    boundary_id_type bc_id;
     bool calculate_jac = false;
     
     for (unsigned short int n=0; n<_elem.n_sides(); n++) {
-        bc_id = binfo.boundary_id(&_elem, n);
-        if ((bc_id != BoundaryInfo::invalid_id) &&
-            _side_bc_map.count(bc_id)) {
+        if (!binfo.n_boundary_ids(&_elem, n))
+            continue;
+        
+        std::vector<boundary_id_type> bc_ids = binfo.boundary_ids(&_elem, n);
+        std::vector<boundary_id_type>::const_iterator bc_it = bc_ids.begin();
+        for ( ; bc_it != bc_ids.end(); bc_it++) {
             // find the loads on this boundary and evaluate the f and jac
-            switch (bc_it1->second->type()) {
-                case MAST::SURFACE_PRESSURE:
-                    calculate_jac = (calculate_jac ||
-                                     surface_pressure_force(request_jacobian,
-                                                            f, jac,
-                                                            n,
-                                                            *bc_it1->second));
-                    break;
-                    
-                default:
-                    // not implemented yet
-                    libmesh_error();
-                    break;
+            it =bc.equal_range(*bc_it);
+            
+            for ( ; it.first != it.second; it.first++) {
+                // apply all the types of loading
+                switch (it.first->second->type()) {
+                    case MAST::SURFACE_PRESSURE:
+                        calculate_jac = (calculate_jac ||
+                                         surface_pressure_force(request_jacobian,
+                                                                f, jac,
+                                                                n,
+                                                                *it.first->second));
+                        break;
+                        
+                    default:
+                        // not implemented yet
+                        libmesh_error();
+                        break;
+                }
             }
         }
     }
-    
     return (request_jacobian && calculate_jac);
 }
 
@@ -282,7 +290,8 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
 bool
 MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobian,
                                                              DenseVector<Real> &f,
-                                                             DenseMatrix<Real> &jac) {
+                                                             DenseMatrix<Real> &jac,
+                                                             std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
     libmesh_assert(false);
 }
@@ -292,17 +301,46 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
 bool
 MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                    DenseVector<Real> &f,
-                                                   DenseMatrix<Real> &jac) {
+                                                   DenseMatrix<Real> &jac,
+                                                   std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc) {
+    // iterate over the boundary ids given in the provided force map
+    std::pair<std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it;
     
-    libmesh_error();
+    // for each boundary id, check if any of the sides on the element
+    // has the associated boundary
+    subdomain_id_type sid;
+    bool calculate_jac = false;
     
-    bool calculate_jac = false; // start with false, and then set true if
-                                // any one of the forces provides a Jacobian
-    
-    if (_temperature)  // thermal load
-        calculate_jac = (calculate_jac ||
-                         this->thermal_force(request_jacobian, f, jac));
-    
+    for (unsigned short int n=0; n<_elem.n_sides(); n++) {
+        sid = _elem.subdomain_id();
+        // find the loads on this boundary and evaluate the f and jac
+        it =bc.equal_range(sid);
+        
+        for ( ; it.first != it.second; it.first++) {
+            // apply all the types of loading
+            switch (it.first->second->type()) {
+                case MAST::SURFACE_PRESSURE:
+                    calculate_jac = (calculate_jac ||
+                                     surface_pressure_force(request_jacobian,
+                                                            f, jac,
+                                                            *it.first->second));
+                    break;
+                    
+                    //                case MAST::TEMPERATURE:
+                    //                    calculate_jac = (calculate_jac ||
+                    //                                     thermal_force(request_jacobian,
+                    //                                                   f, jac,
+                    //                                                   *it.first->second));
+                    //                    break;
+                    
+                default:
+                    // not implemented yet
+                    libmesh_error();
+                    break;
+            }
+        }
+    }
     return (request_jacobian && calculate_jac);
 }
 
@@ -312,18 +350,10 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
 bool
 MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jacobian,
                                                                DenseVector<Real> &f,
-                                                               DenseMatrix<Real> &jac) {
-    
+                                                               DenseMatrix<Real> &jac,
+                                                               std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc) {
     libmesh_error();
-    
-    bool calculate_jac = false; // start with false, and then set true if
-                                // any one of the forces provides a Jacobian
-    
-    if (_temperature)  // thermal load
-        calculate_jac = (calculate_jac ||
-                         this->thermal_force(request_jacobian, f, jac));
-    
-    return (request_jacobian && calculate_jac);
+    return request_jacobian;
 }
 
 
@@ -331,7 +361,7 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
 
 void
 MAST::StructuralElementBase::_transform_to_global_system(const DenseMatrix<Real>& local_mat,
-                                                        DenseMatrix<Real>& global_mat) const {
+                                                         DenseMatrix<Real>& global_mat) const {
     libmesh_assert_equal_to( local_mat.m(),  local_mat.n());
     libmesh_assert_equal_to(global_mat.m(), global_mat.n());
     libmesh_assert_equal_to( local_mat.m(), global_mat.m());
@@ -360,7 +390,7 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseMatrix<Real>
 
 void
 MAST::StructuralElementBase::_transform_to_local_system(const DenseVector<Real>& global_vec,
-                                                       DenseVector<Real>& local_vec) const {
+                                                        DenseVector<Real>& local_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
     const unsigned int n_dofs = _fe->n_shape_functions();
@@ -385,7 +415,7 @@ MAST::StructuralElementBase::_transform_to_local_system(const DenseVector<Real>&
 
 void
 MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>& local_vec,
-                                                        DenseVector<Real>& global_vec) const {
+                                                         DenseVector<Real>& global_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
     const unsigned int n_dofs = _fe->n_shape_functions();
@@ -401,7 +431,7 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>
                 tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
                 tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
             }
-
+    
     // left multiply with T
     tmp_mat.vector_mult(global_vec, local_vec);
 }
@@ -414,14 +444,14 @@ void
 MAST::StructuralElementBase::_init_fe_and_qrule( const Elem& e) {
     
     unsigned int nv = _system.n_vars();
-
+    
     libmesh_assert (nv);
     FEType fe_type = _system.variable_type(0); // all variables are assumed to be of same type
     
-
+    
     for (unsigned int i=1; i != nv; ++i)
         libmesh_assert(fe_type == _system.variable_type(i));
-
+    
     // Create an adequate quadrature rule
     _fe.reset(FEBase::build(e.dim(), fe_type).release());
     _qrule.reset(fe_type.default_quadrature_rule
@@ -438,61 +468,31 @@ MAST::StructuralElementBase::_init_fe_and_qrule( const Elem& e) {
 
 
 void
-MAST::StructuralElementBase::_get_side_fe_and_qrule(unsigned int s,
+MAST::StructuralElementBase::_get_side_fe_and_qrule(const Elem& e,
+                                                    unsigned int s,
                                                     std::auto_ptr<FEBase>& fe,
                                                     std::auto_ptr<QBase>& qrule) {
-//    unsigned int nv = _system.n_vars();
-//    
-//    libmesh_assert (nv);
-//    FEType fe_type = _system.variable_type(0); // all variables are assumed to be of same type
-//    
-//    
-//    for (unsigned int i=1; i != nv; ++i)
-//        libmesh_assert(fe_type == _system.variable_type(i));
-//    
-//    // Create an adequate quadrature rule
-//    qrule.reset(fe_type.default_quadrature_rule
-//                (_elem.dim(), _system.extra_quadrature_order).release());
-//    fe.reset(FEBase::build(_elem.dim(), fe_type).release());
-//    
-//    side_qrule = hardest_fe_type.default_quadrature_rule
-//    (dim-1, sys.extra_quadrature_order).release();
-//    if (dim == 3)
-//        edge_qrule = hardest_fe_type.default_quadrature_rule
-//        (1, _system.extra_quadrature_order).release();
-//    
-//    // Next, create finite element objects
-//    // Preserving backward compatibility here for now
-//    // Should move to the protected/FEAbstract interface
-//    _element_fe_var.resize(nv);
-//    _side_fe_var.resize(nv);
-//    if (dim == 3)
-//        _edge_fe_var.resize(nv);
-//    
-//    for (unsigned int i=0; i != nv; ++i)
-//    {
-//        FEType fe_type = sys.variable_type(i);
-//        
-//        if ( _element_fe[fe_type] == NULL )
-//        {
-//            _element_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
-//            _element_fe[fe_type]->attach_quadrature_rule(element_qrule);
-//            _side_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
-//            _side_fe[fe_type]->attach_quadrature_rule(side_qrule);
-//            
-//            if (dim == 3)
-//            {
-//                _edge_fe[fe_type] = FEAbstract::build(dim, fe_type).release();
-//                _edge_fe[fe_type]->attach_quadrature_rule(edge_qrule);
-//            }
-//        }
-//        _element_fe_var[i] = _element_fe[fe_type];
-//        _side_fe_var[i] = _side_fe[fe_type];
-//        if (dim == 3)
-//            _edge_fe_var[i] = _edge_fe[fe_type];
-//        
-//    }
+    unsigned int nv = _system.n_vars();
+    
+    libmesh_assert (nv);
+    FEType fe_type = _system.variable_type(0); // all variables are assumed to be of same type
+    
+    
+    for (unsigned int i=1; i != nv; ++i)
+        libmesh_assert(fe_type == _system.variable_type(i));
+    
+    // Create an adequate quadrature rule
+    fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+    qrule.reset(fe_type.default_quadrature_rule
+                (_elem.dim()-1,
+                 _system.extra_quadrature_order).release());  // system extra quadrature
+    fe->attach_quadrature_rule(qrule.get());
+    fe->get_phi();
+    fe->get_JxW();
+    
+    fe->reinit(&_elem, s);
 }
+
 
 
 
@@ -511,7 +511,7 @@ MAST::build_structural_element(System& sys,
         case 2:
             e.reset(new MAST::StructuralElement2D(sys, elem, p));
             break;
-
+            
         case 1:
         default:
             libmesh_error();

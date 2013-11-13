@@ -11,7 +11,7 @@
 
 // C++ includes
 #include <memory>
-#include <multimap>
+#include <map>
 
 // libMesh includes
 #include "libmesh/system.h"
@@ -77,7 +77,8 @@ namespace MAST {
          */
         virtual bool side_external_force (bool request_jacobian,
                                           DenseVector<Real>& f,
-                                          DenseMatrix<Real>& jac);
+                                          DenseMatrix<Real>& jac,
+                                          std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
          *   prestress force contribution to system residual
@@ -91,7 +92,8 @@ namespace MAST {
          */
         virtual bool volume_external_force (bool request_jacobian,
                                             DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac);
+                                            DenseMatrix<Real>& jac,
+                                            std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!
          *   sensitivity of the internal force contribution to system residual
@@ -118,7 +120,8 @@ namespace MAST {
          */
         virtual bool side_external_force_sensitivity (bool request_jacobian,
                                                       DenseVector<Real>& f,
-                                                      DenseMatrix<Real>& jac);
+                                                      DenseMatrix<Real>& jac,
+                                                      std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
          *   sensitivity of the prestress force contribution to system residual
@@ -132,8 +135,14 @@ namespace MAST {
          */
         virtual bool volume_external_force_sensitivity (bool request_jacobian,
                                                         DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac);
+                                                        DenseMatrix<Real>& jac,
+                                                        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
+        /*!
+         *    flag for follower forces
+         */
+        bool follower_forces;
+        
         /*!
          *   element solution in the local coordinate system
          */
@@ -183,7 +192,8 @@ namespace MAST {
          *   integration. These are raw pointers created using new. The 
          *   pointers must be deleted at the end of scope.
          */
-        virtual void _get_side_fe_and_qrule(unsigned int s,
+        virtual void _get_side_fe_and_qrule(const Elem& e,
+                                            unsigned int s,
                                             std::auto_ptr<FEBase>& fe,
                                             std::auto_ptr<QBase>& qrule);
 
@@ -196,7 +206,21 @@ namespace MAST {
                                             DenseVector<Real>& f,
                                             DenseMatrix<Real>& jac,
                                             const unsigned int side,
-                                            const MAST::BoundaryCondition& p) = 0;
+                                            MAST::BoundaryCondition& p) = 0;
+
+        
+        /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         *    this should be implemented for each element type
+         */
+        virtual bool surface_pressure_force(bool request_jacobian,
+                                            DenseVector<Real>& f,
+                                            DenseMatrix<Real>& jac,
+                                            MAST::BoundaryCondition& p)
+        {
+            libmesh_error();
+            return false;
+        }
 
         
         /*!
@@ -226,11 +250,6 @@ namespace MAST {
          *    function that defines the temperature in the element domain
          */
         MAST::Temperature* _temperature;
-        
-        /*!
-         *   side boundary condition of boundary id and load type
-         */
-        std::multimap<unsigned int, MAST::BoundaryCondition*> _side_bc_map;
         
         /*!
          *   element finite element for computations
