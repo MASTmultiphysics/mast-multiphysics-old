@@ -53,7 +53,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh, 5, 5, 0., 1., 0., 1., TRI3);
+    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., QUAD9);
     //MeshTools::Generation::build_cube (mesh, 5, 5, 5, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
@@ -66,12 +66,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // Declare the system
-    //NonlinearImplicitSystem & system =
-    //equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
+    NonlinearImplicitSystem & system =
+    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
     CondensedEigenSystem* eigen_system = NULL;
-    CondensedEigenSystem & system =
-    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
-    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
+//    CondensedEigenSystem & system =
+//    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+//    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
     
     unsigned int o = infile("fe_order", 1);
@@ -86,14 +86,14 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.add_variable ( "tz", static_cast<Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
+                                                       MAST::STATIC,
                                                        infile);
     
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
     system.extra_quadrature_order = 0;
     
-    ConstFunction<Real> press(1.e4);
+    ConstFunction<Real> press(1.e2);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
@@ -133,8 +133,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         for (unsigned int i=0; i<6; i++)
             vars[i] = i;
         std::set<boundary_id_type> dirichlet_boundary;
-        for (unsigned int i=0; i<4; i++)
-            dirichlet_boundary.insert(i);
+        dirichlet_boundary.insert(0); // bottom
+        dirichlet_boundary.insert(1); // right
+        dirichlet_boundary.insert(2); // upper
+        dirichlet_boundary.insert(3); // left
         system.get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
                                                                       &zero_function));
         equation_systems.init ();
@@ -183,8 +185,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.solve();
     if (eigen_system)
         eigen_system->sensitivity_solve(parameters, sens);
-    //else
-        //system.sensitivity_solve(parameters);
+    else
+        system.sensitivity_solve(parameters);
     
 
     if (!eigen_system) {

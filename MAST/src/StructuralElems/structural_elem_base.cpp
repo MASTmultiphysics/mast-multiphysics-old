@@ -293,7 +293,46 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                                                              DenseMatrix<Real> &jac,
                                                              std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
-    libmesh_assert(false);
+    // iterate over the boundary ids given in the provided force map
+    std::pair<std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator> it;
+    
+    const BoundaryInfo& binfo = *_system.get_mesh().boundary_info;
+    
+    // for each boundary id, check if any of the sides on the element
+    // has the associated boundary
+    bool calculate_jac = false;
+    
+    for (unsigned short int n=0; n<_elem.n_sides(); n++) {
+        if (!binfo.n_boundary_ids(&_elem, n))
+            continue;
+        
+        std::vector<boundary_id_type> bc_ids = binfo.boundary_ids(&_elem, n);
+        std::vector<boundary_id_type>::const_iterator bc_it = bc_ids.begin();
+        for ( ; bc_it != bc_ids.end(); bc_it++) {
+            // find the loads on this boundary and evaluate the f and jac
+            it =bc.equal_range(*bc_it);
+            
+            for ( ; it.first != it.second; it.first++) {
+                // apply all the types of loading
+                switch (it.first->second->type()) {
+                    case MAST::SURFACE_PRESSURE:
+                        calculate_jac = (calculate_jac ||
+                                         surface_pressure_force_sensitivity(request_jacobian,
+                                                                            f, jac,
+                                                                            n,
+                                                                            *it.first->second));
+                        break;
+                        
+                    default:
+                        // not implemented yet
+                        libmesh_error();
+                        break;
+                }
+            }
+        }
+    }
+    return (request_jacobian && calculate_jac);
 }
 
 
@@ -352,8 +391,45 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
                                                                DenseVector<Real> &f,
                                                                DenseMatrix<Real> &jac,
                                                                std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc) {
-    libmesh_error();
-    return request_jacobian;
+    // iterate over the boundary ids given in the provided force map
+    std::pair<std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it;
+    
+    // for each boundary id, check if any of the sides on the element
+    // has the associated boundary
+    subdomain_id_type sid;
+    bool calculate_jac = false;
+    
+    for (unsigned short int n=0; n<_elem.n_sides(); n++) {
+        sid = _elem.subdomain_id();
+        // find the loads on this boundary and evaluate the f and jac
+        it =bc.equal_range(sid);
+        
+        for ( ; it.first != it.second; it.first++) {
+            // apply all the types of loading
+            switch (it.first->second->type()) {
+                case MAST::SURFACE_PRESSURE:
+                    calculate_jac = (calculate_jac ||
+                                     surface_pressure_force_sensitivity(request_jacobian,
+                                                                        f, jac,
+                                                                        *it.first->second));
+                    break;
+                    
+                    //                case MAST::TEMPERATURE:
+                    //                    calculate_jac = (calculate_jac ||
+                    //                                     thermal_force(request_jacobian,
+                    //                                                   f, jac,
+                    //                                                   *it.first->second));
+                    //                    break;
+                    
+                default:
+                    // not implemented yet
+                    libmesh_error();
+                    break;
+            }
+        }
+    }
+    return (request_jacobian && calculate_jac);
 }
 
 

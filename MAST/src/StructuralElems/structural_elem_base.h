@@ -224,6 +224,31 @@ namespace MAST {
 
         
         /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         *    this should be implemented for each element type
+         */
+        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac,
+                                                        const unsigned int side,
+                                                        MAST::BoundaryCondition& p) = 0;
+        
+        
+        /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         *    this should be implemented for each element type
+         */
+        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac,
+                                                        MAST::BoundaryCondition& p)
+        {
+            libmesh_error();
+            return false;
+        }
+
+        
+        /*!
          *    Calculates the force vector and Jacobian due to thermal stresses. 
          *    this should be implemented for each element type
          */
