@@ -283,18 +283,17 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
                                                                _vol_bc_map);
         }
         
+        if (R && J)
+            _system.get_dof_map().constrain_element_matrix_and_vector(mat, vec, dof_indices);
+        else if (R)
+            _system.get_dof_map().constrain_element_vector(vec, dof_indices);
+        else
+            _system.get_dof_map().constrain_element_matrix(mat, dof_indices);
+
         // add to the global matrices
         if (R) R->add_vector(vec, dof_indices);
         if (J) J->add_matrix(mat, dof_indices);
     }
-//    if (R) {
-//        R->close();
-//        R->print();
-//    }
-//    if (J) {
-//        J->close();
-//        J->print();
-//    }
 }
 
 
@@ -356,7 +355,11 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
             structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
         }
-        
+
+        // constrain the element matrices.
+        _system.get_dof_map().constrain_element_matrix(mat1, dof_indices);
+        _system.get_dof_map().constrain_element_matrix(mat2, dof_indices);
+
         // add to the global matrices
         if (if_exchange_AB_matrices)
         {
@@ -445,6 +448,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
             structural_elem->prestress_force_sensitivity(true, vec, mat3);
             mat2.add(1., mat3);
         }
+
+        // constrain the element matrices.
+        _system.get_dof_map().constrain_element_matrix(mat1, dof_indices);
+        _system.get_dof_map().constrain_element_matrix(mat2, dof_indices);
 
         // add to the global matrices
         if (if_exchange_AB_matrices)

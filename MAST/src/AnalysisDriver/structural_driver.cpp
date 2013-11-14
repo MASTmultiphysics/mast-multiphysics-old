@@ -53,7 +53,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., TRI3);
+    MeshTools::Generation::build_square (mesh, 5, 5, 0., 1., 0., 1., TRI3);
     //MeshTools::Generation::build_cube (mesh, 5, 5, 5, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
@@ -66,18 +66,14 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // Declare the system
-    NonlinearImplicitSystem & system =
-    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
+    //NonlinearImplicitSystem & system =
+    //equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
     CondensedEigenSystem* eigen_system = NULL;
-    //CondensedEigenSystem & system =
-    //equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
-    //eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
+    CondensedEigenSystem & system =
+    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
     
-    MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::STATIC,
-                                                       infile);
-
     unsigned int o = infile("fe_order", 1);
     std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
@@ -89,7 +85,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.add_variable ( "ty", static_cast<Order>(o), fefamily);
     system.add_variable ( "tz", static_cast<Order>(o), fefamily);
 
-    //system.time_solver = AutoPtr<TimeSolver>(new SteadySolver(system));
+    MAST::StructuralSystemAssembly structural_assembly(system,
+                                                       MAST::MODAL,
+                                                       infile);
     
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
@@ -114,8 +112,11 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
     // apply the boundary conditions
     if (eigen_system) {
+
         eigen_system->set_eigenproblem_type(GHEP);
         eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+
+        equation_systems.init ();
 
         std::set<unsigned int> dirichlet_dof_ids;
         equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
@@ -136,10 +137,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
             dirichlet_boundary.insert(i);
         system.get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
                                                                       &zero_function));
+        equation_systems.init ();
     }
 
     
-    equation_systems.init ();
 
 //    system.time_solver->diff_solver()->quiet = false;
 //    system.time_solver->diff_solver()->verbose = true;
