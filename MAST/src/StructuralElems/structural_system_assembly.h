@@ -90,11 +90,26 @@ namespace MAST
          *    sets the same property for all cards
          */
         void set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop);
-        
+
+        /*!
+         *    sets the property for specified element
+         */
+        void set_property_for_elem(const Elem& e, const MAST::ElementPropertyCardBase& prop);
+
         /*!
          *    get the material property for the specified element
          */
         const MAST::ElementPropertyCardBase& get_property_card(const Elem& elem) const;
+        
+        /*!
+         *   Adds the parameter and function pairing
+         */
+        void add_parameter(Real* par, MAST::FunctionBase* f);
+        
+        /*!
+         *   Returns the function corresponding to a parameter
+         */
+        const MAST::FunctionBase* get_parameter(Real* par) const;
         
         /*!
          *    assembles the matrices for eigenproblem depending on the analysis type
@@ -140,16 +155,6 @@ namespace MAST
                                            SparseMatrix<Number>* sensitivity_B);
 
 
-        /*!
-         *   Adds the parameter and function pairing
-         */
-        void add_parameter(Real* par, MAST::FunctionBase* f);
-        
-        /*!
-         *   Returns the function corresponding to a parameter
-         */
-        const MAST::FunctionBase* get_parameter(Real* par) const;
-        
     protected:
         
         /*!

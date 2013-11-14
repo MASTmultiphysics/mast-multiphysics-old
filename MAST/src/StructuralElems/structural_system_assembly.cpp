@@ -83,6 +83,15 @@ MAST::StructuralSystemAssembly::set_property_for_all_elems(const MAST::ElementPr
 }
 
 
+void
+MAST::StructuralSystemAssembly::set_property_for_elem(const Elem& e,
+                                                      const MAST::ElementPropertyCardBase& prop) {
+    _if_same_property_for_all_elems = false;
+    _element_property[&e] = &prop;
+}
+
+
+
 const MAST::ElementPropertyCardBase&
 MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
     if (_if_same_property_for_all_elems)
@@ -94,6 +103,39 @@ MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
         
         return *elem_p_it->second;
     }
+}
+
+void
+MAST::StructuralSystemAssembly::add_parameter(Real* par, MAST::FunctionBase* f) {
+    // make sure valid values are given
+    libmesh_assert(par);
+    libmesh_assert(f);
+    // make sure that the function is dependent on the parameters
+    libmesh_assert(f->depends_on(par));
+    // make sure it does not already exist in the map
+    libmesh_assert(!_parameter_map.count(par));
+    
+    // now add this to the map
+    bool insert_success = _parameter_map.insert
+    (std::map<Real*, MAST::FunctionBase*>::value_type(par, f)).second;
+    
+    libmesh_assert(insert_success);
+}
+
+
+
+const MAST::FunctionBase*
+MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
+    // make sure valid values are given
+    libmesh_assert(par);
+    
+    std::map<Real*, const MAST::FunctionBase*>::const_iterator
+    it = _parameter_map.find(par);
+    
+    // make sure it does not already exist in the map
+    libmesh_assert(it != _parameter_map.end());
+    
+    return it->second;
 }
 
 
@@ -605,41 +647,6 @@ void assemble_force_vec(System& sys,
 //    fvec.close();
 //#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
-
-
-void
-MAST::StructuralSystemAssembly::add_parameter(Real* par, MAST::FunctionBase* f) {
-    // make sure valid values are given
-    libmesh_assert(par);
-    libmesh_assert(f);
-    // make sure that the function is dependent on the parameters
-    libmesh_assert(f->depends_on(par));
-    // make sure it does not already exist in the map
-    libmesh_assert(!_parameter_map.count(par));
-    
-    // now add this to the map
-    bool insert_success = _parameter_map.insert
-    (std::map<Real*, MAST::FunctionBase*>::value_type(par, f)).second;
-    
-    libmesh_assert(insert_success);
-}
-
-
-
-const MAST::FunctionBase*
-MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
-    // make sure valid values are given
-    libmesh_assert(par);
-
-    std::map<Real*, const MAST::FunctionBase*>::const_iterator
-    it = _parameter_map.find(par);
-    
-    // make sure it does not already exist in the map
-    libmesh_assert(it != _parameter_map.end());
-
-    return it->second;
-}
-
 
 
 

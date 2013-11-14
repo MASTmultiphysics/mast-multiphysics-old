@@ -17,6 +17,7 @@
 #include "PropertyCards/material_property_card_base.h"
 #include "Optimization/gcmma_optimization_interface.h"
 #include "Base/boundary_condition.h"
+#include "Optimization/topology_optimization.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -42,7 +43,6 @@
 #include "libmesh/zero_function.h"
 #include "libmesh/nonlinear_solver.h"
 
-
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
@@ -50,6 +50,12 @@
 int structural_driver (LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
+    MAST::TopologyOptimization topology(init, infile);
+    MAST::GCMMAOptimizationInterface gcmma;
+    gcmma.attach_function_evaluation_object(topology);
+    gcmma.optimize();
+    return 0;
+    
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
@@ -165,7 +171,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     nu = 0.33;
     rho = 2700.;
     kappa = 5./6.;
-    h  = 0.0021;
+    h  = 0.002;
     
     DenseVector<Real> prestress; prestress.resize(6);
     prestress(3) = -100.;
