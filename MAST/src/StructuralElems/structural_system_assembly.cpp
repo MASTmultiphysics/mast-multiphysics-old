@@ -251,8 +251,8 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
             sol(i) = X(dof_indices[i]);
-        
-        structural_elem->local_solution = sol;
+        structural_elem->local_solution.resize(sol.size());
+        structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         
         // now get the vector values
         if (!params) {
@@ -340,7 +340,8 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
         for (unsigned int i=0; i<dof_indices.size(); i++)
             sol(i) = X(dof_indices[i]);
         
-        structural_elem->local_solution = sol;
+        structural_elem->local_solution.resize(sol.size());
+        structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         sol.zero();
         structural_elem->local_acceleration = sol;
         
@@ -425,7 +426,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
             structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
             
             // now use the solution to get the load dependent stiffness matrix
-            structural_elem->local_solution = sol;
+            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
             if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force(true, vec, mat2);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
@@ -440,7 +441,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
             structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             
             // now use the solution to get the load dependent stiffness matrix
-            structural_elem->local_solution = sol;
+            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
             if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force_sensitivity(true, vec, mat2);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part

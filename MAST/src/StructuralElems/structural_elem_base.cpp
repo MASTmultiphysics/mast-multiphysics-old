@@ -121,10 +121,10 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     
     // now transform to the global coorodinate system
     if (_elem.dim() < 3) {
-        _transform_to_global_system(local_f, tmp_vec2_n2);
+        transform_to_global_system(local_f, tmp_vec2_n2);
         f.add(1., tmp_vec2_n2);
         if (request_jacobian) {
-            _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+            transform_to_global_system(local_jac, tmp_mat2_n2n2);
             jac.add(1., tmp_mat2_n2n2);
         }
     }
@@ -218,10 +218,10 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     
     // now transform to the global coorodinate system
     if (_elem.dim() < 3) {
-        _transform_to_global_system(local_f, tmp_vec2_n2);
+        transform_to_global_system(local_f, tmp_vec2_n2);
         f.add(1., tmp_vec2_n2);
         if (request_jacobian) {
-            _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+            transform_to_global_system(local_jac, tmp_mat2_n2n2);
             jac.add(1., tmp_mat2_n2n2);
         }
     }
@@ -436,7 +436,7 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
 
 
 void
-MAST::StructuralElementBase::_transform_to_global_system(const DenseMatrix<Real>& local_mat,
+MAST::StructuralElementBase::transform_to_global_system(const DenseMatrix<Real>& local_mat,
                                                          DenseMatrix<Real>& global_mat) const {
     libmesh_assert_equal_to( local_mat.m(),  local_mat.n());
     libmesh_assert_equal_to(global_mat.m(), global_mat.n());
@@ -465,7 +465,7 @@ MAST::StructuralElementBase::_transform_to_global_system(const DenseMatrix<Real>
 
 
 void
-MAST::StructuralElementBase::_transform_to_local_system(const DenseVector<Real>& global_vec,
+MAST::StructuralElementBase::transform_to_local_system(const DenseVector<Real>& global_vec,
                                                         DenseVector<Real>& local_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
@@ -490,7 +490,7 @@ MAST::StructuralElementBase::_transform_to_local_system(const DenseVector<Real>&
 
 
 void
-MAST::StructuralElementBase::_transform_to_global_system(const DenseVector<Real>& local_vec,
+MAST::StructuralElementBase::transform_to_global_system(const DenseVector<Real>& local_vec,
                                                          DenseVector<Real>& global_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
@@ -558,15 +558,15 @@ MAST::StructuralElementBase::_get_side_fe_and_qrule(const Elem& e,
         libmesh_assert(fe_type == _system.variable_type(i));
     
     // Create an adequate quadrature rule
-    fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+    fe.reset(FEBase::build(e.dim(), fe_type).release());
     qrule.reset(fe_type.default_quadrature_rule
-                (_elem.dim()-1,
+                (e.dim()-1,
                  _system.extra_quadrature_order).release());  // system extra quadrature
     fe->attach_quadrature_rule(qrule.get());
     fe->get_phi();
     fe->get_JxW();
     
-    fe->reinit(&_elem, s);
+    fe->reinit(&e, s);
 }
 
 

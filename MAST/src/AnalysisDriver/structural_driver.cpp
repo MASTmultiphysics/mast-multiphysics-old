@@ -53,7 +53,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., 1., QUAD9);
+    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., .1, TRI3);
     //MeshTools::Generation::build_cube (mesh, 5, 5, 5, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
@@ -98,7 +98,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
     mesh.subdomain_ids(ids);
-    structural_assembly.add_volume_load(0, bc);
+    structural_assembly.add_side_load(2, bc);
     
     
     system.attach_assemble_object(structural_assembly);
@@ -133,9 +133,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         for (unsigned int i=0; i<6; i++)
             vars[i] = i;
         std::set<boundary_id_type> dirichlet_boundary;
-        dirichlet_boundary.insert(0); // bottom
+        //dirichlet_boundary.insert(0); // bottom
         dirichlet_boundary.insert(1); // right
-        dirichlet_boundary.insert(2); // upper
+        //dirichlet_boundary.insert(2); // upper
         dirichlet_boundary.insert(3); // left
         system.get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
                                                                       &zero_function));

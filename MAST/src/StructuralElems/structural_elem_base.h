@@ -163,17 +163,18 @@ namespace MAST {
          */
         const MAST::SensitivityParameters* sensitivity_params;
         
+        
+        virtual void transform_to_global_system(const DenseMatrix<Real>& local_mat,
+                                                DenseMatrix<Real>& global_mat) const;
+        
+        virtual void transform_to_local_system(const DenseVector<Real>& global_vec,
+                                               DenseVector<Real>& local_vec) const;
+        
+        virtual void transform_to_global_system(const DenseVector<Real>& local_vec,
+                                                DenseVector<Real>& global_vec) const;
+        
     protected:
-        
-        virtual void _transform_to_global_system(const DenseMatrix<Real>& local_mat,
-                                                 DenseMatrix<Real>& global_mat) const;
-        
-        virtual void _transform_to_local_system(const DenseVector<Real>& global_vec,
-                                                DenseVector<Real>& local_vec) const;
-        
-        virtual void _transform_to_global_system(const DenseVector<Real>& local_vec,
-                                                 DenseVector<Real>& global_vec) const;
-        
+
         /*!
          *   matrix that transforms the global dofs to the local element coordinate
          *   system

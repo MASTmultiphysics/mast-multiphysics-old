@@ -157,13 +157,13 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
     
     
     // now transform to the global coorodinate system
-    _transform_to_global_system(local_f, tmp_vec3_n2);
+    transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     if (request_jacobian) {
         // add small values to the diagonal of the theta_z dofs
         for (unsigned int i=0; i<n_phi; i++)
             local_jac(5*n_phi+i, 5*n_phi+i) = 1.0e-6;
-        _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(1., tmp_mat2_n2n2);
     }
     
@@ -270,10 +270,10 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
     }
     
     // now transform to the global coorodinate system
-    _transform_to_global_system(local_f, tmp_vec3_n2);
+    transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     if (request_jacobian) {
-        _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(1., tmp_mat2_n2n2);
     }
     
@@ -331,10 +331,10 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
     
     // now transform to the global coorodinate system
     Real dTemp_dparam = _temperature->sensitivity(*(this->sensitivity_params));
-    _transform_to_global_system(local_f, tmp_vec3_n2);
+    transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(dTemp_dparam, tmp_vec3_n2);
     if (request_jacobian) {
-        _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(dTemp_dparam, tmp_mat2_n2n2);
     }
     
@@ -439,10 +439,10 @@ MAST::StructuralElement2D::prestress_force (bool request_jacobian,
     }
     
     // now transform to the global coorodinate system
-    _transform_to_global_system(local_f, tmp_vec3_n2);
+    transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     if (request_jacobian && if_vk) {
-        _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(1., tmp_mat2_n2n2);
     }
     
@@ -549,10 +549,10 @@ MAST::StructuralElement2D::prestress_force_sensitivity (bool request_jacobian,
     }
     
     // now transform to the global coorodinate system
-    _transform_to_global_system(local_f, tmp_vec3_n2);
+    transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     if (request_jacobian && if_vk) {
-        _transform_to_global_system(local_jac, tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(1., tmp_mat2_n2n2);
     }
     
@@ -619,7 +619,7 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
     }
     
     // now transform to the global system and add
-    _transform_to_global_system(local_f, tmp_vec3_n2);
+    transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     
     return false;
@@ -982,7 +982,7 @@ MAST::StructuralElement2D::surface_pressure_force(bool request_jacobian,
     }
     
     // now transform to the global system and add
-    _transform_to_global_system(local_f, tmp_vec_n2);
+    transform_to_global_system(local_f, tmp_vec_n2);
     f.add(1., tmp_vec_n2);
     
     return (request_jacobian && follower_forces);
@@ -1039,7 +1039,7 @@ MAST::StructuralElement2D::surface_pressure_force(bool request_jacobian,
     }
     
     // now transform to the global system and add
-    _transform_to_global_system(local_f, tmp_vec_n2);
+    transform_to_global_system(local_f, tmp_vec_n2);
     f.add(1., tmp_vec_n2);
     
     return (request_jacobian && follower_forces);
