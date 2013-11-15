@@ -26,7 +26,9 @@ class FEMOperatorMatrix
 public:
     FEMOperatorMatrix();
     
+    
     virtual ~FEMOperatorMatrix();
+    
     
     /*!
      *   clears the data structures
@@ -197,9 +199,14 @@ FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
     libmesh_assert(interpolated_var < _n_interpolated_vars);
     libmesh_assert(discrete_var < _n_discrete_vars);
     
-    DenseVector<Real>* vec = new DenseVector<Real>;
+    DenseVector<Real>* vec = _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var];
+    if (!vec)
+    {
+        vec = new DenseVector<Real>;
+        _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var] = vec;
+    }
+    
     *vec = shape_func;
-    _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var] = vec;
 }
 
 

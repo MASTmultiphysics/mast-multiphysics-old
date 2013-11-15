@@ -28,6 +28,8 @@
 #include "libmesh/const_function.h"
 #include "libmesh/zero_function.h"
 #include "libmesh/nonlinear_solver.h"
+#include "libmesh/nemesis_io.h"
+#include "libmesh/sensitivity_data.h"
 
 
 namespace MAST {
@@ -44,12 +46,14 @@ namespace MAST {
         _infile(input),
         _eq_systems(NULL),
         _system(NULL),
+        _rho_system(NULL),
         _structural_assembly(NULL),
+        _compliance(NULL),
         _mesh(NULL),
         _press(NULL),
         _zero_function(NULL),
         _bc(NULL),
-        _penalty(2.),
+        _penalty(3.),
         E0(72.0e9),
         V0(0.3)
         {
@@ -59,6 +63,8 @@ namespace MAST {
         virtual ~TopologyOptimization() {
             
             delete _structural_assembly;
+            
+            delete _compliance;
             
             delete _eq_systems;
             
@@ -95,7 +101,31 @@ namespace MAST {
                               std::vector<bool>& eval_grads,
                               std::vector<Real>& grads);
         
+        virtual void output(unsigned int iter,
+                            const std::vector<Real>& x,
+                            Real obj,
+                            const std::vector<Real>& fval) const;
+
     protected:
+
+        class Compliance:
+        public System::QOI,
+        public System::QOIDerivative {
+        public:
+            Compliance(NonlinearImplicitSystem& sys):
+            System::QOI(),
+            System::QOIDerivative(),
+            _system(sys)
+            { }
+            
+            virtual void qoi(const QoISet& qoi_indices);
+            
+            virtual void qoi_derivative (const QoISet& qoi_indices);
+            
+        protected:
+            NonlinearImplicitSystem& _system;
+        };
+        
 
         void _init();
         
@@ -107,8 +137,12 @@ namespace MAST {
         EquationSystems* _eq_systems;
         
         NonlinearImplicitSystem* _system;
-        
+
+        System* _rho_system;
+
         MAST::StructuralSystemAssembly* _structural_assembly;
+        
+        MAST::TopologyOptimization::Compliance* _compliance;
         
         UnstructuredMesh* _mesh;
         
@@ -140,7 +174,7 @@ MAST::TopologyOptimization::init_dvar(std::vector<Real>& x,
                                       std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 1.);           // start with a solid material
+    std::fill(x.begin(), x.end(), 0.3);           // start with a solid material
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 1.0e-3); // lower limit is a small value.
     xmax.resize(_n_vars);
@@ -169,24 +203,24 @@ MAST::TopologyOptimization::evaluate(const std::vector<Real>& dvars,
     
     
     // now solve the system
+    std::cout << "New Eval" << std::endl;
+    QoISet qoi_set(*_system);
+    qoi_set.add_index(0);
+    _system->solution->zero();
     _system->solve();
-    _system->sensitivity_solve(_parameters);
+    _system->assemble_qoi(qoi_set);
     
-    // now calculate the objective function
-    std::auto_ptr<NumericVector<Number> >
-    vec(NumericVector<Number>::build(_system->comm()).release());
-    vec->init(*_system->solution);
-    _system->matrix->vector_mult(*vec, *_system->solution);
-    obj = -0.5 * vec->dot(*_system->solution); // negative, since J = -K
+    obj = _system->qoi[0]; // compliance
     
     if (eval_obj_grad) { // objective gradients
-        // iterate over each dv and calculate the sensitivity
-        for (unsigned int i=0; i<dvars.size(); i++) {
-            NumericVector<Number>& sens = _system->get_sensitivity_solution(i);
-            // df0/dxi = df0/dEi * dEi/dxi
-            // dEi/dxi = E0 * p * x^(p-1)
-            obj_grad[i] = vec->dot(sens) * E0 * _penalty * pow(dvars[i], _penalty-1.);
-        }
+        SensitivityData sens;
+        _system->set_adjoint_already_solved(false);
+        _system->adjoint_qoi_parameter_sensitivity(qoi_set, _parameters, sens);
+        // df0/dxi = df0/dEi * dEi/dxi
+        // dEi/dxi = E0 * p * x^(p-1)
+        for (unsigned int i=0; i<dvars.size(); i++)
+            obj_grad[i] = sens[0][i] * E0 * _penalty * pow(dvars[i], _penalty-1.);
+        _system->set_adjoint_already_solved(true);
     }
     
     // now calculate the constraint gradient
@@ -204,7 +238,7 @@ MAST::TopologyOptimization::_init() {
     _mesh = new SerialMesh(_libmesh_init.comm());
     _mesh->set_mesh_dimension(2);
     
-    MeshTools::Generation::build_square (*_mesh, 10, 10, 0., 1., 0., .1, TRI3);
+    MeshTools::Generation::build_square (*_mesh, 10, 10, 0., 1., 0., .1, QUAD4);
     
     _mesh->prepare_for_use();
     
@@ -217,7 +251,9 @@ MAST::TopologyOptimization::_init() {
     
     // Declare the system
     _system = &_eq_systems->add_system<NonlinearImplicitSystem> ("StructuralSystem");
-    
+    _rho_system = &_eq_systems->add_system<System> ("RhoSystem");
+    _rho_system->add_variable("rho", FEType(CONSTANT, MONOMIAL));
+
     unsigned int o = _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
@@ -232,15 +268,20 @@ MAST::TopologyOptimization::_init() {
     _structural_assembly = new MAST::StructuralSystemAssembly(*_system,
                                                               MAST::STATIC,
                                                               _infile);
+    _compliance = new MAST::TopologyOptimization::Compliance(*_system);
     
-    _press = new ConstFunction<Real>(1.e2);
+    _press = new ConstFunction<Real>(1.e5);
     _bc = new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE);
     _bc->set_function(*_press);
     _structural_assembly->add_side_load(2, *_bc);
     
     
     _system->attach_assemble_object(*_structural_assembly);
-    _system->attach_sensitivity_assemble_object(*_structural_assembly);
+    //_system->attach_sensitivity_assemble_object(*_structural_assembly);
+    _system->attach_QOI_object(*_compliance);
+    _system->attach_QOI_derivative_object(*_compliance);
+    _system->qoi.resize(1);
+
     
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
     
@@ -266,7 +307,7 @@ MAST::TopologyOptimization::_init() {
     _n_vars = n_elems;
     _n_eq = 0;
     _n_ineq = 1;
-    _max_iters = 100;
+    _max_iters = 100000;
     
     _parameters.resize(n_elems);
     _elem_properties.resize(n_elems);
@@ -315,6 +356,47 @@ MAST::TopologyOptimization::_init() {
     // now calculate relative element volumes
     for (unsigned int i=0; i<_elem_vol.size(); i++)
         _elem_vol[i] /= total_vol;
+}
+
+
+inline void
+MAST::TopologyOptimization::output(unsigned int iter,
+                                   const std::vector<Real>& x,
+                                   Real obj,
+                                   const std::vector<Real>& fval) const  {
+    for (unsigned int i=0; i<x.size(); i++)
+        _rho_system->solution->set(_mesh->elem(i)->dof_number(_rho_system->number(), 0, 0),
+                                   x[i]);
+    
+    
+    _rho_system->solution->close();
+    _rho_system->update();
+    
+    Nemesis_IO(*_mesh).write_equation_systems("out.exo", *_eq_systems);
+    
+    MAST::FunctionEvaluation::output(iter, x, obj, fval);
+}
+
+
+inline void
+MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
+    if (qoi_indices.has_index(0)) {
+        
+        std::auto_ptr<NumericVector<Number> >
+        vec(NumericVector<Number>::build(_system.comm()).release());
+        vec->init(*_system.solution);
+        
+        _system.matrix->vector_mult(*vec, *_system.solution);
+        _system.qoi[0] = -0.5 * vec->dot(*_system.solution); // negative, since J = -K
+    }
+}
+
+
+inline void
+MAST::TopologyOptimization::Compliance::qoi_derivative (const QoISet& qoi_indices) {
+    if (qoi_indices.has_index(0))
+        _system.matrix->vector_mult(_system.get_adjoint_rhs(), *_system.solution);
+    _system.get_adjoint_rhs().scale(-1.);
 }
 
 

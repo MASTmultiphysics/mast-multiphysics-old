@@ -121,6 +121,22 @@ namespace MAST
                                                   MAST::ElemenetPropertyMatrixType t,
                                                   DenseMatrix<Real>& m,
                                                   const MAST::SensitivityParameters& p) const;
+        /*!
+         *  returns true if the property card depends on the function \p f
+         */
+        virtual bool depends_on(const FunctionBase& f) const {
+            return _material->depends_on(f) ||            // check if the material property depends on the function
+            MAST::ElementPropertyCardBase::depends_on(f); // check with this property card
+        }
+        
+        
+        /*!
+         *  returns true if the property card depends on the functions in \p p
+         */
+        virtual bool depends_on(const MAST::SensitivityParameters& p) const {
+            return _material->depends_on(p) ||            // check if the material property depends on the function
+            MAST::ElementPropertyCardBase::depends_on(p); // check with this property card
+        }
 
     protected:
         

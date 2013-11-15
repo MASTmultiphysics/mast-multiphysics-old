@@ -146,6 +146,7 @@ namespace MAST
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                       DenseMatrix<Real>& m) const = 0;
         
+        
     protected:
         
         /*!

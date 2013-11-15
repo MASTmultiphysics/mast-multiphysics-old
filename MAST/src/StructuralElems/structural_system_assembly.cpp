@@ -145,7 +145,16 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
                                                        NumericVector<Number>* R,
                                                        SparseMatrix<Number>*  J,
                                                        NonlinearImplicitSystem& S) {
-    
+
+    if (R) {
+        R->zero();
+        R->close();
+    }
+    if (J) {
+        J->zero();
+        J->zero();
+    }
+
     switch (_analysis_type) {
         case MAST::STATIC:
         case MAST::DYNAMIC:
@@ -157,6 +166,9 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
             libmesh_error();
             break;
     }
+    
+    if (R) R->close();
+    if (J) J->close();
 }
 
 
@@ -168,7 +180,10 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
                                                       NumericVector<Number>& sensitivity_rhs) {
     SensitivityParameters sens_params;
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
-    
+
+    sensitivity_rhs.zero();
+    sensitivity_rhs.close();
+
     switch (_analysis_type) {
         case MAST::STATIC:
         case MAST::DYNAMIC:
@@ -184,6 +199,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
             break;
     }
     
+    sensitivity_rhs.close();
     // currently, all relevant parameter sensitivities are calculated
     return true;
 }
@@ -196,6 +212,9 @@ MAST::StructuralSystemAssembly::assemble() {
     SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
     SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
 
+    matrix_A.zero(); matrix_A.close();
+    matrix_B.zero(); matrix_B.close();
+    
     switch (_analysis_type) {
         case MAST::MODAL:
             _assemble_matrices_for_modal_analysis(*_system.solution,
@@ -215,6 +234,9 @@ MAST::StructuralSystemAssembly::assemble() {
             libmesh_error();
             break;
     }
+    
+    matrix_A.close();
+    matrix_B.close();
 }
 
 
@@ -228,6 +250,8 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     SensitivityParameters sens_params;
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
     
+    sensitivity_A->zero(); sensitivity_A->close();
+    sensitivity_B->zero(); sensitivity_B->close();
     
     switch (_analysis_type) {
         case MAST::MODAL:
@@ -248,6 +272,10 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
             libmesh_error();
             break;
     }
+    
+    sensitivity_A->close();
+    sensitivity_B->close();
+    
     // currently, all relevant parameter sensitivities are calculated
     return true;
 }
