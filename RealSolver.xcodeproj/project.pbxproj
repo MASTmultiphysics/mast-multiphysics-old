@@ -28,6 +28,7 @@
 		EB81735A1835309D00E03740 /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173571835309D00E03740 /* structural_element_2D.cpp */; };
 		EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173581835309D00E03740 /* structural_element_3D.cpp */; };
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
+		EB81735F183ACA0100E03740 /* libpetsc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB81735E183ACA0100E03740 /* libpetsc.dylib */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
@@ -116,6 +117,7 @@
 		EB8173571835309D00E03740 /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		EB8173581835309D00E03740 /* structural_element_3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_3D.cpp; sourceTree = "<group>"; };
 		EB81735C1835677F00E03740 /* topology_optimization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = topology_optimization.h; sourceTree = "<group>"; };
+		EB81735E183ACA0100E03740 /* libpetsc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpetsc.dylib; path = ../../usr/packages/petsc/real/lib/libpetsc.dylib; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB81735F183ACA0100E03740 /* libpetsc.dylib in Frameworks */,
 				EB817355183424C500E03740 /* libgcmma.a in Frameworks */,
 				EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */,
@@ -350,6 +353,7 @@
 		EBF96D8A16EA6B1100316D86 = {
 			isa = PBXGroup;
 			children = (
+				EB81735E183ACA0100E03740 /* libpetsc.dylib */,
 				EB817354183424C500E03740 /* libgcmma.a */,
 				EB8173511832A91E00E03740 /* libgfortran.dylib */,
 				EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */,
@@ -516,6 +520,7 @@
 					/opt/local/include/,
 					/opt/local/include/openmpi,
 					"/opt/local/include/vtk-5.10",
+					"$(HOME)/Documents/usr/packages/petsc/real/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -524,10 +529,11 @@
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug",
 					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
 					/opt/local/lib/gcc48,
+					/Users/bhatiam/Documents/usr/packages/petsc/real/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include /opt/local/include/vtk-5.10 \"$(SRCROOT)/../FESystem/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include /opt/local/include/vtk-5.10 \"$(SRCROOT)/../FESystem/FESystem/src\" ";
 			};
 			name = Debug;
 		};
@@ -543,6 +549,7 @@
 					/opt/local/include/,
 					/opt/local/include/openmpi,
 					"/opt/local/include/vtk-5.10",
+					"$(HOME)/Documents/usr/packages/petsc/real/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -551,10 +558,11 @@
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug",
 					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
 					/opt/local/lib/gcc48,
+					/Users/bhatiam/Documents/usr/packages/petsc/real/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include /opt/local/include/vtk-5.10 \"$(SRCROOT)/../FESystem/FESystem/src\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include /opt/local/include/vtk-5.10 \"$(SRCROOT)/../FESystem/FESystem/src\" ";
 			};
 			name = Release;
 		};

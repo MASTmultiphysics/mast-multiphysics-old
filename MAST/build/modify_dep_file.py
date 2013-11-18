@@ -11,8 +11,8 @@ for ln in f:
     if (ln.count(':')):
         lns = ln.split(':')
         target_name = lns[0].split('.o')
-        strval += (dirval+target_name[0]+'-${METHOD}-cpp.o ')
-        strval += (dirval+target_name[0]+'-cpp.dep: ')
+        strval += (dirval+target_name[0]+'-%-cpp.o: ')
+        strval += (dirval+target_name[0]+'-cpp.dep  ')
         strval += lns[1]
     else:
         strval += ln
