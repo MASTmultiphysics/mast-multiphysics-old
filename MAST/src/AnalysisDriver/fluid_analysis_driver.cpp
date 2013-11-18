@@ -380,7 +380,7 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
     core_time_solver->theta        = infile("timesolver_theta", 1.0);
     
     timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
-    timesolver->diff_solver().reset(new FluidNewtonSolver(system));
+    timesolver->diff_solver().reset(new NewtonSolver(system));
     system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
 
     system.dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
@@ -661,7 +661,7 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
             << std::right
             << t_step
             << ".exo";
-
+            
             Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                     equation_systems);
             

@@ -38,7 +38,7 @@ public:
         // this object calculates the lift, which are calculated on the side
         assemble_qoi_sides = true;
         assemble_qoi_internal_sides = false;
-        assemble_qoi_elements = false;
+        assemble_qoi_elements = true;
         
         FluidElemBase::init_data();
     }

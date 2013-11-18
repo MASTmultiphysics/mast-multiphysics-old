@@ -238,7 +238,7 @@ MAST::TopologyOptimization::_init() {
     _mesh = new SerialMesh(_libmesh_init.comm());
     _mesh->set_mesh_dimension(2);
     
-    MeshTools::Generation::build_square (*_mesh, 10, 10, 0., 1., 0., .1, QUAD4);
+    MeshTools::Generation::build_square (*_mesh, 50, 20, 0., 1., 0., .1, QUAD4);
     
     _mesh->prepare_for_use();
     
@@ -277,7 +277,7 @@ MAST::TopologyOptimization::_init() {
     
     
     _system->attach_assemble_object(*_structural_assembly);
-    //_system->attach_sensitivity_assemble_object(*_structural_assembly);
+    _system->attach_sensitivity_assemble_object(*_structural_assembly);
     _system->attach_QOI_object(*_compliance);
     _system->attach_QOI_derivative_object(*_compliance);
     _system->qoi.resize(1);
@@ -307,7 +307,7 @@ MAST::TopologyOptimization::_init() {
     _n_vars = n_elems;
     _n_eq = 0;
     _n_ineq = 1;
-    _max_iters = 100000;
+    _max_iters = 10000;
     
     _parameters.resize(n_elems);
     _elem_properties.resize(n_elems);
@@ -387,7 +387,7 @@ MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
         vec->init(*_system.solution);
         
         _system.matrix->vector_mult(*vec, *_system.solution);
-        _system.qoi[0] = -0.5 * vec->dot(*_system.solution); // negative, since J = -K
+        _system.qoi[0] = -1 * vec->dot(*_system.solution); // negative, since J = -K
     }
 }
 
