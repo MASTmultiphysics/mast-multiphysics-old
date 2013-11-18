@@ -27,6 +27,7 @@
 		EB817355183424C500E03740 /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB817354183424C500E03740 /* libgcmma.a */; };
 		EB81735A1835309D00E03740 /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173571835309D00E03740 /* structural_element_2D.cpp */; };
 		EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173581835309D00E03740 /* structural_element_3D.cpp */; };
+		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
@@ -418,6 +419,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */,
 				6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */,
 				696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */,
 				EB817343182D902300E03740 /* basis_matrix.cpp in Sources */,
