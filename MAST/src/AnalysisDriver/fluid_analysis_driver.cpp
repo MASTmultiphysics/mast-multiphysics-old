@@ -50,8 +50,6 @@
 
 #include "Numerics/fem_operator_matrix.h"
 
-#include "petsc.h"
-
 int main_fem_operator (int argc, char* const argv[])
 {
     DenseVector<Real> vec1, vec2, shp;
@@ -495,9 +493,6 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
     
     // Print information about the system to the screen.
     equation_systems.print_info();
-    
-    PetscOptionsSetValue("-eu_stat", "1");
-    PetscOptionsSetValue("-level", "4");
     
     // Now we begin the timestep loop to compute the time-accurate
     // solution of the equations.

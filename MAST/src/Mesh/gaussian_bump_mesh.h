@@ -12,6 +12,7 @@
 
 // MAST includes
 #include "Mesh/mesh_initializer.h"
+#include "FluidElems/surface_motion.h"
 
 
 class GaussianBumpMesh2D: public MeshInitializer
@@ -30,6 +31,16 @@ public:
                        const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                        UnstructuredMesh& mesh, ElemType t);
     
+    Real x0() const {return _x0;}
+
+    Real x1() const {return _x1;}
+
+    Real y0() const {return _y0;}
+
+    Real y1() const {return _y1;}
+    
+    Real h() const {return _height;}
+
 protected:
     
     /*!
@@ -88,6 +99,68 @@ protected:
     Real _z0, _z1;
 };
 
+
+
+
+class GaussianBumpSurfaceNormalCorrection2D: public SurfaceMotionBase
+{
+public:
+    GaussianBumpSurfaceNormalCorrection2D(Real x0, Real x1, Real h):
+    SurfaceMotionBase(),
+    _x0(x0),
+    _x1(x1),
+    _h(h)
+    { }
+    
+    virtual ~GaussianBumpSurfaceNormalCorrection2D() {}
+    
+    /*!
+     *   calculation of surface velocity in frequency domain. \p u_trans is
+     *   the pure translation velocity component, while \p dn_rot defines the
+     *   surface normal perturbation
+     */
+    virtual void surface_velocity_frequency_domain(const Point& p,
+                                                   const Point& n,
+                                                   DenseVector<Complex>& u_trans,
+                                                   DenseVector<Complex>& dn_rot)
+    { libmesh_error();}
+    
+    /*!
+     *   calculation of surface velocity in time domain. \p u_trans is
+     *   the pure translation velocity component, while \p dn_rot defines the
+     *   surface normal perturbation
+     */
+    virtual void surface_velocity_time_domain(const Real t,
+                                              const Point& p,
+                                              const Point& n,
+                                              DenseVector<Number>& u_trans,
+                                              DenseVector<Number>& dn_rot);
+    
+    protected:
+    
+    Real _x0, _x1, _h;
+};
+
+
+
+inline void
+GaussianBumpSurfaceNormalCorrection2D::surface_velocity_time_domain(const Real t,
+                                                                    const Point& p,
+                                                                    const Point& n,
+                                                                    DenseVector<Number>& u_trans,
+                                                                    DenseVector<Number>& dn_rot)
+{
+    // for the point p, add the correction of surface normal n to dn_rot
+    Real x = p(0),
+    f = -25. * pow((x-_x0)-(_x1-_x0)*0.5, 2.0),
+    dfdx = -50.*((x-_x0)-(_x1-_x0)*0.5),
+    dydx = _h*exp(f)*dfdx;
+
+    dn_rot(0) = dydx; dn_rot(1) = -1.;
+    dn_rot.scale(1./dn_rot.l2_norm());  // expected surface normal
+    dn_rot(0) -= n(0);                  // error in surface normal
+    dn_rot(1) -= n(1);
+}
 
 
 inline void

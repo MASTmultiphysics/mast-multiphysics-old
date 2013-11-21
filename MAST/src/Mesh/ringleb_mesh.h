@@ -60,6 +60,66 @@ protected:
 };
 
 
+class RinglebSurfaceNormalCorrection: public SurfaceMotionBase
+{
+public:
+    RinglebSurfaceNormalCorrection(Real x0, Real x1, Real h):
+    SurfaceMotionBase(),
+    _x0(x0),
+    _x1(x1),
+    _h(h)
+    { }
+    
+    virtual ~RinglebSurfaceNormalCorrection() {}
+    
+    /*!
+     *   calculation of surface velocity in frequency domain. \p u_trans is
+     *   the pure translation velocity component, while \p dn_rot defines the
+     *   surface normal perturbation
+     */
+    virtual void surface_velocity_frequency_domain(const Point& p,
+                                                   const Point& n,
+                                                   DenseVector<Complex>& u_trans,
+                                                   DenseVector<Complex>& dn_rot)
+    { libmesh_error();}
+    
+    /*!
+     *   calculation of surface velocity in time domain. \p u_trans is
+     *   the pure translation velocity component, while \p dn_rot defines the
+     *   surface normal perturbation
+     */
+    virtual void surface_velocity_time_domain(const Real t,
+                                              const Point& p,
+                                              const Point& n,
+                                              DenseVector<Number>& u_trans,
+                                              DenseVector<Number>& dn_rot);
+    
+protected:
+    
+    Real _x0, _x1, _h;
+};
+
+
+
+inline void
+RinglebSurfaceNormalCorrection::surface_velocity_time_domain(const Real t,
+                                                             const Point& p,
+                                                             const Point& n,
+                                                             DenseVector<Number>& u_trans,
+                                                             DenseVector<Number>& dn_rot)
+{
+    // for the point p, add the correction of surface normal n to dn_rot
+    Real x = p(0),
+    f = -25. * pow((x-_x0)-(_x1-_x0)*0.5, 2.0),
+    dfdx = -50.*((x-_x0)-(_x1-_x0)*0.5),
+    dydx = _h*exp(f)*dfdx;
+    
+    dn_rot(0) = dydx; dn_rot(1) = -1.;
+    dn_rot.scale(1./dn_rot.l2_norm());  // expected surface normal
+    dn_rot(0) -= n(0);                  // error in surface normal
+    dn_rot(1) -= n(1);
+}
+
 
 inline void
 RinglebMesh::init (unsigned int n_x, unsigned int n_y,
