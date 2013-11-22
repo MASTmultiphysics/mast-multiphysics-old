@@ -146,14 +146,8 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
                                                        SparseMatrix<Number>*  J,
                                                        NonlinearImplicitSystem& S) {
 
-    if (R) {
-        R->zero();
-        R->close();
-    }
-    if (J) {
-        J->zero();
-        J->zero();
-    }
+    if (R) R->zero();
+    if (J) J->zero();
 
     switch (_analysis_type) {
         case MAST::STATIC:
@@ -182,7 +176,6 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
 
     sensitivity_rhs.zero();
-    sensitivity_rhs.close();
 
     switch (_analysis_type) {
         case MAST::STATIC:
@@ -212,8 +205,8 @@ MAST::StructuralSystemAssembly::assemble() {
     SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
     SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
 
-    matrix_A.zero(); matrix_A.close();
-    matrix_B.zero(); matrix_B.close();
+    matrix_A.zero();
+    matrix_B.zero();
     
     switch (_analysis_type) {
         case MAST::MODAL:
@@ -250,8 +243,8 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     SensitivityParameters sens_params;
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
     
-    sensitivity_A->zero(); sensitivity_A->close();
-    sensitivity_B->zero(); sensitivity_B->close();
+    sensitivity_A->zero();
+    sensitivity_B->zero();
     
     switch (_analysis_type) {
         case MAST::MODAL:

@@ -50,16 +50,16 @@
 int structural_driver (LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
-    MAST::TopologyOptimization topology(init, infile);
-    MAST::GCMMAOptimizationInterface gcmma;
-    gcmma.attach_function_evaluation_object(topology);
-    gcmma.optimize();
-    return 0;
+//    MAST::TopologyOptimization topology(init, infile);
+//    MAST::GCMMAOptimizationInterface gcmma;
+//    gcmma.attach_function_evaluation_object(topology);
+//    gcmma.optimize();
+//    return 0;
     
     SerialMesh mesh(init.comm());
     mesh.set_mesh_dimension(2);
 
-    MeshTools::Generation::build_square (mesh, 10, 10, 0., 1., 0., .1, TRI3);
+    MeshTools::Generation::build_square (mesh, 20, 20, 0., 1., 0., 1., QUAD9);
     //MeshTools::Generation::build_cube (mesh, 5, 5, 5, 0., 1., 0., 1., 0., 1., HEX8);
 
     mesh.prepare_for_use();
@@ -72,12 +72,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // Declare the system
-    NonlinearImplicitSystem & system =
-    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
+    //NonlinearImplicitSystem & system =
+    //equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
     CondensedEigenSystem* eigen_system = NULL;
-//    CondensedEigenSystem & system =
-//    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
-//    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
+    CondensedEigenSystem & system =
+    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
     
     unsigned int o = infile("fe_order", 1);
@@ -92,7 +92,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.add_variable ( "tz", static_cast<Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::STATIC,
+                                                       MAST::BUCKLING,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -104,7 +104,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
     mesh.subdomain_ids(ids);
-    structural_assembly.add_side_load(2, bc);
+    //structural_assembly.add_side_load(2, bc);
     
     
     system.attach_assemble_object(structural_assembly);
@@ -139,9 +139,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         for (unsigned int i=0; i<6; i++)
             vars[i] = i;
         std::set<boundary_id_type> dirichlet_boundary;
-        //dirichlet_boundary.insert(0); // bottom
+        dirichlet_boundary.insert(0); // bottom
         dirichlet_boundary.insert(1); // right
-        //dirichlet_boundary.insert(2); // upper
+        dirichlet_boundary.insert(2); // upper
         dirichlet_boundary.insert(3); // left
         system.get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
                                                                       &zero_function));
@@ -174,13 +174,13 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     h  = 0.002;
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(3) = -100.;
+    prestress(1) = -100.;
     
     prop3d.set_material(mat);
     prop2d.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false);
-    //prop2d.prestress(prestress);
-    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.prestress(prestress);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
@@ -189,10 +189,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     structural_assembly.add_parameter(h.ptr(), &h);
     
     system.solve();
-    if (eigen_system)
-        eigen_system->sensitivity_solve(parameters, sens);
-    else
-        system.sensitivity_solve(parameters);
+//    if (eigen_system)
+//        eigen_system->sensitivity_solve(parameters, sens);
+//    else
+//        system.sensitivity_solve(parameters);
     
 
     if (!eigen_system) {
@@ -214,6 +214,21 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         
         for (unsigned int i=0; i<nconv; i++)
         {
+            std::ostringstream file_name;
+            
+            // We write the file in the ExodusII format.
+            file_name << "out_"
+            << std::setw(3)
+            << std::setfill('0')
+            << std::right
+            << i
+            << ".exo";
+            
+            // We write the file in the ExodusII format.
+            Nemesis_IO(mesh).write_equation_systems(file_name.str(),
+                                                    equation_systems);
+
+            // now write the eigenvlaues
             std::pair<Real, Real> val = eigen_system->get_eigenpair(i);
             
             // also add the solution as an independent vector, which will have to
@@ -233,20 +248,22 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 eigval = std::complex<Real>(val.first, val.second);
                 eigval = 1./eigval;
 
-                std::cout << std::setw(5) << i
-                << std::setw(10) << eigval.real()
-                << " + i  "
-                << std::setw(10) << eigval.imag();
+                std::cout << std::setw(20) << eigval.real();
+
+//                std::cout << std::setw(5) << i
+//                << std::setw(10) << eigval.real()
+//                << " + i  "
+//                << std::setw(10) << eigval.imag();
                 
-                // write the sensitivity
-                Complex eig_sens = -sens[i]/pow(Complex(val.first, val.second),2);
-                if (sens.size())
-                    std::cout << "  deig/dp = "
-                    << std::setw(10) << eig_sens.real()
-                    << " + i  "
-                    << std::setw(10) << eig_sens.imag();
-                
-                std::cout << std::endl;
+//                // write the sensitivity
+//                Complex eig_sens = -sens[i]/pow(Complex(val.first, val.second),2);
+//                if (sens.size())
+//                    std::cout << "  deig/dp = "
+//                    << std::setw(10) << eig_sens.real()
+//                    << " + i  "
+//                    << std::setw(10) << eig_sens.imag();
+//                
+//                std::cout << std::endl;
                 
             }
             else {
@@ -257,27 +274,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 << " + i  "
                 << std::setw(10) << val.second;
                 
-                // write the sensitivity
-                if (sens.size())
-                    std::cout << "  deig/dp = " << sens[i];
+//                // write the sensitivity
+//                if (sens.size())
+//                    std::cout << "  deig/dp = " << sens[i];
 
                 std::cout<< std::endl;
             }
-            
-            
-            std::ostringstream file_name;
-            
-            // We write the file in the ExodusII format.
-            file_name << "out_"
-            << std::setw(3)
-            << std::setfill('0')
-            << std::right
-            << i
-            << ".exo";
-            
-            // We write the file in the ExodusII format.
-            Nemesis_IO(mesh).write_equation_systems(file_name.str(),
-                                                    equation_systems);
         }
         
         file.close();
