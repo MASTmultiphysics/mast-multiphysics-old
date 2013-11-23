@@ -291,6 +291,13 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
+    AutoPtr<NumericVector<Number> > localized_solution =
+    NumericVector<Number>::build(_system.comm());
+    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                             _system.get_dof_map().get_send_list(),
+                             false, GHOSTED);
+    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
+
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
@@ -313,7 +320,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         mat.resize(ndofs, ndofs);
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = X(dof_indices[i]);
+            sol(i) = (*localized_solution)(dof_indices[i]);
         structural_elem->local_solution.resize(sol.size());
         structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         
@@ -378,6 +385,14 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
+    AutoPtr<NumericVector<Number> > localized_solution =
+    NumericVector<Number>::build(_system.comm());
+    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                             _system.get_dof_map().get_send_list(),
+                             false, GHOSTED);
+    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
+
+    
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
@@ -401,7 +416,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
         mat2.resize(ndofs, ndofs);
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = X(dof_indices[i]);
+            sol(i) = (*localized_solution)(dof_indices[i]);
         
         structural_elem->local_solution.resize(sol.size());
         structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
@@ -454,6 +469,13 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
+    AutoPtr<NumericVector<Number> > localized_solution =
+    NumericVector<Number>::build(_system.comm());
+    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                             _system.get_dof_map().get_send_list(),
+                             false, GHOSTED);
+    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
+
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
@@ -481,7 +503,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
         mat3.resize(ndofs, ndofs);
         
         for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = X(dof_indices[i]);
+            sol(i) = (*localized_solution)(dof_indices[i]);
         
         if (!params) {
             // set the local solution to zero for the load INdependent stiffness matrix

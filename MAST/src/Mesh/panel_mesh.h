@@ -12,6 +12,9 @@
 // MAST includes
 #include "Mesh/mesh_initializer.h"
 
+// libMesh includes
+#include "libmesh/mesh_base.h"
+
 
 class PanelMesh2D: public MeshInitializer
 {
@@ -201,7 +204,7 @@ PanelMesh2D::process_mesh( )
     
     // now move the mesh points
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
-    const Mesh::node_iterator n_end = _mesh->nodes_end();
+    const MeshBase::node_iterator n_end = _mesh->nodes_end();
     
     const Real pi = acos(-1.);
     Real x, y;
@@ -322,7 +325,7 @@ PanelMesh3D::process_mesh( )
     
     // now move the mesh points
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
-    const Mesh::node_iterator n_end = _mesh->nodes_end();
+    const MeshBase::node_iterator n_end = _mesh->nodes_end();
     
     const Real pi = acos(-1.);
     Real x, y, z;
