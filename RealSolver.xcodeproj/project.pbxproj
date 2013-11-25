@@ -30,6 +30,7 @@
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
 		EB81735F183ACA0100E03740 /* libpetsc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB81735E183ACA0100E03740 /* libpetsc.dylib */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
+		EBD795F31843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
 		EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */; };
@@ -119,6 +120,8 @@
 		EB81735C1835677F00E03740 /* topology_optimization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = topology_optimization.h; sourceTree = "<group>"; };
 		EB81735E183ACA0100E03740 /* libpetsc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpetsc.dylib; path = ../../usr/packages/petsc/real/lib/libpetsc.dylib; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = single_discipline_analysis_driver.cpp; sourceTree = "<group>"; };
+		EBD795F21843E9B9007FA3A7 /* analysis_driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = analysis_driver.h; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fluid_analysis_driver.cpp; sourceTree = "<group>"; };
@@ -188,6 +191,8 @@
 				69A98AC317A5A77400789481 /* flutter_driver.cpp */,
 				6989BCA718046949007C6D9A /* potential_fluid_analysis_driver.cpp */,
 				696C081A1796ED8200B77C5C /* structural_driver.cpp */,
+				EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */,
+				EBD795F21843E9B9007FA3A7 /* analysis_driver.h */,
 			);
 			path = AnalysisDriver;
 			sourceTree = "<group>";
@@ -444,6 +449,7 @@
 				EB817345182D902300E03740 /* function_base.cpp in Sources */,
 				EBE83D5917A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp in Sources */,
 				EBE83D5D17A182CE000F013C /* flutter_solver_base.cpp in Sources */,
+				EBD795F31843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */,
 				6989BCA918046949007C6D9A /* potential_fluid_analysis_driver.cpp in Sources */,
 				EBE83D5F17A1A75B000F013C /* residual_based_adaptive_time_solver.cpp in Sources */,
 				69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */,
