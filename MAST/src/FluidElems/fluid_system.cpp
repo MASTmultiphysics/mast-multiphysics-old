@@ -1,6 +1,6 @@
 //
 //  assembleEuler.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 2/21/13.
 //
@@ -9,7 +9,7 @@
 // C++ includes
 #include <iomanip>
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/fluid_system.h"
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS

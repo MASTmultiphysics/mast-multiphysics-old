@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-// FESystem includes
+// MAST includes
 #include "Solvers/residual_based_adaptive_time_solver.h"
 
 #include "libmesh/diff_system.h"

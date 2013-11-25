@@ -1,13 +1,13 @@
 //
 //  aerodynamic_qoi.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 6/11/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/aerodynamic_qoi.h"
 
 

@@ -1,6 +1,6 @@
 //
 //  run_euler.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/6/13.
 //

@@ -1,12 +1,12 @@
 //
 //  surface_motion.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/20/13.
 //
 //
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/rigid_surface_motion.h"
 
 

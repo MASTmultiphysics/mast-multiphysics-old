@@ -1,18 +1,18 @@
 //
 //  frequency_domain_linearized_euler.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/8/13.
 //
 //
 
-// FEsystem includes
+// MAST includes
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/fluid_system.h"
 #include "Numerics/fem_operator_matrix.h"
 

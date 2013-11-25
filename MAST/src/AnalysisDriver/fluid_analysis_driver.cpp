@@ -1,6 +1,6 @@
 //
 //  run_euler.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/6/13.
 //
@@ -9,7 +9,7 @@
 // C++ includes
 #include <iomanip>
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Solvers/residual_based_adaptive_time_solver.h"
@@ -349,7 +349,7 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
     
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-    // Declare the system "FluidSystem"
+    // Declare the system for fluid analysis
     FluidSystem & system =
     equation_systems.add_system<FluidSystem> ("FluidSystem");
     system.flight_condition = &flight_cond;

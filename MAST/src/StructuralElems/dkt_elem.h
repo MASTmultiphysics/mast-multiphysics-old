@@ -249,7 +249,7 @@ MAST::DKTElem::_calculate_dkt_shape_functions(const DenseVector<Real>& phi,
     // -- keep in mind that the index numbers for the elems start at 0.
     // -- also, the mid side node numbers in the Batoz's paper are different from
     //   the ones used in this library. Hence, use the following association
-    //                   BATOZ TRI6 node #              FESystem TRI6 node #
+    //                   BATOZ TRI6 node #              MAST TRI6 node #
     //                          1                               0
     //                          2                               1
     //                          3                               2

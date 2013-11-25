@@ -9,7 +9,7 @@
 // C++ includes
 #include <iomanip>
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/fluid_elem_base.h"
 #include "FluidElems/fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"

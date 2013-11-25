@@ -1,6 +1,6 @@
 //
 //  assembleEuler.h
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 2/21/13.
 //
@@ -19,7 +19,7 @@
 #include "libmesh/equation_systems.h"
 
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/fluid_elem_base.h"
 
 using namespace libMesh;

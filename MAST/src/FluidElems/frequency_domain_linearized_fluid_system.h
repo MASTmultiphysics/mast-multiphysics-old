@@ -1,6 +1,6 @@
 //
 //  frequency_domain_linearized_euler.h
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/8/13.
 //
@@ -20,7 +20,7 @@
 #include "libmesh/auto_ptr.h"
 #include "libmesh/mesh_function.h"
 
-// FEsystem includes
+// MAST includes
 #include "FluidElems/fluid_elem_base.h"
 
 

@@ -1,6 +1,6 @@
 //
 //  surface_motion.h
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 3/20/13.
 //

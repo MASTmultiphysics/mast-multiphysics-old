@@ -1,12 +1,12 @@
 //
 //  fluid_newton_solver.cpp
-//  FESystem
+//  MAST
 //
 //  Created by Manav Bhatia on 7/12/13.
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-// FESystem includes
+// MAST includes
 #include "FluidElems/fluid_newton_solver.h"
 #include "FluidElems/fluid_system.h"
 
