@@ -4,12 +4,13 @@
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/fe_interface.h"
 #include "libmesh/parameter_vector.h"
+#include "libmesh/dof_map.h"
 
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
-#include "StructuralElems/surface_pressure_load.h"
 #include "StructuralElems/structural_elem_base.h"
 #include "PropertyCards/element_property_card_base.h"
+#include "Base/boundary_condition.h"
 
 
 MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
@@ -274,6 +275,83 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 }
 
 
+
+
+void
+MAST::StructuralSystemAssembly::assemble_unsteady_aerodynamic_force(NumericVector<Number> &f) {
+    
+    f.zero();
+    
+    // iterate over each element, initialize it and get the relevant
+    // analysis quantities
+    DenseVector<Real> vec, sol;
+    DenseMatrix<Real> mat;
+    std::vector<dof_id_type> dof_indices;
+    const DofMap& dof_map = _system.get_dof_map();
+    std::auto_ptr<MAST::StructuralElementBase> structural_elem;
+    
+    // create a side and volume boundary condition map for the aerodynamic forces
+    std::multimap<boundary_id_type, MAST::BoundaryCondition*>   pressure_surf_bc_map;
+    std::multimap<subdomain_id_type, MAST::BoundaryCondition*>  pressure_vol_bc_map;
+
+    // surface force map
+    {
+        std::multimap<boundary_id_type, MAST::BoundaryCondition*>::iterator it, end;
+        // add the surface forces
+        it = _side_bc_map.begin(); end = _side_bc_map.end();
+        for ( ; it != end; it++)
+            if (it->second->type() == MAST::SURFACE_PRESSURE)
+                pressure_surf_bc_map.insert(*it);
+    }
+    
+    // surface force map
+    {
+        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::iterator it, end;
+        // add the surface forces
+        it = _vol_bc_map.begin(); end = _vol_bc_map.end();
+        for ( ; it != end; it++)
+            if (it->second->type() == MAST::SURFACE_PRESSURE)
+                pressure_vol_bc_map.insert(*it);
+    }
+    
+    
+    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    
+    for ( ; el != end_el; ++el) {
+        
+        const Elem* elem = *el;
+        
+        dof_map.dof_indices (elem, dof_indices);
+        
+        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
+        
+        // create the structural element for analysis
+        structural_elem.reset(MAST::build_structural_element
+                              (_system, *elem, p_card).release());
+        
+        // get the solution
+        unsigned int ndofs = (unsigned int)dof_indices.size();
+        sol.resize(ndofs);
+        vec.resize(ndofs);
+        mat.resize(ndofs, ndofs);
+        
+        // now get the vector values
+        structural_elem->side_external_force(false,
+                                             vec, mat,
+                                             pressure_surf_bc_map);
+        structural_elem->volume_external_force(false,
+                                               vec, mat,
+                                               pressure_vol_bc_map);
+        
+        _system.get_dof_map().constrain_element_vector(vec, dof_indices);
+        
+        // add to the global matrices
+        f.add_vector(vec, dof_indices);
+    }
+    
+    f.close();
+}
 
 
 void
@@ -618,11 +696,11 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
 
 
 
-void assemble_force_vec(System& sys,
-                             SurfacePressureLoad& surf_press,
-                             SurfaceMotionBase& surf_motion,
-                             NumericVector<Number>& fvec)
-{
+//void assemble_force_vec(System& sys,
+//                             SurfacePressureLoad& surf_press,
+//                             SurfaceMotionBase& surf_motion,
+//                             NumericVector<Number>& fvec)
+//{
 //#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 //    // Get a constant reference to the mesh object.
 //    const MeshBase& mesh = sys.get_mesh();
@@ -689,7 +767,7 @@ void assemble_force_vec(System& sys,
 //    }
 //    fvec.close();
 //#endif // LIBMESH_USE_COMPLEX_NUMBERS
-}
+//}
 
 
 
