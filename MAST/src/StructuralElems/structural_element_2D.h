@@ -218,12 +218,10 @@ namespace MAST {
         
         /*!
          *   initialze the bending strain operator for Mindling plate model.
-         *   The bending part is included in \par Bend_par and the transverse
-         *   shear part is included in \par Bmat_trans;
+         *   The bending part is included in \par Bend_par 
          */
         void initialize_mindlin_bending_strain_operator(const unsigned int qp,
-                                                        FEMOperatorMatrix& Bmat_bend,
-                                                        FEMOperatorMatrix& Bmat_trans);
+                                                        FEMOperatorMatrix& Bmat_bend);
         
         
         /*!
@@ -253,14 +251,12 @@ namespace MAST {
                                        DenseMatrix<Real>& local_jac,
                                        FEMOperatorMatrix& Bmat_mem,
                                        FEMOperatorMatrix& Bmat_bend,
-                                       FEMOperatorMatrix& Bmat_trans,
                                        FEMOperatorMatrix& Bmat_vk,
                                        DenseMatrix<Real>& stress,
                                        DenseMatrix<Real>& vk_dwdxi_mat,
                                        DenseMatrix<Real>& material_A_mat,
                                        DenseMatrix<Real>& material_B_mat,
                                        DenseMatrix<Real>& material_D_mat,
-                                       DenseMatrix<Real>& material_trans_shear_mat,
                                        DenseVector<Real>& tmp_vec1_n1,
                                        DenseVector<Real>& tmp_vec2_n1,
                                        DenseVector<Real>& tmp_vec3_n2,
@@ -270,6 +266,20 @@ namespace MAST {
                                        DenseMatrix<Real>& tmp_mat2_n2n2,
                                        DenseMatrix<Real>& tmp_mat3,
                                        DenseMatrix<Real>& tmp_mat4_2n2);
+        
+        /*!
+         *    performs integration of the mindlin plate shear energy term
+         */
+        void _internal_mindlin_plate_shear_force_operation
+        (bool request_jacobian,
+         DenseVector<Real>& local_f,
+         DenseMatrix<Real>& local_jac,
+         DenseVector<Real>& tmp_vec3_n2,
+         DenseVector<Real>& tmp_vec4_2,
+         DenseVector<Real>& tmp_vec5_2,
+         DenseMatrix<Real>& tmp_mat2_n2n2,
+         DenseMatrix<Real>& tmp_mat4_2n2,
+         const MAST::SensitivityParameters* sens_params);
         
         /*!
          *   matrix that transforms the global dofs to the local element coordinate
@@ -290,6 +300,11 @@ namespace MAST {
          */
         MAST::Local2DElem _local_elem;
         
+        /*!
+         *   reduction in quadrature order for Reissner-Mindlin plate. Default 
+         *   value is 2
+         */
+        unsigned int _mindlin_shear_quadrature_reduction;
     };
 }
 

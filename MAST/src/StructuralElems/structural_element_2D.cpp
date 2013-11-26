@@ -67,7 +67,8 @@ MAST::StructuralElement2D::StructuralElement2D(System& sys,
                                                const Elem& elem,
                                                const MAST::ElementPropertyCardBase& p):
 MAST::StructuralElementBase(sys, elem, p),
-_local_elem(elem)
+_local_elem(elem),
+_mindlin_shear_quadrature_reduction(2)
 {
     _init_fe_and_qrule(_local_elem.local_elem());
     
@@ -95,7 +96,7 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1=3, n2=6*n_phi;
     DenseMatrix<Real> material_A_mat, material_B_mat, material_D_mat,
-    material_trans_shear_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
+    tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
     tmp_mat4_2n2, vk_dwdxi_mat, stress, local_jac;
     DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     tmp_vec4_2, tmp_vec5_2, local_f;
@@ -109,7 +110,6 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
     
     Bmat_mem.reinit(3, _system.n_vars(), n_phi); // three stress-strain components
     Bmat_bend.reinit(3, _system.n_vars(), n_phi);
-    Bmat_trans.reinit(2, _system.n_vars(), n_phi); // only two shear stresses
     Bmat_vk.reinit(2, _system.n_vars(), n_phi); // only dw/dx and dw/dy
     
     const MAST::ElementPropertyCard2D& property_2D =
@@ -135,25 +135,28 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
             _property.calculate_matrix(_elem,
                                        MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
                                        material_D_mat);
-            if (!if_dkt)
-                _property.calculate_matrix(_elem,
-                                           MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-                                           material_trans_shear_mat);
-            
         }
         
         // now calculte the quantity for these matrices
         _internal_force_operation(if_bending, if_dkt, if_vk, n2, qp, JxW,
                                   request_jacobian, local_f, local_jac,
-                                  Bmat_mem, Bmat_bend, Bmat_trans, Bmat_vk,
+                                  Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, vk_dwdxi_mat, material_A_mat,
-                                  material_B_mat, material_D_mat,
-                                  material_trans_shear_mat, tmp_vec1_n1,
+                                  material_B_mat, material_D_mat, tmp_vec1_n1,
                                   tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2,
                                   tmp_vec5_2, tmp_mat1_n1n2, tmp_mat2_n2n2,
                                   tmp_mat3, tmp_mat4_2n2);
         
     }
+    
+    
+    // now calculate the transverse shear contribution if appropriate for the
+    // element
+    if (if_bending && !if_dkt)
+        _internal_mindlin_plate_shear_force_operation
+        (request_jacobian, local_f, local_jac, 
+         tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2, tmp_mat2_n2n2,
+         tmp_mat4_2n2, NULL);
     
     
     // now transform to the global coorodinate system
@@ -260,10 +263,9 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
         // now calculte the quantity for these matrices
         _internal_force_operation(if_bending, if_dkt, if_vk, n2, qp, JxW,
                                   request_jacobian, local_f, local_jac,
-                                  Bmat_mem, Bmat_bend, Bmat_trans, Bmat_vk,
+                                  Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, vk_dwdxi_mat, material_A_mat,
-                                  material_B_mat, material_D_mat,
-                                  material_trans_shear_mat, tmp_vec1_n1,
+                                  material_B_mat, material_D_mat, tmp_vec1_n1,
                                   tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2,
                                   tmp_vec5_2, tmp_mat1_n1n2, tmp_mat2_n2n2,
                                   tmp_mat3, tmp_mat4_2n2);
@@ -277,6 +279,14 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
         jac.add(1., tmp_mat2_n2n2);
     }
     
+    // now calculate the transverse shear contribution if appropriate for the
+    // element
+    if (if_bending && !if_dkt)
+        _internal_mindlin_plate_shear_force_operation
+        (request_jacobian, local_f, local_jac,
+         tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2, tmp_mat2_n2n2,
+         tmp_mat4_2n2, this->sensitivity_params);
+
     
     // next, calculate the sensitivity due to temperature, if it is provided
     if (!_temperature)
@@ -320,10 +330,9 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
         // now calculte the quantity for these matrices
         _internal_force_operation(if_bending, if_dkt, if_vk, n2, qp, JxW,
                                   request_jacobian, local_f, local_jac,
-                                  Bmat_mem, Bmat_bend, Bmat_trans, Bmat_vk,
+                                  Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, vk_dwdxi_mat, material_A_mat,
-                                  material_B_mat, material_D_mat,
-                                  material_trans_shear_mat, tmp_vec1_n1,
+                                  material_B_mat, material_D_mat, tmp_vec1_n1,
                                   tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2,
                                   tmp_vec5_2, tmp_mat1_n1n2, tmp_mat2_n2n2,
                                   tmp_mat3, tmp_mat4_2n2);
@@ -400,8 +409,7 @@ MAST::StructuralElement2D::prestress_force (bool request_jacobian,
                 _dkt_elem->initialize_dkt_bending_strain_operator(qp, Bmat_bend);
             else
                 this->initialize_mindlin_bending_strain_operator(qp,
-                                                                 Bmat_bend,
-                                                                 Bmat_trans);
+                                                                 Bmat_bend);
             if (if_vk)  // get the vonKarman strain operator if needed
                 this->initialize_von_karman_strain_operator(qp,
                                                             tmp_vec2_n1,
@@ -510,8 +518,7 @@ MAST::StructuralElement2D::prestress_force_sensitivity (bool request_jacobian,
                 _dkt_elem->initialize_dkt_bending_strain_operator(qp, Bmat_bend);
             else
                 this->initialize_mindlin_bending_strain_operator(qp,
-                                                                 Bmat_bend,
-                                                                 Bmat_trans);
+                                                                 Bmat_bend);
             if (if_vk)  // get the vonKarman strain operator if needed
                 this->initialize_von_karman_strain_operator(qp,
                                                             tmp_vec2_n1,
@@ -672,8 +679,7 @@ MAST::StructuralElement2D::initialize_membrane_strain_operator(const unsigned in
 
 void
 MAST::StructuralElement2D::initialize_mindlin_bending_strain_operator(const unsigned int qp,
-                                                                FEMOperatorMatrix& Bmat_bend,
-                                                                FEMOperatorMatrix& Bmat_trans) {
+                                                                FEMOperatorMatrix& Bmat_bend) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     const std::vector<std::vector<Real> >& phi = _fe->get_phi();
@@ -685,7 +691,7 @@ MAST::StructuralElement2D::initialize_mindlin_bending_strain_operator(const unsi
         phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
     
     Bmat_bend.set_shape_function(0, 4, phi_vec); // epsilon-x: thetay
-    Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
+    //Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
     phi_vec.scale(-1.0);
     Bmat_bend.set_shape_function(2, 3, phi_vec); // gamma-xy : thetax
     
@@ -694,7 +700,7 @@ MAST::StructuralElement2D::initialize_mindlin_bending_strain_operator(const unsi
         phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
     
     Bmat_bend.set_shape_function(2, 4, phi_vec); // gamma-xy : thetay
-    Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
+    //Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
     phi_vec.scale(-1.0);
     Bmat_bend.set_shape_function(1, 3, phi_vec); // epsilon-y: thetax
     
@@ -702,9 +708,9 @@ MAST::StructuralElement2D::initialize_mindlin_bending_strain_operator(const unsi
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = phi[i_nd][qp];  // phi
     
-    Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
+    //Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
     phi_vec.scale(-1.0);
-    Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
+    //Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
 }
 
 
@@ -757,14 +763,12 @@ MAST::StructuralElement2D::_internal_force_operation
  DenseMatrix<Real>& local_jac,
  FEMOperatorMatrix& Bmat_mem,
  FEMOperatorMatrix& Bmat_bend,
- FEMOperatorMatrix& Bmat_trans,
  FEMOperatorMatrix& Bmat_vk,
  DenseMatrix<Real>& stress,
  DenseMatrix<Real>& vk_dwdxi_mat,
  DenseMatrix<Real>& material_A_mat,
  DenseMatrix<Real>& material_B_mat,
  DenseMatrix<Real>& material_D_mat,
- DenseMatrix<Real>& material_trans_shear_mat,
  DenseVector<Real>& tmp_vec1_n1,
  DenseVector<Real>& tmp_vec2_n1,
  DenseVector<Real>& tmp_vec3_n2,
@@ -784,8 +788,7 @@ MAST::StructuralElement2D::_internal_force_operation
             _dkt_elem->initialize_dkt_bending_strain_operator(qp, Bmat_bend);
         else
             this->initialize_mindlin_bending_strain_operator(qp,
-                                                             Bmat_bend,
-                                                             Bmat_trans);
+                                                             Bmat_bend);
         if (if_vk)  // get the vonKarman strain operator if needed
             this->initialize_von_karman_strain_operator(qp,
                                                         tmp_vec2_n1, // epsilon_vk
@@ -843,14 +846,6 @@ MAST::StructuralElement2D::_internal_force_operation
         material_D_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1);
         Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
         local_f.add(-JxW[qp], tmp_vec3_n2);
-        
-        if (!if_dkt) {
-            // now add the transverse shear component
-            Bmat_trans.vector_mult(tmp_vec4_2, local_solution);
-            material_trans_shear_mat.vector_mult(tmp_vec5_2, tmp_vec4_2);
-            Bmat_trans.vector_mult_transpose(tmp_vec3_n2, tmp_vec5_2);
-            local_f.add(-JxW[qp], tmp_vec3_n2);
-        }
     }
     
     if (request_jacobian) {
@@ -917,16 +912,173 @@ MAST::StructuralElement2D::_internal_force_operation
             Bmat_bend.left_multiply(tmp_mat1_n1n2, material_D_mat);
             Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
             local_jac.add(-JxW[qp], tmp_mat2_n2n2);
-            
-            if (!if_dkt) {
-                // now add the transverse shear component
-                Bmat_trans.left_multiply(tmp_mat4_2n2, material_trans_shear_mat);
-                Bmat_trans.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat4_2n2);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
-            }
         }
     }
 }
+
+
+
+
+void
+MAST::StructuralElement2D::_internal_mindlin_plate_shear_force_operation
+(bool request_jacobian,
+ DenseVector<Real>& local_f,
+ DenseMatrix<Real>& local_jac,
+ DenseVector<Real>& tmp_vec3_n2,
+ DenseVector<Real>& tmp_vec4_2,
+ DenseVector<Real>& tmp_vec5_2,
+ DenseMatrix<Real>& tmp_mat2_n2n2,
+ DenseMatrix<Real>& tmp_mat4_2n2,
+ const MAST::SensitivityParameters* sens_params)
+{
+    DenseMatrix<Real> material_trans_shear_mat;
+    
+    // make an fe and quadrature object for the requested order for integrating
+    // transverse shear
+    
+    std::auto_ptr<FEBase> fe;
+    std::auto_ptr<QBase> qrule;
+    FEType fe_type = _fe->get_fe_type();
+    
+    fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+    qrule.reset(fe_type.default_quadrature_rule
+                (_elem.dim(),
+                 _system.extra_quadrature_order                     // system extra quadrature
+                 +_property.extra_quadrature_order(_elem, fe_type)  // elem extra quadrature
+                 - _mindlin_shear_quadrature_reduction).release());
+    fe->attach_quadrature_rule(qrule.get());
+    fe->get_phi();
+    fe->get_JxW();
+    fe->get_dphi();
+    
+    fe->reinit(&_local_elem.local_elem());
+
+    const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
+    const std::vector<std::vector<Real> >& phi = fe->get_phi();
+    const std::vector<Real>& JxW = fe->get_JxW();
+    const std::vector<Point>& xyz = fe->get_xyz();
+
+    const unsigned int n_phi = (unsigned int)phi.size();
+    DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
+
+    FEMOperatorMatrix Bmat_trans;
+    Bmat_trans.reinit(2, _system.n_vars(), n_phi); // only two shear stresses
+
+    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+        
+        // if temperature is specified, the initialize it to the current location
+        if (_temperature)
+            _temperature->initialize(xyz[qp]);
+        
+        if (!sens_params)
+            _property.calculate_matrix(_elem,
+                                       MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                       material_trans_shear_mat);
+        else
+            _property.calculate_matrix_sensitivity(_elem,
+                                                   MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX,
+                                                   material_trans_shear_mat,
+                                                   *sens_params);
+        
+
+        
+        // initialize the strain operator
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
+        
+        Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
+        
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
+        
+        Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
+        
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];  // phi
+        
+        Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
+        phi_vec.scale(-1.0);
+        Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
+        
+        
+        // now add the transverse shear component
+        Bmat_trans.vector_mult(tmp_vec4_2, local_solution);
+        material_trans_shear_mat.vector_mult(tmp_vec5_2, tmp_vec4_2);
+        Bmat_trans.vector_mult_transpose(tmp_vec3_n2, tmp_vec5_2);
+        local_f.add(-JxW[qp], tmp_vec3_n2);
+        
+        if (request_jacobian) {
+            // now add the transverse shear component
+            Bmat_trans.left_multiply(tmp_mat4_2n2, material_trans_shear_mat);
+            Bmat_trans.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat4_2n2);
+            local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+        }
+    }
+    
+    
+    // if sensitivity was requested, calculate the sensitivity wrt temperature
+    // next, calculate the sensitivity due to temperature, if it is provided
+    if (!_temperature || !sens_params)
+        return;
+
+    Real dTemp_dparam = _temperature->sensitivity(*sens_params);
+    
+    if (dTemp_dparam == 0.) // no need to do calculations if the coefficient is zero
+        return;
+    
+    MAST::SensitivityParameters temp_param;
+    temp_param.add_parameter(_temperature, 1);
+    
+    // first calculate the sensitivity due to the parameter
+    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+        
+        // if temperature is specified, the initialize it to the current location
+        if (_temperature)
+            _temperature->initialize(xyz[qp]);
+        
+        // get the material matrix
+        _property.calculate_matrix_sensitivity(_elem,
+                                               MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                                               material_trans_shear_mat,
+                                               temp_param);
+        
+        // now calculte the quantity for these matrices
+        // initialize the strain operator
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
+        
+        Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
+        
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
+        
+        Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
+        
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];  // phi
+        
+        Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
+        phi_vec.scale(-1.0);
+        Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
+        
+        
+        // now add the transverse shear component
+        Bmat_trans.vector_mult(tmp_vec4_2, local_solution);
+        material_trans_shear_mat.vector_mult(tmp_vec5_2, tmp_vec4_2);
+        Bmat_trans.vector_mult_transpose(tmp_vec3_n2, tmp_vec5_2);
+        local_f.add(-JxW[qp]*dTemp_dparam, tmp_vec3_n2);
+        
+        if (request_jacobian) {
+            // now add the transverse shear component
+            Bmat_trans.left_multiply(tmp_mat4_2n2, material_trans_shear_mat);
+            Bmat_trans.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat4_2n2);
+            local_jac.add(-JxW[qp]*dTemp_dparam, tmp_mat2_n2n2);
+        }
+    }
+}
+
+
+
 
 
 bool
