@@ -20,13 +20,6 @@ void
 MAST::Local2DElem::_create_local_elem() {
     
     libmesh_assert(_elem.dim() == 2);
-    _local_elem = Elem::build(_elem.type()).release();
-    _local_nodes.resize(_elem.n_nodes());
-    for (unsigned int i=0; i<_elem.n_nodes(); i++) {
-        _local_nodes[i] = new Node;
-        _local_nodes[i]->set_id() = _elem.get_node(i)->id();
-        _local_elem->set_node(i) = _local_nodes[i];
-    }
     
     // first node is the origin of the new cs
     // calculate the coordinate system for the plane of the element
@@ -38,13 +31,29 @@ MAST::Local2DElem::_create_local_elem() {
     
     // set the surfaece normal
     _normal = v3;
+
+    _T_mat.resize(3,3);
+
+    // if element is in xy-plane, no need to create a new element
+    if (_normal(2) == 1.) {
+        for (unsigned int i=0; i<3; i++)
+            _T_mat(i,i) = 1.;
+        return;
+    }
     
+    _local_elem = Elem::build(_elem.type()).release();
+    _local_nodes.resize(_elem.n_nodes());
+    for (unsigned int i=0; i<_elem.n_nodes(); i++) {
+        _local_nodes[i] = new Node;
+        _local_nodes[i]->set_id() = _elem.get_node(i)->id();
+        _local_elem->set_node(i) = _local_nodes[i];
+    }
+
     // now the transformation matrix from old to new cs
     //        an_i vn_i = a_i v_i
     //        an_j = a_i v_i.vn_j  = a_i t_ij = T^t a_i
     //        t_ij = v_i.vn_j
     
-    _T_mat.resize(3,3);
     for (unsigned int i=0; i<3; i++) {
         _T_mat(i,0) = v1(i);
         _T_mat(i,1) = v2(i);
@@ -252,12 +261,6 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
                                                    MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
                                                    material_D_mat,
                                                    *(this->sensitivity_params));
-            
-            if (!if_dkt)
-                _property.calculate_matrix_sensitivity(_elem,
-                                                       MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-                                                       material_trans_shear_mat,
-                                                       *(this->sensitivity_params));
         }
         
         // now calculte the quantity for these matrices
@@ -319,12 +322,6 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
                                                    MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
                                                    material_D_mat,
                                                    temp_param);
-            
-            if (!if_dkt)
-                _property.calculate_matrix_sensitivity(_elem,
-                                                       MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-                                                       material_trans_shear_mat,
-                                                       temp_param);
         }
         
         // now calculte the quantity for these matrices

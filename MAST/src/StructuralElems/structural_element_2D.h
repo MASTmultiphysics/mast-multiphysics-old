@@ -42,9 +42,13 @@ namespace MAST {
         
         
         ~Local2DElem() {
-            delete _local_elem;
-            for (unsigned int i=0; i<_local_nodes.size(); i++)
-                delete _local_nodes[i];
+            // the local element may not have been created
+            // for cases where the original element lies in the xy-plane
+            if (_local_elem) {
+                delete _local_elem;
+                for (unsigned int i=0; i<_local_nodes.size(); i++)
+                    delete _local_nodes[i];
+            }
         }
         
         /*!
@@ -59,7 +63,10 @@ namespace MAST {
          *   returns a constant reference to the local element.
          */
         const Elem& local_elem() const {
-            return *_local_elem;
+            if (!_local_elem) // original element lies in the xy-plane
+                return _elem;
+            else
+                return *_local_elem;
         }
 
         /*!

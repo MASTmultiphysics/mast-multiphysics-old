@@ -29,15 +29,25 @@ namespace MAST {
      *   class provides a simple mechanism to create a geometric element
      *   in the local coordinate system.
      */
-    class Local1DELem {
+    class Local1DElem {
     public:
-        Local1DELem(const Elem& elem):
+        Local1DElem(const Elem& elem):
         _elem(elem),
         _local_elem(NULL)
         {
-            this->create_local_elem();
+            _create_local_elem();
         }
         
+        
+        ~Local1DElem() {
+            // the local element may not have been created
+            // for cases where the original element lies in the xy-plane
+            if (_local_elem) {
+                delete _local_elem;
+                for (unsigned int i=0; i<_local_nodes.size(); i++)
+                    delete _local_nodes[i];
+            }
+        }
         
         /*!
          *   returns a constant reference to the global element.
@@ -51,14 +61,36 @@ namespace MAST {
          *   returns a constant reference to the local element.
          */
         const Elem& local_elem() const {
-            return *_local_elem;
+            if (!_local_elem) // original element lies in the xy-plane
+                return _elem;
+            else
+                return *_local_elem;
         }
+        
+        /*!
+         *    returns the transformation matrix for this element. This is used
+         *    to map the coordinates from local to global coordinate system
+         */
+        const DenseMatrix<Real>& T_matrix() const {
+            return _T_mat;
+        }
+        
+        
+        /*!
+         *   @returns the unit normal vector out of the plane of this element.
+         *   This is valid only for flat elements
+         */
+        const Point& normal() const {
+            return _normal;
+        }
+        
         
     protected:
         
-        void create_local_elem() {
-            libmesh_error(); // to be implemented
-        }
+        /*!
+         *    creation of an element in the local coordinate system
+         */
+        void _create_local_elem();
         
         /*!
          *   given element in global coordinate system
@@ -70,6 +102,24 @@ namespace MAST {
          */
         Elem* _local_elem;
         
+        /*!
+         *   nodes for local element
+         */
+        std::vector<Node*> _local_nodes;
+        
+        /*!
+         *    Transformation matrix defines T_ij = V_i^t . Vn_j, where
+         *    V_i are the unit vectors of the global cs, and Vn_j are the
+         *    unit vectors of the local cs. To transform a vector from global to
+         *    local cs,    an_j = T^t a_i, and the reverse transformation is
+         *    obtained as  a_j  = T  an_i
+         */
+        DenseMatrix<Real> _T_mat;
+        
+        /*!
+         *   surface normal
+         */
+        Point _normal;
     };
     
     
@@ -88,6 +138,30 @@ namespace MAST {
                                     DenseVector<Real>& f,
                                     DenseMatrix<Real>& jac);
         
+        /*!
+         *    Calculates the internal force vector and Jacobian due to
+         *    strain energy coming from a prestress
+         */
+        virtual bool prestress_force (bool request_jacobian,
+                                      DenseVector<Real>& f,
+                                      DenseMatrix<Real>& jac);
+        
+        
+        /*!
+         *    Calculates the sensitivity internal force vector and Jacobian due to
+         *    strain energy
+         */
+        virtual bool internal_force_sensitivity(bool request_jacobian,
+                                                DenseVector<Real>& f,
+                                                DenseMatrix<Real>& jac);
+        
+        /*!
+         *    Calculates the internal force vector and Jacobian due to
+         *    strain energy coming from a prestress
+         */
+        virtual bool prestress_force_sensitivity (bool request_jacobian,
+                                                  DenseVector<Real>& f,
+                                                  DenseMatrix<Real>& jac);
         
     protected:
         
@@ -99,6 +173,14 @@ namespace MAST {
                                    DenseMatrix<Real>& jac);
         
         /*!
+         *    Calculates the sensitivity fo force vector and Jacobian due
+         *    to thermal stresses
+         */
+        virtual bool thermal_force_sensitivity(bool request_jacobian,
+                                               DenseVector<Real>& f,
+                                               DenseMatrix<Real>& jac);
+        
+        /*!
          *    Calculates the force vector and Jacobian due to surface pressure.
          */
         virtual bool surface_pressure_force(bool request_jacobian,
@@ -106,7 +188,15 @@ namespace MAST {
                                             DenseMatrix<Real>& jac,
                                             const unsigned int side,
                                             MAST::BoundaryCondition& p);
-
+        
+        /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         */
+        virtual bool surface_pressure_force(bool request_jacobian,
+                                            DenseVector<Real>& f,
+                                            DenseMatrix<Real>& jac,
+                                            MAST::BoundaryCondition& p);
+        
         /*!
          *    Calculates the force vector and Jacobian due to surface pressure.
          */
@@ -115,21 +205,28 @@ namespace MAST {
                                                         DenseMatrix<Real>& jac,
                                                         const unsigned int side,
                                                         MAST::BoundaryCondition& p);
-
+        
+        /*!
+         *    Calculates the force vector and Jacobian due to surface pressure.
+         */
+        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac,
+                                                        MAST::BoundaryCondition& p);
+        
+        
         /*!
          *   initialize membrane strain operator matrix
          */
-        void initialize_extension_strain_operator(const unsigned int qp,
-                                                  FEMOperatorMatrix& Bmat);
+        void initialize_axial_strain_operator(const unsigned int qp,
+                                              FEMOperatorMatrix& Bmat);
         
         /*!
          *   initialze the bending strain operator for Mindling plate model.
-         *   The bending part is included in \par Bend_par and the transverse
-         *   shear part is included in \par Bmat_trans;
+         *   The bending part is included in \par Bend_par
          */
         void initialize_timoshenko_bending_strain_operator(const unsigned int qp,
-                                                           FEMOperatorMatrix& Bmat_bend,
-                                                           FEMOperatorMatrix& Bmat_trans);
+                                                           FEMOperatorMatrix& Bmat_bend);
         
         
         /*!
@@ -144,15 +241,75 @@ namespace MAST {
                                                    FEMOperatorMatrix& Bmat_vk);
         
         /*!
+         *   performs integration at the quadrature point for the provided
+         *   matrices. The temperature vector and matrix entities are provided for
+         *   integration
+         */
+        void _internal_force_operation(bool if_bending,
+                                       bool if_bernoulli,
+                                       bool if_vk,
+                                       const unsigned int n2,
+                                       const unsigned int qp,
+                                       const std::vector<Real>& JxW,
+                                       bool request_jacobian,
+                                       DenseVector<Real>& local_f,
+                                       DenseMatrix<Real>& local_jac,
+                                       FEMOperatorMatrix& Bmat_mem,
+                                       FEMOperatorMatrix& Bmat_bend,
+                                       FEMOperatorMatrix& Bmat_vk,
+                                       DenseMatrix<Real>& stress,
+                                       DenseMatrix<Real>& vk_dwdxi_mat,
+                                       DenseMatrix<Real>& material_A_mat,
+                                       DenseMatrix<Real>& material_B_mat,
+                                       DenseMatrix<Real>& material_D_mat,
+                                       DenseVector<Real>& tmp_vec1_n1,
+                                       DenseVector<Real>& tmp_vec2_n1,
+                                       DenseVector<Real>& tmp_vec3_n2,
+                                       DenseVector<Real>& tmp_vec4_2,
+                                       DenseVector<Real>& tmp_vec5_2,
+                                       DenseMatrix<Real>& tmp_mat1_n1n2,
+                                       DenseMatrix<Real>& tmp_mat2_n2n2,
+                                       DenseMatrix<Real>& tmp_mat3,
+                                       DenseMatrix<Real>& tmp_mat4_2n2);
+        
+        /*!
+         *    performs integration of the mindlin plate shear energy term
+         */
+        void _internal_timoshenko_beam_shear_force_operation
+        (bool request_jacobian,
+         DenseVector<Real>& local_f,
+         DenseMatrix<Real>& local_jac,
+         DenseVector<Real>& tmp_vec3_n2,
+         DenseVector<Real>& tmp_vec4_2,
+         DenseVector<Real>& tmp_vec5_2,
+         DenseMatrix<Real>& tmp_mat2_n2n2,
+         DenseMatrix<Real>& tmp_mat4_2n2,
+         const MAST::SensitivityParameters* sens_params);
+        
+        /*!
+         *   matrix that transforms the global dofs to the local element coordinate
+         *   system
+         */
+        virtual const DenseMatrix<Real>& _transformation_matrix() const {
+            return _local_elem.T_matrix();
+        }
+        
+        /*!
          *    DKT element, initialized if the element needs it
          */
-        std::auto_ptr<MAST::BernoulliElem> _dkt_elem;
+        std::auto_ptr<MAST::BernoulliElem> _bernoulli_elem;
         
         
         /*!
          *   element in local coordinate system
          */
-        MAST::Local1DELem _local_elem;
+        MAST::Local1DElem _local_elem;
+        
+        /*!
+         *   reduction in quadrature order for Reissner-Mindlin plate. Default
+         *   value is 2
+         */
+        unsigned int _timoshenko_beam_shear_quadrature_reduction;
     };
 }
 
