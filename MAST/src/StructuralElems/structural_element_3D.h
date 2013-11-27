@@ -32,7 +32,15 @@ namespace MAST {
         {
             _init_fe_and_qrule(elem);
         }
-        
+
+        /*!
+         *   returns a constant reference to the element in local coordinate system. 
+         *   For a 3D element, the two are same.
+         */
+        virtual const Elem& local_elem() const {
+            return _elem;
+        }
+
         /*!
          *    Calculates the internal force vector and Jacobian due to
          *    strain energy

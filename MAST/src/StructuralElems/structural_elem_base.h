@@ -52,6 +52,52 @@ namespace MAST {
         
         
         /*!
+         *   returns a constant reference to the finite element object
+         */
+        System& system()  {
+            return _system;
+        }
+
+        /*!
+         *   returns a constant reference to the finite element object
+         */
+        const MAST::ElementPropertyCardBase& elem_property()  {
+            return _property;
+        }
+
+        
+        /*!
+         *   returns a constant reference to the element
+         */
+        const Elem& elem() const {
+            return _elem;
+        }
+
+        
+        /*!
+         *   returns a constant reference to the element in local coordinate system
+         */
+        virtual const Elem& local_elem() const = 0;
+
+        
+        /*!
+         *   returns a constant reference to the quadrature rule
+         */
+        QBase& quadrature_rule()  {
+            return *_qrule;
+        }
+
+        
+        
+        /*!
+         *   returns a constant reference to the finite element object
+         */
+        FEBase& fe()  {
+            return *_fe;
+        }
+
+        
+        /*!
          *   internal force contribution to system residual
          */
         virtual bool internal_force (bool request_jacobian,

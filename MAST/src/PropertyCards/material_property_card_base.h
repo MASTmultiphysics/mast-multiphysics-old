@@ -157,26 +157,31 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix(MAST::MaterialPropertyM
     
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
-            m.resize(1,1);
-            double E = this->get<Real>("E")();
+            m.resize(2,2);
+            double E = this->get<Real>("E")(),
+            nu = this->get<Real>("nu")(),
+            G = E/2./(1.+nu);
             m(0,0) = E;
+            m(1,1) = G;
         }
             break;
-            
+
         case MAST::MATERIAL_INERTIA_MATRIX: {
-            m.resize(1,1);
+            m.resize(6,6);
             double rho = this->get<Real>("rho")();
-            m(0,0) = rho;
+            for (unsigned int i=0; i<6; i++)
+                m(i,i) = rho;
         }
             break;
             
         case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
-            m.resize(1,1);
+            m.resize(2,2);
             double E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
-            m(0,0) = G*kappa;
+            for (unsigned int i=0; i<2; i++)
+                m(i,i) = G*kappa;
         }
             break;
 
@@ -207,38 +212,55 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix_sensitivity
     const MAST::FunctionBase& f = *(it->first);
     
     switch (t) {
+
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
-            m.resize(1,1);
-            if (f.name() == "E")
+            m.resize(2,2);
+            double E = this->get<Real>("E")(),
+            nu = this->get<Real>("nu")();
+            if (f.name() == "E") {
                 m(0,0) = 1.;
-            else
+                m(1,1) = 1./2./(1.+nu);
+            }
+            else if (f.name() == "nu") {
                 m(0,0) = 0.;
+                m(1,1) = -E/2./pow(1.+nu,2);
+            }
+            else
+                m.zero();
         }
             break;
-            
+
         case MAST::MATERIAL_INERTIA_MATRIX: {
-            m.resize(1,1);
+            m.resize(6,6);
             if (f.name() == "rho")
-                m(0,0) = 1.;
+                for (unsigned int i=0; i<6; i++)
+                    m(i,i) = 1.;
             else
-                m(0,0) = 0.;
+                for (unsigned int i=0; i<6; i++)
+                    m(i,i) = 0.;
         }
             break;
             
         case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
-            m.resize(1,1);
+            m.resize(2,2);
             double E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
-            if (f.name() == "E")
-                m(0,0) = 1./2./(1.+nu)*kappa;
-            else if (f.name() == "nu")
-                m(0,0) = -E/2./pow(1.+nu,2)*kappa;
-            else if (f.name() == "kappa")
-                m(0,0) = G;
+            if (f.name() == "E") {
+                for (unsigned int i=0; i<2; i++)
+                    m(i,i) = 1./2./(1.+nu)*kappa;
+            }
+            else if (f.name() == "nu") {
+                for (unsigned int i=0; i<2; i++)
+                    m(i,i) = -E/2./pow(1.+nu,2)*kappa;
+            }
+            else if (f.name() == "kappa") {
+                for (unsigned int i=0; i<2; i++)
+                    m(i,i) = G;
+            }
             else
-                m(0,0) = 0.;
+                m.zero();
         }
             break;
             

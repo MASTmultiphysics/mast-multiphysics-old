@@ -17,21 +17,12 @@
 
 namespace MAST
 {
-    enum BendingModel1D {
-        BERNOULLI,
-        TIMOSHENKO,
-        NO_BENDING_1D,
-        DEFAULT_BENDING_1D
-    };
-    
-    
-    
     class ElementPropertyCard1D: public MAST::ElementPropertyCardBase {
         
     public:
         ElementPropertyCard1D():
         MAST::ElementPropertyCardBase(),
-        _bending_model(MAST::DEFAULT_BENDING_1D)
+        _bending_model(MAST::DEFAULT_BENDING)
         { }
         
         /*!
@@ -42,7 +33,7 @@ namespace MAST
         /*!
          *   returns the bending model to be used for the 2D element
          */
-        void set_bending_model(MAST::BendingModel1D b)  {
+        void set_bending_model(MAST::BendingOperatorType b)  {
             _bending_model = b;
         }
         
@@ -50,8 +41,8 @@ namespace MAST
         /*!
          *   returns the bending model to be used for the 2D element.
          */
-        MAST::BendingModel1D bending_model(const Elem& elem,
-                                           const FEType& fe) const;
+        virtual MAST::BendingOperatorType bending_model(const Elem& elem,
+                                                 const FEType& fe) const;
         
         
         /*!
@@ -73,7 +64,7 @@ namespace MAST
          *   material property card. By default this chooses DKT for 3 noded
          *   triangles and Mindling for all other elements
          */
-        MAST::BendingModel1D _bending_model;
+        MAST::BendingOperatorType _bending_model;
         
     };
     
@@ -150,24 +141,24 @@ namespace MAST
 
 
 inline
-MAST::BendingModel1D
+MAST::BendingOperatorType
 MAST::ElementPropertyCard1D::bending_model(const Elem& elem,
                                            const FEType& fe) const {
-    // for a TRI3 element, default bending is DKT. For all other elements
-    // the default is Mindlin. Otherwise it returns the model set for
+    // for an EDGE2 element, default bending is Bernoulli. For all other elements
+    // the default is Timoshenko. Otherwise it returns the model set for
     // this card.
     switch (elem.type()) {
         case EDGE2:
             if ((fe.family == LAGRANGE) &&
                 (fe.order  == FIRST) &&
-                (_bending_model == MAST::DEFAULT_BENDING_1D))
+                (_bending_model == MAST::DEFAULT_BENDING))
                 return MAST::BERNOULLI;
             else
                 return _bending_model;
             break;
             
         default:
-            if (_bending_model == MAST::DEFAULT_BENDING_1D)
+            if (_bending_model == MAST::DEFAULT_BENDING)
                 return MAST::TIMOSHENKO;
             else
                 return _bending_model;
@@ -187,33 +178,38 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
     switch (elem.dim()) {
             
         case 1: {
-            double h = this->get<Real>("h")(), // section height
+            Real h = this->get<Real>("h")(), // section height
             b = this->get<Real>("b")(),        // section width
-            Area = b*h, Itrans = b*pow(h,3)/12., Ichord = h*pow(b,3)/12.;
+            Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
+            Iyz = 0., J=0.;
+            
             switch (t) {
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
                     _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
                                                    m);
-                    m.scale(Area);
+                    m.scale_row(0, Area);
+                    m.scale_row(1, J);
+                }
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_TRANSVERSE:
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_CHORDWISE:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
                     // for solid sections with isotropic material this is zero
+                    // m(0, 0) and m(0, 1) identify coupling of extension and bending
+                    // m(1, 0) and m(1, 1) identify coupling of torsion and bending
+                    // m(0,0) = E Lz (y2^2- y1^2)
+                    // m(0,1) = E Ly (z2^2- z1^2)
+                    m.resize(2,2);
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_TRANSVERSE:
-                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                   m);
-                    m.scale(Itrans);
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX: {
+                    m.resize(2,2);
+                    Real E = _material->get<Real>("E")();
+                    m(0,0) = E*Iyy;
+                    m(0,1) = E*Iyz;
+                    m(1,0) = E*Iyz;
+                    m(1,1) = E*Izz;
+                }
                     break;
-
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_CHORDWISE:
-                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                   m);
-                    m.scale(Ichord);
-                    break;
-
                     
                 case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
                     _material->calculate_1d_matrix(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
@@ -221,6 +217,16 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
                     m.scale(Area);
                     break;
                     
+                case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
+                    _material->calculate_1d_matrix(MAST::MATERIAL_INERTIA_MATRIX,
+                                                   m);
+                    m.scale(Area);
+                    // now scale the rotation dofs with small factors
+                    for (unsigned int i=0; i<3; i++) {
+                        m(i+3, i+3) *= 1.0e-6;
+                    }
+                    break;
+
                 default:
                     libmesh_error();
                     break;
@@ -262,63 +268,67 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
         case 1: {
             double h = this->get<Real>("h")(), // section height
             b = this->get<Real>("b")(),        // section width
-            Area = b*h, Itrans = b*pow(h,3)/12., Ichord = h*pow(b,3)/12.,
+            Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
             dAreadb = h, dAreadh = b,
-            dItransdb = pow(h,3)/12., dItransdh = b*pow(h,2)/4.,
-            dIchorddb = h*pow(b,2)/4., dIchorddh =  pow(b,3)/12.;
+            dIyydb = pow(h,3)/12., dIyydh = b*pow(h,2)/4.,
+            dIzzdb = h*pow(b,2)/4., dIzzdh =  pow(b,3)/12.,
+            Iyz = 0., dIyzdb = 0., dIyzdh = 0.,
+            J = 0., dJdh = 0., dJdb = 0.;
+
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
                     _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
                                                    m);
                     _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
                                                                dm, p);
-                    if (f.name() == "h")
-                        m.scale(dAreadh);
-                    else if (f.name() == "b")
-                        m.scale(dAreadb);
-                    else
-                        m.scale(0.);
+                    dm.scale_row(0, Area);
+                    dm.scale_row(1, J);
                     
-                    m.add(Area, dm);
+                    if (f.name() == "h") {
+                        m.scale_row(0, dAreadh);
+                        m.scale_row(1, dJdh);
+                    }
+                    else if (f.name() == "b") {
+                        m.scale_row(0, dAreadb);
+                        m.scale_row(1, dJdb);
+                    }
+                    else
+                        m.zero();
+                    
+                    m.add(1., dm);
                 }
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_TRANSVERSE:
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_CHORDWISE:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
                     // for solid sections with isotropic material this is zero
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_TRANSVERSE: {
-                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                   m);
-                    _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                               dm, p);
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX: {
+                    m.resize(2,2); dm.resize(2,2);
+                    Real E = _material->get<Real>("E")(),
+                    dEdp = _material->get<Real>("E").sensitivity(p);
+                    dm(0,0) = dEdp*Iyy;
+                    dm(0,1) = dEdp*Iyz;
+                    dm(1,0) = dEdp*Iyz;
+                    dm(1,1) = dEdp*Izz;
+
+                    if (f.name() == "h") {
+                        m(0,0) = E*dIyydh;
+                        m(0,1) = E*dIyzdh;
+                        m(1,0) = E*dIyzdh;
+                        m(1,1) = E*dIzzdh;
+                    }
+                    else if (f.name() == "b") {
+                        m(0,0) = E*dIyydb;
+                        m(0,1) = E*dIyzdb;
+                        m(1,0) = E*dIyzdb;
+                        m(1,1) = E*dIzzdb;
+                    }
+                    else {
+                        m.zero();
+                    }
                     
-                    if (f.name() == "h")
-                        m.scale(dItransdh);
-                    else if (f.name() == "b")
-                        m.scale(dItransdb);
-                    else
-                        m.scale(0.);
-                    
-                    m.add(Itrans, dm);
-                }
-                    break;
-                    
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_CHORDWISE: {
-                    _material->calculate_1d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                   m);
-                    _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                               dm, p);
-                    
-                    if (f.name() == "h")
-                        m.scale(dIchorddh);
-                    else if (f.name() == "b")
-                        m.scale(dIchorddb);
-                    else
-                        m.scale(0.);
-                    
-                    m.add(Ichord, dm);
+                    m.add(1., dm);
                 }
                     break;
                     
@@ -333,7 +343,7 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                     else if (f.name() == "b")
                         m.scale(dAreadb);
                     else
-                        m.scale(0.);
+                        m.zero();
                     
                     m.add(Area, dm);
                 }

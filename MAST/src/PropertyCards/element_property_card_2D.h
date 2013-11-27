@@ -16,21 +16,13 @@
 
 namespace MAST
 {
-    enum BendingModel2D {
-        DKT,
-        MINDLIN,
-        NO_BENDING_2D,
-        DEFAULT_BENDING_2D
-    };
-    
-    
     
     class ElementPropertyCard2D: public MAST::ElementPropertyCardBase {
         
     public:
         ElementPropertyCard2D():
         MAST::ElementPropertyCardBase(),
-        _bending_model(MAST::DEFAULT_BENDING_2D),
+        _bending_model(MAST::DEFAULT_BENDING),
         _if_plane_stress(true)
         { }
         
@@ -42,7 +34,7 @@ namespace MAST
         /*!
          *   returns the bending model to be used for the 2D element
          */
-        void set_bending_model(MAST::BendingModel2D b)  {
+        void set_bending_model(MAST::BendingOperatorType b)  {
             _bending_model = b;
         }
         
@@ -50,8 +42,8 @@ namespace MAST
         /*!
          *   returns the bending model to be used for the 2D element.
          */
-        MAST::BendingModel2D bending_model(const Elem& elem,
-                                           const FEType& fe) const;
+        MAST::BendingOperatorType bending_model(const Elem& elem,
+                                         const FEType& fe) const;
         
         
         /*!
@@ -118,7 +110,7 @@ namespace MAST
          *   material property card. By default this chooses DKT for 3 noded
          *   triangles and Mindling for all other elements
          */
-        MAST::BendingModel2D _bending_model;
+        MAST::BendingOperatorType _bending_model;
         
         /*!
          *   if the analysis is plne stress, otherwise it is plane strain.
@@ -217,7 +209,7 @@ namespace MAST
 
 
 inline
-MAST::BendingModel2D
+MAST::BendingOperatorType
 MAST::ElementPropertyCard2D::bending_model(const Elem& elem,
                                            const FEType& fe) const {
     // for a TRI3 element, default bending is DKT. For all other elements
@@ -227,14 +219,14 @@ MAST::ElementPropertyCard2D::bending_model(const Elem& elem,
         case TRI3:
             if ((fe.family == LAGRANGE) &&
                 (fe.order  == FIRST) &&
-                (_bending_model == MAST::DEFAULT_BENDING_2D))
+                (_bending_model == MAST::DEFAULT_BENDING))
                 return MAST::DKT;
             else
                 return _bending_model;
             break;
             
         default:
-            if (_bending_model == MAST::DEFAULT_BENDING_2D)
+            if (_bending_model == MAST::DEFAULT_BENDING)
                 return MAST::MINDLIN;
             else
                 return _bending_model;

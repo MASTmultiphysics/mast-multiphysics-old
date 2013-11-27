@@ -30,6 +30,8 @@
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBD795F31843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */; };
+		EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795F81846834F007FA3A7 /* bending_structural_elem.cpp */; };
+		EBD795FB18468C35007FA3A7 /* bending_operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795FA18468C35007FA3A7 /* bending_operator.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
 		EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */; };
@@ -100,7 +102,7 @@
 		EB41AEEC17EA253700288448 /* panel_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = panel_mesh.h; sourceTree = "<group>"; };
 		EB41AEED17EA253700288448 /* ringleb_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringleb_mesh.h; sourceTree = "<group>"; };
 		EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_1D.h; sourceTree = "<group>"; };
-		EB7D8B6D181AC0E800D275D6 /* bernoulli_beam_elem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bernoulli_beam_elem.h; sourceTree = "<group>"; };
+		EB7D8B6D181AC0E800D275D6 /* bernoulli_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bernoulli_bending_operator.h; sourceTree = "<group>"; };
 		EB81733E182D504300E03740 /* sensitivity_parameters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sensitivity_parameters.h; sourceTree = "<group>"; };
 		EB81733F182D902300E03740 /* basis_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basis_matrix.cpp; sourceTree = "<group>"; };
 		EB817340182D902300E03740 /* fem_operator_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fem_operator_matrix.cpp; sourceTree = "<group>"; };
@@ -120,6 +122,12 @@
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = single_discipline_analysis_driver.cpp; sourceTree = "<group>"; };
 		EBD795F21843E9B9007FA3A7 /* analysis_driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = analysis_driver.h; sourceTree = "<group>"; };
+		EBD795F5184673F6007FA3A7 /* bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bending_operator.h; sourceTree = "<group>"; };
+		EBD795F618467C86007FA3A7 /* mindlin_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mindlin_bending_operator.h; sourceTree = "<group>"; };
+		EBD795F7184680B5007FA3A7 /* bending_structural_elem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bending_structural_elem.h; sourceTree = "<group>"; };
+		EBD795F81846834F007FA3A7 /* bending_structural_elem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bending_structural_elem.cpp; sourceTree = "<group>"; };
+		EBD795FA18468C35007FA3A7 /* bending_operator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bending_operator.cpp; sourceTree = "<group>"; };
+		EBD795FC18468D6E007FA3A7 /* timoshenko_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timoshenko_bending_operator.h; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fluid_analysis_driver.cpp; sourceTree = "<group>"; };
@@ -133,12 +141,11 @@
 		EBF2785F180DE17C00DC81A3 /* property_card_base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = property_card_base.h; sourceTree = "<group>"; };
 		EBF27860180ED3CE00DC81A3 /* element_property_card_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = element_property_card_base.h; sourceTree = "<group>"; };
 		EBF27861180ED3CE00DC81A3 /* material_property_card_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = material_property_card_base.h; sourceTree = "<group>"; };
-		EBF27863180F122000DC81A3 /* strain_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = strain_operator.h; sourceTree = "<group>"; };
 		EBF278651815995100DC81A3 /* structural_element_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_1D.h; sourceTree = "<group>"; };
 		EBF278661815996200DC81A3 /* structural_element_2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_2D.h; sourceTree = "<group>"; };
 		EBF278671815997700DC81A3 /* structural_element_3D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_element_3D.h; sourceTree = "<group>"; };
 		EBF2786818184B9D00DC81A3 /* temperature_function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = temperature_function.h; sourceTree = "<group>"; };
-		EBF278691819B50600DC81A3 /* dkt_elem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dkt_elem.h; sourceTree = "<group>"; };
+		EBF278691819B50600DC81A3 /* dkt_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dkt_bending_operator.h; sourceTree = "<group>"; };
 		EBF96D9516EA6B1100316D86 /* MAST */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MAST; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -242,9 +249,13 @@
 		696C08071796CD4100B77C5C /* StructuralElems */ = {
 			isa = PBXGroup;
 			children = (
-				EB7D8B6D181AC0E800D275D6 /* bernoulli_beam_elem.h */,
-				EBF278691819B50600DC81A3 /* dkt_elem.h */,
-				EBF27863180F122000DC81A3 /* strain_operator.h */,
+				EBD795FA18468C35007FA3A7 /* bending_operator.cpp */,
+				EBD795F5184673F6007FA3A7 /* bending_operator.h */,
+				EBD795F81846834F007FA3A7 /* bending_structural_elem.cpp */,
+				EBD795F7184680B5007FA3A7 /* bending_structural_elem.h */,
+				EB7D8B6D181AC0E800D275D6 /* bernoulli_bending_operator.h */,
+				EBF278691819B50600DC81A3 /* dkt_bending_operator.h */,
+				EBD795F618467C86007FA3A7 /* mindlin_bending_operator.h */,
 				696C08081796CD4100B77C5C /* structural_elem_base.cpp */,
 				696C08091796CD4100B77C5C /* structural_elem_base.h */,
 				EB8173561835309D00E03740 /* structural_element_1D.cpp */,
@@ -256,6 +267,7 @@
 				696C08171796CF9200B77C5C /* structural_system_assembly.cpp */,
 				696C08181796CF9200B77C5C /* structural_system_assembly.h */,
 				698C603317ADEBFE009E6058 /* surface_pressure_load.h */,
+				EBD795FC18468D6E007FA3A7 /* timoshenko_bending_operator.h */,
 			);
 			path = StructuralElems;
 			sourceTree = "<group>";
@@ -428,6 +440,7 @@
 				6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */,
 				696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */,
 				EB817343182D902300E03740 /* basis_matrix.cpp in Sources */,
+				EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */,
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
 				EB81735A1835309D00E03740 /* structural_element_2D.cpp in Sources */,
@@ -443,6 +456,7 @@
 				EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */,
 				EBE83D5817A021F4000F013C /* fluid_system.cpp in Sources */,
 				EB817345182D902300E03740 /* function_base.cpp in Sources */,
+				EBD795FB18468C35007FA3A7 /* bending_operator.cpp in Sources */,
 				EBE83D5917A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp in Sources */,
 				EBE83D5D17A182CE000F013C /* flutter_solver_base.cpp in Sources */,
 				EBD795F31843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */,

@@ -9,11 +9,13 @@
 #ifndef __MAST_element_property_card_base_h__
 #define __MAST_element_property_card_base_h__
 
-// MAST includes
-#include "PropertyCards/property_card_base.h"
-
 // libMesh includes
 #include "libmesh/elem.h"
+
+// MAST includes
+#include "PropertyCards/property_card_base.h"
+#include "StructuralElems/bending_operator.h"
+
 
 
 namespace MAST
@@ -22,13 +24,9 @@ namespace MAST
         LINEAR_STRAIN,
         VON_KARMAN_STRAIN
     };
-    
+ 
     enum ElemenetPropertyMatrixType {
         SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-        SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_TRANSVERSE,
-        SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_TRANSVERSE,
-        SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX_1D_CHORDWISE,
-        SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX_1D_CHORDWISE,
         SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
         SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
         SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX,
@@ -51,7 +49,14 @@ namespace MAST
          *   virtual destructor
          */
         virtual ~ElementPropertyCardBase() { }
-        
+
+        /*!
+         *   returns the bending model to be used for the element. Should be 
+         *   reimplemented in the derived classes
+         */
+        virtual MAST::BendingOperatorType bending_model(const Elem& elem,
+                                                 const FEType& fe) const
+        { libmesh_error(); }
         
         /*!
          *    returns the extra quadrature order (on top of the system) that 

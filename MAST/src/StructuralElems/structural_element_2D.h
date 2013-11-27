@@ -14,7 +14,7 @@
 
 
 // MAST includes
-#include "StructuralElems/structural_elem_base.h"
+#include "StructuralElems/bending_structural_elem.h"
 
 
 // Forward declerations
@@ -24,24 +24,22 @@ class FEMOperatorMatrix;
 namespace MAST {
 
     // Forward declerations
-    class DKTElem;
     class BoundaryCondition;
     
     /*!
      *   class provides a simple mechanism to create a geometric element
      *   in the local coordinate system.
      */
-    class Local2DElem {
+    class Local2DElem : public MAST::LocalElemBase {
     public:
         Local2DElem(const Elem& elem):
-        _elem(elem),
-        _local_elem(NULL)
+        MAST::LocalElemBase(elem)
         {
             _create_local_elem();
         }
         
         
-        ~Local2DElem() {
+        virtual ~Local2DElem() {
             // the local element may not have been created
             // for cases where the original element lies in the xy-plane
             if (_local_elem) {
@@ -51,41 +49,6 @@ namespace MAST {
             }
         }
         
-        /*!
-         *   returns a constant reference to the global element.
-         */
-        const Elem& global_elem() const {
-            return _elem;
-        }
-        
-        
-        /*!
-         *   returns a constant reference to the local element.
-         */
-        const Elem& local_elem() const {
-            if (!_local_elem) // original element lies in the xy-plane
-                return _elem;
-            else
-                return *_local_elem;
-        }
-
-        /*!
-         *    returns the transformation matrix for this element. This is used 
-         *    to map the coordinates from local to global coordinate system
-         */
-        const DenseMatrix<Real>& T_matrix() const {
-            return _T_mat;
-        }
-        
-        
-        /*!
-         *   @returns the unit normal vector out of the plane of this element.
-         *   This is valid only for flat elements
-         */
-        const Point& normal() const {
-            return _normal;
-        }
-        
         
     protected:
         
@@ -93,143 +56,26 @@ namespace MAST {
          *    creation of an element in the local coordinate system
          */
         void _create_local_elem();
-        
-        /*!
-         *   given element in global coordinate system
-         */
-        const Elem& _elem;
-        
-        /*!
-         *   element created in local coordinate system
-         */
-        Elem* _local_elem;
-        
-        /*!
-         *   nodes for local element
-         */
-        std::vector<Node*> _local_nodes;
-        
-        /*!
-         *    Transformation matrix defines T_ij = V_i^t . Vn_j, where
-         *    V_i are the unit vectors of the global cs, and Vn_j are the 
-         *    unit vectors of the local cs. To transform a vector from global to 
-         *    local cs,    an_j = T^t a_i, and the reverse transformation is 
-         *    obtained as  a_j  = T  an_i
-         */
-        DenseMatrix<Real> _T_mat;
-        
-        /*!
-         *   surface normal
-         */
-        Point _normal;
     };
     
     
-    class StructuralElement2D: public MAST::StructuralElementBase {
+    
+    class StructuralElement2D: public MAST::BendingStructuralElem {
         
     public:
         StructuralElement2D(System& sys,
                             const Elem& elem,
                             const MAST::ElementPropertyCardBase& p);
-        
-        /*!
-         *    Calculates the internal force vector and Jacobian due to
-         *    strain energy
-         */
-        virtual bool internal_force(bool request_jacobian,
-                                    DenseVector<Real>& f,
-                                    DenseMatrix<Real>& jac);
-        
-        /*!
-         *    Calculates the internal force vector and Jacobian due to
-         *    strain energy coming from a prestress
-         */
-        virtual bool prestress_force (bool request_jacobian,
-                                      DenseVector<Real>& f,
-                                      DenseMatrix<Real>& jac);
 
-        
-        /*!
-         *    Calculates the sensitivity internal force vector and Jacobian due to
-         *    strain energy
-         */
-        virtual bool internal_force_sensitivity(bool request_jacobian,
-                                                DenseVector<Real>& f,
-                                                DenseMatrix<Real>& jac);
-        
-        /*!
-         *    Calculates the internal force vector and Jacobian due to
-         *    strain energy coming from a prestress
-         */
-        virtual bool prestress_force_sensitivity (bool request_jacobian,
-                                                  DenseVector<Real>& f,
-                                                  DenseMatrix<Real>& jac);
 
     protected:
-        
-        /*!
-         *    Calculates the force vector and Jacobian due to thermal stresses
-         */
-        virtual bool thermal_force(bool request_jacobian,
-                                   DenseVector<Real>& f,
-                                   DenseMatrix<Real>& jac);
-
-        /*!
-         *    Calculates the sensitivity fo force vector and Jacobian due
-         *    to thermal stresses
-         */
-        virtual bool thermal_force_sensitivity(bool request_jacobian,
-                                               DenseVector<Real>& f,
-                                               DenseMatrix<Real>& jac);
-
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
-                                            const unsigned int side,
-                                            MAST::BoundaryCondition& p);
-
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
-                                            MAST::BoundaryCondition& p);
-
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
-                                                        const unsigned int side,
-                                                        MAST::BoundaryCondition& p);
-        
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
-                                                        MAST::BoundaryCondition& p);
 
 
         /*!
          *   initialize membrane strain operator matrix
          */
-        void initialize_membrane_strain_operator(const unsigned int qp,
-                                                 FEMOperatorMatrix& Bmat);
-        
-        /*!
-         *   initialze the bending strain operator for Mindling plate model.
-         *   The bending part is included in \par Bend_par 
-         */
-        void initialize_mindlin_bending_strain_operator(const unsigned int qp,
-                                                        FEMOperatorMatrix& Bmat_bend);
-        
+        virtual void initialize_direct_strain_operator(const unsigned int qp,
+                                                       FEMOperatorMatrix& Bmat);
         
         /*!
          *   initialze the von Karman strain in \par vK_strain, the operator
@@ -237,81 +83,10 @@ namespace MAST {
          *   vk_strain = [dw/dx 0; 0 dw/dy; dw/dy dw/dx]
          *   Bmat_vk   = [dw/dx; dw/dy]
          */
-        void initialize_von_karman_strain_operator(const unsigned int qp,
-                                                   DenseVector<Real>& vk_strain,
-                                                   DenseMatrix<Real>& vk_dwdxi_mat,
-                                                   FEMOperatorMatrix& Bmat_vk);
-        
-        /*!
-         *   performs integration at the quadrature point for the provided 
-         *   matrices. The temperature vector and matrix entities are provided for
-         *   integration
-         */
-        void _internal_force_operation(bool if_bending,
-                                       bool if_dkt,
-                                       bool if_vk,
-                                       const unsigned int n2,
-                                       const unsigned int qp,
-                                       const std::vector<Real>& JxW,
-                                       bool request_jacobian,
-                                       DenseVector<Real>& local_f,
-                                       DenseMatrix<Real>& local_jac,
-                                       FEMOperatorMatrix& Bmat_mem,
-                                       FEMOperatorMatrix& Bmat_bend,
-                                       FEMOperatorMatrix& Bmat_vk,
-                                       DenseMatrix<Real>& stress,
-                                       DenseMatrix<Real>& vk_dwdxi_mat,
-                                       DenseMatrix<Real>& material_A_mat,
-                                       DenseMatrix<Real>& material_B_mat,
-                                       DenseMatrix<Real>& material_D_mat,
-                                       DenseVector<Real>& tmp_vec1_n1,
-                                       DenseVector<Real>& tmp_vec2_n1,
-                                       DenseVector<Real>& tmp_vec3_n2,
-                                       DenseVector<Real>& tmp_vec4_2,
-                                       DenseVector<Real>& tmp_vec5_2,
-                                       DenseMatrix<Real>& tmp_mat1_n1n2,
-                                       DenseMatrix<Real>& tmp_mat2_n2n2,
-                                       DenseMatrix<Real>& tmp_mat3,
-                                       DenseMatrix<Real>& tmp_mat4_2n2);
-        
-        /*!
-         *    performs integration of the mindlin plate shear energy term
-         */
-        void _internal_mindlin_plate_shear_force_operation
-        (bool request_jacobian,
-         DenseVector<Real>& local_f,
-         DenseMatrix<Real>& local_jac,
-         DenseVector<Real>& tmp_vec3_n2,
-         DenseVector<Real>& tmp_vec4_2,
-         DenseVector<Real>& tmp_vec5_2,
-         DenseMatrix<Real>& tmp_mat2_n2n2,
-         DenseMatrix<Real>& tmp_mat4_2n2,
-         const MAST::SensitivityParameters* sens_params);
-        
-        /*!
-         *   matrix that transforms the global dofs to the local element coordinate
-         *   system
-         */
-        virtual const DenseMatrix<Real>& _transformation_matrix() const {
-            return _local_elem.T_matrix();
-        }
-            
-        /*!
-         *    DKT element, initialized if the element needs it
-         */
-        std::auto_ptr<MAST::DKTElem> _dkt_elem;
-        
-        
-        /*!
-         *   element in local coordinate system
-         */
-        MAST::Local2DElem _local_elem;
-        
-        /*!
-         *   reduction in quadrature order for Reissner-Mindlin plate. Default 
-         *   value is 2
-         */
-        unsigned int _mindlin_shear_quadrature_reduction;
+        virtual void initialize_von_karman_strain_operator(const unsigned int qp,
+                                                           DenseVector<Real>& vk_strain,
+                                                           DenseMatrix<Real>& vk_dwdxi_mat,
+                                                           FEMOperatorMatrix& Bmat_vk);
     };
 }
 
