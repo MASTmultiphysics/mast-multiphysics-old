@@ -38,7 +38,7 @@ namespace MAST {
          *   returns true if this bending operator supports a transverse shear component
          */
         virtual bool include_transverse_shear_energy() const {
-            return false;
+            return true;
         }
         
         /*!
@@ -129,7 +129,8 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     fe.reset(FEBase::build(_elem.dim(), fe_type).release());
     qrule.reset(fe_type.default_quadrature_rule
                 (_elem.dim(),
-                 _qrule.get_order() - _mindlin_shear_quadrature_reduction).release());
+                 property.extra_quadrature_order(_elem, fe->get_fe_type())
+                 - _mindlin_shear_quadrature_reduction).release());
     fe->attach_quadrature_rule(qrule.get());
     fe->get_phi();
     fe->get_JxW();
