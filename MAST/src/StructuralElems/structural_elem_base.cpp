@@ -15,7 +15,7 @@
 #include "Numerics/fem_operator_matrix.h"
 #include "StructuralElems/structural_element_3D.h"
 #include "StructuralElems/structural_element_2D.h"
-//#include "StructuralElems/structural_element_1D.h"
+#include "StructuralElems/structural_element_1D.h"
 #include "ThermalElems/temperature_function.h"
 #include "Numerics/sensitivity_parameters.h"
 #include "Base/boundary_condition.h"
@@ -580,15 +580,18 @@ MAST::build_structural_element(System& sys,
     std::auto_ptr<MAST::StructuralElementBase> e;
     
     switch (elem.dim()) {
-        case 3:
-            e.reset(new MAST::StructuralElement3D(sys, elem, p));
+        case 1:
+            e.reset(new MAST::StructuralElement1D(sys, elem, p));
             break;
             
         case 2:
             e.reset(new MAST::StructuralElement2D(sys, elem, p));
             break;
             
-        case 1:
+        case 3:
+            e.reset(new MAST::StructuralElement3D(sys, elem, p));
+            break;
+
         default:
             libmesh_error();
             break;

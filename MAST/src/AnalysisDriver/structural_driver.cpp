@@ -14,6 +14,7 @@
 #include "PropertyCards/element_property_card_base.h"
 #include "PropertyCards/element_property_card_3D.h"
 #include "PropertyCards/element_property_card_2D.h"
+#include "PropertyCards/element_property_card_1D.h"
 #include "PropertyCards/material_property_card_base.h"
 #include "Optimization/gcmma_optimization_interface.h"
 #include "Base/boundary_condition.h"
@@ -92,9 +93,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     error_norm = infile("error_norm", std::string("kelly"));
     
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
-    
     if (if_panel_mesh)
     {
+        
+        
         const unsigned int nx_divs = infile("nx_divs",0),
         ny_divs = infile("ny_divs",0),
         nz_divs = infile("nz_divs",0);
@@ -156,7 +158,11 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         const std::string mesh_type = infile("mesh_type", std::string(""));
         if (mesh_type == "panel")
         {
-            if (dim == 2)
+            if (dim == 1)
+                MeshTools::Generation::build_line (mesh,
+                                                   divs[0]->total_elem_divs(),
+                                                   0., 1., elem_type);
+            else if (dim == 2)
                 PanelMesh2D().init(0., false, 0, 100, 101, // dummy values not needed in structures
                                    divs, mesh, elem_type);
             else if (dim == 3)
@@ -298,17 +304,24 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::IsotropicMaterialPropertyCard mat;
     MAST::ElementPropertyCard3D prop3d;
     MAST::Solid2DSectionElementPropertyCard prop2d;
+    MAST::Solid1DSectionElementPropertyCard prop1d;
     
     MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
     &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION),
     &rho = mat.add<Real>("rho", MAST::CONSTANT_FUNCTION),
     &kappa = mat.add<Real>("kappa", MAST::CONSTANT_FUNCTION),
-    &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION);
+    &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION),
+    &th =  prop1d.add<Real>("h", MAST::CONSTANT_FUNCTION),
+    &b =  prop1d.add<Real>("b", MAST::CONSTANT_FUNCTION);
+
+    
     E  = infile("youngs_modulus", 72.e9);
     nu = infile("poisson_ratio", 0.33);
     rho =infile("material_density", 2700.);
     kappa = infile("shear_corr_factor", 5./6.);
     h  = infile("thickness", 0.002);
+    th  = infile("thickness", 0.002);
+    b  = infile("thickness", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
     prestress(1) = -100.;
@@ -316,13 +329,15 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop3d.set_material(mat);
     prop2d.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false);
+    prop1d.set_material(mat);
+    prop1d.set_diagonal_mass_matrix(false);
 //    prop2d.prestress(prestress);
 //    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
     
-    structural_assembly.set_property_for_all_elems(prop2d);
+    structural_assembly.set_property_for_all_elems(prop1d);
     structural_assembly.add_parameter(h.ptr(), &h);
     
     system.solve();

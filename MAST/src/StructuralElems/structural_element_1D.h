@@ -68,7 +68,21 @@ namespace MAST {
                             const Elem& elem,
                             const MAST::ElementPropertyCardBase& p);
         
+        /*!
+         *    row dimension of the direct strain matrix, also used for the
+         *    bending operator row dimension
+         */
+        virtual unsigned int n_direct_strain_components() {
+            return 2;
+        }
         
+        /*!
+         *    row dimension of the von Karman strain matrix
+         */
+        virtual unsigned int n_von_karman_strain_components() {
+            return 2;
+        }
+
     protected:
         
         

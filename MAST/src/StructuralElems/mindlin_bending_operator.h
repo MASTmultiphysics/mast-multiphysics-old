@@ -10,8 +10,6 @@
 #define __MAST_mindlin_bending_operator_h__
 
 // libMesh includes
-#include "libmesh/elem.h"
-#include "libmesh/node.h"
 #include "libmesh/fe.h"
 #include "libmesh/quadrature.h"
 #include "libmesh/dense_vector.h"
@@ -29,7 +27,7 @@ namespace MAST {
         MindlinBendingOperator(StructuralElementBase& elem):
         MAST::BendingOperator(elem),
         _fe(elem.fe()),
-        _mindlin_shear_quadrature_reduction(2)
+        _shear_quadrature_reduction(2)
         { }
         
         virtual ~MindlinBendingOperator() { }
@@ -65,7 +63,7 @@ namespace MAST {
         /*!
          *   reduction in quadrature for shear energy
          */
-        unsigned int _mindlin_shear_quadrature_reduction;
+        unsigned int _shear_quadrature_reduction;
     };
 }
 
@@ -130,7 +128,7 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     qrule.reset(fe_type.default_quadrature_rule
                 (_elem.dim(),
                  property.extra_quadrature_order(_elem, fe->get_fe_type())
-                 - _mindlin_shear_quadrature_reduction).release());
+                 - _shear_quadrature_reduction).release());
     fe->attach_quadrature_rule(qrule.get());
     fe->get_phi();
     fe->get_JxW();

@@ -61,6 +61,25 @@ namespace MAST
     protected:
         
         /*!
+         *    initializes the vector to the prestress in the element
+         */
+        virtual void _prestress_vector(DenseVector<Real>& v) const {
+            v.resize(1);
+            if (_prestress.size() == 6)
+                v(0) = _prestress(0);
+        }
+        
+        
+        /*!
+         *    initializes the matrix to the prestress in the element
+         */
+        virtual void _prestress_matrix(DenseMatrix<Real>& m) const {
+            m.resize(1, 1);
+            if (_prestress.size() == 6)
+                m(0,0) = _prestress(0);
+        }
+
+        /*!
          *   material property card. By default this chooses DKT for 3 noded
          *   triangles and Mindling for all other elements
          */
@@ -70,6 +89,8 @@ namespace MAST
     
     
     class Solid1DSectionElementPropertyCard : public MAST::ElementPropertyCard1D {
+
+    public:
         
         Solid1DSectionElementPropertyCard():
         MAST::ElementPropertyCard1D(),
@@ -112,6 +133,19 @@ namespace MAST
                                                   MAST::ElemenetPropertyMatrixType t,
                                                   DenseMatrix<Real>& m,
                                                   const MAST::SensitivityParameters& p) const;
+        /*!
+         *    initializes the vector to the prestress in the element
+         */
+        virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                      DenseVector<Real>& v) const;
+        
+        
+        /*!
+         *    initializes the matrix to the prestress in the element
+         */
+        virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                      DenseMatrix<Real>& m) const;
+
         /*!
          *  returns true if the property card depends on the function \p f
          */
@@ -181,7 +215,7 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
             Real h = this->get<Real>("h")(), // section height
             b = this->get<Real>("b")(),        // section width
             Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
-            Iyz = 0., J=0.;
+            Iyz = 0., J=1.;
             
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
@@ -358,6 +392,58 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
             
         case 2:
         case 3:
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+inline void
+MAST::Solid1DSectionElementPropertyCard::prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                                          DenseVector<Real>& v) const {
+    double h = this->get<Real>("h")(), // section height
+    b = this->get<Real>("b")(),        // section width
+    Area = b*h;
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            _prestress_vector(v);
+            v.scale(Area);
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            // for solid sections with isotropic material this is zero
+            v.resize(1);
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+
+
+inline void
+MAST::Solid1DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                                          DenseMatrix<Real>& m) const {
+    double h = this->get<Real>("h")(), // section height
+    b = this->get<Real>("b")(),        // section width
+    Area = b*h;
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            _prestress_matrix(m);
+            m.scale(Area);
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            // for solid sections with isotropic material this is zero
+            m.resize(1,1);
+            break;
+            
         default:
             libmesh_error();
             break;

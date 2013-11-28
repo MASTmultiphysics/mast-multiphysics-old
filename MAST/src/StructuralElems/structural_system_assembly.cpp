@@ -516,7 +516,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
         // constrain the element matrices.
         _system.get_dof_map().constrain_element_matrix(mat1, dof_indices);
         _system.get_dof_map().constrain_element_matrix(mat2, dof_indices);
-
+        
         // add to the global matrices
         if (if_exchange_AB_matrices)
         {

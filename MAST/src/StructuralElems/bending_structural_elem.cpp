@@ -45,28 +45,27 @@ MAST::BendingStructuralElem::internal_force (bool request_jacobian,
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
-    const unsigned int n1=3, n2=6*n_phi;
+    const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
+    n3 = this->n_von_karman_strain_components();
     DenseMatrix<Real> material_A_mat, material_B_mat, material_D_mat,
     tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
-    tmp_mat4_2n2, vk_dwdxi_mat, stress, local_jac;
+    tmp_mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
     DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    tmp_vec4_2, tmp_vec5_2, local_f;
+    tmp_vec4_n3, tmp_vec5_n3, local_f;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_mat4_2n2.resize(2, n2); local_jac.resize(n2, n2);
-    vk_dwdxi_mat.resize(n1,2); stress.resize(2,2); local_f.resize(n2);
+    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
     tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
+    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
     
     
-    Bmat_mem.reinit(3, _system.n_vars(), n_phi); // three stress-strain components
-    Bmat_bend.reinit(3, _system.n_vars(), n_phi);
-    Bmat_vk.reinit(2, _system.n_vars(), n_phi); // only dw/dx and dw/dy
+    Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat_bend.reinit(n1, _system.n_vars(), n_phi);
+    Bmat_vk.reinit(n3, _system.n_vars(), n_phi); // only dw/dx and dw/dy
     
-    const MAST::ElementPropertyCard2D& property_2D =
-    dynamic_cast<const MAST::ElementPropertyCard2D&>(_property);
-    bool if_vk = (property_2D.strain_type() == MAST::VON_KARMAN_STRAIN),
-    if_bending = (property_2D.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
+    bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
+    if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
@@ -93,9 +92,9 @@ MAST::BendingStructuralElem::internal_force (bool request_jacobian,
                                   Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, vk_dwdxi_mat, material_A_mat,
                                   material_B_mat, material_D_mat, tmp_vec1_n1,
-                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2,
-                                  tmp_vec5_2, tmp_mat1_n1n2, tmp_mat2_n2n2,
-                                  tmp_mat3, tmp_mat4_2n2);
+                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
+                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
+                                  tmp_mat3, tmp_mat4_n3n2);
         
     }
     
@@ -112,9 +111,12 @@ MAST::BendingStructuralElem::internal_force (bool request_jacobian,
     transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     if (request_jacobian) {
-        // add small values to the diagonal of the theta_z dofs
-        for (unsigned int i=0; i<n_phi; i++)
-            local_jac(5*n_phi+i, 5*n_phi+i) = 1.0e-6;
+        // for 2D elements
+        if (_elem.dim() == 2) {
+            // add small values to the diagonal of the theta_z dofs
+            for (unsigned int i=0; i<n_phi; i++)
+                local_jac(5*n_phi+i, 5*n_phi+i) = 1.0e-6;
+        }
         transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(1., tmp_mat2_n2n2);
     }
@@ -153,28 +155,27 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
-    const unsigned int n1=3, n2=6*n_phi;
+    const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
+    n3 = this->n_von_karman_strain_components();
     DenseMatrix<Real> material_A_mat, material_B_mat, material_D_mat,
     material_trans_shear_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
-    tmp_mat4_2n2, vk_dwdxi_mat, stress, local_jac;
+    tmp_mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
     DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    tmp_vec4_2, tmp_vec5_2, local_f;
+    tmp_vec4_n3, tmp_vec5_n3, local_f;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_mat4_2n2.resize(2, n2); local_jac.resize(n2, n2);
-    vk_dwdxi_mat.resize(n1,2); stress.resize(2,2); local_f.resize(n2);
+    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
     tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
+    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
     
     
-    Bmat_mem.reinit(3, _system.n_vars(), n_phi); // three stress-strain components
-    Bmat_bend.reinit(3, _system.n_vars(), n_phi);
-    Bmat_vk.reinit(2, _system.n_vars(), n_phi); // only dw/dx and dw/dy
+    Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat_bend.reinit(n1, _system.n_vars(), n_phi);
+    Bmat_vk.reinit(n3, _system.n_vars(), n_phi); // only dw/dx and dw/dy
     
-    const MAST::ElementPropertyCard2D& property_2D =
-    dynamic_cast<const MAST::ElementPropertyCard2D&>(_property);
-    bool if_vk = (property_2D.strain_type() == MAST::VON_KARMAN_STRAIN),
-    if_bending = (property_2D.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
+    bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
+    if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
     
     // first calculate the sensitivity due to the parameter
@@ -207,9 +208,9 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
                                   Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, vk_dwdxi_mat, material_A_mat,
                                   material_B_mat, material_D_mat, tmp_vec1_n1,
-                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2,
-                                  tmp_vec5_2, tmp_mat1_n1n2, tmp_mat2_n2n2,
-                                  tmp_mat3, tmp_mat4_2n2);
+                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
+                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
+                                  tmp_mat3, tmp_mat4_n3n2);
     }
     
     // now transform to the global coorodinate system
@@ -267,9 +268,9 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
                                   Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, vk_dwdxi_mat, material_A_mat,
                                   material_B_mat, material_D_mat, tmp_vec1_n1,
-                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2,
-                                  tmp_vec5_2, tmp_mat1_n1n2, tmp_mat2_n2n2,
-                                  tmp_mat3, tmp_mat4_2n2);
+                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
+                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
+                                  tmp_mat3, tmp_mat4_n3n2);
     }
     
     // now transform to the global coorodinate system
@@ -299,25 +300,24 @@ MAST::BendingStructuralElem::prestress_force (bool request_jacobian,
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
-    const unsigned int n1=3, n2=6*n_phi;
+    const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
+    n3 = this->n_von_karman_strain_components();
     DenseMatrix<Real> tmp_mat2_n2n2, tmp_mat3, vk_dwdxi_mat, local_jac,
     prestress_mat_A;
-    DenseVector<Real> tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2,
+    DenseVector<Real> tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
     local_f, prestress_vec_A, prestress_vec_B;
     
     tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
-    vk_dwdxi_mat.resize(n1,2); local_f.resize(n2); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
+    vk_dwdxi_mat.resize(n1,n3); local_f.resize(n2); tmp_vec2_n1.resize(n1);
+    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
     
     
-    Bmat_mem.reinit(3, _system.n_vars(), n_phi); // three stress-strain components
-    Bmat_bend.reinit(3, _system.n_vars(), n_phi);
-    Bmat_vk.reinit(2, _system.n_vars(), n_phi); // only dw/dx and dw/dy
+    Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat_bend.reinit(n1, _system.n_vars(), n_phi);
+    Bmat_vk.reinit(n3, _system.n_vars(), n_phi); // only dw/dx and dw/dy
     
-    const MAST::ElementPropertyCard2D& property_2D =
-    dynamic_cast<const MAST::ElementPropertyCard2D&>(_property);
-    bool if_vk = (property_2D.strain_type() == MAST::VON_KARMAN_STRAIN),
-    if_bending = (property_2D.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
+    bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
+    if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
     
     // get the element prestress
@@ -355,8 +355,8 @@ MAST::BendingStructuralElem::prestress_force (bool request_jacobian,
         if (if_bending) {
             if (if_vk) {
                 // von Karman strain
-                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, prestress_vec_A);
-                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
+                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_n3, prestress_vec_A);
+                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_n3);
                 local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_vk * sigma_0
             }
             
@@ -399,29 +399,30 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
     if (!_property.if_prestressed())
         return false;
     
+    libmesh_error(); // revisit to include prestress matrix sensitivity
+    
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
-    const unsigned int n1=3, n2=6*n_phi;
+    const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
+    n3 = this->n_von_karman_strain_components();
     DenseMatrix<Real> tmp_mat2_n2n2, tmp_mat3, vk_dwdxi_mat, local_jac,
     prestress_mat_A;
-    DenseVector<Real> tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2,
+    DenseVector<Real> tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
     local_f, prestress_vec_A, prestress_vec_B;
     
     tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
-    vk_dwdxi_mat.resize(n1,2); local_f.resize(n2); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
+    vk_dwdxi_mat.resize(n1,n3); local_f.resize(n2); tmp_vec2_n1.resize(n1);
+    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
     
     
-    Bmat_mem.reinit(3, _system.n_vars(), n_phi); // three stress-strain components
-    Bmat_bend.reinit(3, _system.n_vars(), n_phi);
-    Bmat_vk.reinit(2, _system.n_vars(), n_phi); // only dw/dx and dw/dy
+    Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat_bend.reinit(n1, _system.n_vars(), n_phi);
+    Bmat_vk.reinit(n3, _system.n_vars(), n_phi); // only dw/dx and dw/dy
     
-    const MAST::ElementPropertyCard2D& property_2D =
-    dynamic_cast<const MAST::ElementPropertyCard2D&>(_property);
-    bool if_vk = (property_2D.strain_type() == MAST::VON_KARMAN_STRAIN),
-    if_bending = (property_2D.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
+    bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
+    if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
     
     // get the element prestress
@@ -459,8 +460,8 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
         if (if_bending) {
             if (if_vk) {
                 // von Karman strain
-                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, prestress_vec_A);
-                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
+                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_n3, prestress_vec_A);
+                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_n3);
                 local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_vk * sigma_0
             }
             
@@ -631,11 +632,13 @@ MAST::BendingStructuralElem::_internal_force_operation
     material_A_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1); // stress
     Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
     local_f.add(-JxW[qp], tmp_vec3_n2);
-    // copy the stress values to a matrix if needed
+    // copy the stress values to a matrix if needed    
     stress(0,0) = tmp_vec1_n1(0); // sigma_xx
-    stress(0,1) = tmp_vec1_n1(2); // sigma_xy
-    stress(1,0) = tmp_vec1_n1(2); // sigma_yx
-    stress(1,1) = tmp_vec1_n1(1); // sigma_yy
+    if (_elem.dim() == 2) { // this is not needed for 1D element
+        stress(0,1) = tmp_vec1_n1(2); // sigma_xy
+        stress(1,0) = tmp_vec1_n1(2); // sigma_yx
+        stress(1,1) = tmp_vec1_n1(1); // sigma_yy
+    }
     
     if (if_bending) {
         if (if_vk) {

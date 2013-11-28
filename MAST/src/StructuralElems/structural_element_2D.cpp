@@ -87,7 +87,10 @@ MAST::StructuralElement2D::initialize_direct_strain_operator(const unsigned int 
     
     unsigned int n_phi = (unsigned int)dphi.size();
     DenseVector<Real> phi; phi.resize(n_phi);
-    
+
+    libmesh_assert_equal_to(Bmat.m(), 3);
+    libmesh_assert_equal_to(Bmat.n(), 6*n_phi);
+
     // now set the shape function values
     // dN/dx
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
@@ -111,8 +114,14 @@ MAST::StructuralElement2D::initialize_von_karman_strain_operator(const unsigned 
                                                                  FEMOperatorMatrix& Bmat_vk) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
-    
     const unsigned int n_phi = (unsigned int)dphi.size();
+    
+    libmesh_assert_equal_to(vk_strain.size(), 3);
+    libmesh_assert_equal_to(vk_dwdxi_mat.m(), 3);
+    libmesh_assert_equal_to(vk_dwdxi_mat.n(), 2);
+    libmesh_assert_equal_to(Bmat_vk.m(), 2);
+    libmesh_assert_equal_to(Bmat_vk.n(), 6*n_phi);
+
     Real dw=0.;
     vk_dwdxi_mat.zero();
     
@@ -126,6 +135,8 @@ MAST::StructuralElement2D::initialize_von_karman_strain_operator(const unsigned 
     Bmat_vk.set_shape_function(0, 2, phi_vec); // dw/dx
     vk_dwdxi_mat(0, 0) = dw;  // epsilon-xx : dw/dx
     vk_dwdxi_mat(2, 1) = dw;  // gamma-xy : dw/dx
+    vk_strain(0) = 0.5*dw*dw; // 1/2 * (dw/dx)^2
+    vk_strain(2) = dw;        // (dw/dx)*(dw/dy)  only dw/dx is provided here
     
     dw = 0.;
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ ) {
@@ -135,6 +146,8 @@ MAST::StructuralElement2D::initialize_von_karman_strain_operator(const unsigned 
     Bmat_vk.set_shape_function(1, 2, phi_vec); // dw/dy
     vk_dwdxi_mat(1, 1) = dw;  // epsilon-yy : dw/dy
     vk_dwdxi_mat(2, 0) = dw;  // gamma-xy : dw/dy
+    vk_strain(1) = 0.5*dw*dw; // 1/2 * (dw/dy)^2
+    vk_strain(2) *= dw;       // (dw/dx)*(dw/dy)
 }
 
 
