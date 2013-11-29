@@ -18,7 +18,10 @@ namespace MAST {
     
     enum BoundaryConditionType {
         SURFACE_PRESSURE,
+        SMALL_DISTURBANCE_SURFACE_PRESSURE,
+        PISTON_THEORY,
         DISPLACEMENT,
+        SMALL_DISTURBANCE_DISPLACEMENT,
         TEMPERATURE
     };
     
