@@ -18,7 +18,7 @@
 #include "StructuralElems/structural_element_1D.h"
 #include "ThermalElems/temperature_function.h"
 #include "Numerics/sensitivity_parameters.h"
-#include "Base/boundary_condition.h"
+#include "BoundaryConditions/boundary_condition.h"
 
 
 MAST::StructuralElementBase::StructuralElementBase(System& sys,
@@ -317,6 +317,13 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                 // apply all the types of loading
                 switch (it.first->second->type()) {
                     case MAST::SURFACE_PRESSURE:
+                        calculate_jac = (calculate_jac ||
+                                         surface_pressure_force_sensitivity(request_jacobian,
+                                                                            f, jac,
+                                                                            n,
+                                                                            *it.first->second));
+
+                    case MAST::SMALL_DISTURBANCE_MOTION:
                         calculate_jac = (calculate_jac ||
                                          surface_pressure_force_sensitivity(request_jacobian,
                                                                             f, jac,

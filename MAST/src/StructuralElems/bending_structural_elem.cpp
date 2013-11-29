@@ -12,7 +12,7 @@
 #include "PropertyCards/element_property_card_2D.h"
 #include "Numerics/fem_operator_matrix.h"
 #include "ThermalElems/temperature_function.h"
-#include "Base/boundary_condition.h"
+#include "BoundaryConditions/boundary_condition.h"
 #include "StructuralElems/structural_element_1D.h"
 #include "StructuralElems/structural_element_2D.h"
 
@@ -752,6 +752,7 @@ MAST::BendingStructuralElem::surface_pressure_force(bool request_jacobian,
                                                   DenseMatrix<Real> &jac,
                                                   const unsigned int side,
                                                   MAST::BoundaryCondition &p) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
     FEMOperatorMatrix Bmat;
@@ -801,7 +802,8 @@ MAST::BendingStructuralElem::surface_pressure_force(bool request_jacobian,
     // now transform to the global system and add
     transform_to_global_system(local_f, tmp_vec_n2);
     f.add(1., tmp_vec_n2);
-    
+
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 
@@ -812,6 +814,7 @@ MAST::BendingStructuralElem::surface_pressure_force(bool request_jacobian,
                                                     DenseVector<Real> &f,
                                                     DenseMatrix<Real> &jac,
                                                     MAST::BoundaryCondition &p) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
     FEMOperatorMatrix Bmat;
@@ -862,6 +865,7 @@ MAST::BendingStructuralElem::surface_pressure_force(bool request_jacobian,
     transform_to_global_system(local_f, tmp_vec_n2);
     f.add(1., tmp_vec_n2);
     
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 

@@ -10,7 +10,7 @@
 #define MAST_flexible_surface_motion_h
 
 // MAST includes
-#include "FluidElems/surface_motion.h"
+#include "BoundaryConditions/boundary_surface_motion.h"
 
 // libMesh includes
 #include "libmesh/mesh_function.h"
@@ -18,74 +18,77 @@
 #include "libmesh/mesh_serializer.h"
 
 
-class FlexibleSurfaceMotion: public SurfaceMotionBase
-{
-public:
-    FlexibleSurfaceMotion(System& sys):
-    SurfaceMotionBase(),
-    system(sys)
+namespace MAST {
+    
+    class FlexibleSurfaceMotion: public MAST::SurfaceMotionBase
     {
-        MeshBase& mesh = sys.get_mesh();
-        _mesh_serializer.reset(new MeshSerializer(mesh, true));
-    }
-    
-    virtual ~FlexibleSurfaceMotion()
-    { }
-
-    /*!
-     *   system associated with the mesh and solution vector
-     */
-    System& system;
-
-    virtual void zero();
-    
-    virtual void init(Real freq, Real phase,
-                      NumericVector<Number>& sol);
-    
-    /*!
-     *   calculation of surface velocity in frequency domain. \p u_trans is
-     *   the pure translation velocity component, while \p dn_rot defines the
-     *   surface normal perturbation
-     */
-    virtual void surface_velocity_frequency_domain(const Point& p,
-                                                   const Point& n,
-                                                   DenseVector<Complex>& u_trans,
-                                                   DenseVector<Complex>& dn_rot);
-    
-    /*!
-     *   calculation of surface velocity in time domain. \p u_trans is
-     *   the pure translation velocity component, while \p dn_rot defines the
-     *   surface normal perturbation
-     */
-    virtual void surface_velocity_time_domain(const Real t,
-                                              const Point& p,
-                                              const Point& n,
-                                              DenseVector<Number>& u_trans,
-                                              DenseVector<Number>& dn_rot);
-    
-protected:
-
-    /*!
-     *   mesh function that interpolates the solution
-     */
-    std::auto_ptr<MeshFunction> _function;
-
-    /*!
-     *    numeric vector that stores the solution
-     */
-    std::auto_ptr<NumericVector<Number> > _sol;
-
-    
-    /*!
-     *   this serializes the mesh for use in interpolation
-     */
-    std::auto_ptr<MeshSerializer> _mesh_serializer;
-};
+    public:
+        FlexibleSurfaceMotion(System& sys):
+        SurfaceMotionBase(),
+        system(sys)
+        {
+            MeshBase& mesh = sys.get_mesh();
+            _mesh_serializer.reset(new MeshSerializer(mesh, true));
+        }
+        
+        virtual ~FlexibleSurfaceMotion()
+        { }
+        
+        /*!
+         *   system associated with the mesh and solution vector
+         */
+        System& system;
+        
+        virtual void zero();
+        
+        virtual void init(Real freq, Real phase,
+                          NumericVector<Number>& sol);
+        
+        /*!
+         *   calculation of surface velocity in frequency domain. \p u_trans is
+         *   the pure translation velocity component, while \p dn_rot defines the
+         *   surface normal perturbation
+         */
+        virtual void surface_velocity_frequency_domain(const Point& p,
+                                                       const Point& n,
+                                                       DenseVector<Complex>& u_trans,
+                                                       DenseVector<Complex>& dn_rot);
+        
+        /*!
+         *   calculation of surface velocity in time domain. \p u_trans is
+         *   the pure translation velocity component, while \p dn_rot defines the
+         *   surface normal perturbation
+         */
+        virtual void surface_velocity_time_domain(const Real t,
+                                                  const Point& p,
+                                                  const Point& n,
+                                                  DenseVector<Number>& u_trans,
+                                                  DenseVector<Number>& dn_rot);
+        
+    protected:
+        
+        /*!
+         *   mesh function that interpolates the solution
+         */
+        std::auto_ptr<MeshFunction> _function;
+        
+        /*!
+         *    numeric vector that stores the solution
+         */
+        std::auto_ptr<NumericVector<Number> > _sol;
+        
+        
+        /*!
+         *   this serializes the mesh for use in interpolation
+         */
+        std::auto_ptr<MeshSerializer> _mesh_serializer;
+    };
+}
 
 
 inline
 void
-FlexibleSurfaceMotion::zero()
+MAST::FlexibleSurfaceMotion::zero()
 {
     libmesh_assert(false);
 }
@@ -93,8 +96,8 @@ FlexibleSurfaceMotion::zero()
 
 inline
 void
-FlexibleSurfaceMotion::init(Real freq, Real phase,
-                            NumericVector<Number>& sol)
+MAST::FlexibleSurfaceMotion::init(Real freq, Real phase,
+                                  NumericVector<Number>& sol)
 {
     // first initialize the solution to the given vector
     if (!_sol.get())
@@ -118,17 +121,17 @@ FlexibleSurfaceMotion::init(Real freq, Real phase,
         _function->init();
     }
     
-    SurfaceMotionBase::init(freq, phase);
+    MAST::SurfaceMotionBase::init(freq, phase);
 }
 
 
 
 inline
 void
-FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
-                                                         const Point& n,
-                                                         DenseVector<Complex>& u_trans,
-                                                         DenseVector<Complex>& dn_rot)
+MAST::FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
+                                                               const Point& n,
+                                                               DenseVector<Complex>& u_trans,
+                                                               DenseVector<Complex>& dn_rot)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
     u_trans.zero();
@@ -144,7 +147,7 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
     Complex iota(0., 1.);
     for (unsigned int i=0; i<3; i++)
         u_trans(i) = v(i) * iota * frequency;
-
+    
     // perturbation of the normal requires calculation of the curl of
     // displacement at the given point
     std::vector<Gradient> gradients;
@@ -154,7 +157,7 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
     
     // now prepare the rotation vector
     DenseVector<Complex> rot;
-    rot.resize(3); 
+    rot.resize(3);
     rot(0) = gradients[2](1) - gradients[1](2); // dwz/dy - dwy/dz
     rot(1) = gradients[0](2) - gradients[2](0); // dwx/dz - dwz/dx
     rot(2) = gradients[1](0) - gradients[0](1); // dwy/dx - dwx/dy
@@ -170,11 +173,11 @@ FlexibleSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
 
 inline
 void
-FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
-                                                 const Point& p,
-                                                 const Point& n,
-                                                 DenseVector<Number>& u_trans,
-                                                 DenseVector<Number>& dn_rot)
+MAST::FlexibleSurfaceMotion::surface_velocity_time_domain(const Real t,
+                                                          const Point& p,
+                                                          const Point& n,
+                                                          DenseVector<Number>& u_trans,
+                                                          DenseVector<Number>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();

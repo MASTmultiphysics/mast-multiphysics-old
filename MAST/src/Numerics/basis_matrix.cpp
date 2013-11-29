@@ -18,3 +18,8 @@ ShellMatrix<T>(comm_in)
 template <typename T>
 BasisMatrix<T>::~BasisMatrix()
 { }
+
+
+// explicit instantiations
+template BasisMatrix<Real>::BasisMatrix(const Parallel::Communicator &comm_in);
+template BasisMatrix<Complex>::BasisMatrix(const Parallel::Communicator &comm_in);

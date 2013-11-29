@@ -26,9 +26,9 @@ public:
     CoupledFluidStructureSystem(CFDAerodynamicModel& aero,
                                 FEMStructuralModel& structure):
     CoupledAeroStructuralModel(aero, structure),
-    surface_pressure(new SurfacePressureLoad(aero.nonlinear_fluid_system,
+    surface_pressure(new MAST::SmallDisturbanceSurfacePressure(aero.nonlinear_fluid_system,
                                              aero.linearized_fluid_system)),
-    surface_motion(new FlexibleSurfaceMotion(structure.structural_system))
+    surface_motion(new MAST::FlexibleSurfaceMotion(structure.structural_system))
     { }
 
     
@@ -50,20 +50,21 @@ protected:
     /*!
      *   this provides interpolation of the surface pressure
      */
-    std::auto_ptr<SurfacePressureLoad> surface_pressure;
+    std::auto_ptr<MAST::SmallDisturbanceSurfacePressure> surface_pressure;
     
     
     /*!
      *   this provides the surface motion description
      */
-    std::auto_ptr<FlexibleSurfaceMotion> surface_motion;
+    std::auto_ptr<MAST::FlexibleSurfaceMotion> surface_motion;
 };
 
 
 void assemble_force_vec(System& sys,
-                        SurfacePressureLoad& press,
-                        SurfaceMotionBase& motion,
-                        NumericVector<Number>& fvec);
+                        MAST::SmallDisturbanceSurfacePressure& press,
+                        MAST::SurfaceMotionBase& motion,
+                        NumericVector<Number>& fvec)
+{ }
 
 inline
 bool

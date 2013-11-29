@@ -18,7 +18,9 @@ namespace MAST {
     
     enum BoundaryConditionType {
         SURFACE_PRESSURE,
-        SMALL_DISTURBANCE_SURFACE_PRESSURE,
+        SMALL_DISTURBANCE_PRESSURE, // provides pressure perturbations about steady values
+        SMALL_DISTURBANCE_MOTION, // provides pressure and motion
+                                  //perturbations about steady state values
         PISTON_THEORY,
         DISPLACEMENT,
         SMALL_DISTURBANCE_DISPLACEMENT,

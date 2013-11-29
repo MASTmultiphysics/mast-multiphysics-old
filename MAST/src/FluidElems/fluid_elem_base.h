@@ -16,7 +16,7 @@
 // MAST includes
 #include "Numerics/fem_operator_matrix.h"
 #include "Flight/flight_condition.h"
-#include "FluidElems/surface_motion.h"
+#include "BoundaryConditions/boundary_surface_motion.h"
 
 // libMesh includes
 #include "libmesh/dense_vector.h"
@@ -115,7 +115,7 @@ public:
      *    fluid solver. This can be used to define either a time-dependent
      *    motion, or a steady-state motion.
      */
-    SurfaceMotionBase* surface_motion;
+    MAST::SurfaceMotionBase* surface_motion;
     
     FlightCondition* flight_condition;
 

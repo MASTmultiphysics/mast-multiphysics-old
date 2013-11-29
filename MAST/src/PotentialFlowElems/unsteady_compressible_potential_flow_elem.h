@@ -32,7 +32,7 @@ void init_compressible_potential_variables(EquationSystems& es,
  */
 
 class UnsteadyCompressiblePotentialFlow :
-public FEMSystem, public PotentialFlowElemBase
+public FEMSystem, public MAST::PotentialFlowElemBase
 {
 public:
     UnsteadyCompressiblePotentialFlow(EquationSystems& es,

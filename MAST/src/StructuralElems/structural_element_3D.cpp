@@ -11,7 +11,7 @@
 #include "PropertyCards/element_property_card_base.h"
 #include "Numerics/fem_operator_matrix.h"
 #include "ThermalElems/temperature_function.h"
-#include "Base/boundary_condition.h"
+#include "BoundaryConditions/boundary_condition.h"
 
 
 bool
@@ -253,6 +253,7 @@ MAST::StructuralElement3D::surface_pressure_force(bool request_jacobian,
                                                   DenseMatrix<Real> &jac,
                                                   const unsigned int side,
                                                   MAST::BoundaryCondition &p) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
     FEMOperatorMatrix Bmat;
@@ -297,7 +298,7 @@ MAST::StructuralElement3D::surface_pressure_force(bool request_jacobian,
         
         f.add(-JxW[qp], tmp_vec_n2);
     }
-    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 

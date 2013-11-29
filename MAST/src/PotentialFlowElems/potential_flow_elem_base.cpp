@@ -10,7 +10,8 @@
 // MAST includes
 #include "PotentialFlowElems/potential_flow_elem_base.h"
 
-void PotentialFlowElemBase::init_data ()
+void
+MAST::PotentialFlowElemBase::init_data ()
 {
     // Check the input file for Reynolds number, application type,
     // approximation type

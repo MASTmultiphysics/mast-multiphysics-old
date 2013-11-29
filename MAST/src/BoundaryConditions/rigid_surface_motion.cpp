@@ -7,10 +7,10 @@
 //
 
 // MAST includes
-#include "FluidElems/rigid_surface_motion.h"
+#include "BoundaryConditions/rigid_surface_motion.h"
 
 
-RigidSurfaceMotion::RigidSurfaceMotion():
+MAST::RigidSurfaceMotion::RigidSurfaceMotion():
 SurfaceMotionBase(),
 plunge_amplitude(0.),
 pitch_amplitude(0.),
@@ -19,14 +19,14 @@ pitch_phase(0.)
     
 }
 
-RigidSurfaceMotion::~RigidSurfaceMotion()
+MAST::RigidSurfaceMotion::~RigidSurfaceMotion()
 {
     
 }
 
 
 void
-RigidSurfaceMotion::zero()
+MAST::RigidSurfaceMotion::zero()
 {
     plunge_vector.zero();
     pitch_axis.zero();
@@ -41,7 +41,7 @@ RigidSurfaceMotion::zero()
 
 
 void
-RigidSurfaceMotion::init(Real freq, Real phase)
+MAST::RigidSurfaceMotion::init(Real freq, Real phase)
 {
     // make unit vectors
     if (pitch_axis.size() > 0.)
@@ -55,10 +55,10 @@ RigidSurfaceMotion::init(Real freq, Real phase)
 
 
 void
-RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
-                                                      const Point& n,
-                                                      DenseVector<Complex>& u_trans,
-                                                      DenseVector<Complex>& dn_rot)
+MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
+                                                            const Point& n,
+                                                            DenseVector<Complex>& u_trans,
+                                                            DenseVector<Complex>& dn_rot)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
@@ -96,11 +96,11 @@ RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
 
 
 void
-RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
-                                                 const Point& p,
-                                                 const Point& n,
-                                                 DenseVector<Number>& u_trans,
-                                                 DenseVector<Number>& dn_rot)
+MAST::RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
+                                                       const Point& p,
+                                                       const Point& n,
+                                                       DenseVector<Number>& u_trans,
+                                                       DenseVector<Number>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();

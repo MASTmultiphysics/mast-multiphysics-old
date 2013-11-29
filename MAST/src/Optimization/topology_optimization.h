@@ -191,7 +191,8 @@ MAST::TopologyOptimization::evaluate(const std::vector<Real>& dvars,
                                      std::vector<Real>& fvals,
                                      std::vector<bool>& eval_grads,
                                      std::vector<Real>& grads) {
- 
+ #ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    
     libmesh_assert_equal_to(dvars.size(), _mesh->n_elem());
         
     // set the parameter values equal to the DV value
@@ -228,6 +229,8 @@ MAST::TopologyOptimization::evaluate(const std::vector<Real>& dvars,
     if (eval_grads[0])
         for (unsigned int i=0; i<dvars.size(); i++)
             grads[i] = _elem_vol[i];
+
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -235,6 +238,7 @@ inline
 void
 MAST::TopologyOptimization::_init() {
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     _mesh = new SerialMesh(_libmesh_init.comm());
     _mesh->set_mesh_dimension(2);
     
@@ -356,6 +360,8 @@ MAST::TopologyOptimization::_init() {
     // now calculate relative element volumes
     for (unsigned int i=0; i<_elem_vol.size(); i++)
         _elem_vol[i] /= total_vol;
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -380,6 +386,7 @@ MAST::TopologyOptimization::output(unsigned int iter,
 
 inline void
 MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     if (qoi_indices.has_index(0)) {
         
         std::auto_ptr<NumericVector<Number> >
@@ -389,6 +396,7 @@ MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
         _system.matrix->vector_mult(*vec, *_system.solution);
         _system.qoi[0] = -1 * vec->dot(*_system.solution); // negative, since J = -K
     }
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 

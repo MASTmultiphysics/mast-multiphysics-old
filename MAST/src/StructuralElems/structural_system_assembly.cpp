@@ -10,7 +10,7 @@
 #include "StructuralElems/structural_system_assembly.h"
 #include "StructuralElems/structural_elem_base.h"
 #include "PropertyCards/element_property_card_base.h"
-#include "Base/boundary_condition.h"
+#include "BoundaryConditions/boundary_condition.h"
 
 
 MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
@@ -173,6 +173,8 @@ bool
 MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
                                                       NumericVector<Number>& sensitivity_rhs) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    
     SensitivityParameters sens_params;
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
 
@@ -196,6 +198,8 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_rhs.close();
     // currently, all relevant parameter sensitivities are calculated
     return true;
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -241,6 +245,8 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
                                                       const unsigned int i,
                                                       SparseMatrix<Number>* sensitivity_A,
                                                       SparseMatrix<Number>* sensitivity_B) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    
     SensitivityParameters sens_params;
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
     
@@ -271,87 +277,10 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_B->close();
     
     // currently, all relevant parameter sensitivities are calculated
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return true;
 }
 
-
-
-
-void
-MAST::StructuralSystemAssembly::assemble_unsteady_aerodynamic_force(NumericVector<Number> &f) {
-    
-    f.zero();
-    
-    // iterate over each element, initialize it and get the relevant
-    // analysis quantities
-    DenseVector<Real> vec, sol;
-    DenseMatrix<Real> mat;
-    std::vector<dof_id_type> dof_indices;
-    const DofMap& dof_map = _system.get_dof_map();
-    std::auto_ptr<MAST::StructuralElementBase> structural_elem;
-    
-    // create a side and volume boundary condition map for the aerodynamic forces
-    std::multimap<boundary_id_type, MAST::BoundaryCondition*>   pressure_surf_bc_map;
-    std::multimap<subdomain_id_type, MAST::BoundaryCondition*>  pressure_vol_bc_map;
-
-    // surface force map
-    {
-        std::multimap<boundary_id_type, MAST::BoundaryCondition*>::iterator it, end;
-        // add the surface forces
-        it = _side_bc_map.begin(); end = _side_bc_map.end();
-        for ( ; it != end; it++)
-            if (it->second->type() == MAST::SURFACE_PRESSURE)
-                pressure_surf_bc_map.insert(*it);
-    }
-    
-    // surface force map
-    {
-        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::iterator it, end;
-        // add the surface forces
-        it = _vol_bc_map.begin(); end = _vol_bc_map.end();
-        for ( ; it != end; it++)
-            if (it->second->type() == MAST::SURFACE_PRESSURE)
-                pressure_vol_bc_map.insert(*it);
-    }
-    
-    
-    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
-    
-    for ( ; el != end_el; ++el) {
-        
-        const Elem* elem = *el;
-        
-        dof_map.dof_indices (elem, dof_indices);
-        
-        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
-        
-        // create the structural element for analysis
-        structural_elem.reset(MAST::build_structural_element
-                              (_system, *elem, p_card).release());
-        
-        // get the solution
-        unsigned int ndofs = (unsigned int)dof_indices.size();
-        sol.resize(ndofs);
-        vec.resize(ndofs);
-        mat.resize(ndofs, ndofs);
-        
-        // now get the vector values
-        structural_elem->side_external_force(false,
-                                             vec, mat,
-                                             pressure_surf_bc_map);
-        structural_elem->volume_external_force(false,
-                                               vec, mat,
-                                               pressure_vol_bc_map);
-        
-        _system.get_dof_map().constrain_element_vector(vec, dof_indices);
-        
-        // add to the global matrices
-        f.add_vector(vec, dof_indices);
-    }
-    
-    f.close();
-}
 
 
 void
@@ -360,7 +289,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
                                                                  SparseMatrix<Number>*  J,
                                                                  NonlinearImplicitSystem& S,
                                                                  const MAST::SensitivityParameters* params) {
-    
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     DenseVector<Real> vec, sol;
@@ -437,11 +366,12 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
             _system.get_dof_map().constrain_element_vector(vec, dof_indices);
         else
             _system.get_dof_map().constrain_element_matrix(mat, dof_indices);
-
+        
         // add to the global matrices
         if (R) R->add_vector(vec, dof_indices);
         if (J) J->add_matrix(mat, dof_indices);
     }
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -451,6 +381,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
                                                                       SparseMatrix<Number>&  matrix_A,
                                                                       SparseMatrix<Number>&  matrix_B,
                                                                       const MAST::SensitivityParameters* params) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -529,6 +460,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
             matrix_B.add_matrix (mat2, dof_indices); // mass
         }
     }
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -538,6 +470,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
                                                                          SparseMatrix<Number>&  matrix_A,
                                                                          SparseMatrix<Number>&  matrix_B,
                                                                          const MAST::SensitivityParameters* params) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -629,6 +562,8 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
             matrix_B.add_matrix (mat2, dof_indices); // load dependent
         }
     }
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -701,78 +636,78 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
 
 
 
-void assemble_force_vec(System& sys,
-                             SurfacePressureLoad& surf_press,
-                             SurfaceMotionBase& surf_motion,
-                             NumericVector<Number>& fvec)
-{
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-    // Get a constant reference to the mesh object.
-    const MeshBase& mesh = sys.get_mesh();
-    
-    // The dimension that we are running.
-    const unsigned int dim = mesh.mesh_dimension();
-    
-    // A reference to the \p DofMap object for this system.  The \p DofMap
-    // object handles the index translation from node and element numbers
-    // to degree of freedom numbers.
-    const DofMap& dof_map = sys.get_dof_map();
-    std::vector<dof_id_type> dof_indices;
-
-    // The element mass and stiffness matrices.
-    DenseVector<Number>   fvec_e;
-    
-    FEType fe_type(FIRST, LAGRANGE);
-    AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-    QGauss qrule (dim, FIFTH);
-    fe->attach_quadrature_rule (&qrule);
-    const std::vector<Real>& JxW = fe->get_JxW();
-    const std::vector<Point>& q_point = fe->get_xyz();
-    const std::vector<std::vector<Real> >& phi = fe->get_phi();
-    
-    
-    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
-    Number press, dpress;
-    DenseVector<Number> utrans, dn_rot; utrans.resize(3); dn_rot.resize(3);
-    Point normal; normal.zero(); normal(dim) = -1.;
-    
-    fvec.zero(); fvec.close();
-    
-    for ( ; el != end_el; ++el)
-    {
-        dof_map.dof_indices (*el, dof_indices);
-        fvec_e.resize (dof_indices.size());
-        fe->reinit (*el);
-        for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-        {
-            surf_press.surface_pressure(q_point[qp], press, dpress);
-            surf_motion.surface_velocity_frequency_domain(q_point[qp], normal,
-                                                          utrans, dn_rot);
-//            press = 0.;
-//            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
-//            std::cout << q_point[qp](0)
-//            << "  " << std::real(utrans(1))
-//            << "  " << std::imag(utrans(1))
-//            << "  " << std::real(dn_rot(0))
-//            << "  " << std::imag(dn_rot(0))
-//            << "  " << std::real(press)
-//            << "  " << std::imag(press)
-//            << "  " << std::real(dpress)
-//            << "  " << std::imag(dpress) << std::endl;
-            
-            for (unsigned int i=0; i<3; i++)
-                for (unsigned int iphi=0; iphi<phi.size(); iphi++)
-                    fvec_e(i*phi.size()+iphi) += JxW[qp] * phi[iphi][qp] *
-                    ( press * dn_rot(i) + // steady pressure
-                     dpress * normal(i)); // unsteady pressure
-        }
-        
-        fvec.add_vector (fvec_e, dof_indices);
-    }
-    fvec.close();
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
-}
+//void assemble_force_vec(System& sys,
+//                        MAST::SmallDisturbanceSurfacePressure& press,
+//                        MAST::SurfaceMotionBase& motion,
+//                        NumericVector<Number>& fvec)
+//{
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//    // Get a constant reference to the mesh object.
+//    const MeshBase& mesh = sys.get_mesh();
+//    
+//    // The dimension that we are running.
+//    const unsigned int dim = mesh.mesh_dimension();
+//    
+//    // A reference to the \p DofMap object for this system.  The \p DofMap
+//    // object handles the index translation from node and element numbers
+//    // to degree of freedom numbers.
+//    const DofMap& dof_map = sys.get_dof_map();
+//    std::vector<dof_id_type> dof_indices;
+//
+//    // The element mass and stiffness matrices.
+//    DenseVector<Number>   fvec_e;
+//    
+//    FEType fe_type(FIRST, LAGRANGE);
+//    AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+//    QGauss qrule (dim, FIFTH);
+//    fe->attach_quadrature_rule (&qrule);
+//    const std::vector<Real>& JxW = fe->get_JxW();
+//    const std::vector<Point>& q_point = fe->get_xyz();
+//    const std::vector<std::vector<Real> >& phi = fe->get_phi();
+//    
+//    
+//    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+//    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+//    Number press, dpress;
+//    DenseVector<Number> utrans, dn_rot; utrans.resize(3); dn_rot.resize(3);
+//    Point normal; normal.zero(); normal(dim) = -1.;
+//    
+//    fvec.zero(); fvec.close();
+//    
+//    for ( ; el != end_el; ++el)
+//    {
+//        dof_map.dof_indices (*el, dof_indices);
+//        fvec_e.resize (dof_indices.size());
+//        fe->reinit (*el);
+//        for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+//        {
+//            surf_press.surface_pressure(q_point[qp], press, dpress);
+//            surf_motion.surface_velocity_frequency_domain(q_point[qp], normal,
+//                                                          utrans, dn_rot);
+////            press = 0.;
+////            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
+////            std::cout << q_point[qp](0)
+////            << "  " << std::real(utrans(1))
+////            << "  " << std::imag(utrans(1))
+////            << "  " << std::real(dn_rot(0))
+////            << "  " << std::imag(dn_rot(0))
+////            << "  " << std::real(press)
+////            << "  " << std::imag(press)
+////            << "  " << std::real(dpress)
+////            << "  " << std::imag(dpress) << std::endl;
+//            
+//            for (unsigned int i=0; i<3; i++)
+//                for (unsigned int iphi=0; iphi<phi.size(); iphi++)
+//                    fvec_e(i*phi.size()+iphi) += JxW[qp] * phi[iphi][qp] *
+//                    ( press * dn_rot(i) + // steady pressure
+//                     dpress * normal(i)); // unsteady pressure
+//        }
+//        
+//        fvec.add_vector (fvec_e, dof_indices);
+//    }
+//    fvec.close();
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//}
 
 
 

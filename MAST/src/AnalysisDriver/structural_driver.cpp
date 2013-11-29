@@ -17,7 +17,7 @@
 #include "PropertyCards/element_property_card_1D.h"
 #include "PropertyCards/material_property_card_base.h"
 #include "Optimization/gcmma_optimization_interface.h"
-#include "Base/boundary_condition.h"
+#include "BoundaryConditions/boundary_condition.h"
 #include "Optimization/topology_optimization.h"
 #include "Mesh/mesh_initializer.h"
 #include "Mesh/panel_mesh.h"

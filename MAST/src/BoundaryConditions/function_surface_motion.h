@@ -13,86 +13,89 @@
 #include <functional>
 
 // MAST includes
-#include "FluidElems/surface_motion.h"
+#include "BoundaryConditions/boundary_surface_motion.h"
 
-class SurfaceMotionFunction: public SurfaceMotionBase
-{
-public:
-    SurfaceMotionFunction();
+namespace MAST {
     
-    virtual ~SurfaceMotionFunction();
+    class SurfaceMotionFunction: public MAST::SurfaceMotionBase
+    {
+    public:
+        SurfaceMotionFunction();
         
-    /*!
-     *   The functors that provide the velocity and displacement derivative with
-     *   respect to each spatial coordinate.
-     */
-//    virtual void init(std::function<Point(const Point &p, const Real t)> wdot,
-//                      std::function<Point(const Point &p, const Real t)> dwdx,
-//                      std::function<Point(const Point &p, const Real t)> dwdy,
-//                      std::function<Point(const Point &p, const Real t)> dwdz){
-//        _wdot = wdot;
-//        _dwdx = dwdx;
-//        _dwdy = dwdy;
-//        _dwdz = dwdz;
-//    }
-    
-    
-    /*!
-     *   calculation of surface velocity in frequency domain. \p u_trans is
-     *   the pure translation velocity component, while \p dn_rot defines the
-     *   surface normal perturbation
-     */
-    virtual void surface_velocity_frequency_domain(const Point& p,
-                                                   const Point& n,
-                                                   DenseVector<Complex>& u_trans,
-                                                   DenseVector<Complex>& dn_rot);
-    
-    /*!
-     *   calculation of surface velocity in time domain. \p u_trans is
-     *   the pure translation velocity component, while \p dn_rot defines the
-     *   surface normal perturbation
-     */
-    virtual void surface_velocity_time_domain(const Real t,
-                                              const Point& p,
-                                              const Point& n,
-                                              DenseVector<Number>& u_trans,
-                                              DenseVector<Number>& dn_rot);
-    
-protected:
-    
-//    /*!
-//     *   surface velocity functor
-//     */
-//    std::function<Point(const Point &p, const Real t)> _wdot;
-//
-//    /*!
-//     *   surface displacement gradient with respect to x-coordinate
-//     */
-//    std::function<Point(const Point &p, const Real t)> _dwdx;
-//
-//    /*!
-//     *   surface displacement gradient with respect to y-coordinate
-//     */
-//    std::function<Point(const Point &p, const Real t)> _dwdy;
-//
-//    /*!
-//     *   surface displacement gradient with respect to z-coordinate
-//     */
-//    std::function<Point(const Point &p, const Real t)> _dwdz;
-
-};
+        virtual ~SurfaceMotionFunction();
+        
+        /*!
+         *   The functors that provide the velocity and displacement derivative with
+         *   respect to each spatial coordinate.
+         */
+        //    virtual void init(std::function<Point(const Point &p, const Real t)> wdot,
+        //                      std::function<Point(const Point &p, const Real t)> dwdx,
+        //                      std::function<Point(const Point &p, const Real t)> dwdy,
+        //                      std::function<Point(const Point &p, const Real t)> dwdz){
+        //        _wdot = wdot;
+        //        _dwdx = dwdx;
+        //        _dwdy = dwdy;
+        //        _dwdz = dwdz;
+        //    }
+        
+        
+        /*!
+         *   calculation of surface velocity in frequency domain. \p u_trans is
+         *   the pure translation velocity component, while \p dn_rot defines the
+         *   surface normal perturbation
+         */
+        virtual void surface_velocity_frequency_domain(const Point& p,
+                                                       const Point& n,
+                                                       DenseVector<Complex>& u_trans,
+                                                       DenseVector<Complex>& dn_rot);
+        
+        /*!
+         *   calculation of surface velocity in time domain. \p u_trans is
+         *   the pure translation velocity component, while \p dn_rot defines the
+         *   surface normal perturbation
+         */
+        virtual void surface_velocity_time_domain(const Real t,
+                                                  const Point& p,
+                                                  const Point& n,
+                                                  DenseVector<Number>& u_trans,
+                                                  DenseVector<Number>& dn_rot);
+        
+    protected:
+        
+        //    /*!
+        //     *   surface velocity functor
+        //     */
+        //    std::function<Point(const Point &p, const Real t)> _wdot;
+        //
+        //    /*!
+        //     *   surface displacement gradient with respect to x-coordinate
+        //     */
+        //    std::function<Point(const Point &p, const Real t)> _dwdx;
+        //
+        //    /*!
+        //     *   surface displacement gradient with respect to y-coordinate
+        //     */
+        //    std::function<Point(const Point &p, const Real t)> _dwdy;
+        //
+        //    /*!
+        //     *   surface displacement gradient with respect to z-coordinate
+        //     */
+        //    std::function<Point(const Point &p, const Real t)> _dwdz;
+        
+    };
+}
 
 
 inline
-SurfaceMotionFunction::SurfaceMotionFunction():
-SurfaceMotionBase()
+MAST::SurfaceMotionFunction::SurfaceMotionFunction():
+MAST::SurfaceMotionBase()
 {
     
 }
 
 
 inline
-SurfaceMotionFunction::~SurfaceMotionFunction()
+MAST::SurfaceMotionFunction::~SurfaceMotionFunction()
 {
     
 }
@@ -102,10 +105,10 @@ SurfaceMotionFunction::~SurfaceMotionFunction()
 
 
 inline void
-SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
-                                                      const Point& n,
-                                                      DenseVector<Complex>& u_trans,
-                                                      DenseVector<Complex>& dn_rot)
+MAST::SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
+                                                               const Point& n,
+                                                               DenseVector<Complex>& u_trans,
+                                                               DenseVector<Complex>& dn_rot)
 {
     libmesh_assert(false); // to be implemented
 }
@@ -113,11 +116,11 @@ SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
 
 
 inline void
-SurfaceMotionFunction::surface_velocity_time_domain(const Real t,
-                                                 const Point& p,
-                                                 const Point& n,
-                                                 DenseVector<Number>& u_trans,
-                                                 DenseVector<Number>& dn_rot)
+MAST::SurfaceMotionFunction::surface_velocity_time_domain(const Real t,
+                                                          const Point& p,
+                                                          const Point& n,
+                                                          DenseVector<Number>& u_trans,
+                                                          DenseVector<Number>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();

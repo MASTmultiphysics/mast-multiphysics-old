@@ -60,11 +60,11 @@ protected:
 };
 
 
-class RinglebSurfaceNormalCorrection: public SurfaceMotionBase
+class RinglebSurfaceNormalCorrection: public MAST::SurfaceMotionBase
 {
 public:
     RinglebSurfaceNormalCorrection(Real x0, Real x1, Real h):
-    SurfaceMotionBase(),
+    MAST::SurfaceMotionBase(),
     _x0(x0),
     _x1(x1),
     _h(h)

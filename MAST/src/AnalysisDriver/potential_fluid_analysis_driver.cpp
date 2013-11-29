@@ -11,7 +11,7 @@
 
 // MAST includes
 #include "PotentialFlowElems/unsteady_compressible_potential_flow_elem.h"
-#include "FluidElems/surface_motion_function.h"
+#include "BoundaryConditions/function_surface_motion.h"
 #include "Solvers/residual_based_adaptive_time_solver.h"
 #include "Mesh/panel_mesh.h"
 #include "Mesh/ramp_mesh.h"
@@ -276,9 +276,6 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
     
     equation_systems.init ();
     
-#else
-    
-#endif
     
     
     system.print_residual_norms = infile("print_residual_norms", false);
@@ -439,9 +436,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
         
         // Advance to the next timestep in a transient problem
         system.time_solver->advance_timestep();
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
         sol_norm = timesolver->_x_dot_norm_old;
-#endif
         
         // check for termination criteria
         t_step++;
@@ -508,7 +503,6 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
         
     }
     
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     MeshSerializer serializer(mesh);
     XdrIO xdr(mesh, true);
     xdr.set_write_parallel(false);

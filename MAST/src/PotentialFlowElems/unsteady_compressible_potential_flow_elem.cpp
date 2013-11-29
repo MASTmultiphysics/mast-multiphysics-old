@@ -8,6 +8,7 @@
 
 // MAST includes
 #include "PotentialFlowElems/unsteady_compressible_potential_flow_elem.h"
+#include "BoundaryConditions/boundary_surface_motion.h"
 
 // libMesh includes
 #include "libmesh/string_to_enum.h"
@@ -54,6 +55,7 @@ Real unsteady_compressible_potential_solution_value(const Point& p,
 void init_compressible_potential_variables(EquationSystems& es,
                                            const std::string& system_name)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // It is a good idea to make sure we are initializing
     // the proper system.
     libmesh_assert_equal_to (system_name, "UnsteadyCompressiblePotentialSystem");
@@ -67,6 +69,7 @@ void init_compressible_potential_variables(EquationSystems& es,
     
     system.project_solution(unsteady_compressible_potential_solution_value,
                             NULL, es.parameters);
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -148,6 +151,8 @@ void UnsteadyCompressiblePotentialFlow::init_context(DiffContext &context)
 bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_jacobian,
                                                                  DiffContext &context)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     FEBase* elem_fe;
@@ -312,6 +317,7 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
     //        Kmat.print(std::cout);
     
     return request_jacobian;
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -321,6 +327,7 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
 bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacobian,
                                                               DiffContext &context)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
@@ -521,6 +528,7 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
     //    if (request_jacobian && c.elem_solution_derivative)
     //        Kmat.print(std::cout);
     
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return request_jacobian;
 }
 
@@ -528,6 +536,7 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
 bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
                                                        DiffContext &context)
 {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     FEBase* elem_fe;
@@ -609,6 +618,7 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
     //    if (request_jacobian && c.elem_solution_derivative)
     //        Kmat.print(std::cout);
     
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return request_jacobian;
 }
 

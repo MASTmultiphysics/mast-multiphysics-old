@@ -18,60 +18,61 @@
 #include "FluidElems/fluid_elem_base.h"
 
 
-enum PotentialFlowVars
-{ RHO, PHI };
-
-
-// Forward declerations
-class SurfaceMotionBase;
-
-
-/*!
- *    Provides the base class for potential flow equations
- */
-class PotentialFlowElemBase
-{
-public:
-    // Constructor
-    PotentialFlowElemBase(GetPot& infile):
-    surface_motion(NULL),
-    flight_condition(NULL),
-    dim(0),
-    _infile(infile)
-    { }
+namespace MAST {
     
-    virtual ~PotentialFlowElemBase()
-    { }
-
-    void init_data();
-
-    /*!
-     *   flight condition for analysis
-     */
-    FlightCondition* flight_condition;
+    enum PotentialFlowVars
+    { RHO, PHI };
     
-    SurfaceMotionBase* surface_motion;
+    // Forward declerations
+    class SurfaceMotionBase;
     
-protected:
-
-    /*!
-     *   Input source for this class
-     */
-    GetPot& _infile;
-
-    /*!
-     *   flight condition for analysis
-     */
-    unsigned int dim;
     
     /*!
-     *    map of boundary ids and boundary condition
+     *    Provides the base class for potential flow equations
      */
-    std::multimap<unsigned int, FluidBoundaryConditionType> _boundary_condition;
-
-};
-
-
+    class PotentialFlowElemBase
+    {
+    public:
+        // Constructor
+        PotentialFlowElemBase(GetPot& infile):
+        surface_motion(NULL),
+        flight_condition(NULL),
+        dim(0),
+        _infile(infile)
+        { }
+        
+        virtual ~PotentialFlowElemBase()
+        { }
+        
+        void init_data();
+        
+        /*!
+         *   flight condition for analysis
+         */
+        FlightCondition* flight_condition;
+        
+        MAST::SurfaceMotionBase* surface_motion;
+        
+    protected:
+        
+        /*!
+         *   Input source for this class
+         */
+        GetPot& _infile;
+        
+        /*!
+         *   flight condition for analysis
+         */
+        unsigned int dim;
+        
+        /*!
+         *    map of boundary ids and boundary condition
+         */
+        std::multimap<unsigned int, FluidBoundaryConditionType> _boundary_condition;
+        
+    };
+    
+}
 
 
 #endif /* defined(__MAST__potential_flow_elem_base__) */

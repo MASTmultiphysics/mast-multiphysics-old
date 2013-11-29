@@ -14,7 +14,7 @@
 
 // MAST includes
 #include "Aeroelasticity/structural_model.h"
-#include "StructuralElems/surface_pressure_load.h"
+#include "BoundaryConditions/surface_pressure.h"
 #include "Numerics/basis_matrix.h"
 
 

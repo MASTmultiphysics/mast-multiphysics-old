@@ -12,7 +12,7 @@
 #include "PropertyCards/element_property_card_2D.h"
 #include "Numerics/fem_operator_matrix.h"
 #include "ThermalElems/temperature_function.h"
-#include "Base/boundary_condition.h"
+#include "BoundaryConditions/boundary_condition.h"
 
 
 void

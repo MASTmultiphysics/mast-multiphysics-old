@@ -15,7 +15,7 @@
 // MAST includes
 #include "Aeroelasticity/aerodynamic_model.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
-#include "FluidElems/flexible_surface_motion.h"
+#include "BoundaryConditions/flexible_surface_motion.h"
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 

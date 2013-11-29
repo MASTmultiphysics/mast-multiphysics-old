@@ -125,11 +125,6 @@ namespace MAST
                                             SparseMatrix<Number>*  J,
                                             NonlinearImplicitSystem& S);
         
-        /*!
-         *    assembly of the aerodynamic force vector
-         */
-        virtual void assemble_unsteady_aerodynamic_force(NumericVector<Number>& f);
-        
         /**
          * Assembly function.  This function will be called
          * to assemble the sensitivity of system residual prior to a solve and must

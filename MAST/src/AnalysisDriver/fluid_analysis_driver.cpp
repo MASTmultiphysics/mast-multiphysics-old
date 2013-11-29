@@ -15,9 +15,9 @@
 #include "Solvers/residual_based_adaptive_time_solver.h"
 #include "FluidElems/aerodynamic_qoi.h"
 #include "FluidElems/fluid_newton_solver.h"
-#include "FluidElems/rigid_surface_motion.h"
-#include "FluidElems/flexible_surface_motion.h"
-#include "FluidElems/surface_motion_function.h"
+#include "BoundaryConditions/rigid_surface_motion.h"
+#include "BoundaryConditions/flexible_surface_motion.h"
+#include "BoundaryConditions/function_surface_motion.h"
 #include "Mesh/panel_mesh.h"
 #include "Mesh/gaussian_bump_mesh.h"
 #include "Mesh/ringleb_mesh.h"
@@ -430,7 +430,7 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
     system.localize_fluid_solution();
     
     // initialize the surface motion definition
-    std::auto_ptr<RigidSurfaceMotion> surface_motion(new RigidSurfaceMotion);
+    std::auto_ptr<MAST::RigidSurfaceMotion> surface_motion(new MAST::RigidSurfaceMotion);
     system.perturbed_surface_motion = surface_motion.get();
     
     surface_motion->pitch_amplitude = infile("pitch_ampl",0.);

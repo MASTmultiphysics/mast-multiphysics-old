@@ -61,7 +61,7 @@ public:
      *   this defines the small disturbance surface motion on top of the 
      *   steady surface motion that the body might have seen.
      */
-    SurfaceMotionBase* perturbed_surface_motion;
+    MAST::SurfaceMotionBase* perturbed_surface_motion;
     
 protected:
     

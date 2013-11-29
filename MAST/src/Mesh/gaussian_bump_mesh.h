@@ -12,7 +12,7 @@
 
 // MAST includes
 #include "Mesh/mesh_initializer.h"
-#include "FluidElems/surface_motion.h"
+#include "BoundaryConditions/boundary_surface_motion.h"
 
 
 class GaussianBumpMesh2D: public MeshInitializer
@@ -102,11 +102,11 @@ protected:
 
 
 
-class GaussianBumpSurfaceNormalCorrection2D: public SurfaceMotionBase
+class GaussianBumpSurfaceNormalCorrection2D: public MAST::SurfaceMotionBase
 {
 public:
     GaussianBumpSurfaceNormalCorrection2D(Real x0, Real x1, Real h):
-    SurfaceMotionBase(),
+    MAST::SurfaceMotionBase(),
     _x0(x0),
     _x1(x1),
     _h(h)
