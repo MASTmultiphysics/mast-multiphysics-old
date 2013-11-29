@@ -210,14 +210,17 @@ namespace MAST {
         const MAST::SensitivityParameters* sensitivity_params;
         
         
-        virtual void transform_to_global_system(const DenseMatrix<Real>& local_mat,
-                                                DenseMatrix<Real>& global_mat) const;
+        template <typename ValType>
+        void transform_to_global_system(const DenseMatrix<ValType>& local_mat,
+                                                DenseMatrix<ValType>& global_mat) const;
         
-        virtual void transform_to_local_system(const DenseVector<Real>& global_vec,
-                                               DenseVector<Real>& local_vec) const;
+        template <typename ValType>
+        void transform_to_local_system(const DenseVector<ValType>& global_vec,
+                                       DenseVector<ValType>& local_vec) const;
         
-        virtual void transform_to_global_system(const DenseVector<Real>& local_vec,
-                                                DenseVector<Real>& global_vec) const;
+        template <typename ValType>
+        void transform_to_global_system(const DenseVector<ValType>& local_vec,
+                                        DenseVector<ValType>& global_vec) const;
         
     protected:
 
@@ -253,44 +256,50 @@ namespace MAST {
                                             DenseVector<Real>& f,
                                             DenseMatrix<Real>& jac,
                                             const unsigned int side,
-                                            MAST::BoundaryCondition& p) = 0;
+                                            MAST::BoundaryCondition& p);
 
         
         /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         *    this should be implemented for each element type
+         *    Calculates the force vector and Jacobian due to surface pressure 
+         *    applied on the entire element domain. This is applicable for
+         *    only 1D and 2D elements.
          */
         virtual bool surface_pressure_force(bool request_jacobian,
                                             DenseVector<Real>& f,
                                             DenseMatrix<Real>& jac,
-                                            MAST::BoundaryCondition& p)
-        {
-            libmesh_error();
-            return false;
-        }
+                                            MAST::BoundaryCondition& p);
 
         
         /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         *    this should be implemented for each element type
+         *    Calculates the force vector and Jacobian due to small 
+         *    perturbation surface pressure.
          */
-        virtual bool surface_unsteady_pressure_force(DenseVector<Number>& f,
-                                                     MAST::BoundaryCondition& p)
-        {
-            libmesh_error();
-            return false;
-        }
+        virtual bool small_disturbance_surface_pressure_force(bool request_jacobian,
+                                                              DenseVector<Number>& f,
+                                                              DenseMatrix<Number>& jac,
+                                                              const unsigned int side,
+                                                              MAST::BoundaryCondition& p);
+        
+        
+        /*!
+         *    Calculates the force vector and Jacobian due to surface pressure
+         *    applied on the entire element domain. This is applicable for
+         *    only 1D and 2D elements.
+         */
+        virtual bool small_disturbance_surface_pressure_force(bool request_jacobian,
+                                                              DenseVector<Number>& f,
+                                                              DenseMatrix<Number>& jac,
+                                                              MAST::BoundaryCondition& p);
 
         
         /*!
          *    Calculates the force vector and Jacobian due to surface pressure.
-         *    this should be implemented for each element type
          */
         virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
                                                         DenseVector<Real>& f,
                                                         DenseMatrix<Real>& jac,
                                                         const unsigned int side,
-                                                        MAST::BoundaryCondition& p) = 0;
+                                                        MAST::BoundaryCondition& p);
         
         
         /*!
@@ -300,11 +309,7 @@ namespace MAST {
         virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
                                                         DenseVector<Real>& f,
                                                         DenseMatrix<Real>& jac,
-                                                        MAST::BoundaryCondition& p)
-        {
-            libmesh_error();
-            return false;
-        }
+                                                        MAST::BoundaryCondition& p);
 
         
         /*!

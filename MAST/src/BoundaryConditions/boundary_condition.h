@@ -9,9 +9,15 @@
 #ifndef __MAST_boundary_condition_h__
 #define __MAST_boundary_condition_h__
 
+// C++ includes
+#include <memory>
 
 // libMesh includes
 #include "libmesh/function_base.h"
+
+// MAST includes
+#include "Base/MAST_data_types.h"
+
 
 
 namespace MAST {
@@ -65,6 +71,14 @@ namespace MAST {
         
         libMesh::FunctionBase<Number>* _function;
     };
+    
+    
+    /*!
+     *    builds a boundary condition object and returns it in a smart-pointer
+     *    object
+     */
+    std::auto_ptr<MAST::BoundaryCondition>
+    build_boundary_condition(MAST::BoundaryConditionType t);
 }
 
 

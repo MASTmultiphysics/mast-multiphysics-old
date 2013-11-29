@@ -91,25 +91,6 @@ namespace MAST {
         virtual bool thermal_force_sensitivity(bool request_jacobian,
                                                DenseVector<Real>& f,
                                                DenseMatrix<Real>& jac);
-
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
-                                            const unsigned int side,
-                                            MAST::BoundaryCondition& p);
-        
-        
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
-                                                        const unsigned int side,
-                                                        MAST::BoundaryCondition& p);
         
         /*!
          *   initialize strain operator matrix

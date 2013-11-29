@@ -186,41 +186,6 @@ namespace MAST {
                                                DenseMatrix<Real>& jac);
         
         /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
-                                            const unsigned int side,
-                                            MAST::BoundaryCondition& p);
-        
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
-                                            MAST::BoundaryCondition& p);
-        
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
-                                                        const unsigned int side,
-                                                        MAST::BoundaryCondition& p);
-        
-        /*!
-         *    Calculates the force vector and Jacobian due to surface pressure.
-         */
-        virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
-                                                        MAST::BoundaryCondition& p);
-        
-        
-        /*!
          *   initialize membrane strain operator matrix
          */
         virtual void initialize_direct_strain_operator(const unsigned int qp,

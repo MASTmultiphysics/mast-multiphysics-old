@@ -27,12 +27,19 @@
 
 namespace MAST {
     
-    class SurfacePressure: MAST::BoundaryCondition {
+    class SurfacePressure: public MAST::BoundaryCondition {
+    public:
+        SurfacePressure():
+        MAST::BoundaryCondition(MAST::SURFACE_PRESSURE)
+        { }
+        
+        virtual ~SurfacePressure()
+        { }
         
     };
     
     
-    class SmallDisturbanceSurfacePressure: MAST::BoundaryCondition
+    class SmallDisturbanceSurfacePressure: public MAST::BoundaryCondition
     {
     public:
         SmallDisturbanceSurfacePressure(System& nl_sys,

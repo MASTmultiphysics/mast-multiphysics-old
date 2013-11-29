@@ -19,6 +19,7 @@
 #include "ThermalElems/temperature_function.h"
 #include "Numerics/sensitivity_parameters.h"
 #include "BoundaryConditions/boundary_condition.h"
+#include "BoundaryConditions/small_disturbance_motion.h"
 
 
 MAST::StructuralElementBase::StructuralElementBase(System& sys,
@@ -442,16 +443,378 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
 
 
 
+bool
+MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
+                                                    DenseVector<Real> &f,
+                                                    DenseMatrix<Real> &jac,
+                                                    const unsigned int side,
+                                                    MAST::BoundaryCondition &p) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    
+    FEMOperatorMatrix Bmat;
+    
+    // get the function from this boundary condition
+    libMesh::FunctionBase<Number>& func = p.function();
+    std::auto_ptr<FEBase> fe;
+    std::auto_ptr<QBase> qrule;
+    _get_side_fe_and_qrule(this->local_elem(), side, fe, qrule);
+    
+    const std::vector<Real> &JxW = fe->get_JxW();
+    
+    // Physical location of the quadrature points
+    const std::vector<Point>& qpoint = fe->get_xyz();
+    const std::vector<std::vector<Real> >& phi = fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size();
+    const unsigned int n1=3, n2=6*n_phi;
+    
+    // boundary normals
+    const std::vector<Point>& face_normals = fe->get_normals();
+    Real press;
+    
+    DenseVector<Real> phi_vec, force, local_f, tmp_vec_n2;
+    phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
+    tmp_vec_n2.resize(n2);
+    
+    for (unsigned int qp=0; qp<qpoint.size(); qp++)
+    {
+        // now set the shape function values
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];
+        
+        Bmat.reinit(2*n1, phi_vec);
+        
+        // get pressure value
+        press = func(qpoint[qp], _system.time);
+        
+        // calculate force
+        for (unsigned int i_dim=0; i_dim<n1; i_dim++)
+            force(i_dim) = press * face_normals[qp](i_dim);
+        
+        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        
+        local_f.add(-JxW[qp], tmp_vec_n2);
+    }
+    
+    // now transform to the global system and add
+    if (_elem.dim() < 3) {
+        transform_to_global_system(local_f, tmp_vec_n2);
+        f.add(1., tmp_vec_n2);
+    }
+    else
+        f.add(1., local_f);
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+    return (request_jacobian && follower_forces);
+}
+
+
+
+
+bool
+MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
+                                                    DenseVector<Real> &f,
+                                                    DenseMatrix<Real> &jac,
+                                                    MAST::BoundaryCondition &p) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+    libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    
+    FEMOperatorMatrix Bmat;
+    
+    // get the function from this boundary condition
+    libMesh::FunctionBase<Number>& func = p.function();
+    const std::vector<Real> &JxW = _fe->get_JxW();
+    
+    // Physical location of the quadrature points
+    const std::vector<Point>& qpoint = _fe->get_xyz();
+    const std::vector<std::vector<Real> >& phi = _fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size();
+    const unsigned int n1=3, n2=6*n_phi;
+    
+    // normal for face integration
+    Point normal;
+    // direction of pressure assumed to be normal (along local z-axis)
+    // to the element face for 2D and along local y-axis for 1D element.
+    normal(_elem.dim()) = 1.;
+    
+    Real press;
+    
+    DenseVector<Real> phi_vec, force, local_f, tmp_vec_n2;
+    phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
+    tmp_vec_n2.resize(n2);
+    
+    for (unsigned int qp=0; qp<qpoint.size(); qp++)
+    {
+        // now set the shape function values
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];
+        
+        Bmat.reinit(2*n1, phi_vec);
+        
+        // get pressure value
+        press = func(qpoint[qp], _system.time);
+        
+        // calculate force
+        for (unsigned int i_dim=0; i_dim<n1; i_dim++)
+            force(i_dim) = press * normal(i_dim);
+        
+        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        
+        local_f.add(-JxW[qp], tmp_vec_n2);
+    }
+    
+    // now transform to the global system and add
+    transform_to_global_system(local_f, tmp_vec_n2);
+    f.add(1., tmp_vec_n2);
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+    return (request_jacobian && follower_forces);
+}
+
+
+bool
+MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
+                                                                      DenseVector<Number> &f,
+                                                                      DenseMatrix<Number> &jac,
+                                                                      const unsigned int side,
+                                                                      MAST::BoundaryCondition &p) {
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
+    
+    MAST::SmallDisturbanceMotion& sd_motion = dynamic_cast<MAST::SmallDisturbanceMotion&>(p);
+    MAST::SurfaceMotionBase& surf_motion = sd_motion.get_deformation();
+    MAST::SmallDisturbanceSurfacePressure& surf_press = sd_motion.get_pressure();
+    
+    FEMOperatorMatrix Bmat;
+    
+    // get the function from this boundary condition
+    std::auto_ptr<FEBase> fe;
+    std::auto_ptr<QBase> qrule;
+    _get_side_fe_and_qrule(this->local_elem(), side, fe, qrule);
+    
+    const std::vector<Real> &JxW = fe->get_JxW();
+    
+    // Physical location of the quadrature points
+    const std::vector<Point>& qpoint = fe->get_xyz();
+    const std::vector<std::vector<Real> >& phi = fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size();
+    const unsigned int n1=3, n2=6*n_phi;
+    
+    // boundary normals
+    const std::vector<Point>& face_normals = fe->get_normals();
+    
+    Number press, dpress;
+    DenseVector<Real> phi_vec;
+    DenseVector<Number> utrans, dn_rot, force, local_f, tmp_vec_n2;
+    utrans.resize(3); dn_rot.resize(3);
+    phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
+    tmp_vec_n2.resize(n2);
+    
+    for (unsigned int qp=0; qp<qpoint.size(); qp++)
+    {
+        // now set the shape function values
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];
+        
+        Bmat.reinit(2*n1, phi_vec);
+
+        // get pressure and deformation information
+        surf_press.surface_pressure(qpoint[qp], press, dpress);
+        surf_motion.surface_velocity_frequency_domain(qpoint[qp], face_normals[qp],
+                                                      utrans, dn_rot);
+        
+        //            press = 0.;
+        //            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
+        //            std::cout << q_point[qp](0)
+        //            << "  " << std::real(utrans(1))
+        //            << "  " << std::imag(utrans(1))
+        //            << "  " << std::real(dn_rot(0))
+        //            << "  " << std::imag(dn_rot(0))
+        //            << "  " << std::real(press)
+        //            << "  " << std::imag(press)
+        //            << "  " << std::real(dpress)
+        //            << "  " << std::imag(dpress) << std::endl;
+
+        // calculate force
+        for (unsigned int i_dim=0; i_dim<n1; i_dim++)
+            force(i_dim) =  ( press * dn_rot(i_dim) + // steady pressure
+                             dpress * face_normals[qp](i_dim)); // unsteady pressure
+
+        
+        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        
+        local_f.add(-JxW[qp], tmp_vec_n2);
+    }
+    
+    // now transform to the global system and add
+    if (_elem.dim() < 3) {
+        transform_to_global_system(local_f, tmp_vec_n2);
+        f.add(1., tmp_vec_n2);
+    }
+    else
+        f.add(1., local_f);
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+    return (request_jacobian && follower_forces);
+}
+
+
+
+
+bool
+MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
+                                                                      DenseVector<Number> &f,
+                                                                      DenseMatrix<Number> &jac,
+                                                                      MAST::BoundaryCondition &p) {
+#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements.
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
+
+    MAST::SmallDisturbanceMotion& sd_motion = dynamic_cast<MAST::SmallDisturbanceMotion&>(p);
+    MAST::SurfaceMotionBase& surf_motion = sd_motion.get_deformation();
+    MAST::SmallDisturbanceSurfacePressure& surf_press = sd_motion.get_pressure();
+
+    FEMOperatorMatrix Bmat;
+    
+    // get the function from this boundary condition
+    const std::vector<Real> &JxW = _fe->get_JxW();
+    
+    // Physical location of the quadrature points
+    const std::vector<Point>& qpoint = _fe->get_xyz();
+    const std::vector<std::vector<Real> >& phi = _fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size();
+    const unsigned int n1=3, n2=6*n_phi;
+    
+    // normal for face integration
+    Point normal;
+    // direction of pressure assumed to be normal (along local z-axis)
+    // to the element face for 2D and along local y-axis for 1D element.
+    normal(_elem.dim()) = 1.;
+    
+    Number press, dpress;
+    DenseVector<Real> phi_vec;
+    DenseVector<Number> utrans, dn_rot, force, local_f, tmp_vec_n2;
+    utrans.resize(3); dn_rot.resize(3);
+    phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
+    tmp_vec_n2.resize(n2);
+    
+    for (unsigned int qp=0; qp<qpoint.size(); qp++)
+    {
+        // now set the shape function values
+        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+            phi_vec(i_nd) = phi[i_nd][qp];
+        
+        Bmat.reinit(2*n1, phi_vec);
+        
+        // get pressure and deformation information
+        surf_press.surface_pressure(qpoint[qp], press, dpress);
+        surf_motion.surface_velocity_frequency_domain(qpoint[qp], normal,
+                                                      utrans, dn_rot);
+        
+        // calculate force
+        for (unsigned int i_dim=0; i_dim<n1; i_dim++)
+            force(i_dim) = ( press * dn_rot(i_dim) + // steady pressure
+                            dpress * normal(i_dim)); // unsteady pressure
+        
+        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        
+        local_f.add(-JxW[qp], tmp_vec_n2);
+    }
+    
+    // now transform to the global system and add
+    transform_to_global_system(local_f, tmp_vec_n2);
+    f.add(1., tmp_vec_n2);
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+    return (request_jacobian && follower_forces);
+}
+
+
+
+bool
+MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jacobian,
+                                                                DenseVector<Real> &f,
+                                                                DenseMatrix<Real> &jac,
+                                                                const unsigned int side,
+                                                                MAST::BoundaryCondition &p) {
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    
+    // currently not implemented.
+    return false;
+    
+    // this should be true if the function is called
+    libmesh_assert(this->sensitivity_params);
+    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
+    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+    
+    // check if the material property or the provided exterior
+    // values, like temperature, are functions of the sensitivity parameter
+    bool calculate = false;
+    if (_temperature)
+        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    
+    // nothing to be calculated if the element does not depend on the
+    // sensitivity parameter.
+    if (!calculate)
+        return false;
+    
+    
+    return (request_jacobian && follower_forces);
+}
+
+
+
+
+bool
+MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jacobian,
+                                                                DenseVector<Real> &f,
+                                                                DenseMatrix<Real> &jac,
+                                                                MAST::BoundaryCondition &p) {
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    
+    // currently not implemented.
+    return false;
+    
+    // this should be true if the function is called
+    libmesh_assert(this->sensitivity_params);
+    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
+    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+    
+    // check if the material property or the provided exterior
+    // values, like temperature, are functions of the sensitivity parameter
+    bool calculate = false;
+    if (_temperature)
+        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    
+    // nothing to be calculated if the element does not depend on the
+    // sensitivity parameter.
+    if (!calculate)
+        return false;
+    
+    
+    return (request_jacobian && follower_forces);
+}
+
+
+
+
+
+template <typename ValType>
 void
-MAST::StructuralElementBase::transform_to_global_system(const DenseMatrix<Real>& local_mat,
-                                                         DenseMatrix<Real>& global_mat) const {
+MAST::StructuralElementBase::transform_to_global_system(const DenseMatrix<ValType>& local_mat,
+                                                        DenseMatrix<ValType>& global_mat) const {
     libmesh_assert_equal_to( local_mat.m(),  local_mat.n());
     libmesh_assert_equal_to(global_mat.m(), global_mat.n());
     libmesh_assert_equal_to( local_mat.m(), global_mat.m());
     
     const unsigned int n_dofs = _fe->n_shape_functions();
     global_mat.zero();
-    DenseMatrix<Real> tmp_mat;
+    DenseMatrix<ValType> tmp_mat;
     tmp_mat.resize(6*n_dofs, 6*n_dofs);
     
     const DenseMatrix<Real>& Tmat = _transformation_matrix();
@@ -471,9 +834,10 @@ MAST::StructuralElementBase::transform_to_global_system(const DenseMatrix<Real>&
 
 
 
+template <typename ValType>
 void
-MAST::StructuralElementBase::transform_to_local_system(const DenseVector<Real>& global_vec,
-                                                        DenseVector<Real>& local_vec) const {
+MAST::StructuralElementBase::transform_to_local_system(const DenseVector<ValType>& global_vec,
+                                                        DenseVector<ValType>& local_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
     const unsigned int n_dofs = _fe->n_shape_functions();
@@ -496,9 +860,10 @@ MAST::StructuralElementBase::transform_to_local_system(const DenseVector<Real>& 
 
 
 
+template <typename ValType>
 void
-MAST::StructuralElementBase::transform_to_global_system(const DenseVector<Real>& local_vec,
-                                                         DenseVector<Real>& global_vec) const {
+MAST::StructuralElementBase::transform_to_global_system(const DenseVector<ValType>& local_vec,
+                                                         DenseVector<ValType>& global_vec) const {
     libmesh_assert_equal_to( local_vec.size(),  global_vec.size());
     
     const unsigned int n_dofs = _fe->n_shape_functions();
@@ -606,5 +971,41 @@ MAST::build_structural_element(System& sys,
     
     return e;
 }
+
+
+
+// template instantiations
+template
+void
+MAST::StructuralElementBase::transform_to_global_system<Real>(const DenseMatrix<Real>& local_mat,
+                                                              DenseMatrix<Real>& global_mat) const;
+
+template
+void
+MAST::StructuralElementBase::transform_to_local_system<Real>(const DenseVector<Real>& global_vec,
+                                                             DenseVector<Real>& local_vec) const;
+
+template
+void
+MAST::StructuralElementBase::transform_to_global_system<Real>(const DenseVector<Real>& local_vec,
+                                                              DenseVector<Real>& global_vec) const;
+
+
+template
+void
+MAST::StructuralElementBase::transform_to_global_system<Complex>(const DenseMatrix<Complex>& local_mat,
+                                                              DenseMatrix<Complex>& global_mat) const;
+
+template
+void
+MAST::StructuralElementBase::transform_to_local_system<Complex>(const DenseVector<Complex>& global_vec,
+                                                             DenseVector<Complex>& local_vec) const;
+
+template
+void
+MAST::StructuralElementBase::transform_to_global_system<Complex>(const DenseVector<Complex>& local_vec,
+                                                              DenseVector<Complex>& global_vec) const;
+
+
 
 

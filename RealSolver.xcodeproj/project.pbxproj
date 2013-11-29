@@ -34,6 +34,7 @@
 		EBD79634184903E2007FA3A7 /* rigid_surface_motion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD79631184903E2007FA3A7 /* rigid_surface_motion.cpp */; };
 		EBD7963F18490471007FA3A7 /* surface_pressure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD7963E18490471007FA3A7 /* surface_pressure.cpp */; };
 		EBD7964518491D37007FA3A7 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBD7964418491D37007FA3A7 /* Accelerate.framework */; };
+		EBD7964918492E3C007FA3A7 /* boundary_condition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD7964818492E3C007FA3A7 /* boundary_condition.cpp */; };
 		EBE3222316EA72430078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */; };
 		EBE3222416EA72430078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3222216EA72430078E733 /* libmpi.1.dylib */; };
 		EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */; };
@@ -133,6 +134,8 @@
 		EBD79633184903E2007FA3A7 /* surface_pressure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = surface_pressure.h; sourceTree = "<group>"; };
 		EBD7963E18490471007FA3A7 /* surface_pressure.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = surface_pressure.cpp; sourceTree = "<group>"; };
 		EBD7964418491D37007FA3A7 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		EBD7964818492E3C007FA3A7 /* boundary_condition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = boundary_condition.cpp; sourceTree = "<group>"; };
+		EBD7964B18493030007FA3A7 /* small_disturbance_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = small_disturbance_motion.h; sourceTree = "<group>"; };
 		EBE3222116EA72430078E733 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = ../../../../../opt/local/lib/libmpi_cxx.1.dylib; sourceTree = "<group>"; };
 		EBE3222216EA72430078E733 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = ../../../../../opt/local/lib/libmpi.1.dylib; sourceTree = "<group>"; };
 		EBE83D5217A021E3000F013C /* fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fluid_analysis_driver.cpp; sourceTree = "<group>"; };
@@ -352,12 +355,14 @@
 		EBD7962C184903E2007FA3A7 /* BoundaryConditions */ = {
 			isa = PBXGroup;
 			children = (
+				EBD7964818492E3C007FA3A7 /* boundary_condition.cpp */,
 				EBD7962D184903E2007FA3A7 /* boundary_condition.h */,
 				EBD7962E184903E2007FA3A7 /* boundary_surface_motion.h */,
 				EBD7962F184903E2007FA3A7 /* flexible_surface_motion.h */,
 				EBD79630184903E2007FA3A7 /* function_surface_motion.h */,
 				EBD79631184903E2007FA3A7 /* rigid_surface_motion.cpp */,
 				EBD79632184903E2007FA3A7 /* rigid_surface_motion.h */,
+				EBD7964B18493030007FA3A7 /* small_disturbance_motion.h */,
 				EBD7963E18490471007FA3A7 /* surface_pressure.cpp */,
 				EBD79633184903E2007FA3A7 /* surface_pressure.h */,
 			);
@@ -454,6 +459,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */,
+				EBD7964918492E3C007FA3A7 /* boundary_condition.cpp in Sources */,
 				EBD79634184903E2007FA3A7 /* rigid_surface_motion.cpp in Sources */,
 				6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */,
 				696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */,
