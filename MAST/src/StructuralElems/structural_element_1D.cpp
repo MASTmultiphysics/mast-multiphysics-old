@@ -110,7 +110,7 @@ MAST::StructuralElement1D::initialize_von_karman_strain_operator(const unsigned 
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
 
-    //libmesh_assert_equal_to(vk_strain.size(), 1);
+    libmesh_assert_equal_to(vk_strain.size(), 2);
     libmesh_assert_equal_to(vk_dwdxi_mat.m(), 2);
     libmesh_assert_equal_to(vk_dwdxi_mat.n(), 2);
     libmesh_assert_equal_to(Bmat_vk.m(), 2);
