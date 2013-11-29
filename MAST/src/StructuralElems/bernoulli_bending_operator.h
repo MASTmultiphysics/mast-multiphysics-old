@@ -76,14 +76,14 @@ MAST::BernoulliBendingOperator::initialize_bending_strain_operator (const unsign
     N(1) = (0.5/_length) * (  0.0     -  12.0/_length*xi);
     
     Bmat.set_shape_function(0, 1, N);  // v-disp
-    Bmat.set_shape_function(0, 2, N);  // w-disp
+    Bmat.set_shape_function(1, 2, N);  // w-disp
 
     N(0) = (0.5/_length) * (- 2.0     +           6.0*xi);  // needs a -1.0 factor for theta_y
     N(1) = (0.5/_length) * (  2.0     +           6.0*xi);  // needs a -1.0 factor for theta_y
 
     Bmat.set_shape_function(0, 5, N); // theta-z
     N.scale(-1.);
-    Bmat.set_shape_function(0, 4, N); // theta-y
+    Bmat.set_shape_function(1, 4, N); // theta-y
 }
 
 

@@ -682,6 +682,11 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
             dof_ids.insert(dof_indices[i]);
         
         dof_indices.clear();
+        dof_map.dof_indices(*el, dof_indices, 3); // tx
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            dof_ids.insert(dof_indices[i]);
+
+        dof_indices.clear();
         dof_map.dof_indices(*el, dof_indices, 5); // tz
         for (unsigned int i=0; i<dof_indices.size(); i++)
             dof_ids.insert(dof_indices[i]);

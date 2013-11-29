@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */; };
 		696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */; };
 		696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C07FA1796CD4100B77C5C /* fluid_newton_solver.cpp */; };
 		696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C08081796CD4100B77C5C /* structural_elem_base.cpp */; };
 		696C08161796CD4100B77C5C /* thermal_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C080B1796CD4100B77C5C /* thermal_elem_base.cpp */; };
-		696C08191796CF9200B77C5C /* structural_system_assembly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C08171796CF9200B77C5C /* structural_system_assembly.cpp */; };
 		696C081B1796ED8200B77C5C /* structural_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C081A1796ED8200B77C5C /* structural_driver.cpp */; };
 		6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BC9A180360AB007C6D9A /* potential_flow_elem_base.cpp */; };
 		6989BC9F180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BC9C180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp */; };
@@ -56,6 +56,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
 		696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aerodynamic_qoi.cpp; sourceTree = "<group>"; };
 		696C07F71796CD4100B77C5C /* aerodynamic_qoi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_qoi.h; sourceTree = "<group>"; };
 		696C07F91796CD4100B77C5C /* fluid_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fluid_elem_base.h; sourceTree = "<group>"; };
@@ -70,7 +71,6 @@
 		696C08091796CD4100B77C5C /* structural_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = structural_elem_base.h; sourceTree = "<group>"; };
 		696C080B1796CD4100B77C5C /* thermal_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = thermal_elem_base.cpp; sourceTree = "<group>"; };
 		696C080C1796CD4100B77C5C /* thermal_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thermal_elem_base.h; sourceTree = "<group>"; };
-		696C08171796CF9200B77C5C /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
 		696C08181796CF9200B77C5C /* structural_system_assembly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = structural_system_assembly.h; sourceTree = "<group>"; };
 		696C081A1796ED8200B77C5C /* structural_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_driver.cpp; sourceTree = "<group>"; };
 		6989BC9A180360AB007C6D9A /* potential_flow_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_flow_elem_base.cpp; sourceTree = "<group>"; };
@@ -249,6 +249,7 @@
 		696C08071796CD4100B77C5C /* StructuralElems */ = {
 			isa = PBXGroup;
 			children = (
+				69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */,
 				EBD795FA18468C35007FA3A7 /* bending_operator.cpp */,
 				EBD795F5184673F6007FA3A7 /* bending_operator.h */,
 				EBD795F81846834F007FA3A7 /* bending_structural_elem.cpp */,
@@ -264,7 +265,6 @@
 				EBF278661815996200DC81A3 /* structural_element_2D.h */,
 				EB8173581835309D00E03740 /* structural_element_3D.cpp */,
 				EBF278671815997700DC81A3 /* structural_element_3D.h */,
-				696C08171796CF9200B77C5C /* structural_system_assembly.cpp */,
 				696C08181796CF9200B77C5C /* structural_system_assembly.h */,
 				698C603317ADEBFE009E6058 /* surface_pressure_load.h */,
 				EBD795FC18468D6E007FA3A7 /* timoshenko_bending_operator.h */,
@@ -442,12 +442,12 @@
 				EB817343182D902300E03740 /* basis_matrix.cpp in Sources */,
 				EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */,
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
+				69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
 				EB81735A1835309D00E03740 /* structural_element_2D.cpp in Sources */,
 				696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */,
 				EB817346182D902300E03740 /* sensitivity_parameters.cpp in Sources */,
 				696C08161796CD4100B77C5C /* thermal_elem_base.cpp in Sources */,
-				696C08191796CF9200B77C5C /* structural_system_assembly.cpp in Sources */,
 				EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */,
 				696C081B1796ED8200B77C5C /* structural_driver.cpp in Sources */,
 				EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */,
@@ -536,20 +536,17 @@
 					/opt/local/include/,
 					/opt/local/include/openmpi,
 					"/opt/local/include/vtk-5.10",
-					"$(HOME)/Documents/usr/packages/petsc/real/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../libmesh/real/lib",
 					/opt/local/lib,
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug",
 					"$(SRCROOT)/MAST/src/Optimization/gcmma",
 					/opt/local/lib/gcc48,
-					/Users/bhatiam/Documents/usr/packages/petsc/real/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include /opt/local/include/vtk-5.10 \"$(SRCROOT)/../FESystem/FESystem/src\" ";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include";
 			};
 			name = Debug;
 		};
@@ -565,20 +562,17 @@
 					/opt/local/include/,
 					/opt/local/include/openmpi,
 					"/opt/local/include/vtk-5.10",
-					"$(HOME)/Documents/usr/packages/petsc/real/include",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../libmesh/real/lib",
 					/opt/local/lib,
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-gzpjcglpavpumwbuwznoivbuhmyv/Build/Products/Debug",
 					"$(SRCROOT)/MAST/src/Optimization/gcmma",
 					/opt/local/lib/gcc48,
-					/Users/bhatiam/Documents/usr/packages/petsc/real/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include /opt/local/include/vtk-5.10 \"$(SRCROOT)/../FESystem/FESystem/src\" ";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include";
 			};
 			name = Release;
 		};
