@@ -234,7 +234,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.add_variable ( "tz", static_cast<Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
+                                                       MAST::BUCKLING,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -324,15 +324,18 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     b  = infile("thickness", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(1) = -100.;
+    prestress(0) = -100.;
     
     prop3d.set_material(mat);
     prop2d.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
-//    prop2d.prestress(prestress);
-//    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.prestress(prestress);
+    prop1d.prestress(prestress);
+
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     

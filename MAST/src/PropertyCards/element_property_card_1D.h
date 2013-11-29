@@ -64,7 +64,7 @@ namespace MAST
          *    initializes the vector to the prestress in the element
          */
         virtual void _prestress_vector(DenseVector<Real>& v) const {
-            v.resize(1);
+            v.resize(2);
             if (_prestress.size() == 6)
                 v(0) = _prestress(0);
         }
@@ -74,7 +74,7 @@ namespace MAST
          *    initializes the matrix to the prestress in the element
          */
         virtual void _prestress_matrix(DenseMatrix<Real>& m) const {
-            m.resize(1, 1);
+            m.resize(2, 2);
             if (_prestress.size() == 6)
                 m(0,0) = _prestress(0);
         }
@@ -414,7 +414,7 @@ MAST::Solid1DSectionElementPropertyCard::prestress_vector(MAST::ElemenetProperty
             
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
             // for solid sections with isotropic material this is zero
-            v.resize(1);
+            v.resize(2);
             break;
             
         default:
@@ -441,7 +441,7 @@ MAST::Solid1DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetProperty
             
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
             // for solid sections with isotropic material this is zero
-            m.resize(1,1);
+            m.resize(2,2);
             break;
             
         default:
