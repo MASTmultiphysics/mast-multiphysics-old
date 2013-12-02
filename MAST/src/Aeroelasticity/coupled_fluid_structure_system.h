@@ -97,10 +97,10 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
         surface_pressure->init(*aero.nonlinear_fluid_system.solution,
                                *aero.linearized_fluid_system.solution);
         
-        assemble_force_vec(structure.structural_system,
-                           *surface_pressure,
-                           *surface_motion,
-                           f_vec); // A_FS X_F
+        structure.assemble_force_vec(*surface_pressure,
+                                     *surface_motion,
+                                     f_vec); // A_FS X_F
+
         structure.basis_matrix->vector_mult_transpose
         (projected_force, f_vec); // Phi^T A_FS X_F
 

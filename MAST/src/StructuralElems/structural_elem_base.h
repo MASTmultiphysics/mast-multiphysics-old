@@ -122,8 +122,8 @@ namespace MAST {
          *   side external force contribution to system residual
          */
         virtual bool side_external_force (bool request_jacobian,
-                                          DenseVector<Real>& f,
-                                          DenseMatrix<Real>& jac,
+                                          DenseVector<Number>& f,
+                                          DenseMatrix<Number>& jac,
                                           std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
@@ -137,8 +137,8 @@ namespace MAST {
          *   volume external force contribution to system residual
          */
         virtual bool volume_external_force (bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
+                                            DenseVector<Number>& f,
+                                            DenseMatrix<Number>& jac,
                                             std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!
@@ -165,8 +165,8 @@ namespace MAST {
          *   sensitivity of the side external force contribution to system residual
          */
         virtual bool side_external_force_sensitivity (bool request_jacobian,
-                                                      DenseVector<Real>& f,
-                                                      DenseMatrix<Real>& jac,
+                                                      DenseVector<Number>& f,
+                                                      DenseMatrix<Number>& jac,
                                                       std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
@@ -180,8 +180,8 @@ namespace MAST {
          *   sensitivity of the volume external force contribution to system residual
          */
         virtual bool volume_external_force_sensitivity (bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
+                                                        DenseVector<Number>& f,
+                                                        DenseMatrix<Number>& jac,
                                                         std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!

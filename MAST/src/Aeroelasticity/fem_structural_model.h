@@ -14,16 +14,22 @@
 
 // MAST includes
 #include "Aeroelasticity/structural_model.h"
-#include "BoundaryConditions/surface_pressure.h"
+#include "BoundaryConditions/small_disturbance_motion.h"
 #include "Numerics/basis_matrix.h"
+#include "StructuralElems/structural_system_assembly.h"
+
+
+// libMesh includes
+#include "libmesh/system.h"
 
 
 class FEMStructuralModel: public StructuralModel
 {
 public:
-    FEMStructuralModel(System& system):
+    FEMStructuralModel(MAST::StructuralSystemAssembly& a):
     StructuralModel(),
-    structural_system(system)
+    assembly(a),
+    structural_system(a.get_system())
     { }
     
     virtual ~FEMStructuralModel()
@@ -78,6 +84,14 @@ public:
         return *basis_matrix;
     }
 
+    /*!
+     *    calculates force vector for the specified unsteady pressure and
+     *    motion
+     */
+    void assemble_force_vec(MAST::SmallDisturbanceSurfacePressure& press,
+                            MAST::SurfaceMotionBase& displ,
+                            NumericVector<Number>& f_vec);
+
     
     /*!
      *    vector of eigenvalues
@@ -86,11 +100,15 @@ public:
 
     
     /*!
+     *    structural assembly object
+     */
+    MAST::StructuralSystemAssembly& assembly;
+
+    /*!
      *    the structural system that provides the basis of
      *    calculations for this model
      */
     System& structural_system;
-    
     
     /*!
      *    returns the basis matrix using the modal data in structural system
@@ -118,6 +136,22 @@ FEMStructuralModel::init()
         basis_matrix->modes[i] = &structural_system.get_vector(oss.str());
     }
 }
+
+
+inline
+void
+FEMStructuralModel::assemble_force_vec(MAST::SmallDisturbanceSurfacePressure& press,
+                                       MAST::SurfaceMotionBase& displ,
+                                       NumericVector<Number>& f_vec) {
+    MAST::SmallDisturbanceMotion load;
+    load.set_deformation(displ);
+    load.set_pressure(press);
+    assembly.clear_loads();
+    assembly.add_volume_load(0, load);
+    assembly.assemble_small_disturbance_aerodynamic_force(*structural_system.solution,
+                                                          f_vec);
+}
+
 
 
 #endif

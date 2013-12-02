@@ -44,6 +44,14 @@ _property(NULL)
 }
 
 
+
+void
+MAST::StructuralSystemAssembly::clear_loads() {
+    _side_bc_map.clear();
+    _vol_bc_map.clear();
+}
+
+
 void
 MAST::StructuralSystemAssembly::add_side_load(boundary_id_type bid,
                                               MAST::BoundaryCondition& load) {
@@ -373,6 +381,93 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
     }
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
+
+
+
+void
+MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const NumericVector<Number>& X,
+                                                                              NumericVector<Number>& F) {
+    F.zero();
+    
+    // iterate over each element, initialize it and get the relevant
+    // analysis quantities
+    DenseVector<Number> vec, sol;
+    DenseMatrix<Number> mat;
+    std::vector<dof_id_type> dof_indices;
+    const DofMap& dof_map = _system.get_dof_map();
+    std::auto_ptr<MAST::StructuralElementBase> structural_elem;
+    
+    AutoPtr<NumericVector<Number> > localized_solution =
+    NumericVector<Number>::build(_system.comm());
+    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                             _system.get_dof_map().get_send_list(),
+                             false, GHOSTED);
+    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
+    
+    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    
+    std::multimap<boundary_id_type, MAST::BoundaryCondition*> local_side_bc_map;
+    std::multimap<subdomain_id_type, MAST::BoundaryCondition*> local_vol_bc_map;
+  
+    {
+        // create a map of only the specified type of load
+        std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
+        it = _side_bc_map.begin(), end = _side_bc_map.end();
+        for ( ; it!= end; it++)
+            if (it->second->type() == MAST::SMALL_DISTURBANCE_MOTION)
+                local_side_bc_map.insert(*it);
+    }
+
+    {
+        // create a map of only the specified type of load
+        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
+        it = _vol_bc_map.begin(), end = _vol_bc_map.end();
+        for ( ; it!= end; it++)
+            if (it->second->type() == MAST::SMALL_DISTURBANCE_MOTION)
+                local_vol_bc_map.insert(*it);
+    }
+
+    for ( ; el != end_el; ++el) {
+        
+        const Elem* elem = *el;
+        
+        dof_map.dof_indices (elem, dof_indices);
+        
+        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
+        
+        // create the structural element for analysis
+        structural_elem.reset(MAST::build_structural_element
+                              (_system, *elem, p_card).release());
+        
+        // get the solution
+        unsigned int ndofs = (unsigned int)dof_indices.size();
+        sol.resize(ndofs);
+        vec.resize(ndofs);
+        mat.resize(ndofs, ndofs);
+        
+        //for (unsigned int i=0; i<dof_indices.size(); i++)
+        //    sol(i) = (*localized_solution)(dof_indices[i]);
+        structural_elem->local_solution.resize(sol.size());
+        //structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+        
+        // now get the vector values
+        structural_elem->side_external_force(false, vec, mat,
+                                             local_side_bc_map);
+        structural_elem->volume_external_force(false, vec, mat,
+                                               local_vol_bc_map);
+        
+        // constrain the vector
+        _system.get_dof_map().constrain_element_vector(vec, dof_indices);
+        
+        // add to the global vector
+        F.add_vector(vec, dof_indices);
+    }
+    
+    F.close();
+}
+
+
 
 
 

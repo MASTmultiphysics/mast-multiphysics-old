@@ -39,6 +39,7 @@ public:
      *    Returns false if the matrix does not exist for this model
      */
     virtual bool get_damping_matrix(RealMatrixX& c) = 0;
+    
 };
 
 

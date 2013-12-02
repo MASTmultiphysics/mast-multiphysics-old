@@ -52,7 +52,7 @@ namespace MAST {
          *   @returns a reference to the deformation object
          */
         MAST::SurfaceMotionBase& get_deformation() {
-            libmesh_assert(!_deformation);
+            libmesh_assert(_deformation);
             return *_deformation;
         }
         
@@ -61,7 +61,7 @@ namespace MAST {
          *   @returns a reference to the surface pressure object
          */
         MAST::SmallDisturbanceSurfacePressure& get_pressure() {
-            libmesh_assert(!_pressure);
+            libmesh_assert(_pressure);
             return *_pressure;
         }
 

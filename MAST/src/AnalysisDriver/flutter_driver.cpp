@@ -8,7 +8,8 @@
 #include "Flight/flight_condition.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
-
+#include "StructuralElems/structural_system_assembly.h"
+#include "PropertyCards/element_property_card_1D.h"
 
 // libMesh includes
 #include "libmesh/getpot.h"
@@ -130,9 +131,14 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     structural_mesh.print_info();
     structural_equation_systems.print_info();
     
+    // create the structural assembly object
+    MAST::Solid1DSectionElementPropertyCard prop1d;
+    MAST::StructuralSystemAssembly assembly(structural_system, MAST::MODAL, infile);
+    assembly.set_property_for_all_elems(prop1d);
+    
     
     // read the eigenvalues
-    FEMStructuralModel structural_model(structural_system);
+    FEMStructuralModel structural_model(assembly);
     std::string nm = infile("modal_data", "");
     GetPot modal_data(nm);
     unsigned int neig = modal_data("n_eig", 0);

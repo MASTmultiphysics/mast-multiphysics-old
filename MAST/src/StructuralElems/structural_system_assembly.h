@@ -17,6 +17,7 @@
 #include "libmesh/sparse_matrix.h"
 
 
+
 using namespace libMesh;
 
 
@@ -59,13 +60,24 @@ namespace MAST
         StructuralSystemAssembly(System& sys,
                                  MAST::StructuralAnalysisType t,
                                  GetPot& _infile);
-
+        
         /*!
          *   virtual destructor
          */
         virtual ~StructuralSystemAssembly()
         { }
         
+        /*!
+         *   returns a reference to the System object
+         */
+        System& get_system() {
+            return _system;
+        }
+
+        /*!
+         *   clear the loads for this structural model
+         */
+        void clear_loads();
         
         /*!
          *   adds the specified side loads for the boudnary with tag \p b_id
@@ -125,6 +137,13 @@ namespace MAST
                                             SparseMatrix<Number>*  J,
                                             NonlinearImplicitSystem& S);
         
+        /*!
+         *    function to assemble the external forces of type specified in the 
+         *    set
+         */
+        virtual void assemble_small_disturbance_aerodynamic_force (const NumericVector<Number>& X,
+                                                                   NumericVector<Number>& F);
+
         /**
          * Assembly function.  This function will be called
          * to assemble the sensitivity of system residual prior to a solve and must
