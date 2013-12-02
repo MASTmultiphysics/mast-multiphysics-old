@@ -159,9 +159,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         if (mesh_type == "panel")
         {
             if (dim == 1)
-                MeshTools::Generation::build_line (mesh,
-                                                   divs[0]->total_elem_divs(),
-                                                   0., 1., elem_type);
+                MeshInitializer().init(divs, mesh, elem_type);
             else if (dim == 2)
                 PanelMesh2D().init(0., false, 0, 100, 101, // dummy values not needed in structures
                                    divs, mesh, elem_type);
@@ -234,7 +232,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     system.add_variable ( "tz", static_cast<Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::BUCKLING,
+                                                       MAST::MODAL,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -321,7 +319,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     kappa = infile("shear_corr_factor", 5./6.);
     h  = infile("thickness", 0.002);
     th  = infile("thickness", 0.002);
-    b  = infile("thickness", 0.002);
+    b  = infile("width", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
     prestress(0) = -100.;
@@ -331,11 +329,11 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
-    prop2d.prestress(prestress);
-    prop1d.prestress(prestress);
+    //prop2d.prestress(prestress);
+    //prop1d.prestress(prestress);
 
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
-    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
@@ -379,13 +377,14 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
             << i
             << ".exo";
             
+            // now write the eigenvlaues
+            std::pair<Real, Real> val = eigen_system->get_eigenpair(i);
+
             // We write the file in the ExodusII format.
             Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                     equation_systems);
-
-            // now write the eigenvlaues
-            std::pair<Real, Real> val = eigen_system->get_eigenpair(i);
             
+
             // also add the solution as an independent vector, which will have to
             // be read in
             std::ostringstream vec_name;
@@ -447,7 +446,21 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                            libMeshEnums::ENCODE,
                            (EquationSystems::WRITE_DATA |
                             EquationSystems::WRITE_ADDITIONAL_DATA));
-    
+
+    ParallelMesh structural_mesh(init.comm());
+    structural_mesh.read("saved_structural_mesh.xdr");
+
+    EquationSystems structural_equation_systems (structural_mesh);
+    CondensedEigenSystem & structural_system =
+    structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
+    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
+                                           libMeshEnums::DECODE,
+                                           (EquationSystems::READ_HEADER |
+                                            EquationSystems::READ_DATA |
+                                            EquationSystems::READ_ADDITIONAL_DATA));
+    structural_mesh.print_info();
+    structural_equation_systems.print_info();
+
     // All done.
     return 0;
 }
