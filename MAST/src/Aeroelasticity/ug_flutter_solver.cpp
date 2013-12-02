@@ -501,6 +501,11 @@ UGFlutterSolver::analyze(const Real k_ref,
 {
     ComplexMatrixX m, k;
 
+    libMesh::out
+    << " ====================================================" << std::endl
+    << "UG Solution for k_red = "
+    << std::setw(10) << k_ref << std::endl;
+    
     initialize_matrices(k_ref, m, k);
     LAPACK_ZGGEV ges;
     ges.compute(m, k);
@@ -516,6 +521,11 @@ UGFlutterSolver::analyze(const Real k_ref,
     
     if (prev_sol)
         val.second->sort(*prev_sol);
+
+    libMesh::out
+    << "Finished UG Solution" << std::endl
+    << " ====================================================" << std::endl;
+
     
     return val.second;
 }
