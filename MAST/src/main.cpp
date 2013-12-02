@@ -43,8 +43,8 @@ int main (int argc, char* const argv[])
         rval = structural_driver(init, infile, argc, argv);
 //    else if (type == "structures_modal")
 //        rval = modal_structural_driver(init, infile, argc, argv);
-#endif
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+#else
+
     else if (type == "flutter")
         rval = flutter_driver(init, infile, argc, argv);
 #endif

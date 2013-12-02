@@ -446,21 +446,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                            libMeshEnums::ENCODE,
                            (EquationSystems::WRITE_DATA |
                             EquationSystems::WRITE_ADDITIONAL_DATA));
-
-    ParallelMesh structural_mesh(init.comm());
-    structural_mesh.read("saved_structural_mesh.xdr");
-
-    EquationSystems structural_equation_systems (structural_mesh);
-    CondensedEigenSystem & structural_system =
-    structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
-    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
-                                           libMeshEnums::DECODE,
-                                           (EquationSystems::READ_HEADER |
-                                            EquationSystems::READ_DATA |
-                                            EquationSystems::READ_ADDITIONAL_DATA));
-    structural_mesh.print_info();
-    structural_equation_systems.print_info();
-
     // All done.
     return 0;
 }

@@ -119,13 +119,13 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     structural_mesh.read("saved_structural_mesh.xdr");
     
     EquationSystems structural_equation_systems (structural_mesh);
-    CondensedEigenSystem & structural_system =
-    structural_equation_systems.add_system<CondensedEigenSystem> ("Eigensystem");
     structural_equation_systems.read<Real>("saved_structural_solution.xdr",
                                            libMeshEnums::DECODE,
                                            (EquationSystems::READ_HEADER |
                                             EquationSystems::READ_DATA |
                                             EquationSystems::READ_ADDITIONAL_DATA));
+    System & structural_system =
+    structural_equation_systems.get_system<System> ("StructuralSystem");
     
     // Prints information about the system to the screen.
     structural_mesh.print_info();
