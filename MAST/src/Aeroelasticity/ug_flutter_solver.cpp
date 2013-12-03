@@ -661,6 +661,8 @@ UGFlutterSolver::print_sorted_roots(std::ostream* output)
     
     
     // write the roots identified using iterative search technique
+    std::streamsize prec = output->precision();
+    
     unsigned int nroots = this->n_roots_found();
     *output << std::endl
     << "n critical roots identified: " << nroots << std::endl;
@@ -670,8 +672,9 @@ UGFlutterSolver::print_sorted_roots(std::ostream* output)
         *output
         << "** Root : " << std::setw(5) << i << " **" << std::endl
         << "g      = " << std::setw(15) << root.g << std::endl
-        << "V      = " << std::setw(15) << root.V << std::endl
-        << "omega  = " << std::setw(15) << root.omega << std::endl
+        << "V      = " << std::setw(35) << std::setprecision(15) << root.V << std::endl
+        << "omega  = " << std::setw(35) << std::setprecision(15) << root.omega << std::endl
+        << std::setprecision(prec) // set the precision to the default value
         << "k_ref  = " << std::setw(15) << root.k_ref << std::endl
         << "Modal Participation : " << std::endl ;
         for (unsigned int j=0; j<nvals; j++)

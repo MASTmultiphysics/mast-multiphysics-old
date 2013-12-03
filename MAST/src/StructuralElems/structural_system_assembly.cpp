@@ -686,7 +686,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     
     for ( ; el != end_el; ++el)
     {
-        dof_map.dof_indices (*el, dof_indices, 2); // uz
+        dof_map.dof_indices (*el, dof_indices, 1); // uy
         
         // All boundary dofs are Dirichlet dofs in this case
         for (unsigned int s=0; s<(*el)->n_sides(); s++)
@@ -707,7 +707,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
             dof_ids.insert(dof_indices[i]);
         
         dof_indices.clear();
-        dof_map.dof_indices(*el, dof_indices, 1); // uy
+        dof_map.dof_indices(*el, dof_indices, 2); // uz
         for (unsigned int i=0; i<dof_indices.size(); i++)
             dof_ids.insert(dof_indices[i]);
         
@@ -717,7 +717,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
             dof_ids.insert(dof_indices[i]);
 
         dof_indices.clear();
-        dof_map.dof_indices(*el, dof_indices, 5); // tz
+        dof_map.dof_indices(*el, dof_indices, 4); // ty
         for (unsigned int i=0; i<dof_indices.size(); i++)
             dof_ids.insert(dof_indices[i]);
     } // end of element loop
