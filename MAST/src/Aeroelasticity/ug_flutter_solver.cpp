@@ -474,7 +474,7 @@ UGFlutterSolver::find_critical_root()
             const unsigned int root_num = cross->root_num;
             std::pair<bool, UGFlutterSolver::UGFlutterSolution*> bisection_sol =
             bisection_search(cross->crossover_solutions,
-                             root_num, 1.0e-5, 10);
+                             root_num, 1.0e-9, 30);
             cross->root = &(bisection_sol.second->get_root(root_num));
             
             // now, remove this entry from the _flutter_crossover points and

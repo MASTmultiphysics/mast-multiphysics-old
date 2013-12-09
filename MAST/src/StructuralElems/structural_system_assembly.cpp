@@ -699,7 +699,21 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
                 for(unsigned int ii=0; ii<side_dofs.size(); ii++)
                     dof_ids.insert(dof_indices[side_dofs[ii]]);
             }
+
+        dof_map.dof_indices (*el, dof_indices, 5); // tz
         
+        // All boundary dofs are Dirichlet dofs in this case
+        for (unsigned int s=0; s<(*el)->n_sides(); s++)
+            if ((*el)->neighbor(s) == NULL)
+            {
+                std::vector<unsigned int> side_dofs;
+                FEInterface::dofs_on_side(*el, dim, fe_type,
+                                          s, side_dofs);
+                
+                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
+                    dof_ids.insert(dof_indices[side_dofs[ii]]);
+            }
+
         // also add the dofs for variable u, v and tz
         dof_indices.clear();
         dof_map.dof_indices(*el, dof_indices, 0); // ux

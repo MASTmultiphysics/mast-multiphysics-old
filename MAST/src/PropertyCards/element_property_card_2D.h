@@ -222,7 +222,7 @@ MAST::ElementPropertyCard2D::bending_model(const Elem& elem,
                 (_bending_model == MAST::DEFAULT_BENDING))
                 return MAST::DKT;
             else
-                return _bending_model;
+                return MAST::TIMOSHENKO;
             break;
             
         default:

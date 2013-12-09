@@ -444,7 +444,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     xdr.write("saved_structural_mesh.xdr");
     equation_systems.write("saved_structural_solution.xdr",
                            libMeshEnums::ENCODE,
-                           (EquationSystems::WRITE_DATA |
+                           (EquationSystems::WRITE_SERIAL_FILES |
+                            EquationSystems::WRITE_DATA |
                             EquationSystems::WRITE_ADDITIONAL_DATA));
     // All done.
     return 0;

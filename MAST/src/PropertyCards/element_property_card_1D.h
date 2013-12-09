@@ -188,7 +188,7 @@ MAST::ElementPropertyCard1D::bending_model(const Elem& elem,
                 (_bending_model == MAST::DEFAULT_BENDING))
                 return MAST::BERNOULLI;
             else
-                return _bending_model;
+                return MAST::TIMOSHENKO;
             break;
             
         default:
