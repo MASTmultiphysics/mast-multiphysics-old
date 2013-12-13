@@ -60,6 +60,7 @@
 
 /* Begin PBXFileReference section */
 		69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
+		695F3B2B1856C90900052C29 /* stiffened_panel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stiffened_panel.h; sourceTree = "<group>"; };
 		696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aerodynamic_qoi.cpp; sourceTree = "<group>"; };
 		696C07F71796CD4100B77C5C /* aerodynamic_qoi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_qoi.h; sourceTree = "<group>"; };
 		696C07F91796CD4100B77C5C /* fluid_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fluid_elem_base.h; sourceTree = "<group>"; };
@@ -334,8 +335,9 @@
 				EB41AEEA17EA253700288448 /* gaussian_bump_mesh.h */,
 				EB41AEEB17EA253700288448 /* mesh_initializer.h */,
 				EB41AEEC17EA253700288448 /* panel_mesh.h */,
-				EB41AEED17EA253700288448 /* ringleb_mesh.h */,
 				EB1655E9180755300037E46C /* ramp_mesh.h */,
+				EB41AEED17EA253700288448 /* ringleb_mesh.h */,
+				695F3B2B1856C90900052C29 /* stiffened_panel.h */,
 			);
 			path = Mesh;
 			sourceTree = "<group>";
