@@ -21,6 +21,7 @@
 #include "Optimization/topology_optimization.h"
 #include "Mesh/mesh_initializer.h"
 #include "Mesh/panel_mesh.h"
+#include "Mesh/stiffened_panel.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -168,6 +169,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                                    divs, mesh, elem_type);
             else
                 libmesh_error();
+        }
+        else if (mesh_type == "stiffened_panel") {
+            MAST::StiffenedPanel().init(divs, mesh, elem_type);
         }
         else
             libmesh_error();
@@ -338,7 +342,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
     
-    structural_assembly.set_property_for_all_elems(prop1d);
+    structural_assembly.set_property_for_all_elems(prop2d);
     structural_assembly.add_parameter(h.ptr(), &h);
     
     system.solve();

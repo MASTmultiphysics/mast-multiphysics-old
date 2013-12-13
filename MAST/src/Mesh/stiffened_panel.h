@@ -32,11 +32,12 @@ namespace MAST {
             STIFFENER_Y
         };
         
-        void combine_mesh(UnstructuredMesh& panel,
-                          UnstructuredMesh& stiffener,
-                          MAST::StiffenedPanel::Component c,
-                          Real stiff_offset);
-        
+        void _combine_mesh(UnstructuredMesh& panel,
+                           UnstructuredMesh& stiffener,
+                           MAST::StiffenedPanel::Component c,
+                           Real stiff_offset,
+                           subdomain_id_type sid);
+
     };
 }
 
@@ -50,7 +51,8 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     {
         SerialMesh panel(mesh.comm());
         init.init(divs, panel, t);
-        combine_mesh(mesh, panel, MAST::StiffenedPanel::PANEL, 0.);
+        // use subdomain id for panel as 0
+        _combine_mesh(mesh, panel, MAST::StiffenedPanel::PANEL, 0., 0);
     }
     
     const unsigned int n_x_stiff = divs[1]->n_divs()-1,
@@ -73,8 +75,9 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
         
         // add the elements and nodes to the panel mesh
         // the y-coordinate for this mesh will be the x-coordinate
-        combine_mesh(mesh, stiff, MAST::StiffenedPanel::STIFFENER_X,
-                     divs[1]->div_location(i+1));
+        // subdomain id for each x-stiffener is 1+i
+        _combine_mesh(mesh, stiff, MAST::StiffenedPanel::STIFFENER_X,
+                     divs[1]->div_location(i+1), i+1);
     }
     
     for (unsigned int i=0; i<n_y_stiff; i++) {
@@ -86,23 +89,32 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
         
         // add the elements and nodes to the panel mesh
         // the y-coordinate for this mesh will be the x-coordinate
-        combine_mesh(mesh, stiff, MAST::StiffenedPanel::STIFFENER_Y,
-                     divs[0]->div_location(i+1));
+        // subdomain id for each y-stiffener is n_x_stiff + i
+        _combine_mesh(mesh, stiff, MAST::StiffenedPanel::STIFFENER_Y,
+                     divs[0]->div_location(i+1), n_x_stiff+i+1);
     }
+    
+    mesh.prepare_for_use();
 }
 
 
+
+inline
 void
-MAST::StiffenedPanel::combine_mesh(UnstructuredMesh& panel,
-                                   UnstructuredMesh& stiffener,
-                                   MAST::StiffenedPanel::Component c,
-                                   Real stiff_offset) {
-    panel.reserve_nodes(stiffener.n_nodes());
-    panel.reserve_elem(stiffener.n_elem());
+MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
+                                    UnstructuredMesh& component,
+                                    MAST::StiffenedPanel::Component c,
+                                    Real stiff_offset,
+                                    subdomain_id_type sid) {
+    BoundaryInfo &panel_binfo = *panel.boundary_info,
+    &component_binfo = *component.boundary_info;
+
+    panel.reserve_nodes(component.n_nodes());
+    panel.reserve_elem(component.n_elem());
     
     MeshBase::const_element_iterator
-    el_it = stiffener.elements_begin(),
-    el_end = stiffener.elements_end();
+    el_it = component.elements_begin(),
+    el_end = component.elements_end();
     
     std::map<Node*, Node*> old_to_new;
     Node *old_node, *new_node;
@@ -110,6 +122,18 @@ MAST::StiffenedPanel::combine_mesh(UnstructuredMesh& panel,
     for ( ; el_it != el_end; el_it++ ) {
         Elem* old_elem = *el_it,
         *new_elem = panel.add_elem(Elem::build(old_elem->type()).release());
+        new_elem->subdomain_id() = sid;
+        
+        // add boundary condition tags for the panel boundary
+        if (c == MAST::StiffenedPanel::PANEL)
+            for (unsigned short int n=0; n<old_elem->n_sides(); n++)
+                if (component_binfo.n_boundary_ids(old_elem, n)) {
+                    // add the boundary tags to the panel mesh
+                    std::vector<boundary_id_type> bc_ids = component_binfo.boundary_ids(old_elem, n);
+                    for ( unsigned int bid=0; bid < bc_ids.size(); bid++)
+                        panel_binfo.add_side(new_elem, n, bc_ids[bid]);
+                }
+        
         
         for (unsigned int n=0; n<old_elem->n_nodes(); n++) {
             old_node = old_elem->get_node(n);
@@ -160,6 +184,9 @@ MAST::StiffenedPanel::combine_mesh(UnstructuredMesh& panel,
         }
     }
 }
+
+
+
 
 
 #endif // __MAST_stiffened_panel_h__

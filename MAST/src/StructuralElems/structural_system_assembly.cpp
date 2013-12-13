@@ -685,56 +685,32 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     
     for ( ; el != end_el; ++el)
-    {
-        dof_map.dof_indices (*el, dof_indices, 1); // uy
-        
-        // All boundary dofs are Dirichlet dofs in this case
-        for (unsigned int s=0; s<(*el)->n_sides(); s++)
-            if ((*el)->neighbor(s) == NULL)
+        for (unsigned int i_var=0; i_var<6; i_var++)
+            if ((**el).centroid()(2) == 0. &&  // only for panel elements
+                (i_var == 0 || i_var == 1 || i_var == 2 || i_var == 5)) // only for u,v,w,tz
             {
-                std::vector<unsigned int> side_dofs;
-                FEInterface::dofs_on_side(*el, dim, fe_type,
-                                          s, side_dofs);
+                dof_indices.clear();
+                dof_map.dof_indices (*el, dof_indices, i_var);
                 
-                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
-                    dof_ids.insert(dof_indices[side_dofs[ii]]);
-            }
-
-        dof_map.dof_indices (*el, dof_indices, 5); // tz
-        
-        // All boundary dofs are Dirichlet dofs in this case
-        for (unsigned int s=0; s<(*el)->n_sides(); s++)
-            if ((*el)->neighbor(s) == NULL)
-            {
-                std::vector<unsigned int> side_dofs;
-                FEInterface::dofs_on_side(*el, dim, fe_type,
-                                          s, side_dofs);
+                // All boundary dofs are Dirichlet dofs in this case
+                for (unsigned int s=0; s<(*el)->n_sides(); s++)
+                    if ((*el)->neighbor(s) == NULL)
+                    {
+                        std::vector<unsigned int> side_dofs;
+                        FEInterface::dofs_on_side(*el, dim, fe_type,
+                                                  s, side_dofs);
+                        
+                        for(unsigned int ii=0; ii<side_dofs.size(); ii++)
+                            dof_ids.insert(dof_indices[side_dofs[ii]]);
+                    }
                 
-                for(unsigned int ii=0; ii<side_dofs.size(); ii++)
-                    dof_ids.insert(dof_indices[side_dofs[ii]]);
-            }
-
-        // also add the dofs for variable u, v and tz
-        dof_indices.clear();
-        dof_map.dof_indices(*el, dof_indices, 0); // ux
-        for (unsigned int i=0; i<dof_indices.size(); i++)
-            dof_ids.insert(dof_indices[i]);
-        
-        dof_indices.clear();
-        dof_map.dof_indices(*el, dof_indices, 2); // uz
-        for (unsigned int i=0; i<dof_indices.size(); i++)
-            dof_ids.insert(dof_indices[i]);
-        
-        dof_indices.clear();
-        dof_map.dof_indices(*el, dof_indices, 3); // tx
-        for (unsigned int i=0; i<dof_indices.size(); i++)
-            dof_ids.insert(dof_indices[i]);
-
-        dof_indices.clear();
-        dof_map.dof_indices(*el, dof_indices, 4); // ty
-        for (unsigned int i=0; i<dof_indices.size(); i++)
-            dof_ids.insert(dof_indices[i]);
-    } // end of element loop
+                // also add the dofs for variable u, v and tz
+                //        dof_indices.clear();
+                //        dof_map.dof_indices(*el, dof_indices, 3); // tx
+                //        for (unsigned int i=0; i<dof_indices.size(); i++)
+                //            dof_ids.insert(dof_indices[i]);
+                
+            } // end of element loop
     
     /**
      * All done!
