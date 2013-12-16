@@ -1,3 +1,10 @@
+//
+//  structural_system_assembly.h
+//  MAST
+//
+//  Created by Manav Bhatia on 12/16/13.
+//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
+//
 
 // libMesh include files
 #include "libmesh/nonlinear_solver.h"
@@ -11,6 +18,7 @@
 #include "StructuralElems/structural_elem_base.h"
 #include "PropertyCards/element_property_card_base.h"
 #include "BoundaryConditions/boundary_condition.h"
+#include "BoundaryConditions/displacement_boundary_condition.h"
 
 
 MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
@@ -60,11 +68,32 @@ MAST::StructuralSystemAssembly::add_side_load(boundary_id_type bid,
     std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator> it =
     _side_bc_map.equal_range(bid);
     
-    for ( ; it.first != it.second; it.first++)
+    for ( ; it.first != it.second; it.first++) {
         libmesh_assert(it.first->second != &load);
+        // only one displacement boundary condition is allowed per boundary
+        if (load.type() == MAST::DISPLACEMENT)
+            libmesh_assert(it.first->second->type() != MAST::DISPLACEMENT);
+    }
     
-    _side_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
-                        (bid, &load));
+    // displacement boundary condition needs to be hadled separately
+    if (load.type() == MAST::DISPLACEMENT) {
+        
+        // get the Dirichlet boundary condition object
+        DirichletBoundary& dirichlet_b =
+        (dynamic_cast<MAST::DisplacementBoundaryCondition&>(load)).dirichlet_boundary();
+        
+        // add an entry for each boundary of this dirichlet object.
+        for (std::set<boundary_id_type>::const_iterator it = dirichlet_b.b.begin();
+             it != dirichlet_b.b.end(); it++)
+            _side_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+                                (*it, &load));
+        
+        // now add this to the dof_map for this system
+        _system.get_dof_map().add_dirichlet_boundary(dirichlet_b);
+    }
+    else
+        _side_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+                            (bid, &load));
 }
 
 
@@ -78,7 +107,7 @@ MAST::StructuralSystemAssembly::add_volume_load(subdomain_id_type bid,
     
     for ( ; it.first != it.second; it.first++)
         libmesh_assert(it.first->second != &load);
-
+    
     _vol_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
                        (bid, &load));
 }
@@ -665,9 +694,30 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
 
 void
 MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_ids) const {
+    
     dof_ids.clear();
     
-    // Get a constant reference to the mesh object.
+    // first prepare a map of boundary ids and the constrained vars on that
+    // boundary
+    std::map<boundary_id_type, std::vector<unsigned int> >  constrained_vars_map;
+    
+    // now populate the map for all the give boundaries
+    std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
+    it = _side_bc_map.begin(), end = _side_bc_map.end();
+    
+    for ( ; it != end; it++)
+        if (it->second->type() == MAST::DISPLACEMENT) {
+            // get the displacement dirichlet condition
+            DirichletBoundary& dirichlet_b =
+            (dynamic_cast<MAST::DisplacementBoundaryCondition*>(it->second))->dirichlet_boundary();
+            
+            constrained_vars_map[it->first] = dirichlet_b.variables;
+        }
+    
+
+    // now collect the ids that correspond to the specified boundary conditions
+    
+    // Get a constant reference to the mesh object
     const MeshBase& mesh = _system.get_mesh();
     
     // The dimension that we are running.
@@ -684,38 +734,38 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     
-    for ( ; el != end_el; ++el)
-        for (unsigned int i_var=0; i_var<6; i_var++)
-            if ((**el).centroid()(2) == 0. &&  // only for panel elements
-                (i_var == 0 || i_var == 1 || i_var == 2 || i_var == 5)) // only for u,v,w,tz
-            {
-                dof_indices.clear();
-                dof_map.dof_indices (*el, dof_indices, i_var);
+    for ( ; el != end_el; ++el) {
+        const Elem* elem = *el;
+        
+        for (unsigned int s=0; s<elem->n_sides(); s++)
+            if ((*el)->neighbor(s) == NULL &&
+                mesh.boundary_info->n_boundary_ids(elem, s)) {
                 
-                // All boundary dofs are Dirichlet dofs in this case
-                for (unsigned int s=0; s<(*el)->n_sides(); s++)
-                    if ((*el)->neighbor(s) == NULL)
-                    {
-                        std::vector<unsigned int> side_dofs;
-                        FEInterface::dofs_on_side(*el, dim, fe_type,
-                                                  s, side_dofs);
+                std::vector<boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
+
+                for (unsigned int i_bid=0; i_bid<bc_ids.size(); i_bid++)
+                    if (constrained_vars_map.count(bc_ids[i_bid])) {
                         
-                        for(unsigned int ii=0; ii<side_dofs.size(); ii++)
-                            dof_ids.insert(dof_indices[side_dofs[ii]]);
-                    }
-                
-                // also add the dofs for variable u, v and tz
-                //        dof_indices.clear();
-                //        dof_map.dof_indices(*el, dof_indices, 3); // tx
-                //        for (unsigned int i=0; i<dof_indices.size(); i++)
-                //            dof_ids.insert(dof_indices[i]);
-                
-            } // end of element loop
-    
-    /**
-     * All done!
-     */
+                        const std::vector<unsigned int>& vars = constrained_vars_map[bc_ids[i_bid]];
+                        // now iterate over each constrained variable for this boundary
+                        // and collect its dofs
+                        for (unsigned int i_var=0; i_var<vars.size(); i_var++) {
+                            
+                            dof_indices.clear();
+                            dof_map.dof_indices (*el, dof_indices, vars[i_var]);
+                            
+                            // All boundary dofs are Dirichlet dofs in this case
+                            std::vector<unsigned int> side_dofs;
+                            FEInterface::dofs_on_side(*el, dim, fe_type,
+                                                      s, side_dofs);
+                            
+                            for(unsigned int ii=0; ii<side_dofs.size(); ii++)
+                                dof_ids.insert(dof_indices[side_dofs[ii]]);
+                        }
+                    } // end of boundary loop
+            } // end of side loop
+    }// end of element loop
     return;
-    
+
 }
 

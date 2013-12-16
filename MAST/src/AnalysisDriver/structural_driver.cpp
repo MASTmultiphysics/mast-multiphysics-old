@@ -18,6 +18,7 @@
 #include "PropertyCards/material_property_card_base.h"
 #include "Optimization/gcmma_optimization_interface.h"
 #include "BoundaryConditions/boundary_condition.h"
+#include "BoundaryConditions/displacement_boundary_condition.h"
 #include "Optimization/topology_optimization.h"
 #include "Mesh/mesh_initializer.h"
 #include "Mesh/panel_mesh.h"
@@ -228,13 +229,14 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
-    system.add_variable ( "ux", static_cast<Order>(o), fefamily);
-    system.add_variable ( "uy", static_cast<Order>(o), fefamily);
-    system.add_variable ( "uz", static_cast<Order>(o), fefamily);
-    system.add_variable ( "tx", static_cast<Order>(o), fefamily);
-    system.add_variable ( "ty", static_cast<Order>(o), fefamily);
-    system.add_variable ( "tz", static_cast<Order>(o), fefamily);
-
+    std::map<std::string, unsigned int> var_id;
+    var_id["ux"] = system.add_variable ( "ux", static_cast<Order>(o), fefamily);
+    var_id["uy"] = system.add_variable ( "uy", static_cast<Order>(o), fefamily);
+    var_id["uz"] = system.add_variable ( "uz", static_cast<Order>(o), fefamily);
+    var_id["tx"] = system.add_variable ( "tx", static_cast<Order>(o), fefamily);
+    var_id["ty"] = system.add_variable ( "ty", static_cast<Order>(o), fefamily);
+    var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
+    
     MAST::StructuralSystemAssembly structural_assembly(system,
                                                        MAST::MODAL,
                                                        infile);
@@ -261,14 +263,53 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     std::vector<Real> sens;
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
 
-    // apply the boundary conditions
-    if (eigen_system) {
+    std::set<boundary_id_type> dirichlet_boundary;
+    // read and initialize the boundary conditions
+    std::map<boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
+    unsigned int n_bc, b_id;
+    // first read the boundaries for ux constraint
 
+    for (std::map<std::string, unsigned int>::iterator it = var_id.begin();
+         it != var_id.end(); it++) {
+        
+        std::string nm = "n_" + it->first + "_bc"; // name for # bcs
+        n_bc = infile(nm, 0);
+        
+        nm = it->first + "_bc";  // name for bc id vector
+        
+        for (unsigned int i=0; i<n_bc; i++) {
+            b_id = infile(nm, 0, i); // ith component of the bc id vector
+            
+            if (!boundary_constraint_map.count(b_id)) // add vector if it does not exist
+                boundary_constraint_map[b_id] = std::vector<unsigned int>(0);
+            
+            boundary_constraint_map[b_id].push_back(var_id[it->first]);
+        }
+    }
+    
+    std::vector<MAST::BoundaryCondition*> dirichlet_boundary_conditions;
+    
+    // now iterate over each boundary and create the boudnary condition object
+    for (std::map<boundary_id_type, std::vector<unsigned int> >::iterator
+         it = boundary_constraint_map.begin();
+         it != boundary_constraint_map.end(); it++) {
+        MAST::DisplacementBoundaryCondition* bc = new MAST::DisplacementBoundaryCondition;
+        bc->init(it->first, it->second);
+        dirichlet_boundary_conditions.push_back(bc);
+        structural_assembly.add_side_load(it->first, *bc);
+    }
+    
+    equation_systems.init ();
+    equation_systems.print_info();
+    
+    // apply the boundary conditions to the eigenproblem if necessary
+    if (eigen_system) {
+        
         eigen_system->set_eigenproblem_type(GHEP);
         eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
-
+        
         equation_systems.init ();
-
+        
         std::set<unsigned int> dirichlet_dof_ids;
         equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
         equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
@@ -278,21 +319,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
         eigen_system->initialize_condensed_dofs(dirichlet_dof_ids);
     }
-    else {
-        ZeroFunction<Real> zero_function;
-        std::vector<unsigned int> vars(6);
-        for (unsigned int i=0; i<6; i++)
-            vars[i] = i;
-        std::set<boundary_id_type> dirichlet_boundary;
-        dirichlet_boundary.insert(0); // bottom
-        dirichlet_boundary.insert(1); // right
-        dirichlet_boundary.insert(2); // upper
-        dirichlet_boundary.insert(3); // left
-        system.get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
-                                                                      &zero_function));
-        equation_systems.init ();
-    }
-
     
 
 //    system.time_solver->diff_solver()->quiet = false;
@@ -301,7 +327,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 //    system.time_solver->diff_solver()->absolute_residual_tolerance =  1.0e-8;
     
     // Print information about the system to the screen.
-    equation_systems.print_info();
     
     MAST::IsotropicMaterialPropertyCard mat;
     MAST::ElementPropertyCard3D prop3d;
@@ -442,6 +467,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         std::cout<< std::endl;
         file.close();
     }
+
+    // be sure to delete the boundary condition objects
+    for (unsigned int i=0; i<dirichlet_boundary_conditions.size(); i++)
+        delete dirichlet_boundary_conditions[i];
     
     // now write the data to an output file
     XdrIO xdr(mesh, true);
@@ -451,6 +480,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                            (EquationSystems::WRITE_SERIAL_FILES |
                             EquationSystems::WRITE_DATA |
                             EquationSystems::WRITE_ADDITIONAL_DATA));
+    
     // All done.
     return 0;
 }

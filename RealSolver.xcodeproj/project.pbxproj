@@ -95,6 +95,8 @@
 		69A98AC317A5A77400789481 /* flutter_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flutter_driver.cpp; sourceTree = "<group>"; };
 		69FB3B0518185F1000CEDF1D /* element_property_card_2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_2D.h; sourceTree = "<group>"; };
 		69FB3B071818D2F500CEDF1D /* element_property_card_3D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_3D.h; sourceTree = "<group>"; };
+		EB0A4002185F64910091C051 /* nastran_io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nastran_io.h; sourceTree = "<group>"; };
+		EB0A4003185F84E20091C051 /* displacement_boundary_condition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = displacement_boundary_condition.h; sourceTree = "<group>"; };
 		EB1655E9180755300037E46C /* ramp_mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ramp_mesh.h; sourceTree = "<group>"; };
 		EB41AEEA17EA253700288448 /* gaussian_bump_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gaussian_bump_mesh.h; sourceTree = "<group>"; };
 		EB41AEEB17EA253700288448 /* mesh_initializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_initializer.h; sourceTree = "<group>"; };
@@ -334,6 +336,7 @@
 			children = (
 				EB41AEEA17EA253700288448 /* gaussian_bump_mesh.h */,
 				EB41AEEB17EA253700288448 /* mesh_initializer.h */,
+				EB0A4002185F64910091C051 /* nastran_io.h */,
 				EB41AEEC17EA253700288448 /* panel_mesh.h */,
 				EB1655E9180755300037E46C /* ramp_mesh.h */,
 				EB41AEED17EA253700288448 /* ringleb_mesh.h */,
@@ -360,6 +363,7 @@
 				EBD7964818492E3C007FA3A7 /* boundary_condition.cpp */,
 				EBD7962D184903E2007FA3A7 /* boundary_condition.h */,
 				EBD7962E184903E2007FA3A7 /* boundary_surface_motion.h */,
+				EB0A4003185F84E20091C051 /* displacement_boundary_condition.h */,
 				EBD7962F184903E2007FA3A7 /* flexible_surface_motion.h */,
 				EBD79630184903E2007FA3A7 /* function_surface_motion.h */,
 				EBD79631184903E2007FA3A7 /* rigid_surface_motion.cpp */,

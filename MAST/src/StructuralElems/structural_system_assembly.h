@@ -1,3 +1,10 @@
+//
+//  structural_system_assembly.h
+//  MAST
+//
+//  Created by Manav Bhatia on 12/16/13.
+//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
+//
 
 #ifndef __MAST__structural_system_assembly_h__
 #define __MAST__structural_system_assembly_h__
@@ -17,19 +24,15 @@
 #include "libmesh/sparse_matrix.h"
 
 
+// MAST includes
+#include "BoundaryConditions/boundary_condition.h"
+
 
 using namespace libMesh;
 
 
 namespace MAST
 {
-    enum StructuralBoundaryConditionType
-    {
-        DIRICHLET,
-        TRACTION
-    };
-    
-    
     enum StructuralAnalysisType {
         STATIC,
         DYNAMIC,
@@ -229,11 +232,6 @@ namespace MAST
          *     property card if the same card is to be used
          */
         const MAST::ElementPropertyCardBase* _property;
-        
-        /*!
-         *   boundary conditions for this analysis
-         */
-        std::map<unsigned int, MAST::StructuralBoundaryConditionType> _boundary_condition;
         
         /*!
          *   map of element property cards for each element
