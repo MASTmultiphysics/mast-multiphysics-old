@@ -46,11 +46,17 @@ void
 MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                            UnstructuredMesh& mesh, ElemType t) {
     
+    libmesh_assert_equal_to(divs.size(), 3);
+    
+    std::vector<MeshInitializer::CoordinateDivisions*> stiff_divs(2);
     MeshInitializer init;
+    stiff_divs[0] = divs[0];
+    stiff_divs[1] = divs[1];
+
     // initialize the main mesh
     {
         SerialMesh panel(mesh.comm());
-        init.init(divs, panel, t);
+        init.init(stiff_divs, panel, t);
         // use subdomain id for panel as 0
         _combine_mesh(mesh, panel, MAST::StiffenedPanel::PANEL, 0., 0);
     }
@@ -58,18 +64,12 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     const unsigned int n_x_stiff = divs[1]->n_divs()-1,
     n_y_stiff = divs[0]->n_divs()-1;
     
-    std::vector<MeshInitializer::CoordinateDivisions*> stiff_divs(2);
-    MeshInitializer::CoordinateDivisions height;
-    std::vector<Real> div_loc(2); div_loc[0] = 0.; div_loc[1] = 0.1;
-    std::vector<Real> dx_rel(2); dx_rel[0] = 1.; dx_rel[1] = 1.;
-    std::vector<unsigned int> n_dx(1); n_dx[0] = 4;
-    height.init(1, div_loc, dx_rel, n_dx);
     
     // now iterate over the stiffeners and create them
     for (unsigned int i=0; i<n_x_stiff; i++) {
         SerialMesh stiff(mesh.comm());
         stiff_divs[0] = divs[0];
-        stiff_divs[1] = &height;
+        stiff_divs[1] = divs[2];
         
         init.init(stiff_divs, stiff, t);
         
@@ -83,7 +83,7 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     for (unsigned int i=0; i<n_y_stiff; i++) {
         SerialMesh stiff(mesh.comm());
         stiff_divs[0] = divs[1];
-        stiff_divs[1] = &height;
+        stiff_divs[1] = divs[2];
         
         init.init(stiff_divs, stiff, t);
         
