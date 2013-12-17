@@ -65,12 +65,14 @@ namespace MAST
          *    initializes the vector to the prestress in the element
          */
         virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                      const DenseMatrix<Real>& T,
                                       DenseVector<Real>& v) const;
         
         /*!
          *    initializes the matrix to the prestress in the element
          */
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                      const DenseMatrix<Real>& T,
                                       DenseMatrix<Real>& m) const;
 
         
@@ -196,6 +198,7 @@ MAST::ElementPropertyCard3D::calculate_matrix_sensitivity(const libMesh::Elem &e
 
 inline void
 MAST::ElementPropertyCard3D::prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                              const DenseMatrix<Real>& T,
                                               DenseVector<Real>& v) const {
     if (_prestress.size() == 0)
         v.resize(6); // zero, if the stress has not been defined
@@ -209,6 +212,7 @@ MAST::ElementPropertyCard3D::prestress_vector(MAST::ElemenetPropertyMatrixType t
  */
 inline void
 MAST::ElementPropertyCard3D::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                              const DenseMatrix<Real>& T,
                                               DenseMatrix<Real>& m) const {
     m.resize(3, 3);
     if (_prestress.size() == 6) {

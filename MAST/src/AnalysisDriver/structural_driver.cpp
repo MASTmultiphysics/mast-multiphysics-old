@@ -23,6 +23,7 @@
 #include "Mesh/mesh_initializer.h"
 #include "Mesh/panel_mesh.h"
 #include "Mesh/stiffened_panel.h"
+#include "Mesh/nastran_io.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -98,7 +99,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     if (if_panel_mesh)
     {
         
-        
         const unsigned int nx_divs = infile("nx_divs",0),
         ny_divs = infile("ny_divs",0),
         nz_divs = infile("nz_divs",0);
@@ -160,6 +160,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         const std::string mesh_type = infile("mesh_type", std::string(""));
         if (mesh_type == "panel")
         {
+            mesh.set_mesh_dimension(dim);
             if (dim == 1)
                 MeshInitializer().init(divs, mesh, elem_type);
             else if (dim == 2)
@@ -370,6 +371,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     structural_assembly.set_property_for_all_elems(prop2d);
     structural_assembly.add_parameter(h.ptr(), &h);
+    
+    MAST::NastranIO(structural_assembly).write("nast.txt");
+    return 0;
     
     system.solve();
 //    if (eigen_system)

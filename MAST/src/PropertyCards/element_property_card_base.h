@@ -121,7 +121,7 @@ namespace MAST
          *    otherwise
          */
         virtual bool if_prestressed() const {
-            if (_prestress.size())
+            if (_prestress.m() == 0)
                 return true;
             else
                 return false;
@@ -131,24 +131,53 @@ namespace MAST
         /*!
          *    initializes the prestress in the element. The vector should 
          *    contain six stress components: sigma_xx, sigma_yy, sigma_zz,
-         *    tau_xy, tau_yz, tau_zx
+         *    tau_xy, tau_yz, tau_zx. It is assumed that the stress values 
+         *    are defined in the global coordinate system.
          */
         virtual void prestress(const DenseVector<Real>& v) {
             libmesh_assert_equal_to(v.size(), 6);
-            _prestress = v;
+            _prestress.resize(3, 3);
+            _prestress(0,0) = v(0); // sigma_xx
+            _prestress(1,1) = v(1); // sigma_yy
+            _prestress(2,2) = v(2); // sigma_zz
+            _prestress(0,1) = v(3); // sigma_xy
+            _prestress(1,0) = v(3);
+            _prestress(1,2) = v(4); // sigma_yz
+            _prestress(2,1) = v(4);
+            _prestress(0,2) = v(5); // sigma_zx
+            _prestress(2,0) = v(5);
+            
         }
 
         /*!
-         *    initializes the vector to the prestress in the element
+         *    initializes the vector to the prestress in the element. The 
+         *    stress value is defined in the global coordinate system. 
+         *    Hence, the given matrix \par T is used to transform the vector
+         *    to the local coordinate defined for \par T. Note that 
+         *    T_ij = V_i^t . Vn_j, where
+         *    V_i are the unit vectors of the global cs, and Vn_j are the
+         *    unit vectors of the local cs. To transform a vector from global to
+         *    local cs,    an_j = T^t a_i, and the reverse transformation is
+         *    obtained as  a_j  = T  an_i
          */
         virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                      const DenseMatrix<Real>& T,
                                       DenseVector<Real>& v) const = 0;
         
         
         /*!
-         *    initializes the matrix to the prestress in the element
+         *    initializes the matrix to the prestress in the element. The
+         *    stress value is defined in the global coordinate system.
+         *    Hence, the given matrix \par T is used to transform the vector
+         *    to the local coordinate defined for \par T. Note that
+         *    T_ij = V_i^t . Vn_j, where
+         *    V_i are the unit vectors of the global cs, and Vn_j are the
+         *    unit vectors of the local cs. To transform a vector from global to
+         *    local cs,    an_j = T^t a_i, and the reverse transformation is
+         *    obtained as  a_j  = T  an_i
          */
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                      const DenseMatrix<Real>& T,
                                       DenseMatrix<Real>& m) const = 0;
         
         
@@ -165,10 +194,10 @@ namespace MAST
         bool _diagonal_mass;
         
         /*!
-         *   element prestress: six stress components: sigma_xx, sigma_yy, 
+         *   element prestress tensor: six stress components: sigma_xx, sigma_yy,
          *   sigma_zz, tau_xy, tau_yz, tau_zx
          */
-        DenseVector<Real> _prestress;
+        DenseMatrix<Real> _prestress;
     };
     
     

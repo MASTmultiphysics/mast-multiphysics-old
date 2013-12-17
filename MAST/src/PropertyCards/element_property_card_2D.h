@@ -171,6 +171,7 @@ namespace MAST
          *    initializes the vector to the prestress in the element
          */
         virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                      const DenseMatrix<Real>& T,
                                       DenseVector<Real>& v) const;
         
         
@@ -178,6 +179,7 @@ namespace MAST
          *    initializes the matrix to the prestress in the element
          */
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                      const DenseMatrix<Real>& T,
                                       DenseMatrix<Real>& m) const;
         
         /*!
@@ -399,6 +401,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
 
 inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetPropertyMatrixType t,
+                                                          const DenseMatrix<Real>& T,
                                                           DenseVector<Real>& v) const {
     double h = this->get<Real>("h")();
     switch (t) {
@@ -424,6 +427,7 @@ MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetProperty
 
 inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
+                                                          const DenseMatrix<Real>& T,
                                                           DenseMatrix<Real>& m) const {
     double h = this->get<Real>("h")();
     switch (t) {

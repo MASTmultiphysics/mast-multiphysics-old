@@ -48,6 +48,8 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     
     libmesh_assert_equal_to(divs.size(), 3);
     
+    mesh.set_mesh_dimension(2);
+    
     std::vector<MeshInitializer::CoordinateDivisions*> stiff_divs(2);
     MeshInitializer init;
     stiff_divs[0] = divs[0];

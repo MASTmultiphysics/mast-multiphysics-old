@@ -322,11 +322,14 @@ MAST::BendingStructuralElem::prestress_force (bool request_jacobian,
     
     // get the element prestress
     _property.prestress_matrix(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                               _local_elem->T_matrix(),
                                prestress_mat_A);
     _property.prestress_vector(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                               _local_elem->T_matrix(),
                                prestress_vec_A);
     
     _property.prestress_vector(SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
+                               _local_elem->T_matrix(),
                                prestress_vec_B);
     // transform to the local coordinate system
     
@@ -427,11 +430,14 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
     
     // get the element prestress
     _property.prestress_matrix(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                               _local_elem->T_matrix(),
                                prestress_mat_A);
     _property.prestress_vector(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                               _local_elem->T_matrix(),
                                prestress_vec_A);
     
     _property.prestress_vector(SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
+                               _local_elem->T_matrix(),
                                prestress_vec_B);
     // transform to the local coordinate system
     
