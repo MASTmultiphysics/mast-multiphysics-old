@@ -299,17 +299,17 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         structural_assembly.add_side_load(it->first, *bc);
     }
     
-    equation_systems.init ();
-    equation_systems.print_info();
-    
-    // apply the boundary conditions to the eigenproblem if necessary
     if (eigen_system) {
         
         eigen_system->set_eigenproblem_type(GHEP);
         eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
-        
-        equation_systems.init ();
-        
+    }
+    
+    equation_systems.init ();
+    equation_systems.print_info();
+    
+    // apply the boundary conditions to the eigenproblem if necessary
+    if (eigen_system) {        
         std::set<unsigned int> dirichlet_dof_ids;
         equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
         equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
@@ -321,6 +321,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     }
     
 
+    
 //    system.time_solver->diff_solver()->quiet = false;
 //    system.time_solver->diff_solver()->verbose = true;
 //    system.time_solver->diff_solver()->relative_residual_tolerance =  1.0e-8;
