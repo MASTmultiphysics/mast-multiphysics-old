@@ -102,15 +102,11 @@ namespace MAST
         void get_dirichlet_dofs(std::set<unsigned int>& dof_ids) const;
         
         /*!
-         *    sets the same property for all cards
+         *    sets the same property for all elements in the specified subdomain
          */
-        void set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop);
-
-        /*!
-         *    sets the property for specified element
-         */
-        void set_property_for_elem(const Elem& e, const MAST::ElementPropertyCardBase& prop);
-
+        void set_property_for_subdomain(const subdomain_id_type sid,
+                                        const MAST::ElementPropertyCardBase& prop);
+        
         /*!
          *    get the material property for the specified element
          */
@@ -223,20 +219,9 @@ namespace MAST
         
         
         /*!
-         *    flag to specify if the same material card is to be used for all 
-         *    elements. False by default
-         */
-        bool _if_same_property_for_all_elems;
-        
-        /*!
-         *     property card if the same card is to be used
-         */
-        const MAST::ElementPropertyCardBase* _property;
-        
-        /*!
          *   map of element property cards for each element
          */
-        std::map<const Elem*, const MAST::ElementPropertyCardBase*> _element_property;
+        std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*> _element_property;
         
         /*!
          *   vector of material property cards

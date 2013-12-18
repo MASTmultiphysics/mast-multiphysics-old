@@ -101,8 +101,8 @@ namespace MAST
             m.resize(2, 2);
             if (_prestress.m() != 0) {
                 DenseMatrix<Real> mat; mat = _prestress;
-                mat.right_multiply_transpose(T);
-                mat.left_multiply(T);
+                mat.right_multiply(T);
+                mat.left_multiply_transpose(T);
                 
                 for (unsigned int i=0; i<2; i++)
                     for (unsigned int j=0; j<2; j++)
