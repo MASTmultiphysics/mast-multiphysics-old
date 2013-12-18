@@ -79,14 +79,17 @@ namespace MAST
         /*!
          *    initializes the vector to the prestress in the element
          */
-        virtual void _prestress_vector(DenseVector<Real>& v) const {
-            if (_prestress.size() == 0)
+        virtual void _prestress_vector(const DenseMatrix<Real>& T,
+                                       DenseVector<Real>& v) const {
+            if (_prestress.m() == 0)
                 v.resize(3); // zero, if the stress has not been defined
             else {
                 v.resize(3);
-                v(0) = _prestress(0);
-                v(1) = _prestress(1);
-                v(2) = _prestress(3);
+                DenseMatrix<Real> mat;
+                _prestress_matrix(T, mat);
+                v(0) = mat(0,0); // sigma_xx
+                v(1) = mat(1,1); // sigma_yy
+                v(2) = mat(0,1); // sigma_xy
             }
         }
         
@@ -94,13 +97,17 @@ namespace MAST
         /*!
          *    initializes the matrix to the prestress in the element
          */
-        virtual void _prestress_matrix(DenseMatrix<Real>& m) const {
+        virtual void _prestress_matrix(const DenseMatrix<Real>& T,
+                                       DenseMatrix<Real>& m) const {
             m.resize(2, 2);
-            if (_prestress.size() == 6) {
+            if (_prestress.m() == 6) {
+                DenseMatrix<Real> mat; mat = _prestress;
+                mat.right_multiply_transpose(T);
+                mat.left_multiply(T);
+                
                 for (unsigned int i=0; i<2; i++)
-                    m(i,i) = _prestress(i);
-                m(0,1) = _prestress(3);  // tau_xy
-                m(1,0) = _prestress(3);  // tau_xy
+                    for (unsigned int j=0; j<2; j++)
+                        m(i,j) = mat(i,j);
             }
         }
         
@@ -406,7 +413,7 @@ MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetProperty
     double h = this->get<Real>("h")();
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-            _prestress_vector(v);
+            _prestress_vector(T, v);
             v.scale(h);
             break;
                     
@@ -432,7 +439,7 @@ MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetProperty
     double h = this->get<Real>("h")();
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-            _prestress_matrix(m);
+            _prestress_matrix(T, m);
             m.scale(h);
             break;
             

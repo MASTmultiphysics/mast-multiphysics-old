@@ -63,20 +63,32 @@ namespace MAST
         /*!
          *    initializes the vector to the prestress in the element
          */
-        virtual void _prestress_vector(DenseVector<Real>& v) const {
-            v.resize(2);
-            if (_prestress.size() == 6)
-                v(0) = _prestress(0);
+        virtual void _prestress_vector(const DenseMatrix<Real>& T,
+                                       DenseVector<Real>& v) const {
+            v.resize(2); // zero, if the stress has not been defined
+
+            if (_prestress.m() == 6) {
+                
+                DenseMatrix<Real> mat;
+                _prestress_matrix(T, mat);
+                v(0) = mat(0,0); // sigma_xx
+            }
         }
         
         
         /*!
          *    initializes the matrix to the prestress in the element
          */
-        virtual void _prestress_matrix(DenseMatrix<Real>& m) const {
+        virtual void _prestress_matrix(const DenseMatrix<Real>& T,
+                                       DenseMatrix<Real>& m) const {
             m.resize(2, 2);
-            if (_prestress.size() == 6)
-                m(0,0) = _prestress(0);
+            if (_prestress.m() == 6) {
+                DenseMatrix<Real> mat; mat = _prestress;
+                mat.right_multiply_transpose(T);
+                mat.left_multiply(T);
+                
+                m(0,0) = mat(0,0);
+            }
         }
 
         /*!
@@ -411,7 +423,7 @@ MAST::Solid1DSectionElementPropertyCard::prestress_vector(MAST::ElemenetProperty
     Area = b*h;
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-            _prestress_vector(v);
+            _prestress_vector(T, v);
             v.scale(Area);
             break;
             
@@ -439,7 +451,7 @@ MAST::Solid1DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetProperty
     Area = b*h;
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-            _prestress_matrix(m);
+            _prestress_matrix(T, m);
             m.scale(Area);
             break;
             
