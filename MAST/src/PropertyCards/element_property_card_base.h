@@ -122,9 +122,9 @@ namespace MAST
          */
         virtual bool if_prestressed() const {
             if (_prestress.m() == 0)
-                return true;
-            else
                 return false;
+            else
+                return true;
         }
 
         

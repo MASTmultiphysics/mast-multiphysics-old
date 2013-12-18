@@ -81,10 +81,9 @@ namespace MAST
          */
         virtual void _prestress_vector(const DenseMatrix<Real>& T,
                                        DenseVector<Real>& v) const {
-            if (_prestress.m() == 0)
-                v.resize(3); // zero, if the stress has not been defined
-            else {
-                v.resize(3);
+            v.resize(3); // zero, if the stress has not been defined
+            if (_prestress.m() != 0) {
+
                 DenseMatrix<Real> mat;
                 _prestress_matrix(T, mat);
                 v(0) = mat(0,0); // sigma_xx
@@ -100,7 +99,7 @@ namespace MAST
         virtual void _prestress_matrix(const DenseMatrix<Real>& T,
                                        DenseMatrix<Real>& m) const {
             m.resize(2, 2);
-            if (_prestress.m() == 6) {
+            if (_prestress.m() != 0) {
                 DenseMatrix<Real> mat; mat = _prestress;
                 mat.right_multiply_transpose(T);
                 mat.left_multiply(T);

@@ -24,7 +24,6 @@
 		EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */; };
 		EB8173521832A91E00E03740 /* libgfortran.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8173511832A91E00E03740 /* libgfortran.dylib */; };
 		EB817355183424C500E03740 /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB817354183424C500E03740 /* libgcmma.a */; };
-		EB81735A1835309D00E03740 /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173571835309D00E03740 /* structural_element_2D.cpp */; };
 		EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173581835309D00E03740 /* structural_element_3D.cpp */; };
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
@@ -116,7 +115,6 @@
 		EB8173511832A91E00E03740 /* libgfortran.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgfortran.dylib; path = ../../../../../opt/local/lib/gcc48/libgfortran.dylib; sourceTree = "<group>"; };
 		EB817354183424C500E03740 /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = MAST/src/Optimization/gcmma/libgcmma.a; sourceTree = "<group>"; };
 		EB8173561835309D00E03740 /* structural_element_1D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_1D.cpp; sourceTree = "<group>"; };
-		EB8173571835309D00E03740 /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		EB8173581835309D00E03740 /* structural_element_3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_3D.cpp; sourceTree = "<group>"; };
 		EB81735C1835677F00E03740 /* topology_optimization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = topology_optimization.h; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -270,7 +268,6 @@
 				696C08091796CD4100B77C5C /* structural_elem_base.h */,
 				EB8173561835309D00E03740 /* structural_element_1D.cpp */,
 				EBF278651815995100DC81A3 /* structural_element_1D.h */,
-				EB8173571835309D00E03740 /* structural_element_2D.cpp */,
 				EBF278661815996200DC81A3 /* structural_element_2D.h */,
 				EB8173581835309D00E03740 /* structural_element_3D.cpp */,
 				EBF278671815997700DC81A3 /* structural_element_3D.h */,
@@ -474,7 +471,6 @@
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
 				69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
-				EB81735A1835309D00E03740 /* structural_element_2D.cpp in Sources */,
 				696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */,
 				EB817346182D902300E03740 /* sensitivity_parameters.cpp in Sources */,
 				696C08161796CD4100B77C5C /* thermal_elem_base.cpp in Sources */,

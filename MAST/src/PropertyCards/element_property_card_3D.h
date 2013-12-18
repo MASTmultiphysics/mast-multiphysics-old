@@ -200,9 +200,8 @@ inline void
 MAST::ElementPropertyCard3D::prestress_vector(MAST::ElemenetPropertyMatrixType t,
                                               const DenseMatrix<Real>& T,
                                               DenseVector<Real>& v) const {
-    if (_prestress.m() == 0)
-        v.resize(6); // zero, if the stress has not been defined
-    else {
+    v.resize(6); // zero, if the stress has not been defined
+    if (_prestress.m() != 0) {
         for (unsigned int i=0; i<3; i++)
             v(i) = _prestress(i,i);
         v(3) = _prestress(0,1);  // tau_xy
@@ -220,7 +219,7 @@ MAST::ElementPropertyCard3D::prestress_matrix(MAST::ElemenetPropertyMatrixType t
                                               const DenseMatrix<Real>& T,
                                               DenseMatrix<Real>& m) const {
     m.resize(3, 3);
-    if (_prestress.m() == 6)
+    if (_prestress.m() != 0)
         m = _prestress;
 }
 
