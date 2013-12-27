@@ -20,8 +20,8 @@ namespace MAST
     class ElementPropertyCard1D: public MAST::ElementPropertyCardBase {
         
     public:
-        ElementPropertyCard1D():
-        MAST::ElementPropertyCardBase(),
+        ElementPropertyCard1D(unsigned int pid):
+        MAST::ElementPropertyCardBase(pid),
         _bending_model(MAST::DEFAULT_BENDING)
         { }
         
@@ -29,6 +29,15 @@ namespace MAST
          *   virtual destructor
          */
         ~ElementPropertyCard1D() { }
+        
+        
+        /*!
+         *   dimension of the element for which this property is defined
+         */
+        virtual unsigned int dim() const {
+            return 1;
+        }
+
         
         /*!
          *   returns the bending model to be used for the 2D element
@@ -57,6 +66,13 @@ namespace MAST
             else
                 return 0;
         }
+        
+        
+        /*!
+         *   returns value of the property \par val. The string values for 
+         *   \par val are IYY, IZZ, IYZ
+         */
+        virtual Real value(const std::string& val) const = 0;
         
     protected:
         
@@ -104,15 +120,17 @@ namespace MAST
 
     public:
         
-        Solid1DSectionElementPropertyCard():
-        MAST::ElementPropertyCard1D(),
+        Solid1DSectionElementPropertyCard(unsigned int pid):
+        MAST::ElementPropertyCard1D(pid),
         _material(NULL)
         { }
+        
         
         /*!
          *   virtual destructor
          */
         ~Solid1DSectionElementPropertyCard() { }
+        
         
         /*!
          *    sets the material card
@@ -123,13 +141,27 @@ namespace MAST
         
         
         /*!
+         *   return true if the property is isotropic
+         */
+        virtual bool if_isotropic() const {
+            return true;
+        }
+        
+        
+        /*!
          *    returns a reference to the material
          */
-        const MAST::MaterialPropertyCardBase& get_material() const {
+        virtual const MAST::MaterialPropertyCardBase& get_material() const {
             libmesh_assert(_material); // make sure it has already been set
             return *_material;
         }
         
+        
+        /*!
+         *   returns value of the property \par val. The string values for
+         *   \par val are IYY, IZZ, IYZ
+         */
+        virtual Real value(const std::string& val) const;
         
         /*!
          *   calculates the matrix in \par m of type \par t.
@@ -213,6 +245,33 @@ MAST::ElementPropertyCard1D::bending_model(const Elem& elem,
             break;
     }
 }
+
+
+
+inline Real
+MAST::Solid1DSectionElementPropertyCard::value(const std::string& val) const {
+    
+    Real h = this->get<Real>("h")(), // section height
+    b = this->get<Real>("b")(),        // section width
+    Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
+    Iyz = 0., J=1.;
+
+    if (val == "A")
+        return Area;
+    else if (val == "IYY")
+        return Iyy;
+    else if (val == "IZZ")
+        return Izz;
+    else if (val == "IYZ")
+        return Iyz;
+    else if (val == "J")
+        return J;
+    
+    // should not get here
+    libmesh_error();
+    return 0.;
+}
+
 
 
 
@@ -314,7 +373,7 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
     switch (elem.dim()) {
             
         case 1: {
-            double h = this->get<Real>("h")(), // section height
+            Real h = this->get<Real>("h")(), // section height
             b = this->get<Real>("b")(),        // section width
             Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
             dAreadb = h, dAreadh = b,
@@ -418,7 +477,7 @@ inline void
 MAST::Solid1DSectionElementPropertyCard::prestress_vector(MAST::ElemenetPropertyMatrixType t,
                                                           const DenseMatrix<Real>& T,
                                                           DenseVector<Real>& v) const {
-    double h = this->get<Real>("h")(), // section height
+    Real h = this->get<Real>("h")(), // section height
     b = this->get<Real>("b")(),        // section width
     Area = b*h;
     switch (t) {
@@ -446,7 +505,7 @@ inline void
 MAST::Solid1DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                                           const DenseMatrix<Real>& T,
                                                           DenseMatrix<Real>& m) const {
-    double h = this->get<Real>("h")(), // section height
+    Real h = this->get<Real>("h")(), // section height
     b = this->get<Real>("b")(),        // section width
     Area = b*h;
     switch (t) {

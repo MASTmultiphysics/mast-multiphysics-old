@@ -20,8 +20,8 @@ namespace MAST
         
     public:
     public:
-        ElementPropertyCard3D():
-        MAST::ElementPropertyCardBase(),
+        ElementPropertyCard3D(unsigned int pid):
+        MAST::ElementPropertyCardBase(pid),
         _material(NULL)
         { }
         
@@ -30,6 +30,13 @@ namespace MAST
          */
         virtual ~ElementPropertyCard3D() { }
         
+        /*!
+         *   dimension of the element for which this property is defined
+         */
+        virtual unsigned int dim() const {
+            return 3;
+        }
+
         /*!
          *   calculates the material matrix in \par m of type \par t.
          */
@@ -46,9 +53,17 @@ namespace MAST
                                                   const MAST::SensitivityParameters& params) const;
 
         /*!
+         *   return true if the property is isotropic
+         */
+        virtual bool if_isotropic() const {
+            return true;
+        }
+
+        
+        /*!
          *    sets the material card
          */
-        void set_material(MAST::MaterialPropertyCardBase& mat) {
+        virtual void set_material(MAST::MaterialPropertyCardBase& mat) {
             _material = &mat;
         }
         

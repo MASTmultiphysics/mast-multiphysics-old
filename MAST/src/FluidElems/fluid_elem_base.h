@@ -228,7 +228,7 @@ protected:
      const DenseVector<Real>& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseMatrix<Real>& Ai_Bi_advection,
-     double& discontinuity_val );
+     Real& discontinuity_val );
 
     
     void calculate_yzbeta_discontinuity_operator
@@ -236,7 +236,7 @@ protected:
      FEMContext& c, const DenseVector<Real>& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseMatrix<Real>& Ai_Bi_advection,
-     double& discontinuity_val );
+     Real& discontinuity_val );
     
     
     void calculate_differential_operator_matrix

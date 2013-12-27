@@ -332,8 +332,8 @@ MAST::TopologyOptimization::_init() {
         total_vol += _elem_vol[counter];
         
         // create material properties for the element
-        MAST::IsotropicMaterialPropertyCard* mat = new MAST::IsotropicMaterialPropertyCard;
-        MAST::Solid2DSectionElementPropertyCard* prop2d = new MAST::Solid2DSectionElementPropertyCard;
+        MAST::IsotropicMaterialPropertyCard* mat = new MAST::IsotropicMaterialPropertyCard(0);
+        MAST::Solid2DSectionElementPropertyCard* prop2d = new MAST::Solid2DSectionElementPropertyCard(0);
         _materials[counter] = mat;
         _elem_properties[counter] = prop2d;
         

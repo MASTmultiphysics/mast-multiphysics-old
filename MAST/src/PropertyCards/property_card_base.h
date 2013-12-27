@@ -36,6 +36,19 @@ namespace MAST {
                 delete it->second;
         }
         
+
+        /*!
+         *   checks if the card contains the specified property value
+         */
+        bool contains(const std::string& nm) const {
+            std::map<std::string, MAST::FunctionBase*>::const_iterator it =
+            _properties.find(nm);
+            
+            // make sure that this funciton exists
+            return (it != _properties.end());
+        }
+
+        
         
         /*!
          *    adds the function to this card and returns a reference to it.

@@ -61,7 +61,7 @@ public:
          *   relative numbers specifying the expected mesh size at each
          *   division point
          */
-        std::vector<double> _relative_mesh_size_at_div;
+        std::vector<Real> _relative_mesh_size_at_div;
 
         /*!
          *   map of computational and nodal location along the coordinate
@@ -188,7 +188,7 @@ public:
             }
             
             n=1;
-            double dx=0.0, growth_factor = 0.0;
+            Real dx=0.0, growth_factor = 0.0;
             // now calculate the base mesh size, and calculate the nodal points
             for (unsigned int i=0; i<_n_divs; i++)
             {

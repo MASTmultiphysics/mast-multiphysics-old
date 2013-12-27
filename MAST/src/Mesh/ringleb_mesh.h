@@ -169,14 +169,14 @@ RinglebMesh::process_mesh( )
         else
             x_val = (0.5-x_val)*2.+1.;
         
-        double exp_val = 0.2, x_break=0.7;
+        Real exp_val = 0.2, x_break=0.7;
         if (x_val <= x_break)
             x_val = x_val/x_break*pow(x_break, exp_val);
         else
             x_val = pow(x_val,exp_val);
         
         y_val = n(1);
-        double kval, qval, aval, gammaval =1.4, rhoval, pval, Jval;
+        Real kval, qval, aval, gammaval =1.4, rhoval, pval, Jval;
         kval = y_val * 0.8 + 0.7; // linear variation from 0.7 to 1.5
         qval = x_val * (kval-0.5) + 0.5; // linear variation from 0.5 to kval
         aval = sqrt(1.-0.5*(gammaval-1.)*qval*qval);

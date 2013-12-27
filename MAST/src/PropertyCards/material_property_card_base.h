@@ -27,10 +27,18 @@ namespace MAST
         
     public:
         
-        MaterialPropertyCardBase():
-        MAST::PropertyCardBase ()
+        MaterialPropertyCardBase(unsigned int pid):
+        MAST::PropertyCardBase (),
+        _pid(pid)
         { }
         
+        /*!
+         *    returns the id for this card
+         */
+        unsigned int id() const {
+            return _pid;
+        }
+
         /*!
          *   calculates the material matrix in \par m of type \par t for a
          *   1D element.
@@ -84,6 +92,11 @@ namespace MAST
         
     protected:
         
+        /*!
+         *   property card id
+         */
+        unsigned int _pid;
+        
     };
 
     
@@ -91,8 +104,8 @@ namespace MAST
         
     public:
         
-        IsotropicMaterialPropertyCard():
-        MAST::MaterialPropertyCardBase ()
+        IsotropicMaterialPropertyCard(unsigned int pid):
+        MAST::MaterialPropertyCardBase (pid)
         { }
         
         /*!
@@ -158,7 +171,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix(MAST::MaterialPropertyM
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(2,2);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             G = E/2./(1.+nu);
             m(0,0) = E;
@@ -168,7 +181,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix(MAST::MaterialPropertyM
 
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
-            double rho = this->get<Real>("rho")();
+            Real rho = this->get<Real>("rho")();
             for (unsigned int i=0; i<6; i++)
                 m(i,i) = rho;
         }
@@ -176,7 +189,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix(MAST::MaterialPropertyM
             
         case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
             m.resize(2,2);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
@@ -215,7 +228,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix_sensitivity
 
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(2,2);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
             if (f.name() == "E") {
                 m(0,0) = 1.;
@@ -243,7 +256,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix_sensitivity
             
         case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
             m.resize(2,2);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
@@ -283,7 +296,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix(MAST::MaterialPropertyM
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(3,3);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
             if (if_plane_stress) {
                 for (unsigned int i=0; i<2; i++) {
@@ -303,7 +316,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix(MAST::MaterialPropertyM
             
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
-            double rho = this->get<Real>("rho")();
+            Real rho = this->get<Real>("rho")();
             for (unsigned int i=0; i<6; i++)
                 m(i,i) = rho;
         }
@@ -311,7 +324,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix(MAST::MaterialPropertyM
             
         case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
             m.resize(2,2);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
@@ -352,7 +365,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix_sensitivity
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(3,3);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
             if (if_plane_stress) {
                 if (f.name() == "E") {
@@ -396,7 +409,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix_sensitivity
             
         case MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX: {
             m.resize(2,2);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
@@ -431,7 +444,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix(MAST::MaterialPropertyM
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(6,6);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
             for (unsigned int i=0; i<3; i++) {
                 for (unsigned int j=0; j<3; j++)
@@ -446,7 +459,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix(MAST::MaterialPropertyM
             
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
-            double rho = this->get<Real>("rho")();
+            Real rho = this->get<Real>("rho")();
             for (unsigned int i=0; i<6; i++)
                 m(i,i) = rho;
         }
@@ -481,7 +494,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix_sensitivity
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(6,6);
-            double E = this->get<Real>("E")(),
+            Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
             if (f.name() == "E") {
                 for (unsigned int i=0; i<3; i++) {

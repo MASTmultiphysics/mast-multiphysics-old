@@ -20,6 +20,9 @@
 
 namespace MAST
 {
+    // forward decleration
+    class MaterialPropertyCardBase;
+    
     enum StrainType {
         LINEAR_STRAIN,
         VON_KARMAN_STRAIN
@@ -39,8 +42,9 @@ namespace MAST
     class ElementPropertyCardBase: public MAST::PropertyCardBase {
         
     public:
-        ElementPropertyCardBase():
+        ElementPropertyCardBase(unsigned int pid):
         MAST::PropertyCardBase(),
+        _pid(pid),
         _strain_type(MAST::LINEAR_STRAIN),
         _diagonal_mass(false)
         { }
@@ -83,6 +87,36 @@ namespace MAST
                                                   DenseMatrix<Real>& m,
                                                   const MAST::SensitivityParameters& params) const = 0;
 
+        /*!
+         *    returns the id for this card
+         */
+        unsigned int id() const {
+            return _pid;
+        }
+        
+        
+        /*!
+         *   return true if the property is isotropic
+         */
+        virtual bool if_isotropic() const = 0;
+
+        
+        /*!
+         *   return the material property. This needs to be reimplemented 
+         *   for individual card type, and should be used only for isotropic 
+         *   cards.
+         */
+        virtual const MAST::MaterialPropertyCardBase& get_material() const {
+            libmesh_error();
+        }
+
+        
+        /*!
+         *   dimension of the element for which this property is defined
+         */
+        virtual unsigned int dim() const = 0;
+        
+        
         /*!
          *    sets the type of strain to be used, which is LINEAR_STRAIN by
          *    default
@@ -182,6 +216,11 @@ namespace MAST
         
         
     protected:
+        
+        /*!
+         *    property card id
+         */
+        unsigned int _pid;
         
         /*!
          *    type of nonlinear strain to be used for analysis

@@ -489,7 +489,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
             //            std::vector<unsigned int> v(1); v[0] = system.variable_number("rho");
             //            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
             //            m.init();
-            //            unsigned int ndivs=10000; double dx=5.0/(ndivs*1.);
+            //            unsigned int ndivs=10000; Real dx=5.0/(ndivs*1.);
             //            Point p; DenseVector<Real> vals; vals.resize(4);
             //            p(0) = 0.; p(1) = .026;
             //            while (p(0) < 5.) {

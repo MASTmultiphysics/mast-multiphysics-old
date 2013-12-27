@@ -239,7 +239,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::BUCKLING,
+                                                       MAST::MODAL,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -330,10 +330,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     // Print information about the system to the screen.
     
-    MAST::IsotropicMaterialPropertyCard mat;
-    MAST::ElementPropertyCard3D prop3d;
-    MAST::Solid2DSectionElementPropertyCard prop2d, prop2d_stiff;
-    MAST::Solid1DSectionElementPropertyCard prop1d;
+    MAST::IsotropicMaterialPropertyCard mat(0);
+    MAST::ElementPropertyCard3D prop3d(0);
+    MAST::Solid2DSectionElementPropertyCard prop2d(1), prop2d_stiff(2);
+    MAST::Solid1DSectionElementPropertyCard prop1d(3);
     
     MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
     &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION),
@@ -362,10 +362,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
-    prop2d.prestress(prestress); // no prestress for stiffener
+    //prop2d.prestress(prestress); // no prestress for stiffener
     //prop1d.prestress(prestress);
 
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
@@ -375,9 +375,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     for (unsigned int i=1; i<3; i++)
         structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
     structural_assembly.add_parameter(h.ptr(), &h);
-    
-    MAST::NastranIO(structural_assembly).write("nast.txt");
-    return 0;
     
     system.solve();
 //    if (eigen_system)
@@ -482,6 +479,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         delete dirichlet_boundary_conditions[i];
     
     // now write the data to an output file
+    MAST::NastranIO(structural_assembly).write("nast.txt");
     XdrIO xdr(mesh, true);
     xdr.write("saved_structural_mesh.xdr");
     equation_systems.write("saved_structural_solution.xdr",

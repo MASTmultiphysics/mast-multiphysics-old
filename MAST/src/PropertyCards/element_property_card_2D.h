@@ -20,8 +20,8 @@ namespace MAST
     class ElementPropertyCard2D: public MAST::ElementPropertyCardBase {
         
     public:
-        ElementPropertyCard2D():
-        MAST::ElementPropertyCardBase(),
+        ElementPropertyCard2D(unsigned int pid):
+        MAST::ElementPropertyCardBase(pid),
         _bending_model(MAST::DEFAULT_BENDING),
         _if_plane_stress(true)
         { }
@@ -131,8 +131,8 @@ namespace MAST
     
     class Solid2DSectionElementPropertyCard : public MAST::ElementPropertyCard2D {
     public:
-        Solid2DSectionElementPropertyCard():
-        MAST::ElementPropertyCard2D(),
+        Solid2DSectionElementPropertyCard(unsigned int pid):
+        MAST::ElementPropertyCard2D(pid),
         _material(NULL)
         { }
         
@@ -141,6 +141,20 @@ namespace MAST
          */
         ~Solid2DSectionElementPropertyCard() { }
         
+        /*!
+         *   dimension of the element for which this property is defined
+         */
+        virtual unsigned int dim() const {
+            return 2;
+        }
+
+        /*!
+         *   return true if the property is isotropic
+         */
+        virtual bool if_isotropic() const {
+            return true;
+        }
+
         /*!
          *    sets the material card
          */
@@ -152,7 +166,7 @@ namespace MAST
         /*!
          *    returns a reference to the material
          */
-        const MAST::MaterialPropertyCardBase& get_material() const {
+        virtual const MAST::MaterialPropertyCardBase& get_material() const {
             libmesh_assert(_material); // make sure it has already been set
             return *_material;
         }
@@ -254,7 +268,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
     switch (elem.dim()) {
 
         case 2: {
-            double h = this->get<Real>("h")();
+            Real h = this->get<Real>("h")();
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
                     _material->calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
@@ -328,7 +342,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
     switch (elem.dim()) {
             
         case 2: {
-            double h = this->get<Real>("h")();
+            Real h = this->get<Real>("h")();
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
                     _material->calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
@@ -409,7 +423,7 @@ inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetPropertyMatrixType t,
                                                           const DenseMatrix<Real>& T,
                                                           DenseVector<Real>& v) const {
-    double h = this->get<Real>("h")();
+    Real h = this->get<Real>("h")();
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_vector(T, v);
@@ -435,7 +449,7 @@ inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                                           const DenseMatrix<Real>& T,
                                                           DenseMatrix<Real>& m) const {
-    double h = this->get<Real>("h")();
+    Real h = this->get<Real>("h")();
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_matrix(T, m);

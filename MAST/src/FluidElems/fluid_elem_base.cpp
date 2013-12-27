@@ -2143,7 +2143,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
   const DenseVector<Real>& elem_solution,
   const std::vector<FEMOperatorMatrix>& dB_mat,
   const DenseMatrix<Real>& Ai_Bi_advection,
-  double& discontinuity_val )
+  Real& discontinuity_val )
 {
     const unsigned int n1 = 2 + dim;
 
@@ -2205,10 +2205,10 @@ void FluidElemBase::calculate_yzbeta_discontinuity_operator
    FEMContext& c, const DenseVector<Real>& elem_solution,
    const std::vector<FEMOperatorMatrix>& dB_mat,
    const DenseMatrix<Real>& Ai_Bi_advection,
-   double& discontinuity_val )
+   Real& discontinuity_val )
 {
     const unsigned int n1 = 2 + dim;
-    const double beta = 2.0;
+    const Real beta = 2.0;
 
     DenseVector<Real> vec1, ref_sol, jvec;
     vec1.resize(n1); ref_sol.resize(n1); jvec.resize(dim); 

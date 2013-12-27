@@ -17,6 +17,8 @@
 
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
+#include "PropertyCards/element_property_card_1D.h"
+#include "PropertyCards/element_property_card_2D.h"
 
 
 
@@ -54,6 +56,10 @@ namespace MAST {
         void _nastran_element(const ElemType t,
                               std::string& nm,
                               unsigned int& n_nodes);
+        
+        void _write_property_cards(std::ostream& out_stream,
+                                   std::set<const MAST::ElementPropertyCardBase*>& pcards);
+        
 
         /*!
          *   reference to the structural system assembly for which the
@@ -132,7 +138,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
         << "METHOD = 1" << std::endl
         << "BEGIN BULK" << std::endl
         << "PARAM, POST, 0" << std::endl
-        << "PARAM, LMODES, 20" << std::endl
+        //<< "PARAM, LMODES, 20" << std::endl
         << "EIGRL,1,0.0,,20" << std::endl
         << "$" << std::endl;
     }
@@ -144,12 +150,15 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
             << std::setw(8)  << "GRID*   "
             << std::setw(16) << mesh.node(v).id()+1
             << std::setw(16) << " "
-            << std::setw(16) << mesh.node(v)(0)
-            << std::setw(16) << mesh.node(v)(1)
-            << std::setw(8)  << "   ++   " << std::endl
-            << std::setw(8)  << "   ++   "
-            << std::setw(16) << mesh.node(v)(2) << std::endl;
+            << std::setw(16) << std::showpoint << mesh.node(v)(0)
+            << std::setw(16) << std::showpoint << mesh.node(v)(1)
+            << std::setw(8)  << "      ++" << std::endl
+            << std::setw(8)  << "*++     "
+            << std::setw(16) << std::showpoint << mesh.node(v)(2)
+            << std::endl;
     }
+    
+    std::set<const MAST::ElementPropertyCardBase*> pcards;
     
     {
         // write the connectivity
@@ -167,7 +176,13 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
             _nastran_element(elem->type(), nm, n_nastran_nodes);
             nm += "*";
             
-            unsigned int pid, count=0;
+            
+            const MAST::ElementPropertyCardBase& prop = _assembly.get_property_card(*elem);
+            
+            unsigned int count=0, pid = prop.id();
+            
+            // this property card needs to be written
+            pcards.insert(&prop);
             
             out_stream
             << std::setw(8) << nm
@@ -182,14 +197,19 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
                 count++;
                 if (count == 4) {
                     out_stream
-                    << std::setw(8)  << "   ++   " << std::endl
-                    << std::setw(8)  << "   ++   ";
+                    << std::setw(8)  << "      ++" << std::endl
+                    << std::setw(8)  << "*++     ";
                     count = 0;
                 }
             }
             out_stream << std::endl;
         } // element loop
     }
+    
+    
+    // write the element property and material cards
+    _write_property_cards(out_stream, pcards);
+    
     
     
     {
@@ -276,12 +296,12 @@ MAST::NastranIO::_nastran_element(const ElemType t,
             break;
 
         case TRI3:
-            nm = "CTRI3";
+            nm = "CTRIA3";
             n_nodes = 3;
             break;
 
         case TRI6:
-            nm = "CTRI6";
+            nm = "CTRIA6";
             n_nodes = 6;
             break;
 
@@ -323,66 +343,108 @@ MAST::NastranIO::_nastran_element(const ElemType t,
 }
 
 
-//{
-//    do i=1,n_elems
-//        
-//    do i=1,n_constrained_nodes
-//    write(1,*) "SPC,1,",constrained_nodes(i),",123456,0.0"
-//    end do
-//    do i=1,n_materials
-//    write (1,"(A5,I4,A1,D10.5,A3,F10.5,A3,F10.5)") "MAT1,",i,","
-//    $      ,material_prop(i,2),",,",material_prop(i,3),","
-//    $      ,material_prop(i,1)
-//    end do
-//    do i=1,n_elems
-//    n1 = elem_nodes(i,1)
-//    n2 = elem_nodes(i,2)
-//    val = 0.0D0
-//    do j =1,3
-//    v(j) = node_coords(n2,j) - node_coords(n1,j)
-//    val = val + v(j)**2
-//    end do
-//    val = val ** 0.5
-//    do j=1,3
-//    v(j) = v(j)/val
-//    end do
-//    write (1,"(A8,I4,A14,F10.5,A2,F10.5)") "cord2r,",i
-//    $         ,",,0.,0.,0.,0.,",-v(3),",",v(2)
-//    write (1,*) ",1.,",-v(3),",",v(2)
-//    area = 2.0*elem_chord(i)*(elem_tc(i)*elem_skin_thickness(i,2)
-//                              $         + elem_structural_to_aero_chord_ratio(i)*
-//                              $         elem_skin_thickness(i,1))
-//    Itr_l = Itr(elem_skin_thickness(i,1), elem_skin_thickness(i
-//                                                              $         ,2), elem_tc(i), elem_chord(i),
-//                $         elem_structural_to_aero_chord_ratio(i))
-//    Ich_l = Ich(elem_skin_thickness(i,1), elem_skin_thickness(i
-//                                                              $         ,2), elem_tc(i), elem_chord(i),
-//                $         elem_structural_to_aero_chord_ratio(i))
-//    Jfactor = GJfactor(elem_skin_thickness(i,1),
-//                       $         elem_skin_thickness(i,2), elem_tc(i), elem_chord(i)
-//                       $         ,elem_structural_to_aero_chord_ratio(i), 1.0D0, 1.0D0)
-//    write (1,"(A6,I4,A2,I4,A2,F10.5,A3,F10.5,A3,F10.5,A7,F10.5,A4)")
-//    $         "pbeam,",i,",",elem_property(i,1),",",area,",",Itr_l,",",
-//    $         Ich_l,",0.0,",Jfactor,","
-//    write (1,*) ",,"
-//    write (1,*) ",0.0,0.0,"
-//    write (1,*) ",,"
-//    
-//    c          write (1,"(A7,I5,A2,I5,A7)") "PBEAML,",i,",",1,",,BOX"
-//    c          write (1,"(4(A1,F10.5))") ",",elem_chord(i)
-//    c     $         *elem_structural_to_aero_chord_ratio(i),",",elem_tc(i)
-//    c     $         *elem_chord(i),",",elem_skin_thickness(i,1),","
-//    c     $         ,elem_skin_thickness(i,2)
-//    if ((abs(v(1)) .lt. 1.0e-8) .and. (abs(v(1)) .lt. 1.0e-8))
-//    $         then
-//    v(2) = 1.0D0
-//    end if
-//    
-//    write(1,"(A5,I4,A1,I4,A1,I4,A2,I4,A2,F10.5,A2,F10.5,A2F10.5)")
-//    $         "CBEAM,",i,",",i,",",n1,",",n2,",",0.0D0,",",-v(3),",",
-//    $         -v(2)
-//    
-//}
+
+inline
+void
+MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
+                                       std::set<const MAST::ElementPropertyCardBase *> &pcards) {
+    
+    // set of material cards to be written
+    std::set<const MAST::MaterialPropertyCardBase*> mcards;
+    
+    {
+        std::set<const MAST::ElementPropertyCardBase*>::const_iterator
+        it = pcards.begin(), end = pcards.end();
+        
+        for ( ; it != end; it++) {
+            const MAST::ElementPropertyCardBase& prop = **it;
+            libmesh_assert(prop.if_isotropic());
+            mcards.insert(&prop.get_material());
+            
+            // currently only isotropic material sections are written
+            switch (prop.dim()) {
+                case 1: {
+                    const MAST::ElementPropertyCard1D& prop1d =
+                    dynamic_cast<const MAST::ElementPropertyCard1D&>(prop);
+                    out_stream
+                    << std::setw(8)  << "PBEAM*  "
+                    << std::setw(16) << prop1d.id() + 1
+                    << std::setw(16) << prop1d.get_material().id()+1
+                    << std::setw(16) << prop1d.value("A")
+                    << std::setw(16) << prop1d.value("IZZ")
+                    << std::setw(8)  << "      ++" << std::endl
+                    << std::setw(8)  << "*++     "
+                    << std::setw(16) << prop1d.value("IYY")
+                    << std::setw(16) << prop1d.value("IYZ")
+                    << std::setw(16) << prop1d.value("J")
+                    << std::endl;
+                }
+                    break;
+                    
+                case 2: {
+                    out_stream
+                    << std::setw(8)  << "PSHELL* "
+                    << std::setw(16) << prop.id() + 1
+                    << std::setw(16) << prop.get_material().id()+1
+                    << std::setw(16) << prop.get<Real>("h")()
+                    << std::setw(16) << prop.get_material().id()+1
+                    << std::setw(8)  << "      ++" << std::endl
+                    << std::setw(8)  << "*++     "
+                    << std::setw(16) << " "
+                    << std::setw(16) << prop.get_material().id()+1;
+                    
+                    if (prop.get_material().contains("kappa"))
+                        out_stream
+                        << std::setw(16) << prop.get_material().get<Real>("kappa")()
+                        << std::endl;
+                    else
+                        out_stream
+                        << std::setw(16) << 0. << std::endl;
+                    
+                }
+                    break;
+                    
+                case 3: {
+                    out_stream
+                    << std::setw(8)  << "PSOLID* "
+                    << std::setw(16) << prop.id() + 1
+                    << std::setw(16) << prop.get_material().id()+1
+                    << std::endl;
+                }
+                    break;
+                    
+                default:
+                    // should not get here
+                    libmesh_error();
+                    
+            }
+        }
+    }
+    
+    {
+        std::set<const MAST::MaterialPropertyCardBase*>::const_iterator
+        it = mcards.begin(), end = mcards.end();
+        
+        for ( ; it != end; it++) {
+            const MAST::MaterialPropertyCardBase& prop = **it;
+            
+            Real E = prop.get<Real>("E")(),
+            nu = prop.get<Real>("nu")(),
+            G = E/2./(1.+nu);
+
+            out_stream
+            << std::setw(8)  << "MAT1*   "
+            << std::setw(16) << prop.id() + 1
+            << std::setw(16) << E
+            << std::setw(16) << G
+            << std::setw(16) << nu
+            << std::setw(8)  << "      ++" << std::endl
+            << std::setw(8)  << "*++     "
+            << std::setw(16) << prop.get<Real>("rho")()
+            << std::endl;
+        }
+    }
+}
 
 
 
