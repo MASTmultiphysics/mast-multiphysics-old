@@ -77,6 +77,14 @@ namespace MAST
             return _system;
         }
 
+        
+        /*!
+         *    returns the analysis type
+         */
+        MAST::StructuralAnalysisType analysis_type() const {
+            return _analysis_type;
+        }
+        
         /*!
          *   clear the loads for this structural model
          */
@@ -87,6 +95,14 @@ namespace MAST
          */
         void add_side_load(boundary_id_type bid, MAST::BoundaryCondition& load);
 
+        
+        /*!
+         *    returns a reference to the side boundary conditions
+         */
+        const std::multimap<boundary_id_type, MAST::BoundaryCondition*>& side_loads() const{
+            return _side_bc_map;
+        }
+        
         
         /*!
          *   adds the specified volume loads for the elements with
@@ -105,7 +121,7 @@ namespace MAST
          *    sets the same property for all cards
          */
         void set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop);
-
+        
         /*!
          *    sets the property for specified element
          */

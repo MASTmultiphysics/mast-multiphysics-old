@@ -27,6 +27,7 @@
 		EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173581835309D00E03740 /* structural_element_3D.cpp */; };
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
+		EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD70404186DD6E70050676A /* structural_element_2D.cpp */; };
 		EBD795F31843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */; };
 		EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795F81846834F007FA3A7 /* bending_structural_elem.cpp */; };
 		EBD795FB18468C35007FA3A7 /* bending_operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795FA18468C35007FA3A7 /* bending_operator.cpp */; };
@@ -118,6 +119,7 @@
 		EB8173581835309D00E03740 /* structural_element_3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_3D.cpp; sourceTree = "<group>"; };
 		EB81735C1835677F00E03740 /* topology_optimization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = topology_optimization.h; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		EBD70404186DD6E70050676A /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		EBD795F11843E9B9007FA3A7 /* single_discipline_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = single_discipline_analysis_driver.cpp; sourceTree = "<group>"; };
 		EBD795F21843E9B9007FA3A7 /* analysis_driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = analysis_driver.h; sourceTree = "<group>"; };
 		EBD795F5184673F6007FA3A7 /* bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bending_operator.h; sourceTree = "<group>"; };
@@ -256,7 +258,6 @@
 		696C08071796CD4100B77C5C /* StructuralElems */ = {
 			isa = PBXGroup;
 			children = (
-				69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */,
 				EBD795FA18468C35007FA3A7 /* bending_operator.cpp */,
 				EBD795F5184673F6007FA3A7 /* bending_operator.h */,
 				EBD795F81846834F007FA3A7 /* bending_structural_elem.cpp */,
@@ -268,9 +269,11 @@
 				696C08091796CD4100B77C5C /* structural_elem_base.h */,
 				EB8173561835309D00E03740 /* structural_element_1D.cpp */,
 				EBF278651815995100DC81A3 /* structural_element_1D.h */,
+				EBD70404186DD6E70050676A /* structural_element_2D.cpp */,
 				EBF278661815996200DC81A3 /* structural_element_2D.h */,
 				EB8173581835309D00E03740 /* structural_element_3D.cpp */,
 				EBF278671815997700DC81A3 /* structural_element_3D.h */,
+				69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */,
 				696C08181796CF9200B77C5C /* structural_system_assembly.h */,
 				EBD795FC18468D6E007FA3A7 /* timoshenko_bending_operator.h */,
 			);
@@ -469,6 +472,7 @@
 				EB817343182D902300E03740 /* basis_matrix.cpp in Sources */,
 				EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */,
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
+				EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */,
 				69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
 				696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */,

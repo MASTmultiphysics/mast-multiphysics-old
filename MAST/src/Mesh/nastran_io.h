@@ -101,26 +101,40 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
     // Note: we are using version 2.0 of the gmsh output format.
     
     {
+        unsigned int sol_num = 0;
+        switch (_assembly.analysis_type()) {
+            case MAST::STATIC: {
+                sol_num = 101;
+            }
+                break;
+                
+            case MAST::MODAL: {
+                sol_num = 103;
+            }
+                break;
+                
+            case MAST::BUCKLING: {
+                sol_num = 105;
+            }
+                break;
+                
+            default:
+                libmesh_error();
+        }
+        
         // Write the file header.
         out_stream
-        << "SOL 145" << std::endl
+        << "SOL " << sol_num << std::endl
         << "CEND" << std::endl
+        << "POST TOFILE 12 DISPLACE" << std::endl
         << "SPC = 1" << std::endl
         << "DISPLACEMENT = all" << std::endl
-        << "SDISPLACEMENT = all" << std::endl
-        << "SVECTOR = all" << std::endl
         << "METHOD = 1" << std::endl
-        << "FMETHOD = 1" << std::endl
-        << "CMETHOD = 1" << std::endl
         << "BEGIN BULK" << std::endl
         << "PARAM, POST, 0" << std::endl
         << "PARAM, LMODES, 20" << std::endl
         << "EIGRL,1,0.0,,20" << std::endl
-        << "EIGC,1,CLAN,,,,,20" << std::endl
-        << "$" << std::endl
-        << "$TABDMP1 , 1, G," << std::endl
-        << "$,0.0,0.02,10.0,0.02,ENDT" << std::endl
-        << "$PARAM, KDAMP, -1" << std::endl;
+        << "$" << std::endl;
     }
     
     {
@@ -181,6 +195,61 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
     {
         // iterate over the loads in the assembly object and write the
         // displacement boundary conditions
+
+        // first prepare a map of boundary ids and the constrained vars on that
+        // boundary
+        std::map<boundary_id_type, std::vector<unsigned int> >  constrained_vars_map;
+        
+        // now populate the map for all the give boundaries
+        std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
+        it = _assembly.side_loads().begin(), end = _assembly.side_loads().end();
+        
+        for ( ; it != end; it++)
+            if (it->second->type() == MAST::DISPLACEMENT) {
+                // get the displacement dirichlet condition
+                DirichletBoundary& dirichlet_b =
+                (dynamic_cast<MAST::DisplacementBoundaryCondition*>(it->second))->dirichlet_boundary();
+                
+                constrained_vars_map[it->first] = dirichlet_b.variables;
+            }
+        
+        // iterate over elements to write the displacement boudnary conditions
+        MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+        const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+        
+        for ( ; el != end_el; ++el) {
+            const Elem* elem = *el;
+            
+            // boundary condition is applied only on sides with no neighbors
+            // and if the side's boundary id has a boundary condition tag on it
+            for (unsigned int s=0; s<elem->n_sides(); s++)
+                if ((*el)->neighbor(s) == NULL &&
+                    mesh.boundary_info->n_boundary_ids(elem, s)) {
+                    
+                    std::vector<boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
+                    
+                    // the boundary element
+                    AutoPtr<Elem> side(elem->build_side(s).release());
+                    // variables that are constrainted
+                    std::stringstream oss;
+                    
+                    for (unsigned int i_bid=0; i_bid<bc_ids.size(); i_bid++)
+                        if (constrained_vars_map.count(bc_ids[i_bid])) {
+                            
+                            const std::vector<unsigned int>& vars = constrained_vars_map[bc_ids[i_bid]];
+                            for (unsigned int i_var=0; i_var<vars.size(); i_var++)
+                                oss << std::setw(1) << vars[i_var]+1;
+                        } // end of boundary id loop
+                    
+                    // write the SPC entry for each
+                    for (unsigned int i_nd=0; i_nd<side->n_nodes(); i_nd++)
+                        out_stream
+                        << std::setw(8) << "SPC     "
+                        << std::setw(8) << 1               // SPC set id
+                        << std::setw(8) << side->get_node(i_nd)->id()+1
+                        << std::setw(8) << oss.str() <<  std::endl;
+                } // end of side loop
+        } // end of element loop
     }
     
     out_stream
