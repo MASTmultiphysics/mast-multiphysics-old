@@ -349,7 +349,7 @@ MAST::TopologyOptimization::_init() {
         h  = 0.002;
 
         prop2d->set_material(*mat);
-        _structural_assembly->set_property_for_elem(*e, *prop2d);
+        _structural_assembly->set_property_for_subdomain(0, *prop2d);
         _structural_assembly->add_parameter(E.ptr(), &E);
         _parameters[counter] = E.ptr(); // set Young's modulus as a modifiable parameter
         

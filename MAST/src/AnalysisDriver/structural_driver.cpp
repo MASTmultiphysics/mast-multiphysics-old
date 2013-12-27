@@ -239,7 +239,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
+                                                       MAST::BUCKLING,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -332,7 +332,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     MAST::IsotropicMaterialPropertyCard mat;
     MAST::ElementPropertyCard3D prop3d;
-    MAST::Solid2DSectionElementPropertyCard prop2d;
+    MAST::Solid2DSectionElementPropertyCard prop2d, prop2d_stiff;
     MAST::Solid1DSectionElementPropertyCard prop1d;
     
     MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
@@ -340,6 +340,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     &rho = mat.add<Real>("rho", MAST::CONSTANT_FUNCTION),
     &kappa = mat.add<Real>("kappa", MAST::CONSTANT_FUNCTION),
     &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION),
+    &h_stiff =  prop2d_stiff.add<Real>("h", MAST::CONSTANT_FUNCTION),
     &th =  prop1d.add<Real>("h", MAST::CONSTANT_FUNCTION),
     &b =  prop1d.add<Real>("b", MAST::CONSTANT_FUNCTION);
 
@@ -349,27 +350,30 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     rho =infile("material_density", 2700.);
     kappa = infile("shear_corr_factor", 5./6.);
     h  = infile("thickness", 0.002);
+    h_stiff  = infile("thickness", 0.002);
     th  = infile("thickness", 0.002);
     b  = infile("width", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(0) = -100.;
+    prestress(3) = 100.;
     
     prop3d.set_material(mat);
-    prop2d.set_material(mat);
-    prop2d.set_diagonal_mass_matrix(false);
+    prop2d.set_material(mat); prop2d_stiff.set_material(mat);
+    prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
-    //prop2d.prestress(prestress);
+    prop2d.prestress(prestress); // no prestress for stiffener
     //prop1d.prestress(prestress);
 
-    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     ParameterVector parameters; parameters.resize(1);
     parameters[0] = h.ptr(); // set thickness as a modifiable parameter
     
     
-    structural_assembly.set_property_for_all_elems(prop2d);
+    structural_assembly.set_property_for_subdomain(0, prop2d);
+    for (unsigned int i=1; i<3; i++)
+        structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
     structural_assembly.add_parameter(h.ptr(), &h);
     
     MAST::NastranIO(structural_assembly).write("nast.txt");

@@ -27,9 +27,7 @@ MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
 
 _system(sys),
 _analysis_type(t),
-_infile(infile),
-_if_same_property_for_all_elems(false),
-_property(NULL)
+_infile(infile)
 {
     // depending on the analysis type, forward to the appropriate function
     switch (_analysis_type) {
@@ -113,35 +111,25 @@ MAST::StructuralSystemAssembly::add_volume_load(subdomain_id_type bid,
 }
 
 
-void
-MAST::StructuralSystemAssembly::set_property_for_all_elems(const MAST::ElementPropertyCardBase& prop) {
-    _if_same_property_for_all_elems = true;
-    _element_property.clear();
-    _property = &prop;
-}
-
 
 void
-MAST::StructuralSystemAssembly::set_property_for_elem(const Elem& e,
-                                                      const MAST::ElementPropertyCardBase& prop) {
-    _if_same_property_for_all_elems = false;
-    _element_property[&e] = &prop;
+MAST::StructuralSystemAssembly::set_property_for_subdomain(const subdomain_id_type sid,
+                                                           const MAST::ElementPropertyCardBase& prop) {
+    _element_property[sid] = &prop;
 }
 
 
 
 const MAST::ElementPropertyCardBase&
 MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
-    if (_if_same_property_for_all_elems)
-        return *_property;
-    else {
-        std::map<const Elem*, const MAST::ElementPropertyCardBase*>::const_iterator
-        elem_p_it = _element_property.find(&elem);
+
+    std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
+        elem_p_it = _element_property.find(elem.subdomain_id());
         libmesh_assert(elem_p_it != _element_property.end());
         
         return *elem_p_it->second;
-    }
 }
+
 
 void
 MAST::StructuralSystemAssembly::add_parameter(Real* par, MAST::FunctionBase* f) {

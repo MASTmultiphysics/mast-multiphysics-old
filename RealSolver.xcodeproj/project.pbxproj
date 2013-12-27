@@ -16,6 +16,7 @@
 		6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BC9A180360AB007C6D9A /* potential_flow_elem_base.cpp */; };
 		6989BC9F180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BC9C180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp */; };
 		6989BCA918046949007C6D9A /* potential_fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BCA718046949007C6D9A /* potential_fluid_analysis_driver.cpp */; };
+		69982B9B18622F4000E14DD7 /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69982B9A18622F4000E14DD7 /* structural_element_2D.cpp */; };
 		69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A98AC317A5A77400789481 /* flutter_driver.cpp */; };
 		EB817343182D902300E03740 /* basis_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81733F182D902300E03740 /* basis_matrix.cpp */; };
 		EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817340182D902300E03740 /* fem_operator_matrix.cpp */; };
@@ -81,6 +82,7 @@
 		6989BC9C180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unsteady_compressible_potential_flow_elem.cpp; sourceTree = "<group>"; };
 		6989BC9D180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unsteady_compressible_potential_flow_elem.h; sourceTree = "<group>"; };
 		6989BCA718046949007C6D9A /* potential_fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_fluid_analysis_driver.cpp; sourceTree = "<group>"; };
+		69982B9A18622F4000E14DD7 /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		69A98AA917A30F1D00789481 /* flight_condition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flight_condition.h; sourceTree = "<group>"; };
 		69A98AB217A3143700789481 /* MAST_data_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAST_data_types.h; sourceTree = "<group>"; };
 		69A98AB517A31E3F00789481 /* gas_property.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gas_property.h; sourceTree = "<group>"; };
