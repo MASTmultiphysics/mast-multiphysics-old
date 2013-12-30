@@ -84,6 +84,12 @@ namespace MAST {
                             const std::vector<Real>& x,
                             Real obj,
                             const std::vector<Real>& fval) const;
+
+        virtual void tabulated_output(std::ostream& output,
+                                      unsigned int iter,
+                                      const std::vector<Real>& x,
+                                      Real obj,
+                                      const std::vector<Real>& fval) const;
     protected:
         
         unsigned int _n_vars;
@@ -177,6 +183,35 @@ MAST::FunctionEvaluation::output(unsigned int iter, const std::vector<Real> &x,
     
     libMesh::out << std::endl
     << " *************************** " << std::endl;
+}
+
+
+
+inline void
+MAST::FunctionEvaluation::tabulated_output(std::ostream& output,
+                                           unsigned int iter,
+                                           const std::vector<Real>& x,
+                                           Real obj,
+                                           const std::vector<Real>& fval) const {
+    libmesh_assert_equal_to(x.size(), _n_vars);
+    libmesh_assert_equal_to(fval.size(), _n_eq + _n_ineq);
+    
+    // write header for the first iteration
+    if (iter == 0) {
+        output << std::setw(10) << "Iter";
+        for (unsigned int i=0; i < x.size(); i++)
+            output << " x [ " << std::setw(10) << i << " ]   ";
+        output << std::setw(20) << "Obj";
+        for (unsigned int i=0; i<fval.size(); i++)
+            output << " f [ " << std::setw(10) << i << " ]   ";
+    }
+    
+    output << std::setw(10) << iter;
+    for (unsigned int i=0; i < x.size(); i++)
+        output << std::setw(20) << x[i];
+    output << std::setw(20) << obj;
+    for (unsigned int i=0; i < fval.size(); i++)
+        output << std::setw(20) << fval[i];
 }
 
 

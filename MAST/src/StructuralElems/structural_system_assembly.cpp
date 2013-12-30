@@ -41,7 +41,7 @@ _infile(infile)
         case MAST::BUCKLING:
             // nothing to be done here for now
             break;
-
+            
         case MAST::DYNAMIC:
         default:
             libmesh_error();
@@ -115,19 +115,35 @@ MAST::StructuralSystemAssembly::add_volume_load(subdomain_id_type bid,
 void
 MAST::StructuralSystemAssembly::set_property_for_subdomain(const subdomain_id_type sid,
                                                            const MAST::ElementPropertyCardBase& prop) {
+    std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
+    elem_p_it = _element_property.find(sid);
+    libmesh_assert(elem_p_it == _element_property.end());
+
     _element_property[sid] = &prop;
 }
 
 
 
 const MAST::ElementPropertyCardBase&
-MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
-
+MAST::StructuralSystemAssembly::get_property_card(const unsigned int i) const {
+    
     std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
-        elem_p_it = _element_property.find(elem.subdomain_id());
-        libmesh_assert(elem_p_it != _element_property.end());
-        
-        return *elem_p_it->second;
+    elem_p_it = _element_property.find(i);
+    libmesh_assert(elem_p_it != _element_property.end());
+    
+    return *elem_p_it->second;
+}
+
+
+
+const MAST::ElementPropertyCardBase&
+MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
+    
+    std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
+    elem_p_it = _element_property.find(elem.subdomain_id());
+    libmesh_assert(elem_p_it != _element_property.end());
+    
+    return *elem_p_it->second;
 }
 
 
@@ -171,10 +187,10 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
                                                        NumericVector<Number>* R,
                                                        SparseMatrix<Number>*  J,
                                                        NonlinearImplicitSystem& S) {
-
+    
     if (R) R->zero();
     if (J) J->zero();
-
+    
     switch (_analysis_type) {
         case MAST::STATIC:
         case MAST::DYNAMIC:
@@ -202,9 +218,9 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     
     SensitivityParameters sens_params;
     sens_params.add_parameter(this->get_parameter(params[i]), 1);
-
+    
     sensitivity_rhs.zero();
-
+    
     switch (_analysis_type) {
         case MAST::STATIC:
         case MAST::DYNAMIC:
@@ -234,7 +250,7 @@ MAST::StructuralSystemAssembly::assemble() {
     
     SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
     SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
-
+    
     matrix_A.zero();
     matrix_B.zero();
     
@@ -245,14 +261,14 @@ MAST::StructuralSystemAssembly::assemble() {
                                                   matrix_B,
                                                   NULL);
             break;
-
+            
         case MAST::BUCKLING:
             _assemble_matrices_for_buckling_analysis(*_system.solution,
                                                      matrix_A,
                                                      matrix_B,
                                                      NULL);
             break;
-
+            
         default:
             libmesh_error();
             break;
@@ -329,7 +345,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
     X.localize(*localized_solution, _system.get_dof_map().get_send_list());
-
+    
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
@@ -426,7 +442,7 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
     
     std::multimap<boundary_id_type, MAST::BoundaryCondition*> local_side_bc_map;
     std::multimap<subdomain_id_type, MAST::BoundaryCondition*> local_vol_bc_map;
-  
+    
     {
         // create a map of only the specified type of load
         std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
@@ -435,7 +451,7 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
             if (it->second->type() == MAST::SMALL_DISTURBANCE_MOTION)
                 local_side_bc_map.insert(*it);
     }
-
+    
     {
         // create a map of only the specified type of load
         std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
@@ -444,7 +460,7 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
             if (it->second->type() == MAST::SMALL_DISTURBANCE_MOTION)
                 local_vol_bc_map.insert(*it);
     }
-
+    
     for ( ; el != end_el; ++el) {
         
         const Elem* elem = *el;
@@ -502,7 +518,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
-
+    
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
@@ -512,13 +528,13 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
     X.localize(*localized_solution, _system.get_dof_map().get_send_list());
-
+    
     
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
     for ( ; el != end_el; ++el) {
-
+        
         const Elem* elem = *el;
         
         dof_map.dof_indices (elem, dof_indices);
@@ -528,7 +544,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
         // create the structural element for analysis
         structural_elem.reset(MAST::build_structural_element
                               (_system, *elem, p_card).release());
-
+        
         // get the solution
         unsigned int ndofs = (unsigned int)dof_indices.size();
         sol.resize(ndofs);
@@ -555,7 +571,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
             structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
         }
-
+        
         // constrain the element matrices.
         _system.get_dof_map().constrain_element_matrix(mat1, dof_indices);
         _system.get_dof_map().constrain_element_matrix(mat2, dof_indices);
@@ -598,7 +614,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
     X.localize(*localized_solution, _system.get_dof_map().get_send_list());
-
+    
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
@@ -657,11 +673,11 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
             structural_elem->prestress_force_sensitivity(true, vec, mat3);
             mat2.add(1., mat3);
         }
-
+        
         // constrain the element matrices.
         _system.get_dof_map().constrain_element_matrix(mat1, dof_indices);
         _system.get_dof_map().constrain_element_matrix(mat2, dof_indices);
-
+        
         // add to the global matrices
         if (if_exchange_AB_matrices)
         {
@@ -702,7 +718,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
             constrained_vars_map[it->first] = dirichlet_b.variables;
         }
     
-
+    
     // now collect the ids that correspond to the specified boundary conditions
     
     // Get a constant reference to the mesh object
@@ -732,7 +748,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
                 mesh.boundary_info->n_boundary_ids(elem, s)) {
                 
                 std::vector<boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
-
+                
                 for (unsigned int i_bid=0; i_bid<bc_ids.size(); i_bid++)
                     if (constrained_vars_map.count(bc_ids[i_bid])) {
                         
@@ -756,6 +772,6 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
             } // end of side loop
     }// end of element loop
     return;
-
+    
 }
 

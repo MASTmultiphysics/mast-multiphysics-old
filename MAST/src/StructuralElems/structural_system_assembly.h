@@ -127,7 +127,12 @@ namespace MAST
          *    get the material property for the specified element
          */
         const MAST::ElementPropertyCardBase& get_property_card(const Elem& elem) const;
-        
+
+        /*!
+         *    get the material property for the specified subdomain id \par i
+         */
+        const MAST::ElementPropertyCardBase& get_property_card(const unsigned int i) const;
+
         /*!
          *   Adds the parameter and function pairing
          */

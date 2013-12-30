@@ -16,10 +16,8 @@
 #include "PropertyCards/element_property_card_2D.h"
 #include "PropertyCards/element_property_card_1D.h"
 #include "PropertyCards/material_property_card_base.h"
-#include "Optimization/gcmma_optimization_interface.h"
 #include "BoundaryConditions/boundary_condition.h"
 #include "BoundaryConditions/displacement_boundary_condition.h"
-#include "Optimization/topology_optimization.h"
 #include "Mesh/mesh_initializer.h"
 #include "Mesh/panel_mesh.h"
 #include "Mesh/stiffened_panel.h"
@@ -58,11 +56,6 @@
 int structural_driver (LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
-//    MAST::TopologyOptimization topology(init, infile);
-//    MAST::GCMMAOptimizationInterface gcmma;
-//    gcmma.attach_function_evaluation_object(topology);
-//    gcmma.optimize();
-//    return 0;
     
     // Read in parameters from the input file
     const Real global_tolerance          = infile("global_tolerance", 0.);
@@ -256,14 +249,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     
     system.attach_assemble_object(structural_assembly);
-    system.attach_sensitivity_assemble_object(structural_assembly);
     
-    // Set the number of requested eigenpairs \p n_evals and the number
-    // of basis vectors used in the solution algorithm.
-    const unsigned int n_eig_request = 10;
-    std::vector<Real> sens;
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
-
     std::set<boundary_id_type> dirichlet_boundary;
     // read and initialize the boundary conditions
     std::map<boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
@@ -300,6 +287,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         structural_assembly.add_side_load(it->first, *bc);
     }
     
+    // this needs to be done before equation system init
     if (eigen_system) {
         
         eigen_system->set_eigenproblem_type(GHEP);
@@ -310,13 +298,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     equation_systems.print_info();
     
     // apply the boundary conditions to the eigenproblem if necessary
-    if (eigen_system) {        
+    const unsigned int n_eig_request = 10;
+    if (eigen_system) {
         std::set<unsigned int> dirichlet_dof_ids;
         equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
         equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
         equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
-        
-        eigen_system->attach_eigenproblem_sensitivity_assemble_object(structural_assembly);
         structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
         eigen_system->initialize_condensed_dofs(dirichlet_dof_ids);
     }
@@ -367,9 +354,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
-    ParameterVector parameters; parameters.resize(1);
-    parameters[0] = h.ptr(); // set thickness as a modifiable parameter
-    
     
     structural_assembly.set_property_for_subdomain(0, prop2d);
     for (unsigned int i=1; i<3; i++)
@@ -377,10 +361,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     structural_assembly.add_parameter(h.ptr(), &h);
     
     system.solve();
-//    if (eigen_system)
-//        eigen_system->sensitivity_solve(parameters, sens);
-//    else
-//        system.sensitivity_solve(parameters);
     
 
     if (!eigen_system) {
@@ -438,22 +418,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 eigval = 1./eigval;
 
                 std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
-
-//                std::cout << std::setw(5) << i
-//                << std::setw(10) << eigval.real()
-//                << " + i  "
-//                << std::setw(10) << eigval.imag();
-                
-//                // write the sensitivity
-//                Complex eig_sens = -sens[i]/pow(Complex(val.first, val.second),2);
-//                if (sens.size())
-//                    std::cout << "  deig/dp = "
-//                    << std::setw(10) << eig_sens.real()
-//                    << " + i  "
-//                    << std::setw(10) << eig_sens.imag();
-//                
-//                std::cout << std::endl;
-                
             }
             else {
                 file << "eig_"  << i << " = " << val.first << std::endl;
@@ -463,10 +427,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 << " + i  "
                 << std::setw(10) << val.second;
                 
-//                // write the sensitivity
-//                if (sens.size())
-//                    std::cout << "  deig/dp = " << sens[i];
-
                 std::cout<< std::endl;
             }
         }

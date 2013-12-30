@@ -21,6 +21,8 @@ int modal_structural_driver (LibMeshInit& init, GetPot& infile,
                              int argc, char* const argv[]);
 int flutter_driver (LibMeshInit& init, GetPot& infile,
                     int argc, char* const argv[]);
+int optimization_driver (LibMeshInit& init, GetPot& infile,
+                       int argc, char* const argv[]);
 
 using namespace libMesh;
 
@@ -41,8 +43,8 @@ int main (int argc, char* const argv[])
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     else if (type == "structures")
         rval = structural_driver(init, infile, argc, argv);
-//    else if (type == "structures_modal")
-//        rval = modal_structural_driver(init, infile, argc, argv);
+    else if (type == "optimization")
+        rval = optimization_driver(init, infile, argc, argv);
 #else
 
     else if (type == "flutter")

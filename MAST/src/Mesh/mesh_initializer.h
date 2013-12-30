@@ -16,7 +16,7 @@
 
 // libMesh includes
 #include "libmesh/libmesh_config.h"
-#include "libmesh/mesh_base.h"
+#include "libmesh/unstructured_mesh.h"
 #include "libmesh/mesh_generation.h"
 
 /*!

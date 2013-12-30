@@ -402,8 +402,6 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
     if (!_property.if_prestressed())
         return false;
     
-    libmesh_error(); // revisit to include prestress matrix sensitivity
-    
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
     const std::vector<Real>& JxW = _fe->get_JxW();

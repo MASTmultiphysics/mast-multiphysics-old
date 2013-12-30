@@ -12,6 +12,9 @@
 // MAST includes
 #include "Mesh/mesh_initializer.h"
 
+// libMesh includes
+#include "libmesh/serial_mesh.h"
+
 
 namespace MAST {
     class StiffenedPanel {
@@ -42,6 +45,7 @@ namespace MAST {
 }
 
 
+inline
 void
 MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                            UnstructuredMesh& mesh, ElemType t) {
