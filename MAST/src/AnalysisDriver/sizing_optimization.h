@@ -209,8 +209,19 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     else
         libmesh_error(); // should not get here.
     
-    if (eval_grads[0])
+    if (eval_grads[0]) {
+        // grad k = dfi/dxj  ,  where k = j*NDV + i
         _system->sensitivity_solve(_parameters, grads);
+        // now correct this for the fact that the matrices were exchanged
+        if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
+            for (unsigned int j=0; j<_n_vars; j++)
+                for (unsigned int i=0; i<_n_eig; i++) {
+                    val = _system->get_eigenpair(i);
+                    grads[j*_n_vars+i] /= -pow(val.first, 2);
+                }
+        else
+            libmesh_error(); // should not get here
+    }
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }

@@ -193,7 +193,15 @@ namespace MAST
         virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
                                       const DenseMatrix<Real>& T,
                                       DenseVector<Real>& v) const;
-        
+
+        /*!
+         *    initializes the vector to the sensitivity of prestress in the element
+         */
+        virtual void prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                  const DenseMatrix<Real>& T,
+                                                  DenseVector<Real>& v,
+                                                  const MAST::SensitivityParameters& p) const;
+
         
         /*!
          *    initializes the matrix to the prestress in the element
@@ -201,6 +209,14 @@ namespace MAST
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                       const DenseMatrix<Real>& T,
                                       DenseMatrix<Real>& m) const;
+
+        /*!
+         *    initializes the matrix to the sensitivity of prestress in the element
+         */
+        virtual void prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                  const DenseMatrix<Real>& T,
+                                                  DenseMatrix<Real>& m,
+                                                  const MAST::SensitivityParameters& p) const;
         
         /*!
          *  returns true if the property card depends on the function \p f
@@ -444,6 +460,41 @@ MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetProperty
 
 
 
+inline void
+MAST::Solid2DSectionElementPropertyCard::prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                                      const DenseMatrix<Real>& T,
+                                                                      DenseVector<Real>& v,
+                                                                      const MAST::SensitivityParameters& p) const {
+    // only first order sensitivities are calculated at this point
+    libmesh_assert_equal_to(p.total_order(), 1);
+    
+    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
+    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
+    it = p_map.begin(); end = p_map.end();
+    
+    const MAST::FunctionBase& f = *(it->first);
+
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            _prestress_vector(T, v);
+            if (f.name() != "h")
+                v.scale(0.);
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            // for solid sections with isotropic material this is zero
+            v.resize(3);
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
+
+
+
 
 inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
@@ -466,6 +517,40 @@ MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetProperty
             break;
     }
 }
+
+
+inline void
+MAST::Solid2DSectionElementPropertyCard::prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                                      const DenseMatrix<Real>& T,
+                                                                      DenseMatrix<Real>& m,
+                                                                      const MAST::SensitivityParameters& p) const {
+    // only first order sensitivities are calculated at this point
+    libmesh_assert_equal_to(p.total_order(), 1);
+    
+    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
+    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
+    it = p_map.begin(); end = p_map.end();
+    
+    const MAST::FunctionBase& f = *(it->first);
+
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            _prestress_matrix(T, m);
+            if (f.name() != "h")
+                m.scale(0.);
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            // for solid sections with isotropic material this is zero
+            m.resize(2,2);
+            break;
+            
+        default:
+            libmesh_error();
+            break;
+    }
+}
+
 
 
 

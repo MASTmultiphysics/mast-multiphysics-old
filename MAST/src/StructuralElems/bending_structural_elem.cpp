@@ -130,8 +130,8 @@ MAST::BendingStructuralElem::internal_force (bool request_jacobian,
 
 bool
 MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
-                                                       DenseVector<Real>& f,
-                                                       DenseMatrix<Real>& jac)
+                                                         DenseVector<Real>& f,
+                                                         DenseMatrix<Real>& jac)
 {
     // this should be true if the function is called
     libmesh_assert(this->sensitivity_params);
@@ -396,8 +396,8 @@ MAST::BendingStructuralElem::prestress_force (bool request_jacobian,
 
 bool
 MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac)
+                                                          DenseVector<Real>& f,
+                                                          DenseMatrix<Real>& jac)
 {
     if (!_property.if_prestressed())
         return false;
@@ -427,19 +427,21 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
     
     
     // get the element prestress
-    _property.prestress_matrix(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-                               _local_elem->T_matrix(),
-                               prestress_mat_A);
-    _property.prestress_vector(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-                               _local_elem->T_matrix(),
-                               prestress_vec_A);
+    _property.prestress_matrix_sensitivity(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                                           _local_elem->T_matrix(),
+                                           prestress_mat_A,
+                                           *(this->sensitivity_params));
+    _property.prestress_vector_sensitivity(SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                                           _local_elem->T_matrix(),
+                                           prestress_vec_A,
+                                           *(this->sensitivity_params));
     
-    _property.prestress_vector(SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
-                               _local_elem->T_matrix(),
-                               prestress_vec_B);
+    _property.prestress_vector_sensitivity(SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
+                                           _local_elem->T_matrix(),
+                                           prestress_vec_B,
+                                           *(this->sensitivity_params));
+
     // transform to the local coordinate system
-    
-    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         

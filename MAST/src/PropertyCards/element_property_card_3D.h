@@ -84,12 +84,27 @@ namespace MAST
                                       DenseVector<Real>& v) const;
         
         /*!
+         *    initializes the vector to the sensitivity of prestress in the element
+         */
+        virtual void prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                  const DenseMatrix<Real>& T,
+                                                  DenseVector<Real>& v,
+                                                  const MAST::SensitivityParameters& p) const;
+
+        /*!
          *    initializes the matrix to the prestress in the element
          */
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                       const DenseMatrix<Real>& T,
                                       DenseMatrix<Real>& m) const;
 
+        /*!
+         *    initializes the matrix to the sensitivity of prestress in the element
+         */
+        virtual void prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                  const DenseMatrix<Real>& T,
+                                                  DenseMatrix<Real>& m,
+                                                  const MAST::SensitivityParameters& p) const;
         
         /*!
          *  returns true if the property card depends on the function \p f
@@ -226,9 +241,17 @@ MAST::ElementPropertyCard3D::prestress_vector(MAST::ElemenetPropertyMatrixType t
 }
 
 
-/*!
- *    initializes the matrix to the prestress in the element
- */
+
+inline void
+MAST::ElementPropertyCard3D::prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                          const DenseMatrix<Real>& T,
+                                                          DenseVector<Real>& v,
+                                                          const MAST::SensitivityParameters& p) const {
+    v.resize(6); // sensitivity is always zero
+}
+
+
+
 inline void
 MAST::ElementPropertyCard3D::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                               const DenseMatrix<Real>& T,
@@ -236,6 +259,16 @@ MAST::ElementPropertyCard3D::prestress_matrix(MAST::ElemenetPropertyMatrixType t
     m.resize(3, 3);
     if (_prestress.m() != 0)
         m = _prestress;
+}
+
+
+
+inline void
+MAST::ElementPropertyCard3D::prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                          const DenseMatrix<Real>& T,
+                                                          DenseMatrix<Real>& m,
+                                                          const MAST::SensitivityParameters& p) const {
+    m.resize(3, 3); // sensitivity is always zero
 }
 
 

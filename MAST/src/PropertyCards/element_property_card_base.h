@@ -197,7 +197,16 @@ namespace MAST
         virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
                                       const DenseMatrix<Real>& T,
                                       DenseVector<Real>& v) const = 0;
-        
+
+        /*!
+         *    initializes the vector to the sensitivity of prestress vector
+         *    with respect to the specified parameter.
+         */
+        virtual void prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                                  const DenseMatrix<Real>& T,
+                                                  DenseVector<Real>& v,
+                                                  const MAST::SensitivityParameters& p) const = 0;
+
         
         /*!
          *    initializes the matrix to the prestress in the element. The
@@ -213,7 +222,16 @@ namespace MAST
         virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                       const DenseMatrix<Real>& T,
                                       DenseMatrix<Real>& m) const = 0;
-        
+
+        /*!
+         *    initializes the matrix to the sensitivity of prestress matrix
+         *    with respect to the specified parameter.
+         */
+        virtual void prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
+                                             const DenseMatrix<Real>& T,
+                                             DenseMatrix<Real>& m,
+                                             const MAST::SensitivityParameters& p) const = 0;
+
         
     protected:
         

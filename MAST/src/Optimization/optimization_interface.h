@@ -71,7 +71,10 @@ namespace MAST {
                                std::vector<Real>& xmin,
                                std::vector<Real>& xmax) = 0;
         
-        
+        /*!
+         *   \par grads(k): Derivative of f_i(x) with respect 
+         *   to x_j, where k = (j-1)*M + i. 
+         */
         virtual void evaluate(const std::vector<Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
