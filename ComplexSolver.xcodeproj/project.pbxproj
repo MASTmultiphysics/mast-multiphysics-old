@@ -11,7 +11,6 @@
 		EB69869217E79B9000E4530F /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */; };
 		EBB0998717F08F0F00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998617F08F0F00272355 /* main.cpp */; };
 		EBD796001848F125007FA3A7 /* potential_fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795FE1848F125007FA3A7 /* potential_fluid_analysis_driver.cpp */; };
-		EBD796011848F125007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD795FF1848F125007FA3A7 /* single_discipline_analysis_driver.cpp */; };
 		EBD7960B1848F18D007FA3A7 /* basis_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796051848F18D007FA3A7 /* basis_matrix.cpp */; };
 		EBD7960C1848F18D007FA3A7 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796061848F18D007FA3A7 /* fem_operator_matrix.cpp */; };
 		EBD7960D1848F18D007FA3A7 /* function_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796071848F18D007FA3A7 /* function_base.cpp */; };
@@ -65,9 +64,7 @@
 		EB41AEF217EA254A00288448 /* ringleb_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringleb_mesh.h; sourceTree = "<group>"; };
 		EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ug_flutter_solver.cpp; sourceTree = "<group>"; };
 		EBB0998617F08F0F00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		EBD795FD1848F125007FA3A7 /* analysis_driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = analysis_driver.h; sourceTree = "<group>"; };
 		EBD795FE1848F125007FA3A7 /* potential_fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_fluid_analysis_driver.cpp; sourceTree = "<group>"; };
-		EBD795FF1848F125007FA3A7 /* single_discipline_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = single_discipline_analysis_driver.cpp; sourceTree = "<group>"; };
 		EBD796041848F180007FA3A7 /* ramp_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ramp_mesh.h; sourceTree = "<group>"; };
 		EBD796051848F18D007FA3A7 /* basis_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basis_matrix.cpp; sourceTree = "<group>"; };
 		EBD796061848F18D007FA3A7 /* fem_operator_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fem_operator_matrix.cpp; sourceTree = "<group>"; };
@@ -235,11 +232,9 @@
 		EBE84D3217A6B3F400AEE871 /* AnalysisDriver */ = {
 			isa = PBXGroup;
 			children = (
-				EBD795FD1848F125007FA3A7 /* analysis_driver.h */,
 				EBE84D3417A6B3F400AEE871 /* fluid_analysis_driver.cpp */,
 				EBE84D3617A6B3F400AEE871 /* flutter_driver.cpp */,
 				EBD795FE1848F125007FA3A7 /* potential_fluid_analysis_driver.cpp */,
-				EBD795FF1848F125007FA3A7 /* single_discipline_analysis_driver.cpp */,
 				EBE84D3817A6B3F400AEE871 /* structural_driver.cpp */,
 			);
 			path = AnalysisDriver;
@@ -438,7 +433,6 @@
 				EBD7960C1848F18D007FA3A7 /* fem_operator_matrix.cpp in Sources */,
 				EBB0998717F08F0F00272355 /* main.cpp in Sources */,
 				EBD7964118491C9D007FA3A7 /* surface_pressure.cpp in Sources */,
-				EBD796011848F125007FA3A7 /* single_discipline_analysis_driver.cpp in Sources */,
 				EBE84D6917A6B3F400AEE871 /* fluid_elem_base.cpp in Sources */,
 				EBE84D6A17A6B3F400AEE871 /* fluid_newton_solver.cpp in Sources */,
 				EBD7962A1848F1DB007FA3A7 /* structural_system_assembly.cpp in Sources */,
