@@ -253,7 +253,7 @@ MAST::StructuralSystemAssembly::assemble() {
     
     matrix_A.zero();
     matrix_B.zero();
-    
+
     switch (_analysis_type) {
         case MAST::MODAL:
             _assemble_matrices_for_modal_analysis(*_system.solution,
@@ -316,7 +316,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     
     sensitivity_A->close();
     sensitivity_B->close();
-    
+
     // currently, all relevant parameter sensitivities are calculated
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
     return true;
@@ -690,7 +690,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
             matrix_B.add_matrix (mat2, dof_indices); // load dependent
         }
     }
-    
+
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 

@@ -143,6 +143,7 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     // one DV for each element
     x.resize   (_n_vars);
     std::fill(x.begin(), x.end(), 0.02);           // start with a solid material
+    x[1] = .02001;
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 1.0e-4); // lower limit is a small value.
     xmax.resize(_n_vars);
@@ -197,27 +198,58 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     libMesh::out << "New Eval" << std::endl;
     _system->solve();
 
+    // the number of converged eigenpairs could be different from the number asked
+    unsigned int n_required = std::min(_n_eig, _system->get_n_converged());
+    
     std::pair<Real, Real> val;
     Complex eigval;
+    std::fill(fvals.begin(), fvals.end(), 0.);
     if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
-        for (unsigned int i=0; i<_n_eig; i++) {
+        // the total number of constraints is _n_eig, but only n_required are usable
+        for (unsigned int i=0; i<n_required; i++) {
             val = _system->get_eigenpair(i);
             eigval = std::complex<Real>(val.first, val.second);
+            std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
             eigval = 1./eigval;
             fvals[i] = 1.-eigval.real(); // g <= 0.
+            
+            {
+                std::ostringstream file_name;
+                
+                // We write the file in the ExodusII format.
+                file_name << "out_"
+                << std::setw(3)
+                << std::setfill('0')
+                << std::right
+                << i
+                << ".exo";
+                
+                // now write the eigenvlaues
+                _system->get_eigenpair(i);
+                
+                // We write the file in the ExodusII format.
+                Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
+                                                          *_eq_systems);
+            }
         }
     else
         libmesh_error(); // should not get here.
     
+    std::cout << std::endl;
+    std::vector<Real> grad_vals;
+    
     if (eval_grads[0]) {
         // grad k = dfi/dxj  ,  where k = j*NDV + i
-        _system->sensitivity_solve(_parameters, grads);
+        _system->sensitivity_solve(_parameters, grad_vals);
         // now correct this for the fact that the matrices were exchanged
         if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
             for (unsigned int j=0; j<_n_vars; j++)
-                for (unsigned int i=0; i<_n_eig; i++) {
+                for (unsigned int i=0; i<n_required; i++) {
                     val = _system->get_eigenpair(i);
-                    grads[j*_n_vars+i] /= -pow(val.first, 2);
+                    grads[j*_n_eig+i]  = grad_vals[j*_system->get_n_converged()+i];
+                    std::cout << i << " / " << j
+                    <<  std::setw(35) << std::fixed << std::setprecision(15) << grads[j*_n_eig+i] << std::endl;
+                    grads[j*_n_eig+i] /= -pow(val.first, 2);
                 }
         else
             libmesh_error(); // should not get here
