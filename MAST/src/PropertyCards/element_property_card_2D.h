@@ -355,6 +355,8 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
     DenseMatrix<Real> dm;
     const MAST::FunctionBase& f = *(it->first);
 
+    const bool depends = this->depends_on(f);
+
     switch (elem.dim()) {
             
         case 2: {
@@ -365,7 +367,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                                                    m, _if_plane_stress);
                     _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
                                                                dm, _if_plane_stress, p);
-                    if (f.name() != "h")
+                    if (!depends || f.name() != "h")
                         m.scale(0.);
                     m.add(h, dm);
                 }
@@ -381,7 +383,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                                                    m, _if_plane_stress);
                     _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX,
                                                                dm, _if_plane_stress, p);
-                    if (f.name() == "h")
+                    if (depends && f.name() == "h")
                         m.scale(pow(h,2)/4.);
                     else
                         m.scale(0.);
@@ -394,7 +396,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                                                    m, _if_plane_stress);
                     _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                                                                dm, _if_plane_stress, p);
-                    if (f.name() != "h")
+                    if (!depends || f.name() != "h")
                         m.scale(0.);
                     m.add(h, dm);
                 }
@@ -405,7 +407,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                                                    m, _if_plane_stress);
                     _material->calculate_2d_matrix_sensitivity(MAST::MATERIAL_INERTIA_MATRIX,
                                                                dm, _if_plane_stress, p);
-                    if (f.name() != "h")
+                    if (!depends || f.name() != "h")
                         m.scale(0.);
                     m.add(h, dm);
                     // now scale the rotation dofs with small factors
@@ -474,10 +476,12 @@ MAST::Solid2DSectionElementPropertyCard::prestress_vector_sensitivity(MAST::Elem
     
     const MAST::FunctionBase& f = *(it->first);
 
+    const bool depends = this->depends_on(f);
+
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_vector(T, v);
-            if (f.name() != "h")
+            if (!depends || f.name() != "h")
                 v.scale(0.);
             break;
             
@@ -533,10 +537,12 @@ MAST::Solid2DSectionElementPropertyCard::prestress_matrix_sensitivity(MAST::Elem
     
     const MAST::FunctionBase& f = *(it->first);
 
+    const bool depends = this->depends_on(f);
+
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_matrix(T, m);
-            if (f.name() != "h")
+            if (!depends || f.name() != "h")
                 m.scale(0.);
             break;
             

@@ -385,6 +385,8 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
 
     DenseMatrix<Real> dm;
     
+    const bool depends = this->depends_on(f);
+    
     switch (elem.dim()) {
             
         case 1: {
@@ -406,11 +408,11 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                     dm.scale_row(0, Area);
                     dm.scale_row(1, J);
                     
-                    if (f.name() == "h") {
+                    if (depends && f.name() == "h") {
                         m.scale_row(0, dAreadh);
                         m.scale_row(1, dJdh);
                     }
-                    else if (f.name() == "b") {
+                    else if (depends && f.name() == "b") {
                         m.scale_row(0, dAreadb);
                         m.scale_row(1, dJdb);
                     }
@@ -434,13 +436,13 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                     dm(1,0) = dEdp*Iyz;
                     dm(1,1) = dEdp*Izz;
 
-                    if (f.name() == "h") {
+                    if (depends && f.name() == "h") {
                         m(0,0) = E*dIyydh;
                         m(0,1) = E*dIyzdh;
                         m(1,0) = E*dIyzdh;
                         m(1,1) = E*dIzzdh;
                     }
-                    else if (f.name() == "b") {
+                    else if (depends && f.name() == "b") {
                         m(0,0) = E*dIyydb;
                         m(0,1) = E*dIyzdb;
                         m(1,0) = E*dIyzdb;
@@ -460,9 +462,9 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                                                    m);
                     _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                                                                dm, p);
-                    if (f.name() == "h")
+                    if (depends && f.name() == "h")
                         m.scale(dAreadh);
-                    else if (f.name() == "b")
+                    else if (depends && f.name() == "b")
                         m.scale(dAreadb);
                     else
                         m.zero();
@@ -532,12 +534,14 @@ MAST::Solid1DSectionElementPropertyCard::prestress_vector_sensitivity(MAST::Elem
     Real h = this->get<Real>("h")(), // section height
     b = this->get<Real>("b")();        // section width
     
+    const bool depends = this->depends_on(f);
+
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_vector(T, v);
-            if (f.name() == "h")
+            if (depends && f.name() == "h")
                 v.scale(b);
-            else if (f.name() == "b")
+            else if (depends && f.name() == "b")
                 v.scale(h);
             else
                 v.zero();
@@ -601,12 +605,14 @@ MAST::Solid1DSectionElementPropertyCard::prestress_matrix_sensitivity(MAST::Elem
     Real h = this->get<Real>("h")(), // section height
     b = this->get<Real>("b")();        // section width
 
+    const bool depends = this->depends_on(f);
+    
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_matrix(T, m);
-            if (f.name() == "h")
+            if (depends && f.name() == "h")
                 m.scale(b);
-            else if (f.name() == "b")
+            else if (depends && f.name() == "b")
                 m.scale(h);
             else
                 m.zero();

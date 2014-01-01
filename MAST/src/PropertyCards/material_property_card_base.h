@@ -224,17 +224,19 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix_sensitivity
     
     const MAST::FunctionBase& f = *(it->first);
     
+    const bool depends = this->depends_on(f);
+
     switch (t) {
 
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(2,2);
             Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
-            if (f.name() == "E") {
+            if (depends && f.name() == "E") {
                 m(0,0) = 1.;
                 m(1,1) = 1./2./(1.+nu);
             }
-            else if (f.name() == "nu") {
+            else if (depends && f.name() == "nu") {
                 m(0,0) = 0.;
                 m(1,1) = -E/2./pow(1.+nu,2);
             }
@@ -245,7 +247,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix_sensitivity
 
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
-            if (f.name() == "rho")
+            if (depends && f.name() == "rho")
                 for (unsigned int i=0; i<6; i++)
                     m(i,i) = 1.;
             else
@@ -260,15 +262,15 @@ MAST::IsotropicMaterialPropertyCard::calculate_1d_matrix_sensitivity
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
-            if (f.name() == "E") {
+            if (depends && f.name() == "E") {
                 for (unsigned int i=0; i<2; i++)
                     m(i,i) = 1./2./(1.+nu)*kappa;
             }
-            else if (f.name() == "nu") {
+            else if (depends && f.name() == "nu") {
                 for (unsigned int i=0; i<2; i++)
                     m(i,i) = -E/2./pow(1.+nu,2)*kappa;
             }
-            else if (f.name() == "kappa") {
+            else if (depends && f.name() == "kappa") {
                 for (unsigned int i=0; i<2; i++)
                     m(i,i) = G;
             }
@@ -362,13 +364,15 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix_sensitivity
     
     const MAST::FunctionBase& f = *(it->first);
 
+    const bool depends = this->depends_on(f);
+
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(3,3);
             Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
             if (if_plane_stress) {
-                if (f.name() == "E") {
+                if (depends && f.name() == "E") {
                     for (unsigned int i=0; i<2; i++) {
                         for (unsigned int j=0; j<2; j++)
                             if (i == j) // diagonal: direct stress
@@ -378,7 +382,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix_sensitivity
                     }
                     m(2,2) = 1./2./(1.+nu); // diagonal: shear stress
                 }
-                else if (f.name() == "nu") {
+                else if (depends && f.name() == "nu") {
                     for (unsigned int i=0; i<2; i++) {
                         for (unsigned int j=0; j<2; j++)
                             if (i == j) // diagonal: direct stress
@@ -399,7 +403,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix_sensitivity
             
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
-            if (f.name() == "rho")
+            if (depends && f.name() == "rho")
                 for (unsigned int i=0; i<6; i++)
                     m(i,i) = 1.;
             else
@@ -413,13 +417,13 @@ MAST::IsotropicMaterialPropertyCard::calculate_2d_matrix_sensitivity
             nu = this->get<Real>("nu")(),
             kappa = this->get<Real>("kappa")(),
             G = E/2./(1.+nu);
-            if (f.name() == "E")
+            if (depends && f.name() == "E")
                 for (unsigned int i=0; i<2; i++)
                     m(i,i) = 1./2./(1.+nu)*kappa;
-            else if (f.name() == "nu")
+            else if (depends && f.name() == "nu")
                 for (unsigned int i=0; i<2; i++)
                     m(i,i) = -E/2./pow(1.+nu,2)*kappa;
-            else if (f.name() == "kappa")
+            else if (depends && f.name() == "kappa")
                 for (unsigned int i=0; i<2; i++)
                     m(i,i) = G;
             else
@@ -491,12 +495,14 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix_sensitivity
     
     const MAST::FunctionBase& f = *(it->first);
 
+    const bool depends = this->depends_on(f);
+
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX: {
             m.resize(6,6);
             Real E = this->get<Real>("E")(),
             nu = this->get<Real>("nu")();
-            if (f.name() == "E") {
+            if (depends && f.name() == "E") {
                 for (unsigned int i=0; i<3; i++) {
                     for (unsigned int j=0; j<3; j++)
                         if (i == j) // diagonal: direct stress
@@ -506,7 +512,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix_sensitivity
                     m(i+3,i+3) = 1./2./(1.+nu); // diagonal: shear stress
                 }
             }
-            else if (f.name() == "nu") {
+            else if (depends && f.name() == "nu") {
                 for (unsigned int i=0; i<3; i++) {
                     for (unsigned int j=0; j<3; j++)
                         if (i == j) // diagonal: direct stress
@@ -523,7 +529,7 @@ MAST::IsotropicMaterialPropertyCard::calculate_3d_matrix_sensitivity
             
         case MAST::MATERIAL_INERTIA_MATRIX: {
             m.resize(6,6);
-            if (f.name() == "rho")
+            if (depends && f.name() == "rho")
                 for (unsigned int i=0; i<6; i++)
                     m(i,i) = 1.;
             else

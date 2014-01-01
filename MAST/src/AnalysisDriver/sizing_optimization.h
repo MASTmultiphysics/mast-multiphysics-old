@@ -143,7 +143,6 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     // one DV for each element
     x.resize   (_n_vars);
     std::fill(x.begin(), x.end(), 0.02);           // start with a solid material
-    x[1] = .02001;
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 1.0e-4); // lower limit is a small value.
     xmax.resize(_n_vars);

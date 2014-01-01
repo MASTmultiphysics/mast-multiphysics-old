@@ -256,6 +256,7 @@ MAST::StructuralSystemAssembly::assemble() {
 
     switch (_analysis_type) {
         case MAST::MODAL:
+            _system.solution->zero();
             _assemble_matrices_for_modal_analysis(*_system.solution,
                                                   matrix_A,
                                                   matrix_B,
@@ -263,6 +264,7 @@ MAST::StructuralSystemAssembly::assemble() {
             break;
             
         case MAST::BUCKLING:
+            _system.solution->zero();
             _assemble_matrices_for_buckling_analysis(*_system.solution,
                                                      matrix_A,
                                                      matrix_B,
@@ -296,6 +298,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     
     switch (_analysis_type) {
         case MAST::MODAL:
+            _system.solution->zero();
             _assemble_matrices_for_modal_analysis(*_system.solution,
                                                   *sensitivity_A,
                                                   *sensitivity_B,
@@ -303,6 +306,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
             break;
             
         case MAST::BUCKLING:
+            _system.solution->zero();
             _assemble_matrices_for_buckling_analysis(*_system.solution,
                                                      *sensitivity_A,
                                                      *sensitivity_B,
