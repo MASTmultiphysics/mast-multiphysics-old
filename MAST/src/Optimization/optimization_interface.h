@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 
 // MAST includes
@@ -25,13 +26,14 @@ namespace MAST {
         
     public:
         
-        FunctionEvaluation():
+        FunctionEvaluation(std::ostream& tab_output):
         _n_vars(0),
         _n_eq(0),
         _n_ineq(0),
         _max_iters(0),
         _n_rel_change_iters(5),
-        _tol(1.0e-6)
+        _tol(1.0e-6),
+        _output(tab_output)
         { }
         
         virtual ~FunctionEvaluation() { }
@@ -88,11 +90,6 @@ namespace MAST {
                             Real obj,
                             const std::vector<Real>& fval) const;
 
-        virtual void tabulated_output(std::ostream& output,
-                                      unsigned int iter,
-                                      const std::vector<Real>& x,
-                                      Real obj,
-                                      const std::vector<Real>& fval) const;
     protected:
         
         unsigned int _n_vars;
@@ -106,6 +103,8 @@ namespace MAST {
         unsigned int _n_rel_change_iters;
         
         Real _tol;
+        
+        std::ostream& _output;
     };
     
 
@@ -186,36 +185,33 @@ MAST::FunctionEvaluation::output(unsigned int iter, const std::vector<Real> &x,
     
     libMesh::out << std::endl
     << " *************************** " << std::endl;
-}
-
-
-
-inline void
-MAST::FunctionEvaluation::tabulated_output(std::ostream& output,
-                                           unsigned int iter,
-                                           const std::vector<Real>& x,
-                                           Real obj,
-                                           const std::vector<Real>& fval) const {
-    libmesh_assert_equal_to(x.size(), _n_vars);
-    libmesh_assert_equal_to(fval.size(), _n_eq + _n_ineq);
     
-    // write header for the first iteration
-    if (iter == 0) {
-        output << std::setw(10) << "Iter";
+    {
+        // write header for the first iteration
+        if (iter == 0) {
+            _output << std::setw(10) << "Iter";
+            for (unsigned int i=0; i < x.size(); i++) {
+                std::stringstream x; x << "x_" << i;
+                _output << std::setw(20) << x.str();
+            }
+            _output << std::setw(20) << "Obj";
+            for (unsigned int i=0; i<fval.size(); i++) {
+                std::stringstream f; f << "f_" << i;
+                _output << std::setw(20) << f.str();
+            }
+            _output << std::endl;
+        }
+        
+        _output << std::setw(10) << iter;
         for (unsigned int i=0; i < x.size(); i++)
-            output << " x [ " << std::setw(10) << i << " ]   ";
-        output << std::setw(20) << "Obj";
-        for (unsigned int i=0; i<fval.size(); i++)
-            output << " f [ " << std::setw(10) << i << " ]   ";
+            _output << std::setw(20) << x[i];
+        _output << std::setw(20) << obj;
+        for (unsigned int i=0; i < fval.size(); i++)
+            _output << std::setw(20) << fval[i];
+        _output << std::endl;
     }
-    
-    output << std::setw(10) << iter;
-    for (unsigned int i=0; i < x.size(); i++)
-        output << std::setw(20) << x[i];
-    output << std::setw(20) << obj;
-    for (unsigned int i=0; i < fval.size(); i++)
-        output << std::setw(20) << fval[i];
 }
+
 
 
 #endif  // __MAST_optimization_interface_h__

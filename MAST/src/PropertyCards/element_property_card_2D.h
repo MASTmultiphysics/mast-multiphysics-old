@@ -441,11 +441,10 @@ inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_vector(MAST::ElemenetPropertyMatrixType t,
                                                           const DenseMatrix<Real>& T,
                                                           DenseVector<Real>& v) const {
-    Real h = this->get<Real>("h")();
+    // prestress is independent of cross-section.
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_vector(T, v);
-            v.scale(h);
             break;
                     
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
@@ -469,31 +468,8 @@ MAST::Solid2DSectionElementPropertyCard::prestress_vector_sensitivity(MAST::Elem
                                                                       const MAST::SensitivityParameters& p) const {
     // only first order sensitivities are calculated at this point
     libmesh_assert_equal_to(p.total_order(), 1);
-    
-    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
-    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
-    it = p_map.begin(); end = p_map.end();
-    
-    const MAST::FunctionBase& f = *(it->first);
-
-    const bool depends = this->depends_on(f);
-
-    switch (t) {
-        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-            _prestress_vector(T, v);
-            if (!depends || f.name() != "h")
-                v.scale(0.);
-            break;
-            
-        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
-            // for solid sections with isotropic material this is zero
-            v.resize(3);
-            break;
-            
-        default:
-            libmesh_error();
-            break;
-    }
+    // prestress is independent of cross-section.
+    v.resize(3);
 }
 
 
@@ -504,11 +480,11 @@ inline void
 MAST::Solid2DSectionElementPropertyCard::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
                                                           const DenseMatrix<Real>& T,
                                                           DenseMatrix<Real>& m) const {
-    Real h = this->get<Real>("h")();
+    // prestress is independent of cross-section.
+
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             _prestress_matrix(T, m);
-            m.scale(h);
             break;
             
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
@@ -530,31 +506,8 @@ MAST::Solid2DSectionElementPropertyCard::prestress_matrix_sensitivity(MAST::Elem
                                                                       const MAST::SensitivityParameters& p) const {
     // only first order sensitivities are calculated at this point
     libmesh_assert_equal_to(p.total_order(), 1);
-    
-    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
-    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
-    it = p_map.begin(); end = p_map.end();
-    
-    const MAST::FunctionBase& f = *(it->first);
-
-    const bool depends = this->depends_on(f);
-
-    switch (t) {
-        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-            _prestress_matrix(T, m);
-            if (!depends || f.name() != "h")
-                m.scale(0.);
-            break;
-            
-        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
-            // for solid sections with isotropic material this is zero
-            m.resize(2,2);
-            break;
-            
-        default:
-            libmesh_error();
-            break;
-    }
+    // prestress is independent of cross-section.
+    m.resize(2,2);
 }
 
 

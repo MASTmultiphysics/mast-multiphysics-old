@@ -45,8 +45,9 @@ namespace MAST {
     public:
         
         SizingOptimization(LibMeshInit& init,
-                             GetPot& input):
-        MAST::FunctionEvaluation(),
+                           GetPot& input,
+                           std::ostream& output):
+        MAST::FunctionEvaluation(output),
         _libmesh_init(init),
         _infile(input),
         _n_stiff(0),
@@ -144,7 +145,7 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     x.resize   (_n_vars);
     std::fill(x.begin(), x.end(), 0.02);           // start with a solid material
     xmin.resize(_n_vars);
-    std::fill(xmin.begin(), xmin.end(), 1.0e-4); // lower limit is a small value.
+    std::fill(xmin.begin(), xmin.end(), 2.0e-3); // lower limit is a small value.
     xmax.resize(_n_vars);
     std::fill(xmax.begin(), xmax.end(), 0.2);     // upper limit is 1.
 }
@@ -208,33 +209,31 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         for (unsigned int i=0; i<n_required; i++) {
             val = _system->get_eigenpair(i);
             eigval = std::complex<Real>(val.first, val.second);
-            std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
             eigval = 1./eigval;
             fvals[i] = 1.-eigval.real(); // g <= 0.
             
-            {
-                std::ostringstream file_name;
-                
-                // We write the file in the ExodusII format.
-                file_name << "out_"
-                << std::setw(3)
-                << std::setfill('0')
-                << std::right
-                << i
-                << ".exo";
-                
-                // now write the eigenvlaues
-                _system->get_eigenpair(i);
-                
-                // We write the file in the ExodusII format.
-                Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
-                                                          *_eq_systems);
-            }
+//            {
+//                std::ostringstream file_name;
+//                
+//                // We write the file in the ExodusII format.
+//                file_name << "out_"
+//                << std::setw(3)
+//                << std::setfill('0')
+//                << std::right
+//                << i
+//                << ".exo";
+//                
+//                // now write the eigenvlaues
+//                _system->get_eigenpair(i);
+//                
+//                // We write the file in the ExodusII format.
+//                Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
+//                                                          *_eq_systems);
+//            }
         }
     else
         libmesh_error(); // should not get here.
     
-    std::cout << std::endl;
     std::vector<Real> grad_vals;
     
     if (eval_grads[0]) {
@@ -246,8 +245,6 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                 for (unsigned int i=0; i<n_required; i++) {
                     val = _system->get_eigenpair(i);
                     grads[j*_n_eig+i]  = grad_vals[j*_system->get_n_converged()+i];
-                    std::cout << i << " / " << j
-                    <<  std::setw(35) << std::fixed << std::setprecision(15) << grads[j*_n_eig+i] << std::endl;
                     grads[j*_n_eig+i] /= -pow(val.first, 2);
                 }
         else
@@ -452,7 +449,7 @@ MAST::SizingOptimization::_init() {
     h_stiff = _infile("thickness", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(1) = -1.e8;
+    prestress(1) = -1.e5;
     
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);

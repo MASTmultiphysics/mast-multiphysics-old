@@ -60,17 +60,22 @@
 int optimization_driver (LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
+    std::ofstream output;
+    output.open("optimization_output.txt", std::ofstream::out);
+    
     MAST::GCMMAOptimizationInterface gcmma;
     
     // create and attach topology optimization object
-    // MAST::TopologyOptimization func_eval(init, infile);
+    // MAST::TopologyOptimization func_eval(init, infile, output);
     
     // create and attach sizing optimization object
-    MAST::SizingOptimization func_eval(init, infile);
+    MAST::SizingOptimization func_eval(init, infile, output);
 
     // attach and optimize
     gcmma.attach_function_evaluation_object(func_eval);
     gcmma.optimize();
+    
+    output.close();
     
     // All done.
     return 0;

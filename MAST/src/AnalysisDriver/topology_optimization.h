@@ -40,8 +40,9 @@ namespace MAST {
     public:
         
         TopologyOptimization(LibMeshInit& init,
-                             GetPot& input):
-        MAST::FunctionEvaluation(),
+                             GetPot& input,
+                             std::ostream& output):
+        MAST::FunctionEvaluation(output),
         _libmesh_init(init),
         _infile(input),
         _eq_systems(NULL),
