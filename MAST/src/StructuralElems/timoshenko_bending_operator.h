@@ -23,10 +23,10 @@
 
 
 namespace MAST {
-    class TimoshenkoBendingOperator: public MAST::BendingOperator {
+    class TimoshenkoBendingOperator: public MAST::BendingOperator1D {
     public:
         TimoshenkoBendingOperator(StructuralElementBase& elem):
-        MAST::BendingOperator(elem),
+        MAST::BendingOperator1D(elem),
         _fe(elem.fe()),
         _shear_quadrature_reduction(2)
         { }
@@ -41,10 +41,22 @@ namespace MAST {
         }
         
         /*!
-         *   initialze the bending strain operator for DKT element
+         *   initialze the bending strain operator for Timoshenko beam element, withouth
+         *   the y,z-location. This is useful for use with element stiffness matrix
+         *   integration where the D matrix is calculated by section integration by
+         *   the ElementPropertyCard1D.
          */
         virtual void initialize_bending_strain_operator (const unsigned int qp,
                                                          FEMOperatorMatrix& Bmat);
+        
+        /*!
+         *    initializes the bending strain operator for the specified quadrature
+         * point and y,z-location.
+         */
+        virtual void initialize_bending_strain_operator_for_yz(const unsigned int qp,
+                                                               const Real y,
+                                                               const Real z,
+                                                               FEMOperatorMatrix& Bmat_bend);
         
         /*!
          *   calculate the transverse shear component for the element
@@ -74,6 +86,17 @@ namespace MAST {
 inline void
 MAST::TimoshenkoBendingOperator::initialize_bending_strain_operator(const unsigned int qp,
                                                                     FEMOperatorMatrix& Bmat_bend) {
+    this->initialize_bending_strain_operator_for_yz(qp, 1., 1., Bmat_bend);
+}
+
+
+
+
+inline void
+MAST::TimoshenkoBendingOperator::initialize_bending_strain_operator_for_yz(const unsigned int qp,
+                                                                           const Real y,
+                                                                           const Real z,
+                                                                           FEMOperatorMatrix& Bmat_bend) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe.get_dphi();
     const std::vector<std::vector<Real> >& phi = _fe.get_phi();
@@ -81,12 +104,15 @@ MAST::TimoshenkoBendingOperator::initialize_bending_strain_operator(const unsign
     const unsigned int n_phi = (unsigned int)phi.size();
     
     DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
+    
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
-    
+    phi_vec.scale(-y);
     Bmat_bend.set_shape_function(0, 5, phi_vec); // v-bending: thetaz
-    //Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
-    phi_vec.scale(-1.0);
+
+    for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
+        phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
+    phi_vec.scale(z);
     Bmat_bend.set_shape_function(1, 4, phi_vec); // w-bending : thetay
 }
 

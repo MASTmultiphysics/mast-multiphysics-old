@@ -23,10 +23,10 @@
 
 namespace MAST
 {
-    class DKTBendingOperator: public MAST::BendingOperator {
+    class DKTBendingOperator: public MAST::BendingOperator2D {
     public:
         DKTBendingOperator(StructuralElementBase& elem):
-        MAST::BendingOperator(elem),
+        MAST::BendingOperator2D(elem),
         _fe(NULL),
         _tri6(NULL),
         _nodes(3)
@@ -87,12 +87,24 @@ namespace MAST
             return false;
         }
 
+
         /*!
-         *   initialze the bending strain operator for DKT element
+         *   initialze the bending strain operator for DKt element, withouth
+         *   the z-location. This is useful for use with element stiffness matrix
+         *   integration where the D matrix is calculated by section integration by
+         *   the ElementPropertyCard2D.
          */
         virtual void initialize_bending_strain_operator (const unsigned int qp,
                                                          FEMOperatorMatrix& Bmat);
         
+        /*!
+         *    initializes the bending strain operator for the specified quadrature
+         * point and z-location.
+         */
+        void initialize_bending_strain_operator_for_z(const unsigned int qp,
+                                                      const Real z,
+                                                      FEMOperatorMatrix& Bmat_bend);
+
     protected:
         
         /*!
@@ -134,10 +146,19 @@ inline
 void
 MAST::DKTBendingOperator::initialize_bending_strain_operator (const unsigned int qp,
                                                               FEMOperatorMatrix& Bmat) {
+    this->initialize_bending_strain_operator_for_z(qp, 1., Bmat);
+}
+
+
+inline
+void
+MAST::DKTBendingOperator::initialize_bending_strain_operator_for_z (const unsigned int qp,
+                                                                    const Real z,
+                                                                    FEMOperatorMatrix& Bmat) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
-
+    
     DenseVector<Real> phi, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy,
     w, thetax, thetay;
     phi.resize(n_phi); dbetaxdx.resize(9); dbetaxdy.resize(9);
@@ -147,47 +168,60 @@ MAST::DKTBendingOperator::initialize_bending_strain_operator (const unsigned int
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
     _calculate_dkt_shape_functions(phi, dbetaxdx, dbetaydx);
-
+    
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
     _calculate_dkt_shape_functions(phi, dbetaxdy, dbetaydy);
     
     // add the shear components together
     dbetaxdy.add(1.0, dbetaydx);
-
-
+    
+    
     // now set values for individual dofs
     for (unsigned int i=0; i<3; i++) {
         w(i)      = dbetaxdx(  i);
         thetax(i) = dbetaxdx(3+i);
         thetay(i) = dbetaxdx(6+i);
     }
+    
+    w.scale(z);
+    thetax.scale(z);
+    thetay.scale(z);
+    
     Bmat.set_shape_function(0, 2,      w); // epsilon-x: w
     Bmat.set_shape_function(0, 3, thetax); // epsilon-x: tx
     Bmat.set_shape_function(0, 4, thetay); // epsilon-x: ty
-
+    
     
     for (unsigned int i=0; i<3; i++) {
         w(i)      = dbetaydy(  i);
         thetax(i) = dbetaydy(3+i);
         thetay(i) = dbetaydy(6+i);
     }
+    
+    w.scale(z);
+    thetax.scale(z);
+    thetay.scale(z);
+    
     Bmat.set_shape_function(1, 2,      w); // epsilon-x: w
     Bmat.set_shape_function(1, 3, thetax); // epsilon-x: tx
     Bmat.set_shape_function(1, 4, thetay); // epsilon-x: ty
-
+    
     for (unsigned int i=0; i<3; i++) {
         w(i)      = dbetaxdy(  i);
         thetax(i) = dbetaxdy(3+i);
         thetay(i) = dbetaxdy(6+i);
     }
+
+    w.scale(z);
+    thetax.scale(z);
+    thetay.scale(z);
+
     Bmat.set_shape_function(2, 2,      w); // epsilon-x: w
     Bmat.set_shape_function(2, 3, thetax); // epsilon-x: tx
     Bmat.set_shape_function(2, 4, thetay); // epsilon-x: ty
 }
-
-
-
+    
 inline
 Real
 MAST::DKTBendingOperator::_get_edge_length(unsigned int i, unsigned int j)

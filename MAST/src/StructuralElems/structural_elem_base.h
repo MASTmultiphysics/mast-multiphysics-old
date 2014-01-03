@@ -38,6 +38,42 @@ namespace MAST {
     };
     
     
+    /*!
+     *   stress tensor
+     */
+    class Stress: public DenseMatrix<Real> {
+    public:
+        Stress():
+        DenseMatrix<Real>()
+        {
+            this->resize(3,3);
+        }
+        
+        virtual ~Stress() { }
+
+        /*!
+         *    calculates and returns the von Mises stress for this stress
+         *    tensor
+         */
+        Real von_mises_stress() const {
+            
+            const DenseMatrix<Real>& s = *this;
+            
+            Real val =
+            pow(s(0,0) - s(1,1), 2) +
+            pow(s(1,1) - s(2,2), 2) +
+            pow(s(2,2) - s(0,0), 2) +
+            6.* (pow(s(0,1), 2) +
+                 pow(s(1,2), 2) +
+                 pow(s(2,0), 2));
+            
+            val = sqrt(.5 * val);
+            
+            return val;
+        }
+    };
+    
+    
     class StructuralElementBase
     {
     public:

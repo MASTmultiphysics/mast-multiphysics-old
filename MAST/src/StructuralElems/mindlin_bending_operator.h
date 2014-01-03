@@ -22,10 +22,10 @@
 
 
 namespace MAST {
-    class MindlinBendingOperator: public MAST::BendingOperator {
+    class MindlinBendingOperator: public MAST::BendingOperator2D {
     public:
         MindlinBendingOperator(StructuralElementBase& elem):
-        MAST::BendingOperator(elem),
+        MAST::BendingOperator2D(elem),
         _fe(elem.fe()),
         _shear_quadrature_reduction(2)
         { }
@@ -40,11 +40,21 @@ namespace MAST {
         }
         
         /*!
-         *   initialze the bending strain operator for DKT element
+         *   initialze the bending strain operator for Mindlin element, withouth 
+         *   the z-location. This is useful for use with element stiffness matrix
+         *   integration where the D matrix is calculated by section integration by
+         *   the ElementPropertyCard2D.
          */
         virtual void initialize_bending_strain_operator (const unsigned int qp,
                                                          FEMOperatorMatrix& Bmat);
         
+        /*!
+         *    initializes the bending strain operator for the specified quadrature
+         * point and z-location.
+         */
+        void initialize_bending_strain_operator_for_z(const unsigned int qp,
+                                                      const Real z,
+                                                      FEMOperatorMatrix& Bmat_bend);
         /*!
          *   calculate the transverse shear component for the element
          */
@@ -73,6 +83,15 @@ namespace MAST {
 inline void
 MAST::MindlinBendingOperator::initialize_bending_strain_operator(const unsigned int qp,
                                                                  FEMOperatorMatrix& Bmat_bend) {
+    this->initialize_bending_strain_operator_for_z(qp, 1., Bmat_bend);
+}
+
+
+
+inline void
+MAST::MindlinBendingOperator::initialize_bending_strain_operator_for_z(const unsigned int qp,
+                                                                       const Real z,
+                                                                       FEMOperatorMatrix& Bmat_bend) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe.get_dphi();
     const std::vector<std::vector<Real> >& phi = _fe.get_phi();
@@ -83,8 +102,8 @@ MAST::MindlinBendingOperator::initialize_bending_strain_operator(const unsigned 
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
     
+    phi_vec.scale(z);
     Bmat_bend.set_shape_function(0, 4, phi_vec); // epsilon-x: thetay
-                                                 //Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
     phi_vec.scale(-1.0);
     Bmat_bend.set_shape_function(2, 3, phi_vec); // gamma-xy : thetax
     
@@ -92,6 +111,7 @@ MAST::MindlinBendingOperator::initialize_bending_strain_operator(const unsigned 
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
     
+    phi_vec.scale(z);
     Bmat_bend.set_shape_function(2, 4, phi_vec); // gamma-xy : thetay
                                                  //Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
     phi_vec.scale(-1.0);
@@ -101,10 +121,9 @@ MAST::MindlinBendingOperator::initialize_bending_strain_operator(const unsigned 
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = phi[i_nd][qp];  // phi
     
-    //Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
     phi_vec.scale(-1.0);
-    //Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
 }
+
 
 
 

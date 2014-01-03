@@ -211,12 +211,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
 
     // Declare the system
-    //NonlinearImplicitSystem & system =
-    //equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
+    NonlinearImplicitSystem & system =
+    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
     CondensedEigenSystem* eigen_system = NULL;
-    CondensedEigenSystem & system =
-    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
-    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
+    //CondensedEigenSystem & system =
+    //equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    //eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
     
     unsigned int o = infile("fe_order", 1);
@@ -232,7 +232,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
+                                                       MAST::STATIC,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -245,7 +245,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
     mesh.subdomain_ids(ids);
-    //structural_assembly.add_side_load(2, bc);
+    structural_assembly.add_volume_load(0, bc);
     
     
     system.attach_assemble_object(structural_assembly);
@@ -342,7 +342,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     b  = infile("width", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(3) = 100.;
+    prestress(3) = 1.0e6;
     
     prop3d.set_material(mat);
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
@@ -361,9 +361,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     structural_assembly.add_parameter(h.ptr(), &h);
     
     system.solve();
-    
-
     if (!eigen_system) {
+        
+        std::vector<Real> stress;
+        structural_assembly.calculate_max_elem_stress(*system.solution, stress, NULL);
         
         // We write the file in the ExodusII format.
         Nemesis_IO(mesh).write_equation_systems("out.exo",

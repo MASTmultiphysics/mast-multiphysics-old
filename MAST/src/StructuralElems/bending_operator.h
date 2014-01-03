@@ -90,7 +90,47 @@ namespace MAST {
         QBase& _qrule;
 
     };
+
     
+    
+    /*!
+     *   Bending strain operator for 1D element
+     */
+    class BendingOperator1D: public MAST::BendingOperator {
+    public:
+        BendingOperator1D(StructuralElementBase& elem):
+        MAST::BendingOperator(elem)
+        { }
+
+        /*!
+         *   initialze the bending strain operator for the specified quadrature point
+         */
+        virtual void initialize_bending_strain_operator_for_yz (const unsigned int qp,
+                                                                const Real y,
+                                                                const Real z,
+                                                                FEMOperatorMatrix& Bmat) = 0;
+
+    };
+
+    
+    /*!
+     *   Bending strain operator for 1D element
+     */
+    class BendingOperator2D: public MAST::BendingOperator {
+    public:
+        BendingOperator2D(StructuralElementBase& elem):
+        MAST::BendingOperator(elem)
+        { }
+        
+        /*!
+         *   initialze the bending strain operator for the specified quadrature point
+         */
+        virtual void initialize_bending_strain_operator_for_z (const unsigned int qp,
+                                                                const Real z,
+                                                                FEMOperatorMatrix& Bmat) = 0;
+        
+    };
+
     
     /*!
      *   builds a bending operator and returns it in a smart-pointer

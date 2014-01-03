@@ -284,6 +284,10 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                                                                                   *it.first->second));
                         break;
 #endif
+
+                    case MAST::DISPLACEMENT:
+                        // nothing to be done here
+                        break;
                         
                     default:
                         // not implemented yet
@@ -336,6 +340,10 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                                                                             *it.first->second));
                         break;
 #endif
+                    case MAST::DISPLACEMENT:
+                        // nothing to be done here
+                        break;
+                        
                     default:
                         // not implemented yet
                         libmesh_error();
