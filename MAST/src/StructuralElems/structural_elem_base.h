@@ -185,6 +185,18 @@ namespace MAST {
                                                         std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!
+         *   returns the value of maximum von Mises stress over the element
+         */
+        virtual Real max_von_mises_stress() = 0;
+        
+        
+        /*!
+         *   returns the sensitivity of maximum von Mises stress over the element
+         */
+        virtual Real max_von_mises_stress_sensitivity() = 0;
+        
+        
+        /*!
          *    flag for follower forces
          */
         bool follower_forces;

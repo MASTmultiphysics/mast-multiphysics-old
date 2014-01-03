@@ -701,6 +701,73 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
 
 
 void
+MAST::StructuralSystemAssembly::calculate_max_elem_stress(const NumericVector<Number>& X,
+                                                          std::vector<Real>& stress,
+                                                          const MAST::SensitivityParameters* params) {
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
+    // resize the stress vector to store values for each element
+    stress.resize(_system.get_mesh().n_active_local_elem());
+    
+    // iterate over each element, initialize it and get the relevant
+    // analysis quantities
+    DenseVector<Real> sol;
+    DenseMatrix<Real> mat;
+    std::vector<dof_id_type> dof_indices;
+    const DofMap& dof_map = _system.get_dof_map();
+    std::auto_ptr<MAST::StructuralElementBase> structural_elem;
+    
+    AutoPtr<NumericVector<Number> > localized_solution =
+    NumericVector<Number>::build(_system.comm());
+    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                             _system.get_dof_map().get_send_list(),
+                             false, GHOSTED);
+    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
+    
+    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    
+    unsigned int counter = 0;
+    
+    for ( ; el != end_el; ++el) {
+        
+        const Elem* elem = *el;
+        
+        dof_map.dof_indices (elem, dof_indices);
+        
+        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
+        
+        // create the structural element for analysis
+        structural_elem.reset(MAST::build_structural_element
+                              (_system, *elem, p_card).release());
+        
+        // get the solution
+        unsigned int ndofs = (unsigned int)dof_indices.size();
+        sol.resize(ndofs);
+        mat.resize(ndofs, ndofs);
+        
+        for (unsigned int i=0; i<dof_indices.size(); i++)
+            sol(i) = (*localized_solution)(dof_indices[i]);
+        structural_elem->local_solution.resize(sol.size());
+        structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+        
+        // now get the vector values
+        if (!params) {
+            stress[counter] = structural_elem->max_von_mises_stress();
+        }
+        else {
+            structural_elem->sensitivity_params = params;
+            stress[counter] = structural_elem->max_von_mises_stress_sensitivity();
+        }
+        counter++;
+    }
+    
+#endif // LIBMESH_USE_COMPLEX_NUMBERS
+}
+
+
+
+void
 MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_ids) const {
     
     dof_ids.clear();

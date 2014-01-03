@@ -83,6 +83,19 @@ namespace MAST {
             return 2;
         }
 
+        /*!
+         *   returns the value of maximum von Mises stress over the element
+         */
+        virtual Real max_von_mises_stress();
+        
+        
+        /*!
+         *   returns the sensitivity of maximum von Mises stress over the element
+         */
+        virtual Real max_von_mises_stress_sensitivity() {
+            libmesh_error();
+        }
+
     protected:
 
 

@@ -193,6 +193,15 @@ namespace MAST
                                            SparseMatrix<Number>* sensitivity_A,
                                            SparseMatrix<Number>* sensitivity_B);
 
+        /*!
+         *    calculates the maximum element stress for the displacement provided
+         *    in \par disp. This method looks at von Mises stresses for all quadrature
+         *    points on the element, and returns the one with the maximum value.
+         */
+        virtual void calculate_max_elem_stress(const NumericVector<Number>& X,
+                                               std::vector<Real>& stress,
+                                               const MAST::SensitivityParameters* params);
+
 
     protected:
         

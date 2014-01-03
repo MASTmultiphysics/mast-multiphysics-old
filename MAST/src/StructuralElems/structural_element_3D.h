@@ -74,6 +74,22 @@ namespace MAST {
                                                   DenseVector<Real>& f,
                                                   DenseMatrix<Real>& jac)
         { libmesh_error();}
+        
+        
+        /*!
+         *   returns the value of maximum von Mises stress over the element
+         */
+        virtual Real max_von_mises_stress(){
+            libmesh_error();
+        }
+        
+        
+        /*!
+         *   returns the sensitivity of maximum von Mises stress over the element
+         */
+        virtual Real max_von_mises_stress_sensitivity(){
+            libmesh_error();
+        }
 
     protected:
         
