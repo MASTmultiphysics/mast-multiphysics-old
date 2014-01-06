@@ -331,7 +331,8 @@ MAST::SizingOptimization::_init() {
     _max_iters = 10000;
 
     // now initialize the mesh
-    MAST::StiffenedPanel().init(divs, *_mesh, elem_type);
+    bool beam_stiff = _infile("beam_stiffeners", false);
+    MAST::StiffenedPanel().init(divs, *_mesh, elem_type, beam_stiff);
 
     // Print information about the mesh to the screen.
     _mesh->print_info();

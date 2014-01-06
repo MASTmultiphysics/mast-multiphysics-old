@@ -32,10 +32,18 @@ namespace MAST {
      */
     class Local1DElem : public MAST::LocalElemBase {
     public:
-        Local1DElem(const Elem& elem):
-        MAST::LocalElemBase(elem)
+        /*!
+         *    constructor takes a reference to the element for this which this 
+         *    local element is to be created, and a vector in the element 
+         *    x-y plane. The x-axis, by default, is along the element length.
+         */
+        Local1DElem(const Elem& elem,
+                    const Point& y):
+        MAST::LocalElemBase(elem),
+        _local_y(y)
         {
             _create_local_elem();
+            libmesh_assert_greater(_local_y.size(), 0.);
         }
         
         
@@ -57,6 +65,10 @@ namespace MAST {
          */
         void _create_local_elem();
         
+        /*!
+         *    orientation of element local y-axis
+         */
+        Point _local_y;
     };
     
     

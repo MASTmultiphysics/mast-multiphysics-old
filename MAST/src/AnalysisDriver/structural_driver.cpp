@@ -166,7 +166,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 libmesh_error();
         }
         else if (mesh_type == "stiffened_panel") {
-            MAST::StiffenedPanel().init(divs, mesh, elem_type);
+            bool beam_stiff = infile("beam_stiffeners", false);
+            MAST::StiffenedPanel().init(divs, mesh, elem_type, beam_stiff);
         }
         else
             libmesh_error();
@@ -356,9 +357,24 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     structural_assembly.set_property_for_subdomain(0, prop2d);
-    for (unsigned int i=1; i<3; i++)
-        structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
-    structural_assembly.add_parameter(h.ptr(), &h);
+    
+    const std::string mesh_type = infile("mesh_type", std::string(""));
+    if (mesh_type == "stiffened_panel") {
+        bool beam_stiff = infile("beam_stiffeners", false);
+        unsigned int n_stiff = (infile("nx_divs",0)-1) + (infile("ny_divs",0)-1);
+        if (!beam_stiff) {
+            // stiffeners using shell elements
+            for (unsigned int i=1; i<n_stiff; i++)
+                structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
+        }
+        else {
+            // stiffeners using beam elements with offsets
+            MAST::FunctionValue<Real>& off_h = prop1d.add<Real>("off_h", MAST::CONSTANT_FUNCTION);
+            off_h = 0.5*th();
+            for (unsigned int i=1; i<n_stiff; i++)
+                structural_assembly.set_property_for_subdomain(i, prop1d);
+        }
+    }
     
     system.solve();
     if (!eigen_system) {

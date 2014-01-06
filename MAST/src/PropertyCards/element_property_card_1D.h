@@ -74,6 +74,24 @@ namespace MAST
          */
         virtual Real value(const std::string& val) const = 0;
         
+        /*!
+         *   vector in the x-y plane of the element. This should not be the same
+         *   as the element x-axis.
+         */
+        Point& y_vector() {
+            return _local_y;
+        }
+        
+
+        /*!
+         *   constant reference to vector in the x-y plane of the element. 
+         *   This should not be the same as the element x-axis.
+         */
+        const Point& y_vector() const {
+            return _local_y;
+        }
+        
+        
     protected:
         
         /*!
@@ -112,6 +130,11 @@ namespace MAST
          *   triangles and Mindling for all other elements
          */
         MAST::BendingOperatorType _bending_model;
+        
+        /*!
+         *   vector in the x-y plane.
+         */
+        Point _local_y;
         
     };
     
@@ -266,10 +289,20 @@ MAST::ElementPropertyCard1D::bending_model(const Elem& elem,
 inline Real
 MAST::Solid1DSectionElementPropertyCard::value(const std::string& val) const {
     
-    Real h = this->get<Real>("h")(), // section height
-    b = this->get<Real>("b")(),        // section width
-    Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
-    Iyz = 0., J=1.;
+    Real h_y = this->get<Real>("h_y")(), // section height
+    h_z = this->get<Real>("h_z")(),        // section width
+    off_h_y = 0., off_h_z = 0.;
+    
+    if (_properties.count("off_h_y"))
+        off_h_y = this->get<Real>("off_h_y")();
+    if (_properties.count("off_h_z"))
+        off_h_z = this->get<Real>("off_h_z")();
+
+    Real Area = h_y*h_z,
+    Iyy = h_y*(pow(h_z,3)/12. + pow(off_h_z,2)*h_z),
+    Izz = h_z*(pow(h_y,3)/12. + pow(off_h_y,2)*h_y),
+    Iyz = (off_h_y*off_h_z*h_y*h_z),
+    J=1.;
 
     if (val == "A")
         return Area;
@@ -300,10 +333,20 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
     switch (elem.dim()) {
             
         case 1: {
-            Real h = this->get<Real>("h")(), // section height
-            b = this->get<Real>("b")(),        // section width
-            Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
-            Iyz = 0., J=1.;
+            Real h_y = this->get<Real>("h_y")(), // section height
+            h_z = this->get<Real>("h_z")(),      // section width
+            off_h_y = 0., off_h_z = 0.;          // offset values of mid-plane from longitudinal axis
+            
+            if (_properties.count("off_h_y"))
+                off_h_y = this->get<Real>("off_h_y")();
+            if (_properties.count("off_h_z"))
+                off_h_z = this->get<Real>("off_h_z")();
+            
+            Real Area = h_y*h_z,
+            Iyy = h_y*(pow(h_z,3)/12. + pow(off_h_z,2)*h_z),   // used for w-bending
+            Izz = h_z*(pow(h_y,3)/12. + pow(off_h_y,2)*h_y),   // used for v-bending
+            Iyz = (off_h_y*off_h_z*h_y*h_z),
+            J=1.;
             
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
@@ -314,22 +357,26 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
                 }
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX: {
                     // for solid sections with isotropic material this is zero
                     // m(0, 0) and m(0, 1) identify coupling of extension and bending
                     // m(1, 0) and m(1, 1) identify coupling of torsion and bending
-                    // m(0,0) = E Lz (y2^2- y1^2)
-                    // m(0,1) = E Ly (z2^2- z1^2)
+                    Real E = _material->get<Real>("E")();
                     m.resize(2,2);
+                    m(0,0) = E*h_y*h_z*off_h_y;  // u <-> v
+                    m(0,1) = E*h_y*h_z*off_h_z;  // u <-> w
+                    m(1,0) = 0.;           // tx <-> v
+                    m(1,1) = 0.;           // tx <-> w
+                }
                     break;
                     
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX: {
                     m.resize(2,2);
                     Real E = _material->get<Real>("E")();
-                    m(0,0) = E*Iyy;
+                    m(0,0) = E*Izz;
                     m(0,1) = E*Iyz;
                     m(1,0) = E*Iyz;
-                    m(1,1) = E*Izz;
+                    m(1,1) = E*Iyy;
                 }
                     break;
                     
@@ -390,14 +437,31 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
     switch (elem.dim()) {
             
         case 1: {
-            Real h = this->get<Real>("h")(), // section height
-            b = this->get<Real>("b")(),        // section width
-            Area = b*h, Iyy = b*pow(h,3)/12., Izz = h*pow(b,3)/12.,
-            dAreadb = h, dAreadh = b,
-            dIyydb = pow(h,3)/12., dIyydh = b*pow(h,2)/4.,
-            dIzzdb = h*pow(b,2)/4., dIzzdh =  pow(b,3)/12.,
-            Iyz = 0., dIyzdb = 0., dIyzdh = 0.,
-            J = 0., dJdh = 0., dJdb = 0.;
+            Real h_y = this->get<Real>("h_y")(), // section height
+            h_z = this->get<Real>("h_z")(),        // section width
+            off_h_y = 0., off_h_z = 0.;          // offset values of mid-plane from longitudinal axis
+            
+            if (_properties.count("off_h_y"))
+                off_h_y = this->get<Real>("off_h_y")();
+            if (_properties.count("off_h_z"))
+                off_h_z = this->get<Real>("off_h_z")();
+            
+            Real Area = h_y*h_z,
+            Iyy = h_y*(pow(h_z,3)/12. + pow(off_h_z,2)*h_z),   // used for w-bending
+            Izz = h_z*(pow(h_y,3)/12. + pow(off_h_y,2)*h_y),   // used for v-bending
+            Iyz = (off_h_y*off_h_z*h_y*h_z),
+            
+            dAreadhy = h_z, dAreadhz = h_y,
+            
+            dIyydhy = (pow(h_z,3)/12. + pow(off_h_z,2)*h_z),
+            dIyydhz = h_y*(pow(h_z,2)/4. + pow(off_h_z,2)),
+            dIzzdhy = h_z*(pow(h_y,2)/4. + pow(off_h_y,2)),
+            dIzzdhz = (pow(h_y,3)/12. + pow(off_h_y,2)*h_y),
+            
+            dIyzdhy = off_h_y*off_h_z*h_z,
+            dIyzdhz = off_h_y*off_h_z*h_y,
+            
+            J = 1., dJdhy = 0., dJdhz = 0.;
 
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX: {
@@ -408,13 +472,13 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                     dm.scale_row(0, Area);
                     dm.scale_row(1, J);
                     
-                    if (depends && f.name() == "h") {
-                        m.scale_row(0, dAreadh);
-                        m.scale_row(1, dJdh);
+                    if (depends && f.name() == "h_y") {
+                        m.scale_row(0, dAreadhy);
+                        m.scale_row(1, dJdhy);
                     }
-                    else if (depends && f.name() == "b") {
-                        m.scale_row(0, dAreadb);
-                        m.scale_row(1, dJdb);
+                    else if (depends && f.name() == "h_z") {
+                        m.scale_row(0, dAreadhz);
+                        m.scale_row(1, dJdhz);
                     }
                     else
                         m.zero();
@@ -436,17 +500,17 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                     dm(1,0) = dEdp*Iyz;
                     dm(1,1) = dEdp*Izz;
 
-                    if (depends && f.name() == "h") {
-                        m(0,0) = E*dIyydh;
-                        m(0,1) = E*dIyzdh;
-                        m(1,0) = E*dIyzdh;
-                        m(1,1) = E*dIzzdh;
+                    if (depends && f.name() == "h_y") {
+                        m(0,0) = E*dIyydhy;
+                        m(0,1) = E*dIyzdhy;
+                        m(1,0) = E*dIyzdhy;
+                        m(1,1) = E*dIzzdhy;
                     }
-                    else if (depends && f.name() == "b") {
-                        m(0,0) = E*dIyydb;
-                        m(0,1) = E*dIyzdb;
-                        m(1,0) = E*dIyzdb;
-                        m(1,1) = E*dIzzdb;
+                    else if (depends && f.name() == "h_z") {
+                        m(0,0) = E*dIyydhz;
+                        m(0,1) = E*dIyzdhz;
+                        m(1,0) = E*dIyzdhz;
+                        m(1,1) = E*dIzzdhz;
                     }
                     else {
                         m.zero();
@@ -462,10 +526,10 @@ MAST::Solid1DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
                                                    m);
                     _material->calculate_1d_matrix_sensitivity(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                                                                dm, p);
-                    if (depends && f.name() == "h")
-                        m.scale(dAreadh);
-                    else if (depends && f.name() == "b")
-                        m.scale(dAreadb);
+                    if (depends && f.name() == "h_y")
+                        m.scale(dAreadhy);
+                    else if (depends && f.name() == "h_z")
+                        m.scale(dAreadhz);
                     else
                         m.zero();
                     

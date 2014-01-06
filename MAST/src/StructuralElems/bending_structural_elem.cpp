@@ -9,6 +9,7 @@
 
 // MAST includes
 #include "StructuralElems/bending_structural_elem.h"
+#include "PropertyCards/element_property_card_1D.h"
 #include "PropertyCards/element_property_card_2D.h"
 #include "Numerics/fem_operator_matrix.h"
 #include "ThermalElems/temperature_function.h"
@@ -808,8 +809,11 @@ MAST::build_local_elem(MAST::StructuralElementBase &elem) {
     
     std::auto_ptr<MAST::LocalElemBase> rval;
     switch (elem.elem().dim()) {
-        case 1:
-            rval.reset(new MAST::Local1DElem(elem.elem()));
+        case 1: {
+            const MAST::ElementPropertyCard1D& p =
+            dynamic_cast<const MAST::ElementPropertyCard1D&>(elem.elem_property());
+            rval.reset(new MAST::Local1DElem(elem.elem(), p.y_vector()));
+        }
             break;
             
         case 2:

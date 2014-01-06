@@ -25,7 +25,7 @@ namespace MAST {
         
         
         void init (const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                   UnstructuredMesh& mesh, ElemType t);
+                   UnstructuredMesh& mesh, ElemType t, bool beam_stiffeners);
         
     protected:
         
@@ -48,21 +48,40 @@ namespace MAST {
 inline
 void
 MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                           UnstructuredMesh& mesh, ElemType t) {
+                           UnstructuredMesh& mesh, ElemType t, bool beam_stiffeners) {
     
     libmesh_assert_equal_to(divs.size(), 3);
     
     mesh.set_mesh_dimension(2);
     
-    std::vector<MeshInitializer::CoordinateDivisions*> stiff_divs(2);
+    std::vector<MeshInitializer::CoordinateDivisions*> panel_divs(2), stiff_divs(2);
     MeshInitializer init;
-    stiff_divs[0] = divs[0];
-    stiff_divs[1] = divs[1];
-
+    ElemType stiff_t = t;
+    panel_divs[0] = divs[0];
+    panel_divs[1] = divs[1];
+    if (beam_stiffeners) {
+        stiff_divs.resize(1);
+        switch (t) {
+            case TRI3:
+            case QUAD4:
+                stiff_t = EDGE2;
+                break;
+                
+            case TRI6:
+            case QUAD8:
+            case QUAD9:
+                stiff_t = EDGE3;
+                break;
+                
+            default:
+                libmesh_error();
+        }
+    }
+    
     // initialize the main mesh
     {
         SerialMesh panel(mesh.comm());
-        init.init(stiff_divs, panel, t);
+        init.init(panel_divs, panel, t);
         // use subdomain id for panel as 0
         _combine_mesh(mesh, panel, MAST::StiffenedPanel::PANEL, 0., 0);
     }
@@ -75,9 +94,10 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     for (unsigned int i=0; i<n_x_stiff; i++) {
         SerialMesh stiff(mesh.comm());
         stiff_divs[0] = divs[0];
-        stiff_divs[1] = divs[2];
+        if (!beam_stiffeners)
+            stiff_divs[1] = divs[2];
         
-        init.init(stiff_divs, stiff, t);
+        init.init(stiff_divs, stiff, stiff_t);
         
         // add the elements and nodes to the panel mesh
         // the y-coordinate for this mesh will be the x-coordinate
@@ -89,9 +109,10 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     for (unsigned int i=0; i<n_y_stiff; i++) {
         SerialMesh stiff(mesh.comm());
         stiff_divs[0] = divs[1];
-        stiff_divs[1] = divs[2];
+        if (!beam_stiffeners)
+            stiff_divs[1] = divs[2];
         
-        init.init(stiff_divs, stiff, t);
+        init.init(stiff_divs, stiff, stiff_t);
         
         // add the elements and nodes to the panel mesh
         // the y-coordinate for this mesh will be the x-coordinate
