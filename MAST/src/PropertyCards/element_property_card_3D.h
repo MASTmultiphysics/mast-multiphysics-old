@@ -157,10 +157,15 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
 
                     break;
 
-                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX:
-                    _material->calculate_3d_matrix(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, m);
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX: {
+                    DenseMatrix<Real> a;
+                    _material->calculate_3d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX, m);
+                    _material->calculate_3d_matrix(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, a);
+                    m.right_multiply(a);
+                }
                     break;
                     
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
                 default:
                     libmesh_error(); // others need to be implemented
                     break;
@@ -205,10 +210,16 @@ MAST::ElementPropertyCard3D::calculate_matrix_sensitivity(const libMesh::Elem &e
                     
                     break;
                     
-                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX:
-                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, m, p);
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX: {
+                    DenseMatrix<Real> a, aprime;
+                    _material->calculate_3d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX, m);
+                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX,
+                                                               a, p);
+                    m.right_multiply(a);
+                }
                     break;
-                    
+
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
                 default:
                     libmesh_error(); // others need to be implemented
                     break;

@@ -176,7 +176,7 @@ MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
                                       material_trans_shear_mat);
         else
             property.calculate_matrix_sensitivity(_elem,
-                                                  MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX,
+                                                  MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                                                   material_trans_shear_mat,
                                                   *sens_params);
         

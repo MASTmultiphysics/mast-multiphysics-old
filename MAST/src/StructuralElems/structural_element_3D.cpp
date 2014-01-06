@@ -149,51 +149,47 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     if (!_temperature) // only if a temperature load is specified
         return false;
     
-    libmesh_error(); // to be implemented
-    
     FEMOperatorMatrix Bmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)JxW.size();
-    const unsigned int n1=6, n2=6*n_phi;
-    DenseMatrix<Real> material_mat, expansion_mat;
-    DenseVector<Real>  phi, temperature, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2;
+    const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
+    const unsigned int n1= 6, n2=6*n_phi;
+    DenseMatrix<Real> material_exp_A_mat, material_exp_B_mat,
+    tmp_mat1_n1n2, tmp_mat2_n2n2, stress;
+    DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, delta_t;
     
-    phi.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); temperature.resize(6);
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
+    tmp_vec3_n2.resize(n2); delta_t.resize(1);
     
-    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
     
-    Real temperature_value, ref_temperature;
+    Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        this->initialize_strain_operator(qp, Bmat);
+        
+        // if temperature is specified, the initialize it to the current location
+        if (_temperature)
+            _temperature->initialize(xyz[qp]);
         
         // set the temperature vector to the value at this point
         _temperature->initialize(xyz[qp]);
-        temperature_value = (*_temperature)();
-        ref_temperature   = _temperature->reference();
+        delta_t(0) = (*_temperature)() - _temperature->reference();
         
         // this is moved inside the domain since
         _property.calculate_matrix(_elem,
-                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-                                   material_mat);
-        _property.calculate_matrix(_elem,
-                                   MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_MATRIX,
-                                   expansion_mat);
+                                   MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
+                                   material_exp_A_mat);
+
+        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)}
         
-        // calculate the strain
-        expansion_mat.vector_mult(tmp_vec2_n1, tmp_vec1_n1);
+        this->initialize_strain_operator(qp, Bmat);
         
-        // calculate the stress
-        material_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1);
-        
-        // now calculate the internal force vector
         Bmat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
         f.add(JxW[qp], tmp_vec3_n2);
     }
     
+    // Jacobian contribution from von Karman strain
     return false;
 }
 
