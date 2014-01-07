@@ -212,12 +212,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
 
     // Declare the system
-    NonlinearImplicitSystem & system =
-    equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
+    //NonlinearImplicitSystem & system =
+    //equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
     CondensedEigenSystem* eigen_system = NULL;
-    //CondensedEigenSystem & system =
-    //equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
-    //eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
+    CondensedEigenSystem & system =
+    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
     
     unsigned int o = infile("fe_order", 1);
@@ -233,7 +233,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::STATIC,
+                                                       MAST::BUCKLING,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -343,17 +343,17 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     b  = infile("width", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(3) = 1.0e6;
+    prestress(0) = -1.31345e6;
     
     prop3d.set_material(mat);
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
-    //prop2d.prestress(prestress); // no prestress for stiffener
+    prop2d.prestress(prestress); // no prestress for stiffener
     //prop1d.prestress(prestress);
 
-    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     structural_assembly.set_property_for_subdomain(0, prop2d);
@@ -364,14 +364,14 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         unsigned int n_stiff = (infile("nx_divs",0)-1) + (infile("ny_divs",0)-1);
         if (!beam_stiff) {
             // stiffeners using shell elements
-            for (unsigned int i=1; i<n_stiff; i++)
+            for (unsigned int i=1; i<n_stiff+1; i++)
                 structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
         }
         else {
             // stiffeners using beam elements with offsets
             MAST::FunctionValue<Real>& off_h = prop1d.add<Real>("off_h", MAST::CONSTANT_FUNCTION);
             off_h = 0.5*th();
-            for (unsigned int i=1; i<n_stiff; i++)
+            for (unsigned int i=1; i<n_stiff+1; i++)
                 structural_assembly.set_property_for_subdomain(i, prop1d);
         }
     }

@@ -143,11 +143,11 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                       std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 0.02);           // start with a solid material
+    std::fill(x.begin(), x.end(), 0.003);           // start with a solid material
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 2.0e-3); // lower limit is a small value.
     xmax.resize(_n_vars);
-    std::fill(xmax.begin(), xmax.end(), 0.2);     // upper limit is 1.
+    std::fill(xmax.begin(), xmax.end(), 0.02);     // upper limit is 1.
 }
 
 
@@ -450,7 +450,7 @@ MAST::SizingOptimization::_init() {
     h_stiff = _infile("thickness", 0.002);
     
     DenseVector<Real> prestress; prestress.resize(6);
-    prestress(1) = -1.e5;
+    prestress(0) = -1.31345e6;
     
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
