@@ -86,9 +86,28 @@ namespace MAST
         }
         
         /*!
-         *   clear the loads for this structural model
+         *   clear the loads and pointer to static solution system for
+         *   this structural model
          */
         void clear_loads();
+        
+        /*!
+         *    sets a pointer to the static solution system that provides
+         *    deformation and its sensitivity for modal and buckling solution
+         */
+        void set_static_solution_system(System* sys) {
+            // make sure it hasn't already not been set
+            libmesh_assert(!_static_sol_system);
+            _static_sol_system = sys;
+        }
+        
+        /*!
+         *    @returns a pointer to the static solution system that provides
+         *    deformation and its sensitivity for modal and buckling solution
+         */
+        System* static_solution_system() {
+            return _static_sol_system;
+        }
         
         /*!
          *   adds the specified side loads for the boudnary with tag \p b_id
@@ -218,20 +237,34 @@ namespace MAST
         /*!
          *    Calculates the A and B matrices of a modal analysis eigenproblem
          *    [A] {X} = [B] {X} [lambda]
+         *
+         *    If \par params is non-NULL, then matrix sensitivities are assembled.
+         *    \par static_sol is a pointer to the static deformation for 
+         *    calculation of geometric stresses. If this is NULL, then no 
+         *    deformation is assumed. If \par params and \par static_sol are 
+         *    provided, then \par static_sol_sens should also be given.
          */
-        void _assemble_matrices_for_modal_analysis(const NumericVector<Number>& X,
-                                                   SparseMatrix<Number>&  matrix_A,
+        void _assemble_matrices_for_modal_analysis(SparseMatrix<Number>&  matrix_A,
                                                    SparseMatrix<Number>&  matrix_B,
-                                                   const MAST::SensitivityParameters* params);
+                                                   const MAST::SensitivityParameters* params,
+                                                   const NumericVector<Number>* static_sol,
+                                                   const NumericVector<Number>* static_sol_sens);
         
         /*!
          *    Calculates the A and B matrices of a buckling analysis eigenproblem
          *    [A] {X} = [B] {X} [lambda]
+         *
+         *    If \par params is non-NULL, then matrix sensitivities are assembled.
+         *    \par static_sol is a pointer to the static deformation for
+         *    calculation of geometric stresses. If this is NULL, then no
+         *    deformation is assumed. If \par params and \par static_sol are
+         *    provided, then \par static_sol_sens should also be given.
          */
-        void _assemble_matrices_for_buckling_analysis(const NumericVector<Number>& X,
-                                                      SparseMatrix<Number>&  matrix_A,
+        void _assemble_matrices_for_buckling_analysis(SparseMatrix<Number>&  matrix_A,
                                                       SparseMatrix<Number>&  matrix_B,
-                                                      const MAST::SensitivityParameters* params);
+                                                      const MAST::SensitivityParameters* params,
+                                                      const NumericVector<Number>* static_sol,
+                                                      const NumericVector<Number>* static_sol_sens);
 
         /*!
          *    System for which analysis is to be performed
@@ -247,6 +280,11 @@ namespace MAST
 
         GetPot& _infile;
         
+        /*!
+         *    System that provides the static solution for calculation of geometric
+         *    stress. This is used in modal and buckling analysis
+         */
+        System *_static_sol_system;
         
         /*!
          *   map of element property cards for each element
@@ -273,6 +311,7 @@ namespace MAST
          *   volume boundary condition map of boundary id and load
          */
         std::multimap<subdomain_id_type, MAST::BoundaryCondition*> _vol_bc_map;
+        
     };
 }
 

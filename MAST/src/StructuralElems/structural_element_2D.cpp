@@ -123,6 +123,7 @@ MAST::StructuralElement2D::initialize_von_karman_strain_operator(const unsigned 
     libmesh_assert_equal_to(Bmat_vk.n(), 6*n_phi);
 
     Real dw=0.;
+    vk_strain.zero();
     vk_dwdxi_mat.zero();
     
     DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
@@ -184,10 +185,6 @@ MAST::StructuralElement2D::max_von_mises_stress() {
     MAST::BendingOperator2D& bending_2d = dynamic_cast<MAST::BendingOperator2D&>(*_bending_operator);
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
         
         _property.get_material().calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
                                                      material_mat,

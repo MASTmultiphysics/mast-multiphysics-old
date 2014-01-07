@@ -98,7 +98,8 @@ namespace MAST {
          */
         virtual bool thermal_force(bool request_jacobian,
                                    DenseVector<Real>& f,
-                                   DenseMatrix<Real>& jac);
+                                   DenseMatrix<Real>& jac,
+                                   MAST::BoundaryCondition& p);
 
         /*!
          *    Calculates the sensitivity of force vector and Jacobian due to 
@@ -106,7 +107,8 @@ namespace MAST {
          */
         virtual bool thermal_force_sensitivity(bool request_jacobian,
                                                DenseVector<Real>& f,
-                                               DenseMatrix<Real>& jac);
+                                               DenseMatrix<Real>& jac,
+                                               MAST::BoundaryCondition& p);
         
         /*!
          *   initialize strain operator matrix

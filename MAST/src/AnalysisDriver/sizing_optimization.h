@@ -126,7 +126,7 @@ namespace MAST {
         
         ParameterVector _parameters;
         
-        std::vector<MAST::DisplacementBoundaryCondition*> _bc;
+        std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
 
         std::vector<MAST::MaterialPropertyCardBase*> _materials;
         
@@ -143,11 +143,11 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                       std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 0.003);           // start with a solid material
+    std::fill(x.begin(), x.end(), 0.005);
     xmin.resize(_n_vars);
-    std::fill(xmin.begin(), xmin.end(), 2.0e-3); // lower limit is a small value.
+    std::fill(xmin.begin(), xmin.end(), 2.0e-3);
     xmax.resize(_n_vars);
-    std::fill(xmax.begin(), xmax.end(), 0.02);     // upper limit is 1.
+    std::fill(xmax.begin(), xmax.end(), 0.02);   
 }
 
 
@@ -245,7 +245,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                 for (unsigned int i=0; i<n_required; i++) {
                     val = _system->get_eigenpair(i);
                     grads[j*_n_eig+i]  = grad_vals[j*_system->get_n_converged()+i];
-                    grads[j*_n_eig+i] /= -pow(val.first, 2);
+                    grads[j*_n_eig+i] /= -1. * -pow(val.first, 2); // sens = - d eig / dp
                 }
         else
             libmesh_error(); // should not get here
@@ -397,7 +397,7 @@ MAST::SizingOptimization::_init() {
     for (std::map<boundary_id_type, std::vector<unsigned int> >::iterator
          it = boundary_constraint_map.begin();
          it != boundary_constraint_map.end(); it++) {
-        _bc[counter] = new MAST::DisplacementBoundaryCondition;
+        _bc[counter] = new MAST::DisplacementDirichletBoundaryCondition;
         _bc[counter]->init(it->first, it->second);
         _structural_assembly->add_side_load(it->first, *_bc[counter]);
         counter++;

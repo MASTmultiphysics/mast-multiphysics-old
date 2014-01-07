@@ -22,6 +22,7 @@
 #include "Mesh/panel_mesh.h"
 #include "Mesh/stiffened_panel.h"
 #include "Mesh/nastran_io.h"
+#include "ThermalElems/temperature_function.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -242,6 +243,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     
     ConstFunction<Real> press(1.e2);
+    MAST::ConstantTemperature temp;
+    temp.set_temperature(100., 0.);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
@@ -282,7 +285,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     for (std::map<boundary_id_type, std::vector<unsigned int> >::iterator
          it = boundary_constraint_map.begin();
          it != boundary_constraint_map.end(); it++) {
-        MAST::DisplacementBoundaryCondition* bc = new MAST::DisplacementBoundaryCondition;
+        MAST::DisplacementDirichletBoundaryCondition* bc = new MAST::DisplacementDirichletBoundaryCondition;
         bc->init(it->first, it->second);
         dirichlet_boundary_conditions.push_back(bc);
         structural_assembly.add_side_load(it->first, *bc);

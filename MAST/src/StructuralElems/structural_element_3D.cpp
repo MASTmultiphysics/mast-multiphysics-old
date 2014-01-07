@@ -37,10 +37,6 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         this->initialize_strain_operator(qp, Bmat);
         
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
-        
         // get the material matrix
         _property.calculate_matrix(_elem,
                                    MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
@@ -81,8 +77,6 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    if (_temperature)
-        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
     calculate = calculate || _property.depends_on(*(this->sensitivity_params));
     
     // nothing to be calculated if the element does not depend on the
@@ -107,10 +101,6 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         this->initialize_strain_operator(qp, Bmat);
-        
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
         
         // get the material matrix
         _property.calculate_matrix_sensitivity(_elem,
@@ -143,12 +133,10 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
 
 bool
 MAST::StructuralElement3D::thermal_force (bool request_jacobian,
-                                    DenseVector<Real>& f,
-                                    DenseMatrix<Real>& jac)
+                                          DenseVector<Real>& f,
+                                          DenseMatrix<Real>& jac,
+                                          MAST::BoundaryCondition& p)
 {
-    if (!_temperature) // only if a temperature load is specified
-        return false;
-    
     FEMOperatorMatrix Bmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
@@ -168,13 +156,9 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
-        
         // set the temperature vector to the value at this point
-        _temperature->initialize(xyz[qp]);
-        delta_t(0) = (*_temperature)() - _temperature->reference();
+//        _temperature->initialize(xyz[qp]);
+//        delta_t(0) = (*_temperature)() - _temperature->reference();
         
         // this is moved inside the domain since
         _property.calculate_matrix(_elem,
@@ -198,8 +182,9 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
 
 bool
 MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
-                                                DenseVector<Real>& f,
-                                                DenseMatrix<Real>& jac)
+                                                      DenseVector<Real>& f,
+                                                      DenseMatrix<Real>& jac,
+                                                      MAST::BoundaryCondition& p)
 {
     
     libmesh_error(); // to be implemented

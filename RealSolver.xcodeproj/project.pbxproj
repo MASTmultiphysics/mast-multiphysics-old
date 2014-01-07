@@ -26,6 +26,9 @@
 		EB817355183424C500E03740 /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB817354183424C500E03740 /* libgcmma.a */; };
 		EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173581835309D00E03740 /* structural_element_3D.cpp */; };
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
+		EB8F5C20187C572E002976E5 /* ksgcsu07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C19187C572E002976E5 /* ksgcsu07.f */; };
+		EB8F5C22187C572E002976E5 /* ksmaxim07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C1B187C572E002976E5 /* ksmaxim07.f */; };
+		EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD70404186DD6E70050676A /* structural_element_2D.cpp */; };
 		EBD704071871C9DE0050676A /* optimization_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD704061871C9DE0050676A /* optimization_driver.cpp */; };
@@ -117,6 +120,10 @@
 		EB817354183424C500E03740 /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = MAST/src/Optimization/gcmma/libgcmma.a; sourceTree = "<group>"; };
 		EB8173561835309D00E03740 /* structural_element_1D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_1D.cpp; sourceTree = "<group>"; };
 		EB8173581835309D00E03740 /* structural_element_3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_3D.cpp; sourceTree = "<group>"; };
+		EB8F5C19187C572E002976E5 /* ksgcsu07.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = ksgcsu07.f; sourceTree = "<group>"; };
+		EB8F5C1B187C572E002976E5 /* ksmaxim07.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = ksmaxim07.f; sourceTree = "<group>"; };
+		EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = ksmaxsu07.f; sourceTree = "<group>"; };
+		EB8F5C27187C9381002976E5 /* temperature.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBD70404186DD6E70050676A /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		EBD704061871C9DE0050676A /* optimization_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = optimization_driver.cpp; sourceTree = "<group>"; };
@@ -349,12 +356,23 @@
 		EB8173481832789200E03740 /* Optimization */ = {
 			isa = PBXGroup;
 			children = (
+				EB8F5C18187C572E002976E5 /* gcmma */,
 				EB81734A18327CCA00E03740 /* dot_optimization_interface.h */,
 				EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */,
 				EB81734B18327CDF00E03740 /* gcmma_optimization_interface.h */,
 				EB817349183278A600E03740 /* optimization_interface.h */,
 			);
 			path = Optimization;
+			sourceTree = "<group>";
+		};
+		EB8F5C18187C572E002976E5 /* gcmma */ = {
+			isa = PBXGroup;
+			children = (
+				EB8F5C19187C572E002976E5 /* ksgcsu07.f */,
+				EB8F5C1B187C572E002976E5 /* ksmaxim07.f */,
+				EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */,
+			);
+			path = gcmma;
 			sourceTree = "<group>";
 		};
 		EBD7962C184903E2007FA3A7 /* BoundaryConditions */ = {
@@ -371,6 +389,7 @@
 				EBD7964B18493030007FA3A7 /* small_disturbance_motion.h */,
 				EBD7963E18490471007FA3A7 /* surface_pressure.cpp */,
 				EBD79633184903E2007FA3A7 /* surface_pressure.h */,
+				EB8F5C27187C9381002976E5 /* temperature.h */,
 			);
 			path = BoundaryConditions;
 			sourceTree = "<group>";
@@ -477,14 +496,17 @@
 				69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
 				696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */,
+				EB8F5C22187C572E002976E5 /* ksmaxim07.f in Sources */,
 				EB817346182D902300E03740 /* sensitivity_parameters.cpp in Sources */,
 				696C08161796CD4100B77C5C /* thermal_elem_base.cpp in Sources */,
 				EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */,
 				696C081B1796ED8200B77C5C /* structural_driver.cpp in Sources */,
 				EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */,
 				EBE83D5717A021F4000F013C /* fluid_elem_base.cpp in Sources */,
+				EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */,
 				EBB0998517F0872B00272355 /* main.cpp in Sources */,
 				EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */,
+				EB8F5C20187C572E002976E5 /* ksgcsu07.f in Sources */,
 				EBE83D5817A021F4000F013C /* fluid_system.cpp in Sources */,
 				EB817345182D902300E03740 /* function_base.cpp in Sources */,
 				EBD795FB18468C35007FA3A7 /* bending_operator.cpp in Sources */,
@@ -573,6 +595,7 @@
 					/opt/local/lib,
 					"$(SRCROOT)/MAST/src/Optimization/gcmma",
 					/opt/local/lib/gcc48,
+					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
@@ -599,6 +622,7 @@
 					/opt/local/lib,
 					"$(SRCROOT)/MAST/src/Optimization/gcmma",
 					/opt/local/lib/gcc48,
+					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;

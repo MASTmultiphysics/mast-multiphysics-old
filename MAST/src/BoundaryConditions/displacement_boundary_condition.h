@@ -22,14 +22,14 @@
 
 namespace MAST {
     
-    class DisplacementBoundaryCondition: public MAST::BoundaryCondition {
+    class DisplacementDirichletBoundaryCondition: public MAST::BoundaryCondition {
       
     public:
-        DisplacementBoundaryCondition():
-        MAST::BoundaryCondition(MAST::DISPLACEMENT)
+        DisplacementDirichletBoundaryCondition():
+        MAST::BoundaryCondition(MAST::DISPLACEMENT_DIRICHLET)
         { }
         
-        virtual ~DisplacementBoundaryCondition() { }
+        virtual ~DisplacementDirichletBoundaryCondition() { }
 
         /*!
          *   initializes the object for the specified domain id (either boundary, 
@@ -61,8 +61,8 @@ namespace MAST {
 
 inline
 void
-MAST::DisplacementBoundaryCondition::init(const boundary_id_type bid,
-                                          const std::vector<unsigned int>& constrained_comp) {
+MAST::DisplacementDirichletBoundaryCondition::init(const boundary_id_type bid,
+                                                   const std::vector<unsigned int>& constrained_comp) {
     // should not have been initialized if this is called
     libmesh_assert(_dirichlet_boundary.get() == NULL);
 

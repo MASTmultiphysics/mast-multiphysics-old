@@ -70,10 +70,6 @@ MAST::BendingStructuralElem::internal_force (bool request_jacobian,
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
-        
         // get the material matrix
         _property.calculate_matrix(_elem,
                                    MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
@@ -142,8 +138,6 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    if (_temperature)
-        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
     calculate = calculate || _property.depends_on(*(this->sensitivity_params));
     
     // nothing to be calculated if the element does not depend on the
@@ -181,10 +175,6 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
     
     // first calculate the sensitivity due to the parameter
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
         
         // get the material matrix
         _property.calculate_matrix_sensitivity
@@ -230,58 +220,58 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
                                                             this->sensitivity_params);
     
     
-    // next, calculate the sensitivity due to temperature, if it is provided
-    if (!_temperature)
-        return request_jacobian;
-    
-    local_f.zero();
-    local_jac.zero();
-    MAST::SensitivityParameters temp_param;
-    temp_param.add_parameter(_temperature, 1);
-    
-    // first calculate the sensitivity due to the parameter
-    for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
-        
-        // get the material matrix
-        _property.calculate_matrix_sensitivity
-        (_elem,
-         MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-         material_A_mat, temp_param);
-        if (if_bending) {
-            _property.calculate_matrix_sensitivity(_elem,
-                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
-                                                   material_B_mat,
-                                                   temp_param);
-            
-            _property.calculate_matrix_sensitivity(_elem,
-                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
-                                                   material_D_mat,
-                                                   temp_param);
-        }
-        
-        // now calculte the quantity for these matrices
-        _internal_force_operation(if_bending, if_vk, n2, qp, JxW,
-                                  request_jacobian, local_f, local_jac,
-                                  Bmat_mem, Bmat_bend, Bmat_vk,
-                                  stress, vk_dwdxi_mat, material_A_mat,
-                                  material_B_mat, material_D_mat, tmp_vec1_n1,
-                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
-                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
-                                  tmp_mat3, tmp_mat4_n3n2);
-    }
-    
-    // now transform to the global coorodinate system
-    Real dTemp_dparam = _temperature->sensitivity(*(this->sensitivity_params));
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(dTemp_dparam, tmp_vec3_n2);
-    if (request_jacobian) {
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(dTemp_dparam, tmp_mat2_n2n2);
-    }
+//    // next, calculate the sensitivity due to temperature, if it is provided
+//    if (!_temperature)
+//        return request_jacobian;
+//    
+//    local_f.zero();
+//    local_jac.zero();
+//    MAST::SensitivityParameters temp_param;
+//    temp_param.add_parameter(_temperature, 1);
+//    
+//    // first calculate the sensitivity due to the parameter
+//    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+//        
+//        // if temperature is specified, the initialize it to the current location
+//        if (_temperature)
+//            _temperature->initialize(xyz[qp]);
+//        
+//        // get the material matrix
+//        _property.calculate_matrix_sensitivity
+//        (_elem,
+//         MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+//         material_A_mat, temp_param);
+//        if (if_bending) {
+//            _property.calculate_matrix_sensitivity(_elem,
+//                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
+//                                                   material_B_mat,
+//                                                   temp_param);
+//            
+//            _property.calculate_matrix_sensitivity(_elem,
+//                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
+//                                                   material_D_mat,
+//                                                   temp_param);
+//        }
+//        
+//        // now calculte the quantity for these matrices
+//        _internal_force_operation(if_bending, if_vk, n2, qp, JxW,
+//                                  request_jacobian, local_f, local_jac,
+//                                  Bmat_mem, Bmat_bend, Bmat_vk,
+//                                  stress, vk_dwdxi_mat, material_A_mat,
+//                                  material_B_mat, material_D_mat, tmp_vec1_n1,
+//                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
+//                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
+//                                  tmp_mat3, tmp_mat4_n3n2);
+//    }
+//    
+//    // now transform to the global coorodinate system
+//    Real dTemp_dparam = _temperature->sensitivity(*(this->sensitivity_params));
+//    transform_to_global_system(local_f, tmp_vec3_n2);
+//    f.add(dTemp_dparam, tmp_vec3_n2);
+//    if (request_jacobian) {
+//        transform_to_global_system(local_jac, tmp_mat2_n2n2);
+//        jac.add(dTemp_dparam, tmp_mat2_n2n2);
+//    }
     
     return request_jacobian;
 }
@@ -505,12 +495,10 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
 
 bool
 MAST::BendingStructuralElem::thermal_force (bool request_jacobian,
-                                          DenseVector<Real>& f,
-                                          DenseMatrix<Real>& jac)
+                                            DenseVector<Real>& f,
+                                            DenseMatrix<Real>& jac,
+                                            MAST::BoundaryCondition& p)
 {
-    if (!_temperature) // only if a temperature load is specified
-        return false;
-    
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
@@ -543,13 +531,8 @@ MAST::BendingStructuralElem::thermal_force (bool request_jacobian,
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        // if temperature is specified, the initialize it to the current location
-        if (_temperature)
-            _temperature->initialize(xyz[qp]);
-
-        // set the temperature vector to the value at this point
-        _temperature->initialize(xyz[qp]);
-        delta_t(0) = (*_temperature)() - _temperature->reference();
+//        // set the temperature vector to the value at this point
+//        delta_t(0) = (*_temperature)() - _temperature->reference();
         
         // this is moved inside the domain since
         _property.calculate_matrix(_elem,
@@ -568,22 +551,26 @@ MAST::BendingStructuralElem::thermal_force (bool request_jacobian,
         Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
         local_f.add(JxW[qp], tmp_vec3_n2);
         
-        if (if_bending && if_vk) {
+        if (if_bending) {
             // bending strain
             _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
             Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec2_n1);
-            
-            // get the vonKarman strain operator if needed
-            this->initialize_von_karman_strain_operator(qp,
-                                                        tmp_vec2_n1, // epsilon_vk
-                                                        vk_dwdxi_mat,
-                                                        Bmat_vk);
-            // von Karman strain
-            vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
-            Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
             local_f.add(JxW[qp], tmp_vec3_n2);
             
-            if (request_jacobian) {
+            // von Karman strain
+            if (if_vk) {
+                // get the vonKarman strain operator if needed
+                this->initialize_von_karman_strain_operator(qp,
+                                                            tmp_vec2_n1, // epsilon_vk
+                                                            vk_dwdxi_mat,
+                                                            Bmat_vk);
+                // von Karman strain
+                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
+                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
+                local_f.add(JxW[qp], tmp_vec3_n2);
+            }
+            
+            if (request_jacobian && if_vk) { // Jacobian only for vk strain
                 stress(0,0) = tmp_vec1_n1(0); // sigma_xx
                 if (_elem.dim() == 2) { // this is not needed for 1D element
                     stress(0,1) = tmp_vec1_n1(2); // sigma_xy
@@ -618,12 +605,10 @@ MAST::BendingStructuralElem::thermal_force (bool request_jacobian,
 
 bool
 MAST::BendingStructuralElem::thermal_force_sensitivity (bool request_jacobian,
-                                                      DenseVector<Real>& f,
-                                                      DenseMatrix<Real>& jac)
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac,
+                                                        MAST::BoundaryCondition& p)
 {
-    if (!_temperature) // only if a temperature load is specified
-        return false;
-    
     libmesh_error(); // to be implemented
     
     

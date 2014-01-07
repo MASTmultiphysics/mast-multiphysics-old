@@ -238,19 +238,19 @@ namespace MAST {
         bool follower_forces;
         
         /*!
-         *   element solution in the local coordinate system
+         *   element solution, and sensitivity in the local coordinate system
          */
-        DenseVector<Real> local_solution;
+        DenseVector<Real> local_solution, local_solution_sens;
         
         /*!
-         *   element velocity in the local coordinate system
+         *   element velocity, and sensitivity in the local coordinate system
          */
-        DenseVector<Real> local_velocity;
+        DenseVector<Real> local_velocity, local_velocity_sens;
         
         /*!
-         *   element acceleration in the local coordinate system
+         *   element acceleration, and sensitivity in the local coordinate system
          */
-        DenseVector<Real> local_acceleration;
+        DenseVector<Real> local_acceleration, local_acceleration_sens;
         
         /*!
          *   parameters for which sensitivity has to be calculated.
@@ -366,8 +366,18 @@ namespace MAST {
          */
         virtual bool thermal_force(bool request_jacobian,
                                    DenseVector<Real>& f,
-                                   DenseMatrix<Real>& jac) = 0;
-        
+                                   DenseMatrix<Real>& jac,
+                                   MAST::BoundaryCondition& p) = 0;
+
+        /*!
+         *    Calculates the sensitivity of force vector and Jacobian due to 
+         *    thermal stresses. this should be implemented for each element type
+         */
+        virtual bool thermal_force_sensitivity(bool request_jacobian,
+                                               DenseVector<Real>& f,
+                                               DenseMatrix<Real>& jac,
+                                               MAST::BoundaryCondition& p) = 0;
+
         /*!
          *    System to which this system belongs
          */
@@ -382,11 +392,6 @@ namespace MAST {
          *   element property
          */
         const MAST::ElementPropertyCardBase& _property;
-        
-        /*!
-         *    function that defines the temperature in the element domain
-         */
-        MAST::Temperature* _temperature;
         
         /*!
          *   element finite element for computations

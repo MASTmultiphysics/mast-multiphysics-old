@@ -28,8 +28,7 @@ MAST::StructuralElementBase::StructuralElementBase(System& sys,
 follower_forces(false),
 _system(sys),
 _elem(elem),
-_property(p),
-_temperature(NULL)
+_property(p)
 { }
 
 
@@ -153,8 +152,6 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    if (_temperature)
-        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
     calculate = calculate || _property.depends_on(*(this->sensitivity_params));
     
     // nothing to be calculated if the element does not depend on the
@@ -285,7 +282,7 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                         break;
 #endif
 
-                    case MAST::DISPLACEMENT:
+                    case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
                         break;
                         
@@ -340,7 +337,7 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                                                                             *it.first->second));
                         break;
 #endif
-                    case MAST::DISPLACEMENT:
+                    case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
                         break;
                         
@@ -384,6 +381,12 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                         f, jac,
                                                         *it.first->second));
                 break;
+            case MAST::TEMPERATURE:
+                calculate_jac = (calculate_jac ||
+                                 thermal_force(request_jacobian,
+                                               f, jac,
+                                               *it.first->second));
+                break;
 #else
             case MAST::SMALL_DISTURBANCE_MOTION:
                 calculate_jac = (calculate_jac ||
@@ -392,13 +395,6 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                                           *it.first->second));
                 break;
 #endif
-                //                case MAST::TEMPERATURE:
-                //                    calculate_jac = (calculate_jac ||
-                //                                     thermal_force(request_jacobian,
-                //                                                   f, jac,
-                //                                                   *it.first->second));
-                //                    break;
-                
             default:
                 // not implemented yet
                 libmesh_error();
@@ -439,13 +435,15 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
                                                                     f, jac,
                                                                     *it.first->second));
                 break;
+
+            case MAST::TEMPERATURE:
+                calculate_jac = (calculate_jac ||
+                                 thermal_force(request_jacobian,
+                                               f, jac,
+                                               *it.first->second));
+                break;
+
 #endif
-                //                case MAST::TEMPERATURE:
-                //                    calculate_jac = (calculate_jac ||
-                //                                     thermal_force(request_jacobian,
-                //                                                   f, jac,
-                //                                                   *it.first->second));
-                //                    break;
                 
             default:
                 // not implemented yet
@@ -769,8 +767,6 @@ MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jac
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    if (_temperature)
-        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
     calculate = calculate || _property.depends_on(*(this->sensitivity_params));
     
     // nothing to be calculated if the element does not depend on the
@@ -803,8 +799,6 @@ MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jac
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    if (_temperature)
-        calculate = calculate || _temperature->depends_on(*(this->sensitivity_params));
     calculate = calculate || _property.depends_on(*(this->sensitivity_params));
     
     // nothing to be calculated if the element does not depend on the

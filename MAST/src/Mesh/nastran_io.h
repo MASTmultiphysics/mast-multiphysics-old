@@ -225,10 +225,10 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
         it = _assembly.side_loads().begin(), end = _assembly.side_loads().end();
         
         for ( ; it != end; it++)
-            if (it->second->type() == MAST::DISPLACEMENT) {
+            if (it->second->type() == MAST::DISPLACEMENT_DIRICHLET) {
                 // get the displacement dirichlet condition
                 DirichletBoundary& dirichlet_b =
-                (dynamic_cast<MAST::DisplacementBoundaryCondition*>(it->second))->dirichlet_boundary();
+                (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition*>(it->second))->dirichlet_boundary();
                 
                 constrained_vars_map[it->first] = dirichlet_b.variables;
             }

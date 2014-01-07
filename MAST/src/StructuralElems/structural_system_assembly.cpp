@@ -27,7 +27,8 @@ MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
 
 _system(sys),
 _analysis_type(t),
-_infile(infile)
+_infile(infile),
+_static_sol_system(NULL)
 {
     // depending on the analysis type, forward to the appropriate function
     switch (_analysis_type) {
@@ -55,6 +56,7 @@ void
 MAST::StructuralSystemAssembly::clear_loads() {
     _side_bc_map.clear();
     _vol_bc_map.clear();
+    _static_sol_system = NULL;
 }
 
 
@@ -69,16 +71,16 @@ MAST::StructuralSystemAssembly::add_side_load(boundary_id_type bid,
     for ( ; it.first != it.second; it.first++) {
         libmesh_assert(it.first->second != &load);
         // only one displacement boundary condition is allowed per boundary
-        if (load.type() == MAST::DISPLACEMENT)
-            libmesh_assert(it.first->second->type() != MAST::DISPLACEMENT);
+        if (load.type() == MAST::DISPLACEMENT_DIRICHLET)
+            libmesh_assert(it.first->second->type() != MAST::DISPLACEMENT_DIRICHLET);
     }
     
     // displacement boundary condition needs to be hadled separately
-    if (load.type() == MAST::DISPLACEMENT) {
+    if (load.type() == MAST::DISPLACEMENT_DIRICHLET) {
         
         // get the Dirichlet boundary condition object
         DirichletBoundary& dirichlet_b =
-        (dynamic_cast<MAST::DisplacementBoundaryCondition&>(load)).dirichlet_boundary();
+        (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition&>(load)).dirichlet_boundary();
         
         // add an entry for each boundary of this dirichlet object.
         for (std::set<boundary_id_type>::const_iterator it = dirichlet_b.b.begin();
@@ -254,21 +256,27 @@ MAST::StructuralSystemAssembly::assemble() {
     matrix_A.zero();
     matrix_B.zero();
 
+    NumericVector<Number> *sol = NULL;
+    
+    // if a system is provided for getting the static solution, then get the vectors
+    if (_static_sol_system)
+        sol = _static_sol_system->solution.get();
+
     switch (_analysis_type) {
         case MAST::MODAL:
             _system.solution->zero();
-            _assemble_matrices_for_modal_analysis(*_system.solution,
-                                                  matrix_A,
+            _assemble_matrices_for_modal_analysis(matrix_A,
                                                   matrix_B,
-                                                  NULL);
+                                                  NULL,
+                                                  sol, NULL);
             break;
             
         case MAST::BUCKLING:
             _system.solution->zero();
-            _assemble_matrices_for_buckling_analysis(*_system.solution,
-                                                     matrix_A,
+            _assemble_matrices_for_buckling_analysis(matrix_A,
                                                      matrix_B,
-                                                     NULL);
+                                                     NULL,
+                                                     sol, NULL);
             break;
             
         default:
@@ -296,21 +304,27 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_A->zero();
     sensitivity_B->zero();
     
+    NumericVector<Number> *sol = NULL, *sol_sens = NULL;
+    
+    // if a system is provided for getting the static solution, then get the vectors
+    if (_static_sol_system) {
+        sol = _static_sol_system->solution.get();
+        sol_sens = &(_static_sol_system->get_sensitivity_solution(i));
+    }
+    
     switch (_analysis_type) {
         case MAST::MODAL:
-            _system.solution->zero();
-            _assemble_matrices_for_modal_analysis(*_system.solution,
-                                                  *sensitivity_A,
+            _assemble_matrices_for_modal_analysis(*sensitivity_A,
                                                   *sensitivity_B,
-                                                  &sens_params);
+                                                  &sens_params,
+                                                  sol, sol_sens);
             break;
             
         case MAST::BUCKLING:
-            _system.solution->zero();
-            _assemble_matrices_for_buckling_analysis(*_system.solution,
-                                                     *sensitivity_A,
+            _assemble_matrices_for_buckling_analysis(*sensitivity_A,
                                                      *sensitivity_B,
-                                                     &sens_params);
+                                                     &sens_params,
+                                                     sol, sol_sens);
             break;
             
         default:
@@ -509,10 +523,11 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const NumericVector<Number>& X,
-                                                                      SparseMatrix<Number>&  matrix_A,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<Number>&  matrix_A,
                                                                       SparseMatrix<Number>&  matrix_B,
-                                                                      const MAST::SensitivityParameters* params) {
+                                                                      const MAST::SensitivityParameters* params,
+                                                                      const NumericVector<Number>* static_sol,
+                                                                      const NumericVector<Number>* static_sol_sens) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
@@ -526,13 +541,25 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<NumericVector<Number> > localized_solution =
-    NumericVector<Number>::build(_system.comm());
-    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
-                             _system.get_dof_map().get_send_list(),
-                             false, GHOSTED);
-    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
-    
+    AutoPtr<NumericVector<Number> > localized_solution, localized_solution_sens;
+    if (static_sol) { // static deformation is provided
+        localized_solution.reset(NumericVector<Number>::build(_system.comm()).release());
+        localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                                 _system.get_dof_map().get_send_list(),
+                                 false, GHOSTED);
+        static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
+        // do the same for sensitivity if the parameters were provided
+        if (params) {
+            // make sure that the sensitivity was also provided
+            libmesh_assert(static_sol_sens);
+            
+            localized_solution_sens.reset(NumericVector<Number>::build(_system.comm()).release());
+            localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
+                                     _system.get_dof_map().get_send_list(),
+                                     false, GHOSTED);
+            static_sol_sens->localize(*localized_solution, _system.get_dof_map().get_send_list());
+        }
+    }
     
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
@@ -555,24 +582,43 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
         vec.resize(ndofs);
         mat1.resize(ndofs, ndofs);
         mat2.resize(ndofs, ndofs);
-        
-        for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = (*localized_solution)(dof_indices[i]);
-        
+
+        // resize the solution to the correct size
         structural_elem->local_solution.resize(sol.size());
-        structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
-        sol.zero();
-        structural_elem->local_acceleration = sol;
+        structural_elem->local_velocity.resize(sol.size());
+        structural_elem->local_acceleration.resize(sol.size());
+
+        // if the static solution is provided, initialize the element solution
+        if (static_sol) {
+            for (unsigned int i=0; i<dof_indices.size(); i++)
+                sol(i) = (*localized_solution)(dof_indices[i]);
+            
+            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+        }
         
         
         // now get the matrices
         if (!params) {
-            structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->internal_force(true, vec, mat1);
+            structural_elem->prestress_force(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force(true, vec, mat2);
         }
         else {
+            // get the solution sensitivity if the static solution was provided
+            structural_elem->local_solution_sens.resize(sol.size());
+            structural_elem->local_velocity_sens.resize(sol.size());
+            structural_elem->local_acceleration_sens.resize(sol.size());
+
+            if (static_sol) {
+                for (unsigned int i=0; i<dof_indices.size(); i++)
+                    sol(i) = (*localized_solution_sens)(dof_indices[i]);
+                
+                structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
+            }
+
             structural_elem->sensitivity_params = params;
-            structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->internal_force_sensitivity(true, vec, mat1);
+            structural_elem->prestress_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
         }
         
@@ -598,10 +644,11 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(const Nume
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const NumericVector<Number>& X,
-                                                                         SparseMatrix<Number>&  matrix_A,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<Number>&  matrix_A,
                                                                          SparseMatrix<Number>&  matrix_B,
-                                                                         const MAST::SensitivityParameters* params) {
+                                                                         const MAST::SensitivityParameters* params,
+                                                                         const NumericVector<Number>* static_sol,
+                                                                         const NumericVector<Number>* static_sol_sens) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
@@ -612,15 +659,28 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<NumericVector<Number> > localized_solution =
-    NumericVector<Number>::build(_system.comm());
-    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
-                             _system.get_dof_map().get_send_list(),
-                             false, GHOSTED);
-    X.localize(*localized_solution, _system.get_dof_map().get_send_list());
-    
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
+    
+    AutoPtr<NumericVector<Number> > localized_solution, localized_solution_sens;
+    if (static_sol) { // static deformation is provided
+        localized_solution.reset(NumericVector<Number>::build(_system.comm()).release());
+        localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+                                 _system.get_dof_map().get_send_list(),
+                                 false, GHOSTED);
+        static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
+        // do the same for sensitivity if the parameters were provided
+        if (params) {
+            // make sure that the sensitivity was also provided
+            libmesh_assert(static_sol_sens);
+            
+            localized_solution_sens.reset(NumericVector<Number>::build(_system.comm()).release());
+            localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
+                                          _system.get_dof_map().get_send_list(),
+                                          false, GHOSTED);
+            static_sol_sens->localize(*localized_solution, _system.get_dof_map().get_send_list());
+        }
+    }
     
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
@@ -643,39 +703,52 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(const N
         vec.resize(ndofs);
         mat1.resize(ndofs, ndofs);
         mat2.resize(ndofs, ndofs);
-        mat3.resize(ndofs, ndofs);
         
-        for (unsigned int i=0; i<dof_indices.size(); i++)
-            sol(i) = (*localized_solution)(dof_indices[i]);
+        // resize the solution to the correct size
+        structural_elem->local_solution.resize(sol.size());
         
         if (!params) {
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
             structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
-            
-            // now use the solution to get the load dependent stiffness matrix
-            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
-            if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
+            structural_elem->prestress_force(true, vec, mat2);
+
+            // if the static solution is provided, initialize the element solution
+            if (static_sol) {
+                for (unsigned int i=0; i<dof_indices.size(); i++)
+                    sol(i) = (*localized_solution)(dof_indices[i]);
+                
+                structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+                
+                // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force(true, vec, mat2);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
             }
-            structural_elem->prestress_force(true, vec, mat3);
-            mat2.add(1., mat3);
         }
         else {
             structural_elem->sensitivity_params = params;
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
+            structural_elem->local_solution_sens.resize(sol.size());
             structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
-            
+            structural_elem->prestress_force_sensitivity(true, vec, mat2);
+
             // now use the solution to get the load dependent stiffness matrix
-            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
-            if (sol.l2_norm() > 0.) { // if displacement is zero, mat1 = mat2
+            if (static_sol) {
+                // displacement
+                for (unsigned int i=0; i<dof_indices.size(); i++)
+                    sol(i) = (*localized_solution)(dof_indices[i]);
+                structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+
+                // displacement sensitivity
+                for (unsigned int i=0; i<dof_indices.size(); i++)
+                    sol(i) = (*localized_solution_sens)(dof_indices[i]);
+                structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
+
+                // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force_sensitivity(true, vec, mat2);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
             }
-            structural_elem->prestress_force_sensitivity(true, vec, mat3);
-            mat2.add(1., mat3);
         }
         
         // constrain the element matrices.
@@ -781,10 +854,10 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     it = _side_bc_map.begin(), end = _side_bc_map.end();
     
     for ( ; it != end; it++)
-        if (it->second->type() == MAST::DISPLACEMENT) {
+        if (it->second->type() == MAST::DISPLACEMENT_DIRICHLET) {
             // get the displacement dirichlet condition
             DirichletBoundary& dirichlet_b =
-            (dynamic_cast<MAST::DisplacementBoundaryCondition*>(it->second))->dirichlet_boundary();
+            (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition*>(it->second))->dirichlet_boundary();
             
             constrained_vars_map[it->first] = dirichlet_b.variables;
         }

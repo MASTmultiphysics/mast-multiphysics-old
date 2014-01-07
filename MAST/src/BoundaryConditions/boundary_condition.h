@@ -28,7 +28,7 @@ namespace MAST {
         SMALL_DISTURBANCE_MOTION, // provides pressure and motion
                                   //perturbations about steady state values
         PISTON_THEORY,
-        DISPLACEMENT,
+        DISPLACEMENT_DIRICHLET,
         SMALL_DISTURBANCE_DISPLACEMENT,
         TEMPERATURE
     };

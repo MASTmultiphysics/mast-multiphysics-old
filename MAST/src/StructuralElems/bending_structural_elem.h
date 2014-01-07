@@ -175,15 +175,17 @@ namespace MAST {
          */
         virtual bool thermal_force(bool request_jacobian,
                                    DenseVector<Real>& f,
-                                   DenseMatrix<Real>& jac);
-        
+                                   DenseMatrix<Real>& jac,
+                                   MAST::BoundaryCondition& p);
+
         /*!
-         *    Calculates the sensitivity fo force vector and Jacobian due
-         *    to thermal stresses
+         *    Calculates the sensitivity of force vector and the Jacobian due to 
+         *    thermal stresses
          */
         virtual bool thermal_force_sensitivity(bool request_jacobian,
                                                DenseVector<Real>& f,
-                                               DenseMatrix<Real>& jac);
+                                               DenseMatrix<Real>& jac,
+                                               MAST::BoundaryCondition& p);
         
         /*!
          *   initialize membrane strain operator matrix

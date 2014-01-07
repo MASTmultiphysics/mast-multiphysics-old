@@ -91,6 +91,64 @@ namespace MAST
             return _reference;
         }
         
+        /*!
+         *    returns the function kind
+         */
+        virtual MAST::FunctionType type() const {
+            return MAST::CONSTANT_FUNCTION;
+        }
+        
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(Real* val) const {
+            return (val == &_temperature);
+        }
+        
+        /*!
+         *  returns false since a constant function does not depend on any
+         *  function.
+         */
+        virtual bool depends_on(const FunctionBase& f) const {
+            if (&f == this)
+                return true;
+            else
+                return false;
+        }
+
+        /*!
+         *   returns the sensitivity of this function
+         */
+        virtual Real sensitivity (const MAST::SensitivityParameters& p) const
+        {
+            // only first order sensitivities are calculated at this point
+            libmesh_assert_equal_to(p.total_order(), 1);
+            
+            const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
+            MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
+            it = p_map.begin(); end = p_map.end();
+            
+            const MAST::FunctionBase& f = *(it->first);
+            
+            if (this->depends_on(f))
+                return 1.;
+            else
+                return 0.;
+        }
+        
+        /*!
+         *    Returns the pointer to value of this function.
+         */
+        virtual Real* ptr() {
+            return &_temperature;
+        };
+        
+        /*!
+         *  sets the value of this function
+         */
+        void operator =(const Real& val)
+        { _temperature = val;}
+
     protected:
         
         /*!
