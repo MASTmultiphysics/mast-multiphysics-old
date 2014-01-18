@@ -6,6 +6,7 @@
 //
 //
 
+#include <iomanip>
 // libMesh includes
 #include "libmesh/quadrature.h"
 
@@ -727,6 +728,16 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         surf_press.surface_pressure(qpoint[qp], press, dpress);
         surf_motion.surface_velocity_frequency_domain(qpoint[qp], normal,
                                                       utrans, dn_rot);
+//        std::cout << std::setw(15) << qpoint[qp](0)
+//        << std::setw(15) << std::real(press)
+//        << std::setw(15) << std::imag(press)
+//        << std::setw(15) << std::real(dpress)
+//        << std::setw(15) << std::imag(dpress)
+//        << std::setw(15) << std::real(utrans(1))
+//        << std::setw(15) << std::imag(utrans(1))
+//        << std::setw(15) << std::real(dn_rot(0))
+//        << std::setw(15) << std::imag(dn_rot(0)) << std::endl;
+        
         
         // calculate force
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)

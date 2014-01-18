@@ -66,7 +66,7 @@ MAST::DisplacementDirichletBoundaryCondition::init(const boundary_id_type bid,
     // should not have been initialized if this is called
     libmesh_assert(_dirichlet_boundary.get() == NULL);
 
-    ZeroFunction<Real> zero_function;
+    ZeroFunction<Number> zero_function;
     std::set<boundary_id_type> bid_set; bid_set.insert(bid);
     
     _dirichlet_boundary.reset(new DirichletBoundary(bid_set,

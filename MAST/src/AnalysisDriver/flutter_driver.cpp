@@ -132,9 +132,11 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     structural_equation_systems.print_info();
     
     // create the structural assembly object
-    MAST::Solid1DSectionElementPropertyCard prop1d;
+    MAST::Solid1DSectionElementPropertyCard prop1d(0);
+    Point p; p(1) = 1.;
+    prop1d.y_vector() = p;
     MAST::StructuralSystemAssembly assembly(structural_system, MAST::MODAL, infile);
-    assembly.set_property_for_all_elems(prop1d);
+    assembly.set_property_for_subdomain(0, prop1d);
     
     
     // read the eigenvalues
