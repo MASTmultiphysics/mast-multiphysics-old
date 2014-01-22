@@ -234,7 +234,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::BUCKLING,
+                                                       MAST::MODAL,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -334,7 +334,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     &h_stiff =  prop2d_stiff.add<Real>("h", MAST::CONSTANT_FUNCTION),
     &th =  prop1d.add<Real>("h", MAST::CONSTANT_FUNCTION),
     &b =  prop1d.add<Real>("b", MAST::CONSTANT_FUNCTION);
-
+    
     
     E  = infile("youngs_modulus", 72.e9);
     nu = infile("poisson_ratio", 0.33);
@@ -353,10 +353,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
-    prop2d.prestress(prestress); // no prestress for stiffener
+    //prop2d.prestress(prestress); // no prestress for stiffener
     //prop1d.prestress(prestress);
 
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     structural_assembly.set_property_for_subdomain(0, prop2d);

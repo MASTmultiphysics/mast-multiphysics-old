@@ -315,7 +315,7 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix(const libMesh::Elem &e
                     m.scale(h);
                     // now scale the rotation dofs with small factors
                     for (unsigned int i=0; i<3; i++) {
-                        m(i+3, i+3) *= 1.0e-6;
+                        m(i+3, i+3) *= 1.0e-12;
                     }
                     break;
 
