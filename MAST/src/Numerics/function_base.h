@@ -20,6 +20,9 @@
 #include "Base/MAST_data_types.h"
 #include "Numerics/sensitivity_parameters.h"
 
+// libMesh includes
+#include "libmesh/point.h"
+
 namespace MAST
 {
     
@@ -233,15 +236,15 @@ namespace MAST
          *    Returns the partial derivative of this function with respect to
          *    the sensitivity parameter \par p
          */
-        virtual ValType partial_derivative (const MAST::SensitivityParameters& par,
-                                            const Point& p, const Real t, ValType& v) const = 0;
+        virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                         const Point& p, const Real t, ValType& v) const = 0;
         
         /*!
          *    Returns the total derivative of this function with respect to
          *    the sensitivity parameter \par p
          */
-        virtual ValType total_derivative (const MAST::SensitivityParameters& par,
-                                          const Point& p, const Real t, ValType& v) const = 0;
+        virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                       const Point& p, const Real t, ValType& v) const = 0;
     };
 
     

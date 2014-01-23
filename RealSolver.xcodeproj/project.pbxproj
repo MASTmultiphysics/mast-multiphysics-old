@@ -79,6 +79,7 @@
 		696C080C1796CD4100B77C5C /* thermal_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thermal_elem_base.h; sourceTree = "<group>"; };
 		696C08181796CF9200B77C5C /* structural_system_assembly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = structural_system_assembly.h; sourceTree = "<group>"; };
 		696C081A1796ED8200B77C5C /* structural_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_driver.cpp; sourceTree = "<group>"; };
+		698707C51890BB8600853555 /* constant_field_function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = constant_field_function.h; sourceTree = "<group>"; };
 		6989BC9A180360AB007C6D9A /* potential_flow_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_flow_elem_base.cpp; sourceTree = "<group>"; };
 		6989BC9B180360AB007C6D9A /* potential_flow_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = potential_flow_elem_base.h; sourceTree = "<group>"; };
 		6989BC9C180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unsteady_compressible_potential_flow_elem.cpp; sourceTree = "<group>"; };
@@ -252,6 +253,7 @@
 				EBDEF68C1890476D007F3D6F /* mesh_field_function.h */,
 				EB817342182D902300E03740 /* sensitivity_parameters.cpp */,
 				EB81733E182D504300E03740 /* sensitivity_parameters.h */,
+				698707C51890BB8600853555 /* constant_field_function.h */,
 			);
 			path = Numerics;
 			sourceTree = "<group>";
