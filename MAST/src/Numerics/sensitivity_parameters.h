@@ -95,6 +95,16 @@ namespace MAST {
             return this->_parameters;
         }
         
+        
+        /*!
+         *    this is a utility function to return the first order sensitivity 
+         *    parameter. This should only be used when total_order() == 1
+         */
+        const MAST::FunctionBase& get_first_order_derivative_parameter() const {
+            libmesh_assert_equal_to(this->total_order(), 1);
+            return *_parameters.begin()->first;
+        }
+        
     protected:
 
         /*!

@@ -23,6 +23,8 @@
 #include "Mesh/stiffened_panel.h"
 #include "Mesh/nastran_io.h"
 #include "ThermalElems/temperature_function.h"
+#include "Numerics/constant_function.h"
+#include "Numerics/constant_field_function.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -326,24 +328,28 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::Solid2DSectionElementPropertyCard prop2d(1), prop2d_stiff(2);
     MAST::Solid1DSectionElementPropertyCard prop1d(3);
     
-    MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
-    &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION),
-    &rho = mat.add<Real>("rho", MAST::CONSTANT_FUNCTION),
-    &kappa = mat.add<Real>("kappa", MAST::CONSTANT_FUNCTION),
-    &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION),
-    &h_stiff =  prop2d_stiff.add<Real>("h", MAST::CONSTANT_FUNCTION),
-    &th =  prop1d.add<Real>("h", MAST::CONSTANT_FUNCTION),
-    &b =  prop1d.add<Real>("b", MAST::CONSTANT_FUNCTION);
+    // create the scalar function values
+    MAST::ConstantFunction<Real> E("E", infile("youngs_modulus", 72.e9)),
+    nu("nu", infile("poisson_ratio", 0.33)),
+    rho("rho", infile("material_density", 2700.)),
+    kappa("kappa", infile("shear_corr_factor", 5./6.)),
+    h("h", infile("thickness", 0.002)),
+    h_stiff("h", infile("thickness", 0.002)),
+    th("h", infile("thickness", 0.002)),
+    b("b", infile("width", 0.002)),
+    off_h("off_h", 0.5*th());
     
+    // add the properties to the cards
+    mat.add(E);
+    mat.add(nu);
+    mat.add(rho);
+    mat.add(kappa);
     
-    E  = infile("youngs_modulus", 72.e9);
-    nu = infile("poisson_ratio", 0.33);
-    rho =infile("material_density", 2700.);
-    kappa = infile("shear_corr_factor", 5./6.);
-    h  = infile("thickness", 0.002);
-    h_stiff  = infile("thickness", 0.002);
-    th  = infile("thickness", 0.002);
-    b  = infile("width", 0.002);
+    prop2d.add(h);
+    prop2d_stiff.add(h_stiff);
+    prop1d.add(th);
+    prop1d.add(b);
+    
     
     DenseVector<Real> prestress; prestress.resize(6);
     prestress(0) = -1.31345e6;
@@ -372,8 +378,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         }
         else {
             // stiffeners using beam elements with offsets
-            MAST::FunctionValue<Real>& off_h = prop1d.add<Real>("off_h", MAST::CONSTANT_FUNCTION);
-            off_h = 0.5*th();
+            prop1d.add(off_h);
             for (unsigned int i=1; i<n_stiff+1; i++)
                 structural_assembly.set_property_for_subdomain(i, prop1d);
         }

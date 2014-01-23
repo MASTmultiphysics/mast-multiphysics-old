@@ -26,6 +26,7 @@
 
 // MAST includes
 #include "BoundaryConditions/boundary_condition.h"
+#include "Numerics/constant_function.h"
 
 
 using namespace libMesh;
@@ -155,7 +156,7 @@ namespace MAST
         /*!
          *   Adds the parameter and function pairing
          */
-        void add_parameter(Real* par, MAST::FunctionBase* f);
+        void add_parameter(MAST::ConstantFunction<Real>& f);
         
         /*!
          *   Returns the function corresponding to a parameter

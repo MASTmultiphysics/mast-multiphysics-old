@@ -347,13 +347,9 @@ MAST::Solid2DSectionElementPropertyCard::calculate_matrix_sensitivity(const libM
     
     // only first order sensitivities are calculated at this point
     libmesh_assert_equal_to(p.total_order(), 1);
+    const MAST::FunctionBase& f = p.get_first_order_derivative_parameter();
     
-    const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
-    MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
-    it = p_map.begin(); end = p_map.end();
-
     DenseMatrix<Real> dm;
-    const MAST::FunctionBase& f = *(it->first);
 
     const bool depends = this->depends_on(f);
 

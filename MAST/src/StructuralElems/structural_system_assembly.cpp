@@ -150,18 +150,14 @@ MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
 
 
 void
-MAST::StructuralSystemAssembly::add_parameter(Real* par, MAST::FunctionBase* f) {
-    // make sure valid values are given
-    libmesh_assert(par);
-    libmesh_assert(f);
-    // make sure that the function is dependent on the parameters
-    libmesh_assert(f->depends_on(par));
+MAST::StructuralSystemAssembly::add_parameter(MAST::ConstantFunction<Real>& f) {
+    Real* par = f.ptr();
     // make sure it does not already exist in the map
     libmesh_assert(!_parameter_map.count(par));
     
     // now add this to the map
     bool insert_success = _parameter_map.insert
-    (std::map<Real*, MAST::FunctionBase*>::value_type(par, f)).second;
+    (std::map<Real*, MAST::FunctionBase*>::value_type(par, &f)).second;
     
     libmesh_assert(insert_success);
 }

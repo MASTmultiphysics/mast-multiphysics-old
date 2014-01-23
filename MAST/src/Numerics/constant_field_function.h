@@ -17,9 +17,7 @@
 
 // MAST includes
 #include "Numerics/function_base.h"
-
-// libMesh includes
-#include "libmesh/const_function.h"
+#include "Numerics/constant_function.h"
 
 
 namespace MAST {
@@ -28,44 +26,62 @@ namespace MAST {
     class ConstantFieldFunction: public MAST::FieldFunction<ValType> {
         
     public:
-        ConstantFieldFunction(const std::string& nm, const ValType& o):
+        ConstantFieldFunction(const std::string& nm,
+                              const ValType& v):
         MAST::FieldFunction<ValType>(nm),
-        _function(NULL),
-        _function_total_derivative(NULL) {
-            
-            _function = new ConstFunction(o);
-        }
+        _output(v),
+        _func(NULL)
+        { }
+
         
+        ConstantFieldFunction(const std::string& nm, const MAST::ConstantFunction<ValType>& f):
+        MAST::FieldFunction<ValType>(nm),
+        _output(f()),
+        _func(&f)
+        { }
+
         
-        virtual ~ConstantFieldFunction() {
-            
-            // delete the objects before exiting
-            if (_function)
-                delete _function;
-            
-            if (_function_total_derivative)
-                delete _function_total_derivative;
-        }
-        
+        virtual ~ConstantFieldFunction()
+        { }
         
         
         /*!
-         *    initialize the data structure for sensitivity analysis
+         *    returns the function kind
          */
-        void init_for_sens(const ValType& o) {
-            // prepare the localized solution
-            if (_function_total_derivative)
-                delete _function_total_derivative;
-            
-            _function_total_derivative = new ConstFunction(o);
+        virtual MAST::FunctionType type() const {
+            return MAST::CONSTANT_FIELD_FUNCTION;
         }
+
+
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(Real* val) const {
+            if (!_func)
+                return false;
+            else
+                return _func->depends_on(val);
+        }
+
         
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(const MAST::FunctionBase& f) const {
+            if (!_func)
+                return false;
+            else if (_func == &f)
+                return true;
+            else
+                return false;
+        }
+
         
         /*!
          *    Returns the value of this function.
          */
         virtual void operator() (const Point& p, const Real t, ValType& v) const {
-            (*_function)(p, t, v);
+            v = _output;
         }
         
         
@@ -76,12 +92,7 @@ namespace MAST {
          */
         virtual void partial_derivative (const MAST::SensitivityParameters& par,
                                          const Point& p, const Real t, ValType& v) const {
-            // there are no partial derivatives here. A system only calculates
-            // total derivatives
-            libMesh::err
-            << "Error: ConstantFieldFunction does not provide partial derivative. "
-            << std::endl << "Exiting." << std::endl;
-            libmesh_error(false);
+            return this->total_derivative(par, p, t, v);
         }
         
         
@@ -92,23 +103,46 @@ namespace MAST {
          */
         virtual void total_derivative (const MAST::SensitivityParameters& par,
                                        const Point& p, const Real t, ValType& v) const {
-            // make sure that this has been initialized
-            libmesh_assert(_function_total_derivative);
-            (*_function_total_derivative)(p, t, v);
+            // if the function was not specified, then the sensitivity is zero
+            if (!_func) {
+                v = 0.;
+                return;
+            }
+            else {
+                switch (par.total_order()) {
+                    case 1:
+                        if (&(par.get_first_order_derivative_parameter()) == _func) {
+                            v = 1.;
+                            return;
+                        }
+                        break;
+                        
+                    default:
+                        libmesh_error();
+                        break;
+                }
+            }
         }
         
+
         
+        /*!
+         *  sets the value of this function
+         */
+        void operator =(const ValType& val)
+        {   _output = val; }
+
     protected:
         
         /*!
-         *   mesh function object that provides the interpolation
+         *    constant output value
          */
-        ConstFunction *_function;
+        ValType _output;
         
         /*!
-         *   total derivative mesh function
+         *   function value that provides this
          */
-        ConstFunction *_function_total_derivative;
+        const MAST::ConstantFunction<ValType> *_func;
     };
 }
 

@@ -82,6 +82,12 @@ namespace MAST {
             for (unsigned int i=0; i<_materials.size(); i++)
                 delete _materials[i];
             
+            delete _E;
+            delete _nu;
+            delete _rho;
+            delete _kappa;
+            delete _h;
+            delete _h_stiff;
         }
         
         
@@ -123,6 +129,8 @@ namespace MAST {
         ConstFunction<Real>* _press;
         
         ZeroFunction<Real>* _zero_function;
+        
+        MAST::ConstantFunction<Real> *_E, *_nu, *_rho, *_kappa, *_h, *_h_stiff;
         
         ParameterVector _parameters;
         
@@ -434,21 +442,22 @@ MAST::SizingOptimization::_init() {
     &prop2d = dynamic_cast<MAST::Solid2DSectionElementPropertyCard&> (*_elem_properties[0]),
     &prop2d_stiff = dynamic_cast<MAST::Solid2DSectionElementPropertyCard&> (*_elem_properties[1]);
     
-    MAST::FunctionValue<Real>& E = mat.add<Real>("E", MAST::CONSTANT_FUNCTION),
-    &nu = mat.add<Real>("nu", MAST::CONSTANT_FUNCTION),
-    &rho = mat.add<Real>("rho", MAST::CONSTANT_FUNCTION),
-    &kappa = mat.add<Real>("kappa", MAST::CONSTANT_FUNCTION),
-    &h =  prop2d.add<Real>("h", MAST::CONSTANT_FUNCTION),
-    &h_stiff =  prop2d_stiff.add<Real>("h", MAST::CONSTANT_FUNCTION);
+    _E = new MAST::ConstantFunction<Real>("E", _infile("youngs_modulus", 72.e9)),
+    _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
+    _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
+    _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
+    _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002)),
+    _h_stiff = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
     
+    // add the properties to the cards
+    mat.add(*_E);
+    mat.add(*_nu);
+    mat.add(*_rho);
+    mat.add(*_kappa);
     
-    E     = _infile("youngs_modulus", 72.e9);
-    nu    = _infile("poisson_ratio", 0.33);
-    rho   = _infile("material_density", 2700.);
-    kappa = _infile("shear_corr_factor", 5./6.);
-    h     = _infile("thickness", 0.002);
-    h_stiff = _infile("thickness", 0.002);
-    
+    prop2d.add(*_h);
+    prop2d_stiff.add(*_h_stiff);
+
     DenseVector<Real> prestress; prestress.resize(6);
     prestress(0) = -1.31345e6;
     
@@ -457,15 +466,15 @@ MAST::SizingOptimization::_init() {
     prop2d.prestress(prestress); // no prestress for stiffener
     
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    _parameters[0] = h.ptr(); // set thickness as a modifiable parameter
-    _parameters[1] = h_stiff.ptr(); // set thickness as a modifiable parameter
+    _parameters[0] = _h->ptr(); // set thickness as a modifiable parameter
+    _parameters[1] = _h_stiff->ptr(); // set thickness as a modifiable parameter
     
     
     _structural_assembly->set_property_for_subdomain(0, prop2d);
     for (unsigned int i=1; i<=_n_stiff; i++)
         _structural_assembly->set_property_for_subdomain(i, prop2d_stiff);
-    _structural_assembly->add_parameter(h.ptr(), &h);
-    _structural_assembly->add_parameter(h_stiff.ptr(), &h_stiff);
+    _structural_assembly->add_parameter(*_h);
+    _structural_assembly->add_parameter(*_h_stiff);
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }

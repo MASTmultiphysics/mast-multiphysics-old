@@ -27,14 +27,8 @@ namespace MAST {
         /*!
          *   destructor deletes the function pointers
          */
-        virtual ~PropertyCardBase() {
-            // delete the functions in this card
-            std::map<std::string, MAST::FunctionBase*>::iterator
-            it = _properties.begin(), end = _properties.end();
-            
-            for ( ; it != end; it++)
-                delete it->second;
-        }
+        virtual ~PropertyCardBase()
+        { }
         
 
         /*!
@@ -53,20 +47,13 @@ namespace MAST {
         /*!
          *    adds the function to this card and returns a reference to it.
          */
-        template <typename ValType>
-        MAST::FunctionValue<ValType>& add(const std::string& nm,
-                                          MAST::FunctionType type) {
+        void add(MAST::FunctionBase& f) {
             // make sure that this funciton does not already exist
-            libmesh_assert(!_properties.count(nm));
-            
-            MAST::FunctionValue<ValType>* ptr =
-            MAST::build_function<ValType>(nm, type).release();
+            libmesh_assert(!_properties.count(f.name()));
             
             bool success = _properties.insert(std::pair<std::string, MAST::FunctionBase*>
-                                              (nm, ptr)).second;
+                                              (f.name(), &f)).second;
             libmesh_assert(success);
-            
-            return *ptr;
         }
         
         

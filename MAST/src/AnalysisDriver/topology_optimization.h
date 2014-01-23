@@ -83,7 +83,15 @@ namespace MAST {
             
             for (unsigned int i=0; i<_materials.size(); i++)
                 delete _materials[i];
+
+            for (unsigned int i=0; i<_E.size(); i++)
+                delete _E[i];
             
+            delete _nu;
+            delete _rho;
+            delete _kappa;
+            delete _h;
+            delete _h_stiff;
         }
         
         
@@ -154,6 +162,9 @@ namespace MAST {
         MAST::BoundaryCondition* _bc;
         
         Real _penalty, E0, V0;
+
+        std::vector<MAST::ConstantFunction<Real>*> _E;
+        MAST::ConstantFunction<Real> *_nu, *_rho, *_kappa, *_h, *_h_stiff;
 
         ParameterVector _parameters;
         
@@ -315,6 +326,7 @@ MAST::TopologyOptimization::_init() {
     _max_iters = 10000;
     
     _parameters.resize(n_elems);
+    _E.resize(n_elems);
     _elem_properties.resize(n_elems);
     _materials.resize(n_elems);
     _elem_vol.resize(n_elems);
@@ -326,6 +338,15 @@ MAST::TopologyOptimization::_init() {
 
     Real total_vol = 0.;
     
+    _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
+    _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
+    _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
+    _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002)),
+    *_nu = 0.33;
+    *_rho = 2700.;
+    *_kappa = 5./6.;
+    *_h  = 0.002;
+
     unsigned int counter = 0;
     for ( ; eit != eend; eit++ ) {
         const Elem* e = *eit;
@@ -338,21 +359,12 @@ MAST::TopologyOptimization::_init() {
         _materials[counter] = mat;
         _elem_properties[counter] = prop2d;
         
-        MAST::FunctionValue<Real>& E = mat->add<Real>("E", MAST::CONSTANT_FUNCTION),
-        &nu = mat->add<Real>("nu", MAST::CONSTANT_FUNCTION),
-        &rho = mat->add<Real>("rho", MAST::CONSTANT_FUNCTION),
-        &kappa = mat->add<Real>("kappa", MAST::CONSTANT_FUNCTION),
-        &h =  prop2d->add<Real>("h", MAST::CONSTANT_FUNCTION);
-        E  = E0;
-        nu = 0.33;
-        rho = 2700.;
-        kappa = 5./6.;
-        h  = 0.002;
-
+        _E[counter] = new MAST::ConstantFunction<Real>("E", E0);
+        
         prop2d->set_material(*mat);
         _structural_assembly->set_property_for_subdomain(0, *prop2d);
-        _structural_assembly->add_parameter(E.ptr(), &E);
-        _parameters[counter] = E.ptr(); // set Young's modulus as a modifiable parameter
+        _structural_assembly->add_parameter(*_E[counter]);
+        _parameters[counter] = _E[counter]->ptr(); // set Young's modulus as a modifiable parameter
         
         // increment counter for storing objects for next element
         counter++;

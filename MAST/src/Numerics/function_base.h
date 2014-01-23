@@ -29,7 +29,8 @@ namespace MAST
     
     enum FunctionType {
         CONSTANT_FUNCTION,
-        MULTILINEAR_FUNCTION_1D
+        CONSTANT_FIELD_FUNCTION,
+        MULTILINEAR_FUNCTION_1D,
     };
     
     
@@ -80,7 +81,7 @@ namespace MAST
          *  returns true if the function depends on the provided set 
          *  of parameters
          */
-        virtual bool depends_on(const MAST::SensitivityParameters& p) const;
+        //virtual bool depends_on(const MAST::SensitivityParameters& p) const;
 
         
         /*!
@@ -144,15 +145,15 @@ namespace MAST
                                const Point& p, const Real t,
                                ValType& v) const;
 
-        /*!
-         *    adds a parameter on which this function is dependent
-         */
-        void add_function(const FunctionBase& f){
-            // make sure it does not already exist
-            libmesh_assert(!_function_parameters.count(f.name()));
-            _function_parameters.insert(std::pair<std::string, const FunctionBase*>
-                                        (f.name(), &f));
-        }
+//        /*!
+//         *    adds a parameter on which this function is dependent
+//         */
+//        void add_function(const FunctionBase& f){
+//            // make sure it does not already exist
+//            libmesh_assert(!_function_parameters.count(f.name()));
+//            _function_parameters.insert(std::pair<std::string, const FunctionBase*>
+//                                        (f.name(), &f));
+//        }
         
     protected:
         
@@ -172,7 +173,9 @@ namespace MAST
         std::set<MAST::FunctionAttributeType> _attributes;
     };
     
-
+    
+    
+    
     /*!
      *    This creates a base class for functions that depend on specific 
      *    parameters and provide sensitivity operations with respect to the 
@@ -212,9 +215,10 @@ namespace MAST
          */
         virtual void operator =(const ValType& val) = 0;
     };
-
     
-
+    
+    
+    
     /*!
      *    This creates the base class for functions that have a saptial and 
      *    temporal dependence, and provide sensitivity operations with respect 
@@ -303,125 +307,6 @@ namespace MAST
         total_derivative(par, p, t, v);
     }
 
-    
-    /*!
-     *    This is a function that does not change.
-     */
-    template <typename ValType>
-    class ConstantFunction: public FunctionValue<ValType> {
-    public:
-        
-        ConstantFunction(const std::string& nm):
-        FunctionValue<ValType>(nm),
-        _val(ValType())
-        { }
-        
-        /*!
-         *   returns the type of this function: CONSTANT_FUNCTION
-         */
-        virtual MAST::FunctionType type() const {
-            
-            return MAST::CONSTANT_FUNCTION;
-        }
-        
-        /*!
-         *   returns the value of this function
-         */
-        virtual ValType operator() () const {
-            
-            return _val; }
-
-
-        /*!
-         *   returns the sensitivity of this function
-         */
-        virtual ValType partial_derivative (const MAST::SensitivityParameters& p) const {
-            
-            // only first order sensitivities are calculated at this point
-            libmesh_assert_equal_to(p.total_order(), 1);
-            
-            const MAST::SensitivityParameters::ParameterMap& p_map = p.get_map();
-            MAST::SensitivityParameters::ParameterMap::const_iterator it, end;
-            it = p_map.begin(); end = p_map.end();
-            
-            const MAST::FunctionBase& f = *(it->first);
-
-            if (this->depends_on(f))
-                return 1.;
-            else
-                return 0.;
-        }
-
-        
-        /*!
-         *   returns the sensitivity of this function. This is the same as partial 
-         *   sensitivity for a constant function.
-         */
-        virtual ValType total_derivative (const MAST::SensitivityParameters& p) const {
-            return this->partial_derivative(p);
-        }
-
-        
-        /*!
-         *    Returns the pointer to value of this function.
-         */
-        virtual ValType* ptr() {
-            return &_val;
-        };
-
-        /*!
-         *  returns true if the function depends on the provided value
-         */
-        virtual bool depends_on(Real* val) const {
-            return (val == &_val);
-        }
-
-        /*!
-         *  returns false since a constant function does not depend on any 
-         *  function.
-         */
-        virtual bool depends_on(const FunctionBase& f) const {
-            if (&f == this)
-                return true;
-            else
-                return false;
-        }
-
-        /*!
-         *  sets the value of this function
-         */
-        void operator =(const ValType& val) {
-            
-            _val = val; }
-        
-    protected:
-        
-        ValType _val;
-    };
- 
-    
-    /*!
-     *    creates a function and returns it as a smart pointer
-     */
-    template <typename ValType>
-    std::auto_ptr<MAST::FunctionValue<ValType> >
-    build_function(const std::string& nm, MAST::FunctionType type) {
-        
-        std::auto_ptr<MAST::FunctionValue<ValType> > rval;
-        
-        switch (type) {
-            case MAST::CONSTANT_FUNCTION:
-                rval.reset(new MAST::ConstantFunction<ValType>(nm));
-                break;
-                
-            default:
-                // should not get here
-                libmesh_assert(false);
-                break;
-        }
-        
-        return rval;
-    }
     
 }
 
