@@ -16,6 +16,25 @@
 
 namespace MAST
 {
+    
+    class SectionIntegratedStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+    public:
+        SectionIntegratedStiffnessMatrix();
+        
+        ~SectionIntegratedStiffnessMatrix();
+        
+        virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+        
+        virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                         const Point& p, const Real t, DenseMatrix<Real>& v) const;
+        
+        virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                       const Point& p, const Real t, DenseMatrix<Real>& v) const;
+        
+    protected:
+    };
+
+    
     class ElementPropertyCard3D: public MAST::ElementPropertyCardBase {
         
     public:

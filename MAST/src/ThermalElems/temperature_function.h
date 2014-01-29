@@ -13,33 +13,23 @@
 #include "libmesh/point.h"
 
 // MAST includes
-#include "Numerics/function_base.h"
+#include "Numerics/constant_field_function.h"
 
 
 
 namespace MAST
 {
-    class Temperature: public MAST::FunctionValue<Real> {
+    class Temperature: public MAST::FieldFunction<Real> {
     public:
 
         Temperature():
-        MAST::FunctionValue<Real>("Temperature")
+        MAST::FieldFunction<Real>("Temperature")
         { }
         
         /*!
          *    virtual destructor
          */
         virtual ~Temperature() { }
-        
-        /*!
-         *    initialize the value at the specified point
-         */
-        virtual void initialize(const Point& p) = 0;
-        
-        /*!
-         *    returns the temperature value
-         */
-        virtual Real operator() () const = 0;
         
         /*!
          *    returns the reference temperature
@@ -73,15 +63,28 @@ namespace MAST
         }
         
         /*!
-         *    initialize the value at the specified point
+         *    Returns the value of this function.
          */
-        virtual void initialize(const Point& p) { }
+        virtual void operator() (const Point& p, const Real t, Real& v) const {
+            v = _temperature;
+        }
         
         /*!
-         *    returns the temperature value
+         *    Returns the partial derivative of this function with respect to
+         *    the sensitivity parameter \par p
          */
-        virtual Real operator() () const {
-            return _temperature;
+        virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                         const Point& p, const Real t, Real& v) const {
+            libmesh_error();
+        }
+        
+        /*!
+         *    Returns the total derivative of this function with respect to
+         *    the sensitivity parameter \par p
+         */
+        virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                       const Point& p, const Real t, Real& v) const {
+            libmesh_error();
         }
         
         /*!
@@ -95,7 +98,7 @@ namespace MAST
          *    returns the function kind
          */
         virtual MAST::FunctionType type() const {
-            return MAST::CONSTANT_FUNCTION;
+            return MAST::CONSTANT_FIELD_FUNCTION;
         }
         
         /*!
@@ -115,34 +118,7 @@ namespace MAST
             else
                 return false;
         }
-
-        /*!
-         *   returns the sensitivity of this function
-         */
-        virtual Real sensitivity (const MAST::SensitivityParameters& p) const
-        {
-            // only first order sensitivities are calculated at this point
-            libmesh_assert_equal_to(p.total_order(), 1);
-            const MAST::FunctionBase& f = p.get_first_order_derivative_parameter();
-            
-            if (this->depends_on(f))
-                return 1.;
-            else
-                return 0.;
-        }
-        
-        /*!
-         *    Returns the pointer to value of this function.
-         */
-        virtual Real* ptr() {
-            return &_temperature;
-        };
-        
-        /*!
-         *  sets the value of this function
-         */
-        void operator =(const Real& val)
-        { _temperature = val;}
+       
 
     protected:
         
