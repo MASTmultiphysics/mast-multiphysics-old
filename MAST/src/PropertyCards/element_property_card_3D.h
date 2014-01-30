@@ -17,24 +17,6 @@
 namespace MAST
 {
     
-    class SectionIntegratedStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
-    public:
-        SectionIntegratedStiffnessMatrix();
-        
-        ~SectionIntegratedStiffnessMatrix();
-        
-        virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
-        
-        virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                         const Point& p, const Real t, DenseMatrix<Real>& v) const;
-        
-        virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                       const Point& p, const Real t, DenseMatrix<Real>& v) const;
-        
-    protected:
-    };
-
-    
     class ElementPropertyCard3D: public MAST::ElementPropertyCardBase {
         
     public:
@@ -49,6 +31,94 @@ namespace MAST
          */
         virtual ~ElementPropertyCard3D() { }
         
+        
+        
+        class SectionIntegratedStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            SectionIntegratedStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat);
+            
+            virtual ~SectionIntegratedStiffnessMatrix() { }
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > &_material_stiffness;
+        };
+        
+        
+        
+        class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            SectionIntegratedInertiaMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat);
+            
+            virtual ~SectionIntegratedInertiaMatrix() { }
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > &_material_inertia;
+        };
+        
+        
+        
+        class SectionIntegratedThermalExpansionMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat_stiff,
+                                                    MAST::FieldFunction<DenseMatrix<Real> > &mat_expansion);
+            
+            virtual ~SectionIntegratedThermalExpansionMatrix() { }
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > &_material_stiffness;
+            MAST::FieldFunction<DenseMatrix<Real> > &_material_expansion;
+        };
+        
+        
+        
+        
+        class SectionIntegratedPrestressMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            SectionIntegratedPrestressMatrix(MAST::FieldFunction<DenseMatrix<Real> > &prestress);
+            
+            virtual ~SectionIntegratedPrestressMatrix() { }
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void partial_derivative (const MAST::SensitivityParameters& par,
+                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+            virtual void total_derivative (const MAST::SensitivityParameters& par,
+                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > &_prestress;
+        };
+
+
         /*!
          *   dimension of the element for which this property is defined
          */
@@ -95,36 +165,7 @@ namespace MAST
             return *_material;
         }
         
-        /*!
-         *    initializes the vector to the prestress in the element
-         */
-        virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
-                                      const DenseMatrix<Real>& T,
-                                      DenseVector<Real>& v) const;
-        
-        /*!
-         *    initializes the vector to the sensitivity of prestress in the element
-         */
-        virtual void prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                  const DenseMatrix<Real>& T,
-                                                  DenseVector<Real>& v,
-                                                  const MAST::SensitivityParameters& p) const;
 
-        /*!
-         *    initializes the matrix to the prestress in the element
-         */
-        virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
-                                      const DenseMatrix<Real>& T,
-                                      DenseMatrix<Real>& m) const;
-
-        /*!
-         *    initializes the matrix to the sensitivity of prestress in the element
-         */
-        virtual void prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                  const DenseMatrix<Real>& T,
-                                                  DenseMatrix<Real>& m,
-                                                  const MAST::SensitivityParameters& p) const;
-        
         /*!
          *  returns true if the property card depends on the function \p f
          */
@@ -152,6 +193,7 @@ namespace MAST
 }
 
 
+
 inline void
 MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
                                               MAST::ElemenetPropertyMatrixType t,
@@ -163,27 +205,8 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
         case 3:
             switch (t) {
                 case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-                    _material->calculate_3d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX, m);
-                    break;
-                    
                 case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
-                    _material->calculate_3d_matrix(MAST::MATERIAL_INERTIA_MATRIX, m);
-                    // now scale the rotation dofs with small factors
-                    for (unsigned int i=0; i<3; i++) {
-                        m(i+3, i+3) *= 1.0e-6;
-                    }
-                    break;
-
-                    break;
-
-                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX: {
-                    DenseMatrix<Real> a;
-                    _material->calculate_3d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX, m);
-                    _material->calculate_3d_matrix(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, a);
-                    m.right_multiply(a);
-                }
-                    break;
-                    
+                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
                 case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
                 default:
                     libmesh_error(); // others need to be implemented
@@ -197,108 +220,6 @@ MAST::ElementPropertyCard3D::calculate_matrix(const libMesh::Elem &elem,
             libmesh_error();
             break;
     }
-}
-
-
-
-inline void
-MAST::ElementPropertyCard3D::calculate_matrix_sensitivity(const libMesh::Elem &elem,
-                                                          MAST::ElemenetPropertyMatrixType t,
-                                                          DenseMatrix<Real>& m,
-                                                          const MAST::SensitivityParameters& p) const
-{
-    libmesh_assert(_material); // should have been set
-    
-    // currently only first order sensitivity is provided
-    libmesh_assert_equal_to(p.total_order(), 1);
-    
-    switch (elem.dim()) {
-        case 3:
-            switch (t) {
-                case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
-                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_STIFFNESS_MATRIX, m, p);
-                    break;
-                    
-                case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
-                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_INERTIA_MATRIX, m, p);
-                    // now scale the rotation dofs with small factors
-                    for (unsigned int i=0; i<3; i++) {
-                        m(i+3, i+3) *= 1.0e-6;
-                    }
-                    break;
-                    
-                    break;
-                    
-                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX: {
-                    DenseMatrix<Real> a, aprime;
-                    _material->calculate_3d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX, m);
-                    _material->calculate_3d_matrix_sensitivity(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX,
-                                                               a, p);
-                    m.right_multiply(a);
-                }
-                    break;
-
-                case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
-                default:
-                    libmesh_error(); // others need to be implemented
-                    break;
-            }
-            break;
-            
-        case 1:
-        case 2:
-        default:
-            libmesh_error();
-            break;
-    }
-}
-
-
-
-
-inline void
-MAST::ElementPropertyCard3D::prestress_vector(MAST::ElemenetPropertyMatrixType t,
-                                              const DenseMatrix<Real>& T,
-                                              DenseVector<Real>& v) const {
-    v.resize(6); // zero, if the stress has not been defined
-    if (_prestress.m() != 0) {
-        for (unsigned int i=0; i<3; i++)
-            v(i) = _prestress(i,i);
-        v(3) = _prestress(0,1);  // tau_xy
-        v(4) = _prestress(1,2);  // tau_yz
-        v(5) = _prestress(0,2);  // tau_xz
-    }
-}
-
-
-
-inline void
-MAST::ElementPropertyCard3D::prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                          const DenseMatrix<Real>& T,
-                                                          DenseVector<Real>& v,
-                                                          const MAST::SensitivityParameters& p) const {
-    v.resize(6); // sensitivity is always zero
-}
-
-
-
-inline void
-MAST::ElementPropertyCard3D::prestress_matrix(MAST::ElemenetPropertyMatrixType t,
-                                              const DenseMatrix<Real>& T,
-                                              DenseMatrix<Real>& m) const {
-    m.resize(3, 3);
-    if (_prestress.m() != 0)
-        m = _prestress;
-}
-
-
-
-inline void
-MAST::ElementPropertyCard3D::prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                          const DenseMatrix<Real>& T,
-                                                          DenseMatrix<Real>& m,
-                                                          const MAST::SensitivityParameters& p) const {
-    m.resize(3, 3); // sensitivity is always zero
 }
 
 

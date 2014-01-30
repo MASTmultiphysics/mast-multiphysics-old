@@ -10,6 +10,9 @@
 #define __MAST_property_card_base_h__
 
 
+// C++ includes
+#include <vector>
+
 // MAST includes
 #include "Numerics/function_base.h"
 
@@ -61,14 +64,14 @@ namespace MAST {
          *   returns a constant reference to the specified function
          */
         template <typename ValType>
-        const MAST::FunctionValue<ValType>& get(const std::string& nm) const {
+        const ValType& get(const std::string& nm) const {
             std::map<std::string, MAST::FunctionBase*>::const_iterator it =
             _properties.find(nm);
             
             // make sure that this funciton exists
             libmesh_assert(it != _properties.end());
             
-            return dynamic_cast<MAST::FunctionValue<ValType>&>(*(it->second));
+            return dynamic_cast<ValType&>(*(it->second));
         }
         
         
@@ -76,14 +79,14 @@ namespace MAST {
          *   returns a writable reference to the specified function
          */
         template <typename ValType>
-        MAST::FunctionValue<ValType>& get(const std::string& nm) {
+        ValType& get(const std::string& nm) {
             std::map<std::string, MAST::FunctionBase*>::iterator it =
             _properties.find(nm);
             
             // make sure that this funciton exists
             libmesh_assert(it != _properties.end());
             
-            return dynamic_cast<MAST::FunctionValue<ValType>&>(*(it->second));
+            return dynamic_cast<ValType&>(*(it->second));
         }
         
         

@@ -515,7 +515,7 @@
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				HEADER_SEARCH_PATHS = (
 					/opt/local/include/,
-					/opt/local/include/openmpi,
+					"/opt/local/include/openmpi-mp",
 					"/opt/local/include/vtk-5.10",
 				);
 				LD_RUNPATH_SEARCH_PATHS = /opt/local/tbb41_20121003oss/lib;
@@ -540,7 +540,7 @@
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				HEADER_SEARCH_PATHS = (
 					/opt/local/include/,
-					/opt/local/include/openmpi,
+					"/opt/local/include/openmpi-mp",
 					"/opt/local/include/vtk-5.10",
 				);
 				LD_RUNPATH_SEARCH_PATHS = /opt/local/tbb41_20121003oss/lib;

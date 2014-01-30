@@ -46,6 +46,10 @@
 		EBE83D5917A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5617A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp */; };
 		EBE83D5D17A182CE000F013C /* flutter_solver_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5B17A182CE000F013C /* flutter_solver_base.cpp */; };
 		EBE83D5F17A1A75B000F013C /* residual_based_adaptive_time_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE83D5E17A1A75B000F013C /* residual_based_adaptive_time_solver.cpp */; };
+		EBED98AD189AB7E7008561D5 /* isotropic_material_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED98AB189AB7E7008561D5 /* isotropic_material_property_card.cpp */; };
+		EBED98B2189ADA42008561D5 /* element_property_card_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED98B1189ADA42008561D5 /* element_property_card_3D.cpp */; };
+		EBED98B5189AEB75008561D5 /* solid_2d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED98B3189AEB75008561D5 /* solid_2d_section_element_property_card.cpp */; };
+		EBED98B8189B0234008561D5 /* solid_1d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBED98B6189B0234008561D5 /* solid_1d_section_element_property_card.cpp */; };
 		EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */; };
 /* End PBXBuildFile section */
 
@@ -157,6 +161,13 @@
 		EBE83D5B17A182CE000F013C /* flutter_solver_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flutter_solver_base.cpp; sourceTree = "<group>"; };
 		EBE83D5C17A182CE000F013C /* flutter_solver_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = flutter_solver_base.h; sourceTree = "<group>"; };
 		EBE83D5E17A1A75B000F013C /* residual_based_adaptive_time_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = residual_based_adaptive_time_solver.cpp; sourceTree = "<group>"; };
+		EBED98AB189AB7E7008561D5 /* isotropic_material_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = isotropic_material_property_card.cpp; sourceTree = "<group>"; };
+		EBED98AC189AB7E7008561D5 /* isotropic_material_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = isotropic_material_property_card.h; sourceTree = "<group>"; };
+		EBED98B1189ADA42008561D5 /* element_property_card_3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = element_property_card_3D.cpp; sourceTree = "<group>"; };
+		EBED98B3189AEB75008561D5 /* solid_2d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = solid_2d_section_element_property_card.cpp; sourceTree = "<group>"; };
+		EBED98B4189AEB75008561D5 /* solid_2d_section_element_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solid_2d_section_element_property_card.h; sourceTree = "<group>"; };
+		EBED98B6189B0234008561D5 /* solid_1d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = solid_1d_section_element_property_card.cpp; sourceTree = "<group>"; };
+		EBED98B7189B0234008561D5 /* solid_1d_section_element_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solid_1d_section_element_property_card.h; sourceTree = "<group>"; };
 		EBF2785E180DD0E000DC81A3 /* function_base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = function_base.h; sourceTree = "<group>"; };
 		EBF2785F180DE17C00DC81A3 /* property_card_base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = property_card_base.h; sourceTree = "<group>"; };
 		EBF27860180ED3CE00DC81A3 /* element_property_card_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = element_property_card_base.h; sourceTree = "<group>"; };
@@ -334,11 +345,18 @@
 			children = (
 				EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */,
 				69FB3B0518185F1000CEDF1D /* element_property_card_2D.h */,
+				EBED98B1189ADA42008561D5 /* element_property_card_3D.cpp */,
 				69FB3B071818D2F500CEDF1D /* element_property_card_3D.h */,
 				EBF27860180ED3CE00DC81A3 /* element_property_card_base.h */,
 				69A98AB517A31E3F00789481 /* gas_property.h */,
+				EBED98AB189AB7E7008561D5 /* isotropic_material_property_card.cpp */,
+				EBED98AC189AB7E7008561D5 /* isotropic_material_property_card.h */,
 				EBF27861180ED3CE00DC81A3 /* material_property_card_base.h */,
 				EBF2785F180DE17C00DC81A3 /* property_card_base.h */,
+				EBED98B6189B0234008561D5 /* solid_1d_section_element_property_card.cpp */,
+				EBED98B7189B0234008561D5 /* solid_1d_section_element_property_card.h */,
+				EBED98B3189AEB75008561D5 /* solid_2d_section_element_property_card.cpp */,
+				EBED98B4189AEB75008561D5 /* solid_2d_section_element_property_card.h */,
 			);
 			path = PropertyCards;
 			sourceTree = "<group>";
@@ -497,9 +515,11 @@
 				EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */,
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
 				EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */,
+				EBED98AD189AB7E7008561D5 /* isotropic_material_property_card.cpp in Sources */,
 				69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
 				696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */,
+				EBED98B2189ADA42008561D5 /* element_property_card_3D.cpp in Sources */,
 				EB8F5C22187C572E002976E5 /* ksmaxim07.f in Sources */,
 				EB817346182D902300E03740 /* sensitivity_parameters.cpp in Sources */,
 				696C08161796CD4100B77C5C /* thermal_elem_base.cpp in Sources */,
@@ -508,6 +528,7 @@
 				EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */,
 				EBE83D5717A021F4000F013C /* fluid_elem_base.cpp in Sources */,
 				EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */,
+				EBED98B5189AEB75008561D5 /* solid_2d_section_element_property_card.cpp in Sources */,
 				EBB0998517F0872B00272355 /* main.cpp in Sources */,
 				EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */,
 				EB8F5C20187C572E002976E5 /* ksgcsu07.f in Sources */,
@@ -520,6 +541,7 @@
 				EBE83D5F17A1A75B000F013C /* residual_based_adaptive_time_solver.cpp in Sources */,
 				EBD7963F18490471007FA3A7 /* surface_pressure.cpp in Sources */,
 				69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */,
+				EBED98B8189B0234008561D5 /* solid_1d_section_element_property_card.cpp in Sources */,
 				6989BC9F180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -590,7 +612,7 @@
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					/opt/local/include/,
-					/opt/local/include/openmpi,
+					"/opt/local/include/openmpi-mp",
 					"/opt/local/include/vtk-5.10",
 				);
 				LIBRARY_SEARCH_PATHS = (
@@ -617,7 +639,7 @@
 				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS = (
 					/opt/local/include/,
-					/opt/local/include/openmpi,
+					"/opt/local/include/openmpi-mp",
 					"/opt/local/include/vtk-5.10",
 				);
 				LIBRARY_SEARCH_PATHS = (

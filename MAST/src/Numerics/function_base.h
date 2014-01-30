@@ -27,11 +27,11 @@ namespace MAST
 {
     
     
-    enum FunctionType {
-        CONSTANT_FUNCTION,
-        CONSTANT_FIELD_FUNCTION,
-        MULTILINEAR_FUNCTION_1D,
-    };
+//    enum FunctionType {
+//        CONSTANT_FUNCTION,
+//        CONSTANT_FIELD_FUNCTION,
+//        MULTILINEAR_FUNCTION_1D,
+//    };
     
     
     enum FunctionAttributeType {
@@ -55,10 +55,6 @@ namespace MAST
          */
         virtual ~FunctionBase() { }
         
-        /*!
-         *    returns the function kind
-         */
-        virtual MAST::FunctionType type() const = 0;
         
         /*!
          *   returns the name of this function
@@ -68,6 +64,20 @@ namespace MAST
         }
         
         /*!
+         *    @returns true if the provided function \par f is same as this
+         *    function. This is true if the pointer to \par f is equal to this
+         *    or if the pointer to \par f is equal to the master function
+         */
+        bool is_equal(const MAST::FunctionBase& f) const;
+
+        
+        /*!
+         *    @returns a pointer to the master function
+         */
+        MAST::FunctionBase* master() const;
+
+
+        /*!
          *  returns true if the function depends on the provided value
          */
         virtual bool depends_on(Real* val) const = 0;
@@ -75,7 +85,9 @@ namespace MAST
         /*!
          *  returns true if the function depends on the provided value
          */
-        virtual bool depends_on(const MAST::FunctionBase& f) const = 0;
+        virtual bool depends_on(const MAST::FunctionBase& f) const {
+            return _functions.count(f.master());
+        }
 
         /*!
          *  returns true if the function depends on the provided set 
@@ -163,9 +175,9 @@ namespace MAST
         std::string _name;
         
         /*!
-         *   maps of functions that \p this function depends on
+         *   set of functions that \p this function depends on
          */
-        std::map<std::string, const FunctionBase*> _function_parameters;
+        std::set<const MAST::FunctionBase*> _functions;
         
         /*!
          *   attributes of this function
@@ -231,6 +243,13 @@ namespace MAST
         MAST::FunctionBase(nm)
         { }
         
+        /*!
+         *  returns true if the function depends on the provided value
+         */
+        virtual bool depends_on(Real* val) const {
+            libmesh_error(); // does not make sense for this function
+        }
+
         /*!
          *    Returns the value of this function.
          */
