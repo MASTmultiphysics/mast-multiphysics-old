@@ -351,6 +351,8 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
     
     // set of material cards to be written
     std::set<const MAST::MaterialPropertyCardBase*> mcards;
+    Point p; // dummy point for calling FieldFunciton objects
+    Real val;
     
     {
         std::set<const MAST::ElementPropertyCardBase*>::const_iterator
@@ -382,24 +384,26 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
                     break;
                     
                 case 2: {
+                    prop.get<MAST::FieldFunction<Real> >("h")(p, 0., val);
+                    
                     out_stream
                     << std::setw(8)  << "PSHELL* "
                     << std::setw(16) << prop.id() + 1
                     << std::setw(16) << prop.get_material().id()+1
-                    << std::setw(16) << prop.get<Real>("h")()
+                    << std::setw(16) << val
                     << std::setw(16) << prop.get_material().id()+1
                     << std::setw(8)  << "      ++" << std::endl
                     << std::setw(8)  << "*++     "
                     << std::setw(16) << " "
                     << std::setw(16) << prop.get_material().id()+1;
                     
+                    val = 0.;
                     if (prop.get_material().contains("kappa"))
-                        out_stream
-                        << std::setw(16) << prop.get_material().get<Real>("kappa")()
-                        << std::endl;
-                    else
-                        out_stream
-                        << std::setw(16) << 0. << std::endl;
+                        prop.get<MAST::FieldFunction<Real> >("kappa")(p, 0., val);
+                    
+                    out_stream
+                    << std::setw(16) << val
+                    << std::endl;
                     
                 }
                     break;
@@ -428,8 +432,10 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
         for ( ; it != end; it++) {
             const MAST::MaterialPropertyCardBase& prop = **it;
             
-            Real E = prop.get<Real>("E")(),
-            nu = prop.get<Real>("nu")(),
+            Real E, nu, G, rho;
+            prop.get<MAST::FieldFunction<Real> >("E")(p, 0., E);
+            prop.get<MAST::FieldFunction<Real> >("nu")(p, 0., nu);
+            prop.get<MAST::FieldFunction<Real> >("rho")(p, 0., rho);
             G = E/2./(1.+nu);
 
             out_stream
@@ -440,7 +446,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
             << std::setw(16) << nu
             << std::setw(8)  << "      ++" << std::endl
             << std::setw(8)  << "*++     "
-            << std::setw(16) << prop.get<Real>("rho")()
+            << std::setw(16) << rho
             << std::endl;
         }
     }

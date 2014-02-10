@@ -157,19 +157,19 @@ MAST::StructuralSystemAssembly::add_parameter(MAST::ConstantFunction<Real>& f) {
     
     // now add this to the map
     bool insert_success = _parameter_map.insert
-    (std::map<Real*, MAST::FunctionBase*>::value_type(par, &f)).second;
+    (std::map<Real*, MAST::FieldFunctionBase*>::value_type(par, &f)).second;
     
     libmesh_assert(insert_success);
 }
 
 
 
-const MAST::FunctionBase*
+const MAST::FieldFunctionBase*
 MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
     // make sure valid values are given
     libmesh_assert(par);
     
-    std::map<Real*, const MAST::FunctionBase*>::const_iterator
+    std::map<Real*, const MAST::FieldFunctionBase*>::const_iterator
     it = _parameter_map.find(par);
     
     // make sure it does not already exist in the map
@@ -214,8 +214,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
                                                       NumericVector<Number>& sensitivity_rhs) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
-    SensitivityParameters sens_params;
-    sens_params.add_parameter(this->get_parameter(params[i]), 1);
+    const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
     
     sensitivity_rhs.zero();
     
@@ -226,7 +225,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
             _assemble_residual_and_jacobian(*_system.solution, &sensitivity_rhs,
                                             NULL,
                                             dynamic_cast<NonlinearImplicitSystem&>(_system),
-                                            &sens_params);
+                                            f);
             break;
             
         default:
@@ -294,8 +293,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
                                                       SparseMatrix<Number>* sensitivity_B) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
-    SensitivityParameters sens_params;
-    sens_params.add_parameter(this->get_parameter(params[i]), 1);
+    const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
     
     sensitivity_A->zero();
     sensitivity_B->zero();
@@ -312,14 +310,14 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
         case MAST::MODAL:
             _assemble_matrices_for_modal_analysis(*sensitivity_A,
                                                   *sensitivity_B,
-                                                  &sens_params,
+                                                  f,
                                                   sol, sol_sens);
             break;
             
         case MAST::BUCKLING:
             _assemble_matrices_for_buckling_analysis(*sensitivity_A,
                                                      *sensitivity_B,
-                                                     &sens_params,
+                                                     f,
                                                      sol, sol_sens);
             break;
             
@@ -343,7 +341,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
                                                                  NumericVector<Number>* R,
                                                                  SparseMatrix<Number>*  J,
                                                                  NonlinearImplicitSystem& S,
-                                                                 const MAST::SensitivityParameters* params) {
+                                                                 const MAST::FieldFunctionBase* param) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -387,7 +385,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         
         // now get the vector values
-        if (!params) {
+        if (!param) {
             structural_elem->internal_force(J!=NULL?true:false,
                                             vec, mat);
             if (_analysis_type == MAST::DYNAMIC)
@@ -401,7 +399,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
                                                    _vol_bc_map);
         }
         else {
-            structural_elem->sensitivity_params = params;
+            structural_elem->sensitivity_param = param;
             structural_elem->internal_force_sensitivity(J!=NULL?true:false,
                                                         vec, mat);
             if (_analysis_type == MAST::DYNAMIC)
@@ -521,7 +519,7 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
 void
 MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<Number>&  matrix_A,
                                                                       SparseMatrix<Number>&  matrix_B,
-                                                                      const MAST::SensitivityParameters* params,
+                                                                      const MAST::FieldFunctionBase* param,
                                                                       const NumericVector<Number>* static_sol,
                                                                       const NumericVector<Number>* static_sol_sens) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
@@ -545,7 +543,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
                                  false, GHOSTED);
         static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
         // do the same for sensitivity if the parameters were provided
-        if (params) {
+        if (param) {
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
@@ -594,7 +592,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
         
         
         // now get the matrices
-        if (!params) {
+        if (!param) {
             structural_elem->internal_force(true, vec, mat1);
             structural_elem->prestress_force(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force(true, vec, mat2);
@@ -612,7 +610,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
                 structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
             }
 
-            structural_elem->sensitivity_params = params;
+            structural_elem->sensitivity_param = param;
             structural_elem->internal_force_sensitivity(true, vec, mat1);
             structural_elem->prestress_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
@@ -642,7 +640,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
 void
 MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<Number>&  matrix_A,
                                                                          SparseMatrix<Number>&  matrix_B,
-                                                                         const MAST::SensitivityParameters* params,
+                                                                         const MAST::FieldFunctionBase* param,
                                                                          const NumericVector<Number>* static_sol,
                                                                          const NumericVector<Number>* static_sol_sens) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
@@ -666,7 +664,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                                  false, GHOSTED);
         static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
         // do the same for sensitivity if the parameters were provided
-        if (params) {
+        if (param) {
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
@@ -703,7 +701,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
         // resize the solution to the correct size
         structural_elem->local_solution.resize(sol.size());
         
-        if (!params) {
+        if (!param) {
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
             structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
@@ -722,7 +720,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             }
         }
         else {
-            structural_elem->sensitivity_params = params;
+            structural_elem->sensitivity_param = param;
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
             structural_elem->local_solution_sens.resize(sol.size());
@@ -772,7 +770,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
 void
 MAST::StructuralSystemAssembly::calculate_max_elem_stress(const NumericVector<Number>& X,
                                                           std::vector<Real>& stress,
-                                                          const MAST::SensitivityParameters* params) {
+                                                          const MAST::FieldFunctionBase* param) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
     // resize the stress vector to store values for each element
@@ -821,11 +819,11 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const NumericVector<Nu
         structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         
         // now get the vector values
-        if (!params) {
+        if (!param) {
             stress[counter] = structural_elem->max_von_mises_stress();
         }
         else {
-            structural_elem->sensitivity_params = params;
+            structural_elem->sensitivity_param = param;
             stress[counter] = structural_elem->max_von_mises_stress_sensitivity();
         }
         counter++;

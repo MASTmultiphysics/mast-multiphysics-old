@@ -11,11 +11,10 @@
 
 // MAST includes
 #include "StructuralElems/structural_system_assembly.h"
-#include "PropertyCards/element_property_card_base.h"
+#include "PropertyCards/isotropic_material_property_card.h"
 #include "PropertyCards/element_property_card_3D.h"
-#include "PropertyCards/element_property_card_2D.h"
-#include "PropertyCards/element_property_card_1D.h"
-#include "PropertyCards/material_property_card_base.h"
+#include "PropertyCards/solid_1d_section_element_property_card.h"
+#include "PropertyCards/solid_2d_section_element_property_card.h"
 #include "BoundaryConditions/boundary_condition.h"
 #include "BoundaryConditions/displacement_boundary_condition.h"
 #include "Mesh/mesh_initializer.h"
@@ -24,7 +23,8 @@
 #include "Mesh/nastran_io.h"
 #include "ThermalElems/temperature_function.h"
 #include "Numerics/constant_function.h"
-#include "Numerics/constant_field_function.h"
+
+
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -335,9 +335,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     kappa("kappa", infile("shear_corr_factor", 5./6.)),
     h("h", infile("thickness", 0.002)),
     h_stiff("h", infile("thickness", 0.002)),
-    th("h", infile("thickness", 0.002)),
-    b("b", infile("width", 0.002)),
-    off_h("off_h", 0.5*th());
+    hy("hy", infile("thickness", 0.002)),
+    hz("hz", infile("width", 0.002)),
+    off_hy("hy_offset", 0.5*infile("thickness", 0.002)),
+    zero_off_hy("hy_offset", 0.),
+    zero_off_hz("hz_offset", 0.);
+    
     
     // add the properties to the cards
     mat.add(E);
@@ -347,8 +350,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     prop2d.add(h);
     prop2d_stiff.add(h_stiff);
-    prop1d.add(th);
-    prop1d.add(b);
+    prop1d.add(hy);
+    prop1d.add(hz);
+    prop1d.add(zero_off_hy);
+    prop1d.add(zero_off_hz);
     
     
     DenseVector<Real> prestress; prestress.resize(6);
@@ -359,13 +364,17 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
+    prop1d.y_vector()(1) = 1.;
     //prop2d.prestress(prestress); // no prestress for stiffener
     //prop1d.prestress(prestress);
 
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
-    
-    structural_assembly.set_property_for_subdomain(0, prop2d);
+
+    if (dim == 1)
+        structural_assembly.set_property_for_subdomain(0, prop1d);
+    else
+        structural_assembly.set_property_for_subdomain(0, prop2d);
     
     const std::string mesh_type = infile("mesh_type", std::string(""));
     if (mesh_type == "stiffened_panel") {
@@ -378,7 +387,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         }
         else {
             // stiffeners using beam elements with offsets
-            prop1d.add(off_h);
+            prop1d.add(off_hy);
             for (unsigned int i=1; i<n_stiff+1; i++)
                 structural_assembly.set_property_for_subdomain(i, prop1d);
         }

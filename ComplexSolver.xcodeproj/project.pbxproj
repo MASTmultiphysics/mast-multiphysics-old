@@ -14,7 +14,6 @@
 		EBD7960B1848F18D007FA3A7 /* basis_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796051848F18D007FA3A7 /* basis_matrix.cpp */; };
 		EBD7960C1848F18D007FA3A7 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796061848F18D007FA3A7 /* fem_operator_matrix.cpp */; };
 		EBD7960D1848F18D007FA3A7 /* function_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796071848F18D007FA3A7 /* function_base.cpp */; };
-		EBD7960E1848F18D007FA3A7 /* sensitivity_parameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796091848F18D007FA3A7 /* sensitivity_parameters.cpp */; };
 		EBD796251848F1DB007FA3A7 /* bending_operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796151848F1DB007FA3A7 /* bending_operator.cpp */; };
 		EBD796261848F1DB007FA3A7 /* bending_structural_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD796171848F1DB007FA3A7 /* bending_structural_elem.cpp */; };
 		EBD796271848F1DB007FA3A7 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD7961C1848F1DB007FA3A7 /* structural_element_1D.cpp */; };
@@ -70,8 +69,6 @@
 		EBD796061848F18D007FA3A7 /* fem_operator_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fem_operator_matrix.cpp; sourceTree = "<group>"; };
 		EBD796071848F18D007FA3A7 /* function_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = function_base.cpp; sourceTree = "<group>"; };
 		EBD796081848F18D007FA3A7 /* function_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = function_base.h; sourceTree = "<group>"; };
-		EBD796091848F18D007FA3A7 /* sensitivity_parameters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sensitivity_parameters.cpp; sourceTree = "<group>"; };
-		EBD7960A1848F18D007FA3A7 /* sensitivity_parameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sensitivity_parameters.h; sourceTree = "<group>"; };
 		EBD7960F1848F1A3007FA3A7 /* element_property_card_1D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = element_property_card_1D.h; sourceTree = "<group>"; };
 		EBD796101848F1A3007FA3A7 /* element_property_card_2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = element_property_card_2D.h; sourceTree = "<group>"; };
 		EBD796111848F1A3007FA3A7 /* element_property_card_3D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = element_property_card_3D.h; sourceTree = "<group>"; };
@@ -282,8 +279,6 @@
 				EBE84D5217A6B3F400AEE871 /* fem_operator_matrix.h */,
 				EBD796071848F18D007FA3A7 /* function_base.cpp */,
 				EBD796081848F18D007FA3A7 /* function_base.h */,
-				EBD796091848F18D007FA3A7 /* sensitivity_parameters.cpp */,
-				EBD7960A1848F18D007FA3A7 /* sensitivity_parameters.h */,
 			);
 			path = Numerics;
 			sourceTree = "<group>";
@@ -424,7 +419,6 @@
 				EBE84D6517A6B3F400AEE871 /* fluid_analysis_driver.cpp in Sources */,
 				EBE84D6617A6B3F400AEE871 /* flutter_driver.cpp in Sources */,
 				EBD796261848F1DB007FA3A7 /* bending_structural_elem.cpp in Sources */,
-				EBD7960E1848F18D007FA3A7 /* sensitivity_parameters.cpp in Sources */,
 				EBD7963D184903F0007FA3A7 /* rigid_surface_motion.cpp in Sources */,
 				EBD796251848F1DB007FA3A7 /* bending_operator.cpp in Sources */,
 				EBD7964718492E19007FA3A7 /* boundary_condition.cpp in Sources */,

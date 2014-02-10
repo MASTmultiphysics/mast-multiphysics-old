@@ -26,7 +26,7 @@ namespace MAST {
 
     // forward declerations
     class ElementPropertyCardBase;
-    class FunctionBase;
+    class FieldFunctionBase;
     class Temperature;
     class SensitivityParameters;
     class BoundaryCondition;
@@ -253,9 +253,9 @@ namespace MAST {
         DenseVector<Real> local_acceleration, local_acceleration_sens;
         
         /*!
-         *   parameters for which sensitivity has to be calculated.
+         *   parameter for which sensitivity has to be calculated.
          */
-        const MAST::SensitivityParameters* sensitivity_params;
+        const MAST::FieldFunctionBase* sensitivity_param;
         
         
         template <typename ValType>

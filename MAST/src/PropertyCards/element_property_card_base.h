@@ -27,7 +27,7 @@ namespace MAST
         LINEAR_STRAIN,
         VON_KARMAN_STRAIN
     };
- 
+    
     enum ElemenetPropertyMatrixType {
         SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
         SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
@@ -36,7 +36,9 @@ namespace MAST
         SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
         SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
         SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX,
-        SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX
+        SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+        SECTION_INTEGRATED_PRESTRESS_A_MATRIX,
+        SECTION_INTEGRATED_PRESTRESS_B_MATRIX
     };
     
     
@@ -54,17 +56,17 @@ namespace MAST
          *   virtual destructor
          */
         virtual ~ElementPropertyCardBase() { }
-
+        
         /*!
-         *   returns the bending model to be used for the element. Should be 
+         *   returns the bending model to be used for the element. Should be
          *   reimplemented in the derived classes
          */
         virtual MAST::BendingOperatorType bending_model(const Elem& elem,
-                                                 const FEType& fe) const
+                                                        const FEType& fe) const
         { libmesh_error(); }
         
         /*!
-         *    returns the extra quadrature order (on top of the system) that 
+         *    returns the extra quadrature order (on top of the system) that
          *    this element should use. By default this is zero, and can be
          *    changed by the derived classes
          */
@@ -74,20 +76,14 @@ namespace MAST
         }
         
         /*!
-         *   calculates the material matrix in \par m of type \par t.
+         *   returns a function to evaluate the specified quantitys
+         *   type \par t.
          */
-        virtual void calculate_matrix(const Elem& elem,
-                                      MAST::ElemenetPropertyMatrixType t,
-                                      DenseMatrix<Real>& m) const = 0;
-
-        /*!
-         *   calculates the material matrix in \par m of type \par t.
-         */
-        virtual void calculate_matrix_sensitivity(const Elem& elem,
-                                                  MAST::ElemenetPropertyMatrixType t,
-                                                  DenseMatrix<Real>& m,
-                                                  const MAST::SensitivityParameters& params) const = 0;
-
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        get_property(MAST::ElemenetPropertyMatrixType t,
+                     const MAST::StructuralElementBase& e) const = 0;
+        
+        
         /*!
          *    returns the id for this card
          */
@@ -100,17 +96,17 @@ namespace MAST
          *   return true if the property is isotropic
          */
         virtual bool if_isotropic() const = 0;
-
+        
         
         /*!
-         *   return the material property. This needs to be reimplemented 
-         *   for individual card type, and should be used only for isotropic 
+         *   return the material property. This needs to be reimplemented
+         *   for individual card type, and should be used only for isotropic
          *   cards.
          */
         virtual const MAST::MaterialPropertyCardBase& get_material() const {
             libmesh_error();
         }
-
+        
         
         /*!
          *   dimension of the element for which this property is defined
@@ -133,7 +129,7 @@ namespace MAST
         const MAST::StrainType strain_type() const {
             return _strain_type;
         }
-
+        
         
         /*!
          *    sets the mass matrix to be diagonal or consistent
@@ -149,7 +145,7 @@ namespace MAST
         bool if_diagonal_mass_matrix() const {
             return _diagonal_mass;
         }
-
+        
         
         /*!
          *    returns true if the element prestress has been specified, false
@@ -161,78 +157,7 @@ namespace MAST
             else
                 return true;
         }
-
         
-        /*!
-         *    initializes the prestress in the element. The vector should 
-         *    contain six stress components: sigma_xx, sigma_yy, sigma_zz,
-         *    tau_xy, tau_yz, tau_zx. It is assumed that the stress values 
-         *    are defined in the global coordinate system.
-         */
-        virtual void prestress(const DenseVector<Real>& v) {
-            libmesh_assert_equal_to(v.size(), 6);
-            _prestress.resize(3, 3);
-            _prestress(0,0) = v(0); // sigma_xx
-            _prestress(1,1) = v(1); // sigma_yy
-            _prestress(2,2) = v(2); // sigma_zz
-            _prestress(0,1) = v(3); // sigma_xy
-            _prestress(1,0) = v(3);
-            _prestress(1,2) = v(4); // sigma_yz
-            _prestress(2,1) = v(4);
-            _prestress(0,2) = v(5); // sigma_zx
-            _prestress(2,0) = v(5);
-            
-        }
-
-        /*!
-         *    initializes the vector to the prestress in the element. The 
-         *    stress value is defined in the global coordinate system. 
-         *    Hence, the given matrix \par T is used to transform the vector
-         *    to the local coordinate defined for \par T. Note that 
-         *    T_ij = V_i^t . Vn_j, where
-         *    V_i are the unit vectors of the global cs, and Vn_j are the
-         *    unit vectors of the local cs. To transform a vector from global to
-         *    local cs,    an_j = T^t a_i, and the reverse transformation is
-         *    obtained as  a_j  = T  an_i
-         */
-        virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
-                                      const DenseMatrix<Real>& T,
-                                      DenseVector<Real>& v) const = 0;
-
-        /*!
-         *    initializes the vector to the sensitivity of prestress vector
-         *    with respect to the specified parameter.
-         */
-        virtual void prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                  const DenseMatrix<Real>& T,
-                                                  DenseVector<Real>& v,
-                                                  const MAST::SensitivityParameters& p) const = 0;
-
-        
-        /*!
-         *    initializes the matrix to the prestress in the element. The
-         *    stress value is defined in the global coordinate system.
-         *    Hence, the given matrix \par T is used to transform the vector
-         *    to the local coordinate defined for \par T. Note that
-         *    T_ij = V_i^t . Vn_j, where
-         *    V_i are the unit vectors of the global cs, and Vn_j are the
-         *    unit vectors of the local cs. To transform a vector from global to
-         *    local cs,    an_j = T^t a_i, and the reverse transformation is
-         *    obtained as  a_j  = T  an_i
-         */
-        virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
-                                      const DenseMatrix<Real>& T,
-                                      DenseMatrix<Real>& m) const = 0;
-
-        /*!
-         *    initializes the matrix to the sensitivity of prestress matrix
-         *    with respect to the specified parameter.
-         */
-        virtual void prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                             const DenseMatrix<Real>& T,
-                                             DenseMatrix<Real>& m,
-                                             const MAST::SensitivityParameters& p) const = 0;
-
         
     protected:
         
@@ -245,7 +170,7 @@ namespace MAST
          *    type of nonlinear strain to be used for analysis
          */
         MAST::StrainType _strain_type;
-
+        
         /*!
          *    flag to use a diagonal mass matrix. By default, this is false
          */
@@ -256,6 +181,36 @@ namespace MAST
          *   sigma_zz, tau_xy, tau_yz, tau_zx
          */
         DenseMatrix<Real> _prestress;
+    };
+    
+    
+    /*!
+     *    base class for prestress matrix that requires conversion of the matrix to a
+     *    vector form
+     *
+     *    initializes the matrix to the prestress in the element. The
+     *    stress value is defined in the global coordinate system.
+     *    Hence, the given matrix \par T is used to transform the vector
+     *    to the local coordinate defined for \par T. Note that
+     *    T_ij = V_i^t . Vn_j, where
+     *    V_i are the unit vectors of the global cs, and Vn_j are the
+     *    unit vectors of the local cs. To transform a vector from global to
+     *    local cs,    an_j = T^t a_i, and the reverse transformation is
+     *    obtained as  a_j  = T  an_i
+     */
+    class SectionIntegratedPrestressMatrixBase: public MAST::FieldFunction<DenseMatrix<Real> > {
+    public:
+        SectionIntegratedPrestressMatrixBase(const std::string& nm):
+        MAST::FieldFunction<DenseMatrix<Real> >(nm)
+        { }
+
+        SectionIntegratedPrestressMatrixBase(const MAST::SectionIntegratedPrestressMatrixBase& f):
+        MAST::FieldFunction<DenseMatrix<Real> >(f)
+        { }
+
+        virtual ~SectionIntegratedPrestressMatrixBase() { }
+        
+        virtual void convert_to_vector(const DenseMatrix<Real>& m, DenseVector<Real>& v) const = 0;
     };
     
     

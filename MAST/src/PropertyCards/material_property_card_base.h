@@ -12,8 +12,15 @@
 // MAST includes
 #include "PropertyCards/property_card_base.h"
 
+// libMesh includes
+#include "libmesh/dense_matrix.h"
+
 namespace MAST
 {
+    // Forward decleration
+    template <typename ValType> class FieldFunction;
+    class ElementPropertyCardBase;
+    
     enum MaterialPropertyMatrixType {
         MATERIAL_STIFFNESS_MATRIX,
         MATERIAL_DAMPING_MATRIX,
@@ -39,10 +46,11 @@ namespace MAST
             return _pid;
         }
 
-        std::auto_ptr<MAST::FunctionBase>
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
         get_property(MAST::MaterialPropertyMatrixType t,
-                     const unsigned int dim) const;
-
+                     const MAST::ElementPropertyCardBase& p,
+                     const unsigned int dim) const = 0;
+        
     protected:
         
         /*!

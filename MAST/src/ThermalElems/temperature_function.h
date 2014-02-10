@@ -13,7 +13,7 @@
 #include "libmesh/point.h"
 
 // MAST includes
-#include "Numerics/constant_field_function.h"
+#include "Numerics/function_base.h"
 
 
 
@@ -24,6 +24,10 @@ namespace MAST
 
         Temperature():
         MAST::FieldFunction<Real>("Temperature")
+        { }
+        
+        Temperature(const MAST::Temperature& f):
+        MAST::FieldFunction<Real>(f)
         { }
         
         /*!
@@ -49,6 +53,20 @@ namespace MAST
         _reference(0.)
         { }
 
+        ConstantTemperature(const MAST::ConstantTemperature& f):
+        MAST::Temperature(f),
+        _temperature(f._temperature),
+        _reference(f._reference)
+        { }
+        
+        /*!
+         *   @returns a clone of the function
+         */
+        virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
+            return std::auto_ptr<MAST::FieldFunction<Real> >
+            (new MAST::ConstantTemperature(*this));
+        }
+
         /*!
          *    virtual destructor
          */
@@ -73,8 +91,8 @@ namespace MAST
          *    Returns the partial derivative of this function with respect to
          *    the sensitivity parameter \par p
          */
-        virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                         const Point& p, const Real t, Real& v) const {
+        virtual void partial (const MAST::FieldFunctionBase& f,
+                              const Point& p, const Real t, Real& v) const {
             libmesh_error();
         }
         
@@ -82,7 +100,7 @@ namespace MAST
          *    Returns the total derivative of this function with respect to
          *    the sensitivity parameter \par p
          */
-        virtual void total_derivative (const MAST::SensitivityParameters& par,
+        virtual void total (const MAST::FieldFunctionBase& f,
                                        const Point& p, const Real t, Real& v) const {
             libmesh_error();
         }
@@ -95,31 +113,12 @@ namespace MAST
         }
         
         /*!
-         *    returns the function kind
-         */
-        virtual MAST::FunctionType type() const {
-            return MAST::CONSTANT_FIELD_FUNCTION;
-        }
-        
-        /*!
          *  returns true if the function depends on the provided value
          */
         virtual bool depends_on(Real* val) const {
             return (val == &_temperature);
         }
         
-        /*!
-         *  returns false since a constant function does not depend on any
-         *  function.
-         */
-        virtual bool depends_on(const FunctionBase& f) const {
-            if (&f == this)
-                return true;
-            else
-                return false;
-        }
-       
-
     protected:
         
         /*!

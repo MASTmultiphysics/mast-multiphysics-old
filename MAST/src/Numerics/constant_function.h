@@ -20,35 +20,43 @@ namespace MAST {
      *    This is a function that does not change.
      */
     template <typename ValType>
-    class ConstantFunction: public FunctionValue<ValType> {
+    class ConstantFunction: public FieldFunction<ValType> {
     public:
         
         ConstantFunction(const std::string& nm,
                          const ValType& val):
-        FunctionValue<ValType>(nm),
+        FieldFunction<ValType>(nm),
         _val(val)
         { }
         
-        /*!
-         *   returns the type of this function: CONSTANT_FUNCTION
-         */
-        virtual MAST::FunctionType type() const {
-            
-            return MAST::CONSTANT_FUNCTION;
-        }
+        ConstantFunction(const MAST::ConstantFunction<ValType>& f):
+        FieldFunction<ValType>(f),
+        _val(f._val)
+        { }
+
         
+        /*!
+         *   @returns a clone of the function
+         */
+        virtual std::auto_ptr<MAST::FieldFunction<ValType> > clone() const {
+            return std::auto_ptr<MAST::FieldFunction<ValType> >
+            (new MAST::ConstantFunction<ValType>(*this));
+        }
+
         /*!
          *   returns the value of this function
          */
-        virtual ValType operator() () const
-        {   return _val; }
+        virtual void operator() (const Point& p, const Real t, ValType& v) const
+        {   v = _val; }
         
         
         /*!
          *   returns the sensitivity of this function
          */
-        virtual ValType partial_derivative (const MAST::SensitivityParameters& p) const {
-            this->total_derivative(p);
+        virtual void partial (const MAST::FieldFunctionBase& f,
+                              const Point& p, const Real t,
+                              ValType& v) const {
+            this->total(f, p, t, v);
         }
         
         
@@ -56,15 +64,14 @@ namespace MAST {
          *   returns the sensitivity of this function. This is the same as partial
          *   sensitivity for a constant function.
          */
-        virtual ValType total_derivative (const MAST::SensitivityParameters& p) const {
-            // only first order sensitivities are calculated at this point
-            libmesh_assert_equal_to(p.total_order(), 1);
-            const MAST::FunctionBase& f = p.get_first_order_derivative_parameter();
-            
-            if (&f == this)
-                return 1.;
+        virtual void total (const MAST::FieldFunctionBase& f,
+                            const Point& p, const Real t,
+                            ValType& v) const {
+
+            if (this == &f)
+                v = 1.;
             else
-                return 0.;
+                v = 0.;
         }
         
         
@@ -78,19 +85,10 @@ namespace MAST {
         
         
         /*!
-         *  returns true if the function depends on the provided value
-         */
-        virtual bool depends_on(Real* val) const {
-            return (val == &_val);
-        }
-        
-        
-        
-        /*!
          *  returns false since a constant function does not depend on any
          *  function.
          */
-        virtual bool depends_on(const FunctionBase& f) const {
+        virtual bool depends_on(const MAST::FieldFunctionBase& f) const {
             if (&f == this)
                 return true;
             else

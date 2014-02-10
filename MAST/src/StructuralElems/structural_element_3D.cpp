@@ -16,8 +16,8 @@
 
 bool
 MAST::StructuralElement3D::internal_force (bool request_jacobian,
-                                     DenseVector<Real>& f,
-                                     DenseMatrix<Real>& jac)
+                                           DenseVector<Real>& f,
+                                           DenseMatrix<Real>& jac)
 {
     FEMOperatorMatrix Bmat;
     
@@ -34,13 +34,15 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
     
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_stiff
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                            *this).release());
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         this->initialize_strain_operator(qp, Bmat);
         
         // get the material matrix
-        _property.calculate_matrix(_elem,
-                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-                                   material_mat);
+        (*mat_stiff)(xyz[qp], _system.time, material_mat);
         
         // calculate the stress
         Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
@@ -66,18 +68,18 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
 
 bool
 MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
-                                                 DenseVector<Real>& f,
-                                                 DenseMatrix<Real>& jac)
+                                                       DenseVector<Real>& f,
+                                                       DenseMatrix<Real>& jac)
 {
     // this should be true if the function is called
-    libmesh_assert(this->sensitivity_params);
-    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
-    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+    libmesh_assert(this->sensitivity_param);
+    libmesh_assert(!this->sensitivity_param->is_shape_parameter()); // this is not implemented for now
+    
     
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_param));
     
     // nothing to be calculated if the element does not depend on the
     // sensitivity parameter.
@@ -98,16 +100,18 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
-    
+
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_stiff
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
+                            *this).release());
+
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         this->initialize_strain_operator(qp, Bmat);
         
         // get the material matrix
-        _property.calculate_matrix_sensitivity(_elem,
-                                               MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-                                               material_mat,
-                                               *(this->sensitivity_params));
-        
+        mat_stiff->total(*this->sensitivity_param,
+                         xyz[qp], _system.time, material_mat);
+
         // calculate the stress
         Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
         tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_solution); // this is stress
@@ -154,17 +158,19 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     
     Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
     
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
+                            *this).release());
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
         // set the temperature vector to the value at this point
-//        _temperature->initialize(xyz[qp]);
-//        delta_t(0) = (*_temperature)() - _temperature->reference();
+        //        _temperature->initialize(xyz[qp]);
+        //        delta_t(0) = (*_temperature)() - _temperature->reference();
         
         // this is moved inside the domain since
-        _property.calculate_matrix(_elem,
-                                   MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
-                                   material_exp_A_mat);
-
+        (*mat)(xyz[qp], _system.time, material_exp_A_mat);
+        
         material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)}
         
         this->initialize_strain_operator(qp, Bmat);
@@ -197,7 +203,7 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
 
 void
 MAST::StructuralElement3D::initialize_strain_operator(const unsigned int qp,
-                                                FEMOperatorMatrix& Bmat) {
+                                                      FEMOperatorMatrix& Bmat) {
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     
     unsigned int n_phi = (unsigned int)dphi.size();

@@ -11,206 +11,236 @@
 
 
 MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix::
-SectionIntegratedStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat):
+SectionIntegratedStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat):
 MAST::FieldFunction<DenseMatrix<Real> > ("SectionIntegratedStiffnessMatrix3D"),
 _material_stiffness(mat) {
-    _functions.insert(mat.master());
+    _functions.insert(mat);
 }
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix::operator() (const Point& p,
-                                                                           const Real t,
-                                                                           DenseMatrix<Real>& v) const {
+MAST::ElementPropertyCard3D::
+SectionIntegratedStiffnessMatrix::operator() (const Point& p,
+                                              const Real t,
+                                              DenseMatrix<Real>& m) const {
     // this only returns the material stiffness
-    _material_stiffness(p, t, v);
+    (*_material_stiffness)
+    (p, t, m);
 }
-            
+
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix::partial_derivative (const MAST::SensitivityParameters& par,
-                                                                                   const Point& p,
-                                                                                   const Real t,
-                                                                                   DenseMatrix<Real>& v) const {
+MAST::ElementPropertyCard3D::
+SectionIntegratedStiffnessMatrix::partial (const MAST::FieldFunctionBase& f,
+                                           const Point& p,
+                                           const Real t,
+                                           DenseMatrix<Real>& m) const {
     // this only returns the material stiffness
-    _material_stiffness.partial_derivative(par, p, t, v);
+    _material_stiffness->partial(f, p, t, m);
 }
-            
+
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix::total_derivative (const MAST::SensitivityParameters& par,
-                                                                                 const Point& p,
-                                                                                 const Real t,
-                                                                                 DenseMatrix<Real>& v) const {
+MAST::ElementPropertyCard3D::
+SectionIntegratedStiffnessMatrix::total (const MAST::FieldFunctionBase& f,
+                                         const Point& p,
+                                         const Real t,
+                                         DenseMatrix<Real>& m) const {
     // this only returns the material stiffness
-    _material_stiffness.total_derivative(par, p, t, v);
+    _material_stiffness->total(f, p, t, m);
 }
-            
 
 
 
-MAST::ElementPropertyCard3D::SectionIntegratedInertiaMatrix::
-SectionIntegratedInertiaMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat):
+
+MAST::ElementPropertyCard3D::
+SectionIntegratedInertiaMatrix::SectionIntegratedInertiaMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat):
 MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedInertiaMatrix3D"),
 _material_inertia(mat) {
-    _functions.insert(mat.master());
+    _functions.insert(mat);
 }
-            
+
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedInertiaMatrix::operator() (const Point& p,
-                                                                         const Real t,
-                                                                         DenseMatrix<Real>& v) const {
-    DenseMatrix<Real> m;
-    v.resize(6, 6);
+MAST::ElementPropertyCard3D::
+SectionIntegratedInertiaMatrix::operator() (const Point& p,
+                                            const Real t,
+                                            DenseMatrix<Real>& m) const {
+    DenseMatrix<Real> mat;
+    m.resize(6, 6);
     // this only returns the material inertia
-    _material_inertia(p, t, m);
+    (*_material_inertia)(p, t, mat);
     for (unsigned int i=0; i<3; i++) {
         for (unsigned int j=0; j<3; j++) {
-            v(i,j) = m(i,j);
+            m(i,j) = mat(i,j);
         }
-        v(i+3,i+3) = m(i,i) * 1.0e-12;
+        m(i+3,i+3) = mat(i,i) * 1.0e-12;
     }
 }
 
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedInertiaMatrix::partial_derivative (const MAST::SensitivityParameters& par,
-                                                                                 const Point& p,
-                                                                                 const Real t,
-                                                                                 DenseMatrix<Real>& v) const {
-    DenseMatrix<Real> m;
-    v.resize(6, 6);
+MAST::ElementPropertyCard3D::
+SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
+                                         const Point& p,
+                                         const Real t,
+                                         DenseMatrix<Real>& m) const {
+    DenseMatrix<Real> mat;
+    m.resize(6, 6);
     // this only returns the material inertia
     // sensitivity of rotary inertia is assumed to be zero
-    _material_inertia.partial_derivative(par, p, t, m);
+    _material_inertia->partial(f, p, t, mat);
     for (unsigned int i=0; i<3; i++)
         for (unsigned int j=0; j<3; j++)
-            v(i,j) = m(i,j);
+            m(i,j) = mat(i,j);
 }
-            
+
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedInertiaMatrix::total_derivative (const MAST::SensitivityParameters& par,
-                                                                               const Point& p,
-                                                                               const Real t,
-                                                                               DenseMatrix<Real>& v) const {
-    DenseMatrix<Real> m;
-    v.resize(6, 6);
+MAST::ElementPropertyCard3D::
+SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
+                                       const Point& p,
+                                       const Real t,
+                                       DenseMatrix<Real>& m) const {
+    DenseMatrix<Real> mat;
+    m.resize(6, 6);
     // this only returns the material inertia
     // sensitivity of rotary inertia is assumed to be zero
-    _material_inertia.total_derivative(par, p, t, m);
+    _material_inertia->total(f, p, t, mat);
     for (unsigned int i=0; i<3; i++)
         for (unsigned int j=0; j<3; j++)
-            v(i,j) = m(i,j);
+            m(i,j) = mat(i,j);
 }
 
 
 
 
 MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::
-SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat_stiff,
-                                        MAST::FieldFunction<DenseMatrix<Real> > &mat_expansion):
+SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+                                        MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion):
 MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionMatrix3D"),
 _material_stiffness(mat_stiff),
 _material_expansion(mat_expansion) {
-    _functions.insert(mat_stiff.master());
-    _functions.insert(mat_expansion.master());
+    _functions.insert(mat_stiff);
+    _functions.insert(mat_expansion);
 }
-            
+
 
 
 
 void
 MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::operator() (const Point& p,
                                                                                   const Real t,
-                                                                                  DenseMatrix<Real>& v) const {
-    DenseMatrix<Real> m;
-    _material_stiffness(p, t, v);
-    _material_expansion(p, t, m);
-    v.right_multiply(m);
+                                                                                  DenseMatrix<Real>& m) const {
+    DenseMatrix<Real> mat;
+    (*_material_stiffness)(p, t, m);
+    (*_material_expansion)(p, t, mat);
+    m.right_multiply(mat);
 }
 
 
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::partial_derivative (const MAST::SensitivityParameters& par,
-                                                                                          const Point& p,
-                                                                                          const Real t,
-                                                                                          DenseMatrix<Real>& v) const {
+MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::partial (const MAST::FieldFunctionBase& f,
+                                                                               const Point& p,
+                                                                               const Real t,
+                                                                               DenseMatrix<Real>& m) const {
     libmesh_error();
 }
-            
+
 
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::total_derivative (const MAST::SensitivityParameters& par,
-                                                                                        const Point& p,
-                                                                                        const Real t,
-                                                                                        DenseMatrix<Real>& v) const {
+MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::total (const MAST::FieldFunctionBase& f,
+                                                                             const Point& p,
+                                                                             const Real t,
+                                                                             DenseMatrix<Real>& m) const {
     libmesh_error();
 }
 
 
 
 
-MAST::ElementPropertyCard3D::SectionIntegratedPrestressMatrix::
-SectionIntegratedPrestressMatrix(MAST::FieldFunction<DenseMatrix<Real> > &prestress):
-MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedPrestressMatrix3D"),
+MAST::ElementPropertyCard3D::SectionIntegratedPrestressAMatrix::
+SectionIntegratedPrestressAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress):
+MAST::SectionIntegratedPrestressMatrixBase("SectionIntegratedPrestressAMatrix3D"),
 _prestress(prestress){
-    _functions.insert(prestress.master());
+    _functions.insert(prestress);
 }
-            
-
-
-
-void
-MAST::ElementPropertyCard3D::SectionIntegratedPrestressMatrix::operator() (const Point& p,
-                                                                           const Real t,
-                                                                           DenseMatrix<Real>& v) const {
-    libmesh_error();
-}
-
 
 
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedPrestressMatrix::partial_derivative (const MAST::SensitivityParameters& par,
-                                                                                   const Point& p,
-                                                                                   const Real t,
-                                                                                   DenseMatrix<Real>& v) const {
-    libmesh_error();
+MAST::ElementPropertyCard3D::
+SectionIntegratedPrestressAMatrix::operator() (const Point& p,
+                                               const Real t,
+                                               DenseMatrix<Real>& m) const {
+    (*_prestress)(p, t, m);
+}
+
+
+
+
+
+void
+MAST::ElementPropertyCard3D::
+SectionIntegratedPrestressAMatrix::partial (const MAST::FieldFunctionBase& f,
+                                            const Point& p,
+                                            const Real t,
+                                            DenseMatrix<Real>& m) const {
+    _prestress->partial(f, p, t, m);
 }
 
 
 
 void
-MAST::ElementPropertyCard3D::SectionIntegratedPrestressMatrix::total_derivative (const MAST::SensitivityParameters& par,
-                                                                                 const Point& p,
-                                                                                 const Real t,
-                                                                                 DenseMatrix<Real>& v) const {
-    libmesh_error();
+MAST::ElementPropertyCard3D::
+SectionIntegratedPrestressAMatrix::total (const MAST::FieldFunctionBase& f,
+                                          const Point& p,
+                                          const Real t,
+                                          DenseMatrix<Real>& m) const {
+    _prestress->total(f, p, t, m);
 }
 
 
 
-//void
-//MAST::ElementPropertyCard3D::SectionIntegratedPrestressMatrix::prestress_vector(MAST::ElemenetPropertyMatrixType t,
-//                                                                                const DenseMatrix<Real>& T,
-//                                                                                DenseVector<Real>& v) const {
-//    v.resize(6); // zero, if the stress has not been defined
-//    if (_prestress.m() != 0) {
-//        for (unsigned int i=0; i<3; i++)
-//            v(i) = _prestress(i,i);
-//        v(3) = _prestress(0,1);  // tau_xy
-//        v(4) = _prestress(1,2);  // tau_yz
-//        v(5) = _prestress(0,2);  // tau_xz
-//    }
-//}
+void
+MAST::ElementPropertyCard3D::
+SectionIntegratedPrestressAMatrix::convert_to_vector(const DenseMatrix<Real> &m,
+                                                     DenseVector<Real> &v) const {
+    libmesh_error();
+}
+
+
+std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+MAST::ElementPropertyCard3D::get_property(MAST::ElemenetPropertyMatrixType t,
+                                          const MAST::StructuralElementBase& e) const {
+    
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> rval;
+    
+    switch (t) {
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
+        case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
+        case MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX:
+        default:
+            libmesh_error();
+            break;
+    }
+    
+    return rval;
+}
+
 
 

@@ -18,7 +18,6 @@
 #include "StructuralElems/structural_element_2D.h"
 #include "StructuralElems/structural_element_1D.h"
 #include "ThermalElems/temperature_function.h"
-#include "Numerics/sensitivity_parameters.h"
 #include "BoundaryConditions/boundary_condition.h"
 #include "BoundaryConditions/small_disturbance_motion.h"
 
@@ -69,6 +68,7 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     FEMOperatorMatrix Bmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<Point>& xyz = _fe->get_xyz();
     const std::vector<std::vector<Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
@@ -78,11 +78,14 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     local_f.resize(n2);
     
-    _property.calculate_matrix(_elem,
-                               MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
-                               material_mat);
-    
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_inertia
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
+                            *this).release());
+
     if (_property.if_diagonal_mass_matrix()) {
+        // as an approximation, get matrix at the first quadrature point
+        (*mat_inertia)(xyz[0], _system.time, material_mat);
+        
         Real vol = 0.;
         const unsigned int nshp = _fe->n_shape_functions();
         for (unsigned int i=0; i<JxW.size(); i++)
@@ -95,8 +98,9 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
         local_jac.vector_mult(local_f, local_acceleration);
     }
     else {
-        
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
+            
+            (*mat_inertia)(xyz[qp], _system.time, material_mat);
             
             // now set the shape function values
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
@@ -146,14 +150,14 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
                                                         DenseMatrix<Real>& jac)
 {
     // this should be true if the function is called
-    libmesh_assert(this->sensitivity_params);
-    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
-    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+    libmesh_assert(this->sensitivity_param);
+    libmesh_assert(!this->sensitivity_param->is_shape_parameter()); // this is not implemented for now
+    
     
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_param));
     
     // nothing to be calculated if the element does not depend on the
     // sensitivity parameter.
@@ -163,6 +167,7 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     FEMOperatorMatrix Bmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<Point>& xyz = _fe->get_xyz();
     const std::vector<std::vector<Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
@@ -172,12 +177,15 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     local_f.resize(n2);
     
-    _property.calculate_matrix_sensitivity(_elem,
-                                           MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
-                                           material_mat,
-                                           *(this->sensitivity_params));
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_inertia
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
+                            *this).release());
     
     if (_property.if_diagonal_mass_matrix()) {
+        
+        mat_inertia->total(*this->sensitivity_param,
+                           xyz[0], _system.time, material_mat);
+        
         Real vol = 0.;
         const unsigned int nshp = _fe->n_shape_functions();
         for (unsigned int i=0; i<JxW.size(); i++)
@@ -193,6 +201,9 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
         
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
             
+            mat_inertia->total(*this->sensitivity_param,
+                               xyz[qp], _system.time, material_mat);
+
             // now set the shape function values
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
                 phi_vec(i_nd) = phi[i_nd][qp];
@@ -771,14 +782,14 @@ MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jac
     return false;
     
     // this should be true if the function is called
-    libmesh_assert(this->sensitivity_params);
-    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
-    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+    libmesh_assert(this->sensitivity_param);
+    libmesh_assert(!this->sensitivity_param->is_shape_parameter()); // this is not implemented for now
+    
     
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_param));
     
     // nothing to be calculated if the element does not depend on the
     // sensitivity parameter.
@@ -803,14 +814,14 @@ MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jac
     return false;
     
     // this should be true if the function is called
-    libmesh_assert(this->sensitivity_params);
-    libmesh_assert(!this->sensitivity_params->shape_sensitivity()); // this is not implemented for now
-    libmesh_assert(this->sensitivity_params->total_order() == 1); // only first order sensitivity
+    libmesh_assert(this->sensitivity_param);
+    libmesh_assert(!this->sensitivity_param->is_shape_parameter()); // this is not implemented for now
+    
     
     // check if the material property or the provided exterior
     // values, like temperature, are functions of the sensitivity parameter
     bool calculate = false;
-    calculate = calculate || _property.depends_on(*(this->sensitivity_params));
+    calculate = calculate || _property.depends_on(*(this->sensitivity_param));
     
     // nothing to be calculated if the element does not depend on the
     // sensitivity parameter.

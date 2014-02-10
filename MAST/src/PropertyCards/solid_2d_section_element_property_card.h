@@ -30,142 +30,301 @@ namespace MAST {
         
         class SectionIntegratedExtensionStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
-            SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat,
-                                                      MAST::FieldFunction<Real>& h);
+            SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
+                                                      MAST::FieldFunction<Real> *h);
             
-            virtual ~SectionIntegratedExtensionStiffnessMatrix() { }
+            SectionIntegratedExtensionStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _material_stiffness(f._material_stiffness->clone().release()),
+            _h(f._h->clone().release())
+            { }
+
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual ~SectionIntegratedExtensionStiffnessMatrix() {
+                delete _material_stiffness;
+                delete _h;
+            }
             
-            virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix(*this));
+            }
+
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
-            virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > &_material_stiffness;
-            MAST::FieldFunction<Real> &_h;
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
+            MAST::FieldFunction<Real> *_h;
         };
         
         
         
         class SectionIntegratedExtensionBendingStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
-            SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat,
-                                                             MAST::FieldFunction<Real>& h);
+            SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
+                                                             MAST::FieldFunction<Real> *h);
             
-            virtual ~SectionIntegratedExtensionBendingStiffnessMatrix() { }
+            SectionIntegratedExtensionBendingStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _material_stiffness(f._material_stiffness->clone().release()),
+            _h(f._h->clone().release())
+            { }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual ~SectionIntegratedExtensionBendingStiffnessMatrix() {
+                delete _material_stiffness;
+                delete _h;
+            }
+
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix(*this));
+            }
             
-            virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
-            virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > &_material_stiffness;
-            MAST::FieldFunction<Real> &_h;
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
+            MAST::FieldFunction<Real> *_h;
         };
         
         
         class SectionIntegratedBendingStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
-            SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat,
-                                                    MAST::FieldFunction<Real>& h);
+            SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
+                                                    MAST::FieldFunction<Real> *h);
             
-            virtual ~SectionIntegratedBendingStiffnessMatrix() { }
+            SectionIntegratedBendingStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _material_stiffness(f._material_stiffness->clone().release()),
+            _h(f._h->clone().release())
+            { }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+
+            virtual ~SectionIntegratedBendingStiffnessMatrix() {
+                delete _material_stiffness;
+                delete _h;
+            }
             
-            virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix(*this));
+            }
+
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
-            virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > &_material_stiffness;
-            MAST::FieldFunction<Real> &_h;
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
+            MAST::FieldFunction<Real> *_h;
         };
         
         
         
         class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
-            SectionIntegratedInertiaMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat,
-                                           MAST::FieldFunction<Real>& h);
+            SectionIntegratedInertiaMatrix(MAST::FieldFunction<Real> *rho,
+                                           MAST::FieldFunction<Real> *h);
             
-            virtual ~SectionIntegratedInertiaMatrix() { }
+            SectionIntegratedInertiaMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _rho(f._rho->clone().release()),
+            _h(f._h->clone().release())
+            { }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+
+            virtual ~SectionIntegratedInertiaMatrix() {
+                delete _rho;
+                delete _h;
+            }
             
-            virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix(*this));
+            }
+
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
-            virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > &_material_inertia;
-            MAST::FieldFunction<Real> &_h;
+            MAST::FieldFunction<Real> *_rho, *_h;
         };
         
         
         
         class SectionIntegratedThermalExpansionMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
-            SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > &mat_stiff,
-                                                    MAST::FieldFunction<DenseMatrix<Real> > &mat_expansion,
-                                                    MAST::FieldFunction<Real>& h);
+            SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+                                                    MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
+                                                    MAST::FieldFunction<Real> *h);
             
-            virtual ~SectionIntegratedThermalExpansionMatrix() { }
+            SectionIntegratedThermalExpansionMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _material_stiffness(f._material_stiffness->clone().release()),
+            _material_expansion(f._material_expansion->clone().release()),
+            _h(f._h->clone().release())
+            { }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+
+            virtual ~SectionIntegratedThermalExpansionMatrix() {
+                delete _material_stiffness;
+                delete _material_expansion;
+                delete _h;
+            }
             
-            virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionMatrix(*this));
+            }
+
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
-            virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > &_material_stiffness;
-            MAST::FieldFunction<DenseMatrix<Real> > &_material_expansion;
-            MAST::FieldFunction<Real> &_h;
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_expansion;
+            MAST::FieldFunction<Real> *_h;
         };
         
         
         
         
-        class SectionIntegratedPrestressMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedPrestressAMatrix: public MAST::SectionIntegratedPrestressMatrixBase {
         public:
-            SectionIntegratedPrestressMatrix(MAST::FieldFunction<DenseMatrix<Real> > &prestress,
-                                             MAST::FieldFunction<Real>& h);
+            SectionIntegratedPrestressAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
+                                              MAST::FieldFunction<DenseMatrix<Real> > *T,
+                                              MAST::FieldFunction<Real> *h);
+
+            SectionIntegratedPrestressAMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix& f):
+            MAST::SectionIntegratedPrestressMatrixBase(f),
+            _prestress(f._prestress->clone().release()),
+            _T(f._T->clone().release()),
+            _h(f._h->clone().release())
+            { }
             
-            virtual ~SectionIntegratedPrestressMatrix() { }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual ~SectionIntegratedPrestressAMatrix() {
+                delete _prestress;
+                delete _T;
+                delete _h;
+            }
             
-            virtual void partial_derivative (const MAST::SensitivityParameters& par,
-                                             const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix(*this));
+            }
+
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
             
-            virtual void total_derivative (const MAST::SensitivityParameters& par,
-                                           const Point& p, const Real t, DenseMatrix<Real>& v) const;
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+
+            virtual void convert_to_vector(const DenseMatrix<Real>& m, DenseVector<Real>& v) const;
+
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > *_prestress, *_T;
+            MAST::FieldFunction<Real> *_h;
+        };
+
+        
+        
+        class SectionIntegratedPrestressBMatrix: public MAST::SectionIntegratedPrestressMatrixBase {
+        public:
+            SectionIntegratedPrestressBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
+                                              MAST::FieldFunction<DenseMatrix<Real> > *T,
+                                              MAST::FieldFunction<Real> *h);
+
+            SectionIntegratedPrestressBMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix& f):
+            MAST::SectionIntegratedPrestressMatrixBase(f),
+            _prestress(f._prestress->clone().release()),
+            _T(f._T->clone().release()),
+            _h(f._h->clone().release())
+            { }
+            
+
+            virtual ~SectionIntegratedPrestressBMatrix() {
+                delete _prestress;
+                delete _T;
+                delete _h;
+            }
+            
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix(*this));
+            }
+
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            virtual void convert_to_vector(const DenseMatrix<Real>& m, DenseVector<Real>& v) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > &_prestress;
-            MAST::FieldFunction<Real> &_h;
+            MAST::FieldFunction<DenseMatrix<Real> > *_prestress, *_T;
+            MAST::FieldFunction<Real> *_h;
         };
-        
+
         
         /*!
          *   dimension of the element for which this property is defined
@@ -199,67 +358,21 @@ namespace MAST {
         
         
         /*!
-         *   calculates the matrix in \par m of type \par t.
+         *   returns a function to evaluate the specified quantitys
+         *   type \par t.
          */
-        virtual void calculate_matrix(const Elem& elem,
-                                      MAST::ElemenetPropertyMatrixType t,
-                                      DenseMatrix<Real>& m) const;
-        
-        /*!
-         *   calculates the sensitivity of matrix in \par m of type \par t.
-         */
-        virtual void calculate_matrix_sensitivity(const Elem& elem,
-                                                  MAST::ElemenetPropertyMatrixType t,
-                                                  DenseMatrix<Real>& m,
-                                                  const MAST::SensitivityParameters& p) const;
-        
-        /*!
-         *    initializes the vector to the prestress in the element
-         */
-        virtual void prestress_vector(MAST::ElemenetPropertyMatrixType t,
-                                      const DenseMatrix<Real>& T,
-                                      DenseVector<Real>& v) const;
-        
-        /*!
-         *    initializes the vector to the sensitivity of prestress in the element
-         */
-        virtual void prestress_vector_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                  const DenseMatrix<Real>& T,
-                                                  DenseVector<Real>& v,
-                                                  const MAST::SensitivityParameters& p) const;
-        
-        
-        /*!
-         *    initializes the matrix to the prestress in the element
-         */
-        virtual void prestress_matrix(MAST::ElemenetPropertyMatrixType t,
-                                      const DenseMatrix<Real>& T,
-                                      DenseMatrix<Real>& m) const;
-        
-        /*!
-         *    initializes the matrix to the sensitivity of prestress in the element
-         */
-        virtual void prestress_matrix_sensitivity(MAST::ElemenetPropertyMatrixType t,
-                                                  const DenseMatrix<Real>& T,
-                                                  DenseMatrix<Real>& m,
-                                                  const MAST::SensitivityParameters& p) const;
-        
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        get_property(MAST::ElemenetPropertyMatrixType t,
+                     const MAST::StructuralElementBase& e) const;
+
         /*!
          *  returns true if the property card depends on the function \p f
          */
-        virtual bool depends_on(const FunctionBase& f) const {
+        virtual bool depends_on(const MAST::FieldFunctionBase& f) const {
             return _material->depends_on(f) ||            // check if the material property depends on the function
             MAST::ElementPropertyCardBase::depends_on(f); // check with this property card
         }
         
-        
-        /*!
-         *  returns true if the property card depends on the functions in \p p
-         */
-        virtual bool depends_on(const MAST::SensitivityParameters& p) const {
-            return _material->depends_on(p) ||            // check if the material property depends on the function
-            MAST::ElementPropertyCardBase::depends_on(p); // check with this property card
-        }
         
     protected:
         

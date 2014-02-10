@@ -68,7 +68,7 @@ namespace MAST {
         virtual void calculate_transverse_shear_force(bool request_jacobian,
                                                       DenseVector<Real>& local_f,
                                                       DenseMatrix<Real>& local_jac,
-                                                      const MAST::SensitivityParameters* sens_params )
+                                                      const MAST::FieldFunctionBase* sens_params )
         { libmesh_error(); }
         
         

@@ -184,11 +184,14 @@ MAST::StructuralElement2D::max_von_mises_stress() {
     
     MAST::BendingOperator2D& bending_2d = dynamic_cast<MAST::BendingOperator2D&>(*_bending_operator);
     
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > material
+    (_property.get_material().get_property(MAST::MATERIAL_STIFFNESS_MATRIX,
+                                           _property,
+                                           2).release());
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        _property.get_material().calculate_2d_matrix(MAST::MATERIAL_STIFFNESS_MATRIX,
-                                                     material_mat,
-                                                     if_plane_stress);
+        (*material)(xyz[qp], 0., material_mat);
         
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         

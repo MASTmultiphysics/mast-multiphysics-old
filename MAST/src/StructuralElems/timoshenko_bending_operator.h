@@ -64,7 +64,7 @@ namespace MAST {
         virtual void calculate_transverse_shear_force(bool request_jacobian,
                                                       DenseVector<Real>& local_f,
                                                       DenseMatrix<Real>& local_jac,
-                                                      const MAST::SensitivityParameters* sens_params );
+                                                      const MAST::FieldFunctionBase* sens_params );
         
     protected:
         
@@ -123,7 +123,7 @@ MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
 (bool request_jacobian,
  DenseVector<Real>& local_f,
  DenseMatrix<Real>& local_jac,
- const MAST::SensitivityParameters* sens_params)
+ const MAST::FieldFunctionBase* sens_param)
 {
     const MAST::ElementPropertyCardBase& property = _structural_elem.elem_property();
     
@@ -164,21 +164,24 @@ MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
     FEMOperatorMatrix Bmat_trans;
     Bmat_trans.reinit(2, 6, n_phi); // only two shear stresses
     
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_stiff
+    (property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
+                           _structural_elem).release());
+
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
         // if temperature is specified, the initialize it to the current location
         //        if (_temperature)
         //            _temperature->initialize(xyz[qp]);
         
-        if (!sens_params)
-            property.calculate_matrix(_elem,
-                                      MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-                                      material_trans_shear_mat);
+        if (!sens_param)
+            (*mat_stiff)(xyz[qp], _structural_elem.system().time,
+                         material_trans_shear_mat);
         else
-            property.calculate_matrix_sensitivity(_elem,
-                                                  MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-                                                  material_trans_shear_mat,
-                                                  *sens_params);
+            mat_stiff->total(*sens_param,
+                             xyz[qp], _structural_elem.system().time,
+                             material_trans_shear_mat);
         
         // initialize the strain operator
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )

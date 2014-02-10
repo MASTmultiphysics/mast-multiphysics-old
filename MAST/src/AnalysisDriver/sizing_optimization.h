@@ -15,7 +15,7 @@
 #include "Optimization/optimization_interface.h"
 #include "StructuralElems/structural_system_assembly.h"
 #include "PropertyCards/material_property_card_base.h"
-#include "PropertyCards/element_property_card_2D.h"
+#include "PropertyCards/solid_2d_section_element_property_card.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -88,6 +88,7 @@ namespace MAST {
             delete _kappa;
             delete _h;
             delete _h_stiff;
+            delete _prestress;
         }
         
         
@@ -131,8 +132,10 @@ namespace MAST {
         ZeroFunction<Real>* _zero_function;
         
         MAST::ConstantFunction<Real> *_E, *_nu, *_rho, *_kappa, *_h, *_h_stiff;
+        MAST::ConstantFunction<DenseMatrix<Real> > *_prestress;
         
         ParameterVector _parameters;
+        std::vector<MAST::FieldFunctionBase*> _parameter_functions;
         
         std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
 
@@ -185,6 +188,9 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     if (eval_obj_grad)
         std::fill(obj_grad.begin(), obj_grad.end(), 0.);
     
+    Point p; // dummy point object
+    Real h, rho;
+    
     for ( ; eit != eend; eit++ ) {
         const Elem* e = *eit;
         const MAST::ElementPropertyCardBase& prop = _structural_assembly->get_property_card(*e);
@@ -194,12 +200,18 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         _structural_assembly->get_property_card(1);
         _structural_assembly->get_property_card(2);
 
-        obj += e->volume() * prop.get<Real>("h")() * mat.get<Real>("rho")();
+        const MAST::FieldFunction<Real> &hf = prop.get<MAST::FieldFunction<Real> >("h"),
+        &rhof = mat.get<MAST::FieldFunction<Real> >("rho");
+        
+        hf(p, 0., h);
+        rhof(p, 0., rho);
+        
+        obj += e->volume() * h * rho;
         
         if (eval_obj_grad)
             for (unsigned int i=0; i<_n_vars; i++)
-                if (prop.depends_on(_parameters[i]))
-                    obj_grad[i] += e->volume() * mat.get<Real>("rho")();
+                if (prop.depends_on(*_parameter_functions[i]))
+                    obj_grad[i] += e->volume() * rho;
     }
     
     // now solve the system
@@ -432,6 +444,7 @@ MAST::SizingOptimization::_init() {
     _materials.resize(1);
     _elem_properties.resize(_n_vars);
     _parameters.resize(_n_vars);
+    _parameter_functions.resize(_n_vars);
     
     _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
     _elem_properties[0] = new MAST::Solid2DSectionElementPropertyCard(1);
@@ -441,6 +454,9 @@ MAST::SizingOptimization::_init() {
     MAST::Solid2DSectionElementPropertyCard
     &prop2d = dynamic_cast<MAST::Solid2DSectionElementPropertyCard&> (*_elem_properties[0]),
     &prop2d_stiff = dynamic_cast<MAST::Solid2DSectionElementPropertyCard&> (*_elem_properties[1]);
+
+    DenseMatrix<Real> prestress; prestress.resize(3,3);
+    prestress(0,0) = -1.31345e6;
     
     _E = new MAST::ConstantFunction<Real>("E", _infile("youngs_modulus", 72.e9)),
     _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
@@ -448,6 +464,7 @@ MAST::SizingOptimization::_init() {
     _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
     _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002)),
     _h_stiff = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
+    _prestress = new MAST::ConstantFunction<DenseMatrix<Real> >("prestress", prestress);
     
     // add the properties to the cards
     mat.add(*_E);
@@ -457,17 +474,17 @@ MAST::SizingOptimization::_init() {
     
     prop2d.add(*_h);
     prop2d_stiff.add(*_h_stiff);
-
-    DenseVector<Real> prestress; prestress.resize(6);
-    prestress(0) = -1.31345e6;
+    prop2d.add(*_prestress); // no prestress for stiffener
+    
     
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false); prop2d_stiff.set_diagonal_mass_matrix(false);
-    prop2d.prestress(prestress); // no prestress for stiffener
     
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     _parameters[0] = _h->ptr(); // set thickness as a modifiable parameter
     _parameters[1] = _h_stiff->ptr(); // set thickness as a modifiable parameter
+    _parameter_functions[0] = _h;
+    _parameter_functions[1] = _h_stiff;
     
     
     _structural_assembly->set_property_for_subdomain(0, prop2d);

@@ -161,7 +161,7 @@ namespace MAST
         /*!
          *   Returns the function corresponding to a parameter
          */
-        const MAST::FunctionBase* get_parameter(Real* par) const;
+        const MAST::FieldFunctionBase* get_parameter(Real* par) const;
         
         /*!
          *    assembles the matrices for eigenproblem depending on the analysis type
@@ -220,7 +220,7 @@ namespace MAST
          */
         virtual void calculate_max_elem_stress(const NumericVector<Number>& X,
                                                std::vector<Real>& stress,
-                                               const MAST::SensitivityParameters* params);
+                                               const MAST::FieldFunctionBase* params);
 
 
     protected:
@@ -232,7 +232,7 @@ namespace MAST
                                               NumericVector<Number>* R,
                                               SparseMatrix<Number>*  J,
                                               NonlinearImplicitSystem& S,
-                                              const MAST::SensitivityParameters* params);
+                                              const MAST::FieldFunctionBase* params);
 
         
         /*!
@@ -247,7 +247,7 @@ namespace MAST
          */
         void _assemble_matrices_for_modal_analysis(SparseMatrix<Number>&  matrix_A,
                                                    SparseMatrix<Number>&  matrix_B,
-                                                   const MAST::SensitivityParameters* params,
+                                                   const MAST::FieldFunctionBase* params,
                                                    const NumericVector<Number>* static_sol,
                                                    const NumericVector<Number>* static_sol_sens);
         
@@ -263,7 +263,7 @@ namespace MAST
          */
         void _assemble_matrices_for_buckling_analysis(SparseMatrix<Number>&  matrix_A,
                                                       SparseMatrix<Number>&  matrix_B,
-                                                      const MAST::SensitivityParameters* params,
+                                                      const MAST::FieldFunctionBase* params,
                                                       const NumericVector<Number>* static_sol,
                                                       const NumericVector<Number>* static_sol_sens);
 
@@ -301,7 +301,7 @@ namespace MAST
          *   map of sensitivity parameters and the corresponding functions that
          *   are directly dependent on these parameters
          */
-        std::map<Real*, const MAST::FunctionBase*> _parameter_map;
+        std::map<Real*, const MAST::FieldFunctionBase*> _parameter_map;
         
         /*!
          *   side boundary condition map of boundary id and load

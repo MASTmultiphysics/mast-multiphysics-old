@@ -12,6 +12,8 @@
 // MAST includes
 #include "Optimization/optimization_interface.h"
 #include "StructuralElems/structural_system_assembly.h"
+#include "PropertyCards/isotropic_material_property_card.h"
+#include "PropertyCards/solid_2d_section_element_property_card.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
