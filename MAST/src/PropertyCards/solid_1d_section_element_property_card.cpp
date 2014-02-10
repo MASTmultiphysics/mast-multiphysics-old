@@ -408,21 +408,106 @@ SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
 
 
 
-MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionMatrix::
-SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix::
+SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
                                         MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                        MAST::FieldFunction<Real> * A,
-                                        MAST::FieldFunction<Real> * A_y_moment,
-                                        MAST::FieldFunction<Real> * A_z_moment):
-MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionMatrix1D"),
+                                        MAST::FieldFunction<Real> * A):
+MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionAMatrix1D"),
 _material_stiffness(mat_stiff),
 _material_expansion(mat_expansion),
-_A(A),
+_A(A) {
+    _functions.insert(mat_stiff);
+    _functions.insert(mat_expansion);
+    _functions.insert(A);
+}
+
+
+
+
+void
+MAST::Solid1DSectionElementPropertyCard::
+SectionIntegratedThermalExpansionAMatrix::operator() (const Point& p,
+                                                      const Real t,
+                                                      DenseMatrix<Real>& m) const {
+    Real A;
+    DenseMatrix<Real> at;
+    (*_A)(p, t, A);
+    (*_material_stiffness)(p, t, m);
+    (*_material_expansion)(p, t, at);
+    
+    m.right_multiply(at);
+    m.scale(A);
+}
+
+
+
+
+void
+MAST::Solid1DSectionElementPropertyCard::
+SectionIntegratedThermalExpansionAMatrix::partial (const MAST::FieldFunctionBase& f,
+                                                  const Point& p,
+                                                  const Real t,
+                                                  DenseMatrix<Real>& m) const {
+    Real A, dA;
+    DenseMatrix<Real> m1, at, dat, dm;
+    (*_A)(p, t, A); _A->partial(f, p, t, dA);
+    (*_material_stiffness)(p, t, m1); _material_stiffness->partial(f, p, t, dm);
+    (*_material_expansion)(p, t, at); _material_expansion->partial(f, p, t, dat);
+    
+    m=m1;
+    
+    m.right_multiply(at);
+    m.scale(dA);
+    
+    m1.right_multiply(dat);
+    dm.right_multiply(at);
+    m1.add(1., dm);
+    
+    m.add(A, m1);
+}
+
+
+
+
+void
+MAST::Solid1DSectionElementPropertyCard::
+SectionIntegratedThermalExpansionAMatrix::total (const MAST::FieldFunctionBase& f,
+                                                const Point& p,
+                                                const Real t,
+                                                DenseMatrix<Real>& m) const {
+    Real A, dA;
+    DenseMatrix<Real> m1, at, dat, dm;
+    (*_A)(p, t, A); _A->total(f, p, t, dA);
+    (*_material_stiffness)(p, t, m1); _material_stiffness->total(f, p, t, dm);
+    (*_material_expansion)(p, t, at); _material_expansion->total(f, p, t, dat);
+    
+    m=m1;
+    
+    m.right_multiply(at);
+    m.scale(dA);
+    
+    m1.right_multiply(dat);
+    dm.right_multiply(at);
+    m1.add(1., dm);
+    
+    m.add(A, m1);
+}
+
+
+
+
+MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix::
+SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+                                         MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
+                                         MAST::FieldFunction<Real> * A_y_moment,
+                                         MAST::FieldFunction<Real> * A_z_moment):
+MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionBMatrix1D"),
+_material_stiffness(mat_stiff),
+_material_expansion(mat_expansion),
 _A_y_moment(A_y_moment),
 _A_z_moment(A_z_moment) {
     _functions.insert(mat_stiff);
     _functions.insert(mat_expansion);
-    _functions.insert(A);
     _functions.insert(A_y_moment);
     _functions.insert(A_z_moment);
 }
@@ -432,10 +517,19 @@ _A_z_moment(A_z_moment) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionMatrix::operator() (const Point& p,
-                                                     const Real t,
-                                                     DenseMatrix<Real>& m) const {
-    libmesh_error(); // to be implemented
+SectionIntegratedThermalExpansionBMatrix::operator() (const Point& p,
+                                                      const Real t,
+                                                      DenseMatrix<Real>& m) const {
+    Real Ay, Az;
+    DenseMatrix<Real> at;
+    (*_A_y_moment)(p, t, Ay);
+    (*_A_z_moment)(p, t, Az);
+    (*_material_stiffness)(p, t, m);
+    (*_material_expansion)(p, t, at);
+    
+    m.right_multiply(at);
+    m(1,0)  = Ay * m(0,0);
+    m(0,0) *= -Az;
 }
 
 
@@ -443,11 +537,29 @@ SectionIntegratedThermalExpansionMatrix::operator() (const Point& p,
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionMatrix::partial (const MAST::FieldFunctionBase& f,
-                                                  const Point& p,
-                                                  const Real t,
-                                                  DenseMatrix<Real>& m) const {
-    libmesh_error();
+SectionIntegratedThermalExpansionBMatrix::partial (const MAST::FieldFunctionBase& f,
+                                                   const Point& p,
+                                                   const Real t,
+                                                   DenseMatrix<Real>& m) const {
+    Real Ay, Az, dAy, dAz;
+    DenseMatrix<Real> at, dat, m1, dm;
+    (*_A_y_moment)(p, t, Ay); _A_y_moment->partial(f, p, t, dAy);
+    (*_A_z_moment)(p, t, Az); _A_z_moment->partial(f, p, t, dAz);
+    (*_material_stiffness)(p, t, m1); _material_stiffness->partial(f, p, t, dm);
+    (*_material_expansion)(p, t, at); _material_expansion->partial(f, p, t, dat);
+    
+    m = m1;
+    m.right_multiply(at);
+    m(1,0)  = dAy * m(0,0);
+    m(0,0) *= -dAz;
+    
+    m1.right_multiply(dat);
+    dm.right_multiply(at);
+    m1.add(1., dm);
+    m1(1,0)  = Ay * m1(0,0);
+    m1(0,0) *= -Az;
+    
+    m.add(1., m1);
 }
 
 
@@ -455,11 +567,29 @@ SectionIntegratedThermalExpansionMatrix::partial (const MAST::FieldFunctionBase&
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionMatrix::total (const MAST::FieldFunctionBase& f,
-                                                const Point& p,
-                                                const Real t,
-                                                DenseMatrix<Real>& m) const {
-    libmesh_error();
+SectionIntegratedThermalExpansionBMatrix::total (const MAST::FieldFunctionBase& f,
+                                                 const Point& p,
+                                                 const Real t,
+                                                 DenseMatrix<Real>& m) const {
+    Real Ay, Az, dAy, dAz;
+    DenseMatrix<Real> at, dat, m1, dm;
+    (*_A_y_moment)(p, t, Ay); _A_y_moment->total(f, p, t, dAy);
+    (*_A_z_moment)(p, t, Az); _A_z_moment->total(f, p, t, dAz);
+    (*_material_stiffness)(p, t, m1); _material_stiffness->total(f, p, t, dm);
+    (*_material_expansion)(p, t, at); _material_expansion->total(f, p, t, dat);
+    
+    m = m1;
+    m.right_multiply(at);
+    m(1,0)  = dAy * m(0,0);
+    m(0,0) *= -dAz;
+    
+    m1.right_multiply(dat);
+    dm.right_multiply(at);
+    m1.add(1., dm);
+    m1(1,0)  = Ay * m1(0,0);
+    m1(0,0) *= -Az;
+    
+    m.add(1., m1);
 }
 
 

@@ -189,38 +189,44 @@ namespace MAST {
         
         
         
-        class SectionIntegratedThermalExpansionMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedThermalExpansionAMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
-            SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
-                                                    MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                                    MAST::FieldFunction<Real> *h);
+            SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+                                                     MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
+                                                     MAST::FieldFunction<Real> *h);
             
-            SectionIntegratedThermalExpansionMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionMatrix& f):
+            SectionIntegratedThermalExpansionAMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
             _h(f._h->clone().release())
             { }
             
-
-            virtual ~SectionIntegratedThermalExpansionMatrix() {
+            
+            
+            virtual ~SectionIntegratedThermalExpansionAMatrix() {
                 delete _material_stiffness;
                 delete _material_expansion;
                 delete _h;
             }
+            
+            
             
             /*!
              *   @returns a clone of the function
              */
             virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
                 return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
-                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionMatrix(*this));
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix(*this));
             }
-
+            
+            
             virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
             
             virtual void partial (const MAST::FieldFunctionBase& f,
                                   const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
             
             virtual void total (const MAST::FieldFunctionBase& f,
                                 const Point& p, const Real t, DenseMatrix<Real>& m) const;
@@ -231,7 +237,56 @@ namespace MAST {
             MAST::FieldFunction<DenseMatrix<Real> > *_material_expansion;
             MAST::FieldFunction<Real> *_h;
         };
+
         
+        
+        class SectionIntegratedThermalExpansionBMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+                                                    MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
+                                                    MAST::FieldFunction<Real> *h);
+            
+            SectionIntegratedThermalExpansionBMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _material_stiffness(f._material_stiffness->clone().release()),
+            _material_expansion(f._material_expansion->clone().release()),
+            _h(f._h->clone().release())
+            { }
+            
+            
+            virtual ~SectionIntegratedThermalExpansionBMatrix() {
+                delete _material_stiffness;
+                delete _material_expansion;
+                delete _h;
+            }
+            
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix(*this));
+            }
+            
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            
+            
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_expansion;
+            MAST::FieldFunction<Real> *_h;
+        };
+
         
         
         

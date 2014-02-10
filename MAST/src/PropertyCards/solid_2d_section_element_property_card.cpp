@@ -288,11 +288,11 @@ SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
 
 
 
-MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionMatrix::
-SectionIntegratedThermalExpansionMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix::
+SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
                                         MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
                                         MAST::FieldFunction<Real> * h):
-MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionMatrix2D"),
+MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionAMatrix2D"),
 _material_stiffness(mat_stiff),
 _material_expansion(mat_expansion),
 _h(h) {
@@ -305,10 +305,17 @@ _h(h) {
 
 void
 MAST::Solid2DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionMatrix::operator() (const Point& p,
+SectionIntegratedThermalExpansionAMatrix::operator() (const Point& p,
                                                      const Real t,
                                                      DenseMatrix<Real>& m) const {
-    libmesh_error(); // to be implemented
+    DenseMatrix<Real> at;
+    Real h;
+    (*_h)(p, t, h);
+    (*_material_stiffness)(p, t, m);
+    (*_material_expansion)(p, t, at);
+    
+    m.right_multiply(at);
+    m.scale(h);
 }
 
 
@@ -316,11 +323,26 @@ SectionIntegratedThermalExpansionMatrix::operator() (const Point& p,
 
 void
 MAST::Solid2DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionMatrix::partial (const MAST::FieldFunctionBase& f,
+SectionIntegratedThermalExpansionAMatrix::partial (const MAST::FieldFunctionBase& f,
                                                   const Point& p,
                                                   const Real t,
                                                   DenseMatrix<Real>& m) const {
-    libmesh_error();
+    DenseMatrix<Real> m1, at, dm, dat;
+    Real h, dh;
+    (*_h)(p, t, h); _h->partial(f, p, t, dh);
+    (*_material_stiffness)(p, t, m1); _material_stiffness->partial(f, p, t, dm);
+    (*_material_expansion)(p, t, at); _material_expansion->partial(f, p, t, dat);
+    
+    m = m1;
+    
+    m.right_multiply(at);
+    m.scale(dh);
+    
+    m1.right_multiply(dat);
+    dm.right_multiply(at);
+    m1.add(1., dm);
+    
+    m.add(h, m1);
 }
 
 
@@ -328,11 +350,79 @@ SectionIntegratedThermalExpansionMatrix::partial (const MAST::FieldFunctionBase&
 
 void
 MAST::Solid2DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionMatrix::total (const MAST::FieldFunctionBase& f,
-                                                const Point& p,
-                                                const Real t,
-                                                DenseMatrix<Real>& m) const {
-    libmesh_error();
+SectionIntegratedThermalExpansionAMatrix::total (const MAST::FieldFunctionBase& f,
+                                                 const Point& p,
+                                                 const Real t,
+                                                 DenseMatrix<Real>& m) const {
+    DenseMatrix<Real> m1, at, dm, dat;
+    Real h, dh;
+    (*_h)(p, t, h); _h->total(f, p, t, dh);
+    (*_material_stiffness)(p, t, m1); _material_stiffness->total(f, p, t, dm);
+    (*_material_expansion)(p, t, at); _material_expansion->total(f, p, t, dat);
+    
+    m = m1;
+    
+    m.right_multiply(at);
+    m.scale(dh);
+    
+    m1.right_multiply(dat);
+    dm.right_multiply(at);
+    m1.add(1., dm);
+    
+    m.add(h, m1);
+}
+
+
+
+
+MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix::
+SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
+                                         MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
+                                         MAST::FieldFunction<Real> * h):
+MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionBMatrix2D"),
+_material_stiffness(mat_stiff),
+_material_expansion(mat_expansion),
+_h(h) {
+    _functions.insert(mat_stiff);
+    _functions.insert(mat_expansion);
+}
+
+
+
+
+void
+MAST::Solid2DSectionElementPropertyCard::
+SectionIntegratedThermalExpansionBMatrix::operator() (const Point& p,
+                                                      const Real t,
+                                                      DenseMatrix<Real>& m) const {
+    // nothing to be done for a solid symmetric section
+    m.resize(3, 1);
+}
+
+
+
+
+void
+MAST::Solid2DSectionElementPropertyCard::
+SectionIntegratedThermalExpansionBMatrix::partial (const MAST::FieldFunctionBase& f,
+                                                   const Point& p,
+                                                   const Real t,
+                                                   DenseMatrix<Real>& m) const {
+    // nothing to be done for a solid symmetric section
+    m.resize(3, 1);
+}
+
+
+
+
+void
+MAST::Solid2DSectionElementPropertyCard::
+SectionIntegratedThermalExpansionBMatrix::total (const MAST::FieldFunctionBase& f,
+                                                 const Point& p,
+                                                 const Real t,
+                                                 DenseMatrix<Real>& m) const {
+    // nothing to be done for a solid symmetric section
+    m.resize(3, 1);
 }
 
 
@@ -585,9 +675,9 @@ MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
                         this->get<MAST::FieldFunction<Real> >("h").clone().release()));
             break;
 
-        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
+        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
         default:
             libmesh_error();
