@@ -299,6 +299,10 @@ SectionIntegratedInertiaMatrix::operator() (const Point& p,
     for (unsigned int i=0; i<2; i++)
         for (unsigned int j=0; j<2; j++)
             m(4+i,4+j) = I(i,j);
+
+    // reduce the rotation inertia component
+    for (unsigned int i=0; i<3; i++)
+        m(i+3,i+3) *= 1.0e-16;
     
     m.scale(rho);
 }
@@ -344,6 +348,10 @@ SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
             dm(4+i,4+j) = dI(i,j);
         }
     
+    // reduce the rotation inertia component
+    for (unsigned int i=0; i<3; i++)
+        m(i+3,i+3) *= 1.0e-16;
+
     m.scale(drho);
     m.add(rho, dm);
 }
@@ -389,6 +397,10 @@ SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
             dm(4+i,4+j) = dI(i,j);
         }
     
+    // reduce the rotation inertia component
+    for (unsigned int i=0; i<3; i++)
+        m(i+3,i+3) *= 1.0e-16;
+
     m.scale(drho);
     m.add(rho, dm);
 }

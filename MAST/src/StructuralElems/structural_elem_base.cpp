@@ -138,7 +138,7 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
         if (request_jacobian)
             jac.add(1., local_jac);
     }
-    
+
     return request_jacobian;
 }
 

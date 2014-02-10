@@ -416,7 +416,7 @@ namespace MAST {
                 m(0,0) = hz*pow(hy,3)/12. + hy*hz*pow(offy,2) ; // Izz for v-bending
                 m(0,1) = hy*hz*offy*offz;
                 m(1,0) = m(0,1);
-                m(0,0) = hy*pow(hz,3)/12. + hy*hz*pow(offz,2) ; // Iyy for w-bending
+                m(1,1) = hy*pow(hz,3)/12. + hy*hz*pow(offz,2) ; // Iyy for w-bending
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
@@ -434,7 +434,7 @@ namespace MAST {
                 m(0,1) = dhy*hz*offy*offz + hy*dhz*offy*offz +
                 hy*hz*doffy*offz + hy*hz*offy*doffz;
                 m(1,0) = m(0,1);
-                m(0,0) = dhy*pow(hz,3)/12. + hy*pow(hz,2)/4.*dhz +
+                m(1,1) = dhy*pow(hz,3)/12. + hy*pow(hz,2)/4.*dhz +
                 dhy*hz*pow(offz,2) + hy*dhz*pow(offz,2) + 2.*hy*hz*offz*doffz ;
             }
             
@@ -453,7 +453,7 @@ namespace MAST {
                 m(0,1) = dhy*hz*offy*offz + hy*dhz*offy*offz +
                 hy*hz*doffy*offz + hy*hz*offy*doffz;
                 m(1,0) = m(0,1);
-                m(0,0) = dhy*pow(hz,3)/12. + hy*pow(hz,2)/4.*dhz +
+                m(1,1) = dhy*pow(hz,3)/12. + hy*pow(hz,2)/4.*dhz +
                 dhy*hz*pow(offz,2) + hy*dhz*pow(offz,2) + 2.*hy*hz*offz*doffz ;
             }
             

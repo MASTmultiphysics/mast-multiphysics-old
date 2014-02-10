@@ -68,7 +68,7 @@ namespace MAST {
                             const Point& p, const Real t,
                             ValType& v) const {
 
-            if (this == &f)
+            if (this->master() == f.master())
                 v = 1.;
             else
                 v = 0.;
@@ -89,7 +89,7 @@ namespace MAST {
          *  function.
          */
         virtual bool depends_on(const MAST::FieldFunctionBase& f) const {
-            if (&f == this)
+            if (f.master() == this->master())
                 return true;
             else
                 return false;
