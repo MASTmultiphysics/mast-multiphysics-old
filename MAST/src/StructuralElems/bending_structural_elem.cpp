@@ -79,15 +79,19 @@ MAST::BendingStructuralElem::internal_force (bool request_jacobian,
                 (MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
                  *this).release());
 
+
+    Point p;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
+        this->global_coordinates(xyz[qp], p);
+        
         // get the material matrix
-        (*mat_stiff_A)(xyz[qp], _system.time, material_A_mat);
+        (*mat_stiff_A)(p, _system.time, material_A_mat);
 
         if (if_bending) {
-            (*mat_stiff_B)(xyz[qp], _system.time, material_B_mat);
-            (*mat_stiff_D)(xyz[qp], _system.time, material_D_mat);
+            (*mat_stiff_B)(p, _system.time, material_B_mat);
+            (*mat_stiff_D)(p, _system.time, material_D_mat);
         }
         
         // now calculte the quantity for these matrices
@@ -190,19 +194,22 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
                             *this).release());
 
+    Point p;
     
     // first calculate the sensitivity due to the parameter
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
+        this->global_coordinates(xyz[qp], p);
+
         // get the material matrix
         mat_stiff_A->total(*this->sensitivity_param,
-                           xyz[qp], _system.time, material_A_mat);
+                           p, _system.time, material_A_mat);
         
         if (if_bending) {
             mat_stiff_B->total(*this->sensitivity_param,
-                               xyz[qp], _system.time, material_B_mat);
+                               p, _system.time, material_B_mat);
             mat_stiff_D->total(*this->sensitivity_param,
-                               xyz[qp], _system.time, material_D_mat);
+                               p, _system.time, material_D_mat);
         }
         
         // now calculte the quantity for these matrices
@@ -230,61 +237,7 @@ MAST::BendingStructuralElem::internal_force_sensitivity (bool request_jacobian,
         _bending_operator->calculate_transverse_shear_force(request_jacobian,
                                                             local_f, local_jac,
                                                             this->sensitivity_param);
-    
-    
-//    // next, calculate the sensitivity due to temperature, if it is provided
-//    if (!_temperature)
-//        return request_jacobian;
-//    
-//    local_f.zero();
-//    local_jac.zero();
-//    MAST::SensitivityParameters temp_param;
-//    temp_param.add_parameter(_temperature, 1);
-//    
-//    // first calculate the sensitivity due to the parameter
-//    for (unsigned int qp=0; qp<JxW.size(); qp++) {
-//        
-//        // if temperature is specified, the initialize it to the current location
-//        if (_temperature)
-//            _temperature->initialize(xyz[qp]);
-//        
-//        // get the material matrix
-//        _property.calculate_matrix_sensitivity
-//        (_elem,
-//         MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
-//         material_A_mat, temp_param);
-//        if (if_bending) {
-//            _property.calculate_matrix_sensitivity(_elem,
-//                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX,
-//                                                   material_B_mat,
-//                                                   temp_param);
-//            
-//            _property.calculate_matrix_sensitivity(_elem,
-//                                                   MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX,
-//                                                   material_D_mat,
-//                                                   temp_param);
-//        }
-//        
-//        // now calculte the quantity for these matrices
-//        _internal_force_operation(if_bending, if_vk, n2, qp, JxW,
-//                                  request_jacobian, local_f, local_jac,
-//                                  Bmat_mem, Bmat_bend, Bmat_vk,
-//                                  stress, vk_dwdxi_mat, material_A_mat,
-//                                  material_B_mat, material_D_mat, tmp_vec1_n1,
-//                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
-//                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
-//                                  tmp_mat3, tmp_mat4_n3n2);
-//    }
-//    
-//    // now transform to the global coorodinate system
-//    Real dTemp_dparam = _temperature->sensitivity(*(this->sensitivity_param));
-//    transform_to_global_system(local_f, tmp_vec3_n2);
-//    f.add(dTemp_dparam, tmp_vec3_n2);
-//    if (request_jacobian) {
-//        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-//        jac.add(dTemp_dparam, tmp_mat2_n2n2);
-//    }
-    
+
     return request_jacobian;
 }
 
@@ -333,11 +286,16 @@ MAST::BendingStructuralElem::prestress_force (bool request_jacobian,
      (_property.get_property(MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX,
                              *this).release()));
 
+    Point p;
+    
     // now calculate the quantity
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
-        (*prestress_A)(xyz[qp], _system.time, prestress_mat_A);
+        
+        this->global_coordinates(xyz[qp], p);
+        
+        (*prestress_A)(p, _system.time, prestress_mat_A);
         prestress_A->convert_to_vector(prestress_mat_A, prestress_vec_A);
-        (*prestress_B)(xyz[qp], _system.time, prestress_mat_B);
+        (*prestress_B)(p, _system.time, prestress_mat_B);
         prestress_B->convert_to_vector(prestress_mat_B, prestress_vec_B);
         
         this->initialize_direct_strain_operator(qp, Bmat_mem);
@@ -441,15 +399,18 @@ MAST::BendingStructuralElem::prestress_force_sensitivity (bool request_jacobian,
      (_property.get_property(MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX,
                              *this).release()));
     
+    Point p;
     
     // transform to the local coordinate system
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
 
+        this->global_coordinates(xyz[qp], p);
+
         prestress_A->total(*this->sensitivity_param,
-                           xyz[qp], _system.time, prestress_mat_A);
+                           p, _system.time, prestress_mat_A);
         prestress_A->convert_to_vector(prestress_mat_A, prestress_vec_A);
         prestress_B->total(*this->sensitivity_param,
-                           xyz[qp], _system.time, prestress_mat_B);
+                           p, _system.time, prestress_mat_B);
         prestress_B->convert_to_vector(prestress_mat_B, prestress_vec_B);
 
         this->initialize_direct_strain_operator(qp, Bmat_mem);
@@ -552,15 +513,15 @@ MAST::BendingStructuralElem::thermal_force (bool request_jacobian,
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX,
                             *this).release());
 
+    Point pt;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-//        // set the temperature vector to the value at this point
-//        delta_t(0) = (*_temperature)() - _temperature->reference();
+        this->global_coordinates(xyz[qp], pt);
         
         // this is moved inside the domain since
-        (*expansion_A)(xyz[qp], _system.time, material_exp_A_mat);
-        (*expansion_B)(xyz[qp], _system.time, material_exp_B_mat);
+        (*expansion_A)(pt, _system.time, material_exp_A_mat);
+        (*expansion_B)(pt, _system.time, material_exp_B_mat);
         
         material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)} (with membrane strain)
         material_exp_B_mat.vector_mult(tmp_vec2_n1, delta_t); // [C]{alpha (T - T0)} (with bending strain)

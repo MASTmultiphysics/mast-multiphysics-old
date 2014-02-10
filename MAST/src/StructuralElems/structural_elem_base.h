@@ -119,6 +119,17 @@ namespace MAST {
 
         
         /*!
+         *    Local elements are defined for 1D and 2D elements that exist in 
+         *    3D space. These elements have a local coordinate system associated
+         *    with the local coordinate. This method accepts the point defined 
+         *    the local coordinate system as the input and maps it to the 
+         *    global coordinate system.
+         */
+        virtual void global_coordinates(const Point& local,
+                                        Point global) const = 0;
+        
+        
+        /*!
          *   returns a constant reference to the element in local coordinate system
          */
         virtual const Elem& get_elem_for_quadrature() const = 0;

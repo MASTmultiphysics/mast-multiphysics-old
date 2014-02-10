@@ -161,14 +161,9 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
-    
+
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        // set the temperature vector to the value at this point
-        //        _temperature->initialize(xyz[qp]);
-        //        delta_t(0) = (*_temperature)() - _temperature->reference();
-        
-        // this is moved inside the domain since
         (*mat)(xyz[qp], _system.time, material_exp_A_mat);
         
         material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)}

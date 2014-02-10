@@ -42,6 +42,21 @@ namespace MAST {
         }
 
         /*!
+         *    Local elements are defined for 1D and 2D elements that exist in
+         *    3D space. These elements have a local coordinate system associated
+         *    with the local coordinate. This method accepts the point defined
+         *    the local coordinate system as the input and maps it to the
+         *    global coordinate system.
+         *
+         *    For 3D elements, it is assumed that the local and global 
+         *    coordinates are the same.
+         */
+        virtual void global_coordinates(const Point& local,
+                                        Point global) const {
+            global = local;
+        }
+
+        /*!
          *   returns a constant reference to the element in local coordinate system.
          *   For a 3D element, the two are same.
          */

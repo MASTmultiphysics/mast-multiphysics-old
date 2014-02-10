@@ -177,18 +177,18 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     (property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                            _structural_elem).release());
     
+    Point p;
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        // if temperature is specified, the initialize it to the current location
-//        if (_temperature)
-//            _temperature->initialize(xyz[qp]);
+        _structural_elem.global_coordinates(xyz[qp], p);
         
         if (!sens_param)
-            (*mat_stiff)(xyz[qp], _structural_elem.system().time,
+            (*mat_stiff)(p, _structural_elem.system().time,
                          material_trans_shear_mat);
         else
             mat_stiff->total(*sens_param,
-                             xyz[qp], _structural_elem.system().time,
+                             p, _structural_elem.system().time,
                              material_trans_shear_mat);
         
         
@@ -225,67 +225,6 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
             local_jac.add(-JxW[qp], tmp_mat2_n2n2);
         }
     }
-    
-    
-    // if sensitivity was requested, calculate the sensitivity wrt temperature
-    // next, calculate the sensitivity due to temperature, if it is provided
-//    if (!_temperature || !sens_params)
-//        return;
-//    
-//    Real dTemp_dparam = _temperature->sensitivity(*sens_params);
-//    
-//    if (dTemp_dparam == 0.) // no need to do calculations if the coefficient is zero
-//        return;
-//    
-//    MAST::SensitivityParameters temp_param;
-//    temp_param.add_parameter(_temperature, 1);
-//    
-//    // first calculate the sensitivity due to the parameter
-//    for (unsigned int qp=0; qp<JxW.size(); qp++) {
-//        
-//        // if temperature is specified, the initialize it to the current location
-//        if (_temperature)
-//            _temperature->initialize(xyz[qp]);
-//        
-//        // get the material matrix
-//        property.calculate_matrix_sensitivity(_elem,
-//                                              MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
-//                                              material_trans_shear_mat,
-//                                              temp_param);
-//        
-//        // now calculte the quantity for these matrices
-//        // initialize the strain operator
-//        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-//            phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
-//        
-//        Bmat_trans.set_shape_function(0, 2, phi_vec); // gamma-xz:  w
-//        
-//        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-//            phi_vec(i_nd) = dphi[i_nd][qp](1);  // dphi/dy
-//        
-//        Bmat_trans.set_shape_function(1, 2, phi_vec); // gamma-yz : w
-//        
-//        for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
-//            phi_vec(i_nd) = phi[i_nd][qp];  // phi
-//        
-//        Bmat_trans.set_shape_function(0, 4, phi_vec); // gamma-xz:  thetay
-//        phi_vec.scale(-1.0);
-//        Bmat_trans.set_shape_function(1, 3, phi_vec); // gamma-yz : thetax
-//        
-//        
-//        // now add the transverse shear component
-//        Bmat_trans.vector_mult(tmp_vec4_2, local_solution);
-//        material_trans_shear_mat.vector_mult(tmp_vec5_2, tmp_vec4_2);
-//        Bmat_trans.vector_mult_transpose(tmp_vec3_n2, tmp_vec5_2);
-//        local_f.add(-JxW[qp]*dTemp_dparam, tmp_vec3_n2);
-//        
-//        if (request_jacobian) {
-//            // now add the transverse shear component
-//            Bmat_trans.left_multiply(tmp_mat4_2n2, material_trans_shear_mat);
-//            Bmat_trans.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat4_2n2);
-//            local_jac.add(-JxW[qp]*dTemp_dparam, tmp_mat2_n2n2);
-//        }
-//    }
 }
 
 

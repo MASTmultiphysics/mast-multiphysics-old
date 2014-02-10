@@ -98,9 +98,13 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
         local_jac.vector_mult(local_f, local_acceleration);
     }
     else {
+        Point p;
+        
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
             
-            (*mat_inertia)(xyz[qp], _system.time, material_mat);
+            this->global_coordinates(xyz[qp], p);
+            
+            (*mat_inertia)(p, _system.time, material_mat);
             
             // now set the shape function values
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
@@ -198,11 +202,14 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
         local_jac.vector_mult(local_f, local_acceleration);
     }
     else {
+        Point p;
         
         for (unsigned int qp=0; qp<JxW.size(); qp++) {
             
+            this->global_coordinates(xyz[qp], p);
+            
             mat_inertia->total(*this->sensitivity_param,
-                               xyz[qp], _system.time, material_mat);
+                               p, _system.time, material_mat);
 
             // now set the shape function values
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
@@ -502,8 +509,12 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
+    Point pt;
+    
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
+        this->global_coordinates(qpoint[qp], pt);
+        
         // now set the shape function values
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
             phi_vec(i_nd) = phi[i_nd][qp];
@@ -511,7 +522,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         Bmat.reinit(2*n1, phi_vec);
         
         // get pressure value
-        press = func(qpoint[qp], _system.time);
+        press = func(pt, _system.time);
         
         // calculate force
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)
@@ -570,8 +581,13 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
+    Point pt;
+    
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
+        
+        this->global_coordinates(qpoint[qp], pt);
+
         // now set the shape function values
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
             phi_vec(i_nd) = phi[i_nd][qp];
@@ -579,7 +595,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         Bmat.reinit(2*n1, phi_vec);
         
         // get pressure value
-        press = func(qpoint[qp], _system.time);
+        press = func(pt, _system.time);
         
         // calculate force
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)
@@ -638,8 +654,12 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
+    Point pt;
+    
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
+        this->global_coordinates(qpoint[qp], pt)
+        
         // now set the shape function values
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
             phi_vec(i_nd) = phi[i_nd][qp];
@@ -647,8 +667,8 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         Bmat.reinit(2*n1, phi_vec);
 
         // get pressure and deformation information
-        surf_press.surface_pressure(qpoint[qp], press, dpress);
-        surf_motion.surface_velocity_frequency_domain(qpoint[qp], face_normals[qp],
+        surf_press.surface_pressure(pt, press, dpress);
+        surf_motion.surface_velocity_frequency_domain(pt, face_normals[qp],
                                                       utrans, dn_rot);
         
         //            press = 0.;
@@ -727,8 +747,12 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
+    Point pt;
+    
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
+        this->global_coordinates(qpoint[qp], pt)
+        
         // now set the shape function values
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
             phi_vec(i_nd) = phi[i_nd][qp];
@@ -736,10 +760,10 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         Bmat.reinit(2*n1, phi_vec);
         
         // get pressure and deformation information
-        surf_press.surface_pressure(qpoint[qp], press, dpress);
-        surf_motion.surface_velocity_frequency_domain(qpoint[qp], normal,
+        surf_press.surface_pressure(pt, press, dpress);
+        surf_motion.surface_velocity_frequency_domain(pt, normal,
                                                       utrans, dn_rot);
-//        std::cout << std::setw(15) << qpoint[qp](0)
+//        std::cout << std::setw(15) << pt(0)
 //        << std::setw(15) << std::real(press)
 //        << std::setw(15) << std::imag(press)
 //        << std::setw(15) << std::real(dpress)

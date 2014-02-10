@@ -180,8 +180,6 @@ MAST::StructuralElement2D::max_von_mises_stress() {
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    bool if_plane_stress = dynamic_cast<const MAST::ElementPropertyCard2D&>(_property).plane_stress();
-    
     MAST::BendingOperator2D& bending_2d = dynamic_cast<MAST::BendingOperator2D&>(*_bending_operator);
     
     std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > material
@@ -189,9 +187,13 @@ MAST::StructuralElement2D::max_von_mises_stress() {
                                            _property,
                                            2).release());
     
+    Point p;
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
-        (*material)(xyz[qp], 0., material_mat);
+        this->global_coordinates(xyz[qp], p);
+        
+        (*material)(p, 0., material_mat);
         
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         

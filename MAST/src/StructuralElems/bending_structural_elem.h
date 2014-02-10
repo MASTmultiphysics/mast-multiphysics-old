@@ -78,6 +78,23 @@ namespace MAST {
             (new MAST::ConstantFunction<DenseMatrix<Real> >("T_mat", _T_mat));
         }
 
+        
+        /*!
+         *   maps the local coordinates to the global coordinates
+         */
+        void global_coordinates(const Point& global,
+                                Point& local) const {
+            local = 0.;
+            
+            // now calculate the global coordinates with respect to the origin
+            for (unsigned int j=0; j<3; j++)
+                for (unsigned int k=0; k<3; k++)
+                    local(j) += _T_mat(j,k)*global(k);
+            
+            // shift to the global coordinate
+            local += (*_elem.get_node(0));
+        }
+        
 
         protected:
 
@@ -133,6 +150,21 @@ namespace MAST {
          */
         virtual const MAST::LocalElemBase& local_elem() const {
             return *_local_elem;
+        }
+
+        /*!
+         *    Local elements are defined for 1D and 2D elements that exist in
+         *    3D space. These elements have a local coordinate system associated
+         *    with the local coordinate. This method accepts the point defined
+         *    the local coordinate system as the input and maps it to the
+         *    global coordinate system.
+         *
+         *    For 1D and 2D elements the local element is asked to perform the 
+         *    mapping
+         */
+        virtual void global_coordinates(const Point& local,
+                                        Point global) const {
+            _local_elem->global_coordinates(local, global);
         }
 
         
