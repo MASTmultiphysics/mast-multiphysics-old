@@ -399,7 +399,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
                     
                     val = 0.;
                     if (prop.get_material().contains("kappa"))
-                        prop.get<MAST::FieldFunction<Real> >("kappa")(p, 0., val);
+                        prop.get_material().get<MAST::FieldFunction<Real> >("kappa")(p, 0., val);
                     
                     out_stream
                     << std::setw(16) << val

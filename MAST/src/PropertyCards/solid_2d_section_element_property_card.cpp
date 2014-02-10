@@ -546,10 +546,30 @@ MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
     
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 2).release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+            
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 2).release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX:
-        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 2).release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+
         case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix
+                       (_material->get<MAST::FieldFunction<Real> >("rho").clone().release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+
+        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:

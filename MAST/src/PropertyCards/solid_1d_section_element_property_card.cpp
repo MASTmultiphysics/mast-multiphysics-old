@@ -726,6 +726,51 @@ SectionIntegratedPrestressBMatrix::convert_to_vector(const DenseMatrix<Real> &m,
 }
 
 
+
+
+Real
+MAST::Solid1DSectionElementPropertyCard::value(const std::string& val) const {
+    Point p; // dummy value
+    Real v=0.;
+    
+    if (val == "A") {
+        MAST::Solid1DSectionElementPropertyCard::Area
+        A(this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+          this->get<MAST::FieldFunction<Real> >("hz").clone().release());
+        A(p, 0., v);
+    }
+    else if (val == "J") {
+        MAST::Solid1DSectionElementPropertyCard::TorsionalConstant
+        J(this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+          this->get<MAST::FieldFunction<Real> >("hz").clone().release());
+        J(p, 0., v);
+    }
+    else if (val == "IYY" ||
+             val == "IZZ" ||
+             val == "IYZ") {
+        DenseMatrix<Real> Imat;
+        MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix
+        I(this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+          this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
+          this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release(),
+          this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release());
+        I(p, 0., Imat);
+        if (val == "IYY")
+            v = Imat(0,0);
+        else if (val == "IZZ")
+            v = Imat(1,1);
+        else if (val == "IYZ")
+            v = Imat(1,0);
+        else
+            libmesh_error(); // should not get here
+    }
+    else
+        libmesh_error(); // should not get here
+    return v;
+}
+
+
+
 std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
 MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatrixType t,
                                                       const MAST::StructuralElementBase& e) const {

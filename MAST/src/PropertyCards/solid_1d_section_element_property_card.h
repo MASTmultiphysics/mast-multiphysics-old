@@ -875,9 +875,9 @@ namespace MAST {
         
         /*!
          *   returns value of the property \par val. The string values for
-         *   \par val are IYY, IZZ, IYZ
+         *   \par val are A, J, IYY, IZZ, IYZ
          */
-        virtual Real value(const std::string& val) const {libmesh_error();}
+        virtual Real value(const std::string& val) const;
         
         /*!
          *   returns a function to evaluate the specified quantitys
