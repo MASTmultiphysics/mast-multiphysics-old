@@ -28,8 +28,8 @@ namespace MAST {
     class ElementPropertyCardBase;
     class FieldFunctionBase;
     class Temperature;
-    class SensitivityParameters;
     class BoundaryCondition;
+    class LocalElemBase;
     
     enum StructuralElemType {
         ELASTIC_ELEMENT_1D,
@@ -74,6 +74,8 @@ namespace MAST {
     };
     
     
+    
+    
     class StructuralElementBase
     {
     public:
@@ -113,7 +115,13 @@ namespace MAST {
         /*!
          *   returns a constant reference to the element in local coordinate system
          */
-        virtual const Elem& local_elem() const = 0;
+        virtual const MAST::LocalElemBase& local_elem() const = 0;
+
+        
+        /*!
+         *   returns a constant reference to the element in local coordinate system
+         */
+        virtual const Elem& get_elem_for_quadrature() const = 0;
 
         
         /*!

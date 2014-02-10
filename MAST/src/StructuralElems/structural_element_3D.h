@@ -37,7 +37,15 @@ namespace MAST {
          *   returns a constant reference to the element in local coordinate system. 
          *   For a 3D element, the two are same.
          */
-        virtual const Elem& local_elem() const {
+        virtual const MAST::LocalElemBase& local_elem() const {
+            libmesh_error(); // this is not defined for a 3D element
+        }
+
+        /*!
+         *   returns a constant reference to the element in local coordinate system.
+         *   For a 3D element, the two are same.
+         */
+        virtual const Elem& get_elem_for_quadrature() const {
             return _elem;
         }
 

@@ -15,7 +15,8 @@
 
 // MAST includes
 #include "StructuralElems/structural_elem_base.h"
-
+#include "Numerics/function_base.h"
+#include "Numerics/constant_function.h"
 
 // Forward declerations
 class FEMOperatorMatrix;
@@ -66,7 +67,17 @@ namespace MAST {
         const DenseMatrix<Real>& T_matrix() const {
             return _T_mat;
         }
+
         
+        /*!
+         *    returns the transformation matrix for this element. This is used
+         *    to map the coordinates from local to global coordinate system
+         */
+        std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> T_matrix_function() const {
+            return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            (new MAST::ConstantFunction<DenseMatrix<Real> >("T_mat", _T_mat));
+        }
+
 
         protected:
 
@@ -120,10 +131,18 @@ namespace MAST {
         /*!
          *   returns a constant reference to the element in local coordinate system
          */
-        virtual const Elem& local_elem() const {
+        virtual const MAST::LocalElemBase& local_elem() const {
+            return *_local_elem;
+        }
+
+        
+        /*!
+         *   returns a constant reference to the element in local coordinate system
+         */
+        virtual const Elem& get_elem_for_quadrature() const {
             return _local_elem->local_elem();
         }
-        
+
         /*!
          *    row dimension of the direct strain matrix, also used for the 
          *    bending operator row dimension

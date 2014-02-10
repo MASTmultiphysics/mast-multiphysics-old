@@ -484,7 +484,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     libMesh::FunctionBase<Number>& func = p.function();
     std::auto_ptr<FEBase> fe;
     std::auto_ptr<QBase> qrule;
-    _get_side_fe_and_qrule(this->local_elem(), side, fe, qrule);
+    _get_side_fe_and_qrule(this->get_elem_for_quadrature(), side, fe, qrule);
     
     const std::vector<Real> &JxW = fe->get_JxW();
     

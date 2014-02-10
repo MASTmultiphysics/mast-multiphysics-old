@@ -8,7 +8,7 @@
 
 // MAST includes
 #include "PropertyCards/solid_1d_section_element_property_card.h"
-
+#include "StructuralElems/bending_structural_elem.h"
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix::
@@ -844,11 +844,34 @@ MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
                          this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release())));
             break;
 
+        case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
+            rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix
+                       (this->get<MAST::FieldFunction<DenseMatrix<Real>>>
+                        ("prestress").clone().release(),
+                        e.local_elem().T_matrix_function().release(),
+                        new MAST::Solid1DSectionElementPropertyCard::Area
+                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<Real> >("hz").clone().release())));
+            break;
+            
+        case MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX:
+            rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix
+                       (this->get<MAST::FieldFunction<DenseMatrix<Real>>>
+                        ("prestress").clone().release(),
+                        e.local_elem().T_matrix_function().release(),
+                        new MAST::Solid1DSectionElementPropertyCard::AreaYMoment
+                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
+                         new MAST::Solid1DSectionElementPropertyCard::AreaZMoment
+                         (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+                          this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
+                          this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release())));
+            break;
+
         case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
-        case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
-        case MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX:
         default:
             libmesh_error();
             break;

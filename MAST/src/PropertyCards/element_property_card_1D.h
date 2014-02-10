@@ -95,37 +95,6 @@ namespace MAST
     protected:
         
         /*!
-         *    initializes the vector to the prestress in the element
-         */
-        virtual void _prestress_vector(const DenseMatrix<Real>& T,
-                                       DenseVector<Real>& v) const {
-            v.resize(2); // zero, if the stress has not been defined
-
-            if (_prestress.m() != 0) {
-                
-                DenseMatrix<Real> mat;
-                _prestress_matrix(T, mat);
-                v(0) = mat(0,0); // sigma_xx
-            }
-        }
-        
-        
-        /*!
-         *    initializes the matrix to the prestress in the element
-         */
-        virtual void _prestress_matrix(const DenseMatrix<Real>& T,
-                                       DenseMatrix<Real>& m) const {
-            m.resize(2, 2);
-            if (_prestress.m() != 0) {
-                DenseMatrix<Real> mat; mat = _prestress;
-                mat.right_multiply(T);
-                mat.left_multiply_transpose(T);
-                
-                m(0,0) = mat(0,0);
-            }
-        }
-
-        /*!
          *   material property card. By default this chooses DKT for 3 noded
          *   triangles and Mindling for all other elements
          */

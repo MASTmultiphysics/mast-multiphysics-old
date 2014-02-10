@@ -152,10 +152,7 @@ namespace MAST
          *    otherwise
          */
         virtual bool if_prestressed() const {
-            if (_prestress.m() == 0)
-                return false;
-            else
-                return true;
+            return this->contains("prestress");
         }
         
         
@@ -175,12 +172,6 @@ namespace MAST
          *    flag to use a diagonal mass matrix. By default, this is false
          */
         bool _diagonal_mass;
-        
-        /*!
-         *   element prestress tensor: six stress components: sigma_xx, sigma_yy,
-         *   sigma_zz, tau_xy, tau_yz, tau_zx
-         */
-        DenseMatrix<Real> _prestress;
     };
     
     

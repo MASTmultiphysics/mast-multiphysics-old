@@ -236,7 +236,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
     
     MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::MODAL,
+                                                       MAST::BUCKLING,
                                                        infile);
     
     // Set the type of the problem, here we deal with
@@ -356,8 +356,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.add(zero_off_hz);
     
     
-    DenseVector<Real> prestress; prestress.resize(6);
-    prestress(0) = -1.31345e6;
+    DenseMatrix<Real> prestress; prestress.resize(3,3);
+    prestress(0,0) = -1.31345e6;
+    MAST::ConstantFunction<DenseMatrix<Real> > prestress_func("prestress", prestress);
     
     prop3d.set_material(mat);
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
@@ -365,11 +366,11 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
-    //prop2d.prestress(prestress); // no prestress for stiffener
-    //prop1d.prestress(prestress);
+    prop2d.add(prestress_func); // no prestress for stiffener
+    prop1d.add(prestress_func);
 
-    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
 
     if (dim == 1)
         structural_assembly.set_property_for_subdomain(0, prop1d);
