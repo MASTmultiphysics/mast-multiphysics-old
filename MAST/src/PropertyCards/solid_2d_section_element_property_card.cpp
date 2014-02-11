@@ -460,7 +460,7 @@ SectionIntegratedPrestressAMatrix::operator() (const Point& p,
     s.left_multiply_transpose(T);
     
     for (unsigned int i=0; i<2; i++)
-        for (unsigned int j=0; j<3; j++)
+        for (unsigned int j=0; j<2; j++)
             m(i,j) = s(i,j)*h;
 }
 
@@ -503,7 +503,7 @@ SectionIntegratedPrestressAMatrix::partial (const MAST::FieldFunctionBase& f,
     
 
     for (unsigned int i=0; i<2; i++)
-        for (unsigned int j=0; j<3; j++)
+        for (unsigned int j=0; j<2; j++)
             m(i,j) = ds(i,j)*h + s(i,j)*dh;
 }
 
@@ -544,7 +544,7 @@ SectionIntegratedPrestressAMatrix::total (const MAST::FieldFunctionBase& f,
     
     
     for (unsigned int i=0; i<2; i++)
-        for (unsigned int j=0; j<3; j++)
+        for (unsigned int j=0; j<2; j++)
             m(i,j) = ds(i,j)*h + s(i,j)*dh;
 }
 
