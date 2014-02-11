@@ -215,12 +215,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 
 
     // Declare the system
-    //NonlinearImplicitSystem & system =
-    //equation_systems.add_system<NonlinearImplicitSystem> ("StructuralSystem");
-    CondensedEigenSystem* eigen_system = NULL;
-    CondensedEigenSystem & system =
+    NonlinearImplicitSystem & static_system =
+    equation_systems.add_system<NonlinearImplicitSystem> ("StaticStructuralSystem");
+    CondensedEigenSystem & eigen_system =
     equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
-    eigen_system = dynamic_cast<CondensedEigenSystem*>(&system);
     
     
     unsigned int o = infile("fe_order", 1);
@@ -228,41 +226,53 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = system.add_variable ( "ux", static_cast<Order>(o), fefamily);
-    var_id["uy"] = system.add_variable ( "uy", static_cast<Order>(o), fefamily);
-    var_id["uz"] = system.add_variable ( "uz", static_cast<Order>(o), fefamily);
-    var_id["tx"] = system.add_variable ( "tx", static_cast<Order>(o), fefamily);
-    var_id["ty"] = system.add_variable ( "ty", static_cast<Order>(o), fefamily);
-    var_id["tz"] = system.add_variable ( "tz", static_cast<Order>(o), fefamily);
-    
-    MAST::StructuralSystemAssembly structural_assembly(system,
-                                                       MAST::BUCKLING,
-                                                       infile);
+    var_id["ux"] = static_system.add_variable ( "ux", static_cast<Order>(o), fefamily);
+    var_id["uy"] = static_system.add_variable ( "uy", static_cast<Order>(o), fefamily);
+    var_id["uz"] = static_system.add_variable ( "uz", static_cast<Order>(o), fefamily);
+    var_id["tx"] = static_system.add_variable ( "tx", static_cast<Order>(o), fefamily);
+    var_id["ty"] = static_system.add_variable ( "ty", static_cast<Order>(o), fefamily);
+    var_id["tz"] = static_system.add_variable ( "tz", static_cast<Order>(o), fefamily);
+
+    eigen_system.add_variable ( "ux", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "uy", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "uz", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "tx", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "ty", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "tz", static_cast<Order>(o), fefamily);
+
+    MAST::StructuralSystemAssembly
+    static_structural_assembly(static_system,
+                               MAST::STATIC,
+                               infile),
+    eigen_structural_assembly(eigen_system,
+                              MAST::BUCKLING,
+                              infile);
     
     // Set the type of the problem, here we deal with
     // a generalized Hermitian problem.
-    system.extra_quadrature_order = infile("extra_quadrature_order", 0);
+    static_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
+    eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
+
     
-    
-    ConstFunction<Real> press(1.e2);
-    MAST::ConstantTemperature temp;
-    temp.set_temperature(100., 0.);
+    ConstFunction<Real> press(1.e7);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
     mesh.subdomain_ids(ids);
-    structural_assembly.add_volume_load(0, bc);
+    static_structural_assembly.add_side_load(1, bc);
+    MAST::ConstantTemperature temp;
+    temp.set_temperature(100., 0.);
     
-    
-    system.attach_assemble_object(structural_assembly);
+    static_system.attach_assemble_object(static_structural_assembly);
+    eigen_system.attach_assemble_object(eigen_structural_assembly);
     
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
     std::set<boundary_id_type> dirichlet_boundary;
     // read and initialize the boundary conditions
     std::map<boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
     unsigned int n_bc, b_id;
-    // first read the boundaries for ux constraint
 
+    // first read the boundaries for ux constraint
     for (std::map<std::string, unsigned int>::iterator it = var_id.begin();
          it != var_id.end(); it++) {
         
@@ -290,39 +300,26 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         MAST::DisplacementDirichletBoundaryCondition* bc = new MAST::DisplacementDirichletBoundaryCondition;
         bc->init(it->first, it->second);
         dirichlet_boundary_conditions.push_back(bc);
-        structural_assembly.add_side_load(it->first, *bc);
+        static_structural_assembly.add_side_load(it->first, *bc);
+        eigen_structural_assembly.add_side_load(it->first, *bc);
     }
     
     // this needs to be done before equation system init
-    if (eigen_system) {
-        
-        eigen_system->set_eigenproblem_type(GHEP);
-        eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
-    }
+    eigen_system.set_eigenproblem_type(GHEP);
+    eigen_system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
     
     equation_systems.init ();
     equation_systems.print_info();
     
     // apply the boundary conditions to the eigenproblem if necessary
     const unsigned int n_eig_request = 10;
-    if (eigen_system) {
-        std::set<unsigned int> dirichlet_dof_ids;
-        equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
-        equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
-        equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
-        structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
-        eigen_system->initialize_condensed_dofs(dirichlet_dof_ids);
-    }
-    
+    std::set<unsigned int> dirichlet_dof_ids;
+    equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
+    equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
+    equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
+    eigen_structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
+    eigen_system.initialize_condensed_dofs(dirichlet_dof_ids);
 
-    
-//    system.time_solver->diff_solver()->quiet = false;
-//    system.time_solver->diff_solver()->verbose = true;
-//    system.time_solver->diff_solver()->relative_residual_tolerance =  1.0e-8;
-//    system.time_solver->diff_solver()->absolute_residual_tolerance =  1.0e-8;
-    
-    // Print information about the system to the screen.
-    
     MAST::IsotropicMaterialPropertyCard mat(0);
     MAST::ElementPropertyCard3D prop3d(0);
     MAST::Solid2DSectionElementPropertyCard prop2d(1), prop2d_stiff(2);
@@ -365,16 +362,20 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
-    prop2d.add(prestress_func); // no prestress for stiffener
+    //prop2d.add(prestress_func); // no prestress for stiffener
     //prop1d.add(prestress_func);
 
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
 
-    if (dim == 1)
-        structural_assembly.set_property_for_subdomain(0, prop1d);
-    else
-        structural_assembly.set_property_for_subdomain(0, prop2d);
+    if (dim == 1) {
+        static_structural_assembly.set_property_for_subdomain(0, prop1d);
+        eigen_structural_assembly.set_property_for_subdomain(0, prop1d);
+    }
+    else {
+        static_structural_assembly.set_property_for_subdomain(0, prop2d);
+        eigen_structural_assembly.set_property_for_subdomain(0, prop2d);
+    }
     
     const std::string mesh_type = infile("mesh_type", std::string(""));
     if (mesh_type == "stiffened_panel") {
@@ -382,98 +383,102 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         unsigned int n_stiff = (infile("nx_divs",0)-1) + (infile("ny_divs",0)-1);
         if (!beam_stiff) {
             // stiffeners using shell elements
-            for (unsigned int i=1; i<n_stiff+1; i++)
-                structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
+            for (unsigned int i=1; i<n_stiff+1; i++) {
+                static_structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
+                eigen_structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
+            }
         }
         else {
             // stiffeners using beam elements with offsets
             off_hz = 0.5*infile("width", 0.002);
-            for (unsigned int i=1; i<n_stiff+1; i++)
-                structural_assembly.set_property_for_subdomain(i, prop1d);
+            for (unsigned int i=1; i<n_stiff+1; i++) {
+                static_structural_assembly.set_property_for_subdomain(i, prop1d);
+                eigen_structural_assembly.set_property_for_subdomain(i, prop1d);
+            }
         }
     }
     
-    system.solve();
-    if (!eigen_system) {
-        
-        std::vector<Real> stress;
-        structural_assembly.calculate_max_elem_stress(*system.solution, stress, NULL);
+    static_system.solve();
+    eigen_structural_assembly.set_static_solution_system(&static_system);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    eigen_system.solve();
+    
+    std::vector<Real> stress;
+    //static_structural_assembly.calculate_max_elem_stress(*static_system.solution,
+    //                                                     stress, NULL);
+    
+    // We write the file in the ExodusII format.
+    Nemesis_IO(mesh).write_equation_systems("out.exo",
+                                            equation_systems);
+    // Get the number of converged eigen pairs.
+    unsigned int nconv = std::min(eigen_system.get_n_converged(),
+                                  n_eig_request);
+    
+    std::ofstream file;
+    file.open("modal_data.in", std::ofstream::out);
+    
+    file << "n_eig = " << nconv << std::endl;
+    
+    for (unsigned int i=0; i<nconv; i++)
+    {
+        std::ostringstream file_name;
         
         // We write the file in the ExodusII format.
-        Nemesis_IO(mesh).write_equation_systems("out.exo",
+        file_name << "out_"
+        << std::setw(3)
+        << std::setfill('0')
+        << std::right
+        << i
+        << ".exo";
+        
+        // now write the eigenvlaues
+        std::pair<Real, Real> val = eigen_system.get_eigenpair(i);
+        
+        // We write the file in the ExodusII format.
+        Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                 equation_systems);
-    }
-    else {
         
-        // Get the number of converged eigen pairs.
-        unsigned int nconv = std::min(eigen_system->get_n_converged(),
-                                      n_eig_request);
         
-        std::ofstream file;
-        file.open("modal_data.in", std::ofstream::out);
-        
-        file << "n_eig = " << nconv << std::endl;
-        
-        for (unsigned int i=0; i<nconv; i++)
+        // also add the solution as an independent vector, which will have to
+        // be read in
+        std::ostringstream vec_name;
+        vec_name << "mode_" << i;
+        NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
+        vec = *eigen_system.solution;
+        std::complex<Real> eigval;
+        if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
         {
-            std::ostringstream file_name;
+            file << "eig_"  << i << " = " << 1./val.first << std::endl;
+            vec.scale(1./sqrt(val.first));
+            vec.close();
             
-            // We write the file in the ExodusII format.
-            file_name << "out_"
-            << std::setw(3)
-            << std::setfill('0')
-            << std::right
-            << i
-            << ".exo";
+            // now write the eigenvalues
+            eigval = std::complex<Real>(val.first, val.second);
+            eigval = 1./eigval;
             
-            // now write the eigenvlaues
-            std::pair<Real, Real> val = eigen_system->get_eigenpair(i);
-
-            // We write the file in the ExodusII format.
-            Nemesis_IO(mesh).write_equation_systems(file_name.str(),
-                                                    equation_systems);
-            
-
-            // also add the solution as an independent vector, which will have to
-            // be read in
-            std::ostringstream vec_name;
-            vec_name << "mode_" << i;
-            NumericVector<Real>& vec = system.add_vector(vec_name.str());
-            vec = *system.solution;
-            std::complex<Real> eigval;
-            if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
-            {
-                file << "eig_"  << i << " = " << 1./val.first << std::endl;
-                vec.scale(1./sqrt(val.first));
-                vec.close();
-                
-                // now write the eigenvalues
-                eigval = std::complex<Real>(val.first, val.second);
-                eigval = 1./eigval;
-
-                std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
-            }
-            else {
-                file << "eig_"  << i << " = " << val.first << std::endl;
-                
-                std::cout << std::setw(5) << i
-                << std::setw(10) << val.first
-                << " + i  "
-                << std::setw(10) << val.second;
-                
-                std::cout<< std::endl;
-            }
+            std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
         }
-        std::cout<< std::endl;
-        file.close();
+        else {
+            file << "eig_"  << i << " = " << val.first << std::endl;
+            
+            std::cout << std::setw(5) << i
+            << std::setw(10) << val.first
+            << " + i  "
+            << std::setw(10) << val.second;
+            
+            std::cout<< std::endl;
+        }
     }
+    std::cout<< std::endl;
+    file.close();
 
     // be sure to delete the boundary condition objects
     for (unsigned int i=0; i<dirichlet_boundary_conditions.size(); i++)
         delete dirichlet_boundary_conditions[i];
     
     // now write the data to an output file
-    MAST::NastranIO(structural_assembly).write("nast.txt");
+    MAST::NastranIO(static_structural_assembly).write("nast.txt");
     XdrIO xdr(mesh, true);
     xdr.write("saved_structural_mesh.xdr");
     equation_systems.write("saved_structural_solution.xdr",
