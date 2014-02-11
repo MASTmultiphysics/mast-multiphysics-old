@@ -122,8 +122,9 @@ SectionIntegratedExtensionBendingStiffnessMatrix::operator() (const Point& p,
     (*_A_z_moment)(p, t, Az);
     (*_material_stiffness)(p, t, m);
     
-    m(0,0) *= -Az; // coupling of u and v bending (== theta_z)
-    m(0,1) *= Ay;  // coupling of u and w bending (== theta_y)
+    m(0,1)  = m(0,0)*Ay;  // coupling of u and w bending (== theta_y)
+    m(0,0) *= -Az;        // coupling of u and v bending (== theta_z)
+    
     m.scale_row(1, 0); // no coupling for torsion for symmetic sections
 }
 
@@ -141,12 +142,12 @@ SectionIntegratedExtensionBendingStiffnessMatrix::partial (const MAST::FieldFunc
     (*_A_z_moment)(p, t, Az); _A_z_moment->partial(f, p, t, dAz);
     (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
     
-    m(0,0) *= -dAz; // coupling of u and v bending (== theta_z)
-    m(0,1) *= dAy;  // coupling of u and w bending (== theta_y)
-    m.scale_row(1, 0); // no coupling for torsion for symmetic sections
+    m(0,1)  = m(0,0)*dAy;  // coupling of u and w bending (== theta_y)
+    m(0,0) *= -dAz;        // coupling of u and v bending (== theta_z)
+    m.scale_row(1, 0);     // no coupling for torsion for symmetic sections
     
+    dm(0,1)  = dm(0,0)*Ay;
     dm(0,0) *= -Az;
-    dm(0,1) *= Ay;
     dm.scale_row(1, 0.);
     m.add(1., dm);
 }
@@ -165,12 +166,12 @@ SectionIntegratedExtensionBendingStiffnessMatrix::total (const MAST::FieldFuncti
     (*_A_z_moment)(p, t, Az); _A_z_moment->total(f, p, t, dAz);
     (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
     
-    m(0,0) *= -dAz; // coupling of u and v bending (== theta_z)
-    m(0,1) *= dAy;  // coupling of u and w bending (== theta_y)
-    m.scale_row(1, 0); // no coupling for torsion for symmetic sections
+    m(0,1)  = m(0,0)*dAy;  // coupling of u and w bending (== theta_y)
+    m(0,0) *= -dAz;        // coupling of u and v bending (== theta_z)
+    m.scale_row(1, 0);     // no coupling for torsion for symmetic sections
     
+    dm(0,1)  = dm(0,0)*Ay;
     dm(0,0) *= -Az;
-    dm(0,1) *= Ay;
     dm.scale_row(1, 0.);
     m.add(1., dm);
 }
