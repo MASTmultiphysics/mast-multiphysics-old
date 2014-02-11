@@ -317,6 +317,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     equation_systems.parameters.set<bool>("if_exchange_AB_matrices") = true;
     equation_systems.parameters.set<unsigned int>("eigenpairs")    = n_eig_request;
     equation_systems.parameters.set<unsigned int>("basis vectors") = n_eig_request*3;
+    equation_systems.parameters.set<unsigned int>("nonlinear solver maximum iterations") =
+    infile("max_nonlinear_iterations", 5);
     eigen_structural_assembly.get_dirichlet_dofs(dirichlet_dof_ids);
     eigen_system.initialize_condensed_dofs(dirichlet_dof_ids);
 
@@ -365,8 +367,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     //prop2d.add(prestress_func); // no prestress for stiffener
     //prop1d.add(prestress_func);
 
-    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
 
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);
@@ -390,7 +392,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         }
         else {
             // stiffeners using beam elements with offsets
-            off_hz = 0.5*infile("width", 0.002);
+            //off_hz = 0.5*infile("width", 0.002);
             for (unsigned int i=1; i<n_stiff+1; i++) {
                 static_structural_assembly.set_property_for_subdomain(i, prop1d);
                 eigen_structural_assembly.set_property_for_subdomain(i, prop1d);
