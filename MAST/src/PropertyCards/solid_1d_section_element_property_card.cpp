@@ -967,7 +967,9 @@ MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
                          this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::PolarInertia
                         (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release()),
+                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release(),
+                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix
                         (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
                          this->get<MAST::FieldFunction<Real> >("hz").clone().release(),

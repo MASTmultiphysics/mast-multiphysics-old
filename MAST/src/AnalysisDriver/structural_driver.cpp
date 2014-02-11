@@ -337,10 +337,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     h_stiff("h", infile("thickness", 0.002)),
     hy("hy", infile("thickness", 0.002)),
     hz("hz", infile("width", 0.002)),
-    off_hy("hy_offset", 0.5*infile("thickness", 0.002)),
-    zero_off_hy("hy_offset", 0.),
-    zero_off_hz("hz_offset", 0.);
-    
+    off_hy("hy_offset", 0.),
+    off_hz("hz_offset", 0.);
+    //off_hz = .5*infile("width", 0.002);
     
     // add the properties to the cards
     mat.add(E);
@@ -352,8 +351,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d_stiff.add(h_stiff);
     prop1d.add(hy);
     prop1d.add(hz);
-    prop1d.add(zero_off_hy);
-    prop1d.add(zero_off_hz);
+    prop1d.add(off_hy);
+    prop1d.add(off_hz);
     
     
     DenseMatrix<Real> prestress; prestress.resize(3,3);
@@ -367,7 +366,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
     prop2d.add(prestress_func); // no prestress for stiffener
-    prop1d.add(prestress_func);
+    //prop1d.add(prestress_func);
 
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
@@ -388,7 +387,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         }
         else {
             // stiffeners using beam elements with offsets
-            prop1d.add(off_hy);
+            off_hz = 0.5*infile("width", 0.002);
             for (unsigned int i=1; i<n_stiff+1; i++)
                 structural_assembly.set_property_for_subdomain(i, prop1d);
         }

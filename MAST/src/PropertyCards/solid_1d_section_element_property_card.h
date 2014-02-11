@@ -126,29 +126,72 @@ namespace MAST {
             }
             
             virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz;
+                Real hy, hz, a, b;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
                 
-                m = hy*hz;
+                
+                // shorter side is b, and longer side is a
+                if (hy > hz) {
+                    a = hy;
+                    b = hz;
+                }
+                else {
+                    a = hz;
+                    b = hy;
+                }
+                
+                m = a*pow(b,3)*(1./3.-.21*b/a*(1.-pow(b/a,4)/12.));
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
                                   const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz;
+                Real hy, hz, dhy, dhz, a, b, da, db;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 
-                m = dhy*hz + hy*dhz;
+                // shorter side is b, and longer side is a
+                if (hy > hz) {
+                    a = hy; da = dhy;
+                    b = hz; db = dhz;
+                }
+                else {
+                    a = hz; da = dhz;
+                    b = hy; db = dhy;
+                }
+                
+                m =
+                da*pow(b,3)*(1./3.-.21*b/a*(1.-pow(b/a,4)/12.)) +
+                a*3.*pow(b,2)*db*(1./3.-.21*b/a*(1.-pow(b/a,4)/12.)) +
+                a*pow(b,3)*(-.21*db/a*(1.-pow(b/a,4)/12.) +
+                            (.21*b/pow(a,2)*da*(1.-pow(b/a,4)/12.)) +
+                            (-.21*b/a*(-4.*pow(b,3)*db/pow(a,4)/12.+
+                                       4.*pow(b,4)/pow(a,5)*da/12.)));
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
                                 const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz;
+                Real hy, hz, dhy, dhz, a, b, da, db;
                 (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
                 
-                m = dhy*hz + hy*dhz;
+                // shorter side is b, and longer side is a
+                if (hy > hz) {
+                    a = hy; da = dhy;
+                    b = hz; db = dhz;
+                }
+                else {
+                    a = hz; da = dhz;
+                    b = hy; db = dhy;
+                }
+                
+                m =
+                da*pow(b,3)*(1./3.-.21*b/a*(1.-pow(b/a,4)/12.)) +
+                a*3.*pow(b,2)*db*(1./3.-.21*b/a*(1.-pow(b/a,4)/12.)) +
+                a*pow(b,3)*(-.21*db/a*(1.-pow(b/a,4)/12.) +
+                            (.21*b/pow(a,2)*da*(1.-pow(b/a,4)/12.)) +
+                            (-.21*b/a*(-4.*pow(b,3)*db/pow(a,4)/12.+
+                                       4.*pow(b,4)/pow(a,5)*da/12.)));
             }
             
         protected:
@@ -161,18 +204,26 @@ namespace MAST {
         class PolarInertia: public MAST::FieldFunction<Real> {
         public:
             PolarInertia(MAST::FieldFunction<Real> *hy,
-                              MAST::FieldFunction<Real>* hz):
+                         MAST::FieldFunction<Real>* hz,
+                         MAST::FieldFunction<Real>* hy_offset,
+                         MAST::FieldFunction<Real>* hz_offset):
             MAST::FieldFunction<Real>("PolarInertia"),
             _hy(hy),
-            _hz(hz) {
+            _hz(hz),
+            _hy_offset(hy_offset),
+            _hz_offset(hz_offset) {
                 _functions.insert(hy);
                 _functions.insert(hz);
+                _functions.insert(hy_offset);
+                _functions.insert(hz_offset);
             }
             
             PolarInertia(const MAST::Solid1DSectionElementPropertyCard::PolarInertia &f):
             MAST::FieldFunction<Real>(f),
             _hy(f._hy->clone().release()),
-            _hz(f._hz->clone().release())
+            _hz(f._hz->clone().release()),
+            _hy_offset(f._hy_offset->clone().release()),
+            _hz_offset(f._hz_offset->clone().release())
             { }
             
             /*!
@@ -186,37 +237,56 @@ namespace MAST {
             virtual ~PolarInertia() {
                 delete _hy;
                 delete _hz;
+                delete _hy_offset;
+                delete _hz_offset;
             }
             
             virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz;
+                Real hy, hz, offy, offz;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
+                (*_hy_offset)(p, t, offy);
+                (*_hz_offset)(p, t, offz);
                 
-                m = hy*hz;
+                m = hy*hz*((pow(hy,2) + pow(hz,2))/12. +
+                           pow(offy,2) + pow(offz,2));
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
                                   const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz;
+                Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
+                (*_hy_offset)(p, t, offy); _hy_offset->partial(f, p, t, doffy);
+                (*_hz_offset)(p, t, offz); _hz_offset->partial(f, p, t, doffz);
                 
-                m = dhy*hz + hy*dhz;
+                
+                m =
+                (dhy*hz + hy*dhz) * ((pow(hy,2) + pow(hz,2))/12. +
+                                     pow(offy,2) + pow(offz,2)) +
+                2.*hy*hz*((hy*dhy + hz*dhz)/12. +
+                          offy*doffy + offz*doffz);
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
                                 const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz;
-                (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
-                (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
+                Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
+                (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
+                (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
+                (*_hy_offset)(p, t, offy); _hy_offset->partial(f, p, t, doffy);
+                (*_hz_offset)(p, t, offz); _hz_offset->partial(f, p, t, doffz);
                 
-                m = dhy*hz + hy*dhz;
+                
+                m =
+                (dhy*hz + hy*dhz) * ((pow(hy,2) + pow(hz,2))/12. +
+                                     pow(offy,2) + pow(offz,2)) +
+                2.*hy*hz*((hy*dhy + hz*dhz)/12. +
+                          offy*doffy + offz*doffz);
             }
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz;
+            MAST::FieldFunction<Real> *_hy, *_hz, *_hy_offset, *_hz_offset;
         };
 
         
