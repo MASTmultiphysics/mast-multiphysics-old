@@ -388,6 +388,8 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         if (!param) {
             structural_elem->internal_force(J!=NULL?true:false,
                                             vec, mat);
+            structural_elem->prestress_force(J!=NULL?true:false,
+                                             vec, mat);
             if (_analysis_type == MAST::DYNAMIC)
                 structural_elem->inertial_force(J!=NULL?true:false,
                                                 vec, mat);
@@ -402,6 +404,8 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
             structural_elem->sensitivity_param = param;
             structural_elem->internal_force_sensitivity(J!=NULL?true:false,
                                                         vec, mat);
+            structural_elem->prestress_force_sensitivity(J!=NULL?true:false,
+                                                         vec, mat);
             if (_analysis_type == MAST::DYNAMIC)
                 structural_elem->inertial_force_sensitivity(J!=NULL?true:false,
                                                             vec, mat);

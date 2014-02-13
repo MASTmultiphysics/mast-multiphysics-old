@@ -52,8 +52,6 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
         Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
         f.add(-JxW[qp], tmp_vec2_n2);
         
-        // add the prestress
-        
         if (request_jacobian) {
             
             Bmat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
@@ -119,8 +117,6 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
         // now calculate the internal force vector
         Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
         f.add(-JxW[qp], tmp_vec2_n2);
-        
-        // add the prestress
         
         if (request_jacobian) {
             

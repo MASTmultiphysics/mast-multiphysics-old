@@ -149,6 +149,74 @@ namespace MAST {
         
         
         
+        
+        class SectionIntegratedTransverseStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            SectionIntegratedTransverseStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
+                                                       MAST::FieldFunction<Real>* h):
+            MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedTransverseStiffnessMatrix2D"),
+            _material_stiffness(mat),
+            _h(h) {
+                _functions.insert(mat);
+                _functions.insert(h);
+            }
+            
+            
+            SectionIntegratedTransverseStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix &f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _material_stiffness(f._material_stiffness->clone().release()),
+            _h(f._h->clone().release())
+            { }
+            
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+                (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix(*this));
+            }
+            
+            virtual ~SectionIntegratedTransverseStiffnessMatrix() {
+                delete _material_stiffness;
+                delete _h;
+            }
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const {
+                Real h;
+                (*_h)(p, t, h);
+                (*_material_stiffness)(p, t, m);
+                m.scale(h);
+            }
+            
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const {
+                DenseMatrix<Real> dm;
+                Real h, dh;
+                (*_h)(p, t, h); _h->partial(f, p, t, dh);
+                (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
+                
+                m.scale(dh);
+                m.add(h, dm);
+            }
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const {
+                DenseMatrix<Real> dm;
+                Real h, dh;
+                (*_h)(p, t, h); _h->total(f, p, t, dh);
+                (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
+                
+                m.scale(dh);
+                m.add(h, dm);
+            }
+            
+        protected:
+            
+            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
+            MAST::FieldFunction<Real> *_h;
+        };
+
+        
         class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
             SectionIntegratedInertiaMatrix(MAST::FieldFunction<Real> *rho,

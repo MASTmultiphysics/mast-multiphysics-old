@@ -254,7 +254,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
 
     
-    ConstFunction<Real> press(1.e7);
+    ConstFunction<Real> press(1.e6);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
@@ -355,7 +355,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     
     
     DenseMatrix<Real> prestress; prestress.resize(3,3);
-    prestress(0,0) = -1.31345e6;
+    prestress(0,0) = -1.31345e6/.0044;
     MAST::ConstantFunction<DenseMatrix<Real> > prestress_func("prestress", prestress);
     
     prop3d.set_material(mat);
@@ -367,8 +367,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     //prop2d.add(prestress_func); // no prestress for stiffener
     //prop1d.add(prestress_func);
 
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
 
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);
@@ -392,7 +392,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         }
         else {
             // stiffeners using beam elements with offsets
-            //off_hz = 0.5*infile("width", 0.002);
+            off_hz = 0.5*infile("width", 0.002);
             for (unsigned int i=1; i<n_stiff+1; i++) {
                 static_structural_assembly.set_property_for_subdomain(i, prop1d);
                 eigen_structural_assembly.set_property_for_subdomain(i, prop1d);

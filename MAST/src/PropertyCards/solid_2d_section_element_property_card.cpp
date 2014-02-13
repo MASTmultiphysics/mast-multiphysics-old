@@ -675,10 +675,15 @@ MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
                         this->get<MAST::FieldFunction<Real> >("h").clone().release()));
             break;
 
+        case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX, *this, 2).release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+            
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
-        case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
         default:
             libmesh_error();
             break;
