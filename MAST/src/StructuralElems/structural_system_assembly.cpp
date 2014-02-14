@@ -387,7 +387,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         // now get the vector values
         if (!param) {
             structural_elem->internal_force(J!=NULL?true:false,
-                                            vec, mat);
+                                            vec, mat, false);
             structural_elem->prestress_force(J!=NULL?true:false,
                                              vec, mat);
             if (_analysis_type == MAST::DYNAMIC)
@@ -403,7 +403,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
         else {
             structural_elem->sensitivity_param = param;
             structural_elem->internal_force_sensitivity(J!=NULL?true:false,
-                                                        vec, mat);
+                                                        vec, mat, false);
             structural_elem->prestress_force_sensitivity(J!=NULL?true:false,
                                                          vec, mat);
             if (_analysis_type == MAST::DYNAMIC)
@@ -597,7 +597,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
         
         // now get the matrices
         if (!param) {
-            structural_elem->internal_force(true, vec, mat1);
+            structural_elem->internal_force(true, vec, mat1, false);
             structural_elem->prestress_force(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force(true, vec, mat2);
         }
@@ -615,7 +615,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             }
 
             structural_elem->sensitivity_param = param;
-            structural_elem->internal_force_sensitivity(true, vec, mat1);
+            structural_elem->internal_force_sensitivity(true, vec, mat1, false);
             structural_elem->prestress_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
         }
@@ -708,7 +708,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
         if (!param) {
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
-            structural_elem->internal_force(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->internal_force(true, vec, mat1, true); mat1.scale(-1.);
             structural_elem->prestress_force(true, vec, mat2);
 
             // if the static solution is provided, initialize the element solution
@@ -719,7 +719,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                 structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
                 
                 // if displacement is zero, mat1 = mat2
-                structural_elem->internal_force(true, vec, mat2);
+                structural_elem->internal_force(true, vec, mat2, true);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
             }
         }
@@ -728,7 +728,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
             structural_elem->local_solution_sens.resize(sol.size());
-            structural_elem->internal_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->internal_force_sensitivity(true, vec, mat1, true); mat1.scale(-1.);
             structural_elem->prestress_force_sensitivity(true, vec, mat2);
 
             // now use the solution to get the load dependent stiffness matrix
@@ -744,7 +744,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                 structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
 
                 // if displacement is zero, mat1 = mat2
-                structural_elem->internal_force_sensitivity(true, vec, mat2);
+                structural_elem->internal_force_sensitivity(true, vec, mat2, true);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
             }
         }

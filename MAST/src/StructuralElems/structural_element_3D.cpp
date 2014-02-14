@@ -17,7 +17,8 @@
 bool
 MAST::StructuralElement3D::internal_force (bool request_jacobian,
                                            DenseVector<Real>& f,
-                                           DenseMatrix<Real>& jac)
+                                           DenseMatrix<Real>& jac,
+                                           bool if_ignore_ho_jac)
 {
     FEMOperatorMatrix Bmat;
     
@@ -67,7 +68,8 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
 bool
 MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
                                                        DenseVector<Real>& f,
-                                                       DenseMatrix<Real>& jac)
+                                                       DenseMatrix<Real>& jac,
+                                                       bool if_ignore_ho_jac)
 {
     // this should be true if the function is called
     libmesh_assert(this->sensitivity_param);

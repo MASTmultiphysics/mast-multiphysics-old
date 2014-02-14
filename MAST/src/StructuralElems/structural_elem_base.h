@@ -157,7 +157,8 @@ namespace MAST {
          */
         virtual bool internal_force (bool request_jacobian,
                                      DenseVector<Real>& f,
-                                     DenseMatrix<Real>& jac) = 0;
+                                     DenseMatrix<Real>& jac,
+                                     bool if_ignore_ho_jac) = 0;
         
         /*!
          *   damping force contribution to system residual
@@ -201,7 +202,8 @@ namespace MAST {
          */
         virtual bool internal_force_sensitivity (bool request_jacobian,
                                                  DenseVector<Real>& f,
-                                                 DenseMatrix<Real>& jac) = 0;
+                                                 DenseMatrix<Real>& jac,
+                                                 bool if_ignore_ho_jac) = 0;
         /*!
          *   sensitivity of the damping force contribution to system residual
          */

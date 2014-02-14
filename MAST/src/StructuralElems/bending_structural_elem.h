@@ -192,7 +192,8 @@ namespace MAST {
          */
         virtual bool internal_force(bool request_jacobian,
                                     DenseVector<Real>& f,
-                                    DenseMatrix<Real>& jac);
+                                    DenseMatrix<Real>& jac,
+                                    bool if_ignore_ho_jac);
         
         /*!
          *    Calculates the internal force vector and Jacobian due to
@@ -209,7 +210,8 @@ namespace MAST {
          */
         virtual bool internal_force_sensitivity(bool request_jacobian,
                                                 DenseVector<Real>& f,
-                                                DenseMatrix<Real>& jac);
+                                                DenseMatrix<Real>& jac,
+                                                bool if_ignore_ho_jac);
         
         /*!
          *    Calculates the internal force vector and Jacobian due to
@@ -266,12 +268,14 @@ namespace MAST {
                                        const unsigned int qp,
                                        const std::vector<Real>& JxW,
                                        bool request_jacobian,
+                                       bool if_ignore_ho_jac,
                                        DenseVector<Real>& local_f,
                                        DenseMatrix<Real>& local_jac,
                                        FEMOperatorMatrix& Bmat_mem,
                                        FEMOperatorMatrix& Bmat_bend,
                                        FEMOperatorMatrix& Bmat_vk,
                                        DenseMatrix<Real>& stress,
+                                       DenseMatrix<Real>& stress_l,
                                        DenseMatrix<Real>& vk_dwdxi_mat,
                                        DenseMatrix<Real>& material_A_mat,
                                        DenseMatrix<Real>& material_B_mat,

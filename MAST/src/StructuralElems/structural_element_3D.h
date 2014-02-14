@@ -70,7 +70,8 @@ namespace MAST {
          */
         virtual bool internal_force(bool request_jacobian,
                                     DenseVector<Real>& f,
-                                    DenseMatrix<Real>& jac);
+                                    DenseMatrix<Real>& jac,
+                                    bool if_ignore_ho_jac);
 
         
         /*!
@@ -79,7 +80,8 @@ namespace MAST {
          */
         virtual bool internal_force_sensitivity(bool request_jacobian,
                                                 DenseVector<Real>& f,
-                                                DenseMatrix<Real>& jac);
+                                                DenseMatrix<Real>& jac,
+                                                bool if_ignore_ho_jac);
 
         /*!
          *    Calculates the prestress force vector and Jacobian
