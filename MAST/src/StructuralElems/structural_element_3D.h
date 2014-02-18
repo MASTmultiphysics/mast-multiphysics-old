@@ -52,7 +52,7 @@ namespace MAST {
          *    coordinates are the same.
          */
         virtual void global_coordinates(const Point& local,
-                                        Point global) const {
+                                        Point& global) const {
             global = local;
         }
 

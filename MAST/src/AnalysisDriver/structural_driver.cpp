@@ -259,7 +259,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
     mesh.subdomain_ids(ids);
-    static_structural_assembly.add_side_load(1, bc);
+    static_structural_assembly.add_volume_load(0, bc);
     MAST::ConstantTemperature temp;
     temp.set_temperature(100., 0.);
     
@@ -367,7 +367,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     //prop2d.add(prestress_func); // no prestress for stiffener
     //prop1d.add(prestress_func);
 
-    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
 
     if (dim == 1) {

@@ -126,7 +126,7 @@ namespace MAST {
          *    global coordinate system.
          */
         virtual void global_coordinates(const Point& local,
-                                        Point global) const = 0;
+                                        Point& global) const = 0;
         
         
         /*!

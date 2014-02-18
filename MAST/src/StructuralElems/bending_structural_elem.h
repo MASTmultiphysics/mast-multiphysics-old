@@ -163,7 +163,7 @@ namespace MAST {
          *    mapping
          */
         virtual void global_coordinates(const Point& local,
-                                        Point global) const {
+                                        Point& global) const {
             _local_elem->global_coordinates(local, global);
         }
 
