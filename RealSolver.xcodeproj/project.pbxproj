@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		690C378B18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690C378A18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp */; };
 		69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */; };
 		696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */; };
 		696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C07FA1796CD4100B77C5C /* fluid_newton_solver.cpp */; };
@@ -65,6 +66,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		690C378918B45C1C002ED059 /* multilayer_1d_section_element_property_card.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = multilayer_1d_section_element_property_card.h; sourceTree = "<group>"; };
+		690C378A18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = multilayer_1d_section_element_property_card.cpp; sourceTree = "<group>"; };
 		69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
 		695F3B2B1856C90900052C29 /* stiffened_panel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stiffened_panel.h; sourceTree = "<group>"; };
 		696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aerodynamic_qoi.cpp; sourceTree = "<group>"; };
@@ -345,6 +348,8 @@
 				EBED98AB189AB7E7008561D5 /* isotropic_material_property_card.cpp */,
 				EBED98AC189AB7E7008561D5 /* isotropic_material_property_card.h */,
 				EBF27861180ED3CE00DC81A3 /* material_property_card_base.h */,
+				690C378A18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp */,
+				690C378918B45C1C002ED059 /* multilayer_1d_section_element_property_card.h */,
 				EBF2785F180DE17C00DC81A3 /* property_card_base.h */,
 				EBED98B6189B0234008561D5 /* solid_1d_section_element_property_card.cpp */,
 				EBED98B7189B0234008561D5 /* solid_1d_section_element_property_card.h */,
@@ -526,6 +531,7 @@
 				EB8F5C20187C572E002976E5 /* ksgcsu07.f in Sources */,
 				EBE83D5817A021F4000F013C /* fluid_system.cpp in Sources */,
 				EB817345182D902300E03740 /* function_base.cpp in Sources */,
+				690C378B18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp in Sources */,
 				EBD795FB18468C35007FA3A7 /* bending_operator.cpp in Sources */,
 				EBE83D5917A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp in Sources */,
 				EBE83D5D17A182CE000F013C /* flutter_solver_base.cpp in Sources */,
