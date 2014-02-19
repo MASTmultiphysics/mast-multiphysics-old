@@ -1,3 +1,4 @@
+
 //
 //  multilayer_1d_section_element_property_card.h
 //  MAST
@@ -73,14 +74,15 @@ namespace MAST {
             }
 
             virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real val = 0., hi=0.;
+                Real val = 0.;
+                m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     (*_layer_hz[i])(p, t, val);
-                    hi += val; // currently the offset is chosen from h=0;
+                    m += val; // currently the offset is chosen from h=0;
                 }
                 // finally, add half of the current layer thickness
                 (*_layer_hz[_layer_num])(p, t, val);
-                hi += 0.5*val;
+                m += 0.5*val;
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
@@ -137,7 +139,7 @@ namespace MAST {
             virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseMatrix<Real> mi;
-                m.resize(3,3);
+                m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     (*_layer_mats[i])(p, t, mi);
                     m.add(1., mi);
@@ -148,7 +150,7 @@ namespace MAST {
                                   const Point& p, const Real t, DenseMatrix<Real>& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseMatrix<Real> mi;
-                m.resize(3,3);
+                m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     _layer_mats[i]->partial(f, p, t, mi);
                     m.add(1., mi);
@@ -159,7 +161,7 @@ namespace MAST {
                                 const Point& p, const Real t, DenseMatrix<Real>& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseMatrix<Real> mi;
-                m.resize(3,3);
+                m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     _layer_mats[i]->total(f, p, t, mi);
                     m.add(1., mi);
@@ -182,13 +184,15 @@ namespace MAST {
             libmesh_assert(_layers.size() == 0);
             
             // now create the vector of offsets for each later
-            std::vector<MAST::FieldFunction<Real>*> layer_hz(_layers.size());
-            _layer_offsets.resize(_layers.size());
+            const unsigned n_layers = layers.size();
+            _layers = layers;
+            std::vector<MAST::FieldFunction<Real>*> layer_hz(n_layers);
+            _layer_offsets.resize(n_layers);
             
-            for (unsigned int i=0; i<_layers.size(); i++)
+            for (unsigned int i=0; i<n_layers; i++)
                 layer_hz[i] = _layers[i]->get<MAST::FieldFunction<Real> >("hz").clone().release();
             
-            for (unsigned int i=0; i<_layers.size(); i++) {
+            for (unsigned int i=0; i<n_layers; i++) {
                 // create the offset function
                 _layer_offsets[i] = new MAST::Multilayer1DSectionElementPropertyCard::LayerOffset
                 (i, layer_hz);

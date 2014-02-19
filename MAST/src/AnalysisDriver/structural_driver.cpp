@@ -13,6 +13,7 @@
 #include "StructuralElems/structural_system_assembly.h"
 #include "PropertyCards/isotropic_material_property_card.h"
 #include "PropertyCards/element_property_card_3D.h"
+#include "PropertyCards/multilayer_1d_section_element_property_card.h"
 #include "PropertyCards/solid_1d_section_element_property_card.h"
 #include "PropertyCards/solid_2d_section_element_property_card.h"
 #include "BoundaryConditions/boundary_condition.h"
@@ -364,12 +365,48 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
-    //prop2d.add(prestress_func); // no prestress for stiffener
+    prop2d.add(prestress_func); // no prestress for stiffener
     //prop1d.add(prestress_func);
 
+    
+    // multilayer material
+    MAST::Multilayer1DSectionElementPropertyCard multi_prop1d(4);
+    MAST::Solid1DSectionElementPropertyCard bottom(5), middle(6), top(7);
+    MAST::IsotropicMaterialPropertyCard void_material(8);
+    MAST::ConstantFunction<Real> zeroE("E", 0.),
+    hz_bottom("hz", 0.01),
+    hz_middle("hz", 0.005),
+    hz_top("hz", 0.025);
+    void_material.add(zeroE);
+    void_material.add(nu);
+    void_material.add(kappa);
+    // set material
+    bottom.set_material(mat);
+    middle.set_material(void_material);
+    top.set_material(mat);
+    // set thickness and width
+    // offset_hz is going to be set by the multilayer section card
+    bottom.add(hy);
+    bottom.add(hz_bottom);
+    bottom.add(off_hy);
+    middle.add(hy);
+    middle.add(hz_middle);
+    middle.add(off_hy);
+    top.add(hy);
+    top.add(hz_top);
+    top.add(off_hy);
+    // set von karman strain
+    multi_prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    multi_prop1d.y_vector()(1) = 1.;
+    std::vector<MAST::Solid1DSectionElementPropertyCard*> layers(3);
+    layers[0] = &bottom;
+    layers[1] = &middle;
+    layers[2] = &top;
+    multi_prop1d.set_layers(layers);
+    
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
-
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);
         eigen_structural_assembly.set_property_for_subdomain(0, prop1d);
@@ -397,11 +434,27 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 static_structural_assembly.set_property_for_subdomain(i, prop1d);
                 eigen_structural_assembly.set_property_for_subdomain(i, prop1d);
             }
+
+            // iterate over all elements in the region with void and set the
+            // domain id and material property
+            static_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
+            eigen_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
+            MeshBase::const_element_iterator
+            el_it = mesh.elements_begin(),
+            el_end = mesh.elements_end();
+            for ( ; el_it != el_end; el_it++ ) {
+                Elem* elem = *el_it;
+                if (elem->dim() != 1)
+                    continue;
+                Point p = elem->centroid();
+                if (p(0) >= .1 && p(0) <= .2)
+                    elem->subdomain_id() = n_stiff+1;
+            }
         }
     }
     
-    static_system.solve();
-    eigen_structural_assembly.set_static_solution_system(&static_system);
+    //static_system.solve();
+    //eigen_structural_assembly.set_static_solution_system(&static_system);
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     eigen_system.solve();
@@ -480,7 +533,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         delete dirichlet_boundary_conditions[i];
     
     // now write the data to an output file
-    MAST::NastranIO(static_structural_assembly).write("nast.txt");
+    //MAST::NastranIO(static_structural_assembly).write("nast.txt");
     XdrIO xdr(mesh, true);
     xdr.write("saved_structural_mesh.xdr");
     equation_systems.write("saved_structural_solution.xdr",

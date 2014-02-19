@@ -147,8 +147,16 @@ MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
     Node *old_node, *new_node;
     
     for ( ; el_it != el_end; el_it++ ) {
-        Elem* old_elem = *el_it,
-        *new_elem = panel.add_elem(Elem::build(old_elem->type()).release());
+        Elem* old_elem = *el_it;
+//        // if the element lies in the hole, do not add it to the mesh
+//        if (c == MAST::StiffenedPanel::STIFFENER_X) {
+//            Point p = old_elem->centroid();
+//            if (p(0) >= .1 && p(0) <= .2 &&
+//                p(1) >= .01 && p(1) <= .03)
+//                continue;
+//        }
+        
+        Elem *new_elem = panel.add_elem(Elem::build(old_elem->type()).release());
         new_elem->subdomain_id() = sid;
         
         // add boundary condition tags for the panel boundary
