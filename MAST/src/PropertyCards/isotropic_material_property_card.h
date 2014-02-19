@@ -47,8 +47,10 @@ namespace MAST {
             _nu(f._nu->clone().release()),
             _m(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
             _parm_parE(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu))
-            { }
+            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)){
+                _functions.insert(_E);
+                _functions.insert(_nu);
+            }
 
             /*!
              *   @returns a clone of the function
@@ -92,8 +94,10 @@ namespace MAST {
             _m(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
             _parm_parE(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
             _parm_parnu(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)),
-            _parm_parkappa(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parkappa))
-            { }
+            _parm_parkappa(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parkappa)) {
+                _functions.insert(_E);
+                _functions.insert(_nu);
+            }
 
             /*!
              *   @returns a clone of the function
@@ -137,8 +141,10 @@ namespace MAST {
             _nu(f._nu->clone().release()),
             _m(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
             _parm_parE(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu))
-            { }
+            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)) {
+                _functions.insert(_E);
+                _functions.insert(_nu);
+            }
 
             /*!
              *   @returns a clone of the function
@@ -183,8 +189,10 @@ namespace MAST {
             _nu(f._nu->clone().release()),
             _m(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
             _parm_parE(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu))
-            { }
+            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)) {
+                _functions.insert(_E);
+                _functions.insert(_nu);
+            }
 
             /*!
              *   @returns a clone of the function

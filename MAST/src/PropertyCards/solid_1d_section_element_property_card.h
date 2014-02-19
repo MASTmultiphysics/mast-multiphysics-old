@@ -46,8 +46,10 @@ namespace MAST {
             Area(const MAST::Solid1DSectionElementPropertyCard::Area &f):
             MAST::FieldFunction<Real>(f),
             _hy(f._hy->clone().release()),
-            _hz(f._hz->clone().release())
-            { }
+            _hz(f._hz->clone().release()) {
+                _functions.insert(_hy);
+                _functions.insert(_hz);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -109,8 +111,10 @@ namespace MAST {
             TorsionalConstant(const MAST::Solid1DSectionElementPropertyCard::TorsionalConstant &f):
             MAST::FieldFunction<Real>(f),
             _hy(f._hy->clone().release()),
-            _hz(f._hz->clone().release())
-            { }
+            _hz(f._hz->clone().release()) {
+                _functions.insert(_hy);
+                _functions.insert(_hz);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -223,8 +227,12 @@ namespace MAST {
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
             _hy_offset(f._hy_offset->clone().release()),
-            _hz_offset(f._hz_offset->clone().release())
-            { }
+            _hz_offset(f._hz_offset->clone().release()) {
+                _functions.insert(_hy);
+                _functions.insert(_hz);
+                _functions.insert(_hy_offset);
+                _functions.insert(_hz_offset);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -310,8 +318,11 @@ namespace MAST {
             MAST::FieldFunction<Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
-            _hz_offset(f._hz_offset->clone().release())
-            { }
+            _hz_offset(f._hz_offset->clone().release()) {
+                _functions.insert(_hy);
+                _functions.insert(_hz);
+                _functions.insert(_hz_offset);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -381,8 +392,11 @@ namespace MAST {
             MAST::FieldFunction<Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
-            _hy_offset(f._hy_offset->clone().release())
-            { }
+            _hy_offset(f._hy_offset->clone().release()) {
+                _functions.insert(_hy);
+                _functions.insert(_hz);
+                _functions.insert(_hy_offset);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -457,8 +471,12 @@ namespace MAST {
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
             _hy_offset(f._hy_offset->clone().release()),
-            _hz_offset(f._hz_offset->clone().release())
-            { }
+            _hz_offset(f._hz_offset->clone().release()) {
+                _functions.insert(_hy);
+                _functions.insert(_hz);
+                _functions.insert(_hy_offset);
+                _functions.insert(_hz_offset);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -543,8 +561,11 @@ namespace MAST {
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _A(f._A->clone().release()),
-            _J(f._J->clone().release())
-            { }
+            _J(f._J->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_A);
+                _functions.insert(_J);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -586,8 +607,11 @@ namespace MAST {
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _A_y_moment(f._A_y_moment->clone().release()),
-            _A_z_moment(f._A_z_moment->clone().release())
-            { }
+            _A_z_moment(f._A_z_moment->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_A_y_moment);
+                _functions.insert(_A_z_moment);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -626,8 +650,10 @@ namespace MAST {
             SectionIntegratedBendingStiffnessMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix &f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _I(f._I->clone().release())
-            { }
+            _I(f._I->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_I);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -672,8 +698,10 @@ namespace MAST {
             SectionIntegratedTransverseStiffnessMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix &f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _A(f._A->clone().release())
-            { }
+            _A(f._A->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_A);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -740,8 +768,14 @@ namespace MAST {
             _A_y_moment(f._A_y_moment->clone().release()),
             _A_z_moment(f._A_z_moment->clone().release()),
             _Ip(f._Ip->clone().release()),
-            _I(f._I->clone().release())
-            { }
+            _I(f._I->clone().release()) {
+                _functions.insert(_rho);
+                _functions.insert(_A);
+                _functions.insert(_A_y_moment);
+                _functions.insert(_A_z_moment);
+                _functions.insert(_Ip);
+                _functions.insert(_I);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -786,8 +820,11 @@ namespace MAST {
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
-            _A(f._A->clone().release())
-            { }
+            _A(f._A->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_material_expansion);
+                _functions.insert(_A);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -832,8 +869,12 @@ namespace MAST {
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
             _A_y_moment(f._A_y_moment->clone().release()),
-            _A_z_moment(f._A_z_moment->clone().release())
-            { }
+            _A_z_moment(f._A_z_moment->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_material_expansion);
+                _functions.insert(_A_y_moment);
+                _functions.insert(_A_z_moment);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -878,8 +919,11 @@ namespace MAST {
             MAST::SectionIntegratedPrestressMatrixBase(f),
             _prestress(f._prestress->clone().release()),
             _T(f._T->clone().release()),
-            _A(f._A->clone().release())
-            { }
+            _A(f._A->clone().release()) {
+                _functions.insert(_prestress);
+                _functions.insert(_T);
+                _functions.insert(_A);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -925,8 +969,12 @@ namespace MAST {
             _prestress(f._prestress->clone().release()),
             _T(f._T->clone().release()),
             _A_y_moment(f._A_y_moment->clone().release()),
-            _A_z_moment(f._A_z_moment->clone().release())
-            { }
+            _A_z_moment(f._A_z_moment->clone().release()) {
+                _functions.insert(_prestress);
+                _functions.insert(_T);
+                _functions.insert(_A_y_moment);
+                _functions.insert(_A_z_moment);
+            }
             
             /*!
              *   @returns a clone of the function

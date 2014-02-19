@@ -39,8 +39,9 @@ namespace MAST
             
             SectionIntegratedStiffnessMatrix(const MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
-            _material_stiffness(f._material_stiffness->clone().release())
-            { }
+            _material_stiffness(f._material_stiffness->clone().release()) {
+                _functions.insert(_material_stiffness);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -73,8 +74,9 @@ namespace MAST
             
             SectionIntegratedInertiaMatrix(const MAST::ElementPropertyCard3D::SectionIntegratedInertiaMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
-            _material_inertia(f._material_inertia->clone().release())
-            { }
+            _material_inertia(f._material_inertia->clone().release()) {
+                _functions.insert(_material_inertia);
+            }
 
             /*!
              *   @returns a clone of the function
@@ -110,8 +112,10 @@ namespace MAST
                                                     SectionIntegratedThermalExpansionMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _material_expansion(f._material_expansion->clone().release())
-            { }
+            _material_expansion(f._material_expansion->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_material_expansion);
+            }
 
             /*!
              *   @returns a clone of the function
@@ -149,8 +153,9 @@ namespace MAST
             
             SectionIntegratedPrestressAMatrix(const MAST::ElementPropertyCard3D::SectionIntegratedPrestressAMatrix& f):
             MAST::SectionIntegratedPrestressMatrixBase(f),
-            _prestress(f._prestress->clone().release())
-            { }
+            _prestress(f._prestress->clone().release()) {
+                _functions.insert(_prestress);
+            }
 
             /*!
              *   @returns a clone of the function
