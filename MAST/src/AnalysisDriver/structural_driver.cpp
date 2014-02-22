@@ -375,8 +375,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::IsotropicMaterialPropertyCard void_material(8);
     MAST::ConstantFunction<Real> zeroE("E", 0.),
     hz_bottom("hz", 0.01),
-    hz_middle("hz", 0.005),
-    hz_top("hz", 0.025);
+    hz_middle("hz", 0.02),
+    hz_top("hz", 0.01);
     void_material.add(zeroE);
     void_material.add(nu);
     void_material.add(kappa);

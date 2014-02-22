@@ -26,14 +26,21 @@ namespace MAST {
         ConstantFunction(const std::string& nm,
                          const ValType& val):
         FieldFunction<ValType>(nm),
-        _val(val)
-        { }
+        _val(new ValType)
+        { *_val = val;}
         
         ConstantFunction(const MAST::ConstantFunction<ValType>& f):
         FieldFunction<ValType>(f),
         _val(f._val)
         { }
 
+        ~ConstantFunction() {
+            // since the master function owns the pointer, it should not be deleted
+            // if the function is not a master function.
+            if (this == this->master())
+                delete _val;
+        }
+        
         
         /*!
          *   @returns a clone of the function
@@ -47,7 +54,7 @@ namespace MAST {
          *   returns the value of this function
          */
         virtual void operator() (const Point& p, const Real t, ValType& v) const
-        {   v = _val; }
+        {   v = *_val; }
         
         
         /*!
@@ -80,7 +87,7 @@ namespace MAST {
          *    Returns the pointer to value of this function.
          */
         virtual ValType* ptr()
-        {   return &_val; }
+        {   return _val; }
         
         
         
@@ -101,12 +108,12 @@ namespace MAST {
          *  sets the value of this function
          */
         void operator =(const ValType& val)
-        {   _val = val; }
+        {   *_val = val; }
         
         
     protected:
         
-        ValType _val;
+        ValType* _val;
     };
     
 }
