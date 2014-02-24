@@ -260,7 +260,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     bc.set_function(press);
     std::set<subdomain_id_type> ids;
     mesh.subdomain_ids(ids);
-    static_structural_assembly.add_volume_load(0, bc);
+    //static_structural_assembly.add_volume_load(0, bc);
     MAST::ConstantTemperature temp;
     temp.set_temperature(100., 0.);
     
@@ -468,7 +468,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     eigen_system.solve();
     std::vector<Real> sens;
-    eigen_structural_assembly.add_parameter(h_stiff);
+    eigen_structural_assembly.add_parameter(h);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
     eigen_system.sensitivity_solve(params, sens);
     std::cout << "sens>: ";

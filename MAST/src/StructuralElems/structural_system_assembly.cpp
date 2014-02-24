@@ -600,7 +600,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
         
         // now get the matrices
         if (!param) {
-            structural_elem->internal_force(true, vec, mat1, false);
+            structural_elem->internal_force(true, vec, mat1, true);
             structural_elem->prestress_force(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force(true, vec, mat2);
         }
@@ -618,7 +618,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             }
 
             structural_elem->sensitivity_param = param;
-            structural_elem->internal_force_sensitivity(true, vec, mat1, false);
+            structural_elem->internal_force_sensitivity(true, vec, mat1, true);
             structural_elem->prestress_force_sensitivity(true, vec, mat1); mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
         }
