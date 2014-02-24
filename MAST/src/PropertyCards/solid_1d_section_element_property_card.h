@@ -1037,6 +1037,15 @@ namespace MAST {
          *   \par val are A, J, IYY, IZZ, IYZ
          */
         virtual Real value(const std::string& val) const;
+
+        
+        /*!
+         *   returns value of the property \par val. The string values for
+         *   \par val are A, J, IYY, IZZ, IYZ
+         */
+        template <typename ValType>
+        std::auto_ptr<ValType> section_property(const std::string& val) const;
+
         
         /*!
          *   returns a function to evaluate the specified quantitys

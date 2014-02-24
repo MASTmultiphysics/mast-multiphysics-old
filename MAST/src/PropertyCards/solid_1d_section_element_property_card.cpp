@@ -902,6 +902,29 @@ MAST::Solid1DSectionElementPropertyCard::value(const std::string& val) const {
 
 
 
+
+template <>
+std::auto_ptr<MAST::FieldFunction<Real> >
+MAST::Solid1DSectionElementPropertyCard::section_property<MAST::FieldFunction<Real> >
+(const std::string& val) const {
+    std::auto_ptr<MAST::FieldFunction<Real> > rval;
+    
+    if (val == "A")
+        rval.reset( new MAST::Solid1DSectionElementPropertyCard::Area
+                   (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+                    this->get<MAST::FieldFunction<Real> >("hz").clone().release()));
+    else if (val == "J")
+        rval.reset(new MAST::Solid1DSectionElementPropertyCard::TorsionalConstant
+                   (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
+                    this->get<MAST::FieldFunction<Real> >("hz").clone().release()));
+    else
+        libmesh_error(); // should not get here
+    
+    return rval;
+}
+
+
+
 std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
 MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatrixType t,
                                                       const MAST::StructuralElementBase& e) const {
