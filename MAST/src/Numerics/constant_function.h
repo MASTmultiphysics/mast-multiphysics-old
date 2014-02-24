@@ -74,14 +74,11 @@ namespace MAST {
         virtual void total (const MAST::FieldFunctionBase& f,
                             const Point& p, const Real t,
                             ValType& v) const {
-
-            if (this->master() == f.master())
-                v = 1.;
-            else
-                v = 0.;
+            // non-scalar values have a zero sensitivity
+            (*this)(p, t, v);
+            v.zero();
         }
-        
-        
+
         
         /*!
          *    Returns the pointer to value of this function.
@@ -115,6 +112,18 @@ namespace MAST {
         
         ValType* _val;
     };
+    
+    
+
+    template < >
+    inline void MAST::ConstantFunction<Real>::total (const MAST::FieldFunctionBase& f,
+                                                     const Point& p, const Real t,
+                                                     Real& v) const {
+        if (this->master() == f.master())
+            v = 1.;
+        else
+            v = 0.;
+    }
     
 }
 

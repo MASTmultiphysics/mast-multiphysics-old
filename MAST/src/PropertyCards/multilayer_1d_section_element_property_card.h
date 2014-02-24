@@ -87,12 +87,28 @@ namespace MAST {
             
             virtual void partial (const MAST::FieldFunctionBase& f,
                                   const Point& p, const Real t, Real& m) const {
-                libmesh_error(); // to be implemented
+                Real val = 0.;
+                m = 0.;
+                for (unsigned int i=0; i<_layer_num; i++) {
+                    _layer_hz[i]->partial(f, p, t, val);
+                    m += val; // currently the offset is chosen from h=0;
+                }
+                // finally, add half of the current layer thickness
+                _layer_hz[_layer_num]->partial(f, p, t, val);
+                m += 0.5*val;
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
                                 const Point& p, const Real t, Real& m) const {
-                libmesh_error(); // to be implemented
+                Real val = 0.;
+                m = 0.;
+                for (unsigned int i=0; i<_layer_num; i++) {
+                    _layer_hz[i]->total(f, p, t, val);
+                    m += val; // currently the offset is chosen from h=0;
+                }
+                // finally, add half of the current layer thickness
+                _layer_hz[_layer_num]->total(f, p, t, val);
+                m += 0.5*val;
             }
             
         protected:

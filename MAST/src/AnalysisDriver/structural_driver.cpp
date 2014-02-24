@@ -458,6 +458,15 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     eigen_system.solve();
+    ParameterVector params;
+    params.resize(1); params[0] = h_stiff.ptr();
+    std::vector<Real> sens;
+    eigen_structural_assembly.add_parameter(h_stiff);
+    eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
+    eigen_system.sensitivity_solve(params, sens);
+    std::cout << "sens>: ";
+    for (unsigned int i=0; i<sens.size(); i++)
+        std::cout << sens[i] << std::endl;
     
     std::vector<Real> stress;
     //static_structural_assembly.calculate_max_elem_stress(*static_system.solution,
