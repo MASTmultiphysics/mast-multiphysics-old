@@ -404,8 +404,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     layers[2] = &top;
     multi_prop1d.set_layers(layers);
     
-    prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);
@@ -453,13 +453,20 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         }
     }
     
-    //static_system.solve();
-    //eigen_structural_assembly.set_static_solution_system(&static_system);
+    ParameterVector params;
+    params.resize(1); params[0] = h.ptr();
+    static_system.solve();
+    static_system.solution->print();
+    static_system.attach_sensitivity_assemble_object(static_structural_assembly);
+    static_structural_assembly.add_parameter(h);
+    static_system.sensitivity_solve(params);
+    static_system.get_sensitivity_solution().print();
+    return 0;
+    
+    eigen_structural_assembly.set_static_solution_system(&static_system);
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     eigen_system.solve();
-    ParameterVector params;
-    params.resize(1); params[0] = h_stiff.ptr();
     std::vector<Real> sens;
     eigen_structural_assembly.add_parameter(h_stiff);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);

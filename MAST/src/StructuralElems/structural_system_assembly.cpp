@@ -415,6 +415,9 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
             structural_elem->volume_external_force_sensitivity(J!=NULL?true:false,
                                                                vec, mat,
                                                                _vol_bc_map);
+            // scale vector by -1 to account for the fact that the sensitivity
+            // appears on RHS of the system with a -ve sign on it
+            vec.scale(-1.);
         }
         
         if (R && J)
