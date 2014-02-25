@@ -27,10 +27,10 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
     DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
+    DenseVector<Real> tmp_vec1_n1, tmp_vec2_n2;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    phi.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
@@ -93,10 +93,10 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
     DenseMatrix<Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseVector<Real>  phi, tmp_vec1_n1, tmp_vec2_n2;
+    DenseVector<Real> tmp_vec1_n1, tmp_vec2_n2;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    phi.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
@@ -129,6 +129,117 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     
     return request_jacobian;
 }
+
+
+
+
+bool
+MAST::StructuralElement3D::prestress_force (bool request_jacobian,
+                                           DenseVector<Real>& f,
+                                           DenseMatrix<Real>& jac)
+{
+    FEMOperatorMatrix Bmat;
+    
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<Point>& xyz = _fe->get_xyz();
+    const unsigned int n_phi = (unsigned int)JxW.size();
+    const unsigned int n1=6, n2=6*n_phi;
+    DenseMatrix<Real> prestress_mat_A, tmp_mat1_n1n2, tmp_mat2_n2n2;
+    DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n2, prestress_vec_A;
+    
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    
+    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+    
+    std::auto_ptr<MAST::SectionIntegratedPrestressMatrixBase>
+    prestress_A
+    (dynamic_cast<MAST::SectionIntegratedPrestressMatrixBase*>
+     (_property.get_property(MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX,
+                             *this).release()));
+    
+    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+        this->initialize_strain_operator(qp, Bmat);
+        
+        // get the material matrix
+        (*prestress_A)(xyz[qp], _system.time, prestress_mat_A);
+        prestress_A->convert_to_vector(prestress_mat_A, prestress_vec_A);
+        
+        // now calculate the force vector
+        Bmat.vector_mult_transpose(tmp_vec2_n2, prestress_vec_A);
+        f.add(-JxW[qp], tmp_vec2_n2);
+        
+        if (request_jacobian) {
+            // nothing to be done here unless a nonlinear strain is included
+        }
+    }
+    
+    return request_jacobian;
+}
+
+
+
+bool
+MAST::StructuralElement3D::prestress_force_sensitivity (bool request_jacobian,
+                                                        DenseVector<Real>& f,
+                                                        DenseMatrix<Real>& jac)
+{
+    // this should be true if the function is called
+    libmesh_assert(this->sensitivity_param);
+    libmesh_assert(!this->sensitivity_param->is_shape_parameter()); // this is not implemented for now
+    
+    
+    // check if the material property or the provided exterior
+    // values, like temperature, are functions of the sensitivity parameter
+    bool calculate = false;
+    calculate = calculate || _property.depends_on(*(this->sensitivity_param));
+    
+    // nothing to be calculated if the element does not depend on the
+    // sensitivity parameter.
+    if (!calculate)
+        return false;
+    
+    FEMOperatorMatrix Bmat;
+    
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<Point>& xyz = _fe->get_xyz();
+    const unsigned int n_phi = (unsigned int)JxW.size();
+    const unsigned int n1=6, n2=6*n_phi;
+    DenseMatrix<Real> prestress_mat_A, tmp_mat1_n1n2, tmp_mat2_n2n2;
+    DenseVector<Real> prestress_vec_A, tmp_vec1_n1, tmp_vec2_n2;
+    
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    
+    
+    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+    
+    std::auto_ptr<MAST::SectionIntegratedPrestressMatrixBase>
+    prestress_A
+    (dynamic_cast<MAST::SectionIntegratedPrestressMatrixBase*>
+     (_property.get_property(MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX,
+                             *this).release()));
+    
+    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+        this->initialize_strain_operator(qp, Bmat);
+        
+        // get the material matrix sensitivity
+        prestress_A->total(*this->sensitivity_param,
+                           xyz[qp], _system.time, prestress_mat_A);
+        prestress_A->convert_to_vector(prestress_mat_A, prestress_vec_A);
+        
+        // now calculate the force vector
+        Bmat.vector_mult_transpose(tmp_vec2_n2, prestress_vec_A);
+        f.add(-JxW[qp], tmp_vec2_n2);
+        
+        if (request_jacobian) {
+            // nothing to be done here unless a nonlinear strain is included
+        }
+    }
+    
+    return request_jacobian;
+}
+
 
 
 
