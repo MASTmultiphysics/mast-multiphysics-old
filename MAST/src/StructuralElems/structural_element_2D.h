@@ -166,7 +166,15 @@ namespace MAST {
                                                            DenseVector<Real>& vk_strain,
                                                            DenseMatrix<Real>& vk_dwdxi_mat,
                                                            FEMOperatorMatrix& Bmat_vk);
-        
+
+        /*!
+         *   initialze the sensitivity of von Karman operator
+         *   matrices needed for Jacobian calculation.
+         *   vk_dwdxi_mat_sens = [dw/dx 0; 0 dw/dy; dw/dy dw/dx]
+         */
+        virtual void initialize_von_karman_strain_operator_sensitivity(const unsigned int qp,
+                                                                       DenseMatrix<Real>& vk_dwdxi_mat_sens);
+
         /*!
          *   performs integration at the quadrature point for the provided
          *   matrices. The temperature vector and matrix entities are provided for
@@ -200,6 +208,28 @@ namespace MAST {
                                                DenseMatrix<Real>& tmp_mat3,
                                                DenseMatrix<Real>& tmp_mat4_2n2);
 
+        /*!
+         *   sensitivity of linear part of the geometric stiffness matrix
+         */
+        void _linearized_geometric_stiffness_sensitivity_with_static_solution
+        (const unsigned int n2,
+         const unsigned int qp,
+         const std::vector<Real>& JxW,
+         DenseMatrix<Real>& local_jac,
+         FEMOperatorMatrix& Bmat_mem,
+         FEMOperatorMatrix& Bmat_bend,
+         FEMOperatorMatrix& Bmat_vk,
+         DenseMatrix<Real>& stress_l,
+         DenseMatrix<Real>& vk_dwdxi_mat,
+         DenseMatrix<Real>& material_A_mat,
+         DenseMatrix<Real>& material_B_mat,
+         DenseVector<Real>& tmp_vec1_n1,
+         DenseVector<Real>& tmp_vec2_n1,
+         DenseMatrix<Real>& tmp_mat1_n1n2,
+         DenseMatrix<Real>& tmp_mat2_n2n2,
+         DenseMatrix<Real>& tmp_mat3);
+
+        
     };
 }
 

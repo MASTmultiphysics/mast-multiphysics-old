@@ -558,7 +558,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                      _system.get_dof_map().get_send_list(),
                                      false, GHOSTED);
-            static_sol_sens->localize(*localized_solution, _system.get_dof_map().get_send_list());
+            static_sol_sens->localize(*localized_solution_sens, _system.get_dof_map().get_send_list());
         }
     }
     
@@ -679,7 +679,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                           _system.get_dof_map().get_send_list(),
                                           false, GHOSTED);
-            static_sol_sens->localize(*localized_solution, _system.get_dof_map().get_send_list());
+            static_sol_sens->localize(*localized_solution_sens, _system.get_dof_map().get_send_list());
         }
     }
     
@@ -740,12 +740,12 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                 for (unsigned int i=0; i<dof_indices.size(); i++)
                     sol(i) = (*localized_solution)(dof_indices[i]);
                 structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
-
+                
                 // displacement sensitivity
                 for (unsigned int i=0; i<dof_indices.size(); i++)
                     sol(i) = (*localized_solution_sens)(dof_indices[i]);
                 structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
-
+                
                 // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force_sensitivity(true, vec, mat2, true);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part

@@ -456,12 +456,12 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     ParameterVector params;
     params.resize(1); params[0] = h.ptr();
     static_system.solve();
-    static_system.solution->print();
+    //static_system.solution->print();
     static_system.attach_sensitivity_assemble_object(static_structural_assembly);
     static_structural_assembly.add_parameter(h);
     static_system.sensitivity_solve(params);
-    static_system.get_sensitivity_solution().print();
-    return 0;
+    //static_system.get_sensitivity_solution().print();
+    //return 0;
     
     eigen_structural_assembly.set_static_solution_system(&static_system);
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
