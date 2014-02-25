@@ -507,7 +507,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
     XdrIO xdr(mesh, true);
     xdr.set_write_parallel(false);
     xdr.write("saved_mesh.xdr");
-    equation_systems.write("saved_solution.xdr", libMeshEnums::ENCODE,
+    equation_systems.write("saved_solution.xdr", libMesh::ENCODE,
                            (EquationSystems::WRITE_SERIAL_FILES |
                             EquationSystems::WRITE_DATA));
 #endif

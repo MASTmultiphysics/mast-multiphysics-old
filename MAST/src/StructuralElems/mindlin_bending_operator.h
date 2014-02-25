@@ -173,7 +173,7 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     FEMOperatorMatrix Bmat_trans;
     Bmat_trans.reinit(2, 6, n_phi); // only two shear stresses
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_stiff
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat_stiff
     (property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                            _structural_elem).release());
     

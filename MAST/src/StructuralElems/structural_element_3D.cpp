@@ -35,7 +35,7 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_stiff
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat_stiff
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                             *this).release());
     
@@ -101,7 +101,7 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
 
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_stiff
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat_stiff
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                             *this).release());
 
@@ -156,7 +156,7 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     
     Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
 

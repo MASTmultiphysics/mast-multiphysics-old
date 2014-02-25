@@ -73,8 +73,8 @@ namespace MAST {
          *    returns the transformation matrix for this element. This is used
          *    to map the coordinates from local to global coordinate system
          */
-        std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> T_matrix_function() const {
-            return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > T_matrix_function() const {
+            return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
             (new MAST::ConstantFunction<DenseMatrix<Real> >("T_mat", _T_mat));
         }
 

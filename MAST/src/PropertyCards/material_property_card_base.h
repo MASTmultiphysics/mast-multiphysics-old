@@ -46,7 +46,7 @@ namespace MAST
             return _pid;
         }
 
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
         get_property(MAST::MaterialPropertyMatrixType t,
                      const MAST::ElementPropertyCardBase& p,
                      const unsigned int dim) const = 0;

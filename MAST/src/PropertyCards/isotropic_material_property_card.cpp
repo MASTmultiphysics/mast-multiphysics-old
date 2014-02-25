@@ -532,7 +532,7 @@ StiffnessMatrix3D::total (const MAST::FieldFunctionBase& f,
 
 
 
-std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
 MAST::IsotropicMaterialPropertyCard::get_property(MAST::MaterialPropertyMatrixType t,
                                                   const MAST::ElementPropertyCardBase& p,
                                                   const unsigned int dim) const  {
@@ -578,5 +578,5 @@ MAST::IsotropicMaterialPropertyCard::get_property(MAST::MaterialPropertyMatrixTy
     // make sure that this is not null
     libmesh_assert(rval);
     
-    return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>(rval);
+    return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >(rval);
 }

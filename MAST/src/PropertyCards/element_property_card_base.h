@@ -79,7 +79,7 @@ namespace MAST
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const = 0;
         

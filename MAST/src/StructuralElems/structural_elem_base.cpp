@@ -78,7 +78,7 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     local_f.resize(n2);
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_inertia
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat_inertia
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                             *this).release());
 
@@ -181,7 +181,7 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     local_f.resize(n2);
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> mat_inertia
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat_inertia
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                             *this).release());
     
@@ -634,7 +634,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     // get the function from this boundary condition
     std::auto_ptr<FEBase> fe;
     std::auto_ptr<QBase> qrule;
-    _get_side_fe_and_qrule(this->local_elem(), side, fe, qrule);
+    _get_side_fe_and_qrule(this->local_elem().local_elem(), side, fe, qrule);
     
     const std::vector<Real> &JxW = fe->get_JxW();
     
@@ -658,7 +658,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
-        this->global_coordinates(qpoint[qp], pt)
+        this->global_coordinates(qpoint[qp], pt);
         
         // now set the shape function values
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
@@ -751,7 +751,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
-        this->global_coordinates(qpoint[qp], pt)
+        this->global_coordinates(qpoint[qp], pt);
         
         // now set the shape function values
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )

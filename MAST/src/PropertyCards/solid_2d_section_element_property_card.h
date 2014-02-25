@@ -48,8 +48,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix(*this));
             }
 
@@ -88,8 +88,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix(*this));
             }
             
@@ -128,8 +128,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix(*this));
             }
 
@@ -171,8 +171,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix(*this));
             }
             
@@ -237,8 +237,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix(*this));
             }
 
@@ -283,8 +283,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix(*this));
             }
             
@@ -331,8 +331,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix(*this));
             }
             
@@ -381,8 +381,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix(*this));
             }
 
@@ -427,8 +427,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix(*this));
             }
 
@@ -484,7 +484,7 @@ namespace MAST {
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const;
 

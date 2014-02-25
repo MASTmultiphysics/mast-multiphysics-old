@@ -181,7 +181,7 @@ MAST::StructuralElement1D::internal_force (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
     mat_stiff_A(_property.get_property
                 (MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                  *this).release()),
@@ -301,7 +301,7 @@ MAST::StructuralElement1D::internal_force_sensitivity (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
     mat_stiff_A
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                             *this).release()),
@@ -916,7 +916,7 @@ MAST::StructuralElement1D::thermal_force (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> expansion_A
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > expansion_A
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release()),
     expansion_B

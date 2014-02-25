@@ -217,11 +217,11 @@ SectionIntegratedPrestressAMatrix::convert_to_vector(const DenseMatrix<Real> &m,
 }
 
 
-std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
 MAST::ElementPropertyCard3D::get_property(MAST::ElemenetPropertyMatrixType t,
                                           const MAST::StructuralElementBase& e) const {
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> rval;
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > rval;
     
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:

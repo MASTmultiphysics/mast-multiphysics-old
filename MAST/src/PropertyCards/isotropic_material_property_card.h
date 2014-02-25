@@ -55,8 +55,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::IsotropicMaterialPropertyCard::StiffnessMatrix1D(*this));
             }
 
@@ -102,8 +102,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const  {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const  {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::IsotropicMaterialPropertyCard::TransverseShearStiffnessMatrix(*this));
             }
 
@@ -149,8 +149,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::IsotropicMaterialPropertyCard::StiffnessMatrix2D(*this));
             }
 
@@ -197,8 +197,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::IsotropicMaterialPropertyCard::StiffnessMatrix3D(*this));
             }
 
@@ -228,7 +228,7 @@ namespace MAST {
          *   @returns the function object to calculate the requested quantity
          *   \par t, for an element of dimension \par dim
          */
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
         get_property(MAST::MaterialPropertyMatrixType t,
                      const MAST::ElementPropertyCardBase& p,
                      const unsigned int dim) const;

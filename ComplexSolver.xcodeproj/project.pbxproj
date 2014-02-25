@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		69376FB118BC4CEF00213B47 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69376FAF18BC4CEF00213B47 /* libmpi_cxx.1.dylib */; };
+		69376FB218BC4CEF00213B47 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69376FB018BC4CEF00213B47 /* libmpi.1.dylib */; };
+		69376FB318BC4D2000213B47 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF96DF116EA6C9200316D86 /* libmesh_dbg.0.dylib */; };
+		69376FB718BC4DA800213B47 /* optimization_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69376FB418BC4DA800213B47 /* optimization_driver.cpp */; };
+		69376FC618BC4E1200213B47 /* element_property_card_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69376FBD18BC4E1200213B47 /* element_property_card_3D.cpp */; };
+		69376FC718BC4E1200213B47 /* isotropic_material_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69376FBE18BC4E1200213B47 /* isotropic_material_property_card.cpp */; };
+		69376FC818BC4E1200213B47 /* multilayer_1d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69376FC018BC4E1200213B47 /* multilayer_1d_section_element_property_card.cpp */; };
+		69376FC918BC4E1200213B47 /* solid_1d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69376FC218BC4E1200213B47 /* solid_1d_section_element_property_card.cpp */; };
+		69376FCA18BC4E1200213B47 /* solid_2d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69376FC418BC4E1200213B47 /* solid_2d_section_element_property_card.cpp */; };
 		EB41AEE817EA157000288448 /* pk_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB41AEE617EA157000288448 /* pk_flutter_solver.cpp */; };
 		EB69869217E79B9000E4530F /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB69869117E79B9000E4530F /* ug_flutter_solver.cpp */; };
 		EBB0998717F08F0F00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998617F08F0F00272355 /* main.cpp */; };
@@ -24,8 +33,6 @@
 		EBD7964118491C9D007FA3A7 /* surface_pressure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD7964018491C9D007FA3A7 /* surface_pressure.cpp */; };
 		EBD7964318491D22007FA3A7 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBD7964218491D22007FA3A7 /* Accelerate.framework */; };
 		EBD7964718492E19007FA3A7 /* boundary_condition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD7964618492E19007FA3A7 /* boundary_condition.cpp */; };
-		EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */; };
-		EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBE3224616EA7FC80078E733 /* libmpi.1.dylib */; };
 		EBE84D6417A6B3F400AEE871 /* flutter_solver_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D2D17A6B3F400AEE871 /* flutter_solver_base.cpp */; };
 		EBE84D6517A6B3F400AEE871 /* fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D3417A6B3F400AEE871 /* fluid_analysis_driver.cpp */; };
 		EBE84D6617A6B3F400AEE871 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D3617A6B3F400AEE871 /* flutter_driver.cpp */; };
@@ -38,7 +45,6 @@
 		EBE84D6E17A6B3F400AEE871 /* residual_based_adaptive_time_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D5717A6B3F400AEE871 /* residual_based_adaptive_time_solver.cpp */; };
 		EBE84D6F17A6B3F400AEE871 /* structural_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D5B17A6B3F400AEE871 /* structural_elem_base.cpp */; };
 		EBE84D7117A6B3F400AEE871 /* thermal_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE84D6217A6B3F400AEE871 /* thermal_elem_base.cpp */; };
-		EBF96DF216EA6C9200316D86 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EBF96DF116EA6C9200316D86 /* libmesh_dbg.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -55,6 +61,25 @@
 
 /* Begin PBXFileReference section */
 		690D674917B475E300C4AE88 /* lapack_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lapack_interface.h; sourceTree = "<group>"; };
+		69376FAF18BC4CEF00213B47 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = "../../../../../opt/local/lib/openmpi-mp/libmpi_cxx.1.dylib"; sourceTree = "<group>"; };
+		69376FB018BC4CEF00213B47 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = "../../../../../opt/local/lib/openmpi-mp/libmpi.1.dylib"; sourceTree = "<group>"; };
+		69376FB418BC4DA800213B47 /* optimization_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = optimization_driver.cpp; sourceTree = "<group>"; };
+		69376FB518BC4DA800213B47 /* sizing_optimization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sizing_optimization.h; sourceTree = "<group>"; };
+		69376FB618BC4DA800213B47 /* topology_optimization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = topology_optimization.h; sourceTree = "<group>"; };
+		69376FB818BC4DBD00213B47 /* displacement_boundary_condition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = displacement_boundary_condition.h; sourceTree = "<group>"; };
+		69376FB918BC4DC600213B47 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
+		69376FBA18BC4DEB00213B47 /* nastran_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nastran_io.h; sourceTree = "<group>"; };
+		69376FBB18BC4DEB00213B47 /* stiffened_panel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stiffened_panel.h; sourceTree = "<group>"; };
+		69376FBC18BC4DFC00213B47 /* constant_function.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = constant_function.h; sourceTree = "<group>"; };
+		69376FBD18BC4E1200213B47 /* element_property_card_3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = element_property_card_3D.cpp; sourceTree = "<group>"; };
+		69376FBE18BC4E1200213B47 /* isotropic_material_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = isotropic_material_property_card.cpp; sourceTree = "<group>"; };
+		69376FBF18BC4E1200213B47 /* isotropic_material_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = isotropic_material_property_card.h; sourceTree = "<group>"; };
+		69376FC018BC4E1200213B47 /* multilayer_1d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = multilayer_1d_section_element_property_card.cpp; sourceTree = "<group>"; };
+		69376FC118BC4E1200213B47 /* multilayer_1d_section_element_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = multilayer_1d_section_element_property_card.h; sourceTree = "<group>"; };
+		69376FC218BC4E1200213B47 /* solid_1d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = solid_1d_section_element_property_card.cpp; sourceTree = "<group>"; };
+		69376FC318BC4E1200213B47 /* solid_1d_section_element_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solid_1d_section_element_property_card.h; sourceTree = "<group>"; };
+		69376FC418BC4E1200213B47 /* solid_2d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = solid_2d_section_element_property_card.cpp; sourceTree = "<group>"; };
+		69376FC518BC4E1200213B47 /* solid_2d_section_element_property_card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solid_2d_section_element_property_card.h; sourceTree = "<group>"; };
 		EB41AEE617EA157000288448 /* pk_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pk_flutter_solver.cpp; sourceTree = "<group>"; };
 		EB41AEE717EA157000288448 /* pk_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pk_flutter_solver.h; sourceTree = "<group>"; };
 		EB41AEEF17EA254A00288448 /* gaussian_bump_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gaussian_bump_mesh.h; sourceTree = "<group>"; };
@@ -147,10 +172,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69376FB318BC4D2000213B47 /* libmesh_dbg.0.dylib in Frameworks */,
 				EBD7964318491D22007FA3A7 /* Accelerate.framework in Frameworks */,
-				EBF96DF216EA6C9200316D86 /* libmesh_dbg.0.dylib in Frameworks */,
-				EBE3224716EA7FC80078E733 /* libmpi_cxx.1.dylib in Frameworks */,
-				EBE3224816EA7FC80078E733 /* libmpi.1.dylib in Frameworks */,
+				69376FB118BC4CEF00213B47 /* libmpi_cxx.1.dylib in Frameworks */,
+				69376FB218BC4CEF00213B47 /* libmpi.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,9 +187,11 @@
 			children = (
 				EB41AEEF17EA254A00288448 /* gaussian_bump_mesh.h */,
 				EB41AEF017EA254A00288448 /* mesh_initializer.h */,
+				69376FBA18BC4DEB00213B47 /* nastran_io.h */,
 				EB41AEF117EA254A00288448 /* panel_mesh.h */,
 				EBD796041848F180007FA3A7 /* ramp_mesh.h */,
 				EB41AEF217EA254A00288448 /* ringleb_mesh.h */,
+				69376FBB18BC4DEB00213B47 /* stiffened_panel.h */,
 			);
 			path = Mesh;
 			sourceTree = "<group>";
@@ -175,6 +202,7 @@
 				EBD7964618492E19007FA3A7 /* boundary_condition.cpp */,
 				EBD79636184903F0007FA3A7 /* boundary_condition.h */,
 				EBD79637184903F0007FA3A7 /* boundary_surface_motion.h */,
+				69376FB818BC4DBD00213B47 /* displacement_boundary_condition.h */,
 				EBD79638184903F0007FA3A7 /* flexible_surface_motion.h */,
 				EBD79639184903F0007FA3A7 /* function_surface_motion.h */,
 				EBD7963A184903F0007FA3A7 /* rigid_surface_motion.cpp */,
@@ -182,6 +210,7 @@
 				EBD7964A18493023007FA3A7 /* small_disturbance_motion.h */,
 				EBD7964018491C9D007FA3A7 /* surface_pressure.cpp */,
 				EBD7963C184903F0007FA3A7 /* surface_pressure.h */,
+				69376FB918BC4DC600213B47 /* temperature.h */,
 			);
 			path = BoundaryConditions;
 			sourceTree = "<group>";
@@ -229,6 +258,9 @@
 		EBE84D3217A6B3F400AEE871 /* AnalysisDriver */ = {
 			isa = PBXGroup;
 			children = (
+				69376FB418BC4DA800213B47 /* optimization_driver.cpp */,
+				69376FB518BC4DA800213B47 /* sizing_optimization.h */,
+				69376FB618BC4DA800213B47 /* topology_optimization.h */,
 				EBE84D3417A6B3F400AEE871 /* fluid_analysis_driver.cpp */,
 				EBE84D3617A6B3F400AEE871 /* flutter_driver.cpp */,
 				EBD795FE1848F125007FA3A7 /* potential_fluid_analysis_driver.cpp */,
@@ -275,6 +307,7 @@
 			children = (
 				EBD796051848F18D007FA3A7 /* basis_matrix.cpp */,
 				EBE84D5117A6B3F400AEE871 /* basis_matrix.h */,
+				69376FBC18BC4DFC00213B47 /* constant_function.h */,
 				EBD796061848F18D007FA3A7 /* fem_operator_matrix.cpp */,
 				EBE84D5217A6B3F400AEE871 /* fem_operator_matrix.h */,
 				EBD796071848F18D007FA3A7 /* function_base.cpp */,
@@ -288,11 +321,20 @@
 			children = (
 				EBD7960F1848F1A3007FA3A7 /* element_property_card_1D.h */,
 				EBD796101848F1A3007FA3A7 /* element_property_card_2D.h */,
+				69376FBD18BC4E1200213B47 /* element_property_card_3D.cpp */,
 				EBD796111848F1A3007FA3A7 /* element_property_card_3D.h */,
 				EBD796121848F1A3007FA3A7 /* element_property_card_base.h */,
 				EBE84D5417A6B3F400AEE871 /* gas_property.h */,
+				69376FBE18BC4E1200213B47 /* isotropic_material_property_card.cpp */,
+				69376FBF18BC4E1200213B47 /* isotropic_material_property_card.h */,
 				EBD796131848F1A3007FA3A7 /* material_property_card_base.h */,
+				69376FC018BC4E1200213B47 /* multilayer_1d_section_element_property_card.cpp */,
+				69376FC118BC4E1200213B47 /* multilayer_1d_section_element_property_card.h */,
 				EBD796141848F1A3007FA3A7 /* property_card_base.h */,
+				69376FC218BC4E1200213B47 /* solid_1d_section_element_property_card.cpp */,
+				69376FC318BC4E1200213B47 /* solid_1d_section_element_property_card.h */,
+				69376FC418BC4E1200213B47 /* solid_2d_section_element_property_card.cpp */,
+				69376FC518BC4E1200213B47 /* solid_2d_section_element_property_card.h */,
 			);
 			path = PropertyCards;
 			sourceTree = "<group>";
@@ -345,6 +387,8 @@
 		EBF96DA216EA6B3200316D86 = {
 			isa = PBXGroup;
 			children = (
+				69376FAF18BC4CEF00213B47 /* libmpi_cxx.1.dylib */,
+				69376FB018BC4CEF00213B47 /* libmpi.1.dylib */,
 				EBD7964218491D22007FA3A7 /* Accelerate.framework */,
 				EBE84D2417A6B3F400AEE871 /* src */,
 				EBE3224516EA7FC80078E733 /* libmpi_cxx.1.dylib */,
@@ -417,21 +461,27 @@
 				EBE84D6417A6B3F400AEE871 /* flutter_solver_base.cpp in Sources */,
 				EBD7960B1848F18D007FA3A7 /* basis_matrix.cpp in Sources */,
 				EBE84D6517A6B3F400AEE871 /* fluid_analysis_driver.cpp in Sources */,
+				69376FB718BC4DA800213B47 /* optimization_driver.cpp in Sources */,
 				EBE84D6617A6B3F400AEE871 /* flutter_driver.cpp in Sources */,
+				69376FC918BC4E1200213B47 /* solid_1d_section_element_property_card.cpp in Sources */,
+				69376FC718BC4E1200213B47 /* isotropic_material_property_card.cpp in Sources */,
 				EBD796261848F1DB007FA3A7 /* bending_structural_elem.cpp in Sources */,
 				EBD7963D184903F0007FA3A7 /* rigid_surface_motion.cpp in Sources */,
 				EBD796251848F1DB007FA3A7 /* bending_operator.cpp in Sources */,
 				EBD7964718492E19007FA3A7 /* boundary_condition.cpp in Sources */,
 				EBE84D6717A6B3F400AEE871 /* structural_driver.cpp in Sources */,
+				69376FCA18BC4E1200213B47 /* solid_2d_section_element_property_card.cpp in Sources */,
 				EBE84D6817A6B3F400AEE871 /* aerodynamic_qoi.cpp in Sources */,
 				EBD7960C1848F18D007FA3A7 /* fem_operator_matrix.cpp in Sources */,
 				EBB0998717F08F0F00272355 /* main.cpp in Sources */,
+				69376FC618BC4E1200213B47 /* element_property_card_3D.cpp in Sources */,
 				EBD7964118491C9D007FA3A7 /* surface_pressure.cpp in Sources */,
 				EBE84D6917A6B3F400AEE871 /* fluid_elem_base.cpp in Sources */,
 				EBE84D6A17A6B3F400AEE871 /* fluid_newton_solver.cpp in Sources */,
 				EBD7962A1848F1DB007FA3A7 /* structural_system_assembly.cpp in Sources */,
 				EBD796281848F1DB007FA3A7 /* structural_element_2D.cpp in Sources */,
 				EBE84D6B17A6B3F400AEE871 /* fluid_system.cpp in Sources */,
+				69376FC818BC4E1200213B47 /* multilayer_1d_section_element_property_card.cpp in Sources */,
 				EBD7960D1848F18D007FA3A7 /* function_base.cpp in Sources */,
 				EBE84D6C17A6B3F400AEE871 /* frequency_domain_linearized_fluid_system.cpp in Sources */,
 				EBE84D6E17A6B3F400AEE871 /* residual_based_adaptive_time_solver.cpp in Sources */,
@@ -503,7 +553,7 @@
 		EBF96DB816EA6B3300316D86 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -515,10 +565,12 @@
 				LD_RUNPATH_SEARCH_PATHS = /opt/local/tbb41_20121003oss/lib;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../libmesh/complex/lib\"",
+					"\\\"$(SRCROOT)/../libmesh/complex/lib\\\"",
 					/opt/local/lib,
 					/opt/local/tbb41_20121003oss/lib/,
 					"$(SRCROOT)/MAST/src/Optimization/gcmma",
+					"/opt/local/lib/openmpi-mp",
+					/Users/manav/Documents/codes/libmesh/complex/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = MAST;
@@ -529,7 +581,7 @@
 		EBF96DB916EA6B3300316D86 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				HEADER_SEARCH_PATHS = (
@@ -540,10 +592,12 @@
 				LD_RUNPATH_SEARCH_PATHS = /opt/local/tbb41_20121003oss/lib;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../libmesh/complex/lib\"",
+					"\\\"$(SRCROOT)/../libmesh/complex/lib\\\"",
 					/opt/local/lib,
 					/opt/local/tbb41_20121003oss/lib/,
 					"$(SRCROOT)/MAST/src/Optimization/gcmma",
+					"/opt/local/lib/openmpi-mp",
+					/Users/manav/Documents/codes/libmesh/complex/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = MAST;

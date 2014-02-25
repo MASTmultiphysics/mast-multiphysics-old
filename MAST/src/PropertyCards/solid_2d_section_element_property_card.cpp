@@ -628,11 +628,11 @@ SectionIntegratedPrestressBMatrix::convert_to_vector(const DenseMatrix<Real> &m,
 }
 
 
-std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
 MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatrixType t,
                                                       const MAST::StructuralElementBase& e) const {
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> rval;
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > rval;
     
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
@@ -661,7 +661,7 @@ MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
 
         case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
             rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix
-                       (this->get<MAST::FieldFunction<DenseMatrix<Real>>>
+                       (this->get<MAST::FieldFunction<DenseMatrix<Real> > >
                         ("prestress").clone().release(),
                         e.local_elem().T_matrix_function().release(),
                         this->get<MAST::FieldFunction<Real> >("h").clone().release()));
@@ -669,7 +669,7 @@ MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
             
         case MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX:
             rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix
-                       (this->get<MAST::FieldFunction<DenseMatrix<Real>>>
+                       (this->get<MAST::FieldFunction<DenseMatrix<Real> > >
                         ("prestress").clone().release(),
                         e.local_elem().T_matrix_function().release(),
                         this->get<MAST::FieldFunction<Real> >("h").clone().release()));

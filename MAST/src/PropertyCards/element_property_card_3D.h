@@ -46,8 +46,8 @@ namespace MAST
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix(*this));
             }
 
@@ -81,8 +81,8 @@ namespace MAST
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::ElementPropertyCard3D::SectionIntegratedInertiaMatrix(*this));
             }
 
@@ -120,8 +120,8 @@ namespace MAST
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix(*this));
             }
 
@@ -160,8 +160,8 @@ namespace MAST
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>> clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
                 (new MAST::ElementPropertyCard3D::SectionIntegratedPrestressAMatrix(*this));
             }
 
@@ -218,7 +218,7 @@ namespace MAST
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real>>>
+        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const;
 

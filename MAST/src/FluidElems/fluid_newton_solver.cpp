@@ -52,8 +52,10 @@ FluidNewtonSolver::line_search(Real& current_residual,
     {
         Real eta=1., var0, dvar, rho, kval;
         // iterate over each nodal dof and set the value
-        MeshBase::node_iterator node_it  = this->system().get_mesh().pid_nodes_begin(libMesh::processor_id());
-        MeshBase::node_iterator node_end = this->system().get_mesh().pid_nodes_end(libMesh::processor_id());
+        MeshBase::node_iterator node_it  =
+        this->system().get_mesh().pid_nodes_begin(libMesh::global_processor_id());
+        MeshBase::node_iterator node_end =
+        this->system().get_mesh().pid_nodes_end(libMesh::global_processor_id());
         
         for ( ; node_it != node_end; node_it++)
         {

@@ -9,7 +9,7 @@
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "StructuralElems/structural_system_assembly.h"
-#include "PropertyCards/element_property_card_1D.h"
+#include "PropertyCards/solid_1d_section_element_property_card.h"
 
 // libMesh includes
 #include "libmesh/getpot.h"
@@ -74,7 +74,7 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     linearized_fluid_system.time_solver->quiet = false;
     // read the fluid system from the saved file
     fluid_equation_systems.read<Real>("saved_solution.xdr",
-                                      libMeshEnums::DECODE);
+                                      libMesh::DECODE);
     // now initilaize the nonlinear solution
     linearized_fluid_system.localize_fluid_solution();
     linearized_fluid_system.extra_quadrature_order =
@@ -120,7 +120,7 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     
     EquationSystems structural_equation_systems (structural_mesh);
     structural_equation_systems.read<Real>("saved_structural_solution.xdr",
-                                           libMeshEnums::DECODE,
+                                           libMesh::DECODE,
                                            (EquationSystems::READ_HEADER |
                                             EquationSystems::READ_DATA |
                                             EquationSystems::READ_ADDITIONAL_DATA));
