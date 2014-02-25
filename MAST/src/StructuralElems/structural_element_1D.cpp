@@ -146,6 +146,39 @@ MAST::StructuralElement1D::initialize_von_karman_strain_operator(const unsigned 
 
 
 
+
+void
+MAST::StructuralElement1D::initialize_von_karman_strain_operator_sensitivity
+(const unsigned int qp,
+ DenseMatrix<Real>& vk_dvdxi_mat_sens,
+ DenseMatrix<Real>& vk_dwdxi_mat_sens) {
+    
+    const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+    const unsigned int n_phi = (unsigned int)dphi.size();
+    
+    libmesh_assert_equal_to(vk_dvdxi_mat_sens.m(), 2);
+    libmesh_assert_equal_to(vk_dvdxi_mat_sens.n(), 2);
+    libmesh_assert_equal_to(vk_dwdxi_mat_sens.m(), 2);
+    libmesh_assert_equal_to(vk_dwdxi_mat_sens.n(), 2);
+    
+    Real dv=0., dw=0.;
+    vk_dvdxi_mat_sens.zero();
+    vk_dwdxi_mat_sens.zero();
+    
+    DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
+    
+    for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ ) {
+        phi_vec(i_nd) = dphi[i_nd][qp](0);                // dphi/dx
+        dv += phi_vec(i_nd)*local_solution_sens(n_phi+i_nd);   // dv/dx
+        dw += phi_vec(i_nd)*local_solution_sens(2*n_phi+i_nd); // dw/dx
+    }
+    
+    vk_dvdxi_mat_sens(0, 0) = dv;                   // epsilon-xx : dv/dx
+    vk_dwdxi_mat_sens(0, 0) = dw;                   // epsilon-xx : dw/dx
+}
+
+
+
 bool
 MAST::StructuralElement1D::internal_force (bool request_jacobian,
                                              DenseVector<Real>& f,
@@ -341,6 +374,24 @@ MAST::StructuralElement1D::internal_force_sensitivity (bool request_jacobian,
                                   tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
                                   tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
                                   tmp_mat3, tmp_mat4_n3n2);
+        
+        // this accounts for the sensitivity of the linear stress as a result of
+        // static solution. This is needed only for cases that require linearized
+        // geometric stiffness matrix, for example in buckling or natural frequency
+        // analysis
+        if (if_bending && if_vk && if_ignore_ho_jac && request_jacobian) {
+            (*mat_stiff_A)(p, _system.time, material_A_mat);
+            (*mat_stiff_B)(p, _system.time, material_B_mat);
+            
+            _linearized_geometric_stiffness_sensitivity_with_static_solution
+            (n2, qp, JxW, local_jac,
+             Bmat_mem, Bmat_bend, Bmat_v_vk, Bmat_w_vk,
+             stress_l, vk_dvdxi_mat, vk_dwdxi_mat,
+             material_A_mat, material_B_mat, tmp_vec1_n1,
+             tmp_vec2_n1, tmp_mat1_n1n2, tmp_mat2_n2n2,
+             tmp_mat3);
+        }
+
     }
     
     // now transform to the global coorodinate system
@@ -619,6 +670,124 @@ MAST::StructuralElement1D::_internal_force_operation
             local_jac.add(-JxW[qp], tmp_mat2_n2n2);
         }
     }
+}
+
+
+
+
+
+void
+MAST::StructuralElement1D::_linearized_geometric_stiffness_sensitivity_with_static_solution
+(const unsigned int n2,
+ const unsigned int qp,
+ const std::vector<Real>& JxW,
+ DenseMatrix<Real>& local_jac,
+ FEMOperatorMatrix& Bmat_mem,
+ FEMOperatorMatrix& Bmat_bend,
+ FEMOperatorMatrix& Bmat_v_vk,
+ FEMOperatorMatrix& Bmat_w_vk,
+ DenseMatrix<Real>& stress_l,
+ DenseMatrix<Real>& vk_dvdxi_mat,
+ DenseMatrix<Real>& vk_dwdxi_mat,
+ DenseMatrix<Real>& material_A_mat,
+ DenseMatrix<Real>& material_B_mat,
+ DenseVector<Real>& tmp_vec1_n1,
+ DenseVector<Real>& tmp_vec2_n1,
+ DenseMatrix<Real>& tmp_mat1_n1n2,
+ DenseMatrix<Real>& tmp_mat2_n2n2,
+ DenseMatrix<Real>& tmp_mat3)
+{
+    this->initialize_direct_strain_operator(qp, Bmat_mem);
+    _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
+    
+    // first handle constant throught the thickness stresses: membrane and vonKarman
+    Bmat_mem.vector_mult(tmp_vec1_n1, local_solution);
+    material_A_mat.vector_mult(tmp_vec2_n1, tmp_vec1_n1); // linear direct stress
+    
+    // copy the stress values to a matrix
+    stress_l(0,0) = tmp_vec2_n1(0); // sigma_xx
+    
+    // get the von Karman operator matrix
+    this->initialize_von_karman_strain_operator(qp,
+                                                tmp_vec2_n1, // epsilon_vk
+                                                vk_dvdxi_mat,
+                                                vk_dwdxi_mat,
+                                                Bmat_v_vk,
+                                                Bmat_w_vk);
+
+    // sensitivity of the vk_dwdxi matrix due to solution sensitivity
+    this->initialize_von_karman_strain_operator_sensitivity(qp,
+                                                            vk_dvdxi_mat,
+                                                            vk_dwdxi_mat);
+    
+    
+    // membrane - vk: v-displacement
+    tmp_mat3.resize(vk_dvdxi_mat.m(), n2);
+    Bmat_v_vk.left_multiply(tmp_mat3, vk_dvdxi_mat);
+    tmp_mat3.left_multiply(material_A_mat);
+    Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // membrane - vk: w-displacement
+    tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
+    Bmat_w_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
+    tmp_mat3.left_multiply(material_A_mat);
+    Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // vk - membrane: v-displacement
+    Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
+    vk_dvdxi_mat.get_transpose(tmp_mat3);
+    tmp_mat3.right_multiply(tmp_mat1_n1n2);
+    Bmat_v_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // vk - membrane: w-displacement
+    Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
+    vk_dwdxi_mat.get_transpose(tmp_mat3);
+    tmp_mat3.right_multiply(tmp_mat1_n1n2);
+    Bmat_w_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // vk - vk: v-displacement: first order term
+    tmp_mat3.resize(2, n2);
+    Bmat_v_vk.left_multiply(tmp_mat3, stress_l);
+    Bmat_v_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // vk - vk: v-displacement: first order term
+    tmp_mat3.resize(2, n2);
+    Bmat_w_vk.left_multiply(tmp_mat3, stress_l);
+    Bmat_w_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // bending - vk: v-displacement
+    tmp_mat3.resize(vk_dvdxi_mat.m(), n2);
+    Bmat_v_vk.left_multiply(tmp_mat3, vk_dvdxi_mat);
+    tmp_mat3.left_multiply_transpose(material_B_mat);
+    Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // bending - vk: w-displacement
+    tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
+    Bmat_w_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
+    tmp_mat3.left_multiply_transpose(material_B_mat);
+    Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // vk - bending: v-displacement
+    Bmat_bend.left_multiply(tmp_mat1_n1n2, material_B_mat);
+    vk_dvdxi_mat.get_transpose(tmp_mat3);
+    tmp_mat3.right_multiply(tmp_mat1_n1n2);
+    Bmat_v_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    
+    // vk - bending: w-displacement
+    Bmat_bend.left_multiply(tmp_mat1_n1n2, material_B_mat);
+    vk_dwdxi_mat.get_transpose(tmp_mat3);
+    tmp_mat3.right_multiply(tmp_mat1_n1n2);
+    Bmat_w_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
 }
 
 
