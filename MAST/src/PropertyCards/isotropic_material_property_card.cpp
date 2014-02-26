@@ -569,6 +569,12 @@ MAST::IsotropicMaterialPropertyCard::get_property(MAST::MaterialPropertyMatrixTy
              this->get<MAST::FieldFunction<Real> >("kappa").clone().release());
             break;
             
+        case MAST::MATERIAL_THERMAL_EXPANSION_MATRIX:
+            rval = new MAST::IsotropicMaterialPropertyCard::ThermalExpansionMatrix
+            (dim,
+             this->get<MAST::FieldFunction<Real> >("alpha").clone().release());
+            break;
+            
         case MAST::MATERIAL_DAMPING_MATRIX:
         default:
             libmesh_error();

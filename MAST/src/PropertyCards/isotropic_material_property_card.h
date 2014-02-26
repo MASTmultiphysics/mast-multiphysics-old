@@ -224,6 +224,112 @@ namespace MAST {
         
         
         
+        class ThermalExpansionMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        public:
+            
+            ThermalExpansionMatrix(unsigned int dim,
+                                   MAST::FieldFunction<Real>* alpha):
+            MAST::FieldFunction<DenseMatrix<Real> >("ThermalExpansionMatrix"),
+            _dim(dim),
+            _alpha(alpha) {
+                _functions.insert(_alpha);
+            }
+            
+            ThermalExpansionMatrix(const MAST::IsotropicMaterialPropertyCard::ThermalExpansionMatrix& f):
+            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            _dim(f._dim),
+            _alpha(f._alpha->clone().release()) {
+                _functions.insert(_alpha);
+            }
+            
+            /*!
+             *   @returns a clone of the function
+             */
+            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+                (new MAST::IsotropicMaterialPropertyCard::ThermalExpansionMatrix(*this));
+            }
+            
+            virtual ~ThermalExpansionMatrix() {
+                delete _alpha;
+            }
+            
+            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const {
+                
+                Real alpha;
+                (*_alpha)(p, t, alpha);
+                switch (_dim) {
+                    case 1:
+                        m.resize(2,1);
+                        break;
+                        
+                    case 2:
+                        m.resize(3,1);
+                        break;
+                        
+                    case 3:
+                        m.resize(3,1);
+                        break;
+                }
+                
+                for (unsigned int i=0; i<_dim; i++)
+                    m(i,0) = alpha;
+            }
+            
+            virtual void partial (const MAST::FieldFunctionBase& f,
+                                  const Point& p, const Real t, DenseMatrix<Real>& m) const {
+                Real alpha;
+                _alpha->partial(f, p, t, alpha);
+                switch (_dim) {
+                    case 1:
+                        m.resize(2,1);
+                        break;
+                        
+                    case 2:
+                        m.resize(3,1);
+                        break;
+                        
+                    case 3:
+                        m.resize(3,1);
+                        break;
+                }
+                
+                for (unsigned int i=0; i<_dim; i++)
+                    m(i,0) = alpha;
+
+            }
+            
+            virtual void total (const MAST::FieldFunctionBase& f,
+                                const Point& p, const Real t, DenseMatrix<Real>& m) const {
+                Real alpha;
+                _alpha->total(f, p, t, alpha);
+                switch (_dim) {
+                    case 1:
+                        m.resize(2,1);
+                        break;
+                        
+                    case 2:
+                        m.resize(3,1);
+                        break;
+                        
+                    case 3:
+                        m.resize(3,1);
+                        break;
+                }
+                
+                for (unsigned int i=0; i<_dim; i++)
+                    m(i,0) = alpha;
+            }
+            
+            
+        protected:
+
+            const unsigned int _dim;
+            MAST::FieldFunction<Real>* _alpha;
+        };
+
+        
+        
         /*!
          *   @returns the function object to calculate the requested quantity
          *   \par t, for an element of dimension \par dim

@@ -682,7 +682,19 @@ MAST::Solid2DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
             break;
             
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 2).release(),
+                        _material->get_property(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, *this, 2).release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+            
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
+            rval.reset(new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 2).release(),
+                        _material->get_property(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, *this, 2).release(),
+                        this->get<MAST::FieldFunction<Real> >("h").clone().release()));
+            break;
+
         case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
         default:
             libmesh_error();

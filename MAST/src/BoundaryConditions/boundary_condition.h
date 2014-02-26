@@ -22,6 +22,9 @@
 
 namespace MAST {
     
+    // Forward declerations
+    class FieldFunctionBase;
+    
     enum BoundaryConditionType {
         SURFACE_PRESSURE,
         SMALL_DISTURBANCE_PRESSURE, // provides pressure perturbations about steady values
@@ -50,16 +53,16 @@ namespace MAST {
         }
         
         
-        void set_function(libMesh::FunctionBase<Number>& f) {
+        void set_function(MAST::FieldFunctionBase& f) {
             _function = &f;
         }
         
-        libMesh::FunctionBase<Number>& function() {
+        MAST::FieldFunctionBase& function() {
             libmesh_assert(_function);
             return *_function;
         }
 
-        const libMesh::FunctionBase<Number>& function() const {
+        const MAST::FieldFunctionBase& function() const {
             libmesh_assert(_function);
             return *_function;
         }
@@ -69,7 +72,7 @@ namespace MAST {
         MAST::BoundaryConditionType _bc_type;
         
         
-        libMesh::FunctionBase<Number>* _function;
+        MAST::FieldFunctionBase* _function;
     };
     
     

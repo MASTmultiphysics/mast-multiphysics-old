@@ -14,6 +14,7 @@
 #include "StructuralElems/structural_system_assembly.h"
 #include "PropertyCards/isotropic_material_property_card.h"
 #include "PropertyCards/solid_2d_section_element_property_card.h"
+#include "Numerics/constant_function.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -157,7 +158,7 @@ namespace MAST {
         
         UnstructuredMesh* _mesh;
         
-        ConstFunction<Real>* _press;
+        ConstantFunction<Real>* _press;
         
         ZeroFunction<Real>* _zero_function;
         
@@ -288,7 +289,7 @@ MAST::TopologyOptimization::_init() {
                                                               _infile);
     _compliance = new MAST::TopologyOptimization::Compliance(*_system);
     
-    _press = new ConstFunction<Real>(1.e5);
+    _press = new MAST::ConstantFunction<Real>("pressure",1.e5);
     _bc = new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE);
     _bc->set_function(*_press);
     _structural_assembly->add_side_load(2, *_bc);

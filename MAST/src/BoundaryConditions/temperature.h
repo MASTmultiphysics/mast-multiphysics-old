@@ -9,20 +9,9 @@
 #ifndef __MAST_temperature_h__
 #define __MAST_temperature_h__
 
-// libMesh includes
-#include "libmesh/mesh_function.h"
-#include "libmesh/system.h"
-#include "libmesh/dof_map.h"
-#include "libmesh/equation_systems.h"
-#include "libmesh/mesh_serializer.h"
-#include "libmesh/numeric_vector.h"
-
 
 // MAST includes
 #include "BoundaryConditions/boundary_condition.h"
-#include "Flight/flight_condition.h"
-#include "FluidElems/frequency_domain_linearized_fluid_system.h"
-#include "FluidElems/fluid_elem_base.h"
 
 
 namespace MAST {
@@ -40,7 +29,7 @@ namespace MAST {
          *   sets pointer to the function that provides the reference
          *   temperature
          */
-        void set_reference_temperature_function(libMesh::FunctionBase<Number>& f) {
+        void set_reference_temperature_function(MAST::FieldFunction<Number>& f) {
             _reference_temperature_function = &f;
         }
         
@@ -48,7 +37,7 @@ namespace MAST {
          *   @returns reference to the function that provides the reference
          *   temperature
          */
-        libMesh::FunctionBase<Number>& reference_temperature_function() {
+        MAST::FieldFunction<Number>& reference_temperature_function() {
             libmesh_assert(_function);
             return *_reference_temperature_function;
         }
@@ -57,7 +46,7 @@ namespace MAST {
          *   sets pointer to the function that provides the reference
          *   temperature
          */
-        const libMesh::FunctionBase<Number>& reference_temperature_function() const {
+        const MAST::FieldFunction<Number>& reference_temperature_function() const {
             libmesh_assert(_function);
             return *_reference_temperature_function;
         }
@@ -68,7 +57,7 @@ namespace MAST {
         /*!
          *   reference temperature function
          */
-        libMesh::FunctionBase<Number>* _reference_temperature_function;
+        MAST::FieldFunction<Number>* _reference_temperature_function;
     };
 }
 

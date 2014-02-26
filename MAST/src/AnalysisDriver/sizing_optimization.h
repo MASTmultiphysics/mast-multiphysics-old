@@ -133,7 +133,7 @@ namespace MAST {
         
         UnstructuredMesh* _mesh;
         
-        ConstFunction<Real>* _press;
+        ConstantFunction<Real>* _press;
         
         ZeroFunction<Real>* _zero_function;
         

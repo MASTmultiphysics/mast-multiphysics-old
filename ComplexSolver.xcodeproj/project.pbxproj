@@ -116,7 +116,6 @@
 		EBD796221848F1DB007FA3A7 /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
 		EBD796231848F1DB007FA3A7 /* structural_system_assembly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = structural_system_assembly.h; sourceTree = "<group>"; };
 		EBD796241848F1DB007FA3A7 /* timoshenko_bending_operator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timoshenko_bending_operator.h; sourceTree = "<group>"; };
-		EBD7962B1848F1F2007FA3A7 /* temperature_function.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature_function.h; sourceTree = "<group>"; };
 		EBD79636184903F0007FA3A7 /* boundary_condition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundary_condition.h; sourceTree = "<group>"; };
 		EBD79637184903F0007FA3A7 /* boundary_surface_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundary_surface_motion.h; sourceTree = "<group>"; };
 		EBD79638184903F0007FA3A7 /* flexible_surface_motion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = flexible_surface_motion.h; sourceTree = "<group>"; };
@@ -377,7 +376,6 @@
 		EBE84D6017A6B3F400AEE871 /* ThermalElems */ = {
 			isa = PBXGroup;
 			children = (
-				EBD7962B1848F1F2007FA3A7 /* temperature_function.h */,
 				EBE84D6217A6B3F400AEE871 /* thermal_elem_base.cpp */,
 				EBE84D6317A6B3F400AEE871 /* thermal_elem_base.h */,
 			);

@@ -17,12 +17,12 @@
 #include "PropertyCards/solid_1d_section_element_property_card.h"
 #include "PropertyCards/solid_2d_section_element_property_card.h"
 #include "BoundaryConditions/boundary_condition.h"
+#include "BoundaryConditions/temperature.h"
 #include "BoundaryConditions/displacement_boundary_condition.h"
 #include "Mesh/mesh_initializer.h"
 #include "Mesh/panel_mesh.h"
 #include "Mesh/stiffened_panel.h"
 #include "Mesh/nastran_io.h"
-#include "ThermalElems/temperature_function.h"
 #include "Numerics/constant_function.h"
 
 
@@ -255,14 +255,17 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
 
     
-    ConstFunction<Real> press(1.e6);
+    MAST::ConstantFunction<Real> press("pressure", 1.e6);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
-    std::set<subdomain_id_type> ids;
-    mesh.subdomain_ids(ids);
     //static_structural_assembly.add_volume_load(0, bc);
-    MAST::ConstantTemperature temp;
-    temp.set_temperature(100., 0.);
+    MAST::ConstantFunction<Real> temp("temp", 100.), ref_temp("ref_temp", 10.);
+    MAST::Temperature temp_bc;
+    temp_bc.set_function(temp);
+    temp_bc.set_reference_temperature_function(ref_temp);
+    static_structural_assembly.add_volume_load(0, temp_bc);
+    static_structural_assembly.add_volume_load(1, temp_bc);
+    static_structural_assembly.add_volume_load(2, temp_bc);
     
     static_system.attach_assemble_object(static_structural_assembly);
     eigen_system.attach_assemble_object(eigen_structural_assembly);
@@ -331,6 +334,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     // create the scalar function values
     MAST::ConstantFunction<Real> E("E", infile("youngs_modulus", 72.e9)),
     nu("nu", infile("poisson_ratio", 0.33)),
+    alpha("alpha", infile("expansion_coefficient", 2.31e-5)),
     rho("rho", infile("material_density", 2700.)),
     kappa("kappa", infile("shear_corr_factor", 5./6.)),
     h("h", infile("thickness", 0.002)),
@@ -346,6 +350,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     mat.add(nu);
     mat.add(rho);
     mat.add(kappa);
+    mat.add(alpha);
     
     prop2d.add(h);
     prop2d_stiff.add(h_stiff);
@@ -365,7 +370,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.set_material(mat);
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
-    prop2d.add(prestress_func); // no prestress for stiffener
+    //prop2d.add(prestress_func); // no prestress for stiffener
     //prop1d.add(prestress_func);
 
     
@@ -456,11 +461,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     ParameterVector params;
     params.resize(1); params[0] = h.ptr();
     static_system.solve();
-    //static_system.solution->print();
     static_system.attach_sensitivity_assemble_object(static_structural_assembly);
     static_structural_assembly.add_parameter(h);
     static_system.sensitivity_solve(params);
-    //static_system.get_sensitivity_solution().print();
     //return 0;
     
     eigen_structural_assembly.set_static_solution_system(&static_system);

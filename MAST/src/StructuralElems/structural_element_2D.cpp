@@ -11,8 +11,8 @@
 #include "StructuralElems/structural_element_2D.h"
 #include "PropertyCards/element_property_card_2D.h"
 #include "Numerics/fem_operator_matrix.h"
-#include "ThermalElems/temperature_function.h"
 #include "BoundaryConditions/boundary_condition.h"
+#include "BoundaryConditions/temperature.h"
 
 
 void
@@ -955,6 +955,14 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX,
                             *this).release());
     
+    // temperature function
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
+    (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
+    
+    Real t, t0;
     Point pt;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
@@ -964,9 +972,18 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
         // this is moved inside the domain since
         (*expansion_A)(pt, _system.time, material_exp_A_mat);
         (*expansion_B)(pt, _system.time, material_exp_B_mat);
-        
+
+        // get the temperature function
+        temp_func(xyz[qp], _system.time, t);
+        ref_temp_func(xyz[qp], _system.time, t0);
+        delta_t(0) = t-t0;
+
         material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)} (with membrane strain)
         material_exp_B_mat.vector_mult(tmp_vec2_n1, delta_t); // [C]{alpha (T - T0)} (with bending strain)
+        stress(0,0) = tmp_vec1_n1(0); // sigma_xx
+        stress(0,1) = tmp_vec1_n1(2); // sigma_xy
+        stress(1,0) = tmp_vec1_n1(2); // sigma_yx
+        stress(1,1) = tmp_vec1_n1(1); // sigma_yy
         
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         
@@ -994,13 +1011,6 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
             }
             
             if (request_jacobian && if_vk) { // Jacobian only for vk strain
-                stress(0,0) = tmp_vec1_n1(0); // sigma_xx
-                if (_elem.dim() == 2) { // this is not needed for 1D element
-                    stress(0,1) = tmp_vec1_n1(2); // sigma_xy
-                    stress(1,0) = tmp_vec1_n1(2); // sigma_yx
-                    stress(1,1) = tmp_vec1_n1(1); // sigma_yy
-                }
-                
                 // vk - vk
                 tmp_mat3.resize(2, n2);
                 Bmat_vk.left_multiply(tmp_mat3, stress);
@@ -1032,10 +1042,138 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
                                                         DenseMatrix<Real>& jac,
                                                         MAST::BoundaryCondition& p)
 {
-    libmesh_error(); // to be implemented
+    FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
+    
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<Point>& xyz = _fe->get_xyz();
+    const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
+    const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
+    n3 = this->n_von_karman_strain_components();
+    DenseMatrix<Real> material_exp_A_mat, material_exp_B_mat,
+    material_exp_A_mat_sens, material_exp_B_mat_sens,
+    tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
+    tmp_mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
+    DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    tmp_vec4_2, tmp_vec5_n1, local_f, delta_t, delta_t_sens;
+    
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
+    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_n1.resize(n1);
+    delta_t.resize(1); delta_t_sens.resize(1);
     
     
-    return false;
+    Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat_bend.reinit(n1, _system.n_vars(), n_phi);
+    Bmat_vk.reinit(n3, _system.n_vars(), n_phi); // only dw/dx and dw/dy
+    
+    bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
+    if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
+    
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > expansion_A
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
+                            *this).release()),
+    expansion_B
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX,
+                            *this).release());
+    
+    // temperature function
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
+    (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
+    
+    Real t, t0, t_sens;
+    Point pt;
+    
+    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+        
+        this->global_coordinates(xyz[qp], pt);
+        
+        // this is moved inside the domain since
+        (*expansion_A)(pt, _system.time, material_exp_A_mat);
+        expansion_A->total(*this->sensitivity_param,
+                           pt, _system.time, material_exp_A_mat);
+        (*expansion_B)(pt, _system.time, material_exp_B_mat);
+        expansion_B->total(*this->sensitivity_param,
+                           pt, _system.time, material_exp_B_mat);
+        
+        // get the temperature function
+        temp_func(xyz[qp], _system.time, t);
+        ref_temp_func(xyz[qp], _system.time, t0);
+        delta_t(0) = t-t0;
+        
+        // get the temperature function
+        temp_func(xyz[qp], _system.time, t);
+        temp_func.total(*this->sensitivity_param,
+                        xyz[qp], _system.time, t_sens);
+        ref_temp_func(xyz[qp], _system.time, t0);
+        delta_t(0) = t-t0;
+        delta_t_sens(0) = t_sens;
+
+        // now prepare the membrane force sensitivity
+        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t_sens); // [C]{alpha dT/dp} (with membrane strain)
+        material_exp_A_mat_sens.vector_mult(tmp_vec2_n1, delta_t); // d([C]alpha)/dp (T - T0)} (with membrane strain)
+        tmp_vec1_n1.add(1., tmp_vec2_n1);
+        stress(0,0) = tmp_vec1_n1(0); // sigma_xx
+        stress(0,1) = tmp_vec1_n1(2); // sigma_xy
+        stress(1,0) = tmp_vec1_n1(2); // sigma_yx
+        stress(1,1) = tmp_vec1_n1(1); // sigma_yy
+        
+        material_exp_B_mat.vector_mult(tmp_vec2_n1, delta_t_sens); // [C]{alpha dT/dp} (with bending strain)
+        material_exp_B_mat_sens.vector_mult(tmp_vec5_n1, delta_t); // d([C] alpha)/dp (T - T0) (with bending strain)
+        tmp_vec2_n1.add(1., tmp_vec5_n1);
+        
+        
+        this->initialize_direct_strain_operator(qp, Bmat_mem);
+        
+        // membrane strain
+        Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
+        local_f.add(JxW[qp], tmp_vec3_n2);
+        
+        if (if_bending) {
+            // bending strain
+            _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
+            Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec2_n1);
+            local_f.add(JxW[qp], tmp_vec3_n2);
+            
+            // von Karman strain
+            if (if_vk) {
+                // get the vonKarman strain operator if needed
+                this->initialize_von_karman_strain_operator(qp,
+                                                            tmp_vec2_n1, // epsilon_vk
+                                                            vk_dwdxi_mat,
+                                                            Bmat_vk);
+                // von Karman strain
+                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
+                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
+                local_f.add(JxW[qp], tmp_vec3_n2);
+            }
+            
+            if (request_jacobian && if_vk) { // Jacobian only for vk strain
+                
+                // vk - vk
+                tmp_mat3.resize(2, n2);
+                Bmat_vk.left_multiply(tmp_mat3, stress);
+                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
+                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+            }
+        }
+    }
+    
+    
+    // now transform to the global coorodinate system
+    transform_to_global_system(local_f, tmp_vec3_n2);
+    f.add(1., tmp_vec3_n2);
+    if (request_jacobian && if_vk) {
+        transform_to_global_system(local_jac, tmp_mat2_n2n2);
+        jac.add(1., tmp_mat2_n2n2);
+    }
+    
+    // Jacobian contribution from von Karman strain
+    return request_jacobian && if_vk;
 }
 
 

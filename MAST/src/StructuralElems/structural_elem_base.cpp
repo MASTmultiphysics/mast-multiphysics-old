@@ -17,7 +17,6 @@
 #include "StructuralElems/structural_element_3D.h"
 #include "StructuralElems/structural_element_2D.h"
 #include "StructuralElems/structural_element_1D.h"
-#include "ThermalElems/temperature_function.h"
 #include "BoundaryConditions/boundary_condition.h"
 #include "BoundaryConditions/small_disturbance_motion.h"
 
@@ -488,7 +487,8 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     FEMOperatorMatrix Bmat;
     
     // get the function from this boundary condition
-    libMesh::FunctionBase<Number>& func = p.function();
+    MAST::FieldFunction<Number>& func =
+    dynamic_cast<MAST::FieldFunction<Number>&>(p.function());
     std::auto_ptr<FEBase> fe;
     std::auto_ptr<QBase> qrule;
     _get_side_fe_and_qrule(this->get_elem_for_quadrature(), side, fe, qrule);
@@ -522,7 +522,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         Bmat.reinit(2*n1, phi_vec);
         
         // get pressure value
-        press = func(pt, _system.time);
+        func(pt, _system.time, press);
         
         // calculate force
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)
@@ -560,7 +560,8 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     FEMOperatorMatrix Bmat;
     
     // get the function from this boundary condition
-    libMesh::FunctionBase<Number>& func = p.function();
+    MAST::FieldFunction<Number>& func =
+    dynamic_cast<MAST::FieldFunction<Number>&>(p.function());
     const std::vector<Real> &JxW = _fe->get_JxW();
     
     // Physical location of the quadrature points
@@ -595,7 +596,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         Bmat.reinit(2*n1, phi_vec);
         
         // get pressure value
-        press = func(pt, _system.time);
+        func(pt, _system.time, press);
         
         // calculate force
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)

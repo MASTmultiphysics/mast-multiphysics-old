@@ -10,8 +10,7 @@
 #include "StructuralElems/structural_element_3D.h"
 #include "PropertyCards/element_property_card_base.h"
 #include "Numerics/fem_operator_matrix.h"
-#include "ThermalElems/temperature_function.h"
-#include "BoundaryConditions/boundary_condition.h"
+#include "BoundaryConditions/temperature.h"
 
 
 bool
@@ -256,8 +255,7 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= 6, n2=6*n_phi;
-    DenseMatrix<Real> material_exp_A_mat, material_exp_B_mat,
-    tmp_mat1_n1n2, tmp_mat2_n2n2, stress;
+    DenseMatrix<Real> material_exp_A_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, stress;
     DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, delta_t;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
@@ -265,15 +263,26 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     tmp_vec3_n2.resize(n2); delta_t.resize(1);
     
     
+    
     Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
     
     std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
-
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
+    (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
+    
+    Real t, t0;
+    
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
         (*mat)(xyz[qp], _system.time, material_exp_A_mat);
+        temp_func(xyz[qp], _system.time, t);
+        ref_temp_func(xyz[qp], _system.time, t0);
+        delta_t(0) = t-t0;
         
         material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)}
         
@@ -296,9 +305,62 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
                                                       DenseMatrix<Real>& jac,
                                                       MAST::BoundaryCondition& p)
 {
+    FEMOperatorMatrix Bmat;
     
-    libmesh_error(); // to be implemented
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<Point>& xyz = _fe->get_xyz();
+    const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
+    const unsigned int n1= 6, n2=6*n_phi;
+    DenseMatrix<Real> material_exp_A_mat, material_exp_A_mat_sens,
+    tmp_mat1_n1n2, tmp_mat2_n2n2, stress;
+    DenseVector<Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, delta_t,
+    delta_t_sens;
     
+    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
+    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
+    tmp_vec3_n2.resize(n2); delta_t.resize(1); delta_t_sens.resize(1);
+    
+    
+    
+    Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    
+    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat
+    (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
+                            *this).release());
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
+    (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
+    
+    Real t, t0, t_sens;
+    
+    for (unsigned int qp=0; qp<JxW.size(); qp++) {
+        
+        (*mat)(xyz[qp], _system.time, material_exp_A_mat);
+        mat->total(*this->sensitivity_param,
+                   xyz[qp], _system.time, material_exp_A_mat_sens);
+
+        temp_func(xyz[qp], _system.time, t);
+        temp_func.total(*this->sensitivity_param,
+                        xyz[qp], _system.time, t_sens);
+        ref_temp_func(xyz[qp], _system.time, t0);
+        delta_t(0) = t-t0;
+        delta_t_sens(0) = t_sens;
+        
+        
+        this->initialize_strain_operator(qp, Bmat);
+        
+        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t_sens); // [C]{alpha dT/dp}
+        Bmat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
+        f.add(JxW[qp], tmp_vec3_n2);
+        
+        material_exp_A_mat_sens.vector_mult(tmp_vec1_n1, delta_t); // d([C].{alpha})/dp (T - T0)}
+        Bmat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
+        f.add(JxW[qp], tmp_vec3_n2);
+    }
+    
+    // Jacobian contribution from von Karman strain
     return false;
 }
 

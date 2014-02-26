@@ -12,7 +12,6 @@
 #include "PropertyCards/element_property_card_1D.h"
 #include "PropertyCards/element_property_card_2D.h"
 #include "Numerics/fem_operator_matrix.h"
-#include "ThermalElems/temperature_function.h"
 #include "BoundaryConditions/boundary_condition.h"
 #include "StructuralElems/structural_element_1D.h"
 #include "StructuralElems/structural_element_2D.h"

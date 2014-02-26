@@ -44,7 +44,6 @@ namespace MAST
     // Forward decleration
     class ElementPropertyCardBase;
     class MaterialPropertyCardBase;
-    class FunctionBase;
     class SensitivityParameters;
     class BoundaryCondition;
 
