@@ -259,13 +259,16 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     //static_structural_assembly.add_volume_load(0, bc);
-    MAST::ConstantFunction<Real> temp("temp", 100.), ref_temp("ref_temp", 10.);
+    MAST::ConstantFunction<Real> temp("temp", 100.), ref_temp("ref_temp", 0.);
     MAST::Temperature temp_bc;
     temp_bc.set_function(temp);
     temp_bc.set_reference_temperature_function(ref_temp);
     static_structural_assembly.add_volume_load(0, temp_bc);
+    eigen_structural_assembly.add_volume_load(0, temp_bc);
     static_structural_assembly.add_volume_load(1, temp_bc);
+    eigen_structural_assembly.add_volume_load(1, temp_bc);
     static_structural_assembly.add_volume_load(2, temp_bc);
+    eigen_structural_assembly.add_volume_load(2, temp_bc);
     
     static_system.attach_assemble_object(static_structural_assembly);
     eigen_system.attach_assemble_object(eigen_structural_assembly);

@@ -601,7 +601,15 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
         // now get the matrices
         if (!param) {
             structural_elem->internal_force(true, vec, mat1, true);
-            structural_elem->prestress_force(true, vec, mat1); mat1.scale(-1.);
+            structural_elem->prestress_force(true, vec, mat1);
+            if (static_sol) {
+                // get the Jacobian due to external loads, including thermal stresses
+                structural_elem->side_external_force(true, vec, mat1,
+                                                     _side_bc_map);
+                structural_elem->volume_external_force(true, vec, mat1,
+                                                       _vol_bc_map);
+            }
+            mat1.scale(-1.);
             structural_elem->inertial_force(true, vec, mat2);
         }
         else {
@@ -615,6 +623,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
                     sol(i) = (*localized_solution_sens)(dof_indices[i]);
                 
                 structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
+                structural_elem->side_external_force_sensitivity(true, vec, mat2,
+                                                                 _side_bc_map);
+                structural_elem->volume_external_force_sensitivity(true, vec, mat2,
+                                                                   _vol_bc_map);
             }
 
             structural_elem->sensitivity_param = param;
@@ -712,7 +724,6 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             // set the local solution to zero for the load INdependent stiffness matrix
             structural_elem->local_solution.resize(sol.size());
             structural_elem->internal_force(true, vec, mat1, true); mat1.scale(-1.);
-            structural_elem->prestress_force(true, vec, mat2);
 
             // if the static solution is provided, initialize the element solution
             if (static_sol) {
@@ -724,7 +735,14 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                 // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force(true, vec, mat2, true);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
+                
+                structural_elem->side_external_force(true, vec, mat2,
+                                                     _side_bc_map);
+                structural_elem->volume_external_force(true, vec, mat2,
+                                                       _vol_bc_map);
             }
+            
+            structural_elem->prestress_force(true, vec, mat2);
         }
         else {
             structural_elem->sensitivity_param = param;
@@ -732,7 +750,6 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             structural_elem->local_solution.resize(sol.size());
             structural_elem->local_solution_sens.resize(sol.size());
             structural_elem->internal_force_sensitivity(true, vec, mat1, true); mat1.scale(-1.);
-            structural_elem->prestress_force_sensitivity(true, vec, mat2);
 
             // now use the solution to get the load dependent stiffness matrix
             if (static_sol) {
@@ -749,7 +766,13 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                 // if displacement is zero, mat1 = mat2
                 structural_elem->internal_force_sensitivity(true, vec, mat2, true);
                 mat2.add(1., mat1); // subtract to get the purely load dependent part
+                structural_elem->side_external_force_sensitivity(true, vec, mat2,
+                                                                 _side_bc_map);
+                structural_elem->volume_external_force_sensitivity(true, vec, mat2,
+                                                                   _vol_bc_map);
             }
+            
+            structural_elem->prestress_force_sensitivity(true, vec, mat2);
         }
         
         // constrain the element matrices.
