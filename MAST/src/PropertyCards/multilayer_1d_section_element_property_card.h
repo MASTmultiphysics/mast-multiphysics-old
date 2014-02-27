@@ -187,7 +187,7 @@ namespace MAST {
             
         protected:
             
-            std::vector<MAST::FieldFunction<DenseMatrix<Real>>*> _layer_mats;
+            std::vector<MAST::FieldFunction<DenseMatrix<Real> >*> _layer_mats;
         };
         
         

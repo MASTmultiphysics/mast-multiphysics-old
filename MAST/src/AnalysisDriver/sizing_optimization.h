@@ -39,6 +39,126 @@
 
 
 namespace MAST {
+
+    class Weight: public MAST::FieldFunction<Real> {
+    public:
+        Weight(UnstructuredMesh& m,
+               MAST::StructuralSystemAssembly& assembly):
+        MAST::FieldFunction<Real>("Weight"),
+        _mesh(m),
+        _assembly(assembly) {
+            
+        }
+        
+        Weight(const MAST::Weight& w):
+        MAST::FieldFunction<Real>(w),
+        _mesh(w._mesh),
+        _assembly(w._assembly) {
+        
+        }
+        
+        virtual ~Weight() { }
+        
+    protected:
+        
+        UnstructuredMesh &_mesh;
+        
+        MAST::StructuralSystemAssembly& _assembly;
+        
+    public:
+        
+        virtual void operator() (const Point& p, Real t, Real& v) {
+            MeshBase::const_element_iterator
+            eit  = _mesh.active_local_elements_begin(),
+            eend = _mesh.active_local_elements_end();
+            
+            Real h, rho;
+            v = 0.;
+            
+            for ( ; eit != eend; eit++ ) {
+                const Elem* e = *eit;
+                const MAST::ElementPropertyCardBase& prop =
+                _assembly.get_property_card(*e);
+                const MAST::MaterialPropertyCardBase& mat =
+                prop.get_material();
+                const MAST::FieldFunction<Real> &rhof =
+                mat.get<MAST::FieldFunction<Real> >("rho");
+                
+                if (e->dim() == 2) { // panel
+                    const MAST::FieldFunction<Real> &hf =
+                    prop.get<MAST::FieldFunction<Real> >("h");
+                    
+                    hf(p, 0., h);
+                    rhof(p, 0., rho);
+                    
+                    v += e->volume() * h * rho;
+                }
+                else if (e->dim() == 1) { // stiffener
+                    const MAST::Solid1DSectionElementPropertyCard& prop1d =
+                    dynamic_cast<const MAST::Solid1DSectionElementPropertyCard&>(prop);
+                    std::auto_ptr<MAST::FieldFunction<Real> >
+                    stiff_area (prop1d.section_property<MAST::FieldFunction<Real> >("A").release());
+                    
+                    (*stiff_area)(p, 0., h);
+                    rhof(p, 0., rho);
+            
+                    v += e->volume() * h * rho;
+                    
+                }
+                
+            }
+        }
+    
+        virtual void partial(const MAST::FieldFunctionBase& f,
+                             const Point& p, Real t, Real& v) {
+            libmesh_error();
+        }
+        
+        virtual void total(const MAST::FieldFunctionBase& f,
+                           const Point& p, Real t, Real& v) {
+            
+            v = 0.;
+
+            MeshBase::const_element_iterator
+            eit  = _mesh.active_local_elements_begin(),
+            eend = _mesh.active_local_elements_end();
+            
+            Real h, rho;
+            v = 0.;
+            
+            for ( ; eit != eend; eit++ ) {
+                const Elem* e = *eit;
+                const MAST::ElementPropertyCardBase& prop =
+                _assembly.get_property_card(*e);
+                const MAST::MaterialPropertyCardBase& mat =
+                prop.get_material();
+                const MAST::FieldFunction<Real> &rhof =
+                mat.get<MAST::FieldFunction<Real> >("rho");
+                
+                if (e->dim() == 2) { // panel
+                    const MAST::FieldFunction<Real> &hf =
+                    prop.get<MAST::FieldFunction<Real> >("h");
+                    
+                    hf.total(f, p, 0., h);
+                    rhof(p, 0., rho);
+                    
+                    v += e->volume() * h * rho;
+                }
+                else if (e->dim() == 1) { // stiffener
+                    const MAST::Solid1DSectionElementPropertyCard& prop1d =
+                    dynamic_cast<const MAST::Solid1DSectionElementPropertyCard&>(prop);
+                    std::auto_ptr<MAST::FieldFunction<Real> >
+                    stiff_area (prop1d.section_property<MAST::FieldFunction<Real> >("A").release());
+                    
+                    stiff_area->total(f, p, 0., h);
+                    rhof(p, 0., rho);
+                    
+                    v += e->volume() * h * rho;
+                }
+            }
+        }
+    };
+    
     
     class SizingOptimization:
     public MAST::FunctionEvaluation {
@@ -88,10 +208,13 @@ namespace MAST {
             delete _rho;
             delete _kappa;
             delete _h;
-            delete _h_stiff;
-            delete _h_z;
-            delete _offset_h_y;
-            delete _offset_h_z;
+            for (unsigned int i=0; i<_n_stiff; i++) {
+                delete _h_stiff[i];
+                delete _h_z[i];
+                delete _offset_h_y[i];
+                delete _offset_h_z[i];
+            }
+            
             delete _prestress;
         }
         
@@ -137,12 +260,14 @@ namespace MAST {
         
         ZeroFunction<Real>* _zero_function;
         
-        MAST::ConstantFunction<Real> *_E, *_nu, *_rho, *_kappa, *_h, *_h_stiff,
-        *_h_z, *_offset_h_y, *_offset_h_z;
+        MAST::ConstantFunction<Real> *_E, *_nu, *_rho, *_kappa, *_h;
+        
+        std::vector<MAST::ConstantFunction<Real>*> _h_stiff, _h_z,
+        _offset_h_y, _offset_h_z;
+        
         MAST::ConstantFunction<DenseMatrix<Real> > *_prestress;
         
         ParameterVector _parameters;
-        std::vector<MAST::FieldFunctionBase*> _parameter_functions;
         
         std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
 
@@ -183,81 +308,21 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     libmesh_assert_equal_to(dvars.size(), _n_vars);
     
     // set the parameter values equal to the DV value
-    *_parameters[0] = dvars[0];
-    *_parameters[1] = dvars[1];
-
-    MeshBase::const_element_iterator
-    eit  = _mesh->active_local_elements_begin(),
-    eend = _mesh->active_local_elements_end();
-    
-    obj = 0.;
-    
-    if (eval_obj_grad)
-        std::fill(obj_grad.begin(), obj_grad.end(), 0.);
+    for (unsigned int i=0; i<_n_vars; i++)
+        *_parameters[i] = dvars[i];
     
     Point p; // dummy point object
-    Real h, rho;
-    
-    for ( ; eit != eend; eit++ ) {
-        const Elem* e = *eit;
-        const MAST::ElementPropertyCardBase& prop = _structural_assembly->get_property_card(*e);
-        const MAST::MaterialPropertyCardBase& mat = prop.get_material();
 
-        if (!_beam_stiff) {
-            const MAST::FieldFunction<Real> &hf = prop.get<MAST::FieldFunction<Real> >("h"),
-            &rhof = mat.get<MAST::FieldFunction<Real> >("rho");
-            
-            hf(p, 0., h);
-            rhof(p, 0., rho);
-            
-            obj += e->volume() * h * rho;
-            
-            if (eval_obj_grad)
-                for (unsigned int i=0; i<_n_vars; i++)
-                    if (prop.depends_on(*_parameter_functions[i]))
-                        obj_grad[i] += e->volume() * rho;
-        }
-        else { // stiffener modeled as beam
-            if (e->dim() == 2) { // panel
-                const MAST::FieldFunction<Real> &hf = prop.get<MAST::FieldFunction<Real> >("h"),
-                &rhof = mat.get<MAST::FieldFunction<Real> >("rho");
-                
-                hf(p, 0., h);
-                rhof(p, 0., rho);
-                
-                obj += e->volume() * h * rho;
-                
-                if (eval_obj_grad)
-                    for (unsigned int i=0; i<_n_vars; i++)
-                        if (prop.depends_on(*_parameter_functions[i]))
-                            obj_grad[i] += e->volume() * rho;
-            }
-            else if (e->dim() == 1) { // stiffener
-                const MAST::Solid1DSectionElementPropertyCard& prop1d =
-                dynamic_cast<const MAST::Solid1DSectionElementPropertyCard&>(prop);
-                const MAST::FieldFunction<Real> &rhof = mat.get<MAST::FieldFunction<Real> >("rho");
-                std::auto_ptr<MAST::FieldFunction<Real> >
-                stiff_area (prop1d.section_property<MAST::FieldFunction<Real> >("A").release());
-                
-                
-                (*stiff_area)(p, 0., h);
-                rhof(p, 0., rho);
-                
-                obj += e->volume() * h * rho;
-                
-                if (eval_obj_grad) {
-                    // get area sensitivity
-                    stiff_area->total(*_h_stiff, p, 0., h);
-                    for (unsigned int i=0; i<_n_vars; i++)
-                        if (prop.depends_on(*_parameter_functions[i]))
-                            obj_grad[i] += e->volume() * rho * h;
-                }
-            }
-            else
-                libmesh_error();
-        }
+    // calculate weight
+    (*_weight)(p, 0., obj);
+
+    // calculate sensitivity of weight if requested
+    if (eval_obj_grad) {
+        std::fill(obj_grad.begin(), obj_grad.end(), 0.);
+        for (unsigned int i=0; i<_n_vars; i++)
+            _weight->total(*_parameter_functions[i], p, 0., obj_grad[i]);
     }
-    
+
     // now solve the system
     libMesh::out << "New Eval" << std::endl;
     _system->solve();
@@ -389,7 +454,7 @@ MAST::SizingOptimization::_init() {
     // design data
     _n_eig = 10;
     _n_stiff = divs[0]->n_divs() + divs[1]->n_divs() - 2;
-    _n_vars = 2;
+    _n_vars = _n_stiff*2+1;
     _n_eq = 0;
     _n_ineq = _n_eig;
     _max_iters = 10000;
@@ -486,9 +551,8 @@ MAST::SizingOptimization::_init() {
 
     // element and material properties
     _materials.resize(1);
-    _elem_properties.resize(_n_vars);
+    _elem_properties.resize(_n_stiff+1);
     _parameters.resize(_n_vars);
-    _parameter_functions.resize(_n_vars);
     
     DenseMatrix<Real> prestress; prestress.resize(3,3);
     prestress(0,0) = -1.31345e6;
@@ -498,17 +562,10 @@ MAST::SizingOptimization::_init() {
     _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
     _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
     _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
-    if (!_beam_stiff)
-        _h_stiff = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
-    else
-        _h_stiff = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002));
-    _h_z = new MAST::ConstantFunction<Real>("hz", z_div_loc[1]),
-    _offset_h_y = new MAST::ConstantFunction<Real>("hy_offset", 0.),
-    _offset_h_z = new MAST::ConstantFunction<Real>("hz_offset", 0.5*z_div_loc[1]);
     _prestress = new MAST::ConstantFunction<DenseMatrix<Real> >("prestress", prestress);
     
     _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
-    _elem_properties[0] = new MAST::Solid2DSectionElementPropertyCard(1);
+    _elem_properties[0] = new MAST::Solid2DSectionElementPropertyCard(1); // panel
     
     MAST::MaterialPropertyCardBase& mat = *_materials[0];
     // add the properties to the cards
@@ -517,43 +574,52 @@ MAST::SizingOptimization::_init() {
     mat.add(*_rho);
     mat.add(*_kappa);
 
+    // panel thickness as a design variable
+    _parameters[0] = _h->ptr();
+    _structural_assembly->add_parameter(*_h);
+
     if (_beam_stiff) {
-        MAST::Solid1DSectionElementPropertyCard *p = new MAST::Solid1DSectionElementPropertyCard(2);
-        p->add(*_h_stiff); // width
-        p->add(*_h_z); // height
-        p->add(*_offset_h_y); // width offset
-        p->add(*_offset_h_z); // height offset
-        p->y_vector()(1) = 1.;
-        p->set_material(mat);
-        p->set_diagonal_mass_matrix(false);
-        p->set_strain(MAST::VON_KARMAN_STRAIN);
-        
-        _elem_properties[1] = p;
-        
-        _parameters[0] = _h->ptr(); // set thickness as a modifiable parameter
-        _parameters[1] = _h_stiff->ptr(); // set thickness as a modifiable parameter
-        _parameter_functions[0] = _h;
-        _parameter_functions[1] = _h_stiff;
-        
-        _structural_assembly->add_parameter(*_h);
-        _structural_assembly->add_parameter(*_h_stiff);
+        // create values for each stiffener
+        for (unsigned int i=0; i<_n_stiff; i++) {
+            MAST::Solid1DSectionElementPropertyCard *p = new MAST::Solid1DSectionElementPropertyCard(2);
+            _h_stiff[i] = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002));
+            _h_z[i] = new MAST::ConstantFunction<Real>("hz", z_div_loc[1]),
+            _offset_h_y[i] = new MAST::ConstantFunction<Real>("hy_offset", 0.),
+            _offset_h_z[i] = new MAST::ConstantFunction<Real>("hz_offset", 0.5*z_div_loc[1]);
+            p->add(*_h_stiff[i]); // width
+            p->add(*_h_z[i]); // height
+            p->add(*_offset_h_y[i]); // width offset
+            p->add(*_offset_h_z[i]); // height offset
+            p->y_vector()(1) = 1.;
+            p->set_material(mat);
+            p->set_diagonal_mass_matrix(false);
+            p->set_strain(MAST::VON_KARMAN_STRAIN);
+            
+            _elem_properties[i+1] = p;
+            
+            _parameters[i*2+1] = _h_z[i]->ptr(); // set thickness as a modifiable parameter
+            _parameters[i*2+2] = _h_stiff[i]->ptr(); // set thickness as a modifiable parameter
+
+            _structural_assembly->add_parameter(*_h_z[i]);
+            _structural_assembly->add_parameter(*_h_stiff[i]);
+        }
     }
     else {
-        MAST::Solid2DSectionElementPropertyCard *p = new MAST::Solid2DSectionElementPropertyCard(2);
-        p->add(*_h_stiff);
-        p->set_material(mat);
-        p->set_diagonal_mass_matrix(false);
-        p->set_strain(MAST::VON_KARMAN_STRAIN);
-        
-        _elem_properties[1] = p;
-        
-        _parameters[0] = _h->ptr(); // set thickness as a modifiable parameter
-        _parameters[1] = _h_stiff->ptr(); // set thickness as a modifiable parameter
-        _parameter_functions[0] = _h;
-        _parameter_functions[1] = _h_stiff;
-        
-        _structural_assembly->add_parameter(*_h);
-        _structural_assembly->add_parameter(*_h_stiff);
+        libmesh_error(); // currently not implemented for non-beam stiffeners
+//        _h_stiff = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
+//        MAST::Solid2DSectionElementPropertyCard *p = new MAST::Solid2DSectionElementPropertyCard(2);
+//        p->add(*_h_stiff);
+//        p->set_material(mat);
+//        p->set_diagonal_mass_matrix(false);
+//        p->set_strain(MAST::VON_KARMAN_STRAIN);
+//        
+//        _elem_properties[1] = p;
+//        
+//        _parameters[0] = _h->ptr(); // set thickness as a modifiable parameter
+//        _parameters[1] = _h_stiff->ptr(); // set thickness as a modifiable parameter
+//        
+//        _structural_assembly->add_parameter(*_h);
+//        _structural_assembly->add_parameter(*_h_stiff);
     }
     
 

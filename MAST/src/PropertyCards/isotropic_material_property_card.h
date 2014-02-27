@@ -9,10 +9,6 @@
 #ifndef __MAST_isotropic_material_property_card_h__
 #define __MAST_isotropic_material_property_card_h__
 
-
-// C++ functional
-#include <functional>
-
 // MAST includes
 #include "PropertyCards/material_property_card_base.h"
 
@@ -44,10 +40,7 @@ namespace MAST {
             StiffnessMatrix1D(const MAST::IsotropicMaterialPropertyCard::StiffnessMatrix1D& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _E(f._E->clone().release()),
-            _nu(f._nu->clone().release()),
-            _m(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
-            _parm_parE(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)){
+            _nu(f._nu->clone().release()){
                 _functions.insert(_E);
                 _functions.insert(_nu);
             }
@@ -75,8 +68,6 @@ namespace MAST {
             
             MAST::FieldFunction<Real>* _E;
             MAST::FieldFunction<Real>* _nu;
-            std::function<void(const Real, const Real, DenseMatrix<Real>&)>
-            *_m, *_parm_parE, *_parm_parnu;
         };
         
         
@@ -90,11 +81,7 @@ namespace MAST {
             TransverseShearStiffnessMatrix(const MAST::IsotropicMaterialPropertyCard::TransverseShearStiffnessMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _E(f._E->clone().release()),
-            _nu(f._nu->clone().release()),
-            _m(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
-            _parm_parE(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)),
-            _parm_parkappa(new std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parkappa)) {
+            _nu(f._nu->clone().release()) {
                 _functions.insert(_E);
                 _functions.insert(_nu);
             }
@@ -124,8 +111,6 @@ namespace MAST {
             MAST::FieldFunction<Real>* _E;
             MAST::FieldFunction<Real>* _nu;
             MAST::FieldFunction<Real>* _kappa;
-            std::function<void(const Real, const Real, const Real, DenseMatrix<Real>&)>
-            *_m, *_parm_parE, *_parm_parnu, *_parm_parkappa;
         };
         
         
@@ -139,9 +124,7 @@ namespace MAST {
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _E(f._E->clone().release()),
             _nu(f._nu->clone().release()),
-            _m(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
-            _parm_parE(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)) {
+            _plane_stress(f._plane_stress) {
                 _functions.insert(_E);
                 _functions.insert(_nu);
             }
@@ -172,8 +155,6 @@ namespace MAST {
             MAST::FieldFunction<Real>* _E;
             MAST::FieldFunction<Real>* _nu;
             bool _plane_stress;
-            std::function<void(const Real, const Real, DenseMatrix<Real>&)>
-            *_m, *_parm_parE, *_parm_parnu;
         };
         
         
@@ -186,10 +167,7 @@ namespace MAST {
             StiffnessMatrix3D(const MAST::IsotropicMaterialPropertyCard::StiffnessMatrix3D &f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _E(f._E->clone().release()),
-            _nu(f._nu->clone().release()),
-            _m(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._m)),
-            _parm_parE(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parE)),
-            _parm_parnu(new std::function<void(const Real, const Real, DenseMatrix<Real>&)>(*f._parm_parnu)) {
+            _nu(f._nu->clone().release()) {
                 _functions.insert(_E);
                 _functions.insert(_nu);
             }
@@ -218,8 +196,6 @@ namespace MAST {
             
             MAST::FieldFunction<Real>* _E;
             MAST::FieldFunction<Real>* _nu;
-            std::function<void(const Real, const Real, DenseMatrix<Real>&)>
-            *_m, *_parm_parE, *_parm_parnu;
         };
         
         
