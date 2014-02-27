@@ -10,8 +10,8 @@ else
 endif
 
 ifeq (${PLATFORM},Darwin)
-    GCC_PRE = g++
-    GCC_COMP = clang++
+    GCC_PRE = mpicxx-openmpi-mp
+    GCC_COMP = mpicxx-openmpi-mp
     PYTHON = python
     ARPACK_LIB_DIR=/opt/local/lib
     ARPACK_LIB=-larpack
@@ -34,9 +34,9 @@ ifeq (${PLATFORM},Darwin)
     LIBMESH_DIR=../../../libmesh
     TRILINOS_DIR=/usr/local/trilinos
     VTK_INCLUDE_DIR=/opt/local/include/vtk-5.10
-    MPI_INCLUDE_DIR=/opt/local/include/openmpi
-    MPI_LIB_DIR=/opt/local/lib/openmpi
-    GCC_FLAGS_DEBUG = -g3 -O0 -Wall -DDEBUG -felide-constructors 
+    MPI_INCLUDE_DIR=/opt/local/include/openmpi-mp
+    MPI_LIB_DIR=/opt/local/lib/openmpi-mp
+    GCC_FLAGS_DEBUG = -g3  -O0 -Wall -DDEBUG -felide-constructors 
     GCC_FLAGS_OPT = -DNDEBUG -O2 -felide-constructors -Qunused-arguments 
     GCC_FLAGS_PRO = -DNDEBUG -O2 -g -felide-constructors -Qunused-arguments 
 endif
