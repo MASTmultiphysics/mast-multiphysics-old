@@ -1020,7 +1020,6 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
         }
     }
     
-    
     // now transform to the global coorodinate system
     transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
