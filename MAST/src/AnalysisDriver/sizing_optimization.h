@@ -248,6 +248,8 @@ namespace MAST {
         
         unsigned int _n_stiff, _n_eig;
         
+        MAST::Weight* _weight;
+        
         EquationSystems* _eq_systems;
         
         CondensedEigenSystem* _system;
@@ -268,6 +270,8 @@ namespace MAST {
         MAST::ConstantFunction<DenseMatrix<Real> > *_prestress;
         
         ParameterVector _parameters;
+        
+        std::vector<MAST::ConstantFunction<Real>*> _parameter_functions;
         
         std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
 

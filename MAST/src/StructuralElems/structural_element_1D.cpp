@@ -1074,7 +1074,7 @@ MAST::StructuralElement1D::thermal_force (bool request_jacobian,
     vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
     tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
     tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_n3.resize(n3);
-    delta_t.resize(1);
+    delta_t.resize(1); vk_dvdxi_mat.resize(2, 2); vk_dwdxi_mat.resize(2, 2);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
@@ -1213,7 +1213,8 @@ MAST::StructuralElement1D::thermal_force_sensitivity (bool request_jacobian,
     vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
     tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
     tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_n1.resize(n1);
-    delta_t.resize(1); delta_t_sens.resize(1);
+    delta_t.resize(1); delta_t_sens.resize(1); vk_dvdxi_mat.resize(2, 2);
+    vk_dwdxi_mat.resize(2, 2);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
