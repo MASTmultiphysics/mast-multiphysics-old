@@ -304,7 +304,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     for (std::map<boundary_id_type, std::vector<unsigned int> >::iterator
          it = boundary_constraint_map.begin();
          it != boundary_constraint_map.end(); it++) {
-        MAST::DisplacementDirichletBoundaryCondition* bc = new MAST::DisplacementDirichletBoundaryCondition;
+        MAST::DisplacementDirichletBoundaryCondition* bc =
+        new MAST::DisplacementDirichletBoundaryCondition;
         bc->init(it->first, it->second);
         dirichlet_boundary_conditions.push_back(bc);
         static_structural_assembly.add_side_load(it->first, *bc);
@@ -443,21 +444,21 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                 eigen_structural_assembly.set_property_for_subdomain(i, prop1d);
             }
 
-            // iterate over all elements in the region with void and set the
-            // domain id and material property
-            static_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
-            eigen_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
-            MeshBase::const_element_iterator
-            el_it = mesh.elements_begin(),
-            el_end = mesh.elements_end();
-            for ( ; el_it != el_end; el_it++ ) {
-                Elem* elem = *el_it;
-                if (elem->dim() != 1)
-                    continue;
-                Point p = elem->centroid();
-                if (p(0) >= .1 && p(0) <= .2)
-                    elem->subdomain_id() = n_stiff+1;
-            }
+//            // iterate over all elements in the region with void and set the
+//            // domain id and material property
+//            static_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
+//            eigen_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
+//            MeshBase::const_element_iterator
+//            el_it = mesh.elements_begin(),
+//            el_end = mesh.elements_end();
+//            for ( ; el_it != el_end; el_it++ ) {
+//                Elem* elem = *el_it;
+//                if (elem->dim() != 1)
+//                    continue;
+//                Point p = elem->centroid();
+//                if (p(0) >= .1 && p(0) <= .2)
+//                    elem->subdomain_id() = n_stiff+1;
+//            }
         }
     }
     

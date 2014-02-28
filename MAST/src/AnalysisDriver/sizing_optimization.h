@@ -57,6 +57,12 @@ namespace MAST {
         
         }
         
+        virtual std::auto_ptr<MAST::FieldFunction<Real> >
+        clone() const {
+            return std::auto_ptr<MAST::FieldFunction<Real> >
+            (new MAST::Weight(*this));
+        }
+        
         virtual ~Weight() { }
         
     protected:
@@ -67,7 +73,7 @@ namespace MAST {
         
     public:
         
-        virtual void operator() (const Point& p, Real t, Real& v) {
+        virtual void operator() (const Point& p, Real t, Real& v) const {
             MeshBase::const_element_iterator
             eit  = _mesh.active_local_elements_begin(),
             eend = _mesh.active_local_elements_end();
@@ -110,12 +116,12 @@ namespace MAST {
         }
     
         virtual void partial(const MAST::FieldFunctionBase& f,
-                             const Point& p, Real t, Real& v) {
+                             const Point& p, Real t, Real& v) const {
             libmesh_error();
         }
         
         virtual void total(const MAST::FieldFunctionBase& f,
-                           const Point& p, Real t, Real& v) {
+                           const Point& p, Real t, Real& v) const {
             
             v = 0.;
 
@@ -173,6 +179,7 @@ namespace MAST {
         _infile(input),
         _n_stiff(0),
         _n_eig(0),
+        _weight(NULL),
         _eq_systems(NULL),
         _system(NULL),
         _structural_assembly(NULL),
@@ -196,6 +203,7 @@ namespace MAST {
             
             delete _zero_function;
             
+            delete _weight;
             
             for (unsigned int i=0; i<_elem_properties.size(); i++)
                 delete _elem_properties[i];
@@ -581,7 +589,8 @@ MAST::SizingOptimization::_init() {
     // panel thickness as a design variable
     _parameters[0] = _h->ptr();
     _structural_assembly->add_parameter(*_h);
-
+    _parameter_functions[0] = _h;
+    
     if (_beam_stiff) {
         // create values for each stiffener
         for (unsigned int i=0; i<_n_stiff; i++) {
@@ -606,6 +615,8 @@ MAST::SizingOptimization::_init() {
 
             _structural_assembly->add_parameter(*_h_z[i]);
             _structural_assembly->add_parameter(*_h_stiff[i]);
+            _parameter_functions[i*2+1] = _h_z[i];
+            _parameter_functions[i*2+2] = _h_stiff[i];
         }
     }
     else {
@@ -639,6 +650,9 @@ MAST::SizingOptimization::_init() {
     _structural_assembly->set_property_for_subdomain(0, prop2d);
     for (unsigned int i=1; i<=_n_stiff; i++)
         _structural_assembly->set_property_for_subdomain(i, *_elem_properties[1]);
+    
+    // create the function to calculate weight
+    _weight = new MAST::Weight(*_mesh, *_structural_assembly);
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
