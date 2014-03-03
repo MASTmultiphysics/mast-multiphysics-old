@@ -232,8 +232,8 @@ SectionIntegratedBendingStiffnessMatrix::total (const MAST::FieldFunctionBase& f
                                                 const Real t,
                                                 DenseMatrix<Real>& m) const {
     DenseMatrix<Real> mat, dmat, dm;
-    (*_I)(p, t, m); _I->partial(f, p, t, dm);
-    (*_material_stiffness)(p, t, mat); _material_stiffness->partial(f, p, t, dmat);
+    (*_I)(p, t, m); _I->total(f, p, t, dm);
+    (*_material_stiffness)(p, t, mat); _material_stiffness->total(f, p, t, dmat);
     
     // dE*I
     m.scale(dmat(0,0)); // scale the inertia matrix with modulus of elasticity

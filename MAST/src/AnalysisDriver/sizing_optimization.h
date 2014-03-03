@@ -17,6 +17,7 @@
 #include "PropertyCards/material_property_card_base.h"
 #include "PropertyCards/solid_1d_section_element_property_card.h"
 #include "PropertyCards/solid_2d_section_element_property_card.h"
+#include "BoundaryConditions/temperature.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -36,10 +37,61 @@
 #include "libmesh/nemesis_io.h"
 #include "libmesh/sensitivity_data.h"
 #include "libmesh/condensed_eigen_system.h"
+#include "libmesh/nonlinear_implicit_system.h"
 
 
 namespace MAST {
 
+    class BeamOffset: public MAST::FieldFunction<Real> {
+    public:
+        BeamOffset(const std::string& nm,
+                   MAST::FieldFunction<Real> *thickness):
+        MAST::FieldFunction<Real>(nm),
+        _dim(thickness) {
+            _functions.insert(thickness->master());
+        }
+        
+        BeamOffset(const MAST::BeamOffset& o):
+        MAST::FieldFunction<Real>(o),
+        _dim(o._dim->clone().release()) {
+            _functions.insert(_dim->master());
+        }
+        
+        virtual std::auto_ptr<MAST::FieldFunction<Real> >
+        clone() const {
+            return std::auto_ptr<MAST::FieldFunction<Real> >
+            (new MAST::BeamOffset(*this));
+        }
+        
+        virtual ~BeamOffset() {
+            delete _dim;
+        }
+        
+    protected:
+        
+        MAST::FieldFunction<Real> *_dim;
+        
+    public:
+        
+        virtual void operator() (const Point& p, Real t, Real& v) const {
+            (*_dim)(p, t, v);
+            v *= 0.5;
+        }
+        
+        virtual void partial(const MAST::FieldFunctionBase& f,
+                             const Point& p, Real t, Real& v) const {
+            libmesh_error();
+        }
+        
+        virtual void total(const MAST::FieldFunctionBase& f,
+                           const Point& p, Real t, Real& v) const {
+            _dim->total(f, p, t, v);
+            v *= 0.5;
+        }
+
+    };
+    
+    
     class Weight: public MAST::FieldFunction<Real> {
     public:
         Weight(UnstructuredMesh& m,
@@ -181,8 +233,10 @@ namespace MAST {
         _n_eig(0),
         _weight(NULL),
         _eq_systems(NULL),
-        _system(NULL),
-        _structural_assembly(NULL),
+        _static_system(NULL),
+        _eigen_system(NULL),
+        _static_structural_assembly(NULL),
+        _eigen_structural_assembly(NULL),
         _mesh(NULL),
         _press(NULL),
         _zero_function(NULL)
@@ -192,7 +246,9 @@ namespace MAST {
         
         virtual ~SizingOptimization() {
             
-            delete _structural_assembly;
+            delete _static_structural_assembly;
+            
+            delete _eigen_structural_assembly;
             
             delete _eq_systems;
             
@@ -213,6 +269,7 @@ namespace MAST {
             
             delete _E;
             delete _nu;
+            delete _alpha;
             delete _rho;
             delete _kappa;
             delete _h;
@@ -224,6 +281,9 @@ namespace MAST {
             }
             
             delete _prestress;
+            delete _temperature;
+            delete _ref_temperature;
+            delete _temperature_bc;
         }
         
         
@@ -260,9 +320,12 @@ namespace MAST {
         
         EquationSystems* _eq_systems;
         
-        CondensedEigenSystem* _system;
+        NonlinearImplicitSystem *_static_system;
+
+        CondensedEigenSystem *_eigen_system;
         
-        MAST::StructuralSystemAssembly* _structural_assembly;
+        MAST::StructuralSystemAssembly* _static_structural_assembly,
+        *_eigen_structural_assembly;
         
         UnstructuredMesh* _mesh;
         
@@ -270,12 +333,18 @@ namespace MAST {
         
         ZeroFunction<Real>* _zero_function;
         
-        MAST::ConstantFunction<Real> *_E, *_nu, *_rho, *_kappa, *_h;
+        MAST::ConstantFunction<Real> *_E, *_nu,  *_alpha, *_rho, *_kappa, *_h;
         
         std::vector<MAST::ConstantFunction<Real>*> _h_stiff, _h_z,
-        _offset_h_y, _offset_h_z;
-        
+        _offset_h_y;
+
+        std::vector<MAST::BeamOffset*> _offset_h_z;
+
         MAST::ConstantFunction<DenseMatrix<Real> > *_prestress;
+
+        MAST::ConstantFunction<Real> *_temperature, *_ref_temperature;
+
+        MAST::Temperature *_temperature_bc;
         
         ParameterVector _parameters;
         
@@ -298,11 +367,11 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                       std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 0.005);
+    std::fill(x.begin(), x.end(), 0.05);
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 2.0e-3);
     xmax.resize(_n_vars);
-    std::fill(xmax.begin(), xmax.end(), 0.02);   
+    std::fill(xmax.begin(), xmax.end(), 0.2);   
 }
 
 
@@ -337,10 +406,11 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
     // now solve the system
     libMesh::out << "New Eval" << std::endl;
-    _system->solve();
+    _static_system->solve();
+    _eigen_system->solve();
 
     // the number of converged eigenpairs could be different from the number asked
-    unsigned int n_required = std::min(_n_eig, _system->get_n_converged());
+    unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
     
     std::pair<Real, Real> val;
     Complex eigval;
@@ -348,7 +418,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
         // the total number of constraints is _n_eig, but only n_required are usable
         for (unsigned int i=0; i<n_required; i++) {
-            val = _system->get_eigenpair(i);
+            val = _eigen_system->get_eigenpair(i);
             eigval = std::complex<Real>(val.first, val.second);
             eigval = 1./eigval;
             fvals[i] = 1.-eigval.real(); // g <= 0.
@@ -378,14 +448,15 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     std::vector<Real> grad_vals;
     
     if (eval_grads[0]) {
-        // grad k = dfi/dxj  ,  where k = j*NDV + i
-        _system->sensitivity_solve(_parameters, grad_vals);
+        // grad_k = dfi/dxj  ,  where k = j*NFunc + i
+        _static_system->sensitivity_solve(_parameters);
+        _eigen_system->sensitivity_solve(_parameters, grad_vals);
         // now correct this for the fact that the matrices were exchanged
         if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
             for (unsigned int j=0; j<_n_vars; j++)
                 for (unsigned int i=0; i<n_required; i++) {
-                    val = _system->get_eigenpair(i);
-                    grads[j*_n_eig+i]  = grad_vals[j*_system->get_n_converged()+i];
+                    val = _eigen_system->get_eigenpair(i);
+                    grads[j*_n_eig+i]  = grad_vals[j*_eigen_system->get_n_converged()+i];
                     grads[j*_n_eig+i] /= -1. * -pow(val.first, 2); // sens = - d eig / dp
                 }
         else
@@ -483,26 +554,51 @@ MAST::SizingOptimization::_init() {
     _eq_systems->parameters.set<GetPot*>("input_file") = &_infile;
     
     // Declare the system
-    _system = &_eq_systems->add_system<CondensedEigenSystem> ("StructuralSystem");
+    _static_system = &_eq_systems->add_system<NonlinearImplicitSystem> ("StaticStructuralSystem");
+    _eigen_system = &_eq_systems->add_system<CondensedEigenSystem> ("EigenStructuralSystem");
     
     unsigned int o = _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = _system->add_variable ( "ux", static_cast<Order>(o), fefamily);
-    var_id["uy"] = _system->add_variable ( "uy", static_cast<Order>(o), fefamily);
-    var_id["uz"] = _system->add_variable ( "uz", static_cast<Order>(o), fefamily);
-    var_id["tx"] = _system->add_variable ( "tx", static_cast<Order>(o), fefamily);
-    var_id["ty"] = _system->add_variable ( "ty", static_cast<Order>(o), fefamily);
-    var_id["tz"] = _system->add_variable ( "tz", static_cast<Order>(o), fefamily);
+    var_id["ux"] = _static_system->add_variable ( "ux", static_cast<Order>(o), fefamily);
+    var_id["uy"] = _static_system->add_variable ( "uy", static_cast<Order>(o), fefamily);
+    var_id["uz"] = _static_system->add_variable ( "uz", static_cast<Order>(o), fefamily);
+    var_id["tx"] = _static_system->add_variable ( "tx", static_cast<Order>(o), fefamily);
+    var_id["ty"] = _static_system->add_variable ( "ty", static_cast<Order>(o), fefamily);
+    var_id["tz"] = _static_system->add_variable ( "tz", static_cast<Order>(o), fefamily);
     
-    _structural_assembly = new MAST::StructuralSystemAssembly(*_system,
-                                                              MAST::BUCKLING,
-                                                              _infile);
+    _eigen_system->add_variable ( "ux", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "uy", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "uz", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "tx", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "ty", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "tz", static_cast<Order>(o), fefamily);
     
-    _system->attach_assemble_object(*_structural_assembly);
-    _system->attach_eigenproblem_sensitivity_assemble_object(*_structural_assembly);
+    _static_structural_assembly = new MAST::StructuralSystemAssembly(*_static_system,
+                                                                     MAST::STATIC,
+                                                                     _infile);
+
+    _eigen_structural_assembly = new MAST::StructuralSystemAssembly(*_eigen_system,
+                                                                    MAST::BUCKLING,
+                                                                    _infile);
+
+    _static_system->attach_assemble_object(*_static_structural_assembly);
+    _static_system->attach_sensitivity_assemble_object(*_static_structural_assembly);
+
+    _eigen_system->attach_assemble_object(*_eigen_structural_assembly);
+    _eigen_system->attach_eigenproblem_sensitivity_assemble_object(*_eigen_structural_assembly);
+    
+    
+    // temperature load
+    _temperature = new MAST::ConstantFunction<Real>("temp", 100.);
+    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", 0.);
+    _temperature_bc = new MAST::Temperature;
+    _temperature_bc->set_function(*_temperature);
+    _temperature_bc->set_reference_temperature_function(*_ref_temperature);
+    //_static_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     
     // apply the boundary conditions
@@ -540,13 +636,15 @@ MAST::SizingOptimization::_init() {
          it != boundary_constraint_map.end(); it++) {
         _bc[counter] = new MAST::DisplacementDirichletBoundaryCondition;
         _bc[counter]->init(it->first, it->second);
-        _structural_assembly->add_side_load(it->first, *_bc[counter]);
+        _static_structural_assembly->add_side_load(it->first, *_bc[counter]);
+        _eigen_structural_assembly->add_side_load(it->first, *_bc[counter]);
         counter++;
     }
 
-    _system->set_eigenproblem_type(GHEP);
-    _system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
-
+    _eigen_system->set_eigenproblem_type(GHEP);
+    _eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+    _eigen_structural_assembly->set_static_solution_system(_static_system);
+    
     _eq_systems->init ();
     
     
@@ -558,13 +656,18 @@ MAST::SizingOptimization::_init() {
     _eq_systems->parameters.set<bool>("if_exchange_AB_matrices") = true;
     _eq_systems->parameters.set<unsigned int>("eigenpairs")    = _n_eig;
     _eq_systems->parameters.set<unsigned int>("basis vectors") = _n_eig*3;
-    _structural_assembly->get_dirichlet_dofs(dirichlet_dof_ids);
-    _system->initialize_condensed_dofs(dirichlet_dof_ids);
+    _eq_systems->parameters.set<unsigned int>("nonlinear solver maximum iterations") =
+    _infile("max_nonlinear_iterations", 5);
+    _eigen_structural_assembly->get_dirichlet_dofs(dirichlet_dof_ids);
+    _eigen_system->initialize_condensed_dofs(dirichlet_dof_ids);
+    
+    
 
     // element and material properties
     _materials.resize(1);
     _elem_properties.resize(_n_stiff+1);
     _parameters.resize(_n_vars);
+    _parameter_functions.resize(_n_vars);
     
     DenseMatrix<Real> prestress; prestress.resize(3,3);
     prestress(0,0) = -1.31345e6;
@@ -574,6 +677,8 @@ MAST::SizingOptimization::_init() {
     _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
     _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
     _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
+    _alpha = new MAST::ConstantFunction<Real>("alpha", _infile("expansion_coefficient", 2.31e-5)),
+
     _prestress = new MAST::ConstantFunction<DenseMatrix<Real> >("prestress", prestress);
     
     _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
@@ -583,14 +688,21 @@ MAST::SizingOptimization::_init() {
     // add the properties to the cards
     mat.add(*_E);
     mat.add(*_nu);
+    mat.add(*_alpha);
     mat.add(*_rho);
     mat.add(*_kappa);
 
     // panel thickness as a design variable
     _parameters[0] = _h->ptr();
-    _structural_assembly->add_parameter(*_h);
+    _static_structural_assembly->add_parameter(*_h);
+    _eigen_structural_assembly->add_parameter(*_h);
     _parameter_functions[0] = _h;
-    
+
+    _h_stiff.resize(_n_stiff);
+    _h_z.resize(_n_stiff);
+    _offset_h_y.resize(_n_stiff);
+    _offset_h_z.resize(_n_stiff);
+
     if (_beam_stiff) {
         // create values for each stiffener
         for (unsigned int i=0; i<_n_stiff; i++) {
@@ -598,12 +710,16 @@ MAST::SizingOptimization::_init() {
             _h_stiff[i] = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002));
             _h_z[i] = new MAST::ConstantFunction<Real>("hz", z_div_loc[1]),
             _offset_h_y[i] = new MAST::ConstantFunction<Real>("hy_offset", 0.),
-            _offset_h_z[i] = new MAST::ConstantFunction<Real>("hz_offset", 0.5*z_div_loc[1]);
+            _offset_h_z[i] = new MAST::BeamOffset("hz_offset", _h_z[i]->clone().release());
             p->add(*_h_stiff[i]); // width
             p->add(*_h_z[i]); // height
             p->add(*_offset_h_y[i]); // width offset
             p->add(*_offset_h_z[i]); // height offset
-            p->y_vector()(1) = 1.;
+            if (i < ny_divs-1) // since stiffened_panel mesh first creates the x_stiffener
+                p->y_vector()(1) = 1.; // x-vector along x, y along y
+            else
+                p->y_vector()(0) = -1.; // x-vector along y, y along -x
+                
             p->set_material(mat);
             p->set_diagonal_mass_matrix(false);
             p->set_strain(MAST::VON_KARMAN_STRAIN);
@@ -613,10 +729,16 @@ MAST::SizingOptimization::_init() {
             _parameters[i*2+1] = _h_z[i]->ptr(); // set thickness as a modifiable parameter
             _parameters[i*2+2] = _h_stiff[i]->ptr(); // set thickness as a modifiable parameter
 
-            _structural_assembly->add_parameter(*_h_z[i]);
-            _structural_assembly->add_parameter(*_h_stiff[i]);
+            _static_structural_assembly->add_parameter(*_h_z[i]);
+            _static_structural_assembly->add_parameter(*_h_stiff[i]);
+            _eigen_structural_assembly->add_parameter(*_h_z[i]);
+            _eigen_structural_assembly->add_parameter(*_h_stiff[i]);
             _parameter_functions[i*2+1] = _h_z[i];
             _parameter_functions[i*2+2] = _h_stiff[i];
+            
+            // temperature load for each stiffener domain
+            //_static_structural_assembly->add_volume_load(i+1, *_temperature_bc);
+            //_eigen_structural_assembly->add_volume_load(i+1, *_temperature_bc);
         }
     }
     else {
@@ -647,12 +769,15 @@ MAST::SizingOptimization::_init() {
     
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
 
-    _structural_assembly->set_property_for_subdomain(0, prop2d);
-    for (unsigned int i=1; i<=_n_stiff; i++)
-        _structural_assembly->set_property_for_subdomain(i, *_elem_properties[1]);
+    _static_structural_assembly->set_property_for_subdomain(0, prop2d);
+    _eigen_structural_assembly->set_property_for_subdomain(0, prop2d);
+    for (unsigned int i=1; i<=_n_stiff; i++) {
+        _static_structural_assembly->set_property_for_subdomain(i, *_elem_properties[i]);
+        _eigen_structural_assembly->set_property_for_subdomain(i, *_elem_properties[i]);
+    }
     
     // create the function to calculate weight
-    _weight = new MAST::Weight(*_mesh, *_structural_assembly);
+    _weight = new MAST::Weight(*_mesh, *_static_structural_assembly);
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
