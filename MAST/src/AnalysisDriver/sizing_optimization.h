@@ -302,6 +302,11 @@ namespace MAST {
                               std::vector<bool>& eval_grads,
                               std::vector<Real>& grads);
         
+        virtual void output(unsigned int iter,
+                            const std::vector<Real>& x,
+                            Real obj,
+                            const std::vector<Real>& fval) const;
+        
     protected:
         
         
@@ -367,7 +372,10 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                       std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 0.05);
+    std::fill(x.begin(), x.end(), 0.008);
+    for (unsigned int i=1; i<x.size(); i+=2)
+        x[i] = .09;
+    x[0] = 0.02;
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 2.0e-3);
     xmax.resize(_n_vars);
@@ -592,13 +600,13 @@ MAST::SizingOptimization::_init() {
     
     
     // temperature load
-    _temperature = new MAST::ConstantFunction<Real>("temp", 100.);
-    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", 0.);
+    _temperature = new MAST::ConstantFunction<Real>("temp", 505.95); // K
+    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", 232.15); // K
     _temperature_bc = new MAST::Temperature;
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
-    //_static_structural_assembly->add_volume_load(0, *_temperature_bc);
-    //_eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
+    _static_structural_assembly->add_volume_load(0, *_temperature_bc);
+    _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     
     // apply the boundary conditions
@@ -723,7 +731,7 @@ MAST::SizingOptimization::_init() {
             p->set_material(mat);
             p->set_diagonal_mass_matrix(false);
             p->set_strain(MAST::VON_KARMAN_STRAIN);
-            
+
             _elem_properties[i+1] = p;
             
             _parameters[i*2+1] = _h_z[i]->ptr(); // set thickness as a modifiable parameter
@@ -737,8 +745,8 @@ MAST::SizingOptimization::_init() {
             _parameter_functions[i*2+2] = _h_stiff[i];
             
             // temperature load for each stiffener domain
-            //_static_structural_assembly->add_volume_load(i+1, *_temperature_bc);
-            //_eigen_structural_assembly->add_volume_load(i+1, *_temperature_bc);
+            _static_structural_assembly->add_volume_load(i+1, *_temperature_bc);
+            _eigen_structural_assembly->add_volume_load(i+1, *_temperature_bc);
         }
     }
     else {
@@ -765,7 +773,7 @@ MAST::SizingOptimization::_init() {
     prop2d.set_material(mat);
     prop2d.set_diagonal_mass_matrix(false);
     prop2d.add(*_h);
-    prop2d.add(*_prestress); // no prestress for stiffener
+    //prop2d.add(*_prestress); // no prestress for stiffener
     
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN);
 
@@ -782,6 +790,50 @@ MAST::SizingOptimization::_init() {
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
+
+inline void
+MAST::SizingOptimization::output(unsigned int iter,
+                                 const std::vector<Real>& x,
+                                 Real obj,
+                                 const std::vector<Real>& fval) const {
+    
+    libmesh_assert_equal_to(x.size(), _n_vars);
+    
+    // set the parameter values equal to the DV value
+    for (unsigned int i=0; i<_n_vars; i++)
+        *_parameters[i] = x[i];
+    
+    // the number of converged eigenpairs could be different from the number asked
+    unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
+    
+    std::pair<Real, Real> val;
+    Complex eigval;
+
+    for (unsigned int i=0; i<n_required; i++) {
+        std::ostringstream file_name;
+        
+        // We write the file in the ExodusII format.
+        file_name << "out_iter"
+        << std::setw(3)
+        << std::setfill('0')
+        << std::right
+        << iter << "_mode_"
+        << std::setw(3)
+        << std::setfill('0')
+        << std::right
+        << i
+        << ".exo";
+        
+        // now write the eigenvlaues
+        _eigen_system->get_eigenpair(i);
+        
+        // We write the file in the ExodusII format.
+        Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
+                                                  *_eq_systems);
+    }
+    
+    MAST::FunctionEvaluation::output(iter, x, obj, fval);
+}
 
 
 #endif // __MAST_sizing_optimization_h__
