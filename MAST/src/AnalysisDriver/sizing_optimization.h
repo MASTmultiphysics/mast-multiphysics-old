@@ -414,6 +414,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
     // now solve the system
     libMesh::out << "New Eval" << std::endl;
+    _static_system->solution->zero();
     _static_system->solve();
     _eigen_system->solve();
 
@@ -786,6 +787,66 @@ MAST::SizingOptimization::_init() {
     
     // create the function to calculate weight
     _weight = new MAST::Weight(*_mesh, *_static_structural_assembly);
+    
+    
+//    std::vector<Real> x0, x1, x, f, obj_grad, f_grad;
+//    x0 = {0.0272691, 0.002, 0.002, 0.002, 0.002, 0.0936944, 0.00916497, 0.0919679, 0.0105329};
+//    x1 = {0.0168242, 0.0833279, 0.002, 0.0832506, 0.002, 0.0990313, 0.0067811, 0.0962686, 0.00770932};
+//    x.resize(_n_vars);
+//    f.resize(_n_ineq);
+//    obj_grad.resize(_n_vars);
+//    f_grad.resize(_n_vars*_n_ineq);
+//    std::vector<bool> eval_f_grad;
+//    eval_f_grad.resize(_n_ineq);
+//    std::fill(eval_f_grad.begin(), eval_f_grad.end(), true);
+//    
+//    Real obj;
+//    
+//    x = x0;
+//    this->evaluate(x, obj, true, obj_grad, f, eval_f_grad, f_grad);
+//    
+//    for (unsigned int k=0; k<x.size(); k++)
+//        std::cout << x[k] << "  ";
+//    std::cout << std::endl;
+//    std::cout << obj << std::endl;
+//
+//    for (unsigned int k=0; k<f.size(); k++)
+//        std::cout << f[k] << "  ";
+//    std::cout << std::endl;
+//
+//    for (unsigned int k=0; k<f_grad.size(); k++)
+//        std::cout << f_grad[k] << "  ";
+//    std::cout << std::endl;
+//
+//    
+//    for (unsigned int k=0; k<obj_grad.size(); k++)
+//        std::cout << obj_grad[k] << "  ";
+//    std::cout << std::endl;
+//    
+//    // calculate perturbed solution
+//    for (unsigned int i=0; i<_n_vars; i++) {
+//        x = x0;
+//        x[i] *= 1.0001;
+//        std::fill(eval_f_grad.begin(), eval_f_grad.end(), false);
+//        this->evaluate(x, obj, false, obj_grad, f, eval_f_grad, f_grad);
+//        for (unsigned int k=0; k<x.size(); k++)
+//            std::cout << x[k] << "  ";
+//        std::cout << std::endl;
+//        std::cout << obj << std::endl;
+//        
+//        for (unsigned int k=0; k<f.size(); k++)
+//            std::cout << f[k] << "  ";
+//        std::cout << std::endl;
+//    }
+    
+    
+//    unsigned int niters=20;
+//    for (unsigned int i=0; i<niters; i++) {
+//        for (unsigned int j=0; j<_n_vars; j++)
+//            x[j] = x0[j] + (1.*i)/(1.*(niters-1))*(x1[j]-x0[j]);
+//        this->evaluate(x, obj, false, obj_grad, f, eval_f_grad, f_grad);
+//        this->output(i, x, obj, f);
+//    }
     
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
