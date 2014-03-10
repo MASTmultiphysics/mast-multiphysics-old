@@ -456,9 +456,9 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
 
             case MAST::TEMPERATURE:
                 calculate_jac = (calculate_jac ||
-                                 thermal_force(request_jacobian,
-                                               f, jac,
-                                               *it.first->second));
+                                 thermal_force_sensitivity(request_jacobian,
+                                                           f, jac,
+                                                           *it.first->second));
                 break;
 
 #endif

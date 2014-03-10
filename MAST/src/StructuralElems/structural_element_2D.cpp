@@ -1094,10 +1094,10 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
         // this is moved inside the domain since
         (*expansion_A)(pt, _system.time, material_exp_A_mat);
         expansion_A->total(*this->sensitivity_param,
-                           pt, _system.time, material_exp_A_mat);
+                           pt, _system.time, material_exp_A_mat_sens);
         (*expansion_B)(pt, _system.time, material_exp_B_mat);
         expansion_B->total(*this->sensitivity_param,
-                           pt, _system.time, material_exp_B_mat);
+                           pt, _system.time, material_exp_B_mat_sens);
         
         // get the temperature function
         temp_func(xyz[qp], _system.time, t);

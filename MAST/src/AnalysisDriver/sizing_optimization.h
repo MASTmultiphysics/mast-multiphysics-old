@@ -415,7 +415,13 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     // now solve the system
     libMesh::out << "New Eval" << std::endl;
     _static_system->solution->zero();
+    // static analysis is performed without von-Karman strain
+    for (unsigned int p=0; p<_elem_properties.size(); p++)
+        _elem_properties[p]->set_strain(MAST::LINEAR_STRAIN);
     _static_system->solve();
+    // eigen analysis is performed with von-Karman strain
+    for (unsigned int p=0; p<_elem_properties.size(); p++)
+        _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
     _eigen_system->solve();
 
     // the number of converged eigenpairs could be different from the number asked
@@ -458,7 +464,13 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     
     if (eval_grads[0]) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
+        // static analysis is performed without von-Karman strain
+        for (unsigned int p=0; p<_elem_properties.size(); p++)
+            _elem_properties[p]->set_strain(MAST::LINEAR_STRAIN);
         _static_system->sensitivity_solve(_parameters);
+        // eigen analysis is performed with von-Karman strain
+        for (unsigned int p=0; p<_elem_properties.size(); p++)
+            _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
         _eigen_system->sensitivity_solve(_parameters, grad_vals);
         // now correct this for the fact that the matrices were exchanged
         if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
