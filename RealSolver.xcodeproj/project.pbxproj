@@ -14,6 +14,7 @@
 		696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C08081796CD4100B77C5C /* structural_elem_base.cpp */; };
 		696C08161796CD4100B77C5C /* thermal_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C080B1796CD4100B77C5C /* thermal_elem_base.cpp */; };
 		696C081B1796ED8200B77C5C /* structural_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C081A1796ED8200B77C5C /* structural_driver.cpp */; };
+		6978193918CE9DE300C7D087 /* multilayer_2d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6978193818CE9DE300C7D087 /* multilayer_2d_section_element_property_card.cpp */; };
 		6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BC9A180360AB007C6D9A /* potential_flow_elem_base.cpp */; };
 		6989BC9F180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BC9C180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp */; };
 		6989BCA918046949007C6D9A /* potential_fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6989BCA718046949007C6D9A /* potential_fluid_analysis_driver.cpp */; };
@@ -85,6 +86,8 @@
 		696C080C1796CD4100B77C5C /* thermal_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thermal_elem_base.h; sourceTree = "<group>"; };
 		696C08181796CF9200B77C5C /* structural_system_assembly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = structural_system_assembly.h; sourceTree = "<group>"; };
 		696C081A1796ED8200B77C5C /* structural_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_driver.cpp; sourceTree = "<group>"; };
+		6978193718CE9C1A00C7D087 /* multilayer_2d_section_element_property_card.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = multilayer_2d_section_element_property_card.h; sourceTree = "<group>"; };
+		6978193818CE9DE300C7D087 /* multilayer_2d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = multilayer_2d_section_element_property_card.cpp; sourceTree = "<group>"; };
 		6989BC9A180360AB007C6D9A /* potential_flow_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_flow_elem_base.cpp; sourceTree = "<group>"; };
 		6989BC9B180360AB007C6D9A /* potential_flow_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = potential_flow_elem_base.h; sourceTree = "<group>"; };
 		6989BC9C180360AB007C6D9A /* unsteady_compressible_potential_flow_elem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unsteady_compressible_potential_flow_elem.cpp; sourceTree = "<group>"; };
@@ -353,6 +356,8 @@
 				EBED98B7189B0234008561D5 /* solid_1d_section_element_property_card.h */,
 				EBED98B3189AEB75008561D5 /* solid_2d_section_element_property_card.cpp */,
 				EBED98B4189AEB75008561D5 /* solid_2d_section_element_property_card.h */,
+				6978193718CE9C1A00C7D087 /* multilayer_2d_section_element_property_card.h */,
+				6978193818CE9DE300C7D087 /* multilayer_2d_section_element_property_card.cpp */,
 			);
 			path = PropertyCards;
 			sourceTree = "<group>";
@@ -534,6 +539,7 @@
 				EBE83D5917A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp in Sources */,
 				EBE83D5D17A182CE000F013C /* flutter_solver_base.cpp in Sources */,
 				6989BCA918046949007C6D9A /* potential_fluid_analysis_driver.cpp in Sources */,
+				6978193918CE9DE300C7D087 /* multilayer_2d_section_element_property_card.cpp in Sources */,
 				EBE83D5F17A1A75B000F013C /* residual_based_adaptive_time_solver.cpp in Sources */,
 				EBD7963F18490471007FA3A7 /* surface_pressure.cpp in Sources */,
 				69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */,
