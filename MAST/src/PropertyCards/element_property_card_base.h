@@ -70,8 +70,8 @@ namespace MAST
          *    this element should use. By default this is zero, and can be
          *    changed by the derived classes
          */
-        virtual unsigned int extra_quadrature_order(const Elem& elem,
-                                                    const FEType& fe) const {
+        virtual int extra_quadrature_order(const Elem& elem,
+                                           const FEType& fe) const {
             return 0;
         }
         

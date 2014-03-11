@@ -791,7 +791,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             matrix_B.add_matrix (mat2, dof_indices); // load dependent
         }
     }
-
+    
 #endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 

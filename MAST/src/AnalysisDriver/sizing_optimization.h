@@ -328,6 +328,8 @@ namespace MAST {
             delete _rho;
             delete _kappa;
             delete _h;
+            delete _panel_off;
+            
             if (_honeycomb) {
                 delete _core_E;
                 delete _core_nu;
@@ -401,7 +403,7 @@ namespace MAST {
         
         ZeroFunction<Real>* _zero_function;
         
-        MAST::ConstantFunction<Real> *_E, *_nu,  *_alpha, *_rho, *_kappa, *_h,
+        MAST::ConstantFunction<Real> *_E, *_nu,  *_alpha, *_rho, *_kappa, *_h, *_panel_off,
         *_core_E, *_core_nu,  *_core_alpha, *_core_rho, *_core_kappa, *_core_h;
         
         std::vector<MAST::ConstantFunction<Real>*> _h_stiff, _h_z,
@@ -652,19 +654,19 @@ MAST::SizingOptimization::_init() {
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = _static_system->add_variable ( "ux", static_cast<Order>(o), fefamily);
-    var_id["uy"] = _static_system->add_variable ( "uy", static_cast<Order>(o), fefamily);
-    var_id["uz"] = _static_system->add_variable ( "uz", static_cast<Order>(o), fefamily);
-    var_id["tx"] = _static_system->add_variable ( "tx", static_cast<Order>(o), fefamily);
-    var_id["ty"] = _static_system->add_variable ( "ty", static_cast<Order>(o), fefamily);
-    var_id["tz"] = _static_system->add_variable ( "tz", static_cast<Order>(o), fefamily);
+    var_id["ux"] = _static_system->add_variable ( "sux", static_cast<Order>(o), fefamily);
+    var_id["uy"] = _static_system->add_variable ( "suy", static_cast<Order>(o), fefamily);
+    var_id["uz"] = _static_system->add_variable ( "suz", static_cast<Order>(o), fefamily);
+    var_id["tx"] = _static_system->add_variable ( "stx", static_cast<Order>(o), fefamily);
+    var_id["ty"] = _static_system->add_variable ( "sty", static_cast<Order>(o), fefamily);
+    var_id["tz"] = _static_system->add_variable ( "stz", static_cast<Order>(o), fefamily);
     
-    _eigen_system->add_variable ( "ux", static_cast<Order>(o), fefamily);
-    _eigen_system->add_variable ( "uy", static_cast<Order>(o), fefamily);
-    _eigen_system->add_variable ( "uz", static_cast<Order>(o), fefamily);
-    _eigen_system->add_variable ( "tx", static_cast<Order>(o), fefamily);
-    _eigen_system->add_variable ( "ty", static_cast<Order>(o), fefamily);
-    _eigen_system->add_variable ( "tz", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "eux", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "euy", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "euz", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "etx", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "ety", static_cast<Order>(o), fefamily);
+    _eigen_system->add_variable ( "etz", static_cast<Order>(o), fefamily);
     
     _static_structural_assembly = new MAST::StructuralSystemAssembly(*_static_system,
                                                                      MAST::STATIC,
@@ -766,6 +768,7 @@ MAST::SizingOptimization::_init() {
     _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
     _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
     _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
+    _panel_off = new MAST::ConstantFunction<Real>("off", 0.);
     _alpha = new MAST::ConstantFunction<Real>("alpha", _infile("expansion_coefficient", 2.31e-5)),
     
     _prestress = new MAST::ConstantFunction<DenseMatrix<Real> >("prestress", prestress);
@@ -789,7 +792,7 @@ MAST::SizingOptimization::_init() {
     if (_honeycomb) {
         // void material
         _materials.push_back(new MAST::IsotropicMaterialPropertyCard(1));
-        MAST::MaterialPropertyCardBase& mat = *_materials[1];
+        MAST::MaterialPropertyCardBase& c_mat = *_materials[1];
         // add the properties to the cards
         _core_E = new MAST::ConstantFunction<Real>("E", _infile("core_youngs_modulus", 72.e9));
         _core_nu = new MAST::ConstantFunction<Real>("nu", _infile("core_poisson_ratio", 0.33));
@@ -798,11 +801,11 @@ MAST::SizingOptimization::_init() {
         _core_h = new MAST::ConstantFunction<Real>("h", _infile("core_thickness", 0.002));
         _core_alpha = new MAST::ConstantFunction<Real>("alpha", _infile("core_expansion_coefficient", 2.31e-5));
         
-        mat.add(*_core_E);
-        mat.add(*_core_nu);
-        mat.add(*_core_alpha);
-        mat.add(*_core_rho);
-        mat.add(*_core_kappa);
+        c_mat.add(*_core_E);
+        c_mat.add(*_core_nu);
+        c_mat.add(*_core_alpha);
+        c_mat.add(*_core_rho);
+        c_mat.add(*_core_kappa);
         
         // element property for the honeycomb panel
         _elem_properties.resize(4);
@@ -818,13 +821,13 @@ MAST::SizingOptimization::_init() {
         std::vector<MAST::Solid2DSectionElementPropertyCard*> layers;
         layers.resize(3); layers[0] = lower; layers[1] = core; layers[2] = upper;
         
-        lower->set_material(mat); lower->add(*_h);
-        core->set_material(mat);  core->add(*_core_h);
-        upper->set_material(mat); upper->add(*_h);
+        lower->set_material(c_mat); lower->add(*_h);
+        core->set_material(c_mat);  core->add(*_core_h);
+        upper->set_material(c_mat); upper->add(*_h);
         
         //prop2d.add(*_prestress); // no prestress for stiffener
         
-        p->set_layers(layers);
+        p->set_layers(0., layers);
         _static_structural_assembly->set_property_for_subdomain(0, *p);
         _eigen_structural_assembly->set_property_for_subdomain(0, *p);
         
@@ -902,6 +905,7 @@ MAST::SizingOptimization::_init() {
         prop2d.set_material(mat);
         prop2d.set_diagonal_mass_matrix(false);
         prop2d.add(*_h);
+        prop2d.add(*_panel_off);
         //prop2d.add(*_prestress); // no prestress for stiffener
         
         _static_structural_assembly->set_property_for_subdomain(0, prop2d);

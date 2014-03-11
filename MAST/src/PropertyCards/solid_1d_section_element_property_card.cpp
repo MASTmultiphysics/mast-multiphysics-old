@@ -123,7 +123,7 @@ SectionIntegratedExtensionBendingStiffnessMatrix::operator() (const Point& p,
     (*_material_stiffness)(p, t, m);
     
     m(0,1)  = m(0,0)*Ay;  // coupling of u and w bending (== theta_y)
-    m(0,0) *= -Az;        // coupling of u and v bending (== theta_z)
+    m(0,0) *= Az;        // coupling of u and v bending (== theta_z)
     
     m.scale_row(1, 0); // no coupling for torsion for symmetic sections
 }
@@ -143,11 +143,11 @@ SectionIntegratedExtensionBendingStiffnessMatrix::partial (const MAST::FieldFunc
     (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
     
     m(0,1)  = m(0,0)*dAy;  // coupling of u and w bending (== theta_y)
-    m(0,0) *= -dAz;        // coupling of u and v bending (== theta_z)
+    m(0,0) *= dAz;        // coupling of u and v bending (== theta_z)
     m.scale_row(1, 0);     // no coupling for torsion for symmetic sections
     
     dm(0,1)  = dm(0,0)*Ay;
-    dm(0,0) *= -Az;
+    dm(0,0) *= Az;
     dm.scale_row(1, 0.);
     m.add(1., dm);
 }
@@ -167,11 +167,11 @@ SectionIntegratedExtensionBendingStiffnessMatrix::total (const MAST::FieldFuncti
     (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
     
     m(0,1)  = m(0,0)*dAy;  // coupling of u and w bending (== theta_y)
-    m(0,0) *= -dAz;        // coupling of u and v bending (== theta_z)
+    m(0,0) *= dAz;        // coupling of u and v bending (== theta_z)
     m.scale_row(1, 0);     // no coupling for torsion for symmetic sections
     
     dm(0,1)  = dm(0,0)*Ay;
-    dm(0,0) *= -Az;
+    dm(0,0) *= Az;
     dm.scale_row(1, 0.);
     m.add(1., dm);
 }
@@ -530,7 +530,7 @@ SectionIntegratedThermalExpansionBMatrix::operator() (const Point& p,
     
     m.right_multiply(at);
     m(1,0)  = Ay * m(0,0);
-    m(0,0) *= -Az;
+    m(0,0) *= Az;
 }
 
 
@@ -552,13 +552,13 @@ SectionIntegratedThermalExpansionBMatrix::partial (const MAST::FieldFunctionBase
     m = m1;
     m.right_multiply(at);
     m(1,0)  = dAy * m(0,0);
-    m(0,0) *= -dAz;
+    m(0,0) *= dAz;
     
     m1.right_multiply(dat);
     dm.right_multiply(at);
     m1.add(1., dm);
     m1(1,0)  = Ay * m1(0,0);
-    m1(0,0) *= -Az;
+    m1(0,0) *= Az;
     
     m.add(1., m1);
 }
@@ -582,13 +582,13 @@ SectionIntegratedThermalExpansionBMatrix::total (const MAST::FieldFunctionBase& 
     m = m1;
     m.right_multiply(at);
     m(1,0)  = dAy * m(0,0);
-    m(0,0) *= -dAz;
+    m(0,0) *= dAz;
     
     m1.right_multiply(dat);
     dm.right_multiply(at);
     m1.add(1., dm);
     m1(1,0)  = Ay * m1(0,0);
-    m1(0,0) *= -Az;
+    m1(0,0) *= Az;
     
     m.add(1., m1);
 }
@@ -757,7 +757,7 @@ SectionIntegratedPrestressBMatrix::operator() (const Point& p,
     s.left_multiply_transpose(T);
     
     // only sigma_xx is applied, and torsion is neglected
-    m(0,0) = -s(0,0)*Az;
+    m(0,0) =  s(0,0)*Az;
     m(0,1) =  s(0,0)*Ay;
 }
 
@@ -799,7 +799,7 @@ SectionIntegratedPrestressBMatrix::partial (const MAST::FieldFunctionBase& f,
     ds += tmp;
     
     // only sigma_xx is applied, and torsion is neglected
-    m(0,0) = -(s(0,0)*dAz + ds(0,0)*Az);
+    m(0,0) =  (s(0,0)*dAz + ds(0,0)*Az);
     m(0,1) =  s(0,0)*dAy + ds(0,0)*Ay;;
 }
 
@@ -839,7 +839,7 @@ SectionIntegratedPrestressBMatrix::total (const MAST::FieldFunctionBase& f,
     ds += tmp;
     
     // only sigma_xx is applied, and torsion is neglected
-    m(0,0) = -(s(0,0)*dAz + ds(0,0)*Az);
+    m(0,0) =  (s(0,0)*dAz + ds(0,0)*Az);
     m(0,1) =  s(0,0)*dAy + ds(0,0)*Ay;
 }
 

@@ -27,7 +27,7 @@ namespace MAST {
         MindlinBendingOperator(StructuralElementBase& elem):
         MAST::BendingOperator2D(elem),
         _fe(elem.fe()),
-        _shear_quadrature_reduction(2)
+        _shear_quadrature_reduction(1)
         { }
         
         virtual ~MindlinBendingOperator() { }

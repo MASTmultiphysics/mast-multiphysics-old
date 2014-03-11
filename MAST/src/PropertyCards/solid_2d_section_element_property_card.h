@@ -36,8 +36,10 @@ namespace MAST {
             SectionIntegratedExtensionStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_h);
+            }
 
             
             virtual ~SectionIntegratedExtensionStiffnessMatrix() {
@@ -72,17 +74,23 @@ namespace MAST {
         class SectionIntegratedExtensionBendingStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
             SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                             MAST::FieldFunction<Real> *h);
+                                                             MAST::FieldFunction<Real> *h,
+                                                             MAST::FieldFunction<Real> *off);
             
             SectionIntegratedExtensionBendingStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()),
+            _off(f._off->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_h);
+                _functions.insert(_off);
+            }
             
             virtual ~SectionIntegratedExtensionBendingStiffnessMatrix() {
                 delete _material_stiffness;
                 delete _h;
+                delete _off;
             }
 
             /*!
@@ -104,25 +112,31 @@ namespace MAST {
         protected:
             
             MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<Real> *_h;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
         
         
         class SectionIntegratedBendingStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
             SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                    MAST::FieldFunction<Real> *h);
+                                                    MAST::FieldFunction<Real> *h,
+                                                    MAST::FieldFunction<Real> *off);
             
             SectionIntegratedBendingStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()),
+            _off(f._off->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_h);
+                _functions.insert(_off);
+            }
             
 
             virtual ~SectionIntegratedBendingStiffnessMatrix() {
                 delete _material_stiffness;
                 delete _h;
+                delete _off;
             }
             
             /*!
@@ -144,7 +158,7 @@ namespace MAST {
         protected:
             
             MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<Real> *_h;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
         
         
@@ -165,8 +179,10 @@ namespace MAST {
             SectionIntegratedTransverseStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix &f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_h);
+            }
             
             /*!
              *   @returns a clone of the function
@@ -220,18 +236,24 @@ namespace MAST {
         class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
         public:
             SectionIntegratedInertiaMatrix(MAST::FieldFunction<Real> *rho,
-                                           MAST::FieldFunction<Real> *h);
+                                           MAST::FieldFunction<Real> *h,
+                                           MAST::FieldFunction<Real> *off);
             
             SectionIntegratedInertiaMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _rho(f._rho->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()),
+            _off(f._off->clone().release()) {
+                _functions.insert(_rho);
+                _functions.insert(_h);
+                _functions.insert(_off);
+            }
             
 
             virtual ~SectionIntegratedInertiaMatrix() {
                 delete _rho;
                 delete _h;
+                delete _off;
             }
             
             /*!
@@ -252,7 +274,7 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_rho, *_h;
+            MAST::FieldFunction<Real> *_rho, *_h, *_off;
         };
         
         
@@ -267,8 +289,11 @@ namespace MAST {
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_material_expansion);
+                _functions.insert(_h);
+            }
             
             
             
@@ -312,20 +337,27 @@ namespace MAST {
         public:
             SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
                                                     MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                                    MAST::FieldFunction<Real> *h);
+                                                     MAST::FieldFunction<Real> *h,
+                                                     MAST::FieldFunction<Real> *off);
             
             SectionIntegratedThermalExpansionBMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix& f):
             MAST::FieldFunction<DenseMatrix<Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()),
+            _off(f._off->clone().release()) {
+                _functions.insert(_material_stiffness);
+                _functions.insert(_material_expansion);
+                _functions.insert(_h);
+                _functions.insert(_off);
+            }
             
             
             virtual ~SectionIntegratedThermalExpansionBMatrix() {
                 delete _material_stiffness;
                 delete _material_expansion;
                 delete _h;
+                delete _off;
             }
             
             /*!
@@ -352,7 +384,7 @@ namespace MAST {
             
             MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
             MAST::FieldFunction<DenseMatrix<Real> > *_material_expansion;
-            MAST::FieldFunction<Real> *_h;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
 
         
@@ -368,8 +400,11 @@ namespace MAST {
             MAST::SectionIntegratedPrestressMatrixBase(f),
             _prestress(f._prestress->clone().release()),
             _T(f._T->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()) {
+                _functions.insert(_prestress);
+                _functions.insert(_T);
+                _functions.insert(_h);
+            }
             
             
             virtual ~SectionIntegratedPrestressAMatrix() {
@@ -408,20 +443,27 @@ namespace MAST {
         public:
             SectionIntegratedPrestressBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
                                               MAST::FieldFunction<DenseMatrix<Real> > *T,
-                                              MAST::FieldFunction<Real> *h);
+                                              MAST::FieldFunction<Real> *h,
+                                              MAST::FieldFunction<Real> *off);
 
             SectionIntegratedPrestressBMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix& f):
             MAST::SectionIntegratedPrestressMatrixBase(f),
             _prestress(f._prestress->clone().release()),
             _T(f._T->clone().release()),
-            _h(f._h->clone().release())
-            { }
+            _h(f._h->clone().release()),
+            _off(f._off->clone().release()) {
+                _functions.insert(_prestress);
+                _functions.insert(_T);
+                _functions.insert(_h);
+                _functions.insert(_off);
+            }
             
 
             virtual ~SectionIntegratedPrestressBMatrix() {
                 delete _prestress;
                 delete _T;
                 delete _h;
+                delete _off;
             }
             
             /*!
@@ -445,7 +487,7 @@ namespace MAST {
         protected:
             
             MAST::FieldFunction<DenseMatrix<Real> > *_prestress, *_T;
-            MAST::FieldFunction<Real> *_h;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
 
         

@@ -59,8 +59,8 @@ namespace MAST
          *    this element should use. This is elevated by two orders for a DKT
          *    element
          */
-        virtual unsigned int extra_quadrature_order(const Elem& elem,
-                                                    const FEType& fe) const {
+        virtual int extra_quadrature_order(const Elem& elem,
+                                           const FEType& fe) const {
             if (this->bending_model(elem, fe) == MAST::BERNOULLI)
                 return 2;
             else

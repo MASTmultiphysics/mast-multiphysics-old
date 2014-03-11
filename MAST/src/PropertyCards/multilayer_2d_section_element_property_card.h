@@ -45,9 +45,11 @@ namespace MAST {
         
         class LayerOffset: public MAST::FieldFunction<Real> {
         public:
-            LayerOffset(unsigned int layer_num,
+            LayerOffset(const Real base,
+                        unsigned int layer_num,
                         std::vector<MAST::FieldFunction<Real>*>& layer_h):
-            MAST::FieldFunction<Real>("h_offset"),
+            MAST::FieldFunction<Real>("off"),
+            _base(base),
             _layer_num(layer_num),
             _layer_h(layer_h) {
                 for (unsigned int i=0; i < _layer_h.size(); i++)
@@ -56,6 +58,7 @@ namespace MAST {
             
             LayerOffset(const MAST::Multilayer2DSectionElementPropertyCard::LayerOffset &f):
             MAST::FieldFunction<Real>(f),
+            _base(f._base),
             _layer_num(f._layer_num)
             {
                 // initialize the vector
@@ -85,11 +88,17 @@ namespace MAST {
                 m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     (*_layer_h[i])(p, t, val);
-                    m += val; // currently the offset is chosen from h=0;
+                    m += val; // this calculates offset from h=0, and then it is modified for base
                 }
                 // finally, add half of the current layer thickness
                 (*_layer_h[_layer_num])(p, t, val);
                 m += 0.5*val;
+                
+                // now add the base offset
+                for (unsigned int i=0; i<_layer_h.size(); i++) {
+                    (*_layer_h[i])(p, t, val);
+                    m -= 0.5*(1.+_base)*val; // currently the offset is chosen from h=0;
+                }
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
@@ -98,11 +107,17 @@ namespace MAST {
                 m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     _layer_h[i]->partial(f, p, t, val);
-                    m += val; // currently the offset is chosen from h=0;
+                    m += val; // this calculates offset from h=0, and then it is modified for base
                 }
                 // finally, add half of the current layer thickness
                 _layer_h[_layer_num]->partial(f, p, t, val);
                 m += 0.5*val;
+
+                // now add the base offset
+                for (unsigned int i=0; i<_layer_h.size(); i++) {
+                    _layer_h[i]->partial(f, p, t, val);
+                    m -= 0.5*(1.+_base)*val; // currently the offset is chosen from h=0;
+                }
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
@@ -111,15 +126,22 @@ namespace MAST {
                 m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     _layer_h[i]->total(f, p, t, val);
-                    m += val; // currently the offset is chosen from h=0;
+                    m += val; // this calculates offset from h=0, and then it is modified for base
                 }
                 // finally, add half of the current layer thickness
                 _layer_h[_layer_num]->total(f, p, t, val);
                 m += 0.5*val;
+
+                // now add the base offset
+                for (unsigned int i=0; i<_layer_h.size(); i++) {
+                    _layer_h[i]->total(f, p, t, val);
+                    m -= 0.5*(1.+_base)*val; // currently the offset is chosen from h=0;
+                }
             }
             
         protected:
             
+            const Real _base;
             const unsigned int _layer_num;
             std::vector<MAST::FieldFunction<Real>*> _layer_h;
         };
@@ -210,9 +232,14 @@ namespace MAST {
         
         
         /*!
-         *    sets the layers of this section
+         *    sets the layers of this section.
+         *    \p base is used reference for calculation of offset.
+         *    base = -1 implies section lower thickness,
+         *    base = 0 implies section mid-point
+         *    base = +1 implies section upper thickness.
          */
-        void set_layers(std::vector<MAST::Solid2DSectionElementPropertyCard*>& layers) {
+        void set_layers(const Real base,
+                        std::vector<MAST::Solid2DSectionElementPropertyCard*>& layers) {
             
             // make sure that this has not been already set
             libmesh_assert(_layers.size() == 0);
@@ -232,7 +259,7 @@ namespace MAST {
                 
                 // create the offset function
                 _layer_offsets[i] = new MAST::Multilayer2DSectionElementPropertyCard::LayerOffset
-                (i, layer_h);
+                (base, i, layer_h);
                 // tell the layer about the offset
                 _layers[i]->add(*_layer_offsets[i]);
             }
