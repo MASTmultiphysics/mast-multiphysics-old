@@ -38,9 +38,11 @@ namespace MAST {
         
         class LayerOffset: public MAST::FieldFunction<Real> {
         public:
-            LayerOffset(unsigned int layer_num,
+            LayerOffset(const Real base,
+                        unsigned int layer_num,
                         std::vector<MAST::FieldFunction<Real>*>& layer_hz):
             MAST::FieldFunction<Real>("hz_offset"),
+            _base(base),
             _layer_num(layer_num),
             _layer_hz(layer_hz) {
                 for (unsigned int i=0; i < _layer_hz.size(); i++)
@@ -49,6 +51,7 @@ namespace MAST {
             
             LayerOffset(const MAST::Multilayer1DSectionElementPropertyCard::LayerOffset &f):
             MAST::FieldFunction<Real>(f),
+            _base(f._base),
             _layer_num(f._layer_num)
             {
                 // initialize the vector
@@ -83,6 +86,12 @@ namespace MAST {
                 // finally, add half of the current layer thickness
                 (*_layer_hz[_layer_num])(p, t, val);
                 m += 0.5*val;
+                
+                // now add the base offset
+                for (unsigned int i=0; i<_layer_hz.size(); i++) {
+                    (*_layer_hz[i])(p, t, val);
+                    m -= 0.5*(1.+_base)*val; // currently the offset is chosen from h=0;
+                }
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
@@ -96,6 +105,12 @@ namespace MAST {
                 // finally, add half of the current layer thickness
                 _layer_hz[_layer_num]->partial(f, p, t, val);
                 m += 0.5*val;
+                
+                // now add the base offset
+                for (unsigned int i=0; i<_layer_hz.size(); i++) {
+                    _layer_hz[i]->partial(f, p, t, val);
+                    m -= 0.5*(1.+_base)*val; // currently the offset is chosen from h=0;
+                }
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
@@ -109,10 +124,17 @@ namespace MAST {
                 // finally, add half of the current layer thickness
                 _layer_hz[_layer_num]->total(f, p, t, val);
                 m += 0.5*val;
+                
+                // now add the base offset
+                for (unsigned int i=0; i<_layer_hz.size(); i++) {
+                    _layer_hz[i]->total(f, p, t, val);
+                    m -= 0.5*(1.+_base)*val; // currently the offset is chosen from h=0;
+                }
             }
             
         protected:
             
+            const Real _base;
             const unsigned int _layer_num;
             std::vector<MAST::FieldFunction<Real>*> _layer_hz;
         };
@@ -155,9 +177,12 @@ namespace MAST {
             virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseMatrix<Real> mi;
-                m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     (*_layer_mats[i])(p, t, mi);
+                    // use the size of the layer matrix to resize the output
+                    // all other layers should return the same sized matrices
+                    if (i==0)
+                        m.resize(mi.m(), mi.n());
                     m.add(1., mi);
                 }
             }
@@ -166,9 +191,12 @@ namespace MAST {
                                   const Point& p, const Real t, DenseMatrix<Real>& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseMatrix<Real> mi;
-                m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     _layer_mats[i]->partial(f, p, t, mi);
+                    // use the size of the layer matrix to resize the output
+                    // all other layers should return the same sized matrices
+                    if (i==0)
+                        m.resize(mi.m(), mi.n());
                     m.add(1., mi);
                 }
             }
@@ -177,9 +205,12 @@ namespace MAST {
                                 const Point& p, const Real t, DenseMatrix<Real>& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseMatrix<Real> mi;
-                m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     _layer_mats[i]->total(f, p, t, mi);
+                    // use the size of the layer matrix to resize the output
+                    // all other layers should return the same sized matrices
+                    if (i==0)
+                        m.resize(mi.m(), mi.n());
                     m.add(1., mi);
                 }
             }
@@ -192,9 +223,14 @@ namespace MAST {
         
         
         /*!
-         *    sets the layers of this section
+         *    sets the layers of this section.
+         *    \p base is used reference for calculation of offset.
+         *    base = -1 implies section lower thickness,
+         *    base = 0 implies section mid-point
+         *    base = +1 implies section upper thickness.
          */
-        void set_layers(std::vector<MAST::Solid1DSectionElementPropertyCard*>& layers) {
+        void set_layers(const Real base,
+                        std::vector<MAST::Solid1DSectionElementPropertyCard*>& layers) {
             
             // make sure that this has not been already set
             libmesh_assert(_layers.size() == 0);
@@ -214,11 +250,22 @@ namespace MAST {
 
                 // create the offset function
                 _layer_offsets[i] = new MAST::Multilayer1DSectionElementPropertyCard::LayerOffset
-                (i, layer_hz);
+                (base, i, layer_hz);
                 // tell the layer about the offset
                 _layers[i]->add(*_layer_offsets[i]);
             }
         }
+        
+
+        /*!
+         *    returns the layers of this section
+         */
+        const std::vector<MAST::Solid1DSectionElementPropertyCard*>& get_layers() const {
+            // make sure they have been set
+            libmesh_assert(_layers.size() > 0);
+            return _layers;
+        }
+        
         
         /*!
          *   return true if the property is isotropic
