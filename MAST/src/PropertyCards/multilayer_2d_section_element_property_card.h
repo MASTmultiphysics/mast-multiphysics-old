@@ -254,8 +254,8 @@ namespace MAST {
                 
                 // offsets to be provided as functions to each layer
                 std::vector<MAST::FieldFunction<Real>*> layer_h(n_layers);
-                for (unsigned int i=0; i<n_layers; i++)
-                    layer_h[i] = _layers[i]->get<MAST::FieldFunction<Real> >("h").clone().release();
+                for (unsigned int j=0; j<n_layers; j++)
+                    layer_h[j] = _layers[j]->get<MAST::FieldFunction<Real> >("h").clone().release();
                 
                 // create the offset function
                 _layer_offsets[i] = new MAST::Multilayer2DSectionElementPropertyCard::LayerOffset
