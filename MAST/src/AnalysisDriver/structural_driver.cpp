@@ -253,7 +253,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     // a generalized Hermitian problem.
     static_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
     eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
-
+    
     
     MAST::ConstantFunction<Real> press("pressure", 1.e6);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
@@ -278,7 +278,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     // read and initialize the boundary conditions
     std::map<boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
     unsigned int n_bc, b_id;
-
+    
     // first read the boundaries for ux constraint
     for (std::map<std::string, unsigned int>::iterator it = var_id.begin();
          it != var_id.end(); it++) {
@@ -345,9 +345,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     h_stiff("h", infile("thickness", 0.002)),
     hy("hy", infile("thickness", 0.002)),
     hz("hz", infile("width", 0.002)),
+    h_off("off", 0.), // plate offset
     off_hy("hy_offset", 0.),
     off_hz("hz_offset", 0.);
-    //off_hz = .5*infile("width", 0.002);
     
     // add the properties to the cards
     mat.add(E);
@@ -357,7 +357,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     mat.add(alpha);
     
     prop2d.add(h);
+    prop2d.add(h_off);
     prop2d_stiff.add(h_stiff);
+    prop2d_stiff.add(h_off);
     prop1d.add(hy);
     prop1d.add(hz);
     prop1d.add(off_hy);
@@ -411,7 +413,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     layers[0] = &bottom;
     layers[1] = &middle;
     layers[2] = &top;
-    multi_prop1d.set_layers(layers);
+    multi_prop1d.set_layers(-1., layers); // offset wrt bottom layer
     
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
@@ -556,7 +558,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         delete dirichlet_boundary_conditions[i];
     
     // now write the data to an output file
-    //MAST::NastranIO(static_structural_assembly).write("nast.txt");
+    MAST::NastranIO(static_structural_assembly).write("nast.txt");
     XdrIO xdr(mesh, true);
     xdr.write("saved_structural_mesh.xdr");
     equation_systems.write("saved_structural_solution.xdr",
