@@ -245,8 +245,8 @@ namespace MAST {
                 
                 // offsets to be provided as functions to each layer
                 std::vector<MAST::FieldFunction<Real>*> layer_hz(n_layers);
-                for (unsigned int i=0; i<n_layers; i++)
-                    layer_hz[i] = _layers[i]->get<MAST::FieldFunction<Real> >("hz").clone().release();
+                for (unsigned int j=0; j<n_layers; j++)
+                    layer_hz[j] = _layers[j]->get<MAST::FieldFunction<Real> >("hz").clone().release();
 
                 // create the offset function
                 _layer_offsets[i] = new MAST::Multilayer1DSectionElementPropertyCard::LayerOffset
