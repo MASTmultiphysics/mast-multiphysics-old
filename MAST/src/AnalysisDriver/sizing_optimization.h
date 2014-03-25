@@ -782,8 +782,8 @@ MAST::SizingOptimization::_init() {
     
     
     // temperature load
-    _temperature = new MAST::ConstantFunction<Real>("temp", 505.95); // K
-    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", 232.15); // K
+    _temperature = new MAST::ConstantFunction<Real>("temp", _infile("panel_temperature", 576.95)); // K
+    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", _infile("panel_ref_temperature", 303.15)); // K
     _temperature_bc = new MAST::Temperature;
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
