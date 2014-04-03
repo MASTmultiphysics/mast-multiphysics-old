@@ -53,18 +53,23 @@ void ResidualBaseAdaptiveTimeSolver::solve()
         _iter_counter = this->n_iters_per_update;
         _first_solve = false;
     }
-    else { // update the solution velocity and old solution
-        *_x_dot = *_system.solution;
-        _x_dot->add(-1., *_x_old);
-        _x_dot->scale(1.0/(_system.time - _t_old));
-        _x_dot->close();
-        x_dot_norm = _x_dot->linfty_norm();
-    }
-
+    
+    // now advance the time step
+    core_time_solver->solve();
+    core_time_solver->advance_timestep();
+    _iter_counter--;
+    
+    *_x_dot = *_system.solution;
+    _x_dot->add(-1., *_x_old);
+    _x_dot->scale(1.0/(_system.time - _t_old));
+    _x_dot->close();
+    x_dot_norm = _x_dot->linfty_norm();
+    
+    
     if (!quiet)
         libMesh::out << "x_dot norm (old):  " << _x_dot_norm_old
         << "\nx_dot norm (curr.):  " << x_dot_norm << std::endl;
-
+    
     // if the time step update is needed, do that now
     if (_iter_counter == 0)
     {
@@ -80,7 +85,7 @@ void ResidualBaseAdaptiveTimeSolver::solve()
                 libMesh::out << " Growth factor constrained by max allowable: "
                 << growth_factor << std::endl;
         }
-
+        
         if (growth_factor < this->min_growth)
         {
             growth_factor = this->min_growth;
@@ -88,9 +93,9 @@ void ResidualBaseAdaptiveTimeSolver::solve()
                 libMesh::out << " Growth factor constrained by min allowable: "
                 << growth_factor << std::endl;
         }
-
+        
         this->_system.deltat *= growth_factor;
-
+        
         // look for the maximum and minimum dt
         if (this->_system.deltat > this->max_deltat)
         {
@@ -98,7 +103,7 @@ void ResidualBaseAdaptiveTimeSolver::solve()
             if (!quiet)
                 libMesh::out << " deltat constrained by max allowable: " << std::endl;
         }
-
+        
         // look for the maximum and minimum dt
         if (this->_system.deltat < this->min_deltat)
         {
@@ -108,20 +113,14 @@ void ResidualBaseAdaptiveTimeSolver::solve()
         }
         
         libMesh::out << " new deltat :  " << this->_system.deltat << std::endl;
-
+        
         _iter_counter = this->n_iters_per_update;
-    }
-    
+    }    
+
     // copy current values to "old"
     _t_old = _system.time;
     _x_dot_norm_old = x_dot_norm;
     *_x_old = *_system.solution;
     _x_old->close();
-    
-
-    // now advance the time step
-    core_time_solver->solve();
-    core_time_solver->advance_timestep();
-    _iter_counter--;
 }
 

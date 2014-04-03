@@ -497,7 +497,7 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
     // Now we begin the timestep loop to compute the time-accurate
     // solution of the equations.
     bool continue_iterations = true;
-    unsigned int t_step=0, amr_steps = max_adaptivesteps;
+    unsigned int t_step=0, amr_steps = max_adaptivesteps, a_step = 0;
     Real sol_norm = 1.0e10;
     if (!if_use_amr) amr_steps = 0;
     
@@ -507,11 +507,28 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
         std::cout << "\n\nSolving time step " << t_step << ", time = "
         << system.time << std::endl;
         
+        
+        // Do one last solve before the time step increment
+        system.solve();
+        //system.assemble_qoi(); // calculate the quantities of interest
+        //system.postprocess(); // set the qois to the post-process variables
+        
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        system.evaluate_recalculate_dc_flag();
+        delta_val_system.solution->close();
+        delta_val_system.update();
+#endif
+        
+        // Advance to the next timestep in a transient problem
+        //system.time_solver->advance_timestep();
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        sol_norm = timesolver->_x_dot_norm_old;
+#endif
+
+        
         // Adaptively solve the timestep
-        unsigned int a_step = 0;
         if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
         {
-            system.solve();
             
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
             delta_val_system.solution->close();
@@ -608,29 +625,13 @@ int fluid_driver (LibMeshInit& init, GetPot& infile,
             
             // decrement the amr counter
             amr_steps--;
+            a_step++;
 
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
             // tell the solver to recalculte the dc coeffs post refinement
             system.if_use_stored_dc_coeff = false;
 #endif
         }
-
-        // Do one last solve before the time step increment
-        system.solve();
-        //system.assemble_qoi(); // calculate the quantities of interest
-        //system.postprocess(); // set the qois to the post-process variables
-
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        system.evaluate_recalculate_dc_flag();
-        delta_val_system.solution->close();
-        delta_val_system.update();
-#endif
-
-        // Advance to the next timestep in a transient problem
-        system.time_solver->advance_timestep();
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        sol_norm = timesolver->_x_dot_norm_old;
-#endif
 
         // check for termination criteria
         t_step++;
