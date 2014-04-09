@@ -47,6 +47,8 @@ public:
     ~ResidualBaseAdaptiveTimeSolver ();
     
     void solve();
+    
+    virtual void init_data() { core_time_solver->init_data(); }
 
     unsigned int n_iters_per_update, _iter_counter;
 

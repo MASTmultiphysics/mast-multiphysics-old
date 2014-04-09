@@ -228,7 +228,8 @@ protected:
      const DenseVector<Real>& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseMatrix<Real>& Ai_Bi_advection,
-     Real& discontinuity_val );
+     Real& discontinuity_val,
+     DenseVector<Real>& delta_sens);
 
     
     void calculate_yzbeta_discontinuity_operator
@@ -248,7 +249,8 @@ protected:
      const DenseMatrix<Real>& Ai_Bi_advection,
      const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
      DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
-     Real& discontinuity_val);
+     Real& discontinuity_val,
+     DenseVector<Real>& delta_sens);
     
     std::vector<FluidPrimitiveVars> _active_primitive_vars;
 
