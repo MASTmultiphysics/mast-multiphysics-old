@@ -129,7 +129,14 @@ namespace MAST
          */
         void add_volume_load(subdomain_id_type bid, MAST::BoundaryCondition& load);
 
-        
+
+        /*!
+         *    returns a reference to the bolume boundary conditions
+         */
+        const std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& volume_loads() const{
+            return _vol_bc_map;
+        }
+
         /*!
          *    fills the set \par dof_ids with the dof ids of the Dirichlet
          *    dofs

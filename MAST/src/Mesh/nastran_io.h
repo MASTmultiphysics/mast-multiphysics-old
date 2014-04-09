@@ -19,6 +19,7 @@
 #include "StructuralElems/structural_system_assembly.h"
 #include "PropertyCards/element_property_card_1D.h"
 #include "PropertyCards/element_property_card_2D.h"
+#include "BoundaryConditions/temperature.h"
 
 
 
@@ -157,6 +158,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
             << std::setw(16) << std::showpoint << mesh.node(v)(2)
             << std::endl;
     }
+
     
     std::set<const MAST::ElementPropertyCardBase*> pcards;
     
@@ -210,6 +212,60 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
     // write the element property and material cards
     _write_property_cards(out_stream, pcards);
     
+    
+    {
+        // identify if any temperature loads are defined, and write those to the
+        // input file.
+        const std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& vol_loads =
+        _assembly.volume_loads();
+        
+        // iterate over the map and identify the subdomain for which the
+        // load is defined
+        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
+        it = vol_loads.begin(), end = vol_loads.end();
+        
+        // store the nodes that have already been written so that no
+        // duplicate temperatures are specified
+        std::set<Node*> nodes;
+
+        for ( ; it != end; it++)
+            if (it->second->type() == MAST::TEMPERATURE) {
+                subdomain_id_type sid = it->first;
+                const MAST::FieldFunction<Real> &temp =
+                dynamic_cast<const MAST::FieldFunction<Real>&>(it->second->function()),
+                &tempref = dynamic_cast<const MAST::FieldFunction<Real>&>
+                (dynamic_cast<const MAST::Temperature*>(it->second)->reference_temperature_function());
+                
+                // get iterator to the nodes for which the mesh is to be written
+                MeshBase::const_element_iterator       eit  = mesh.active_subdomain_elements_begin(sid);
+                const MeshBase::const_element_iterator eend = mesh.active_subdomain_elements_end(sid);
+                
+                std::string nm = "TEMP*", t;
+                unsigned int n_nastran_nodes;
+                Real tval, tref;
+                
+                // loop over the elements
+                for ( ; eit != eend; ++eit) {
+                    const Elem* elem = *eit;
+                    _nastran_element(elem->type(), t, n_nastran_nodes);
+                    for (unsigned int i=0; i<n_nastran_nodes; i++) {
+                        Node* n = elem->get_node(i);
+                        // write only if it has not been written
+                        if (!nodes.count(n)) {
+                            temp(*n, 0., tval);
+                            tempref(*n, 0., tref);
+                            out_stream
+                            << std::setw(8) << nm
+                            << std::setw(16) << 1 // assumed load set id for now
+                            << std::setw(16) << elem->node(i)+1 // node id
+                            << std::setw(16) << std::showpoint << tval-tref
+                            << std::endl;
+                            nodes.insert(n);
+                        }
+                    }
+                }
+            }
+    }
     
     
     {

@@ -2137,13 +2137,14 @@ FluidElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
 
 
 
+
 void FluidElemBase::calculate_aliabadi_discontinuity_operator
 ( const std::vector<unsigned int>& vars, const unsigned int qp,
   FEMContext& c,  const PrimitiveSolution& sol,
   const DenseVector<Real>& elem_solution,
   const std::vector<FEMOperatorMatrix>& dB_mat,
   const DenseMatrix<Real>& Ai_Bi_advection,
-  Real& discontinuity_val )
+  Real& discontinuity_val)
 {
     const unsigned int n1 = 2 + dim;
 
@@ -2189,12 +2190,48 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     }
 
     //    // now calculate the discontinuity capturing operator
-    if ((fabs(val1) > 1.0e-2) &&  (fabs(discontinuity_val) > 1.0e-2))
-        discontinuity_val = sqrt(discontinuity_val/val1);
-    else
-        discontinuity_val = 0.0;
+    //if ((fabs(val1) > 1.0e-2) &&  (fabs(discontinuity_val) > 1.0e-2))
+        discontinuity_val = sqrt(discontinuity_val/(val1+1.0e-4));
+    //else
+    //    discontinuity_val = 0.0;
     
     discontinuity_val = fmin(discontinuity_val, 1.);
+    
+    
+    // now calculate the Ducros shock sensor
+    Real d_ducros = 0., div = 0.;
+    DenseVector<Real> u, dudx, dudy, dudz, dN, curl;
+    u.resize(dim); dudx.resize(3); dudy.resize(3); dudz.resize(3); curl.resize(3);
+    sol.get_uvec(u);
+    
+    for (unsigned int i=0; i<dim; i++) {
+        dudx(i) = diff_vec[0](i+1); // du/dx
+        dudx(i) -= diff_vec[0](0)*u(i); // -drho/dx * u
+        dudx(i) /= sol.rho;
+    }
+    div += dudx(0);
+    if (dim > 1) {
+        for (unsigned int i=0; i<dim; i++) {
+            dudy(i) = diff_vec[1](i+2); // du/dy
+            dudy(i) -= diff_vec[1](0)*u(i); // -drho/dy * u
+            dudy(i) /= sol.rho;
+        }
+        div += dudy(1);
+    }
+    if (dim > 2) {
+        for (unsigned int i=0; i<dim; i++) {
+            dudz(i) = diff_vec[2](i+3); // du/dz
+            dudz(i) -= diff_vec[2](0)*u(i); // -drho/dz * u
+            dudz(i) /= sol.rho;
+        }
+        div += dudz(2);
+    }
+    curl(0) =   dudy(2)-dudz(1);
+    curl(1) = -(dudx(2)-dudz(0));
+    curl(2) =   dudx(1)-dudy(0);
+    
+    d_ducros = (div*div) / (div*div + curl.l2_norm() + 1.0e-4);
+    discontinuity_val *= d_ducros;
 }
 
 
