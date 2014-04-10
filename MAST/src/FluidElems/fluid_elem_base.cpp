@@ -2279,6 +2279,25 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         delta_sens.zero();
     //discontinuity_val *= d_ducros;
     delta_sens.scale(d_ducros*0.);
+    
+    // also add a pressure switch q
+    DenseMatrix<Real> dpdc, dcdp;
+    DenseVector<Real> dpress_dp, dp;
+    dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
+    dp.resize(dim);
+    Real p_sensor = 0., hk = 0.;
+    calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
+    dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
+    dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
+    for (unsigned int i=0; i<dim; i++) {
+        dB_mat[i].vector_mult(vec1, elem_solution);
+        dpdc.vector_mult(vec2, vec1);
+        dp(i) = vec2.dot(dpress_dp);
+        for (unsigned int j=0; j<dim; j++)
+            hk = std::fmax(hk, dX_dxi(i, j));
+    }
+    p_sensor = dp.l2_norm() * hk / sol.p;
+    discontinuity_val *= (p_sensor * 0.2);
 }
 
 
