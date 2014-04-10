@@ -2195,7 +2195,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     // this is the denominator term
     
     // add a small number to avoid division of zero by zero
-    Real val1 = 1.0e-2;
+    Real val1 = 1.0e-6;
     for (unsigned int i=0; i<dim; i++) {
         vec1.zero();
         
@@ -2263,15 +2263,21 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     curl(1) = -(dudx(2)-dudz(0));
     curl(2) =   dudx(1)-dudy(0);
     
-//    std::cout << discontinuity_val << "  " << val1 << "  "  << sqrt(discontinuity_val/val1) << std::endl;
-    
-    discontinuity_val = fmin(sqrt(discontinuity_val/val1), 1.);
-    d_ducros = (div*div) / (div*div + curl.l2_norm() + 1.0e-2);
+    //std::cout << "Delta:  "
+    //<<  discontinuity_val << "  " << val1 << "  "  << sqrt(discontinuity_val/val1) << std::endl;
+    //if ((discontinuity_val > 1.0e-2) && (val1 > 1.0e-2) )
+    discontinuity_val = sqrt(discontinuity_val/val1);
+    //else
+    //discontinuity_val = 0.;
+    //discontinuity_val = fmin(discontinuity_val, 1.);
+    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6);
+    //std::cout << "Ducros:  "
+    //<< div << "  " << curl.l2_norm() << "  " << d_ducros << std::endl;
     if (discontinuity_val > 1.0e-6)
         delta_sens.scale(.5*pow(discontinuity_val, -0.5));
     else
         delta_sens.zero();
-    discontinuity_val *= d_ducros;
+    //discontinuity_val *= d_ducros;
     delta_sens.scale(d_ducros*0.);
 }
 
