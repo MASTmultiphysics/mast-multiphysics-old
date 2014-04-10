@@ -2154,8 +2154,8 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     std::vector<DenseVector<Real> > diff_vec(3);
     DenseMatrix<Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
     tmpmat1_n1n2, tmpmat2_n1n2, tmpmat3;
-    DenseVector<Real> vec1, vec2, vec3;
-    vec1.resize(n1); vec2.resize(n1); vec3.resize(n1);
+    DenseVector<Real> vec1, vec2, vec3_n2, vec4_n2;
+    vec1.resize(n1); vec2.resize(n1); vec3_n2.resize(n2); vec4_n2.resize(n2);
     dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
     tmpmat1_n1n2.resize(dim+2, n2); tmpmat2_n1n2.resize(dim+2, n2);
@@ -2195,7 +2195,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     // this is the denominator term
     
     // add a small number to avoid division of zero by zero
-    Real val1 = 1.0e-6;
+    Real val1 = 1.0e-2;
     for (unsigned int i=0; i<dim; i++) {
         vec1.zero();
         
@@ -2212,34 +2212,24 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
 
     // now add sensitivity of the denominator
     for (unsigned int i=0; i<dim; i++) {
-        vec3.zero();
+        vec1.zero();
         vec2.zero();
         
         for (unsigned int j=0; j<dim; j++)
-            vec3.add(dxi_dX(i, j), diff_vec[j]);
+            vec1.add(dxi_dX(i, j), diff_vec[j]);
         
         for (unsigned int j=0; j<dim; j++) {
             dB_mat[j].left_multiply(tmpmat1_n1n2, A_inv_entropy);
-            tmpmat1_n1n2.vector_mult_transpose(vec1, vec3);
-            vec2.add(dxi_dX(i, j), vec1);
+            tmpmat1_n1n2.vector_mult_transpose(vec3_n2, vec1);
+            vec4_n2.add(dxi_dX(i, j), vec3_n2);
             
             A_inv_entropy.get_transpose(tmpmat3);
             dB_mat[j].left_multiply(tmpmat1_n1n2, tmpmat3);
-            tmpmat3.vector_mult_transpose(vec1, vec3);
-            vec2.add(dxi_dX(i, j), vec1);
+            tmpmat1_n1n2.vector_mult_transpose(vec3_n2, vec1);
+            vec4_n2.add(dxi_dX(i, j), vec3_n2);
         }
-        delta_sens.add(-discontinuity_val/pow(val1,2), vec2);
+        delta_sens.add(-discontinuity_val/pow(val1,2), vec4_n2);
     }
-    delta_sens.scale(.5*pow( discontinuity_val/val1, -0.5));
-    
-    //    // now calculate the discontinuity capturing operator
-    //if ((fabs(val1) > 1.0e-2) &&  (fabs(discontinuity_val) > 1.0e-2))
-        discontinuity_val = sqrt(discontinuity_val/val1);
-    //else
-    //    discontinuity_val = 0.0;
-    
-    discontinuity_val = fmin(discontinuity_val, 1.);
-    
     
     // now calculate the Ducros shock sensor
     Real d_ducros = 0., div = 0.;
@@ -2273,9 +2263,16 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     curl(1) = -(dudx(2)-dudz(0));
     curl(2) =   dudx(1)-dudy(0);
     
-    d_ducros = (div*div) / (div*div + curl.l2_norm() + 1.0e-4);
+//    std::cout << discontinuity_val << "  " << val1 << "  "  << sqrt(discontinuity_val/val1) << std::endl;
+    
+    discontinuity_val = fmin(sqrt(discontinuity_val/val1), 1.);
+    d_ducros = (div*div) / (div*div + curl.l2_norm() + 1.0e-2);
+    if (discontinuity_val > 1.0e-6)
+        delta_sens.scale(.5*pow(discontinuity_val, -0.5));
+    else
+        delta_sens.zero();
     discontinuity_val *= d_ducros;
-    delta_sens.scale(d_ducros);
+    delta_sens.scale(d_ducros*0.);
 }
 
 
