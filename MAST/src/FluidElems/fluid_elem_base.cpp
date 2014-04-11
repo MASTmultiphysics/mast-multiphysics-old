@@ -2144,11 +2144,8 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
   const DenseVector<Real>& elem_solution,
   const std::vector<FEMOperatorMatrix>& dB_mat,
   const DenseMatrix<Real>& Ai_Bi_advection,
-  Real& discontinuity_val,
-  DenseVector<Real>& delta_sens)
+  Real& discontinuity_val)
 {
-    delta_sens.zero();
-    
     const unsigned int n1 = 2 + dim, n2 = dB_mat[0].n();
 
     std::vector<DenseVector<Real> > diff_vec(3);
@@ -2178,19 +2175,6 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     A_inv_entropy.vector_mult(vec2, vec1);
     discontinuity_val = vec1.dot(vec2);  // this is the numerator term
     
-    // calculate the sensitivity vector for the discontinuity capturing term
-    // for the numerator
-    tmpmat3 = A_inv_entropy;
-    tmpmat3.right_multiply(Ai_Bi_advection);
-    tmpmat3.vector_mult_transpose(vec2, vec1);
-    delta_sens.add(1., vec2);
-    
-    A_inv_entropy.get_transpose(tmpmat3);
-    tmpmat3.right_multiply(Ai_Bi_advection);
-    tmpmat3.vector_mult_transpose(vec2, vec1);
-    delta_sens.add(1., vec2);
-    
-
     // now evaluate the dissipation factor for the discontinuity capturing term
     // this is the denominator term
     
@@ -2207,78 +2191,40 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         val1 += vec1.dot(vec2);
     }
 
-    // scale the sensitivity vector with the denominator
-    delta_sens.scale(1./val1);
-
-    // now add sensitivity of the denominator
-    for (unsigned int i=0; i<dim; i++) {
-        vec1.zero();
-        vec2.zero();
-        
-        for (unsigned int j=0; j<dim; j++)
-            vec1.add(dxi_dX(i, j), diff_vec[j]);
-        
-        for (unsigned int j=0; j<dim; j++) {
-            dB_mat[j].left_multiply(tmpmat1_n1n2, A_inv_entropy);
-            tmpmat1_n1n2.vector_mult_transpose(vec3_n2, vec1);
-            vec4_n2.add(dxi_dX(i, j), vec3_n2);
-            
-            A_inv_entropy.get_transpose(tmpmat3);
-            dB_mat[j].left_multiply(tmpmat1_n1n2, tmpmat3);
-            tmpmat1_n1n2.vector_mult_transpose(vec3_n2, vec1);
-            vec4_n2.add(dxi_dX(i, j), vec3_n2);
-        }
-        delta_sens.add(-discontinuity_val/pow(val1,2), vec4_n2);
-    }
+//    // now calculate the Ducros shock sensor
+//    Real d_ducros = 0., div = 0.;
+//    DenseVector<Real> u, dudx, dudy, dudz, dN, curl;
+//    u.resize(dim); dudx.resize(3); dudy.resize(3); dudz.resize(3); curl.resize(3);
+//    sol.get_uvec(u);
+//    
+//    for (unsigned int i=0; i<dim; i++) {
+//        dudx(i) = diff_vec[0](i+1); // du/dx
+//        dudx(i) -= diff_vec[0](0)*u(i); // -drho/dx * u
+//        dudx(i) /= sol.rho;
+//    }
+//    div += dudx(0);
+//    if (dim > 1) {
+//        for (unsigned int i=0; i<dim; i++) {
+//            dudy(i) = diff_vec[1](i+2); // du/dy
+//            dudy(i) -= diff_vec[1](0)*u(i); // -drho/dy * u
+//            dudy(i) /= sol.rho;
+//        }
+//        div += dudy(1);
+//    }
+//    if (dim > 2) {
+//        for (unsigned int i=0; i<dim; i++) {
+//            dudz(i) = diff_vec[2](i+3); // du/dz
+//            dudz(i) -= diff_vec[2](0)*u(i); // -drho/dz * u
+//            dudz(i) /= sol.rho;
+//        }
+//        div += dudz(2);
+//    }
+//    curl(0) =   dudy(2)-dudz(1);
+//    curl(1) = -(dudx(2)-dudz(0));
+//    curl(2) =   dudx(1)-dudy(0);
+//    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6);
     
-    // now calculate the Ducros shock sensor
-    Real d_ducros = 0., div = 0.;
-    DenseVector<Real> u, dudx, dudy, dudz, dN, curl;
-    u.resize(dim); dudx.resize(3); dudy.resize(3); dudz.resize(3); curl.resize(3);
-    sol.get_uvec(u);
-    
-    for (unsigned int i=0; i<dim; i++) {
-        dudx(i) = diff_vec[0](i+1); // du/dx
-        dudx(i) -= diff_vec[0](0)*u(i); // -drho/dx * u
-        dudx(i) /= sol.rho;
-    }
-    div += dudx(0);
-    if (dim > 1) {
-        for (unsigned int i=0; i<dim; i++) {
-            dudy(i) = diff_vec[1](i+2); // du/dy
-            dudy(i) -= diff_vec[1](0)*u(i); // -drho/dy * u
-            dudy(i) /= sol.rho;
-        }
-        div += dudy(1);
-    }
-    if (dim > 2) {
-        for (unsigned int i=0; i<dim; i++) {
-            dudz(i) = diff_vec[2](i+3); // du/dz
-            dudz(i) -= diff_vec[2](0)*u(i); // -drho/dz * u
-            dudz(i) /= sol.rho;
-        }
-        div += dudz(2);
-    }
-    curl(0) =   dudy(2)-dudz(1);
-    curl(1) = -(dudx(2)-dudz(0));
-    curl(2) =   dudx(1)-dudy(0);
-    
-    //std::cout << "Delta:  "
-    //<<  discontinuity_val << "  " << val1 << "  "  << sqrt(discontinuity_val/val1) << std::endl;
-    //if ((discontinuity_val > 1.0e-2) && (val1 > 1.0e-2) )
     discontinuity_val = sqrt(discontinuity_val/val1);
-    //else
-    //discontinuity_val = 0.;
-    //discontinuity_val = fmin(discontinuity_val, 1.);
-    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6);
-    //std::cout << "Ducros:  "
-    //<< div << "  " << curl.l2_norm() << "  " << d_ducros << std::endl;
-    if (discontinuity_val > 1.0e-6)
-        delta_sens.scale(.5*pow(discontinuity_val, -0.5));
-    else
-        delta_sens.zero();
-    //discontinuity_val *= d_ducros;
-    delta_sens.scale(d_ducros*0.);
     
     // also add a pressure switch q
     DenseMatrix<Real> dpdc, dcdp;
@@ -2294,7 +2240,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         dpdc.vector_mult(vec2, vec1);
         dp(i) = vec2.dot(dpress_dp);
         for (unsigned int j=0; j<dim; j++)
-            hk = std::fmax(hk, dX_dxi(i, j));
+            hk = fmax(hk, dX_dxi(i, j));
     }
     p_sensor = dp.l2_norm() * hk / sol.p;
     discontinuity_val *= (p_sensor * 0.2);
@@ -2386,8 +2332,7 @@ void FluidElemBase::calculate_differential_operator_matrix
  const DenseMatrix<Real>& Ai_Bi_advection,
  const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
  DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
- Real& discontinuity_val,
- DenseVector<Real>& delta_sens)
+ Real& discontinuity_val)
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
@@ -2455,8 +2400,7 @@ void FluidElemBase::calculate_differential_operator_matrix
     
     calculate_aliabadi_discontinuity_operator(vars, qp, c, sol, elem_solution,
                                               dB_mat, Ai_Bi_advection,
-                                              discontinuity_val,
-                                              delta_sens);
+                                              discontinuity_val);
 
 //    calculate_yzbeta_discontinuity_operator(vars, qp, c, elem_solution,
 //                                            dB_mat, Ai_Bi_advection,

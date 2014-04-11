@@ -246,7 +246,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     dprim_dcons, dcons_dprim;
     
     DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    conservative_sol, delta_vals, temp_grad, diff_sens;
+    conservative_sol, delta_vals, temp_grad;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);
@@ -257,7 +257,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
     tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
-    delta_vals.resize(n_qpoints); temp_grad.resize(dim); diff_sens.resize(n_dofs);
+    delta_vals.resize(n_qpoints); temp_grad.resize(dim);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -338,7 +338,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
              c.get_elem_solution(), primitive_sol,
              B_mat, dB_mat, Ai_advection,
              Ai_Bi_advection, flux_jacobian_sens,
-             LS_mat, LS_sens, diff_val, diff_sens);
+             LS_mat, LS_sens, diff_val);
         
         if (if_use_stored_dc_coeff)
             diff_val = delta_vals(qp);
@@ -393,15 +393,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2,
                                                        dB_mat[i_dim]);
                 Kmat.add(-JxW[qp]*diff_val, tmp_mat2_n2n2);
-                // add Jacobian component due to diff coefficient
-                if (!if_use_stored_dc_coeff) {
-                    dB_mat[i_dim].vector_mult(flux, c.get_elem_solution());
-                    dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-                    for (unsigned int i=0; i<n_dofs; i++)
-                        for (unsigned int j=0; j<n_dofs; j++)
-                            Kmat(i,j) += (-JxW[qp]) * tmp_vec3_n2(i)*diff_sens(j);
-                }
-                
+
                 if (_if_full_linearization)
                 {
                     // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
@@ -994,13 +986,11 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     std::vector<DenseMatrix<Real> > Ai_advection(dim);
     DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
     tmp_mat2_n2n2, tmp_mat3;
-    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol,
-    diff_sens;
+    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol;
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     tmp_mat2_n2n2.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);  tmp_mat_n1n2.resize(dim+2, n_dofs);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
-    diff_sens.resize(n_dofs);
     conservative_sol.resize(dim+2);
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -1044,7 +1034,7 @@ bool FluidSystem::mass_residual (bool request_jacobian,
             (vars, qp, c, c.get_elem_fixed_solution(),
              primitive_sol, B_mat, dB_mat,
              Ai_advection, Ai_Bi_advection,
-             flux_jacobian_sens, LS_mat, LS_sens, diff_val, diff_sens);
+             flux_jacobian_sens, LS_mat, LS_sens, diff_val);
         
         // Galerkin contribution to velocity
         B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );
