@@ -99,6 +99,7 @@ public:
     surface_motion(NULL),
     flight_condition(NULL),
     dim(0),
+    _dissipation_scaling(1.),
     _infile(infile)
     { }
 
@@ -256,6 +257,7 @@ protected:
     
     bool _if_viscous, _if_full_linearization,
     _if_update_stabilization_per_quadrature_point;
+    Real _dissipation_scaling;
     
     GetPot& _infile;
     

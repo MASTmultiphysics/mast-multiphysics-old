@@ -277,6 +277,7 @@ void FluidElemBase::init_data ()
     _if_full_linearization = _infile("if_full_linearization", true);
     _if_update_stabilization_per_quadrature_point =
     _infile("if_update_stabilization_per_quadrature_point", true);
+    _dissipation_scaling = _infile("dissipation_scaling", 0.4);
     
     // read the boundary conditions
     unsigned int n_bc, bc_id;
@@ -2243,7 +2244,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
             hk = fmax(hk, dX_dxi(i, j));
     }
     p_sensor = dp.l2_norm() * hk / sol.p;
-    discontinuity_val *= (p_sensor * 0.2);
+    discontinuity_val *= (p_sensor * _dissipation_scaling);
 }
 
 
