@@ -6,8 +6,8 @@
 //  Copyright (c) 2013 Manav Bhatia. All rights reserved.
 //
 
-#ifndef MAST_ug_flutter_solver_h
-#define MAST_ug_flutter_solver_h
+#ifndef __MAST_ug_flutter_solver_h__
+#define __MAST_ug_flutter_solver_h__
 
 // C++
 #include <iostream>
