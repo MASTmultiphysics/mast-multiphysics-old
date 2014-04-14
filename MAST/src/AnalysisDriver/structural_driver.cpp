@@ -265,10 +265,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     temp_bc.set_reference_temperature_function(ref_temp);
     static_structural_assembly.add_volume_load(0, temp_bc);
     eigen_structural_assembly.add_volume_load(0, temp_bc);
-    static_structural_assembly.add_volume_load(1, temp_bc);
-    eigen_structural_assembly.add_volume_load(1, temp_bc);
-    static_structural_assembly.add_volume_load(2, temp_bc);
-    eigen_structural_assembly.add_volume_load(2, temp_bc);
     
     static_system.attach_assemble_object(static_structural_assembly);
     eigen_system.attach_assemble_object(eigen_structural_assembly);
@@ -436,6 +432,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
             for (unsigned int i=1; i<n_stiff+1; i++) {
                 static_structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
                 eigen_structural_assembly.set_property_for_subdomain(i, prop2d_stiff);
+                static_structural_assembly.add_volume_load(i, temp_bc);
+                eigen_structural_assembly.add_volume_load(i, temp_bc);
             }
         }
         else {
@@ -444,6 +442,8 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
             for (unsigned int i=1; i<n_stiff+1; i++) {
                 static_structural_assembly.set_property_for_subdomain(i, prop1d);
                 eigen_structural_assembly.set_property_for_subdomain(i, prop1d);
+                static_structural_assembly.add_volume_load(i, temp_bc);
+                eigen_structural_assembly.add_volume_load(i, temp_bc);
             }
 
 //            // iterate over all elements in the region with void and set the
@@ -553,10 +553,6 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     std::cout<< std::endl;
     file.close();
 
-    // be sure to delete the boundary condition objects
-    for (unsigned int i=0; i<dirichlet_boundary_conditions.size(); i++)
-        delete dirichlet_boundary_conditions[i];
-    
     // now write the data to an output file
     MAST::NastranIO(static_structural_assembly).write("nast.txt");
     XdrIO xdr(mesh, true);
@@ -566,6 +562,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
                            (EquationSystems::WRITE_SERIAL_FILES |
                             EquationSystems::WRITE_DATA |
                             EquationSystems::WRITE_ADDITIONAL_DATA));
+
+    // be sure to delete the boundary condition objects
+    for (unsigned int i=0; i<dirichlet_boundary_conditions.size(); i++)
+        delete dirichlet_boundary_conditions[i];
     
     // All done.
     return 0;
