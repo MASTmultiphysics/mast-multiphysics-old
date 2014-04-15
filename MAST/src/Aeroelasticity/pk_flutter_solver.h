@@ -83,12 +83,12 @@ public:
     class PKFlutterRoot: public FlutterRoot
     {
     public:
-        PKFlutterRoot(): FlutterRoot(), if_imag_V(false) { }
+        PKFlutterRoot(): FlutterRoot(), if_nonphysical_root(false) { }
         void init(const Real k, const Real b_ref,
                   const Complex num, const Complex den,
                   const ComplexMatrixX& Bmat,
                   const ComplexVectorX& eig_vec);
-        bool if_imag_V;
+        bool if_nonphysical_root;
     };
     
     
