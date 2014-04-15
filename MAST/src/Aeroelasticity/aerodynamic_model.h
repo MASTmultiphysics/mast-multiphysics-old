@@ -27,7 +27,7 @@ public:
      *    applicable for only the time-domain methods. Returns \par false if
      *    the model does not have a damping term.
      */
-    virtual bool get_damping_matrix(ComplexMatrixX& a)
+    virtual bool get_damping_matrix(RealMatrixX& a)
     { libmesh_assert(false); }
     
     /*!
@@ -35,7 +35,7 @@ public:
      *    applicable for only the time-domain methods. Returns \par false if
      *    the model does not have a stiffness term.
      */
-    virtual bool get_stiffness_matrix(ComplexMatrixX& a)
+    virtual bool get_stiffness_matrix(RealMatrixX& a)
     { libmesh_assert(false); }
     
 };

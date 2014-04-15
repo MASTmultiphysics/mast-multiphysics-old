@@ -44,7 +44,7 @@ namespace MAST {
     public:
         SmallDisturbanceSurfacePressure(System& nl_sys,
                                         System& lin_sys):
-        MAST::BoundaryCondition(MAST::SMALL_DISTURBANCE_MOTION),
+        MAST::BoundaryCondition(MAST::SMALL_DISTURBANCE_PRESSURE),
         nonlinear_sys(nl_sys),
         linearized_sys(lin_sys),
         _flt_cond(NULL),

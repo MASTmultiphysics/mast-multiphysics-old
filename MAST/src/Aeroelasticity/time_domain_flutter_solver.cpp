@@ -1,68 +1,28 @@
 //
-//  ug_flutter_solver.cpp
-//  MAST
+//  time_domain_flutter_solver.cpp
+//  RealSolver
 //
-//  Created by Manav Bhatia on 9/16/13.
-//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
+//  Created by Manav Bhatia on 4/15/14.
+//  Copyright (c) 2014 Manav Bhatia. All rights reserved.
 //
 
 // C++ includes
 #include <iomanip>
 
 // MAST includes
-#include "Aeroelasticity/ug_flutter_solver.h"
-
-
-void
-MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
-                          const Complex num,
-                          const Complex den,
-                          const ComplexMatrixX& Bmat,
-                          const ComplexVectorX& eig_vec)
-{
-    k_ref = k;
-    
-    if (std::abs(den) > 0.)
-    {
-        root = num/den;
-        if (std::real(root) > 0.)
-        {
-            V     = sqrt(1./std::real(root));
-            g     = std::imag(root)/std::real(root);
-            omega = k_ref*V/b_ref;
-            if_nonphysical_root = false;
-        }
-        else
-        {
-            V     = 0.;
-            g     = 0.;
-            omega = 0.;
-            if_nonphysical_root = true;
-        }
-    }
-    
-    // calculate the modal participation vector
-    const unsigned int nvals = (int)Bmat.rows();
-    mode = eig_vec;
-    ComplexVectorX k_q = Bmat * mode;
-    modal_participation.resize(nvals, 1);
-    for (unsigned int i=0; i<nvals; i++)
-        modal_participation(i) =  std::abs(std::conj(mode(i)) * k_q(i));
-    modal_participation *= (1./modal_participation.sum());
-}
+#include "Aeroelasticity/time_domain_flutter_solver.h"
 
 
 
-
-
-MAST::UGFlutterSolver::~UGFlutterSolver()
+MAST::TimeDomainFlutterSolver::~TimeDomainFlutterSolver()
 { }
 
 
 
 
 
-void MAST::UGFlutterSolver::_identify_crossover_points()
+void
+MAST::TimeDomainFlutterSolver::_identify_crossover_points()
 {
     // if the initial scanning has not been done, then do it now
     const Real tol = 1.0e-5, max_allowable_g = 0.75;
@@ -190,34 +150,34 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
 
 
 MAST::FlutterSolutionBase*
-MAST::UGFlutterSolver::analyze(const Real k_ref,
-                               const MAST::FlutterSolutionBase* prev_sol) {
-    ComplexMatrixX m, k;
+MAST::TimeDomainFlutterSolver::analyze(const Real ref_val,
+                                       const MAST::FlutterSolutionBase* prev_sol) {
+    RealMatrixX a, b;
     
     libMesh::out
     << " ====================================================" << std::endl
-    << "UG Solution for k_red = "
-    << std::setw(10) << k_ref << std::endl;
+    << "Eigensolution for V = "
+    << std::setw(10) << ref_val << std::endl;
     
-    initialize_matrices(k_ref, m, k);
-    LAPACK_ZGGEV ges;
-    ges.compute(m, k);
+    initialize_matrices(ref_val, a, b);
+    LAPACK_DGGEV ges;
+    ges.compute(a, b);
     ges.scale_eigenvectors_to_identity_innerproduct();
     
     // now insert the root
     std::pair<Real, MAST::FlutterSolutionBase*>
-    val(k_ref, new MAST::FrequencyDomainFlutterSolution(*this));
+    val(ref_val, new MAST::TimeDomainFlutterSolution(*this));
     bool success = _flutter_solutions.insert(val).second;
     libmesh_assert (success); // make sure that it was successfully added
-    dynamic_cast<MAST::FrequencyDomainFlutterSolution*>(val.second)->init
-    (k_ref, flight_condition->ref_chord, ges);
+    dynamic_cast<MAST::TimeDomainFlutterSolution*>(val.second)->init
+    (ref_val, flight_condition->ref_chord, ges);
     val.second->print(_output, _mode_output);
     
     if (prev_sol)
         val.second->sort(*prev_sol);
     
     libMesh::out
-    << "Finished UG Solution" << std::endl
+    << "Finished Eigensolution" << std::endl
     << " ====================================================" << std::endl;
     
     
@@ -226,29 +186,40 @@ MAST::UGFlutterSolver::analyze(const Real k_ref,
 
 
 
-void MAST::UGFlutterSolver::initialize_matrices(Real k_ref,
-                                                ComplexMatrixX& m, // mass & aero
-                                                ComplexMatrixX& k) // stiffness
+void MAST::TimeDomainFlutterSolver::initialize_matrices(Real ref_val,
+                                                        RealMatrixX& a, // LHS
+                                                        RealMatrixX& b) // RHS
 {
     bool has_matrix = false;
-    RealMatrixX mat_r;
+    RealMatrixX mat1, mat2;
+    Real q0 = flight_condition->q0();
     
-    // stiffness matrix forms the rhs of the eigenvalue problem
-    has_matrix = aero_structural_model->get_structural_stiffness_matrix(mat_r);
-    k = mat_r.cast<Complex>();
+    // mass matrix forms the LHS of the eigenvalue problem
+    has_matrix = aero_structural_model->get_structural_mass_matrix(mat1);
+    const unsigned int n = (int)mat1.rows();
+    a.block(n,n,n,n) = mat1;
     libmesh_assert(has_matrix);
-    
-    // combination of mass and aero matrix forms lhs of the eigenvalue problem
-    has_matrix = aero_structural_model->get_structural_mass_matrix(mat_r);
+
+
+    // structural and aerodynamic stiffness matrices
+    has_matrix = aero_structural_model->get_structural_stiffness_matrix(mat1);
     libmesh_assert(has_matrix);
-    
-    
-    has_matrix = aero_structural_model->get_aero_operator_matrix(k_ref, m);
+    has_matrix = aero_structural_model->get_aero_stiffness_matrix(mat2);
     libmesh_assert(has_matrix);
+    b.block(n, 0, n, n) = (q0*mat2-mat1);
     
-    m *= 0.5 * flight_condition->gas_property.rho;
-    mat_r *= pow(k_ref/flight_condition->ref_chord, 2);
-    m += mat_r.cast<Complex>();
+    // structural and aerodynamic stiffness matrices
+    has_matrix = aero_structural_model->get_structural_damping_matrix(mat1);
+    libmesh_assert(has_matrix);
+    has_matrix = aero_structural_model->get_aero_damping_matrix(mat2);
+    libmesh_assert(has_matrix);
+    b.block(n, 0, n, n) = (q0*mat2-mat1);
+
+    // finally set the identity blocks in the matrix
+    for (unsigned int i=0; i<n; i++) {
+        a(i,  i) = 1.;
+        b(i,i+n) = 1.;
+    }
 }
 
 

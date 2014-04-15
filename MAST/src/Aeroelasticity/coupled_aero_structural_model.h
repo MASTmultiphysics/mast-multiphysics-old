@@ -50,7 +50,7 @@ public:
     {
         return structural_model.get_stiffness_matrix(mat);
     }
-    
+
     
     /*!
      *    updates the aerodynamic matrix operator in \par a for the
@@ -69,7 +69,7 @@ public:
      *    applicable for only the time-domain methods. Returns \par false if
      *    the model does not have a damping term.
      */
-    virtual bool get_aero_damping_matrix(ComplexMatrixX& a)
+    virtual bool get_aero_damping_matrix(RealMatrixX& a)
     {
         return aerodynamic_model.get_damping_matrix(a);
     }
@@ -79,7 +79,7 @@ public:
      *    applicable for only the time-domain methods. Returns \par false if
      *    the model does not have a stiffness term.
      */
-    virtual bool get_aero_stiffness_matrix(ComplexMatrixX& a)
+    virtual bool get_aero_stiffness_matrix(RealMatrixX& a)
     {
         return aerodynamic_model.get_stiffness_matrix(a);
     }

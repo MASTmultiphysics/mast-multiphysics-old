@@ -531,7 +531,6 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     std::fill(x.begin(), x.end(), 0.008);
     for (unsigned int i=1; i<x.size(); i+=2)
         x[i] = .09;
-    x[0] = 0.02;
     xmin.resize(_n_vars);
     std::fill(xmin.begin(), xmin.end(), 2.0e-3);
     xmax.resize(_n_vars);
