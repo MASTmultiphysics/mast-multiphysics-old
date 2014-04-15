@@ -21,17 +21,20 @@
 		699AC47218A3FF4000DDCB48 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 699AC47018A3FF4000DDCB48 /* libmpi_cxx.1.dylib */; };
 		699AC47318A3FF4000DDCB48 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 699AC47118A3FF4000DDCB48 /* libmpi.1.dylib */; };
 		69A98AC417A5A77400789481 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A98AC317A5A77400789481 /* flutter_driver.cpp */; };
+		EB1438C318FD5F6B0053C19C /* flutter_solution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB1438C118FD5F6B0053C19C /* flutter_solution.cpp */; };
+		EB54E61318FD6A850033E18E /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB54E61218FD6A850033E18E /* ug_flutter_solver.cpp */; };
+		EB54E61618FDA2890033E18E /* time_domain_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB54E61418FDA2890033E18E /* time_domain_flutter_solver.cpp */; };
 		EB817343182D902300E03740 /* basis_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81733F182D902300E03740 /* basis_matrix.cpp */; };
 		EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817340182D902300E03740 /* fem_operator_matrix.cpp */; };
 		EB817345182D902300E03740 /* function_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817341182D902300E03740 /* function_base.cpp */; };
 		EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */; };
 		EB8173521832A91E00E03740 /* libgfortran.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8173511832A91E00E03740 /* libgfortran.dylib */; };
-		EB817355183424C500E03740 /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB817354183424C500E03740 /* libgcmma.a */; };
 		EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173581835309D00E03740 /* structural_element_3D.cpp */; };
 		EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8173561835309D00E03740 /* structural_element_1D.cpp */; };
 		EB8F5C20187C572E002976E5 /* ksgcsu07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C19187C572E002976E5 /* ksgcsu07.f */; };
 		EB8F5C22187C572E002976E5 /* ksmaxim07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C1B187C572E002976E5 /* ksmaxim07.f */; };
 		EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */; };
+		EB9BA3AB18F5C6E800400D0A /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB9BA3AA18F5C6E800400D0A /* libgcmma.a */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD70404186DD6E70050676A /* structural_element_2D.cpp */; };
 		EBD704071871C9DE0050676A /* optimization_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD704061871C9DE0050676A /* optimization_driver.cpp */; };
@@ -99,7 +102,6 @@
 		69A98AB217A3143700789481 /* MAST_data_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAST_data_types.h; sourceTree = "<group>"; };
 		69A98AB517A31E3F00789481 /* gas_property.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gas_property.h; sourceTree = "<group>"; };
 		69A98AB617A43F8200789481 /* ug_flutter_solver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ug_flutter_solver.h; sourceTree = "<group>"; };
-		69A98AB717A4443200789481 /* structural_model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = structural_model.h; sourceTree = "<group>"; };
 		69A98AB817A4456F00789481 /* aerodynamic_model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aerodynamic_model.h; sourceTree = "<group>"; };
 		69A98ABA17A4BD1100789481 /* coupled_aero_structural_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coupled_aero_structural_model.h; sourceTree = "<group>"; };
 		69A98ABB17A57EA700789481 /* coupled_fluid_structure_system.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = coupled_fluid_structure_system.h; sourceTree = "<group>"; };
@@ -111,11 +113,16 @@
 		69FB3B071818D2F500CEDF1D /* element_property_card_3D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_3D.h; sourceTree = "<group>"; };
 		EB0A4002185F64910091C051 /* nastran_io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nastran_io.h; sourceTree = "<group>"; };
 		EB0A4003185F84E20091C051 /* displacement_boundary_condition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = displacement_boundary_condition.h; sourceTree = "<group>"; };
+		EB1438C118FD5F6B0053C19C /* flutter_solution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flutter_solution.cpp; sourceTree = "<group>"; };
+		EB1438C218FD5F6B0053C19C /* flutter_solution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = flutter_solution.h; sourceTree = "<group>"; };
 		EB1655E9180755300037E46C /* ramp_mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ramp_mesh.h; sourceTree = "<group>"; };
 		EB41AEEA17EA253700288448 /* gaussian_bump_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gaussian_bump_mesh.h; sourceTree = "<group>"; };
 		EB41AEEB17EA253700288448 /* mesh_initializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_initializer.h; sourceTree = "<group>"; };
 		EB41AEEC17EA253700288448 /* panel_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = panel_mesh.h; sourceTree = "<group>"; };
 		EB41AEED17EA253700288448 /* ringleb_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringleb_mesh.h; sourceTree = "<group>"; };
+		EB54E61218FD6A850033E18E /* ug_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ug_flutter_solver.cpp; sourceTree = "<group>"; };
+		EB54E61418FDA2890033E18E /* time_domain_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = time_domain_flutter_solver.cpp; sourceTree = "<group>"; };
+		EB54E61518FDA2890033E18E /* time_domain_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = time_domain_flutter_solver.h; sourceTree = "<group>"; };
 		EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_1D.h; sourceTree = "<group>"; };
 		EB7D8B6D181AC0E800D275D6 /* bernoulli_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bernoulli_bending_operator.h; sourceTree = "<group>"; };
 		EB81733F182D902300E03740 /* basis_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basis_matrix.cpp; sourceTree = "<group>"; };
@@ -133,6 +140,7 @@
 		EB8F5C1B187C572E002976E5 /* ksmaxim07.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = ksmaxim07.f; sourceTree = "<group>"; };
 		EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = ksmaxsu07.f; sourceTree = "<group>"; };
 		EB8F5C27187C9381002976E5 /* temperature.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
+		EB9BA3AA18F5C6E800400D0A /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = MAST/build/dbg/libgcmma.a; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBD70404186DD6E70050676A /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		EBD704061871C9DE0050676A /* optimization_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = optimization_driver.cpp; sourceTree = "<group>"; };
@@ -188,7 +196,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBD7964518491D37007FA3A7 /* Accelerate.framework in Frameworks */,
-				EB817355183424C500E03740 /* libgcmma.a in Frameworks */,
+				EB9BA3AB18F5C6E800400D0A /* libgcmma.a in Frameworks */,
 				EBF96DF016EA6C6F00316D86 /* libmesh_dbg.0.dylib in Frameworks */,
 				EB8173521832A91E00E03740 /* libgfortran.dylib in Frameworks */,
 				699AC47218A3FF4000DDCB48 /* libmpi_cxx.1.dylib in Frameworks */,
@@ -420,14 +428,18 @@
 		EBE83D5A17A182BC000F013C /* Aeroelasticity */ = {
 			isa = PBXGroup;
 			children = (
-				69A98ABE17A58DA300789481 /* fem_structural_model.h */,
-				69A98ABC17A5807E00789481 /* cfd_aerodynamic_model.h */,
-				69A98ABB17A57EA700789481 /* coupled_fluid_structure_system.h */,
 				69A98AB817A4456F00789481 /* aerodynamic_model.h */,
+				69A98ABC17A5807E00789481 /* cfd_aerodynamic_model.h */,
 				69A98ABA17A4BD1100789481 /* coupled_aero_structural_model.h */,
+				69A98ABB17A57EA700789481 /* coupled_fluid_structure_system.h */,
+				69A98ABE17A58DA300789481 /* fem_structural_model.h */,
+				EB1438C118FD5F6B0053C19C /* flutter_solution.cpp */,
+				EB1438C218FD5F6B0053C19C /* flutter_solution.h */,
 				EBE83D5B17A182CE000F013C /* flutter_solver_base.cpp */,
 				EBE83D5C17A182CE000F013C /* flutter_solver_base.h */,
-				69A98AB717A4443200789481 /* structural_model.h */,
+				EB54E61418FDA2890033E18E /* time_domain_flutter_solver.cpp */,
+				EB54E61518FDA2890033E18E /* time_domain_flutter_solver.h */,
+				EB54E61218FD6A850033E18E /* ug_flutter_solver.cpp */,
 				69A98AB617A43F8200789481 /* ug_flutter_solver.h */,
 			);
 			path = Aeroelasticity;
@@ -436,6 +448,7 @@
 		EBF96D8A16EA6B1100316D86 = {
 			isa = PBXGroup;
 			children = (
+				EB9BA3AA18F5C6E800400D0A /* libgcmma.a */,
 				699AC47018A3FF4000DDCB48 /* libmpi_cxx.1.dylib */,
 				699AC47118A3FF4000DDCB48 /* libmpi.1.dylib */,
 				EBD7964418491D37007FA3A7 /* Accelerate.framework */,
@@ -513,11 +526,13 @@
 				6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */,
 				696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */,
 				EB817343182D902300E03740 /* basis_matrix.cpp in Sources */,
+				EB1438C318FD5F6B0053C19C /* flutter_solution.cpp in Sources */,
 				EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */,
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
 				EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */,
 				EBED98AD189AB7E7008561D5 /* isotropic_material_property_card.cpp in Sources */,
 				69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */,
+				EB54E61318FD6A850033E18E /* ug_flutter_solver.cpp in Sources */,
 				EB81735B1835309D00E03740 /* structural_element_3D.cpp in Sources */,
 				696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */,
 				EBED98B2189ADA42008561D5 /* element_property_card_3D.cpp in Sources */,
@@ -530,6 +545,7 @@
 				EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */,
 				EBED98B5189AEB75008561D5 /* solid_2d_section_element_property_card.cpp in Sources */,
 				EBB0998517F0872B00272355 /* main.cpp in Sources */,
+				EB54E61618FDA2890033E18E /* time_domain_flutter_solver.cpp in Sources */,
 				EB8173501832A71600E03740 /* gcmma_optimization_interface.cpp in Sources */,
 				EB8F5C20187C572E002976E5 /* ksgcsu07.f in Sources */,
 				EBE83D5817A021F4000F013C /* fluid_system.cpp in Sources */,
@@ -625,6 +641,7 @@
 					/opt/local/lib/gcc48,
 					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
 					"/opt/local/lib/openmpi-mp",
+					"$(PROJECT_DIR)/MAST/build/dbg",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
@@ -653,6 +670,7 @@
 					/opt/local/lib/gcc48,
 					/Users/bhatiam/Documents/Projects/MAST/MAST/src/Optimization/gcmma,
 					"/opt/local/lib/openmpi-mp",
+					"$(PROJECT_DIR)/MAST/build/dbg",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
