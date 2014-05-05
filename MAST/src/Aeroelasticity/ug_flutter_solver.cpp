@@ -60,6 +60,11 @@ MAST::UGFlutterSolver::~UGFlutterSolver()
 
 
 
+MAST::FlutterRootBase*
+MAST::UGFlutterSolver::build_flutter_root() {
+    return new MAST::UGFlutterRoot;
+}
+
 
 
 void MAST::UGFlutterSolver::_identify_crossover_points()

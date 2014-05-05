@@ -163,14 +163,14 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
 
     // create the solvers
     nm  = infile("flutter_output", "flutter_output.txt");
-    UGFlutterSolver flutter_solver;
+    MAST::UGFlutterSolver flutter_solver;
     if (!init.comm().rank())
         flutter_solver.set_output_file(nm);
-    flutter_solver.aero_structural_model = &coupled_system;
-    flutter_solver.flight_condition      = &flight_cond;
-    flutter_solver.k_ref_range.first     = infile("ug_lower_k", 0.0);
-    flutter_solver.k_ref_range.second    = infile("ug_upper_k", 0.35);
-    flutter_solver.n_k_divs              = infile("ug_k_divs", 10);
+    flutter_solver.aero_structural_model   = &coupled_system;
+    flutter_solver.flight_condition        = &flight_cond;
+    flutter_solver.ref_val_range.first     = infile("ug_lower_k", 0.0);
+    flutter_solver.ref_val_range.second    = infile("ug_upper_k", 0.35);
+    flutter_solver.n_ref_val_divs          = infile("ug_k_divs", 10);
     flutter_solver.scan_for_roots();
     if (!init.comm().rank())
         flutter_solver.print_crossover_points();

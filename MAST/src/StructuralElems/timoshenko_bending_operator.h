@@ -28,7 +28,7 @@ namespace MAST {
         TimoshenkoBendingOperator(StructuralElementBase& elem):
         MAST::BendingOperator1D(elem),
         _fe(elem.fe()),
-        _shear_quadrature_reduction(-1)
+        _shear_quadrature_reduction(2)
         { }
         
         virtual ~TimoshenkoBendingOperator() { }

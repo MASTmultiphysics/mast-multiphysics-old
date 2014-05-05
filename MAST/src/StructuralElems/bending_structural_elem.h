@@ -82,17 +82,17 @@ namespace MAST {
         /*!
          *   maps the local coordinates to the global coordinates
          */
-        void global_coordinates(const Point& global,
-                                Point& local) const {
-            local = 0.;
+        void global_coordinates(const Point& local,
+                                Point& global) const {
+            global = 0.;
             
             // now calculate the global coordinates with respect to the origin
             for (unsigned int j=0; j<3; j++)
                 for (unsigned int k=0; k<3; k++)
-                    local(j) += _T_mat(j,k)*global(k);
+                    global(j) += _T_mat(j,k)*local(k);
             
             // shift to the global coordinate
-            local += (*_elem.get_node(0));
+            global += (*_elem.get_node(0));
         }
         
 

@@ -32,13 +32,6 @@ MAST::Local1DElem::_create_local_elem() {
     
     _T_mat.resize(3,3);
     
-    // if element is in xy-plane, no need to create a new element
-    if ((v2(1) == 1.) && v3(2) == 1.) {
-        for (unsigned int i=0; i<3; i++)
-            _T_mat(i,i) = 1.;
-        return;
-    }
-    
     _local_elem = Elem::build(_elem.type()).release();
     _local_nodes.resize(_elem.n_nodes());
     for (unsigned int i=0; i<_elem.n_nodes(); i++) {

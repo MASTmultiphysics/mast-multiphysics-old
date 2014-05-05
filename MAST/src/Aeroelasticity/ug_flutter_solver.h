@@ -45,6 +45,11 @@ namespace MAST {
         virtual ~UGFlutterSolver();
         
         
+        /*!
+         *    creates a new flutter root and returns pointer to it.
+         */
+        virtual MAST::FlutterRootBase* build_flutter_root();
+
     protected:
         
         /*!
