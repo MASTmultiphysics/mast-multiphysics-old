@@ -27,19 +27,19 @@ public:
     /*!
      *   initializes the object with the division for each dimension.
      */
-    virtual void init( const Real height,
+    virtual void init( const libMesh::Real height,
                        const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                        UnstructuredMesh& mesh, ElemType t);
     
-    Real x0() const {return _x0;}
+    libMesh::Real x0() const {return _x0;}
 
-    Real x1() const {return _x1;}
+    libMesh::Real x1() const {return _x1;}
 
-    Real y0() const {return _y0;}
+    libMesh::Real y0() const {return _y0;}
 
-    Real y1() const {return _y1;}
+    libMesh::Real y1() const {return _y1;}
     
-    Real h() const {return _height;}
+    libMesh::Real h() const {return _height;}
 
 protected:
     
@@ -51,13 +51,13 @@ protected:
     /*!
      *   Height of the bump
      */
-    Real _height;
+    libMesh::Real _height;
     
     /*!
      *   Extent of computational domain
      */
-    Real _x0, _x1;
-    Real _y0, _y1;
+    libMesh::Real _x0, _x1;
+    libMesh::Real _y0, _y1;
 };
 
 
@@ -75,7 +75,7 @@ public:
     /*!
      *   initializes the object with the division for each dimension.
      */
-    virtual void init(const Real height,
+    virtual void init(const libMesh::Real height,
                       const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                       UnstructuredMesh& mesh, ElemType t);
     
@@ -89,14 +89,14 @@ protected:
     /*!
      *   Height of the bump
      */
-    Real _height;
+    libMesh::Real _height;
     
     /*!
      *   Extent of computational domain
      */
-    Real _x0, _x1;
-    Real _y0, _y1;
-    Real _z0, _z1;
+    libMesh::Real _x0, _x1;
+    libMesh::Real _y0, _y1;
+    libMesh::Real _z0, _z1;
 };
 
 
@@ -105,7 +105,7 @@ protected:
 class GaussianBumpSurfaceNormalCorrection2D: public MAST::SurfaceMotionBase
 {
 public:
-    GaussianBumpSurfaceNormalCorrection2D(Real x0, Real x1, Real h):
+    GaussianBumpSurfaceNormalCorrection2D(libMesh::Real x0, libMesh::Real x1, libMesh::Real h):
     MAST::SurfaceMotionBase(),
     _x0(x0),
     _x1(x1),
@@ -119,10 +119,10 @@ public:
      *   the pure translation velocity component, while \p dn_rot defines the
      *   surface normal perturbation
      */
-    virtual void surface_velocity_frequency_domain(const Point& p,
-                                                   const Point& n,
-                                                   DenseVector<Complex>& u_trans,
-                                                   DenseVector<Complex>& dn_rot)
+    virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
+                                                   const libMesh::Point& n,
+                                                   libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                                   libMesh::DenseVector<libMesh::Complex>& dn_rot)
     { libmesh_error();}
     
     /*!
@@ -130,28 +130,28 @@ public:
      *   the pure translation velocity component, while \p dn_rot defines the
      *   surface normal perturbation
      */
-    virtual void surface_velocity_time_domain(const Real t,
-                                              const Point& p,
-                                              const Point& n,
-                                              DenseVector<Number>& u_trans,
-                                              DenseVector<Number>& dn_rot);
+    virtual void surface_velocity_time_domain(const libMesh::Real t,
+                                              const libMesh::Point& p,
+                                              const libMesh::Point& n,
+                                              libMesh::DenseVector<libMesh::Number>& u_trans,
+                                              libMesh::DenseVector<libMesh::Number>& dn_rot);
     
     protected:
     
-    Real _x0, _x1, _h;
+    libMesh::Real _x0, _x1, _h;
 };
 
 
 
 inline void
-GaussianBumpSurfaceNormalCorrection2D::surface_velocity_time_domain(const Real t,
-                                                                    const Point& p,
-                                                                    const Point& n,
-                                                                    DenseVector<Number>& u_trans,
-                                                                    DenseVector<Number>& dn_rot)
+GaussianBumpSurfaceNormalCorrection2D::surface_velocity_time_domain(const libMesh::Real t,
+                                                                    const libMesh::Point& p,
+                                                                    const libMesh::Point& n,
+                                                                    libMesh::DenseVector<libMesh::Number>& u_trans,
+                                                                    libMesh::DenseVector<libMesh::Number>& dn_rot)
 {
     // for the point p, add the correction of surface normal n to dn_rot
-    Real x = p(0),
+    libMesh::Real x = p(0),
     f = -25. * pow((x-_x0)-(_x1-_x0)*0.5, 2.0),
     dfdx = -50.*((x-_x0)-(_x1-_x0)*0.5),
     dydx = _h*exp(f)*dfdx;
@@ -164,7 +164,7 @@ GaussianBumpSurfaceNormalCorrection2D::surface_velocity_time_domain(const Real t
 
 
 inline void
-GaussianBumpMesh2D::init (const Real height,
+GaussianBumpMesh2D::init (const libMesh::Real height,
                           const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                           UnstructuredMesh& mesh, ElemType t)
 {
@@ -189,7 +189,7 @@ GaussianBumpMesh2D::process_mesh( )
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
     const Mesh::node_iterator n_end = _mesh->nodes_end();
     
-    Real x, y;
+    libMesh::Real x, y;
     
     for (; n_it != n_end; n_it++)
     {
@@ -207,7 +207,7 @@ GaussianBumpMesh2D::process_mesh( )
 
 
 inline void
-GaussianBumpMesh3D::init (const Real height,
+GaussianBumpMesh3D::init (const libMesh::Real height,
                           const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
                           UnstructuredMesh& mesh, ElemType t)
 {
@@ -234,7 +234,7 @@ GaussianBumpMesh3D::process_mesh( )
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
     const Mesh::node_iterator n_end = _mesh->nodes_end();
     
-    Real x, y, z;
+    libMesh::Real x, y, z;
     
     for (; n_it != n_end; n_it++)
     {

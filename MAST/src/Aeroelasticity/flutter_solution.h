@@ -39,9 +39,9 @@ namespace MAST {
         
         bool if_nonphysical_root;
         
-        Real V, g, omega, k_ref;
+        libMesh::Real V, g, omega, k_ref;
         
-        Complex root;
+        libMesh::Complex root;
         
         ComplexVectorX  mode;
         
@@ -58,8 +58,8 @@ namespace MAST {
         
         virtual ~FrequencyDomainFlutterRoot() {}
 
-        virtual void init(const Real ref_val, const Real b_ref,
-                          const Complex num, const Complex den,
+        virtual void init(const libMesh::Real ref_val, const libMesh::Real b_ref,
+                          const libMesh::Complex num, const libMesh::Complex den,
                           const ComplexMatrixX& Bmat,
                           const ComplexVectorX& eig_vec) = 0;
     };
@@ -75,8 +75,8 @@ namespace MAST {
         
         virtual ~TimeDomainFlutterRoot() {}
         
-        virtual void init(const Real ref_val, const Real b_ref,
-                          const Complex num, const Complex den,
+        virtual void init(const libMesh::Real ref_val, const libMesh::Real b_ref,
+                          const libMesh::Complex num, const libMesh::Complex den,
                           const RealMatrixX& Bmat,
                           const ComplexVectorX& eig_vec);
     };
@@ -105,7 +105,7 @@ namespace MAST {
         /*!
          *   the reduced frequency for this solution
          */
-        Real ref_val() const {
+        libMesh::Real ref_val() const {
             return _ref_val;
         }
         
@@ -146,7 +146,7 @@ namespace MAST {
          *    solver this could be velocity. PK solver will need additional 
          *    reference values, provided in the inherited class.
          */
-        Real _ref_val;
+        libMesh::Real _ref_val;
         
         /*!
          *   solver for which this is initialized
@@ -172,7 +172,7 @@ namespace MAST {
         /*!
          *   initializes the flutter solution from an eigensolution
          */
-        virtual void init (const Real ref_val, const Real bref,
+        virtual void init (const libMesh::Real ref_val, const libMesh::Real bref,
                            const LAPACK_ZGGEV& eig_sol);
         
     };
@@ -192,7 +192,7 @@ namespace MAST {
         /*!
          *   initializes the flutter solution from an eigensolution
          */
-        virtual void init (const Real ref_val, const Real bref,
+        virtual void init (const libMesh::Real ref_val, const libMesh::Real bref,
                            const LAPACK_DGGEV& eig_sol);
     };
 

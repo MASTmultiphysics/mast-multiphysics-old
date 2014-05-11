@@ -42,7 +42,7 @@ namespace MAST {
 
     public:
         
-        TopologyOptimization(LibMeshInit& init,
+        TopologyOptimization(libMesh::LibMeshInit& init,
                              GetPot& input,
                              std::ostream& output):
         MAST::FunctionEvaluation(output),
@@ -99,24 +99,24 @@ namespace MAST {
         
         
         
-        virtual void init_dvar(std::vector<Real>& x,
-                               std::vector<Real>& xmin,
-                               std::vector<Real>& xmax);
+        virtual void init_dvar(std::vector<libMesh::Real>& x,
+                               std::vector<libMesh::Real>& xmin,
+                               std::vector<libMesh::Real>& xmax);
         
         
         
-        virtual void evaluate(const std::vector<Real>& dvars,
+        virtual void evaluate(const std::vector<libMesh::Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
-                              std::vector<Real>& obj_grad,
-                              std::vector<Real>& fvals,
+                              std::vector<libMesh::Real>& obj_grad,
+                              std::vector<libMesh::Real>& fvals,
                               std::vector<bool>& eval_grads,
-                              std::vector<Real>& grads);
+                              std::vector<libMesh::Real>& grads);
         
         virtual void output(unsigned int iter,
-                            const std::vector<Real>& x,
-                            Real obj,
-                            const std::vector<Real>& fval) const;
+                            const std::vector<libMesh::Real>& x,
+                            libMesh::Real obj,
+                            const std::vector<libMesh::Real>& fval) const;
 
     protected:
 
@@ -142,15 +142,15 @@ namespace MAST {
         void _init();
         
 
-        LibMeshInit& _libmesh_init;
+        libMesh::LibMeshInit& _libmesh_init;
         
         GetPot& _infile;
         
-        EquationSystems* _eq_systems;
+        libMesh::EquationSystems* _eq_systems;
         
-        NonlinearImplicitSystem* _system;
+        libMesh::NonlinearImplicitSystem* _system;
 
-        System* _rho_system;
+        libMesh::System* _rho_system;
 
         MAST::StructuralSystemAssembly* _structural_assembly;
         
@@ -158,16 +158,16 @@ namespace MAST {
         
         UnstructuredMesh* _mesh;
         
-        ConstantFunction<Real>* _press;
+        ConstantFunction<libMesh::Real>* _press;
         
-        ZeroFunction<Real>* _zero_function;
+        ZeroFunction<libMesh::Real>* _zero_function;
         
         MAST::BoundaryCondition* _bc;
         
-        Real _penalty, E0, V0;
+        libMesh::Real _penalty, E0, V0;
 
-        std::vector<MAST::ConstantFunction<Real>*> _E;
-        MAST::ConstantFunction<Real> *_nu, *_rho, *_kappa, *_h, *_h_stiff;
+        std::vector<MAST::ConstantFunction<libMesh::Real>*> _E;
+        MAST::ConstantFunction<libMesh::Real> *_nu, *_rho, *_kappa, *_h, *_h_stiff;
 
         ParameterVector _parameters;
         
@@ -176,7 +176,7 @@ namespace MAST {
         std::vector<MAST::ElementPropertyCardBase*> _elem_properties;
         
         // relative volume of each element
-        std::vector<Real> _elem_vol;
+        std::vector<libMesh::Real> _elem_vol;
     };
 }
 
@@ -184,9 +184,9 @@ namespace MAST {
 
 inline
 void
-MAST::TopologyOptimization::init_dvar(std::vector<Real>& x,
-                                      std::vector<Real>& xmin,
-                                      std::vector<Real>& xmax) {
+MAST::TopologyOptimization::init_dvar(std::vector<libMesh::Real>& x,
+                                      std::vector<libMesh::Real>& xmin,
+                                      std::vector<libMesh::Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
     std::fill(x.begin(), x.end(), 0.3);           // start with a solid material
@@ -199,13 +199,13 @@ MAST::TopologyOptimization::init_dvar(std::vector<Real>& x,
 
 inline
 void
-MAST::TopologyOptimization::evaluate(const std::vector<Real>& dvars,
+MAST::TopologyOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
                                      Real& obj,
                                      bool eval_obj_grad,
-                                     std::vector<Real>& obj_grad,
-                                     std::vector<Real>& fvals,
+                                     std::vector<libMesh::Real>& obj_grad,
+                                     std::vector<libMesh::Real>& fvals,
                                      std::vector<bool>& eval_grads,
-                                     std::vector<Real>& grads) {
+                                     std::vector<libMesh::Real>& grads) {
  #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     libmesh_assert_equal_to(dvars.size(), _mesh->n_elem());
@@ -265,7 +265,7 @@ MAST::TopologyOptimization::_init() {
     _mesh->print_info();
     
     // Create an equation systems object.
-    _eq_systems = new EquationSystems(*_mesh);
+    _eq_systems = new libMesh::EquationSystems(*_mesh);
     _eq_systems->parameters.set<GetPot*>("input_file") = &_infile;
     
     // Declare the system
@@ -289,7 +289,7 @@ MAST::TopologyOptimization::_init() {
                                                               _infile);
     _compliance = new MAST::TopologyOptimization::Compliance(*_system);
     
-    _press = new MAST::ConstantFunction<Real>("pressure",1.e5);
+    _press = new MAST::ConstantFunction<libMesh::Real>("pressure",1.e5);
     _bc = new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE);
     _bc->set_function(*_press);
     _structural_assembly->add_side_load(2, *_bc);
@@ -305,11 +305,11 @@ MAST::TopologyOptimization::_init() {
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
     
     // apply the boundary conditions
-    _zero_function = new ZeroFunction<Real>;
+    _zero_function = new ZeroFunction<libMesh::Real>;
     std::vector<unsigned int> vars(6);
     for (unsigned int i=0; i<6; i++)
         vars[i] = i;
-    std::set<boundary_id_type> dirichlet_boundary;
+    std::set<libMesh::boundary_id_type> dirichlet_boundary;
     //dirichlet_boundary.insert(0); // bottom
     dirichlet_boundary.insert(1); // right
     dirichlet_boundary.insert(3); // left
@@ -339,12 +339,12 @@ MAST::TopologyOptimization::_init() {
     eit  = _mesh->active_local_elements_begin(),
     eend = _mesh->active_local_elements_end();
 
-    Real total_vol = 0.;
+    libMesh::Real total_vol = 0.;
     
-    _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
-    _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
-    _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
-    _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002)),
+    _nu = new MAST::ConstantFunction<libMesh::Real>("nu", _infile("poisson_ratio", 0.33)),
+    _rho = new MAST::ConstantFunction<libMesh::Real>("rho", _infile("material_density", 2700.)),
+    _kappa = new MAST::ConstantFunction<libMesh::Real>("kappa", _infile("shear_corr_factor", 5./6.)),
+    _h = new MAST::ConstantFunction<libMesh::Real>("h", _infile("thickness", 0.002)),
     *_nu = 0.33;
     *_rho = 2700.;
     *_kappa = 5./6.;
@@ -352,7 +352,7 @@ MAST::TopologyOptimization::_init() {
 
     unsigned int counter = 0;
     for ( ; eit != eend; eit++ ) {
-        const Elem* e = *eit;
+        const libMesh::Elem* e = *eit;
         _elem_vol[counter] = e->volume();
         total_vol += _elem_vol[counter];
         
@@ -362,7 +362,7 @@ MAST::TopologyOptimization::_init() {
         _materials[counter] = mat;
         _elem_properties[counter] = prop2d;
         
-        _E[counter] = new MAST::ConstantFunction<Real>("E", E0);
+        _E[counter] = new MAST::ConstantFunction<libMesh::Real>("E", E0);
         
         prop2d->set_material(*mat);
         _structural_assembly->set_property_for_subdomain(0, *prop2d);
@@ -383,9 +383,9 @@ MAST::TopologyOptimization::_init() {
 
 inline void
 MAST::TopologyOptimization::output(unsigned int iter,
-                                   const std::vector<Real>& x,
-                                   Real obj,
-                                   const std::vector<Real>& fval) const  {
+                                   const std::vector<libMesh::Real>& x,
+                                   libMesh::Real obj,
+                                   const std::vector<libMesh::Real>& fval) const  {
     for (unsigned int i=0; i<x.size(); i++)
         _rho_system->solution->set(_mesh->elem(i)->dof_number(_rho_system->number(), 0, 0),
                                    x[i]);
@@ -405,8 +405,8 @@ MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     if (qoi_indices.has_index(0)) {
         
-        std::auto_ptr<NumericVector<Number> >
-        vec(NumericVector<Number>::build(_system.comm()).release());
+        std::auto_ptr<libMesh::NumericVector<libMesh::Number> >
+        vec(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
         vec->init(*_system.solution);
         
         _system.matrix->vector_mult(*vec, *_system.solution);

@@ -23,7 +23,7 @@
 class CFDAerodynamicModel: public AerodynamicModel
 {
 public:
-    CFDAerodynamicModel(System& nl_sys,
+    CFDAerodynamicModel(libMesh::System& nl_sys,
                         FrequencyDomainLinearizedFluidSystem& lin_sys):
     AerodynamicModel(),
     nonlinear_fluid_system(nl_sys),
@@ -53,7 +53,7 @@ public:
     /*!
      *   Nonlinear fluid system
      */
-    System& nonlinear_fluid_system;
+    libMesh::System& nonlinear_fluid_system;
 
     /*!
      *   The small-disturbance fluid system object that provides the basis

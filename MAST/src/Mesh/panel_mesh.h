@@ -36,7 +36,7 @@ public:
      *   define the panel surface is sin (n_maxima * pi * x / L ). Otherwise,
      *   the function is  1 - cos(n_maxima * 2 * pi * x / L)
      */
-    virtual void init (const Real tc, bool cos_profile,
+    virtual void init (const libMesh::Real tc, bool cos_profile,
                        const unsigned int n_maxima,
                        const unsigned int panel_bc_id,
                        const unsigned int symmetry_bc_id,
@@ -53,11 +53,11 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    Real _tc_ratio;
+    libMesh::Real _tc_ratio;
     
-    Real _x0, _x1;
+    libMesh::Real _x0, _x1;
     
-    Real _y0, _y1;
+    libMesh::Real _y0, _y1;
     
     unsigned int _n_maxima;
     
@@ -87,7 +87,7 @@ public:
      *   define the panel surface is sin (n_maxima * pi * x / L ). Otherwise,
      *   the function is  1 - cos(n_maxima * 2 * pi * x / L)
      */
-    virtual void init (const Real tc, bool cos_profile,
+    virtual void init (const libMesh::Real tc, bool cos_profile,
                        const unsigned int n_maxima_x, const unsigned int n_maxima_y,
                        const unsigned int panel_bc_id,
                        const unsigned int symmetry_bc_id,
@@ -104,13 +104,13 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    Real _tc_ratio;
+    libMesh::Real _tc_ratio;
     
-    Real _x0, _x1;
+    libMesh::Real _x0, _x1;
     
-    Real _y0, _y1;
+    libMesh::Real _y0, _y1;
     
-    Real _z0, _z1;
+    libMesh::Real _z0, _z1;
 
     unsigned int _n_maxima_x, _n_maxima_y;
 
@@ -122,7 +122,7 @@ protected:
 
 
 inline void
-PanelMesh2D::init (const Real tc, bool cos_profile,
+PanelMesh2D::init (const libMesh::Real tc, bool cos_profile,
                    const unsigned int n_maxima,
                    const unsigned int panel_bc_id,
                    const unsigned int symmetry_bc_id,
@@ -206,8 +206,8 @@ PanelMesh2D::process_mesh( )
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
     const MeshBase::node_iterator n_end = _mesh->nodes_end();
     
-    const Real pi = acos(-1.);
-    Real x, y;
+    const libMesh::Real pi = acos(-1.);
+    libMesh::Real x, y;
     
     for (; n_it != n_end; n_it++)
     {
@@ -234,7 +234,7 @@ PanelMesh2D::process_mesh( )
 
 
 inline void
-PanelMesh3D::init (const Real tc, bool cos_profile,
+PanelMesh3D::init (const libMesh::Real tc, bool cos_profile,
                    const unsigned int n_maxima_x, const unsigned int n_maxima_y,
                    const unsigned int panel_bc_id,
                    const unsigned int symmetry_bc_id,
@@ -327,8 +327,8 @@ PanelMesh3D::process_mesh( )
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
     const MeshBase::node_iterator n_end = _mesh->nodes_end();
     
-    const Real pi = acos(-1.);
-    Real x, y, z;
+    const libMesh::Real pi = acos(-1.);
+    libMesh::Real x, y, z;
     
     for (; n_it != n_end; n_it++)
     {

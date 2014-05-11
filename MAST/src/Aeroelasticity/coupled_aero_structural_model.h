@@ -58,7 +58,7 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix(Real k_ref, ComplexMatrixX& a)
+    virtual bool get_aero_operator_matrix(libMesh::Real k_ref, ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class
         libmesh_assert(false);

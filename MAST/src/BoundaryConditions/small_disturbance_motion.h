@@ -69,14 +69,14 @@ namespace MAST {
     protected:
         
         /*!
-         *   Pointer to the small disturbance deformation for this boundary
+         *   libMesh::Pointer to the small disturbance deformation for this boundary
          *   condition
          */
         MAST::SurfaceMotionBase* _deformation;
         
         
         /*!
-         *   Pointer to the small disturbance pressure for this boundary condition
+         *   libMesh::Pointer to the small disturbance pressure for this boundary condition
          */
         MAST::SmallDisturbanceSurfacePressure* _pressure;
         

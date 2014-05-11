@@ -61,7 +61,7 @@ namespace MAST
          *   returns the bending model to be used for the element. Should be
          *   reimplemented in the derived classes
          */
-        virtual MAST::BendingOperatorType bending_model(const Elem& elem,
+        virtual MAST::BendingOperatorType bending_model(const libMesh::Elem& elem,
                                                         const FEType& fe) const
         { libmesh_error(); }
         
@@ -70,7 +70,7 @@ namespace MAST
          *    this element should use. By default this is zero, and can be
          *    changed by the derived classes
          */
-        virtual int extra_quadrature_order(const Elem& elem,
+        virtual int extra_quadrature_order(const libMesh::Elem& elem,
                                            const FEType& fe) const {
             return 0;
         }
@@ -79,7 +79,7 @@ namespace MAST
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+        virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const = 0;
         
@@ -189,19 +189,19 @@ namespace MAST
      *    local cs,    an_j = T^t a_i, and the reverse transformation is
      *    obtained as  a_j  = T  an_i
      */
-    class SectionIntegratedPrestressMatrixBase: public MAST::FieldFunction<DenseMatrix<Real> > {
+    class SectionIntegratedPrestressMatrixBase: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
     public:
         SectionIntegratedPrestressMatrixBase(const std::string& nm):
-        MAST::FieldFunction<DenseMatrix<Real> >(nm)
+        MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(nm)
         { }
 
         SectionIntegratedPrestressMatrixBase(const MAST::SectionIntegratedPrestressMatrixBase& f):
-        MAST::FieldFunction<DenseMatrix<Real> >(f)
+        MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f)
         { }
 
         virtual ~SectionIntegratedPrestressMatrixBase() { }
         
-        virtual void convert_to_vector(const DenseMatrix<Real>& m, DenseVector<Real>& v) const = 0;
+        virtual void convert_to_vector(const libMesh::DenseMatrix<libMesh::Real>& m, libMesh::DenseVector<libMesh::Real>& v) const = 0;
     };
     
     

@@ -13,7 +13,7 @@
 
 using namespace libMesh;
 
-void AerodynamicQoI::init_qoi( std::vector<Number>& sys_qoi)
+void AerodynamicQoI::init_qoi( std::vector<libMesh::Number>& sys_qoi)
 {
     //Two qois are calculated: lift and drag
     sys_qoi.resize(4);
@@ -37,17 +37,17 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
 
-    FEBase* elem_fe;
+    libMesh::FEBase* elem_fe;
     
     c.get_element_fe(_fluid_vars[0], elem_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = elem_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // Physical location of the quadrature points
     const std::vector<Point>& qpoint = elem_fe->get_xyz();
     
-    DenseVector<Real> conservative_sol, integrated_force;
+    libMesh::DenseVector<libMesh::Real> conservative_sol, integrated_force;
     FEMOperatorMatrix  B_mat;
     integrated_force.resize(dim); conservative_sol.resize(dim+2);
     
@@ -55,7 +55,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     
     PrimitiveSolution p_sol;
 
-    Real total_volume=0., entropy_error=0.;
+    libMesh::Real total_volume=0., entropy_error=0.;
     
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
@@ -74,7 +74,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
                            flight_condition->gas_property.gamma)), 2);
     }
     
-    std::vector<Number> vals(2);
+    std::vector<libMesh::Number> vals(2);
     vals[0] = total_volume;
     vals[1] = entropy_error;
 
@@ -145,11 +145,11 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     
     libmesh_assert_equal_to(n_mechanical_bc, 1); // make sure that only one is active
     
-    FEBase * side_fe;
+    libMesh::FEBase * side_fe;
     c.get_side_fe(_fluid_vars[0], side_fe); // assuming all variables have the same FE
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = side_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = side_fe->get_JxW();
     
     // Physical location of the quadrature points
     const std::vector<Point>& qpoint = side_fe->get_xyz();
@@ -157,7 +157,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     // boundary normals
     const std::vector<Point>& face_normals = side_fe->get_normals();
     
-    DenseVector<Real> conservative_sol;
+    libMesh::DenseVector<libMesh::Real> conservative_sol;
     FEMOperatorMatrix  B_mat;
     conservative_sol.resize(dim+2);
     
@@ -193,7 +193,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
             break;
     }
     
-    std::vector<Number> vals(2);
+    std::vector<libMesh::Number> vals(2);
     vals[0] = integrated_force.dot(flight_condition->lift_normal);
     vals[1] = integrated_force.dot(flight_condition->drag_normal);
     

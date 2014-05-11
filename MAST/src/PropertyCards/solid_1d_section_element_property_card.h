@@ -32,11 +32,11 @@ namespace MAST {
         
         
         
-        class Area: public MAST::FieldFunction<Real> {
+        class Area: public MAST::FieldFunction<libMesh::Real> {
         public:
-            Area(MAST::FieldFunction<Real> *hy,
-                 MAST::FieldFunction<Real>* hz):
-            MAST::FieldFunction<Real>("Area"),
+            Area(MAST::FieldFunction<libMesh::Real> *hy,
+                 MAST::FieldFunction<libMesh::Real>* hz):
+            MAST::FieldFunction<libMesh::Real>("Area"),
             _hy(hy),
             _hz(hz) {
                 _functions.insert(hy);
@@ -44,7 +44,7 @@ namespace MAST {
             }
             
             Area(const MAST::Solid1DSectionElementPropertyCard::Area &f):
-            MAST::FieldFunction<Real>(f),
+            MAST::FieldFunction<libMesh::Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()) {
                 _functions.insert(_hy);
@@ -54,8 +54,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<Real> >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
                 (new MAST::Solid1DSectionElementPropertyCard::Area(*this));
             }
             
@@ -64,8 +64,8 @@ namespace MAST {
                 delete _hz;
             }
             
-            virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
                 
@@ -73,8 +73,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz;
+                                  const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, dhy, dhz;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 
@@ -82,8 +82,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz;
+                                const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, dhy, dhz;
                 (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
                 
@@ -92,16 +92,16 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz;
+            MAST::FieldFunction<libMesh::Real> *_hy, *_hz;
         };
         
         
         
-        class TorsionalConstant: public MAST::FieldFunction<Real> {
+        class TorsionalConstant: public MAST::FieldFunction<libMesh::Real> {
         public:
-            TorsionalConstant(MAST::FieldFunction<Real> *hy,
-                              MAST::FieldFunction<Real>* hz):
-            MAST::FieldFunction<Real>("TorsionalConstant"),
+            TorsionalConstant(MAST::FieldFunction<libMesh::Real> *hy,
+                              MAST::FieldFunction<libMesh::Real>* hz):
+            MAST::FieldFunction<libMesh::Real>("TorsionalConstant"),
             _hy(hy),
             _hz(hz) {
                 _functions.insert(hy);
@@ -109,7 +109,7 @@ namespace MAST {
             }
             
             TorsionalConstant(const MAST::Solid1DSectionElementPropertyCard::TorsionalConstant &f):
-            MAST::FieldFunction<Real>(f),
+            MAST::FieldFunction<libMesh::Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()) {
                 _functions.insert(_hy);
@@ -119,8 +119,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<Real> >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
                 (new MAST::Solid1DSectionElementPropertyCard::TorsionalConstant(*this));
             }
             
@@ -129,8 +129,8 @@ namespace MAST {
                 delete _hz;
             }
             
-            virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz, a, b;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, a, b;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
                 
@@ -149,8 +149,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz, a, b, da, db;
+                                  const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, dhy, dhz, a, b, da, db;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 
@@ -174,8 +174,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz, a, b, da, db;
+                                const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, dhy, dhz, a, b, da, db;
                 (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
                 
@@ -200,18 +200,18 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz;
+            MAST::FieldFunction<libMesh::Real> *_hy, *_hz;
         };
 
         
         
-        class PolarInertia: public MAST::FieldFunction<Real> {
+        class PolarInertia: public MAST::FieldFunction<libMesh::Real> {
         public:
-            PolarInertia(MAST::FieldFunction<Real> *hy,
-                         MAST::FieldFunction<Real>* hz,
-                         MAST::FieldFunction<Real>* hy_offset,
-                         MAST::FieldFunction<Real>* hz_offset):
-            MAST::FieldFunction<Real>("PolarInertia"),
+            PolarInertia(MAST::FieldFunction<libMesh::Real> *hy,
+                         MAST::FieldFunction<libMesh::Real>* hz,
+                         MAST::FieldFunction<libMesh::Real>* hy_offset,
+                         MAST::FieldFunction<libMesh::Real>* hz_offset):
+            MAST::FieldFunction<libMesh::Real>("PolarInertia"),
             _hy(hy),
             _hz(hz),
             _hy_offset(hy_offset),
@@ -223,7 +223,7 @@ namespace MAST {
             }
             
             PolarInertia(const MAST::Solid1DSectionElementPropertyCard::PolarInertia &f):
-            MAST::FieldFunction<Real>(f),
+            MAST::FieldFunction<libMesh::Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
             _hy_offset(f._hy_offset->clone().release()),
@@ -237,8 +237,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<Real> >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
                 (new MAST::Solid1DSectionElementPropertyCard::PolarInertia(*this));
             }
             
@@ -249,8 +249,8 @@ namespace MAST {
                 delete _hz_offset;
             }
             
-            virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz, offy, offz;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, offy, offz;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
                 (*_hy_offset)(p, t, offy);
@@ -261,8 +261,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
+                                  const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 (*_hy_offset)(p, t, offy); _hy_offset->partial(f, p, t, doffy);
@@ -277,8 +277,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, Real& m) const {
-                Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
+                                const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 (*_hy_offset)(p, t, offy); _hy_offset->partial(f, p, t, doffy);
@@ -294,18 +294,18 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz, *_hy_offset, *_hz_offset;
+            MAST::FieldFunction<libMesh::Real> *_hy, *_hz, *_hy_offset, *_hz_offset;
         };
 
         
         
         
-        class AreaYMoment: public MAST::FieldFunction<Real> {
+        class AreaYMoment: public MAST::FieldFunction<libMesh::Real> {
         public:
-            AreaYMoment(MAST::FieldFunction<Real>* hy,
-                        MAST::FieldFunction<Real>* hz,
-                        MAST::FieldFunction<Real>* hz_offset):
-            MAST::FieldFunction<Real>("AreaYMoment"),
+            AreaYMoment(MAST::FieldFunction<libMesh::Real>* hy,
+                        MAST::FieldFunction<libMesh::Real>* hz,
+                        MAST::FieldFunction<libMesh::Real>* hz_offset):
+            MAST::FieldFunction<libMesh::Real>("AreaYMoment"),
             _hy(hy),
             _hz(hz),
             _hz_offset(hz_offset) {
@@ -315,7 +315,7 @@ namespace MAST {
             }
             
             AreaYMoment(const MAST::Solid1DSectionElementPropertyCard::AreaYMoment &f):
-            MAST::FieldFunction<Real>(f),
+            MAST::FieldFunction<libMesh::Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
             _hz_offset(f._hz_offset->clone().release()) {
@@ -327,8 +327,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<Real> >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
                 (new MAST::Solid1DSectionElementPropertyCard::AreaYMoment(*this));
             }
             
@@ -338,8 +338,8 @@ namespace MAST {
                 delete _hz_offset;
             }
             
-            virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz, off;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, off;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
                 (*_hz_offset)(p, t, off);
@@ -348,8 +348,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, Real& m) const {
-                Real hy, hz, off, dhy, dhz, doff;
+                                  const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, off, dhy, dhz, doff;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 (*_hz_offset)(p, t, off); _hz_offset->partial(f, p, t, doff);
@@ -358,8 +358,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, Real& m) const {
-                Real hy, hz, off, dhy, dhz, doff;
+                                const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, off, dhy, dhz, doff;
                 (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
                 (*_hz_offset)(p, t, off); _hz_offset->total(f, p, t, doff);
@@ -369,17 +369,17 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz, *_hz_offset;
+            MAST::FieldFunction<libMesh::Real> *_hy, *_hz, *_hz_offset;
         };
         
         
         
-        class AreaZMoment: public MAST::FieldFunction<Real> {
+        class AreaZMoment: public MAST::FieldFunction<libMesh::Real> {
         public:
-            AreaZMoment(MAST::FieldFunction<Real>* hy,
-                        MAST::FieldFunction<Real>* hz,
-                        MAST::FieldFunction<Real>* hy_offset):
-            MAST::FieldFunction<Real>("AreaZMoment"),
+            AreaZMoment(MAST::FieldFunction<libMesh::Real>* hy,
+                        MAST::FieldFunction<libMesh::Real>* hz,
+                        MAST::FieldFunction<libMesh::Real>* hy_offset):
+            MAST::FieldFunction<libMesh::Real>("AreaZMoment"),
             _hy(hy),
             _hz(hz),
             _hy_offset(hy_offset) {
@@ -389,7 +389,7 @@ namespace MAST {
             }
             
             AreaZMoment(const MAST::Solid1DSectionElementPropertyCard::AreaZMoment &f):
-            MAST::FieldFunction<Real>(f),
+            MAST::FieldFunction<libMesh::Real>(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
             _hy_offset(f._hy_offset->clone().release()) {
@@ -401,8 +401,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<Real> >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
                 (new MAST::Solid1DSectionElementPropertyCard::AreaZMoment(*this));
             }
             
@@ -412,8 +412,8 @@ namespace MAST {
                 delete _hy_offset;
             }
             
-            virtual void operator() (const Point& p, const Real t, Real& m) const {
-                Real hy, hz, off;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, off;
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
                 (*_hy_offset)(p, t, off);
@@ -422,8 +422,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, Real& m) const {
-                Real hy, hz, off, dhy, dhz, doff;
+                                  const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, off, dhy, dhz, doff;
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
                 (*_hy_offset)(p, t, off); _hy_offset->partial(f, p, t, doff);
@@ -432,8 +432,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, Real& m) const {
-                Real hy, hz, off, dhy, dhz, doff;
+                                const libMesh::Point& p, const libMesh::Real t, Real& m) const {
+                libMesh::Real hy, hz, off, dhy, dhz, doff;
                 (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
                 (*_hy_offset)(p, t, off); _hy_offset->total(f, p, t, doff);
@@ -443,19 +443,19 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz, *_hy_offset;
+            MAST::FieldFunction<libMesh::Real> *_hy, *_hz, *_hy_offset;
         };
         
         
         
         
-        class AreaInertiaMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class AreaInertiaMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            AreaInertiaMatrix(MAST::FieldFunction<Real>* hy,
-                              MAST::FieldFunction<Real>* hz,
-                              MAST::FieldFunction<Real>* hy_offset,
-                              MAST::FieldFunction<Real>* hz_offset):
-            MAST::FieldFunction<DenseMatrix<Real> >("AreaInertiaMatrix"),
+            AreaInertiaMatrix(MAST::FieldFunction<libMesh::Real>* hy,
+                              MAST::FieldFunction<libMesh::Real>* hz,
+                              MAST::FieldFunction<libMesh::Real>* hy_offset,
+                              MAST::FieldFunction<libMesh::Real>* hz_offset):
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("AreaInertiaMatrix"),
             _hy(hy),
             _hz(hz),
             _hy_offset(hy_offset),
@@ -467,7 +467,7 @@ namespace MAST {
             }
             
             AreaInertiaMatrix(const MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _hy(f._hy->clone().release()),
             _hz(f._hz->clone().release()),
             _hy_offset(f._hy_offset->clone().release()),
@@ -481,8 +481,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix(*this));
             }
             
@@ -493,8 +493,8 @@ namespace MAST {
                 delete _hz_offset;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const {
-                Real hy, hz, offy, offz;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                libMesh::Real hy, hz, offy, offz;
                 m.resize(2,2);
                 (*_hy)(p, t, hy);
                 (*_hz)(p, t, hz);
@@ -508,8 +508,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const {
-                Real hy, hz, offy, offz, dhy, dhz, doffy, doffz;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                libMesh::Real hy, hz, offy, offz, dhy, dhz, doffy, doffz;
                 m.resize(2,2);
                 (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
@@ -527,8 +527,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const {
-                Real hy, hz, offy, offz, dhy, dhz, doffy, doffz;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                libMesh::Real hy, hz, offy, offz, dhy, dhz, doffy, doffz;
                 m.resize(2,2);
                 (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
                 (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
@@ -547,18 +547,18 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<Real> *_hy, *_hz, *_hy_offset, *_hz_offset;
+            MAST::FieldFunction<libMesh::Real> *_hy, *_hz, *_hy_offset, *_hz_offset;
         };
         
         
-        class SectionIntegratedExtensionStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedExtensionStiffnessMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                      MAST::FieldFunction<Real>* A,
-                                                      MAST::FieldFunction<Real>* J);
+            SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                                      MAST::FieldFunction<libMesh::Real>* A,
+                                                      MAST::FieldFunction<libMesh::Real>* J);
             
             SectionIntegratedExtensionStiffnessMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _A(f._A->clone().release()),
             _J(f._J->clone().release()) {
@@ -570,8 +570,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix(*this));
             }
             
@@ -581,30 +581,30 @@ namespace MAST {
                 delete _J;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<Real> *_A, *_J;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_stiffness;
+            MAST::FieldFunction<libMesh::Real> *_A, *_J;
         };
         
         
         
-        class SectionIntegratedExtensionBendingStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedExtensionBendingStiffnessMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                             MAST::FieldFunction<Real>* A_y_moment,
-                                                             MAST::FieldFunction<Real>* A_z_moment);
+            SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                                             MAST::FieldFunction<libMesh::Real>* A_y_moment,
+                                                             MAST::FieldFunction<libMesh::Real>* A_z_moment);
             
             SectionIntegratedExtensionBendingStiffnessMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _A_y_moment(f._A_y_moment->clone().release()),
             _A_z_moment(f._A_z_moment->clone().release()) {
@@ -616,8 +616,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix(*this));
             }
             
@@ -627,28 +627,28 @@ namespace MAST {
                 delete _A_z_moment;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<Real> *_A_y_moment, *_A_z_moment;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_stiffness;
+            MAST::FieldFunction<libMesh::Real> *_A_y_moment, *_A_z_moment;
         };
         
         
-        class SectionIntegratedBendingStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedBendingStiffnessMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                    MAST::FieldFunction<DenseMatrix<Real> > *I);
+            SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                                    MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *I);
             
             SectionIntegratedBendingStiffnessMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _I(f._I->clone().release()) {
                 _functions.insert(_material_stiffness);
@@ -658,8 +658,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix(*this));
             }
             
@@ -668,26 +668,26 @@ namespace MAST {
                 delete _I;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<DenseMatrix<Real> > *_I;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_stiffness;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_I;
         };
         
         
-        class SectionIntegratedTransverseStiffnessMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedTransverseStiffnessMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedTransverseStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                       MAST::FieldFunction<Real>* A):
-            MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedTransverseStiffnessMatrix1D"),
+            SectionIntegratedTransverseStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                                       MAST::FieldFunction<libMesh::Real>* A):
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("SectionIntegratedTransverseStiffnessMatrix1D"),
             _material_stiffness(mat),
             _A(A) {
                 _functions.insert(mat);
@@ -696,7 +696,7 @@ namespace MAST {
             
             
             SectionIntegratedTransverseStiffnessMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _A(f._A->clone().release()) {
                 _functions.insert(_material_stiffness);
@@ -706,8 +706,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix(*this));
             }
             
@@ -716,17 +716,17 @@ namespace MAST {
                 delete _A;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const {
-                Real A;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                libMesh::Real A;
                 (*_A)(p, t, A);
                 (*_material_stiffness)(p, t, m);
                 m.scale(A);
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const {
-                DenseMatrix<Real> dm;
-                Real A, dA;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                libMesh::DenseMatrix<libMesh::Real> dm;
+                libMesh::Real A, dA;
                 (*_A)(p, t, A); _A->partial(f, p, t, dA);
                 (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
                 
@@ -735,9 +735,9 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const {
-                DenseMatrix<Real> dm;
-                Real A, dA;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                libMesh::DenseMatrix<libMesh::Real> dm;
+                libMesh::Real A, dA;
                 (*_A)(p, t, A); _A->total(f, p, t, dA);
                 (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
                 
@@ -747,22 +747,22 @@ namespace MAST {
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<Real> *_A;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_stiffness;
+            MAST::FieldFunction<libMesh::Real> *_A;
         };
 
         
-        class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedInertiaMatrix(MAST::FieldFunction<Real>* rho,
-                                           MAST::FieldFunction<Real>* A,
-                                           MAST::FieldFunction<Real>* A_y_moment,
-                                           MAST::FieldFunction<Real>* A_z_moment,
-                                           MAST::FieldFunction<Real>* Ip,
-                                           MAST::FieldFunction<DenseMatrix<Real> >* I);
+            SectionIntegratedInertiaMatrix(MAST::FieldFunction<libMesh::Real>* rho,
+                                           MAST::FieldFunction<libMesh::Real>* A,
+                                           MAST::FieldFunction<libMesh::Real>* A_y_moment,
+                                           MAST::FieldFunction<libMesh::Real>* A_z_moment,
+                                           MAST::FieldFunction<libMesh::Real>* Ip,
+                                           MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >* I);
             
             SectionIntegratedInertiaMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedInertiaMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _rho(f._rho->clone().release()),
             _A(f._A->clone().release()),
             _A_y_moment(f._A_y_moment->clone().release()),
@@ -780,8 +780,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedInertiaMatrix(*this));
             }
             
@@ -794,30 +794,30 @@ namespace MAST {
                 delete _I;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<Real> *_rho, *_A, *_A_y_moment, *_A_z_moment, *_Ip;
-            MAST::FieldFunction<DenseMatrix<Real> > *_I;
+            MAST::FieldFunction<libMesh::Real> *_rho, *_A, *_A_y_moment, *_A_z_moment, *_Ip;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_I;
         };
         
         
         
-        class SectionIntegratedThermalExpansionAMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedThermalExpansionAMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
-                                                    MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                                    MAST::FieldFunction<Real> *A);
+            SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_stiff,
+                                                    MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_expansion,
+                                                    MAST::FieldFunction<libMesh::Real> *A);
             
             SectionIntegratedThermalExpansionAMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
             _A(f._A->clone().release()) {
@@ -829,8 +829,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix(*this));
             }
             
@@ -840,32 +840,32 @@ namespace MAST {
                 delete _A;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_expansion;
-            MAST::FieldFunction<Real> *_A;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_stiffness;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_expansion;
+            MAST::FieldFunction<libMesh::Real> *_A;
         };
 
         
         
-        class SectionIntegratedThermalExpansionBMatrix: public MAST::FieldFunction<DenseMatrix<Real> > {
+        class SectionIntegratedThermalExpansionBMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
         public:
-            SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
-                                                     MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                                     MAST::FieldFunction<Real> *A_y_moment,
-                                                     MAST::FieldFunction<Real> *A_z_moment);
+            SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_stiff,
+                                                     MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_expansion,
+                                                     MAST::FieldFunction<libMesh::Real> *A_y_moment,
+                                                     MAST::FieldFunction<libMesh::Real> *A_z_moment);
             
             SectionIntegratedThermalExpansionBMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix &f):
-            MAST::FieldFunction<DenseMatrix<Real> >(f),
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
             _material_stiffness(f._material_stiffness->clone().release()),
             _material_expansion(f._material_expansion->clone().release()),
             _A_y_moment(f._A_y_moment->clone().release()),
@@ -879,8 +879,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix(*this));
             }
             
@@ -891,19 +891,19 @@ namespace MAST {
                 delete _A_z_moment;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_stiffness;
-            MAST::FieldFunction<DenseMatrix<Real> > *_material_expansion;
-            MAST::FieldFunction<Real> *_A_y_moment, *_A_z_moment;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_stiffness;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_material_expansion;
+            MAST::FieldFunction<libMesh::Real> *_A_y_moment, *_A_z_moment;
         };
 
         
@@ -911,9 +911,9 @@ namespace MAST {
         
         class SectionIntegratedPrestressAMatrix: public MAST::SectionIntegratedPrestressMatrixBase {
         public:
-            SectionIntegratedPrestressAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
-                                              MAST::FieldFunction<DenseMatrix<Real> > *T,
-                                              MAST::FieldFunction<Real> *A);
+            SectionIntegratedPrestressAMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *prestress,
+                                              MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *T,
+                                              MAST::FieldFunction<libMesh::Real> *A);
             
             SectionIntegratedPrestressAMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix &f):
             MAST::SectionIntegratedPrestressMatrixBase(f),
@@ -928,8 +928,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix(*this));
             }
             
@@ -939,30 +939,30 @@ namespace MAST {
                 delete _A;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
-            virtual void convert_to_vector(const DenseMatrix<Real>& m, DenseVector<Real>& v) const;
+            virtual void convert_to_vector(const libMesh::DenseMatrix<libMesh::Real>& m, libMesh::DenseVector<libMesh::Real>& v) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_prestress, *_T;
-            MAST::FieldFunction<Real> *_A;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_prestress, *_T;
+            MAST::FieldFunction<libMesh::Real> *_A;
         };
         
         
         
         class SectionIntegratedPrestressBMatrix: public MAST::SectionIntegratedPrestressMatrixBase {
         public:
-            SectionIntegratedPrestressBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
-                                              MAST::FieldFunction<DenseMatrix<Real> > *T,
-                                              MAST::FieldFunction<Real> *A_y_moment,
-                                              MAST::FieldFunction<Real> *A_z_moment);
+            SectionIntegratedPrestressBMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *prestress,
+                                              MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *T,
+                                              MAST::FieldFunction<libMesh::Real> *A_y_moment,
+                                              MAST::FieldFunction<libMesh::Real> *A_z_moment);
             
             SectionIntegratedPrestressBMatrix(const MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix &f):
             MAST::SectionIntegratedPrestressMatrixBase(f),
@@ -979,8 +979,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                 (new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix(*this));
             }
             
@@ -991,20 +991,20 @@ namespace MAST {
                 delete _A_z_moment;
             }
             
-            virtual void operator() (const Point& p, const Real t, DenseMatrix<Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const Point& p, const Real t, DenseMatrix<Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
             
-            virtual void convert_to_vector(const DenseMatrix<Real>& m, DenseVector<Real>& v) const;
+            virtual void convert_to_vector(const libMesh::DenseMatrix<libMesh::Real>& m, libMesh::DenseVector<libMesh::Real>& v) const;
             
         protected:
             
-            MAST::FieldFunction<DenseMatrix<Real> > *_prestress, *_T;
-            MAST::FieldFunction<Real> *_A_y_moment, *_A_z_moment;
+            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *_prestress, *_T;
+            MAST::FieldFunction<libMesh::Real> *_A_y_moment, *_A_z_moment;
         };
         
         
@@ -1036,7 +1036,7 @@ namespace MAST {
          *   returns value of the property \par val. The string values for
          *   \par val are A, J, IYY, IZZ, IYZ
          */
-        virtual Real value(const std::string& val) const;
+        virtual libMesh::Real value(const std::string& val) const;
 
         
         /*!
@@ -1051,7 +1051,7 @@ namespace MAST {
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+        virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const;
         

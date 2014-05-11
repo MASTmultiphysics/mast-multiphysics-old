@@ -29,7 +29,7 @@ namespace MAST {
          *   sets pointer to the function that provides the reference
          *   temperature
          */
-        void set_reference_temperature_function(MAST::FieldFunction<Number>& f) {
+        void set_reference_temperature_function(MAST::FieldFunction<libMesh::Number>& f) {
             _reference_temperature_function = &f;
         }
         
@@ -37,7 +37,7 @@ namespace MAST {
          *   @returns reference to the function that provides the reference
          *   temperature
          */
-        MAST::FieldFunction<Number>& reference_temperature_function() {
+        MAST::FieldFunction<libMesh::Number>& reference_temperature_function() {
             libmesh_assert(_function);
             return *_reference_temperature_function;
         }
@@ -46,7 +46,7 @@ namespace MAST {
          *   sets pointer to the function that provides the reference
          *   temperature
          */
-        const MAST::FieldFunction<Number>& reference_temperature_function() const {
+        const MAST::FieldFunction<libMesh::Number>& reference_temperature_function() const {
             libmesh_assert(_function);
             return *_reference_temperature_function;
         }
@@ -57,7 +57,7 @@ namespace MAST {
         /*!
          *   reference temperature function
          */
-        MAST::FieldFunction<Number>* _reference_temperature_function;
+        MAST::FieldFunction<libMesh::Number>* _reference_temperature_function;
     };
 }
 

@@ -45,20 +45,20 @@
 
 
 // The main program.
-int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
+int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
                             int argc, char* const argv[])
 {
     // Read in parameters from the input file
-    const Real global_tolerance          = infile("global_tolerance", 0.);
+    const libMesh::Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
-    const Real deltat                    = infile("deltat", 0.005);
-    const Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
+    const libMesh::Real deltat                    = infile("deltat", 0.005);
+    const libMesh::Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
     unsigned int n_timesteps             = infile("n_timesteps", 1);
     const unsigned int write_interval    = infile("write_interval", 5);
     const bool if_use_amr                = infile("if_use_amr", false);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
-    const Real amr_threshold             = infile("amr_threshold", 1.0e1);
-    const Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
+    const libMesh::Real amr_threshold             = infile("amr_threshold", 1.0e1);
+    const libMesh::Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
@@ -86,11 +86,11 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
         const unsigned int nx_divs = infile("nx_divs",0),
         ny_divs = infile("ny_divs",0),
         nz_divs = infile("nz_divs",0);
-        const Real t_by_c =  infile("t_by_c", 0.0);
+        const libMesh::Real t_by_c =  infile("t_by_c", 0.0);
         ElemType elem_type =
         Utility::string_to_enum<ElemType>(infile("elem_type", "QUAD4"));
         
-        std::vector<Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
+        std::vector<libMesh::Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
         y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
         z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
         std::vector<unsigned int> x_divs(nx_divs), y_divs(ny_divs), z_divs(nz_divs);
@@ -224,7 +224,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
     mesh.print_info();
     
     // Create an equation systems object.
-    EquationSystems equation_systems (mesh);
+    libMesh::EquationSystems equation_systems (mesh);
     equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     // set data for flight condition
@@ -258,7 +258,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
     system.attach_init_function (init_compressible_potential_variables);
     
     ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(system);
-    Euler2Solver *core_time_solver = new Euler2Solver(system);
+    libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(system);
     
     timesolver->quiet              = infile("timesolver_solver_quiet", true);
     timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
@@ -323,7 +323,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
     // solution of the equations.
     bool continue_iterations = true;
     unsigned int t_step=0, amr_steps = max_adaptivesteps;
-    Real sol_norm = 1.0e10;
+    libMesh::Real sol_norm = 1.0e10;
     if (!if_use_amr) amr_steps = 0;
     
     while (continue_iterations)
@@ -368,7 +368,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
                 libmesh_assert(false);
             
             // Calculate error based on u and v (and w?) but not p
-            std::vector<Real> weights(dim+2,0.0);  // all set to 1.0
+            std::vector<libMesh::Real> weights(dim+2,0.0);  // all set to 1.0
             weights[0] = 1.0;
             // Keep the same default norm type.
             std::vector<FEMNormType>
@@ -378,7 +378,7 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
             error_estimator->estimate_error(system, error);
             
             // Print out status at each adaptive step.
-            Real global_error = error.l2_norm();
+            libMesh::Real global_error = error.l2_norm();
             std::cout << "Adaptive step " << a_step << ": " << std::endl;
             if (global_tolerance != 0.)
                 std::cout << "Global_error = " << global_error
@@ -489,8 +489,8 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
             //            std::vector<unsigned int> v(1); v[0] = system.variable_number("rho");
             //            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
             //            m.init();
-            //            unsigned int ndivs=10000; Real dx=5.0/(ndivs*1.);
-            //            Point p; DenseVector<Real> vals; vals.resize(4);
+            //            unsigned int ndivs=10000; libMesh::Real dx=5.0/(ndivs*1.);
+            //            libMesh::Point p; libMesh::DenseVector<libMesh::Real> vals; vals.resize(4);
             //            p(0) = 0.; p(1) = .026;
             //            while (p(0) < 5.) {
             //                m(p, 0., vals);
@@ -508,8 +508,8 @@ int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
     xdr.set_write_parallel(false);
     xdr.write("saved_mesh.xdr");
     equation_systems.write("saved_solution.xdr", libMesh::ENCODE,
-                           (EquationSystems::WRITE_SERIAL_FILES |
-                            EquationSystems::WRITE_DATA));
+                           (libMesh::EquationSystems::WRITE_SERIAL_FILES |
+                            libMesh::EquationSystems::WRITE_DATA));
 #endif
     
     // All done.

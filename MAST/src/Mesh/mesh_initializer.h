@@ -50,7 +50,7 @@ public:
         /*!
          *   location at each division along the coordinate.
          */
-        std::vector<Real> _div_locations;
+        std::vector<libMesh::Real> _div_locations;
         
         /*!
          *   number of elements within each division
@@ -61,12 +61,12 @@ public:
          *   relative numbers specifying the expected mesh size at each
          *   division point
          */
-        std::vector<Real> _relative_mesh_size_at_div;
+        std::vector<libMesh::Real> _relative_mesh_size_at_div;
 
         /*!
          *   map of computational and nodal location along the coordinate
          */
-        std::vector<Real> _points;
+        std::vector<libMesh::Real> _points;
 
     public:
         
@@ -74,8 +74,8 @@ public:
         _n_divs(0)
         { }
         
-        void init(unsigned int n, const std::vector<Real>& div_loc,
-                  const std::vector<Real>& dx_relative,
+        void init(unsigned int n, const std::vector<libMesh::Real>& div_loc,
+                  const std::vector<libMesh::Real>& dx_relative,
                   const std::vector<unsigned int>& n_dx)
         {
             libmesh_assert ( n > 0 );
@@ -105,7 +105,7 @@ public:
         /*!
          *   returns location of division point \par i
          */
-        Real div_location(unsigned int i) const {
+        libMesh::Real div_location(unsigned int i) const {
             libmesh_assert(_n_divs > 0);
             libmesh_assert(i <= _n_divs);
             return _div_locations[i];
@@ -114,7 +114,7 @@ public:
         /*!
          *   returns number of elements in division \par i
          */
-        Real n_elements_in_div(unsigned int i) const {
+        libMesh::Real n_elements_in_div(unsigned int i) const {
             libmesh_assert(_n_divs > 0);
             libmesh_assert(i < _n_divs);
             return _n_subdivs_in_div[i];
@@ -124,7 +124,7 @@ public:
         /*!
          *    returns the length of the mesh along this coordinate
          */
-        Real length() const {
+        libMesh::Real length() const {
             libmesh_assert( _n_divs > 0);
             return (*_div_locations.rbegin());
         }
@@ -145,7 +145,7 @@ public:
         /*!
          *   returns the location of the specified node
          */
-        Real operator() (const Real eta) {
+        libMesh::Real operator() (const libMesh::Real eta) {
             libmesh_assert ((eta >= 0.) && (eta <= 1.));
             
             // idx provides the approximate location of the computational coordinate
@@ -158,7 +158,7 @@ public:
                 return (*_points.rbegin());
             else
             {
-                Real idx_eta0 = Real(idx)/Real(_points.size()-1),
+                libMesh::Real idx_eta0 = Real(idx)/Real(_points.size()-1),
                 idx_eta1 = Real(idx+1)/Real(_points.size()-1);
                 return _points[idx] + (eta-idx_eta0)/(idx_eta1-idx_eta0)*
                 (_points[idx+1]-_points[idx]);
@@ -188,7 +188,7 @@ public:
             }
             
             n=1;
-            Real dx=0.0, growth_factor = 0.0;
+            libMesh::Real dx=0.0, growth_factor = 0.0;
             // now calculate the base mesh size, and calculate the nodal points
             for (unsigned int i=0; i<_n_divs; i++)
             {

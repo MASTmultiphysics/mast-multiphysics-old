@@ -51,14 +51,14 @@ PrimitiveSolution::zero()
 
 
 void PrimitiveSolution::init(const unsigned int dim,
-                             const DenseVector<Real> &conservative_sol,
-                             const Real cp_val, const Real cv_val,
+                             const libMesh::DenseVector<libMesh::Real> &conservative_sol,
+                             const libMesh::Real cp_val, const libMesh::Real cv_val,
                              bool if_viscous)
 {
     dimension = dim;
     const unsigned int n1 = dim+2;
     cp = cp_val; cv = cv_val;
-    const Real R = cp-cv, gamma = cp/cv;
+    const libMesh::Real R = cp-cv, gamma = cp/cv;
     primitive_sol.resize(n1);
     
     rho = conservative_sol(0);
@@ -104,14 +104,14 @@ void PrimitiveSolution::init(const unsigned int dim,
 
 
 Real
-PrimitiveSolution::c_pressure(const Real p0, const Real q0) const
+PrimitiveSolution::c_pressure(const libMesh::Real p0, const libMesh::Real q0) const
 {
     return (p-p0)/q0;
 }
 
 
 void
-PrimitiveSolution::get_uvec(DenseVector<Real> &u) const
+PrimitiveSolution::get_uvec(libMesh::DenseVector<libMesh::Real> &u) const
 {
     u.zero();
     switch (dimension) {
@@ -173,12 +173,12 @@ void SmallPerturbationPrimitiveSolution<ValType>::zero()
 template <typename ValType>
 void
 SmallPerturbationPrimitiveSolution<ValType>::init
-(const PrimitiveSolution& sol, const DenseVector<ValType>& delta_sol)
+(const PrimitiveSolution& sol, const libMesh::DenseVector<ValType>& delta_sol)
 {
     primitive_sol = &sol;
     
     const unsigned int n1 = sol.dimension+2;
-    const Real R = sol.cp-sol.cv, gamma = sol.cp/sol.cv;
+    const libMesh::Real R = sol.cp-sol.cv, gamma = sol.cp/sol.cv;
     perturb_primitive_sol.resize(n1);
     
     drho = delta_sol(0);
@@ -238,7 +238,7 @@ SmallPerturbationPrimitiveSolution<ValType>::print(std::ostream& out) const
 
 template <typename ValType>
 ValType
-SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real q0) const
+SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const libMesh::Real q0) const
 {
     return dp/q0;
 }
@@ -246,7 +246,7 @@ SmallPerturbationPrimitiveSolution<ValType>::c_pressure(const Real q0) const
 
 template <typename ValType>
 void
-SmallPerturbationPrimitiveSolution<ValType>::get_duvec(DenseVector<ValType>& du) const
+SmallPerturbationPrimitiveSolution<ValType>::get_duvec(libMesh::DenseVector<ValType>& du) const
 {
     du.zero();
     switch (primitive_sol->dimension) {
@@ -392,7 +392,7 @@ void FluidElemBase::init_data ()
 
 
 
-void FluidElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
+void FluidElemBase::get_infinity_vars( libMesh::DenseVector<libMesh::Real>& vars_inf ) const
 {
     vars_inf(0) = flight_condition->rho();
     vars_inf(1) = flight_condition->rho_u1();
@@ -406,15 +406,15 @@ void FluidElemBase::get_infinity_vars( DenseVector<Real>& vars_inf ) const
 
 void FluidElemBase::update_solution_at_quadrature_point
 ( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
- const bool if_elem_domain, const DenseVector<Real>& elem_solution,
- DenseVector<Real>& conservative_sol, PrimitiveSolution& primitive_sol,
+ const bool if_elem_domain, const libMesh::DenseVector<libMesh::Real>& elem_solution,
+ libMesh::DenseVector<libMesh::Real>& conservative_sol, PrimitiveSolution& primitive_sol,
  FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat)
 {
     conservative_sol.zero();
 
-    FEBase* fe;
+    libMesh::FEBase* fe;
 
-    DenseVector<Real> phi_vals;
+    libMesh::DenseVector<libMesh::Real> phi_vals;
     
 //    for ( unsigned int i_var=0; i_var<c.n_vars(); i_var++ )
     unsigned int i_var = 0; // assuming that all FE are same
@@ -424,7 +424,7 @@ void FluidElemBase::update_solution_at_quadrature_point
         else
             c.get_side_fe(vars[i_var], fe);
         
-        const std::vector<std::vector<Real> >& phi = fe->get_phi();
+        const std::vector<std::vector<libMesh::Real> >& phi = fe->get_phi();
         const unsigned int n_phi = (unsigned int)phi.size();
 
         phi_vals.resize(n_phi);
@@ -463,11 +463,11 @@ void FluidElemBase::update_solution_at_quadrature_point
 void
 FluidElemBase::calculate_advection_flux(const unsigned int calculate_dim,
                                         const PrimitiveSolution& sol,
-                                        DenseVector<Real>& flux)
+                                        libMesh::DenseVector<libMesh::Real>& flux)
 {
     const unsigned int n1 = 2 + dim;
     
-    const Real rho = sol.rho,
+    const libMesh::Real rho = sol.rho,
     u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
@@ -535,13 +535,13 @@ FluidElemBase::calculate_advection_flux(const unsigned int calculate_dim,
 void
 FluidElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
                                         const PrimitiveSolution& sol,
-                                        const DenseMatrix<Real>& stress_tensor,
-                                        const DenseVector<Real>& temp_gradient,
-                                        DenseVector<Real>& flux)
+                                        const libMesh::DenseMatrix<libMesh::Real>& stress_tensor,
+                                        const libMesh::DenseVector<libMesh::Real>& temp_gradient,
+                                        libMesh::DenseVector<libMesh::Real>& flux)
 {
     const unsigned int n1 = 2 + dim;
     
-    DenseVector<Real> uvec;
+    libMesh::DenseVector<libMesh::Real> uvec;
     uvec.resize(3);
     uvec(0) = sol.u1;
     uvec(1) = sol.u2;
@@ -563,16 +563,16 @@ FluidElemBase::calculate_diffusion_flux(const unsigned int calculate_dim,
 
 
 void
-FluidElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
+FluidElemBase::calculate_diffusion_tensors(const libMesh::DenseVector<libMesh::Real>& elem_sol,
                                            const std::vector<FEMOperatorMatrix>& dB_mat,
-                                           const DenseMatrix<Real>& dprim_dcons,
+                                           const libMesh::DenseMatrix<libMesh::Real>& dprim_dcons,
                                            const PrimitiveSolution& psol,
-                                           DenseMatrix<Real>& stress_tensor,
-                                           DenseVector<Real>& temp_gradient)
+                                           libMesh::DenseMatrix<libMesh::Real>& stress_tensor,
+                                           libMesh::DenseVector<libMesh::Real>& temp_gradient)
 {
     const unsigned int n1 = dim+2;
     
-    DenseVector<Real> dprim_dx, dcons_dx;
+    libMesh::DenseVector<libMesh::Real> dprim_dx, dcons_dx;
     dprim_dx.resize(n1); dcons_dx.resize(n1);
     
     stress_tensor.zero();
@@ -600,8 +600,8 @@ FluidElemBase::calculate_diffusion_tensors(const DenseVector<Real>& elem_sol,
 
 void
 FluidElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution& sol,
-                                                        DenseMatrix<Real>& dcons_dprim,
-                                                        DenseMatrix<Real>& dprim_dcons)
+                                                        libMesh::DenseMatrix<libMesh::Real>& dcons_dprim,
+                                                        libMesh::DenseMatrix<libMesh::Real>& dprim_dcons)
 {
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
@@ -610,7 +610,7 @@ FluidElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution&
     dcons_dprim.zero();
     dprim_dcons.zero();
     
-    const Real u1 = sol.u1,
+    const libMesh::Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     rho = sol.rho,
@@ -687,7 +687,7 @@ FluidElemBase::calculate_conservative_variable_jacobian(const PrimitiveSolution&
 void
 FluidElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_dim,
                                                  const PrimitiveSolution& sol,
-                                                 DenseMatrix<Real>& mat)
+                                                 libMesh::DenseMatrix<libMesh::Real>& mat)
 {
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
@@ -695,7 +695,7 @@ FluidElemBase::calculate_advection_flux_jacobian(const unsigned int calculate_di
     
     mat.zero();
     
-    const Real u1 = sol.u1,
+    const libMesh::Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     k = sol.k,
@@ -833,13 +833,13 @@ void
 FluidElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
                                                  const unsigned int deriv_dim,
                                                  const PrimitiveSolution& sol,
-                                                 DenseMatrix<Real>& mat)
+                                                 libMesh::DenseMatrix<libMesh::Real>& mat)
 {
     const unsigned int n1 = 2 + dim;
     
     mat.zero();
     
-    const Real rho = sol.rho,
+    const libMesh::Real rho = sol.rho,
     u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
@@ -1046,11 +1046,11 @@ FluidElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
 void
 FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
 (const unsigned int calculate_dim, const PrimitiveSolution& sol,
- std::vector<DenseMatrix<Real> >& mat)
+ std::vector<libMesh::DenseMatrix<libMesh::Real> >& mat)
 {
     const unsigned int n1 = 2 + dim;
     
-    DenseMatrix<Real> dprim_dcons, tmp_mat;
+    libMesh::DenseMatrix<libMesh::Real> dprim_dcons, tmp_mat;
     dprim_dcons.resize(n1, n1); tmp_mat.resize(n1, n1);
 
     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
@@ -1078,7 +1078,7 @@ FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_varia
 (const unsigned int calculate_dim,
  const unsigned int primitive_var,
  const PrimitiveSolution& sol,
- DenseMatrix<Real>& mat)
+ libMesh::DenseMatrix<libMesh::Real>& mat)
 {
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
@@ -1086,7 +1086,7 @@ FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_varia
     
     mat.zero();
     
-    const Real u1 = sol.u1,
+    const libMesh::Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     k = sol.k,
@@ -1350,17 +1350,17 @@ FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_primitive_varia
 
 void
 FluidElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal
-(const PrimitiveSolution& sol, const Point& normal, DenseMatrix<Real>& eig_vals,
- DenseMatrix<Real>& l_eig_mat, DenseMatrix<Real>& l_eig_mat_inv_tr)
+(const PrimitiveSolution& sol, const libMesh::Point& normal, libMesh::DenseMatrix<libMesh::Real>& eig_vals,
+ libMesh::DenseMatrix<libMesh::Real>& l_eig_mat, libMesh::DenseMatrix<libMesh::Real>& l_eig_mat_inv_tr)
 {
     const unsigned int n1 = 2 + dim;
     
     eig_vals.zero(); l_eig_mat.zero(); l_eig_mat_inv_tr.zero();
     
-    Real nx=0., ny=0., nz=0., u=0.;
+    libMesh::Real nx=0., ny=0., nz=0., u=0.;
     unsigned int dim_for_eig_vec=100; // initializing with arbitrarily high value
     
-    const Real u1 = sol.u1,
+    const libMesh::Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     k = sol.k,
@@ -1606,15 +1606,15 @@ FluidElemBase::calculate_advection_left_eigenvector_and_inverse_for_normal
 void
 FluidElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
 (const PrimitiveSolution& sol,
- const Real ui_ni, const Point& nvec,
- const DenseVector<Real>& dnormal, DenseMatrix<Real>& mat)
+ const libMesh::Real ui_ni, const libMesh::Point& nvec,
+ const libMesh::DenseVector<libMesh::Real>& dnormal, libMesh::DenseMatrix<libMesh::Real>& mat)
 {
     // calculate Ai = d F_adv / d x_i, where F_adv is the Euler advection flux vector
     
     const unsigned int n1 = 2 + dim;
     
     mat.zero();
-    const Real rho = sol.rho,
+    const libMesh::Real rho = sol.rho,
     u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
@@ -1677,7 +1677,7 @@ FluidElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
         // hence,
         // d (ui * ni)/d U = - d ui / dU * dni
         //
-        DenseVector<Real> duini_dU, tmp;
+        libMesh::DenseVector<libMesh::Real> duini_dU, tmp;
         duini_dU.resize(n1); tmp.resize(n1);
         
         // initialze the Jacobian of ui_ni wrt sol variables
@@ -1721,8 +1721,8 @@ FluidElemBase::calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
 
 void
 FluidElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
-                                                   DenseMatrix<Real>& dUdV,
-                                                   DenseMatrix<Real>& dVdU)
+                                                   libMesh::DenseMatrix<libMesh::Real>& dUdV,
+                                                   libMesh::DenseMatrix<libMesh::Real>& dVdU)
 {
     // calculates dU/dV where V is the Entropy variable vector
     
@@ -1732,7 +1732,7 @@ FluidElemBase::calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
     // identity matrix
     
     const unsigned int n1 = 2 + dim;
-    const Real rho = sol.rho,
+    const libMesh::Real rho = sol.rho,
     u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
@@ -1866,17 +1866,17 @@ bool
 FluidElemBase::calculate_barth_tau_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const PrimitiveSolution& sol,
- DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
+ libMesh::DenseMatrix<libMesh::Real>& tau, std::vector<libMesh::DenseMatrix<libMesh::Real> >& tau_sens)
 {
     const unsigned int n1 = 2 + dim;
 
-    Point nvec;
-    DenseMatrix<Real> eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp1;
+    libMesh::Point nvec;
+    libMesh::DenseMatrix<libMesh::Real> eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp1;
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
     l_eig_vec_inv_tr.resize(n1, n1); tmp1.resize(n1, n1);
     
-    Real nval;
-    FEBase* fe;
+    libMesh::Real nval;
+    libMesh::FEBase* fe;
     c.get_element_fe(vars[0], fe);
     const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
     
@@ -1902,7 +1902,7 @@ FluidElemBase::calculate_barth_tau_matrix
     
 
     // now invert the tmp matrix to get the tau matrix
-    DenseVector<Real> x,b;
+    libMesh::DenseVector<libMesh::Real> x,b;
     x.resize(n1); b.resize(n1);
     for (unsigned int i_var=0; i_var<n1; i_var++)
     {
@@ -1921,18 +1921,18 @@ bool
 FluidElemBase::calculate_aliabadi_tau_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
  const PrimitiveSolution& sol,
- DenseMatrix<Real>& tau, std::vector<DenseMatrix<Real> >& tau_sens)
+ libMesh::DenseMatrix<libMesh::Real>& tau, std::vector<libMesh::DenseMatrix<libMesh::Real> >& tau_sens)
 {
     const unsigned int n1 = 2 + dim;
     
-    FEBase* fe;
+    libMesh::FEBase* fe;
     c.get_element_fe(vars[0], fe);
     const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
     
-    DenseVector<Real> u, dN;
+    libMesh::DenseVector<libMesh::Real> u, dN;
     u.resize(dim); dN.resize(dim);
     
-    const Real u1 = sol.u1,
+    const libMesh::Real u1 = sol.u1,
     u2 = sol.u2,
     u3 = sol.u3,
     a = sol.a,
@@ -1961,7 +1961,7 @@ FluidElemBase::calculate_aliabadi_tau_matrix
     }
     
     // calculate the dot product of velocity times gradient of shape function
-    Real h = 0, u_val = u.l2_norm(), tau_rho, tau_m, tau_e;
+    libMesh::Real h = 0, u_val = u.l2_norm(), tau_rho, tau_m, tau_e;
     u.scale(1.0/u_val);
     
     for (unsigned int i_nodes=0; i_nodes<dphi.size(); i_nodes++)
@@ -1998,7 +1998,7 @@ FluidElemBase::calculate_aliabadi_tau_matrix
     if (_if_full_linearization)
     {
         // calculation sensitivity of the tau matrix for each conservative variable
-        std::vector<Real> primitive_sens, cons_sens;
+        std::vector<libMesh::Real> primitive_sens, cons_sens;
         primitive_sens.resize(n1); cons_sens.resize(n1);
         // sensitivity wrt primitive variables
         for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++)
@@ -2030,7 +2030,7 @@ FluidElemBase::calculate_aliabadi_tau_matrix
             }
         }
         
-        DenseMatrix<Real> dprim_dcons, dcons_dprim;
+        libMesh::DenseMatrix<libMesh::Real> dprim_dcons, dcons_dprim;
         dprim_dcons.resize(n1, n1); dcons_dprim.resize(n1, n1);
         std::fill(cons_sens.begin(), cons_sens.end(), 0.);
         
@@ -2059,13 +2059,13 @@ FluidElemBase::calculate_aliabadi_tau_matrix
 void
 FluidElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
                                 const unsigned int qp, FEMContext& c,
-                                DenseMatrix<Real>& dxi_dX,
-                                DenseMatrix<Real>& dX_dxi)
+                                libMesh::DenseMatrix<libMesh::Real>& dxi_dX,
+                                libMesh::DenseMatrix<libMesh::Real>& dX_dxi)
 {
     // initialize dxi_dX and dX_dxi
     dxi_dX.zero(); dX_dxi.zero();
-    Real val=0., val2=0.;
-    FEBase* fe;
+    libMesh::Real val=0., val2=0.;
+    libMesh::FEBase* fe;
     c.get_element_fe(vars[0], fe); // assuming that all elements have the same interpolation fe
     
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -2142,17 +2142,17 @@ FluidElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
 void FluidElemBase::calculate_aliabadi_discontinuity_operator
 ( const std::vector<unsigned int>& vars, const unsigned int qp,
   FEMContext& c,  const PrimitiveSolution& sol,
-  const DenseVector<Real>& elem_solution,
+  const libMesh::DenseVector<libMesh::Real>& elem_solution,
   const std::vector<FEMOperatorMatrix>& dB_mat,
-  const DenseMatrix<Real>& Ai_Bi_advection,
+  const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
   Real& discontinuity_val)
 {
     const unsigned int n1 = 2 + dim, n2 = dB_mat[0].n();
 
-    std::vector<DenseVector<Real> > diff_vec(3);
-    DenseMatrix<Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
+    std::vector<libMesh::DenseVector<libMesh::Real> > diff_vec(3);
+    libMesh::DenseMatrix<libMesh::Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
     tmpmat1_n1n2, tmpmat2_n1n2, tmpmat3;
-    DenseVector<Real> vec1, vec2, vec3_n2, vec4_n2;
+    libMesh::DenseVector<libMesh::Real> vec1, vec2, vec3_n2, vec4_n2;
     vec1.resize(n1); vec2.resize(n1); vec3_n2.resize(n2); vec4_n2.resize(n2);
     dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
@@ -2180,7 +2180,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     // this is the denominator term
     
     // add a small number to avoid division of zero by zero
-    Real val1 = 1.0e-6;
+    libMesh::Real val1 = 1.0e-6;
     for (unsigned int i=0; i<dim; i++) {
         vec1.zero();
         
@@ -2192,9 +2192,9 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         val1 += vec1.dot(vec2);
     }
 
-//    // now calculate the Ducros shock sensor
-//    Real d_ducros = 0., div = 0.;
-//    DenseVector<Real> u, dudx, dudy, dudz, dN, curl;
+/*    // now calculate the Ducros shock sensor
+//    libMesh::Real d_ducros = 0., div = 0.;
+//    libMesh::DenseVector<libMesh::Real> u, dudx, dudy, dudz, dN, curl;
 //    u.resize(dim); dudx.resize(3); dudy.resize(3); dudz.resize(3); curl.resize(3);
 //    sol.get_uvec(u);
 //    
@@ -2223,16 +2223,16 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
 //    curl(0) =   dudy(2)-dudz(1);
 //    curl(1) = -(dudx(2)-dudz(0));
 //    curl(2) =   dudx(1)-dudy(0);
-//    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6);
+//    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6); */
     
     discontinuity_val = sqrt(discontinuity_val/val1);
     
     // also add a pressure switch q
-    DenseMatrix<Real> dpdc, dcdp;
-    DenseVector<Real> dpress_dp, dp;
+    libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
+    libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
     dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
     dp.resize(dim);
-    Real p_sensor = 0., hk = 0.;
+    libMesh::Real p_sensor = 0., hk = 0.;
     calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
     dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
     dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
@@ -2252,15 +2252,15 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
 
 void FluidElemBase::calculate_yzbeta_discontinuity_operator
 (  const std::vector<unsigned int>& vars, const unsigned int qp,
-   FEMContext& c, const DenseVector<Real>& elem_solution,
+   FEMContext& c, const libMesh::DenseVector<libMesh::Real>& elem_solution,
    const std::vector<FEMOperatorMatrix>& dB_mat,
-   const DenseMatrix<Real>& Ai_Bi_advection,
+   const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
    Real& discontinuity_val )
 {
     const unsigned int n1 = 2 + dim;
-    const Real beta = 2.0;
+    const libMesh::Real beta = 2.0;
 
-    DenseVector<Real> vec1, ref_sol, jvec;
+    libMesh::DenseVector<libMesh::Real> vec1, ref_sol, jvec;
     vec1.resize(n1); ref_sol.resize(n1); jvec.resize(dim); 
     
     this->get_infinity_vars(ref_sol); // Y
@@ -2288,11 +2288,11 @@ void FluidElemBase::calculate_yzbeta_discontinuity_operator
     discontinuity_val *= vec1.l2_norm();
     
     // calculate the element size along density gradient
-    FEBase* fe;
+    libMesh::FEBase* fe;
     c.get_element_fe(vars[0], fe);
     const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
 
-    Point dN, drho;
+    libMesh::Point dN, drho;
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
         vec1.zero();
@@ -2300,7 +2300,7 @@ void FluidElemBase::calculate_yzbeta_discontinuity_operator
         drho(i_dim) = vec1(0);
     }
     
-    Real drho_norm = drho.size(), h = 0;
+    libMesh::Real drho_norm = drho.size(), h = 0;
 
     if (drho_norm > 0.)
     {
@@ -2327,26 +2327,26 @@ void FluidElemBase::calculate_yzbeta_discontinuity_operator
 
 void FluidElemBase::calculate_differential_operator_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
- const DenseVector<Real>& elem_solution, const PrimitiveSolution& sol,
+ const libMesh::DenseVector<libMesh::Real>& elem_solution, const PrimitiveSolution& sol,
  const FEMOperatorMatrix& B_mat, const std::vector<FEMOperatorMatrix>& dB_mat,
- const std::vector<DenseMatrix<Real> >& Ai_advection,
- const DenseMatrix<Real>& Ai_Bi_advection,
- const std::vector<std::vector<DenseMatrix<Real> > >& Ai_sens,
- DenseMatrix<Real>& LS_operator, DenseMatrix<Real>& LS_sens,
+ const std::vector<libMesh::DenseMatrix<libMesh::Real> >& Ai_advection,
+ const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+ const std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > >& Ai_sens,
+ libMesh::DenseMatrix<libMesh::Real>& LS_operator, libMesh::DenseMatrix<libMesh::Real>& LS_sens,
  Real& discontinuity_val)
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
-    DenseMatrix<Real> tmp_mat, tmp_mat2, tau;
-    DenseVector<Real> vec1, vec2, vec3, vec4_n2;
+    libMesh::DenseMatrix<libMesh::Real> tmp_mat, tmp_mat2, tau;
+    libMesh::DenseVector<libMesh::Real> vec1, vec2, vec3, vec4_n2;
     tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
     
-    FEBase* elem_fe;
+    libMesh::FEBase* elem_fe;
     c.get_element_fe(vars[0], elem_fe);
-    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = phi.size();
-    std::vector<DenseMatrix<Real> > tau_sens(n1);
+    std::vector<libMesh::DenseMatrix<libMesh::Real> > tau_sens(n1);
     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
         tau_sens[i_cvar].resize(n1, n1);
 
@@ -2420,4 +2420,4 @@ void FluidElemBase::calculate_differential_operator_matrix
 
 
 
-template class SmallPerturbationPrimitiveSolution<Number>;
+template class SmallPerturbationPrimitiveSolution<libMesh::Number>;

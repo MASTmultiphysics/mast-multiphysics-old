@@ -21,7 +21,7 @@
 #include "BoundaryConditions/displacement_boundary_condition.h"
 
 
-MAST::StructuralSystemAssembly::StructuralSystemAssembly(System& sys,
+MAST::StructuralSystemAssembly::StructuralSystemAssembly(libMesh::System& sys,
                                                          MAST::StructuralAnalysisType t,
                                                          GetPot& infile):
 
@@ -61,11 +61,11 @@ MAST::StructuralSystemAssembly::clear_loads() {
 
 
 void
-MAST::StructuralSystemAssembly::add_side_load(boundary_id_type bid,
+MAST::StructuralSystemAssembly::add_side_load(libMesh::boundary_id_type bid,
                                               MAST::BoundaryCondition& load) {
     // make sure that this boundary and load haven't already been applied
-    std::pair<std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator,
-    std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator> it =
+    std::pair<std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::const_iterator> it =
     _side_bc_map.equal_range(bid);
     
     for ( ; it.first != it.second; it.first++) {
@@ -83,41 +83,41 @@ MAST::StructuralSystemAssembly::add_side_load(boundary_id_type bid,
         (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition&>(load)).dirichlet_boundary();
         
         // add an entry for each boundary of this dirichlet object.
-        for (std::set<boundary_id_type>::const_iterator it = dirichlet_b.b.begin();
+        for (std::set<libMesh::boundary_id_type>::const_iterator it = dirichlet_b.b.begin();
              it != dirichlet_b.b.end(); it++)
-            _side_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+            _side_bc_map.insert(std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::value_type
                                 (*it, &load));
         
         // now add this to the dof_map for this system
         _system.get_dof_map().add_dirichlet_boundary(dirichlet_b);
     }
     else
-        _side_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+        _side_bc_map.insert(std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::value_type
                             (bid, &load));
 }
 
 
 
 void
-MAST::StructuralSystemAssembly::add_volume_load(subdomain_id_type bid,
+MAST::StructuralSystemAssembly::add_volume_load(libMesh::subdomain_id_type bid,
                                                 MAST::BoundaryCondition& load) {
-    std::pair<std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
-    std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it =
+    std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it =
     _vol_bc_map.equal_range(bid);
     
     for ( ; it.first != it.second; it.first++)
         libmesh_assert(it.first->second != &load);
     
-    _vol_bc_map.insert(std::multimap<boundary_id_type, MAST::BoundaryCondition*>::value_type
+    _vol_bc_map.insert(std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::value_type
                        (bid, &load));
 }
 
 
 
 void
-MAST::StructuralSystemAssembly::set_property_for_subdomain(const subdomain_id_type sid,
+MAST::StructuralSystemAssembly::set_property_for_subdomain(const libMesh::subdomain_id_type sid,
                                                            const MAST::ElementPropertyCardBase& prop) {
-    std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
+    std::map<libMesh::subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
     elem_p_it = _element_property.find(sid);
     libmesh_assert(elem_p_it == _element_property.end());
 
@@ -129,7 +129,7 @@ MAST::StructuralSystemAssembly::set_property_for_subdomain(const subdomain_id_ty
 const MAST::ElementPropertyCardBase&
 MAST::StructuralSystemAssembly::get_property_card(const unsigned int i) const {
     
-    std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
+    std::map<libMesh::subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
     elem_p_it = _element_property.find(i);
     libmesh_assert(elem_p_it != _element_property.end());
     
@@ -139,9 +139,9 @@ MAST::StructuralSystemAssembly::get_property_card(const unsigned int i) const {
 
 
 const MAST::ElementPropertyCardBase&
-MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
+MAST::StructuralSystemAssembly::get_property_card(const libMesh::Elem& elem) const {
     
-    std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
+    std::map<libMesh::subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator
     elem_p_it = _element_property.find(elem.subdomain_id());
     libmesh_assert(elem_p_it != _element_property.end());
     
@@ -150,7 +150,7 @@ MAST::StructuralSystemAssembly::get_property_card(const Elem& elem) const {
 
 
 void
-MAST::StructuralSystemAssembly::add_parameter(MAST::ConstantFunction<Real>& f) {
+MAST::StructuralSystemAssembly::add_parameter(MAST::ConstantFunction<libMesh::Real>& f) {
     Real* par = f.ptr();
     // make sure it does not already exist in the map
     libmesh_assert(!_parameter_map.count(par));
@@ -181,9 +181,9 @@ MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
 
 
 void
-MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Number>& X,
-                                                       NumericVector<Number>* R,
-                                                       SparseMatrix<Number>*  J,
+MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
+                                                       libMesh::NumericVector<libMesh::Number>* R,
+                                                       SparseMatrix<libMesh::Number>*  J,
                                                        NonlinearImplicitSystem& S) {
     
     if (R) R->zero();
@@ -211,7 +211,7 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const NumericVector<Numbe
 bool
 MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
-                                                      NumericVector<Number>& sensitivity_rhs) {
+                                                      libMesh::NumericVector<libMesh::Number>& sensitivity_rhs) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
@@ -245,13 +245,13 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 void
 MAST::StructuralSystemAssembly::assemble() {
     
-    SparseMatrix<Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
-    SparseMatrix<Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
+    SparseMatrix<libMesh::Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
+    SparseMatrix<libMesh::Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
     
     matrix_A.zero();
     matrix_B.zero();
 
-    NumericVector<Number> *sol = NULL;
+    libMesh::NumericVector<libMesh::Number> *sol = NULL;
     
     // if a system is provided for getting the static solution, then get the vectors
     if (_static_sol_system)
@@ -289,8 +289,8 @@ MAST::StructuralSystemAssembly::assemble() {
 bool
 MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
-                                                      SparseMatrix<Number>* sensitivity_A,
-                                                      SparseMatrix<Number>* sensitivity_B) {
+                                                      SparseMatrix<libMesh::Number>* sensitivity_A,
+                                                      SparseMatrix<libMesh::Number>* sensitivity_B) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
@@ -298,7 +298,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_A->zero();
     sensitivity_B->zero();
     
-    NumericVector<Number> *sol = NULL, *sol_sens = NULL;
+    libMesh::NumericVector<libMesh::Number> *sol = NULL, *sol_sens = NULL;
     
     // if a system is provided for getting the static solution, then get the vectors
     if (_static_sol_system) {
@@ -337,22 +337,22 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVector<Number>& X,
-                                                                 NumericVector<Number>* R,
-                                                                 SparseMatrix<Number>*  J,
+MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
+                                                                 libMesh::NumericVector<libMesh::Number>* R,
+                                                                 SparseMatrix<libMesh::Number>*  J,
                                                                  NonlinearImplicitSystem& S,
                                                                  const MAST::FieldFunctionBase* param) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    DenseVector<Real> vec, sol;
-    DenseMatrix<Real> mat;
+    libMesh::DenseVector<libMesh::Real> vec, sol;
+    libMesh::DenseMatrix<libMesh::Real> mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<NumericVector<Number> > localized_solution =
-    NumericVector<Number>::build(_system.comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution =
+    libMesh::NumericVector<libMesh::Number>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
@@ -363,7 +363,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
     
     for ( ; el != end_el; ++el) {
         
-        const Elem* elem = *el;
+        const libMesh::Elem* elem = *el;
         
         dof_map.dof_indices (elem, dof_indices);
         
@@ -437,20 +437,20 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const NumericVe
 
 
 void
-MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const NumericVector<Number>& X,
-                                                                              NumericVector<Number>& F) {
+MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Number>& X,
+                                                                              libMesh::NumericVector<libMesh::Number>& F) {
     F.zero();
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    DenseVector<Number> vec, sol;
-    DenseMatrix<Number> mat;
+    libMesh::DenseVector<libMesh::Number> vec, sol;
+    libMesh::DenseMatrix<libMesh::Number> mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<NumericVector<Number> > localized_solution =
-    NumericVector<Number>::build(_system.comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution =
+    libMesh::NumericVector<libMesh::Number>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
@@ -459,12 +459,12 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
     MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
-    std::multimap<boundary_id_type, MAST::BoundaryCondition*> local_side_bc_map;
-    std::multimap<subdomain_id_type, MAST::BoundaryCondition*> local_vol_bc_map;
+    std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*> local_side_bc_map;
+    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*> local_vol_bc_map;
     
     {
         // create a map of only the specified type of load
-        std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
+        std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::const_iterator
         it = _side_bc_map.begin(), end = _side_bc_map.end();
         for ( ; it!= end; it++)
             if (it->second->type() == MAST::SMALL_DISTURBANCE_MOTION)
@@ -473,7 +473,7 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
     
     {
         // create a map of only the specified type of load
-        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
+        std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
         it = _vol_bc_map.begin(), end = _vol_bc_map.end();
         for ( ; it!= end; it++)
             if (it->second->type() == MAST::SMALL_DISTURBANCE_MOTION)
@@ -482,7 +482,7 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
     
     for ( ; el != end_el; ++el) {
         
-        const Elem* elem = *el;
+        const libMesh::Elem* elem = *el;
         
         dof_map.dof_indices (elem, dof_indices);
         
@@ -524,17 +524,17 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<Number>&  matrix_A,
-                                                                      SparseMatrix<Number>&  matrix_B,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
+                                                                      SparseMatrix<libMesh::Number>&  matrix_B,
                                                                       const MAST::FieldFunctionBase* param,
-                                                                      const NumericVector<Number>* static_sol,
-                                                                      const NumericVector<Number>* static_sol_sens) {
+                                                                      const libMesh::NumericVector<libMesh::Number>* static_sol,
+                                                                      const libMesh::NumericVector<libMesh::Number>* static_sol_sens) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    DenseVector<Real> vec, sol;
-    DenseMatrix<Real> mat1, mat2;
+    libMesh::DenseVector<libMesh::Real> vec, sol;
+    libMesh::DenseMatrix<libMesh::Real> mat1, mat2;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
@@ -542,9 +542,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<NumericVector<Number> > localized_solution, localized_solution_sens;
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
-        localized_solution.reset(NumericVector<Number>::build(_system.comm()).release());
+        localized_solution.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
         localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
                                  false, GHOSTED);
@@ -554,7 +554,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
-            localized_solution_sens.reset(NumericVector<Number>::build(_system.comm()).release());
+            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                      _system.get_dof_map().get_send_list(),
                                      false, GHOSTED);
@@ -567,7 +567,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
     
     for ( ; el != end_el; ++el) {
         
-        const Elem* elem = *el;
+        const libMesh::Elem* elem = *el;
         
         dof_map.dof_indices (elem, dof_indices);
         
@@ -657,17 +657,17 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<Number>&  matrix_A,
-                                                                         SparseMatrix<Number>&  matrix_B,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
+                                                                         SparseMatrix<libMesh::Number>&  matrix_B,
                                                                          const MAST::FieldFunctionBase* param,
-                                                                         const NumericVector<Number>* static_sol,
-                                                                         const NumericVector<Number>* static_sol_sens) {
+                                                                         const libMesh::NumericVector<libMesh::Number>* static_sol,
+                                                                         const libMesh::NumericVector<libMesh::Number>* static_sol_sens) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    DenseVector<Real> vec, sol;
-    DenseMatrix<Real> mat1, mat2, mat3;
+    libMesh::DenseVector<libMesh::Real> vec, sol;
+    libMesh::DenseMatrix<libMesh::Real> mat1, mat2, mat3;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
@@ -675,9 +675,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<NumericVector<Number> > localized_solution, localized_solution_sens;
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
-        localized_solution.reset(NumericVector<Number>::build(_system.comm()).release());
+        localized_solution.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
         localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
                                  false, GHOSTED);
@@ -687,7 +687,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
-            localized_solution_sens.reset(NumericVector<Number>::build(_system.comm()).release());
+            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                           _system.get_dof_map().get_send_list(),
                                           false, GHOSTED);
@@ -700,7 +700,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
     
     for ( ; el != end_el; ++el) {
         
-        const Elem* elem = *el;
+        const libMesh::Elem* elem = *el;
         
         dof_map.dof_indices (elem, dof_indices);
         
@@ -798,8 +798,8 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
 
 
 void
-MAST::StructuralSystemAssembly::calculate_max_elem_stress(const NumericVector<Number>& X,
-                                                          std::vector<Real>& stress,
+MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Number>& X,
+                                                          std::vector<libMesh::Real>& stress,
                                                           const MAST::FieldFunctionBase* param) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
@@ -808,14 +808,14 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const NumericVector<Nu
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    DenseVector<Real> sol;
-    DenseMatrix<Real> mat;
+    libMesh::DenseVector<libMesh::Real> sol;
+    libMesh::DenseMatrix<libMesh::Real> mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<NumericVector<Number> > localized_solution =
-    NumericVector<Number>::build(_system.comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution =
+    libMesh::NumericVector<libMesh::Number>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
@@ -828,7 +828,7 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const NumericVector<Nu
     
     for ( ; el != end_el; ++el) {
         
-        const Elem* elem = *el;
+        const libMesh::Elem* elem = *el;
         
         dof_map.dof_indices (elem, dof_indices);
         
@@ -871,10 +871,10 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     
     // first prepare a map of boundary ids and the constrained vars on that
     // boundary
-    std::map<boundary_id_type, std::vector<unsigned int> >  constrained_vars_map;
+    std::map<libMesh::boundary_id_type, std::vector<unsigned int> >  constrained_vars_map;
     
     // now populate the map for all the give boundaries
-    std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
+    std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::const_iterator
     it = _side_bc_map.begin(), end = _side_bc_map.end();
     
     for ( ; it != end; it++)
@@ -907,7 +907,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     
     for ( ; el != end_el; ++el) {
-        const Elem* elem = *el;
+        const libMesh::Elem* elem = *el;
         
         // boundary condition is applied only on sides with no neighbors
         // and if the side's boundary id has a boundary condition tag on it
@@ -915,7 +915,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
             if ((*el)->neighbor(s) == NULL &&
                 mesh.boundary_info->n_boundary_ids(elem, s)) {
                 
-                std::vector<boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
+                std::vector<libMesh::boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
                 
                 for (unsigned int i_bid=0; i_bid<bc_ids.size(); i_bid++)
                     if (constrained_vars_map.count(bc_ids[i_bid])) {

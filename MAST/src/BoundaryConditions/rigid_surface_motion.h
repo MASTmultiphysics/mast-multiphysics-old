@@ -22,42 +22,42 @@ namespace MAST {
         
         virtual ~RigidSurfaceMotion();
         
-        Point plunge_vector;
+        libMesh::Point plunge_vector;
         
-        Point pitch_axis;
+        libMesh::Point pitch_axis;
         
-        Point hinge_location;
+        libMesh::Point hinge_location;
         
-        Real plunge_amplitude;
+        libMesh::Real plunge_amplitude;
         
-        Real pitch_amplitude;
+        libMesh::Real pitch_amplitude;
         
-        Real pitch_phase;
+        libMesh::Real pitch_phase;
         
         virtual void zero();
         
-        virtual void init(Real freq, Real phase);
+        virtual void init(libMesh::Real freq, libMesh::Real phase);
         
         /*!
          *   calculation of surface velocity in frequency domain. \p u_trans is
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity_frequency_domain(const Point& p,
-                                                       const Point& n,
-                                                       DenseVector<Complex>& u_trans,
-                                                       DenseVector<Complex>& dn_rot);
+        virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
+                                                       const libMesh::Point& n,
+                                                       libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                                       libMesh::DenseVector<libMesh::Complex>& dn_rot);
         
         /*!
          *   calculation of surface velocity in time domain. \p u_trans is
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity_time_domain(const Real t,
-                                                  const Point& p,
-                                                  const Point& n,
-                                                  DenseVector<Number>& u_trans,
-                                                  DenseVector<Number>& dn_rot);
+        virtual void surface_velocity_time_domain(const libMesh::Real t,
+                                                  const libMesh::Point& p,
+                                                  const libMesh::Point& n,
+                                                  libMesh::DenseVector<libMesh::Number>& u_trans,
+                                                  libMesh::DenseVector<libMesh::Number>& dn_rot);
     };
 }
 

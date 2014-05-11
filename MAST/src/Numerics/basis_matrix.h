@@ -18,10 +18,10 @@
 
 
 template <typename T>
-class BasisMatrix: public ShellMatrix<T>
+class BasisMatrix: public libMesh::ShellMatrix<T>
 {
 public:
-    BasisMatrix(const Parallel::Communicator &comm_in);
+    BasisMatrix(const libMesh::Parallel::Communicator &comm_in);
     
     virtual ~BasisMatrix();
     
@@ -30,7 +30,7 @@ public:
      * @returns \p m, the row-dimension of the matrix where the marix is
      * \f$ M \times N \f$.
      */
-    virtual numeric_index_type m () const
+    virtual libMesh::numeric_index_type m () const
     {
         libmesh_assert(modes.size() > 0);
         return modes[0]->size();
@@ -40,7 +40,7 @@ public:
      * @returns \p n, the column-dimension of the matrix where the marix
      * is \f$ M \times N \f$.
      */
-    virtual numeric_index_type n () const
+    virtual libMesh::numeric_index_type n () const
     {
         libmesh_assert(modes.size() > 0);
         return modes.size();
@@ -52,7 +52,7 @@ public:
      * dest.
      */
     template <typename VecType>
-    void vector_mult (NumericVector<T>& dest,
+    void vector_mult (libMesh::NumericVector<T>& dest,
                       const VecType& arg) const
     {
         libmesh_assert(modes.size() > 0);
@@ -68,10 +68,10 @@ public:
      * Multiplies the matrix with \p arg and stores the result in \p
      * dest.
      */
-    virtual void vector_mult (NumericVector<T>& dest,
-                      const NumericVector<T>& arg) const
+    virtual void vector_mult (libMesh::NumericVector<T>& dest,
+                      const libMesh::NumericVector<T>& arg) const
     {
-        // not defined for multiplcation with NumericVector
+        // not defined for multiplcation with libMesh::NumericVector
         libmesh_assert(false);
     }
     
@@ -82,7 +82,7 @@ public:
      */
     template <typename VecType>
     void vector_mult_transpose (VecType& dest,
-                                const NumericVector<T>& arg) const
+                                const libMesh::NumericVector<T>& arg) const
     {
         libmesh_assert(modes.size() > 0);
         libmesh_assert_equal_to(m(), arg.size());
@@ -98,20 +98,20 @@ public:
      * Multiplies the transpose of matrix with \p arg and stores the
      * result in \p dest.
      */
-    virtual void vector_mult_transpose (NumericVector<T>& dest,
-                                        const NumericVector<T>& arg) const
+    virtual void vector_mult_transpose (libMesh::NumericVector<T>& dest,
+                                        const libMesh::NumericVector<T>& arg) const
     {
-        // not defined for multiplcation with NumericVector
+        // not defined for multiplcation with libMesh::NumericVector
         libmesh_assert(false);
     }
 
     /**
      * Multiplies the matrix with \p arg and adds the result to \p dest.
      */
-    virtual void vector_mult_add (NumericVector<T>& dest,
-                                  const NumericVector<T>& arg) const
+    virtual void vector_mult_add (libMesh::NumericVector<T>& dest,
+                                  const libMesh::NumericVector<T>& arg) const
     {
-        // not defined for multiplcation with NumericVector
+        // not defined for multiplcation with libMesh::NumericVector
         libmesh_assert(false);
     }
 
@@ -119,9 +119,9 @@ public:
     /**
      * Copies the diagonal part of the matrix into \p dest.
      */
-    virtual void get_diagonal (NumericVector<T>& dest) const
+    virtual void get_diagonal (libMesh::NumericVector<T>& dest) const
     {
-        // not defined for multiplcation with NumericVector
+        // not defined for multiplcation with libMesh::NumericVector
         libmesh_assert(false);
     }
 
@@ -130,9 +130,9 @@ public:
      *  Returns the vector that defines the \p i^th basis vector
      */
     
-    virtual NumericVector<T>& basis(unsigned int i)
+    virtual libMesh::NumericVector<T>& basis(unsigned int i)
     {
-        // not defined for multiplcation with NumericVector
+        // not defined for multiplcation with libMesh::NumericVector
         libmesh_assert(modes.size() > 0);
         libmesh_assert_less(i, modes.size());
         
@@ -142,7 +142,7 @@ public:
     /*!
      *   vector of modes
      */
-    std::vector<NumericVector<T>*> modes;
+    std::vector<libMesh::NumericVector<T>*> modes;
 };
 
 

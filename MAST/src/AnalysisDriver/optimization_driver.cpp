@@ -57,7 +57,7 @@
 
 
 // The main program.
-int optimization_driver (LibMeshInit& init, GetPot& infile,
+int optimization_driver (libMesh::LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
     std::ofstream output;

@@ -11,24 +11,24 @@
 #include "libmesh/getpot.h"
 
 // driver functions
-int fluid_driver (LibMeshInit& init, GetPot& infile,
+int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
                   int argc, char* const argv[]);
-int potential_fluid_driver (LibMeshInit& init, GetPot& infile,
+int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
                             int argc, char* const argv[]);
-int structural_driver (LibMeshInit& init, GetPot& infile,
+int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[]);
-int modal_structural_driver (LibMeshInit& init, GetPot& infile,
+int modal_structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
                              int argc, char* const argv[]);
-int flutter_driver (LibMeshInit& init, GetPot& infile,
+int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
                     int argc, char* const argv[]);
-int optimization_driver (LibMeshInit& init, GetPot& infile,
+int optimization_driver (libMesh::LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[]);
 
 using namespace libMesh;
 
 int main (int argc, char* const argv[])
 {
-    LibMeshInit init(argc, argv);
+    libMesh::LibMeshInit init(argc, argv);
     
     // get the input file
     std::string nm = command_line_value("-i", std::string("system_input.in"));

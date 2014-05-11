@@ -50,25 +50,25 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     vars[0]  = this->add_variable ( "drho", static_cast<Order>(o), fefamily);
-    params.set<Real> ("rho_inf") = flight_condition->rho();
+    params.set<libMesh::Real> ("rho_inf") = flight_condition->rho();
     
     vars[1] = this->add_variable ("drhoux", static_cast<Order>(o), fefamily);
-    params.set<Real> ("rhoux_inf") = flight_condition->rho_u1();
+    params.set<libMesh::Real> ("rhoux_inf") = flight_condition->rho_u1();
     
     if (dim > 1)
     {
         vars[2] = this->add_variable ("drhouy", static_cast<Order>(o), fefamily);
-        params.set<Real> ("rhouy_inf") = flight_condition->rho_u2();
+        params.set<libMesh::Real> ("rhouy_inf") = flight_condition->rho_u2();
     }
     
     if (dim > 2)
     {
         vars[3] = this->add_variable ("drhouz", static_cast<Order>(o), fefamily);
-        params.set<Real> ("rhouz_inf") = flight_condition->rho_u3();
+        params.set<libMesh::Real> ("rhouz_inf") = flight_condition->rho_u3();
     }
     
     vars[dim+2-1] = this->add_variable ("drhoe", static_cast<Order>(o), fefamily);
-    params.set<Real> ("rhoe_inf") = flight_condition->rho_e();
+    params.set<libMesh::Real> ("rhoe_inf") = flight_condition->rho_e();
     
     // Useful debugging options
     // Set verify_analytic_jacobians to 1e-6 to use
@@ -86,7 +86,7 @@ void FrequencyDomainLinearizedFluidSystem::init_context(libMesh::DiffContext &co
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
-    std::vector<FEBase*> elem_fe(dim+2);
+    std::vector<libMesh::FEBase*> elem_fe(dim+2);
     
     for (unsigned int i=0; i<dim+2; i++)
     {
@@ -99,7 +99,7 @@ void FrequencyDomainLinearizedFluidSystem::init_context(libMesh::DiffContext &co
             elem_fe[i]->get_d2phi();
     }
     
-    std::vector<FEBase*> elem_side_fe(dim+2);
+    std::vector<libMesh::FEBase*> elem_side_fe(dim+2);
     
     for (unsigned int i=0; i<dim+2; i++)
     {
@@ -119,10 +119,10 @@ void FrequencyDomainLinearizedFluidSystem::localize_fluid_solution()
     libmesh_assert(!_if_localized_sol);
     
     _local_fluid_solution =
-    NumericVector<Number>::build(this->get_equation_systems().comm());
+    libMesh::NumericVector<libMesh::Number>::build(this->get_equation_systems().comm());
     
     
-    System& fluid =
+    libMesh::System& fluid =
     this->get_equation_systems().get_system<System>("FluidSystem");
 
     _local_fluid_solution->init(fluid.solution->size(), true, SERIAL);
@@ -142,12 +142,12 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
-    FEBase* elem_fe;
+    libMesh::FEBase* elem_fe;
     
     c.get_element_fe(vars[0], elem_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = elem_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The number of local degrees of freedom in each variable
     unsigned int n_dofs = 0;
@@ -157,8 +157,8 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
     
     // The subvectors and submatrices we need to fill:
-    DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
-    DenseVector<Number>& Fvec = c.get_elem_residual();
+    libMesh::DenseMatrix<libMesh::Number>& Kmat = c.get_elem_jacobian();
+    libMesh::DenseVector<libMesh::Number>& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -169,14 +169,14 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     const unsigned int n_qpoints = c.get_element_qrule().n_points(), n1 = dim+2;
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<DenseMatrix<Real> > Ai_advection(dim);
+    std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
     FEMOperatorMatrix B_mat;
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection,
+    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection,
     tmp_mat_n1n2, tmp_mat_n2n2, tmp_mat_n2n1, tmp_mat_n1n1,
     A_sens, stress_tensor, dcons_dprim, dprim_dcons;
-    DenseVector<Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
-    temp_grad, flux_real, tmp_vec3_n2_real;
-    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1,
+    libMesh::DenseVector<libMesh::Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
+    temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude;
+    libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1,
     tmp_vec5_n1;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
@@ -190,12 +190,12 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     tmp_mat_n2n1.resize(n_dofs, dim+2); tmp_mat_n1n1.resize(dim+2, dim+2);
     dcons_dprim.resize(dim+2, dim+2); dprim_dcons.resize(dim+2, dim+2);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
-    tmp_vec3_n2_real.resize(n_dofs);
+    tmp_vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<DenseMatrix<Real> > > flux_jacobian_sens;
+    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
@@ -204,12 +204,14 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
     
-    Real diff_val=0.;
+    libMesh::Real diff_val=0., diff_val2 = 0.;
+    for (unsigned int i=0; i<n_dofs; i++)
+        sol_magnitude(i) = std::abs(c.get_elem_solution()(i));
     
     PrimitiveSolution primitive_sol;
 
     // element dofs from steady solution to calculate the linearized quantities
-    System& fluid =
+    libMesh::System& fluid =
     this->get_equation_systems().get_system<System>("FluidSystem");
     
     std::vector<dof_id_type> fluid_dof_indices;
@@ -218,17 +220,17 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     for (unsigned int i=0; i<c.get_dof_indices().size(); i++)
         ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
     
-    Number iota(0, 1.), mass_scaling = iota*perturbed_surface_motion->frequency,
+    libMesh::Number iota(0, 1.), mass_scaling = iota*perturbed_surface_motion->frequency,
     stiffness_scaling = 1.0;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
         flight_condition->velocity_magnitude;
     
-    System& delta_val_system =
+    libMesh::System& delta_val_system =
     this->get_equation_systems().get_system<System>("DeltaValSystem");
-    NumericVector<Number>& diff_val_vec = (*delta_val_system.solution.get());
+    libMesh::NumericVector<libMesh::Number>& diff_val_vec = (*delta_val_system.solution.get());
     
-    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = phi.size();
     
 
@@ -268,7 +270,14 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         // the discontinuity capturing term is reused from the steady solution
         diff_val = real(diff_val_vec.el(c.get_elem().dof_number
                                         (delta_val_system.number(), 0, 0)));
-
+        
+        calculate_aliabadi_discontinuity_operator(vars, qp, c,
+                                                  primitive_sol,
+                                                  sol_magnitude,
+                                                  dB_mat, Ai_Bi_advection,
+                                                  diff_val2);
+        diff_val += 0.005*diff_val2;
+        
         // calculate the interpolated solution value at this quadrature point
         B_mat.vector_mult(elem_interpolated_sol, c.get_elem_solution());  // B dU
 
@@ -517,14 +526,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
     
     // The subvectors and submatrices we need to fill:
-    DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
-    DenseVector<Number>& Fvec = c.get_elem_residual();
+    libMesh::DenseMatrix<libMesh::Number>& Kmat = c.get_elem_jacobian();
+    libMesh::DenseVector<libMesh::Number>& Fvec = c.get_elem_residual();
     
-    FEBase * side_fe;
+    libMesh::FEBase * side_fe;
     c.get_side_fe(vars[0], side_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = side_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = side_fe->get_JxW();
     
     // Physical location of the quadrature points
     const std::vector<Point>& qpoint = side_fe->get_xyz();
@@ -533,18 +542,18 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     const std::vector<Point>& face_normals = side_fe->get_normals();
     
     
-    Point vel; vel.zero(); // zero surface velocity
+    libMesh::Point vel; vel.zero(); // zero surface velocity
     
 
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     FEMOperatorMatrix B_mat;
 
-    DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
+    libMesh::DenseMatrix<libMesh::Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
-    DenseVector<Real>  normal, normal_local, tmp_vec1, U_vec_interpolated,
+    libMesh::DenseVector<libMesh::Real>  normal, normal_local, tmp_vec1, U_vec_interpolated,
     conservative_sol, ref_sol, temp_grad, uvec, dnormal_steady_real;
-    DenseVector<Number> elem_interpolated_sol, flux, tmp_vec1_n2,
+    libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec1_n2,
     surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol,
     dnormal_steady, surface_steady_vel;
     
@@ -571,7 +580,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
     
     // element dofs from steady solution to calculate the linearized quantities
-    System& fluid =
+    libMesh::System& fluid =
     this->get_equation_systems().get_system<System>("FluidSystem");
     
     std::vector<dof_id_type> fluid_dof_indices;
@@ -580,16 +589,16 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     for (unsigned int i=0; i<c.get_dof_indices().size(); i++)
         ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
     
-    Number iota(0, 1.);
-    Real stiffness_scaling = 1.0;
+    libMesh::Number iota(0, 1.);
+    libMesh::Real stiffness_scaling = 1.0;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
         flight_condition->velocity_magnitude;
 
     PrimitiveSolution p_sol;
-    SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+    SmallPerturbationPrimitiveSolution<libMesh::Number> delta_p_sol;
     
-    const DenseVector<Number>& elem_sol = c.get_elem_solution();
+    const libMesh::DenseVector<libMesh::Number>& elem_sol = c.get_elem_solution();
     
     switch (mechanical_bc_type)
     // adiabatic and isothermal are handled in the no-slip wall BC
@@ -600,7 +609,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
             // thermal BC is handled here
         {
             
-            Number dui_ni_unsteady = 0., ui_ni_steady = 0.;
+            libMesh::Number dui_ni_unsteady = 0., ui_ni_steady = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -791,7 +800,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
             // tau_ij nj = 0   (because velocity gradient at wall = 0)
             // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            Number dui_ni_unsteady = 0., ui_ni_steady = 0.;
+            libMesh::Number dui_ni_unsteady = 0., ui_ni_steady = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -1005,7 +1014,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
 
 
-Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPrimitiveSolution<Number>& delta_p_sol, Real q0)
+libMesh::Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPrimitiveSolution<libMesh::Number>& delta_p_sol, libMesh::Real q0)
 {
     if (var_name == "du_re")
         return std::real(delta_p_sol.du1);
@@ -1049,15 +1058,15 @@ Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPri
 
 
 
-class FrequencyDomainPrimitiveFEMFunction : public FEMFunctionBase<Number>
+class FrequencyDomainPrimitiveFEMFunction : public FEMFunctionBase<libMesh::Number>
 {
 public:
     // Constructor
-    FrequencyDomainPrimitiveFEMFunction(AutoPtr<FunctionBase<Number> > fluid_func,
-                                        AutoPtr<FunctionBase<Number> > sd_fluid_func,
+    FrequencyDomainPrimitiveFEMFunction(AutoPtr<FunctionBase<libMesh::Number> > fluid_func,
+                                        AutoPtr<FunctionBase<libMesh::Number> > sd_fluid_func,
                                         std::vector<std::string>& vars,
-                                        Real cp, Real cv, Real q0):
-    FEMFunctionBase<Number>(),
+                                        libMesh::Real cp, libMesh::Real cv, libMesh::Real q0):
+    FEMFunctionBase<libMesh::Number>(),
     _fluid_function(fluid_func.release()),
     _sd_fluid_function(sd_fluid_func.release()),
     _vars(vars), _cp(cp), _cv(cv), _q0(q0)
@@ -1069,18 +1078,18 @@ public:
     // Destructor
     virtual ~FrequencyDomainPrimitiveFEMFunction () {}
     
-    virtual AutoPtr<FEMFunctionBase<Number> > clone () const
-    {return AutoPtr<FEMFunctionBase<Number> >( new FrequencyDomainPrimitiveFEMFunction
+    virtual AutoPtr<FEMFunctionBase<libMesh::Number> > clone () const
+    {return AutoPtr<FEMFunctionBase<libMesh::Number> >( new FrequencyDomainPrimitiveFEMFunction
                                               (_fluid_function->clone(),
                                                _sd_fluid_function->clone(),
                                                _vars, _cp, _cv,
                                                _q0) ); }
     
-    virtual void operator() (const FEMContext& c, const Point& p,
-                             const Real t, DenseVector<Number>& val)
+    virtual void operator() (const FEMContext& c, const libMesh::Point& p,
+                             const libMesh::Real t, libMesh::DenseVector<libMesh::Number>& val)
     {
-        DenseVector<Number> fluid_sol_complex, sd_fluid_sol;
-        DenseVector<Real> fluid_sol;
+        libMesh::DenseVector<libMesh::Number> fluid_sol_complex, sd_fluid_sol;
+        libMesh::DenseVector<libMesh::Real> fluid_sol;
         
         // get the solution values at the point
         (*_fluid_function)(p, t, fluid_sol_complex);
@@ -1091,7 +1100,7 @@ public:
             fluid_sol(i_var) = std::real(fluid_sol_complex(i_var));
 
         PrimitiveSolution p_sol;
-        SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+        SmallPerturbationPrimitiveSolution<libMesh::Number> delta_p_sol;
 
         // now initialize the primitive variable contexts
         p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
@@ -1102,11 +1111,11 @@ public:
     }
     
     
-    virtual Number component(const FEMContext& c, unsigned int i_comp,
-                             const Point& p, Real t=0.)
+    virtual libMesh::Number component(const FEMContext& c, unsigned int i_comp,
+                             const libMesh::Point& p, libMesh::Real t=0.)
     {
-        DenseVector<Number> fluid_sol_complex, sd_fluid_sol;
-        DenseVector<Real> fluid_sol;
+        libMesh::DenseVector<libMesh::Number> fluid_sol_complex, sd_fluid_sol;
+        libMesh::DenseVector<libMesh::Real> fluid_sol;
         
         // get the solution values at the point
         (*_fluid_function)(p, t, fluid_sol_complex);
@@ -1118,7 +1127,7 @@ public:
             fluid_sol(i_var) = std::real(fluid_sol_complex(i_var));
         
         PrimitiveSolution p_sol;
-        SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+        SmallPerturbationPrimitiveSolution<libMesh::Number> delta_p_sol;
         
         // now initialize the primitive variable contexts
         p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
@@ -1128,16 +1137,16 @@ public:
     }
     
     
-    virtual Number operator() (const FEMContext&, const Point& p,
-                               const Real time = 0.)
+    virtual libMesh::Number operator() (const FEMContext&, const libMesh::Point& p,
+                               const libMesh::Real time = 0.)
     {libmesh_error();}
     
 private:
     
-    AutoPtr<FunctionBase<Number> > _fluid_function;
-    AutoPtr<FunctionBase<Number> > _sd_fluid_function;
+    AutoPtr<FunctionBase<libMesh::Number> > _fluid_function;
+    AutoPtr<FunctionBase<libMesh::Number> > _sd_fluid_function;
     std::vector<std::string>& _vars;
-    Real _cp, _cv, _q0;
+    libMesh::Real _cp, _cv, _q0;
 };
 
 
@@ -1187,7 +1196,7 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
 
     // initialize the mesh function for the fluid solution,
     // this will be used for calculation of the element solution
-    const System& fluid = this->get_equation_systems().get_system<System>
+    const libMesh::System& fluid = this->get_equation_systems().get_system<System>
     ("FluidSystem");
     const FrequencyDomainLinearizedFluidSystem& sd_fluid =
     this->get_equation_systems().get_system<FrequencyDomainLinearizedFluidSystem>
@@ -1200,11 +1209,11 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
         post_process_var_names[i] = this->variable_name(i);
     
     
-    AutoPtr<NumericVector<Number> >
+    AutoPtr<libMesh::NumericVector<libMesh::Number> >
     fluid_sol =
-    NumericVector<Number>::build(this->get_equation_systems().comm()),  // for the nonlinear system
+    libMesh::NumericVector<libMesh::Number>::build(this->get_equation_systems().comm()),  // for the nonlinear system
     sd_fluid_sol =
-    NumericVector<Number>::build(this->get_equation_systems().comm());  // for the small-disturbance system
+    libMesh::NumericVector<libMesh::Number>::build(this->get_equation_systems().comm());  // for the small-disturbance system
 
     // ask systems to localize their solutions
     fluid_sol->init(fluid.solution->size(), true, SERIAL);
@@ -1229,7 +1238,7 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     sd_fluid_mesh_function->init();
 
     
-    AutoPtr<FEMFunctionBase<Number> > post_process_function
+    AutoPtr<FEMFunctionBase<libMesh::Number> > post_process_function
     (new FrequencyDomainPrimitiveFEMFunction
      (fluid_mesh_function->clone(),
       sd_fluid_mesh_function->clone(),

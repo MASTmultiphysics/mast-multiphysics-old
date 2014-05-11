@@ -13,8 +13,8 @@
 
 
 void
-MAST::SmallDisturbanceSurfacePressure::init(NumericVector<Number>& nonlinear_sol,
-                                            NumericVector<Number>& linearized_sol)
+MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Number>& nonlinear_sol,
+                                            libMesh::NumericVector<libMesh::Number>& linearized_sol)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert_equal_to(nonlinear_sol.size(),
@@ -28,12 +28,12 @@ MAST::SmallDisturbanceSurfacePressure::init(NumericVector<Number>& nonlinear_sol
     {
         // vector to store the nonlinear solution
         _sol_nonlinear.reset
-        (NumericVector<Number>::build(nonlinear_sys.comm()).release());
+        (libMesh::NumericVector<libMesh::Number>::build(nonlinear_sys.comm()).release());
         _sol_nonlinear->init(nonlinear_sol.size(), true, SERIAL);
         
         // vector to store the linear solution
         _sol_linear.reset
-        (NumericVector<Number>::build(linearized_sys.comm()).release());
+        (libMesh::NumericVector<libMesh::Number>::build(linearized_sys.comm()).release());
         _sol_linear->init(linearized_sol.size(), true, SERIAL);
     }
     
@@ -88,7 +88,7 @@ MAST::SmallDisturbanceSurfacePressure::init(NumericVector<Number>& nonlinear_sol
 
 
 void
-MAST::SmallDisturbanceSurfacePressure::surface_pressure(const Point& p,
+MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
                                                         Number& cp, Number& dcp)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
@@ -99,13 +99,13 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const Point& p,
     cp = 0.; dcp = 0.;
     
     // get the nonlinear and linearized solution
-    DenseVector<Number> v_nonlin, v_lin;
-    DenseVector<Real> v_nonlin_real;
+    libMesh::DenseVector<libMesh::Number> v_nonlin, v_lin;
+    libMesh::DenseVector<libMesh::Real> v_nonlin_real;
     (*_function_nonlinear)(p, 0., v_nonlin);
     (*_function_linear)(p, 0., v_lin);
     
     PrimitiveSolution p_sol;
-    SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
+    SmallPerturbationPrimitiveSolution<libMesh::Number> delta_p_sol;
     
     v_nonlin_real.resize(v_nonlin.size());
     for (unsigned int i=0; i<v_nonlin.size(); i++)

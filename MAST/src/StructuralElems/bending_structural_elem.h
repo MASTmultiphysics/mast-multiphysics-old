@@ -34,7 +34,7 @@ namespace MAST {
      */
     class LocalElemBase {
     public:
-        LocalElemBase(const Elem& elem):
+        LocalElemBase(const libMesh::Elem& elem):
         _elem(elem),
         _local_elem(NULL)
         { }
@@ -45,7 +45,7 @@ namespace MAST {
         /*!
          *   returns a constant reference to the global element.
          */
-        const Elem& global_elem() const {
+        const libMesh::Elem& global_elem() const {
             return _elem;
         }
         
@@ -53,7 +53,7 @@ namespace MAST {
         /*!
          *   returns a constant reference to the local element.
          */
-        const Elem& local_elem() const {
+        const libMesh::Elem& local_elem() const {
             if (!_local_elem) // original element lies in the xy-plane
                 return _elem;
             else
@@ -64,7 +64,7 @@ namespace MAST {
          *    returns the transformation matrix for this element. This is used
          *    to map the coordinates from local to global coordinate system
          */
-        const DenseMatrix<Real>& T_matrix() const {
+        const libMesh::DenseMatrix<libMesh::Real>& T_matrix() const {
             return _T_mat;
         }
 
@@ -73,17 +73,17 @@ namespace MAST {
          *    returns the transformation matrix for this element. This is used
          *    to map the coordinates from local to global coordinate system
          */
-        std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > T_matrix_function() const {
-            return std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
-            (new MAST::ConstantFunction<DenseMatrix<Real> >("T_mat", _T_mat));
+        std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > T_matrix_function() const {
+            return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            (new MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> >("T_mat", _T_mat));
         }
 
         
         /*!
          *   maps the local coordinates to the global coordinates
          */
-        void global_coordinates(const Point& local,
-                                Point& global) const {
+        void global_coordinates(const libMesh::Point& local,
+                                libMesh::Point& global) const {
             global = 0.;
             
             // now calculate the global coordinates with respect to the origin
@@ -106,12 +106,12 @@ namespace MAST {
         /*!
          *   given element in global coordinate system
          */
-        const Elem& _elem;
+        const libMesh::Elem& _elem;
         
         /*!
          *   element created in local coordinate system
          */
-        Elem* _local_elem;
+        libMesh::Elem* _local_elem;
         
         /*!
          *   nodes for local element
@@ -125,7 +125,7 @@ namespace MAST {
          *    local cs,    an_j = T^t a_i, and the reverse transformation is
          *    obtained as  a_j  = T  an_i
          */
-        DenseMatrix<Real> _T_mat;
+        libMesh::DenseMatrix<libMesh::Real> _T_mat;
     };
     
     
@@ -141,8 +141,8 @@ namespace MAST {
     class BendingStructuralElem: public MAST::StructuralElementBase {
         
     public:
-        BendingStructuralElem(System& sys,
-                            const Elem& elem,
+        BendingStructuralElem(libMesh::System& sys,
+                            const libMesh::Elem& elem,
                             const MAST::ElementPropertyCardBase& p);
         
         /*!
@@ -162,8 +162,8 @@ namespace MAST {
          *    For 1D and 2D elements the local element is asked to perform the 
          *    mapping
          */
-        virtual void global_coordinates(const Point& local,
-                                        Point& global) const {
+        virtual void global_coordinates(const libMesh::Point& local,
+                                        libMesh::Point& global) const {
             _local_elem->global_coordinates(local, global);
         }
 
@@ -171,7 +171,7 @@ namespace MAST {
         /*!
          *   returns a constant reference to the element in local coordinate system
          */
-        virtual const Elem& get_elem_for_quadrature() const {
+        virtual const libMesh::Elem& get_elem_for_quadrature() const {
             return _local_elem->local_elem();
         }
 
@@ -200,7 +200,7 @@ namespace MAST {
          *   matrix that transforms the global dofs to the local element coordinate
          *   system
          */
-        virtual const DenseMatrix<Real>& _transformation_matrix() const {
+        virtual const libMesh::DenseMatrix<libMesh::Real>& _transformation_matrix() const {
             return _local_elem->T_matrix();
         }
         

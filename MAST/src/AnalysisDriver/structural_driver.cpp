@@ -57,21 +57,21 @@
 
 
 // The main program.
-int structural_driver (LibMeshInit& init, GetPot& infile,
+int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[])
 {
     
     // Read in parameters from the input file
-    const Real global_tolerance          = infile("global_tolerance", 0.);
+    const libMesh::Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
-    const Real deltat                    = infile("deltat", 0.005);
-    const Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
+    const libMesh::Real deltat                    = infile("deltat", 0.005);
+    const libMesh::Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
     unsigned int n_timesteps             = infile("n_timesteps", 1);
     const unsigned int write_interval    = infile("write_interval", 5);
     const bool if_use_amr                = infile("if_use_amr", false);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
-    const Real amr_threshold             = infile("amr_threshold", 1.0e1);
-    const Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
+    const libMesh::Real amr_threshold             = infile("amr_threshold", 1.0e1);
+    const libMesh::Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
@@ -102,7 +102,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         ElemType elem_type =
         Utility::string_to_enum<ElemType>(infile("elem_type", "QUAD4"));
         
-        std::vector<Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
+        std::vector<libMesh::Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
         y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
         z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
         std::vector<unsigned int> x_divs(nx_divs), y_divs(ny_divs), z_divs(nz_divs);
@@ -211,7 +211,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     mesh.print_info();
     
     // Create an equation systems object.
-    EquationSystems equation_systems (mesh);
+    libMesh::EquationSystems equation_systems (mesh);
     equation_systems.parameters.set<GetPot*>("input_file") = &infile;
 
 
@@ -255,11 +255,11 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
     
     
-    MAST::ConstantFunction<Real> press("pressure", 1.e6);
+    MAST::ConstantFunction<libMesh::Real> press("pressure", 1.e6);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     //static_structural_assembly.add_volume_load(0, bc);
-    MAST::ConstantFunction<Real> temp("temp", 100.), ref_temp("ref_temp", 0.);
+    MAST::ConstantFunction<libMesh::Real> temp("temp", 100.), ref_temp("ref_temp", 0.);
     MAST::Temperature temp_bc;
     temp_bc.set_function(temp);
     temp_bc.set_reference_temperature_function(ref_temp);
@@ -270,9 +270,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     eigen_system.attach_assemble_object(eigen_structural_assembly);
     
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
-    std::set<boundary_id_type> dirichlet_boundary;
+    std::set<libMesh::boundary_id_type> dirichlet_boundary;
     // read and initialize the boundary conditions
-    std::map<boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
+    std::map<libMesh::boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
     unsigned int n_bc, b_id;
     
     // first read the boundaries for ux constraint
@@ -297,7 +297,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     std::vector<MAST::BoundaryCondition*> dirichlet_boundary_conditions;
     
     // now iterate over each boundary and create the boudnary condition object
-    for (std::map<boundary_id_type, std::vector<unsigned int> >::iterator
+    for (std::map<libMesh::boundary_id_type, std::vector<unsigned int> >::iterator
          it = boundary_constraint_map.begin();
          it != boundary_constraint_map.end(); it++) {
         MAST::DisplacementDirichletBoundaryCondition* bc =
@@ -332,7 +332,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::Solid1DSectionElementPropertyCard prop1d(3);
     
     // create the scalar function values
-    MAST::ConstantFunction<Real> E("E", infile("youngs_modulus", 72.e9)),
+    MAST::ConstantFunction<libMesh::Real> E("E", infile("youngs_modulus", 72.e9)),
     nu("nu", infile("poisson_ratio", 0.33)),
     alpha("alpha", infile("expansion_coefficient", 2.31e-5)),
     rho("rho", infile("material_density", 2700.)),
@@ -362,9 +362,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop1d.add(off_hz);
     
     
-    DenseMatrix<Real> prestress; prestress.resize(3,3);
+    libMesh::DenseMatrix<libMesh::Real> prestress; prestress.resize(3,3);
     prestress(0,0) = -1.31345e6/.0044;
-    MAST::ConstantFunction<DenseMatrix<Real> > prestress_func("prestress", prestress);
+    MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> > prestress_func("prestress", prestress);
     
     prop3d.set_material(mat);
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
@@ -380,7 +380,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     MAST::Multilayer1DSectionElementPropertyCard multi_prop1d(4);
     MAST::Solid1DSectionElementPropertyCard bottom(5), middle(6), top(7);
     MAST::IsotropicMaterialPropertyCard void_material(8);
-    MAST::ConstantFunction<Real> zeroE("E", 0.),
+    MAST::ConstantFunction<libMesh::Real> zeroE("E", 0.),
     hz_bottom("hz", 0.01),
     hz_middle("hz", 0.02),
     hz_top("hz", 0.01);
@@ -454,10 +454,10 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
 //            el_it = mesh.elements_begin(),
 //            el_end = mesh.elements_end();
 //            for ( ; el_it != el_end; el_it++ ) {
-//                Elem* elem = *el_it;
+//                libMesh::Elem* elem = *el_it;
 //                if (elem->dim() != 1)
 //                    continue;
-//                Point p = elem->centroid();
+//                libMesh::Point p = elem->centroid();
 //                if (p(0) >= .1 && p(0) <= .2)
 //                    elem->subdomain_id() = n_stiff+1;
 //            }
@@ -476,7 +476,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     eigen_system.solve();
-    std::vector<Real> sens;
+    std::vector<libMesh::Real> sens;
     eigen_structural_assembly.add_parameter(h);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
     eigen_system.sensitivity_solve(params, sens);
@@ -484,7 +484,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     for (unsigned int i=0; i<sens.size(); i++)
         std::cout << sens[i] << std::endl;
     
-    std::vector<Real> stress;
+    std::vector<libMesh::Real> stress;
     //static_structural_assembly.calculate_max_elem_stress(*static_system.solution,
     //                                                     stress, NULL);
     
@@ -524,9 +524,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
         // be read in
         std::ostringstream vec_name;
         vec_name << "mode_" << i;
-        NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
+        libMesh::NumericVector<libMesh::Real>& vec = eigen_system.add_vector(vec_name.str());
         vec = *eigen_system.solution;
-        std::complex<Real> eigval;
+        std::complex<libMesh::Real> eigval;
         std::streamsize prec = std::cout.precision();
         if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
         {
@@ -537,7 +537,7 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
             vec.close();
             
             // now write the eigenvalues
-            eigval = std::complex<Real>(val.first, val.second);
+            eigval = std::complex<libMesh::Real>(val.first, val.second);
             eigval = 1./eigval;
             
             std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
@@ -564,9 +564,9 @@ int structural_driver (LibMeshInit& init, GetPot& infile,
     xdr.write("saved_structural_mesh.xdr");
     equation_systems.write("saved_structural_solution.xdr",
                            libMesh::ENCODE,
-                           (EquationSystems::WRITE_SERIAL_FILES |
-                            EquationSystems::WRITE_DATA |
-                            EquationSystems::WRITE_ADDITIONAL_DATA));
+                           (libMesh::EquationSystems::WRITE_SERIAL_FILES |
+                            libMesh::EquationSystems::WRITE_DATA |
+                            libMesh::EquationSystems::WRITE_ADDITIONAL_DATA));
 
     // be sure to delete the boundary condition objects
     for (unsigned int i=0; i<dirichlet_boundary_conditions.size(); i++)

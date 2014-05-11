@@ -49,8 +49,8 @@ namespace MAST {
          * point and y,z-location.
          */
         void initialize_bending_strain_operator_for_yz(const unsigned int qp,
-                                                       const Real y,
-                                                       const Real z,
+                                                       const libMesh::Real y,
+                                                       const libMesh::Real z,
                                                        FEMOperatorMatrix& Bmat_bend);
 
     protected:
@@ -58,7 +58,7 @@ namespace MAST {
         /*!
          *   element length
          */
-        Real _length;
+        libMesh::Real _length;
     };
 }
 
@@ -73,10 +73,10 @@ MAST::BernoulliBendingOperator::initialize_bending_strain_operator (const unsign
 
 inline void
 MAST::BernoulliBendingOperator::initialize_bending_strain_operator_for_yz (const unsigned int qp,
-                                                                           const Real y,
-                                                                           const Real z,
+                                                                           const libMesh::Real y,
+                                                                           const libMesh::Real z,
                                                                            FEMOperatorMatrix& Bmat) {
-    const Real xi = _qrule.get_points()[qp](0);
+    const libMesh::Real xi = _qrule.get_points()[qp](0);
     
     // shape function values
     // N1 = (length/8.0) * (4.0/length -  6.0/length*xi + 0.0 +  2.0/length*pow(xi,3));
@@ -90,7 +90,7 @@ MAST::BernoulliBendingOperator::initialize_bending_strain_operator_for_yz (const
     // N3 = (1.0/4.0) * (0.0 -  1.0        - 2.0*xi  +         3.0*pow(xi,2));  // needs a -1.0 factor for theta_y
     // N4 = (1.0/4.0) * (0.0 -  1.0        + 2.0*xi  +         3.0*pow(xi,2));  // needs a -1.0 factor for theta_y
     
-    DenseVector<Real> N; N.resize(2);
+    libMesh::DenseVector<libMesh::Real> N; N.resize(2);
     
     // second order shape function derivative
     N(0) = (0.5/_length) * (  0.0     +  12.0/_length*xi);

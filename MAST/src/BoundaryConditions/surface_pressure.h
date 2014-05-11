@@ -42,8 +42,8 @@ namespace MAST {
     class SmallDisturbanceSurfacePressure: public MAST::BoundaryCondition
     {
     public:
-        SmallDisturbanceSurfacePressure(System& nl_sys,
-                                        System& lin_sys):
+        SmallDisturbanceSurfacePressure(libMesh::System& nl_sys,
+                                        libMesh::System& lin_sys):
         MAST::BoundaryCondition(MAST::SMALL_DISTURBANCE_PRESSURE),
         nonlinear_sys(nl_sys),
         linearized_sys(lin_sys),
@@ -70,11 +70,11 @@ namespace MAST {
         virtual ~SmallDisturbanceSurfacePressure()
         { }
         
-        virtual void init(NumericVector<Number>& nonlinear_sol,
-                          NumericVector<Number>& linearized_sol);
+        virtual void init(libMesh::NumericVector<libMesh::Number>& nonlinear_sol,
+                          libMesh::NumericVector<libMesh::Number>& linearized_sol);
         
         // calculation in frequency domain
-        virtual void surface_pressure(const Point& p,
+        virtual void surface_pressure(const libMesh::Point& p,
                                       Number& cp, Number& dcp);
         
     protected:
@@ -82,8 +82,8 @@ namespace MAST {
         /*!
          *   systems that this is attacehd to
          */
-        System& nonlinear_sys;
-        System& linearized_sys;
+        libMesh::System& nonlinear_sys;
+        libMesh::System& linearized_sys;
         
         /*!
          *   mesh function that interpolates the nonlinear solution
@@ -98,12 +98,12 @@ namespace MAST {
         /*!
          *    numeric vector that stores the solution for nonlinear system
          */
-        std::auto_ptr<NumericVector<Number> > _sol_nonlinear;
+        std::auto_ptr<libMesh::NumericVector<libMesh::Number> > _sol_nonlinear;
         
         /*!
          *    numeric vector that stores the solution for linearized system
          */
-        std::auto_ptr<NumericVector<Number> > _sol_linear;
+        std::auto_ptr<libMesh::NumericVector<libMesh::Number> > _sol_linear;
         
         /*!
          *    this provides the fluid values for calculation of cp

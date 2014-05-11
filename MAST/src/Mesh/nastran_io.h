@@ -170,7 +170,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
         // loop over the elements
         for ( ; it != end; ++it)
         {
-            const Elem* elem = *it;
+            const libMesh::Elem* elem = *it;
             
             // consult the export element table
             std::string nm;
@@ -216,12 +216,12 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
     {
         // identify if any temperature loads are defined, and write those to the
         // input file.
-        const std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& vol_loads =
+        const std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& vol_loads =
         _assembly.volume_loads();
         
         // iterate over the map and identify the subdomain for which the
         // load is defined
-        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
+        std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator
         it = vol_loads.begin(), end = vol_loads.end();
         
         // store the nodes that have already been written so that no
@@ -230,10 +230,10 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
 
         for ( ; it != end; it++)
             if (it->second->type() == MAST::TEMPERATURE) {
-                subdomain_id_type sid = it->first;
-                const MAST::FieldFunction<Real> &temp =
-                dynamic_cast<const MAST::FieldFunction<Real>&>(it->second->function()),
-                &tempref = dynamic_cast<const MAST::FieldFunction<Real>&>
+                libMesh::subdomain_id_type sid = it->first;
+                const MAST::FieldFunction<libMesh::Real> &temp =
+                dynamic_cast<const MAST::FieldFunction<libMesh::Real>&>(it->second->function()),
+                &tempref = dynamic_cast<const MAST::FieldFunction<libMesh::Real>&>
                 (dynamic_cast<const MAST::Temperature*>(it->second)->reference_temperature_function());
                 
                 // get iterator to the nodes for which the mesh is to be written
@@ -242,11 +242,11 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
                 
                 std::string nm = "TEMP*", t;
                 unsigned int n_nastran_nodes;
-                Real tval, tref;
+                libMesh::Real tval, tref;
                 
                 // loop over the elements
                 for ( ; eit != eend; ++eit) {
-                    const Elem* elem = *eit;
+                    const libMesh::Elem* elem = *eit;
                     _nastran_element(elem->type(), t, n_nastran_nodes);
                     for (unsigned int i=0; i<n_nastran_nodes; i++) {
                         Node* n = elem->get_node(i);
@@ -274,10 +274,10 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
 
         // first prepare a map of boundary ids and the constrained vars on that
         // boundary
-        std::map<boundary_id_type, std::vector<unsigned int> >  constrained_vars_map;
+        std::map<libMesh::boundary_id_type, std::vector<unsigned int> >  constrained_vars_map;
         
         // now populate the map for all the give boundaries
-        std::multimap<boundary_id_type, MAST::BoundaryCondition*>::const_iterator
+        std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>::const_iterator
         it = _assembly.side_loads().begin(), end = _assembly.side_loads().end();
         
         for ( ; it != end; it++)
@@ -294,7 +294,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
         const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
         
         for ( ; el != end_el; ++el) {
-            const Elem* elem = *el;
+            const libMesh::Elem* elem = *el;
             
             // boundary condition is applied only on sides with no neighbors
             // and if the side's boundary id has a boundary condition tag on it
@@ -302,7 +302,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
                 if ((*el)->neighbor(s) == NULL &&
                     mesh.boundary_info->n_boundary_ids(elem, s)) {
                     
-                    std::vector<boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
+                    std::vector<libMesh::boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
                     
                     // the boundary element
                     AutoPtr<Elem> side(elem->build_side(s).release());
@@ -407,8 +407,8 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
     
     // set of material cards to be written
     std::set<const MAST::MaterialPropertyCardBase*> mcards;
-    Point p; // dummy point for calling FieldFunciton objects
-    Real val;
+    libMesh::Point p; // dummy point for calling FieldFunciton objects
+    libMesh::Real val;
     
     {
         std::set<const MAST::ElementPropertyCardBase*>::const_iterator
@@ -440,7 +440,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
                     break;
                     
                 case 2: {
-                    prop.get<MAST::FieldFunction<Real> >("h")(p, 0., val);
+                    prop.get<MAST::FieldFunction<libMesh::Real> >("h")(p, 0., val);
                     
                     out_stream
                     << std::setw(8)  << "PSHELL* "
@@ -455,7 +455,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
                     
                     val = 0.;
                     if (prop.get_material().contains("kappa"))
-                        prop.get_material().get<MAST::FieldFunction<Real> >("kappa")(p, 0., val);
+                        prop.get_material().get<MAST::FieldFunction<libMesh::Real> >("kappa")(p, 0., val);
                     
                     out_stream
                     << std::setw(16) << val
@@ -488,10 +488,10 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
         for ( ; it != end; it++) {
             const MAST::MaterialPropertyCardBase& prop = **it;
             
-            Real E, nu, G, rho;
-            prop.get<MAST::FieldFunction<Real> >("E")(p, 0., E);
-            prop.get<MAST::FieldFunction<Real> >("nu")(p, 0., nu);
-            prop.get<MAST::FieldFunction<Real> >("rho")(p, 0., rho);
+            libMesh::Real E, nu, G, rho;
+            prop.get<MAST::FieldFunction<libMesh::Real> >("E")(p, 0., E);
+            prop.get<MAST::FieldFunction<libMesh::Real> >("nu")(p, 0., nu);
+            prop.get<MAST::FieldFunction<libMesh::Real> >("rho")(p, 0., rho);
             G = E/2./(1.+nu);
 
             out_stream

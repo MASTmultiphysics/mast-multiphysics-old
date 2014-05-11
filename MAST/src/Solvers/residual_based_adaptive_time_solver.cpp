@@ -30,7 +30,7 @@ _first_solve(true)
     _x_dot = &(s.add_vector("x_dot"));
     
     // We start with a reasonable time solver: implicit Euler
-    core_time_solver.reset(new Euler2Solver(s));
+    core_time_solver.reset(new libMesh::Euler2Solver(s));
 }
 
 
@@ -48,7 +48,7 @@ void ResidualBaseAdaptiveTimeSolver::solve()
     libmesh_assert(this->n_iters_per_update > 2); // need information from atleast three iterations to adapt
 
     // set the counter only for the first solve
-    Real x_dot_norm = 1.0e10; // an arbitrary norm to begin with
+    libMesh::Real x_dot_norm = 1.0e10; // an arbitrary norm to begin with
     if (_first_solve) {
         _iter_counter = this->n_iters_per_update;
         _first_solve = false;
@@ -76,7 +76,7 @@ void ResidualBaseAdaptiveTimeSolver::solve()
         if (!quiet)
             libMesh::out << "\n ===  Computing new time step ====" << std::endl;
         
-        Real growth_factor = pow( _x_dot_norm_old/x_dot_norm , growth_exponent);
+        libMesh::Real growth_factor = pow( _x_dot_norm_old/x_dot_norm , growth_exponent);
         
         if (growth_factor > this->max_growth)
         {

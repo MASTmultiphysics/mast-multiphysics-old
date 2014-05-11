@@ -32,7 +32,7 @@
 
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
-int flutter_driver (LibMeshInit& init, GetPot& infile,
+int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
                     int argc, char* const argv[])
 {
     // set data for flight condition
@@ -62,7 +62,7 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     ParallelMesh fluid_mesh(init.comm());
     fluid_mesh.read("saved_mesh.xdr");
     
-    EquationSystems fluid_equation_systems (fluid_mesh);
+    libMesh::EquationSystems fluid_equation_systems (fluid_mesh);
     fluid_equation_systems.parameters.set<GetPot*>("input_file") = &infile;
     
     FrequencyDomainLinearizedFluidSystem & linearized_fluid_system =
@@ -73,7 +73,7 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     AutoPtr<TimeSolver>(new SteadySolver(linearized_fluid_system));
     linearized_fluid_system.time_solver->quiet = false;
     // read the fluid system from the saved file
-    fluid_equation_systems.read<Real>("saved_solution.xdr",
+    fluid_equation_systems.read<libMesh::Real>("saved_solution.xdr",
                                       libMesh::DECODE);
     // now initilaize the nonlinear solution
     linearized_fluid_system.localize_fluid_solution();
@@ -118,12 +118,12 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     ParallelMesh structural_mesh(init.comm());
     structural_mesh.read("saved_structural_mesh.xdr");
     
-    EquationSystems structural_equation_systems (structural_mesh);
-    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
+    libMesh::EquationSystems structural_equation_systems (structural_mesh);
+    structural_equation_systems.read<libMesh::Real>("saved_structural_solution.xdr",
                                            libMesh::DECODE,
-                                           (EquationSystems::READ_HEADER |
-                                            EquationSystems::READ_DATA |
-                                            EquationSystems::READ_ADDITIONAL_DATA));
+                                           (libMesh::EquationSystems::READ_HEADER |
+                                            libMesh::EquationSystems::READ_DATA |
+                                            libMesh::EquationSystems::READ_ADDITIONAL_DATA));
     System & structural_system =
     structural_equation_systems.get_system<System> ("StructuralSystem");
     
@@ -133,7 +133,7 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     
     // create the structural assembly object
     MAST::Solid1DSectionElementPropertyCard prop1d(0);
-    Point p; p(1) = 1.;
+    libMesh::Point p; p(1) = 1.;
     prop1d.y_vector() = p;
     MAST::StructuralSystemAssembly assembly(structural_system, MAST::MODAL, infile);
     assembly.set_property_for_subdomain(0, prop1d);
@@ -154,7 +154,7 @@ int flutter_driver (LibMeshInit& init, GetPot& infile,
     structural_model.init();
     
     // attach the fluid and structural systems to the models
-    System& nonlinear_fluid_system =
+    libMesh::System& nonlinear_fluid_system =
     fluid_equation_systems.get_system<System>("FluidSystem");
     CFDAerodynamicModel aero_model(nonlinear_fluid_system,
                                    linearized_fluid_system);

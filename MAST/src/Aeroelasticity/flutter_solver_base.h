@@ -137,7 +137,7 @@ namespace MAST {
         bisection_search(const std::pair<MAST::FlutterSolutionBase*,
                          MAST::FlutterSolutionBase*>& ref_sol_range,
                          const unsigned int root_num,
-                         const Real g_tol,
+                         const libMesh::Real g_tol,
                          const unsigned int max_iters);
         
         /*!
@@ -146,7 +146,7 @@ namespace MAST {
          *   pointer is NULL, then no sorting is performed
          */
         virtual MAST::FlutterSolutionBase*
-        analyze(const Real ref_val,
+        analyze(const libMesh::Real ref_val,
                 const MAST::FlutterSolutionBase* prev_sol=NULL) = 0;
 
 

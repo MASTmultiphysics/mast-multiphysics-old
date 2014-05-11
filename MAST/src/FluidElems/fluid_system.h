@@ -25,14 +25,14 @@
 using namespace libMesh;
 
 
-Real euler_solution_value(const Point& p,
+libMesh::Real euler_solution_value(const libMesh::Point& p,
                           const Parameters& parameters,
                           const std::string& sys_name,
                           const std::string& var_name);
 
 
 
-void init_euler_variables(EquationSystems& es,
+void init_euler_variables(libMesh::EquationSystems& es,
                           const std::string& system_name);
 
 
@@ -41,7 +41,7 @@ class FluidSystem : public FEMSystem, public FluidElemBase
 {
 public:
     // Constructor
-    FluidSystem(EquationSystems& es,
+    FluidSystem(libMesh::EquationSystems& es,
                 const std::string& name_in,
                 const unsigned int number_in)
     : FEMSystem(es, name_in, number_in),
@@ -73,7 +73,7 @@ public:
     /*!
      *    tolerance threshold for turning on/off the stored dc coeff flag
      */
-    Real dc_recalculate_tolerance;
+    libMesh::Real dc_recalculate_tolerance;
     
     /*!
      *     flag to tell the system to use the stored discontinuity capturing terms
@@ -87,7 +87,7 @@ protected:
     /*!
      *    Current and old norms of density in the flow-field
      */
-    Real _rho_norm_old, _rho_norm_curr;
+    libMesh::Real _rho_norm_old, _rho_norm_curr;
 };
 
 
@@ -98,7 +98,7 @@ class FluidPostProcessSystem : public System
 {
 public:
     // Constructor
-    FluidPostProcessSystem(EquationSystems& es,
+    FluidPostProcessSystem(libMesh::EquationSystems& es,
                            const std::string& name_in,
                            const unsigned int number_in)
     : System(es, name_in, number_in)

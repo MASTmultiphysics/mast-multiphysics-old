@@ -16,9 +16,9 @@
 
 
 void
-MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
-                                  const Complex num,
-                                  const Complex den,
+MAST::TimeDomainFlutterRoot::init(const libMesh::Real ref_val, const libMesh::Real b_ref,
+                                  const libMesh::Complex num,
+                                  const libMesh::Complex den,
                                   const RealMatrixX& Bmat,
                                   const ComplexVectorX& eig_vec)
 {
@@ -65,7 +65,7 @@ MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
     for (unsigned int i=0; i<nvals-1; i++)
     {
         const MAST::FlutterRootBase& r = sol.get_root(i);
-        Real max_val = 0., val = 0.;
+        libMesh::Real max_val = 0., val = 0.;
         unsigned int max_val_root = nvals+1;
         for (unsigned int j=i; j<nvals; j++) {
             val = _roots[j]->modal_participation.dot(r.modal_participation);
@@ -85,7 +85,7 @@ MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
 
 
 void
-MAST::FrequencyDomainFlutterSolution::init (const Real ref_val, const Real bref,
+MAST::FrequencyDomainFlutterSolution::init (const libMesh::Real ref_val, const libMesh::Real bref,
                                             const LAPACK_ZGGEV& eig_sol)
 {
     // make sure that it hasn't already been initialized
@@ -109,7 +109,7 @@ MAST::FrequencyDomainFlutterSolution::init (const Real ref_val, const Real bref,
 
 
 void
-MAST::TimeDomainFlutterSolution::init (const Real ref_val, const Real bref,
+MAST::TimeDomainFlutterSolution::init (const libMesh::Real ref_val, const libMesh::Real bref,
                                        const LAPACK_DGGEV& eig_sol)
 {
     // make sure that it hasn't already been initialized

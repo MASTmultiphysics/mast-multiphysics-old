@@ -12,17 +12,17 @@
 #include "StructuralElems/bending_structural_elem.h"
 
 
-std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
 MAST::Multilayer1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatrixType t,
                                                            const MAST::StructuralElementBase& e) const {
     
     // prepare vector of matrix functions from each layer
-    std::vector<MAST::FieldFunction<DenseMatrix<Real> >*> layer_mats(_layers.size());
+    std::vector<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >*> layer_mats(_layers.size());
     for (unsigned int i=0; i<_layers.size(); i++)
         layer_mats[i] = _layers[i]->get_property(t, e).release();
     
     // now create the integrated object
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > rval
+    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > rval
     (new MAST::Multilayer1DSectionElementPropertyCard::SectionIntegratedMatrix
      (layer_mats));
     

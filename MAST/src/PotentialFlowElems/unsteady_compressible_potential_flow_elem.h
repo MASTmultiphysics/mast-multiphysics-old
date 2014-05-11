@@ -16,14 +16,14 @@
 #include "libmesh/fem_system.h"
 #include "libmesh/equation_systems.h"
 
-Real unsteady_compressible_potential_solution_value(const Point& p,
+libMesh::Real unsteady_compressible_potential_solution_value(const libMesh::Point& p,
                                                     const Parameters& parameters,
                                                     const std::string& sys_name,
                                                     const std::string& var_name);
 
 
 
-void init_compressible_potential_variables(EquationSystems& es,
+void init_compressible_potential_variables(libMesh::EquationSystems& es,
                                            const std::string& system_name);
 
 
@@ -35,7 +35,7 @@ class UnsteadyCompressiblePotentialFlow :
 public FEMSystem, public MAST::PotentialFlowElemBase
 {
 public:
-    UnsteadyCompressiblePotentialFlow(EquationSystems& es,
+    UnsteadyCompressiblePotentialFlow(libMesh::EquationSystems& es,
                                       const std::string& name_in,
                                       const unsigned int number_in):
     FEMSystem(es, name_in, number_in),
@@ -70,10 +70,10 @@ protected:
     
     void update_solution_at_quadrature_point
     ( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-     const bool if_elem_domain, const DenseVector<Real>& elem_solution,
-     DenseVector<Real>& conservative_sol, Point& uvec,
+     const bool if_elem_domain, const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     libMesh::DenseVector<libMesh::Real>& conservative_sol, libMesh::Point& uvec,
      FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat,
-     DenseMatrix<Real>& LS_mat);
+     libMesh::DenseMatrix<libMesh::Real>& LS_mat);
 };
 
 

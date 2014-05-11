@@ -66,8 +66,8 @@ namespace MAST {
          *   calculate the transverse shear component for the element
          */
         virtual void calculate_transverse_shear_force(bool request_jacobian,
-                                                      DenseVector<Real>& local_f,
-                                                      DenseMatrix<Real>& local_jac,
+                                                      libMesh::DenseVector<libMesh::Real>& local_f,
+                                                      libMesh::DenseMatrix<libMesh::Real>& local_jac,
                                                       const MAST::FieldFunctionBase* sens_params )
         { libmesh_error(); }
         
@@ -82,12 +82,12 @@ namespace MAST {
         /*!
          *    element for which bending operator is created
          */
-        const Elem& _elem;
+        const libMesh::Elem& _elem;
         
         /*!
          *   quadrature rule to be used. This should already be of the correct order
          */
-        QBase& _qrule;
+        libMesh::QBase& _qrule;
 
     };
 
@@ -106,8 +106,8 @@ namespace MAST {
          *   initialze the bending strain operator for the specified quadrature point
          */
         virtual void initialize_bending_strain_operator_for_yz (const unsigned int qp,
-                                                                const Real y,
-                                                                const Real z,
+                                                                const libMesh::Real y,
+                                                                const libMesh::Real z,
                                                                 FEMOperatorMatrix& Bmat) = 0;
 
     };
@@ -126,7 +126,7 @@ namespace MAST {
          *   initialze the bending strain operator for the specified quadrature point
          */
         virtual void initialize_bending_strain_operator_for_z (const unsigned int qp,
-                                                                const Real z,
+                                                                const libMesh::Real z,
                                                                 FEMOperatorMatrix& Bmat) = 0;
         
     };

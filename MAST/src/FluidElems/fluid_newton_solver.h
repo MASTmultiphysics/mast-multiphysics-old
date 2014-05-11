@@ -32,8 +32,8 @@ protected:
      *   so that each variable continues to stay physically consistent.
      */
     virtual void line_search(Real& current_residual,
-                             NumericVector<Number> &newton_iterate,
-                             const NumericVector<Number> &linear_solution);
+                             libMesh::NumericVector<libMesh::Number> &newton_iterate,
+                             const libMesh::NumericVector<libMesh::Number> &linear_solution);
     
 };
 

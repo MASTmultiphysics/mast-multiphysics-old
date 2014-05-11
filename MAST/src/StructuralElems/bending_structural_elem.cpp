@@ -17,8 +17,8 @@
 #include "StructuralElems/structural_element_2D.h"
 
 
-MAST::BendingStructuralElem::BendingStructuralElem(System& sys,
-                                                   const Elem& elem,
+MAST::BendingStructuralElem::BendingStructuralElem(libMesh::System& sys,
+                                                   const libMesh::Elem& elem,
                                                    const MAST::ElementPropertyCardBase& p):
 MAST::StructuralElementBase(sys, elem, p)
 {

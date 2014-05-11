@@ -37,7 +37,7 @@ namespace MAST {
          *   a bitwise operator. This method initializes the components to zero
          *   value on the domain.
          */
-        virtual void init(const boundary_id_type bid,
+        virtual void init(const libMesh::boundary_id_type bid,
                           const std::vector<unsigned int>& constrained_comp);
         
         
@@ -61,13 +61,13 @@ namespace MAST {
 
 inline
 void
-MAST::DisplacementDirichletBoundaryCondition::init(const boundary_id_type bid,
+MAST::DisplacementDirichletBoundaryCondition::init(const libMesh::boundary_id_type bid,
                                                    const std::vector<unsigned int>& constrained_comp) {
     // should not have been initialized if this is called
     libmesh_assert(_dirichlet_boundary.get() == NULL);
 
-    ZeroFunction<Number> zero_function;
-    std::set<boundary_id_type> bid_set; bid_set.insert(bid);
+    ZeroFunction<libMesh::Number> zero_function;
+    std::set<libMesh::boundary_id_type> bid_set; bid_set.insert(bid);
     
     _dirichlet_boundary.reset(new DirichletBoundary(bid_set,
                                                     constrained_comp,

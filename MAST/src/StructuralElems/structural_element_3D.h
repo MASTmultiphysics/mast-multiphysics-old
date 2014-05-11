@@ -25,8 +25,8 @@ namespace MAST {
     class StructuralElement3D: public MAST::StructuralElementBase {
         
     public:
-        StructuralElement3D(System& sys,
-                            const Elem& elem,
+        StructuralElement3D(libMesh::System& sys,
+                            const libMesh::Elem& elem,
                             const MAST::ElementPropertyCardBase& p):
         StructuralElementBase(sys, elem, p)
         {
@@ -51,8 +51,8 @@ namespace MAST {
          *    For 3D elements, it is assumed that the local and global 
          *    coordinates are the same.
          */
-        virtual void global_coordinates(const Point& local,
-                                        Point& global) const {
+        virtual void global_coordinates(const libMesh::Point& local,
+                                        libMesh::Point& global) const {
             global = local;
         }
 
@@ -60,7 +60,7 @@ namespace MAST {
          *   returns a constant reference to the element in local coordinate system.
          *   For a 3D element, the two are same.
          */
-        virtual const Elem& get_elem_for_quadrature() const {
+        virtual const libMesh::Elem& get_elem_for_quadrature() const {
             return _elem;
         }
 
@@ -69,8 +69,8 @@ namespace MAST {
          *    strain energy
          */
         virtual bool internal_force(bool request_jacobian,
-                                    DenseVector<Real>& f,
-                                    DenseMatrix<Real>& jac,
+                                    libMesh::DenseVector<libMesh::Real>& f,
+                                    libMesh::DenseMatrix<libMesh::Real>& jac,
                                     bool if_ignore_ho_jac);
 
         
@@ -79,30 +79,30 @@ namespace MAST {
          *    Jacobian due to strain energy
          */
         virtual bool internal_force_sensitivity(bool request_jacobian,
-                                                DenseVector<Real>& f,
-                                                DenseMatrix<Real>& jac,
+                                                libMesh::DenseVector<libMesh::Real>& f,
+                                                libMesh::DenseMatrix<libMesh::Real>& jac,
                                                 bool if_ignore_ho_jac);
 
         /*!
          *    Calculates the prestress force vector and Jacobian
          */
         virtual bool prestress_force (bool request_jacobian,
-                                      DenseVector<Real>& f,
-                                      DenseMatrix<Real>& jac);
+                                      libMesh::DenseVector<libMesh::Real>& f,
+                                      libMesh::DenseMatrix<libMesh::Real>& jac);
 
         
         /*!
          *    Calculates the sensitivity prestress force vector and Jacobian
          */
         virtual bool prestress_force_sensitivity (bool request_jacobian,
-                                                  DenseVector<Real>& f,
-                                                  DenseMatrix<Real>& jac);
+                                                  libMesh::DenseVector<libMesh::Real>& f,
+                                                  libMesh::DenseMatrix<libMesh::Real>& jac);
         
         
         /*!
          *   returns the value of maximum von Mises stress over the element
          */
-        virtual Real max_von_mises_stress(){
+        virtual libMesh::Real max_von_mises_stress(){
             libmesh_error();
         }
         
@@ -110,7 +110,7 @@ namespace MAST {
         /*!
          *   returns the sensitivity of maximum von Mises stress over the element
          */
-        virtual Real max_von_mises_stress_sensitivity(){
+        virtual libMesh::Real max_von_mises_stress_sensitivity(){
             libmesh_error();
         }
 
@@ -120,8 +120,8 @@ namespace MAST {
          *    Calculates the force vector and Jacobian due to thermal stresses
          */
         virtual bool thermal_force(bool request_jacobian,
-                                   DenseVector<Real>& f,
-                                   DenseMatrix<Real>& jac,
+                                   libMesh::DenseVector<libMesh::Real>& f,
+                                   libMesh::DenseMatrix<libMesh::Real>& jac,
                                    MAST::BoundaryCondition& p);
 
         /*!
@@ -129,8 +129,8 @@ namespace MAST {
          *    thermal stresses
          */
         virtual bool thermal_force_sensitivity(bool request_jacobian,
-                                               DenseVector<Real>& f,
-                                               DenseMatrix<Real>& jac,
+                                               libMesh::DenseVector<libMesh::Real>& f,
+                                               libMesh::DenseMatrix<libMesh::Real>& jac,
                                                MAST::BoundaryCondition& p);
         
         /*!
@@ -143,7 +143,7 @@ namespace MAST {
          *   matrix that transforms the global dofs to the local element coordinate
          *   system
          */
-        virtual const DenseMatrix<Real>& _transformation_matrix() const {
+        virtual const libMesh::DenseMatrix<libMesh::Real>& _transformation_matrix() const {
             libmesh_error(); // should not be called for a 3D elem
         }
     };

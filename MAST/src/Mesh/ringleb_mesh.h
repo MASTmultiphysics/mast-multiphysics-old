@@ -46,11 +46,11 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    Real _tc_ratio;
+    libMesh::Real _tc_ratio;
     
-    Real _x0, _x1;
+    libMesh::Real _x0, _x1;
     
-    Real _y0, _y1;
+    libMesh::Real _y0, _y1;
     
     unsigned int _n_maxima;
     
@@ -63,7 +63,7 @@ protected:
 class RinglebSurfaceNormalCorrection: public MAST::SurfaceMotionBase
 {
 public:
-    RinglebSurfaceNormalCorrection(Real x0, Real x1, Real h):
+    RinglebSurfaceNormalCorrection(libMesh::Real x0, libMesh::Real x1, libMesh::Real h):
     MAST::SurfaceMotionBase(),
     _x0(x0),
     _x1(x1),
@@ -77,10 +77,10 @@ public:
      *   the pure translation velocity component, while \p dn_rot defines the
      *   surface normal perturbation
      */
-    virtual void surface_velocity_frequency_domain(const Point& p,
-                                                   const Point& n,
-                                                   DenseVector<Complex>& u_trans,
-                                                   DenseVector<Complex>& dn_rot)
+    virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
+                                                   const libMesh::Point& n,
+                                                   libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                                   libMesh::DenseVector<libMesh::Complex>& dn_rot)
     { libmesh_error();}
     
     /*!
@@ -88,28 +88,28 @@ public:
      *   the pure translation velocity component, while \p dn_rot defines the
      *   surface normal perturbation
      */
-    virtual void surface_velocity_time_domain(const Real t,
-                                              const Point& p,
-                                              const Point& n,
-                                              DenseVector<Number>& u_trans,
-                                              DenseVector<Number>& dn_rot);
+    virtual void surface_velocity_time_domain(const libMesh::Real t,
+                                              const libMesh::Point& p,
+                                              const libMesh::Point& n,
+                                              libMesh::DenseVector<libMesh::Number>& u_trans,
+                                              libMesh::DenseVector<libMesh::Number>& dn_rot);
     
 protected:
     
-    Real _x0, _x1, _h;
+    libMesh::Real _x0, _x1, _h;
 };
 
 
 
 inline void
-RinglebSurfaceNormalCorrection::surface_velocity_time_domain(const Real t,
-                                                             const Point& p,
-                                                             const Point& n,
-                                                             DenseVector<Number>& u_trans,
-                                                             DenseVector<Number>& dn_rot)
+RinglebSurfaceNormalCorrection::surface_velocity_time_domain(const libMesh::Real t,
+                                                             const libMesh::Point& p,
+                                                             const libMesh::Point& n,
+                                                             libMesh::DenseVector<libMesh::Number>& u_trans,
+                                                             libMesh::DenseVector<libMesh::Number>& dn_rot)
 {
     // for the point p, add the correction of surface normal n to dn_rot
-    Real x = p(0),
+    libMesh::Real x = p(0),
     f = -25. * pow((x-_x0)-(_x1-_x0)*0.5, 2.0),
     dfdx = -50.*((x-_x0)-(_x1-_x0)*0.5),
     dydx = _h*exp(f)*dfdx;
@@ -132,7 +132,7 @@ RinglebMesh::init (unsigned int n_x, unsigned int n_y,
     divs[0] = x_divs.get();
     divs[1] = y_divs.get();
 
-    std::vector<Real> div_loc(2), dx_relative(2);
+    std::vector<libMesh::Real> div_loc(2), dx_relative(2);
     std::vector<unsigned int> n_divs(1);
     
     div_loc[0] = 0.; div_loc[1] = 1.;
@@ -156,8 +156,8 @@ RinglebMesh::process_mesh( )
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
     const Mesh::node_iterator n_end = _mesh->nodes_end();
     
-    const Real pi = acos(-1.);
-    Real x_val, y_val;
+    const libMesh::Real pi = acos(-1.);
+    libMesh::Real x_val, y_val;
     
     for (; n_it != n_end; n_it++)
     {
@@ -169,14 +169,14 @@ RinglebMesh::process_mesh( )
         else
             x_val = (0.5-x_val)*2.+1.;
         
-        Real exp_val = 0.2, x_break=0.7;
+        libMesh::Real exp_val = 0.2, x_break=0.7;
         if (x_val <= x_break)
             x_val = x_val/x_break*pow(x_break, exp_val);
         else
             x_val = pow(x_val,exp_val);
         
         y_val = n(1);
-        Real kval, qval, aval, gammaval =1.4, rhoval, pval, Jval;
+        libMesh::Real kval, qval, aval, gammaval =1.4, rhoval, pval, Jval;
         kval = y_val * 0.8 + 0.7; // linear variation from 0.7 to 1.5
         qval = x_val * (kval-0.5) + 0.5; // linear variation from 0.5 to kval
         aval = sqrt(1.-0.5*(gammaval-1.)*qval*qval);

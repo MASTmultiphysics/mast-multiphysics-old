@@ -44,24 +44,24 @@
 
 namespace MAST {
     
-    class BeamOffset: public MAST::FieldFunction<Real> {
+    class BeamOffset: public MAST::FieldFunction<libMesh::Real> {
     public:
         BeamOffset(const std::string& nm,
-                   MAST::FieldFunction<Real> *thickness):
-        MAST::FieldFunction<Real>(nm),
+                   MAST::FieldFunction<libMesh::Real> *thickness):
+        MAST::FieldFunction<libMesh::Real>(nm),
         _dim(thickness) {
             _functions.insert(thickness->master());
         }
         
         BeamOffset(const MAST::BeamOffset& o):
-        MAST::FieldFunction<Real>(o),
+        MAST::FieldFunction<libMesh::Real>(o),
         _dim(o._dim->clone().release()) {
             _functions.insert(_dim->master());
         }
         
-        virtual std::auto_ptr<MAST::FieldFunction<Real> >
+        virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
         clone() const {
-            return std::auto_ptr<MAST::FieldFunction<Real> >
+            return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
             (new MAST::BeamOffset(*this));
         }
         
@@ -71,22 +71,22 @@ namespace MAST {
         
     protected:
         
-        MAST::FieldFunction<Real> *_dim;
+        MAST::FieldFunction<libMesh::Real> *_dim;
         
     public:
         
-        virtual void operator() (const Point& p, Real t, Real& v) const {
+        virtual void operator() (const libMesh::Point& p, libMesh::Real t, Real& v) const {
             (*_dim)(p, t, v);
             v *= 0.5;
         }
         
         virtual void partial(const MAST::FieldFunctionBase& f,
-                             const Point& p, Real t, Real& v) const {
+                             const libMesh::Point& p, libMesh::Real t, Real& v) const {
             libmesh_error();
         }
         
         virtual void total(const MAST::FieldFunctionBase& f,
-                           const Point& p, Real t, Real& v) const {
+                           const libMesh::Point& p, libMesh::Real t, Real& v) const {
             _dim->total(f, p, t, v);
             v *= 0.5;
         }
@@ -94,13 +94,13 @@ namespace MAST {
     };
     
     
-    class Weight: public MAST::FieldFunction<Real> {
+    class Weight: public MAST::FieldFunction<libMesh::Real> {
     public:
         Weight(const bool if_honeycomb,
                const bool if_t_stiff,
                UnstructuredMesh& m,
                MAST::StructuralSystemAssembly& assembly):
-        MAST::FieldFunction<Real>("Weight"),
+        MAST::FieldFunction<libMesh::Real>("Weight"),
         _honeycomb(if_honeycomb),
         _t_stiff(if_t_stiff),
         _mesh(m),
@@ -109,7 +109,7 @@ namespace MAST {
         }
         
         Weight(const MAST::Weight& w):
-        MAST::FieldFunction<Real>(w),
+        MAST::FieldFunction<libMesh::Real>(w),
         _honeycomb(w._honeycomb),
         _t_stiff(w._t_stiff),
         _mesh(w._mesh),
@@ -117,9 +117,9 @@ namespace MAST {
             
         }
         
-        virtual std::auto_ptr<MAST::FieldFunction<Real> >
+        virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
         clone() const {
-            return std::auto_ptr<MAST::FieldFunction<Real> >
+            return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
             (new MAST::Weight(*this));
         }
         
@@ -135,16 +135,16 @@ namespace MAST {
         
     public:
         
-        virtual void operator() (const Point& p, Real t, Real& v) const {
+        virtual void operator() (const libMesh::Point& p, libMesh::Real t, Real& v) const {
             MeshBase::const_element_iterator
             eit  = _mesh.active_local_elements_begin(),
             eend = _mesh.active_local_elements_end();
             
-            Real h, rho;
+            libMesh::Real h, rho;
             v = 0.;
             
             for ( ; eit != eend; eit++ ) {
-                const Elem* e = *eit;
+                const libMesh::Elem* e = *eit;
                 const MAST::ElementPropertyCardBase& prop =
                 _assembly.get_property_card(*e);
                 
@@ -158,10 +158,10 @@ namespace MAST {
                     for (unsigned int i=0; i<layers.size(); i++) {
                         const MAST::MaterialPropertyCardBase& mat =
                         layers[i]->get_material();
-                        const MAST::FieldFunction<Real> &hf =
-                        layers[i]->get<MAST::FieldFunction<Real> >("h");
-                        const MAST::FieldFunction<Real> &rhof =
-                        mat.get<MAST::FieldFunction<Real> >("rho");
+                        const MAST::FieldFunction<libMesh::Real> &hf =
+                        layers[i]->get<MAST::FieldFunction<libMesh::Real> >("h");
+                        const MAST::FieldFunction<libMesh::Real> &rhof =
+                        mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                         
                         hf(p, 0., h);
                         rhof(p, 0., rho);
@@ -173,12 +173,12 @@ namespace MAST {
                     if (!_t_stiff) { // blade stiffener
                         const MAST::MaterialPropertyCardBase& mat =
                         prop.get_material();
-                        const MAST::FieldFunction<Real> &rhof =
-                        mat.get<MAST::FieldFunction<Real> >("rho");
+                        const MAST::FieldFunction<libMesh::Real> &rhof =
+                        mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                         
                         if (e->dim() == 2) { // panel
-                            const MAST::FieldFunction<Real> &hf =
-                            prop.get<MAST::FieldFunction<Real> >("h");
+                            const MAST::FieldFunction<libMesh::Real> &hf =
+                            prop.get<MAST::FieldFunction<libMesh::Real> >("h");
                             
                             hf(p, 0., h);
                             rhof(p, 0., rho);
@@ -188,8 +188,8 @@ namespace MAST {
                         else if (e->dim() == 1) { // stiffener
                             const MAST::Solid1DSectionElementPropertyCard& prop1d =
                             dynamic_cast<const MAST::Solid1DSectionElementPropertyCard&>(prop);
-                            std::auto_ptr<MAST::FieldFunction<Real> >
-                            stiff_area (prop1d.section_property<MAST::FieldFunction<Real> >("A").release());
+                            std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
+                            stiff_area (prop1d.section_property<MAST::FieldFunction<libMesh::Real> >("A").release());
                             
                             (*stiff_area)(p, 0., h);
                             rhof(p, 0., rho);
@@ -203,11 +203,11 @@ namespace MAST {
                         if (e->dim() == 2) { // panel
                             const MAST::MaterialPropertyCardBase& mat =
                             prop.get_material();
-                            const MAST::FieldFunction<Real> &rhof =
-                            mat.get<MAST::FieldFunction<Real> >("rho");
+                            const MAST::FieldFunction<libMesh::Real> &rhof =
+                            mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
 
-                            const MAST::FieldFunction<Real> &hf =
-                            prop.get<MAST::FieldFunction<Real> >("h");
+                            const MAST::FieldFunction<libMesh::Real> &hf =
+                            prop.get<MAST::FieldFunction<libMesh::Real> >("h");
                             
                             hf(p, 0., h);
                             rhof(p, 0., rho);
@@ -225,11 +225,11 @@ namespace MAST {
                             for (unsigned int i=0; i<layers.size(); i++) {
                                 const MAST::MaterialPropertyCardBase& mat =
                                 layers[i]->get_material();
-                                const MAST::FieldFunction<Real> &rhof =
-                                mat.get<MAST::FieldFunction<Real> >("rho");
+                                const MAST::FieldFunction<libMesh::Real> &rhof =
+                                mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                                 
-                                std::auto_ptr<MAST::FieldFunction<Real> >
-                                stiff_area (layers[i]->section_property<MAST::FieldFunction<Real> >("A").release());
+                                std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
+                                stiff_area (layers[i]->section_property<MAST::FieldFunction<libMesh::Real> >("A").release());
                                 
                                 (*stiff_area)(p, 0., h);
                                 rhof(p, 0., rho);
@@ -243,12 +243,12 @@ namespace MAST {
         }
         
         virtual void partial(const MAST::FieldFunctionBase& f,
-                             const Point& p, Real t, Real& v) const {
+                             const libMesh::Point& p, libMesh::Real t, Real& v) const {
             libmesh_error();
         }
         
         virtual void total(const MAST::FieldFunctionBase& f,
-                           const Point& p, Real t, Real& v) const {
+                           const libMesh::Point& p, libMesh::Real t, Real& v) const {
             
             v = 0.;
             
@@ -256,11 +256,11 @@ namespace MAST {
             eit  = _mesh.active_local_elements_begin(),
             eend = _mesh.active_local_elements_end();
             
-            Real h, rho;
+            libMesh::Real h, rho;
             v = 0.;
             
             for ( ; eit != eend; eit++ ) {
-                const Elem* e = *eit;
+                const libMesh::Elem* e = *eit;
                 const MAST::ElementPropertyCardBase& prop =
                 _assembly.get_property_card(*e);
                 
@@ -274,10 +274,10 @@ namespace MAST {
                     for (unsigned int i=0; i<layers.size(); i++) {
                         const MAST::MaterialPropertyCardBase& mat =
                         layers[i]->get_material();
-                        const MAST::FieldFunction<Real> &hf =
-                        layers[i]->get<MAST::FieldFunction<Real> >("h");
-                        const MAST::FieldFunction<Real> &rhof =
-                        mat.get<MAST::FieldFunction<Real> >("rho");
+                        const MAST::FieldFunction<libMesh::Real> &hf =
+                        layers[i]->get<MAST::FieldFunction<libMesh::Real> >("h");
+                        const MAST::FieldFunction<libMesh::Real> &rhof =
+                        mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                         
                         hf.total(f, p, 0., h);
                         rhof(p, 0., rho);
@@ -289,12 +289,12 @@ namespace MAST {
                     if (!_t_stiff) { // blade stiffener
                         const MAST::MaterialPropertyCardBase& mat =
                         prop.get_material();
-                        const MAST::FieldFunction<Real> &rhof =
-                        mat.get<MAST::FieldFunction<Real> >("rho");
+                        const MAST::FieldFunction<libMesh::Real> &rhof =
+                        mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                         
                         if (e->dim() == 2) { // panel
-                            const MAST::FieldFunction<Real> &hf =
-                            prop.get<MAST::FieldFunction<Real> >("h");
+                            const MAST::FieldFunction<libMesh::Real> &hf =
+                            prop.get<MAST::FieldFunction<libMesh::Real> >("h");
                             
                             hf.total(f, p, 0., h);
                             rhof(p, 0., rho);
@@ -304,8 +304,8 @@ namespace MAST {
                         else if (e->dim() == 1) { // stiffener
                             const MAST::Solid1DSectionElementPropertyCard& prop1d =
                             dynamic_cast<const MAST::Solid1DSectionElementPropertyCard&>(prop);
-                            std::auto_ptr<MAST::FieldFunction<Real> >
-                            stiff_area (prop1d.section_property<MAST::FieldFunction<Real> >("A").release());
+                            std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
+                            stiff_area (prop1d.section_property<MAST::FieldFunction<libMesh::Real> >("A").release());
                             
                             stiff_area->total(f, p, 0., h);
                             rhof(p, 0., rho);
@@ -319,11 +319,11 @@ namespace MAST {
                         if (e->dim() == 2) { // panel
                             const MAST::MaterialPropertyCardBase& mat =
                             prop.get_material();
-                            const MAST::FieldFunction<Real> &rhof =
-                            mat.get<MAST::FieldFunction<Real> >("rho");
+                            const MAST::FieldFunction<libMesh::Real> &rhof =
+                            mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                             
-                            const MAST::FieldFunction<Real> &hf =
-                            prop.get<MAST::FieldFunction<Real> >("h");
+                            const MAST::FieldFunction<libMesh::Real> &hf =
+                            prop.get<MAST::FieldFunction<libMesh::Real> >("h");
                             
                             hf.total(f, p, 0., h);
                             rhof(p, 0., rho);
@@ -341,11 +341,11 @@ namespace MAST {
                             for (unsigned int i=0; i<layers.size(); i++) {
                                 const MAST::MaterialPropertyCardBase& mat =
                                 layers[i]->get_material();
-                                const MAST::FieldFunction<Real> &rhof =
-                                mat.get<MAST::FieldFunction<Real> >("rho");
+                                const MAST::FieldFunction<libMesh::Real> &rhof =
+                                mat.get<MAST::FieldFunction<libMesh::Real> >("rho");
                                 
-                                std::auto_ptr<MAST::FieldFunction<Real> >
-                                stiff_area (layers[i]->section_property<MAST::FieldFunction<Real> >("A").release());
+                                std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
+                                stiff_area (layers[i]->section_property<MAST::FieldFunction<libMesh::Real> >("A").release());
                                 
                                 stiff_area->total(f, p, 0., h);
                                 rhof(p, 0., rho);
@@ -365,7 +365,7 @@ namespace MAST {
         
     public:
         
-        SizingOptimization(LibMeshInit& init,
+        SizingOptimization(libMesh::LibMeshInit& init,
                            GetPot& input,
                            std::ostream& output):
         MAST::FunctionEvaluation(output),
@@ -443,24 +443,24 @@ namespace MAST {
         
         
         
-        virtual void init_dvar(std::vector<Real>& x,
-                               std::vector<Real>& xmin,
-                               std::vector<Real>& xmax);
+        virtual void init_dvar(std::vector<libMesh::Real>& x,
+                               std::vector<libMesh::Real>& xmin,
+                               std::vector<libMesh::Real>& xmax);
         
         
         
-        virtual void evaluate(const std::vector<Real>& dvars,
+        virtual void evaluate(const std::vector<libMesh::Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
-                              std::vector<Real>& obj_grad,
-                              std::vector<Real>& fvals,
+                              std::vector<libMesh::Real>& obj_grad,
+                              std::vector<libMesh::Real>& fvals,
                               std::vector<bool>& eval_grads,
-                              std::vector<Real>& grads);
+                              std::vector<libMesh::Real>& grads);
         
         virtual void output(unsigned int iter,
-                            const std::vector<Real>& x,
-                            Real obj,
-                            const std::vector<Real>& fval) const;
+                            const std::vector<libMesh::Real>& x,
+                            libMesh::Real obj,
+                            const std::vector<libMesh::Real>& fval) const;
         
     protected:
         
@@ -468,7 +468,7 @@ namespace MAST {
         void _init();
         
         
-        LibMeshInit& _libmesh_init;
+        libMesh::LibMeshInit& _libmesh_init;
         
         GetPot& _infile;
         
@@ -478,7 +478,7 @@ namespace MAST {
         
         MAST::Weight* _weight;
         
-        EquationSystems* _eq_systems;
+        libMesh::EquationSystems* _eq_systems;
         
         NonlinearImplicitSystem *_static_system;
         
@@ -489,27 +489,27 @@ namespace MAST {
         
         UnstructuredMesh* _mesh;
         
-        ConstantFunction<Real>* _press;
+        ConstantFunction<libMesh::Real>* _press;
         
-        ZeroFunction<Real>* _zero_function;
+        ZeroFunction<libMesh::Real>* _zero_function;
         
-        MAST::ConstantFunction<Real> *_E, *_nu,  *_alpha, *_rho, *_kappa, *_h, *_panel_off,
+        MAST::ConstantFunction<libMesh::Real> *_E, *_nu,  *_alpha, *_rho, *_kappa, *_h, *_panel_off,
         *_core_E, *_core_nu,  *_core_alpha, *_core_rho, *_core_kappa, *_core_h;
         
-        std::vector<MAST::ConstantFunction<Real>*> _h_stiff, _h_z,
+        std::vector<MAST::ConstantFunction<libMesh::Real>*> _h_stiff, _h_z,
         _offset_h_y;
         
         std::vector<MAST::BeamOffset*> _offset_h_z;
         
-        MAST::ConstantFunction<DenseMatrix<Real> > *_prestress;
+        MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> > *_prestress;
         
-        MAST::ConstantFunction<Real> *_temperature, *_ref_temperature;
+        MAST::ConstantFunction<libMesh::Real> *_temperature, *_ref_temperature;
         
         MAST::Temperature *_temperature_bc;
         
         ParameterVector _parameters;
         
-        std::vector<MAST::ConstantFunction<Real>*> _parameter_functions;
+        std::vector<MAST::ConstantFunction<libMesh::Real>*> _parameter_functions;
         
         std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
         
@@ -523,9 +523,9 @@ namespace MAST {
 
 inline
 void
-MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
-                                    std::vector<Real>& xmin,
-                                    std::vector<Real>& xmax) {
+MAST::SizingOptimization::init_dvar(std::vector<libMesh::Real>& x,
+                                    std::vector<libMesh::Real>& xmin,
+                                    std::vector<libMesh::Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
     std::fill(x.begin(), x.end(), 0.008);
@@ -540,13 +540,13 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
 
 inline
 void
-MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
+MAST::SizingOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
                                    Real& obj,
                                    bool eval_obj_grad,
-                                   std::vector<Real>& obj_grad,
-                                   std::vector<Real>& fvals,
+                                   std::vector<libMesh::Real>& obj_grad,
+                                   std::vector<libMesh::Real>& fvals,
                                    std::vector<bool>& eval_grads,
-                                   std::vector<Real>& grads) {
+                                   std::vector<libMesh::Real>& grads) {
 #ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     libmesh_assert_equal_to(dvars.size(), _n_vars);
@@ -555,7 +555,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     for (unsigned int i=0; i<_n_vars; i++)
         *_parameters[i] = dvars[i];
     
-    Point p; // dummy point object
+    libMesh::Point p; // dummy point object
     
     // calculate weight
     (*_weight)(p, 0., obj);
@@ -583,13 +583,13 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
     
     std::pair<Real, Real> val;
-    Complex eigval;
+    libMesh::Complex eigval;
     std::fill(fvals.begin(), fvals.end(), 0.);
     if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
         // the total number of constraints is _n_eig, but only n_required are usable
         for (unsigned int i=0; i<n_required; i++) {
             val = _eigen_system->get_eigenpair(i);
-            eigval = std::complex<Real>(val.first, val.second);
+            eigval = std::complex<libMesh::Real>(val.first, val.second);
             eigval = 1./eigval;
             fvals[i] = 1.-eigval.real(); // g <= 0.
             
@@ -615,7 +615,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     else
         libmesh_error(); // should not get here.
     
-    std::vector<Real> grad_vals;
+    std::vector<libMesh::Real> grad_vals;
     
     if (eval_grads[0]) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
@@ -658,7 +658,7 @@ MAST::SizingOptimization::_init() {
     ElemType elem_type =
     Utility::string_to_enum<ElemType>(_infile("elem_type", "QUAD4"));
     
-    std::vector<Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
+    std::vector<libMesh::Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
     y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
     z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
     std::vector<unsigned int> x_divs(nx_divs), y_divs(ny_divs), z_divs(nz_divs);
@@ -739,7 +739,7 @@ MAST::SizingOptimization::_init() {
     _mesh->print_info();
     
     // Create an equation systems object.
-    _eq_systems = new EquationSystems(*_mesh);
+    _eq_systems = new libMesh::EquationSystems(*_mesh);
     _eq_systems->parameters.set<GetPot*>("input_file") = &_infile;
     
     // Declare the system
@@ -781,8 +781,8 @@ MAST::SizingOptimization::_init() {
     
     
     // temperature load
-    _temperature = new MAST::ConstantFunction<Real>("temp", _infile("panel_temperature", 576.95)); // K
-    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", _infile("panel_ref_temperature", 303.15)); // K
+    _temperature = new MAST::ConstantFunction<libMesh::Real>("temp", _infile("panel_temperature", 576.95)); // K
+    _ref_temperature = new MAST::ConstantFunction<libMesh::Real>("ref_temp", _infile("panel_ref_temperature", 303.15)); // K
     _temperature_bc = new MAST::Temperature;
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
@@ -791,11 +791,11 @@ MAST::SizingOptimization::_init() {
     
     
     // apply the boundary conditions
-    _zero_function = new ZeroFunction<Real>;
+    _zero_function = new ZeroFunction<libMesh::Real>;
     // Pass the Dirichlet dof IDs to the CondensedEigenSystem
-    std::set<boundary_id_type> dirichlet_boundary;
+    std::set<libMesh::boundary_id_type> dirichlet_boundary;
     // read and initialize the boundary conditions
-    std::map<boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
+    std::map<libMesh::boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
     unsigned int n_bc, b_id;
     // first read the boundaries for ux constraint
     
@@ -820,7 +820,7 @@ MAST::SizingOptimization::_init() {
     // now iterate over each boundary and create the boudnary condition object
     unsigned int counter=0;
     _bc.resize(boundary_constraint_map.size());
-    for (std::map<boundary_id_type, std::vector<unsigned int> >::iterator
+    for (std::map<libMesh::boundary_id_type, std::vector<unsigned int> >::iterator
          it = boundary_constraint_map.begin();
          it != boundary_constraint_map.end(); it++) {
         _bc[counter] = new MAST::DisplacementDirichletBoundaryCondition;
@@ -857,18 +857,18 @@ MAST::SizingOptimization::_init() {
     _parameters.resize(_n_vars);
     _parameter_functions.resize(_n_vars);
     
-    DenseMatrix<Real> prestress; prestress.resize(3,3);
+    libMesh::DenseMatrix<libMesh::Real> prestress; prestress.resize(3,3);
     prestress(0,0) = -1.31345e6;
     
-    _E = new MAST::ConstantFunction<Real>("E", _infile("youngs_modulus", 72.e9)),
-    _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
-    _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
-    _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
-    _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
-    _panel_off = new MAST::ConstantFunction<Real>("off", 0.);
-    _alpha = new MAST::ConstantFunction<Real>("alpha", _infile("expansion_coefficient", 2.31e-5)),
+    _E = new MAST::ConstantFunction<libMesh::Real>("E", _infile("youngs_modulus", 72.e9)),
+    _nu = new MAST::ConstantFunction<libMesh::Real>("nu", _infile("poisson_ratio", 0.33)),
+    _rho = new MAST::ConstantFunction<libMesh::Real>("rho", _infile("material_density", 2700.)),
+    _kappa = new MAST::ConstantFunction<libMesh::Real>("kappa", _infile("shear_corr_factor", 5./6.)),
+    _h = new MAST::ConstantFunction<libMesh::Real>("h", _infile("thickness", 0.002));
+    _panel_off = new MAST::ConstantFunction<libMesh::Real>("off", 0.);
+    _alpha = new MAST::ConstantFunction<libMesh::Real>("alpha", _infile("expansion_coefficient", 2.31e-5)),
     
-    _prestress = new MAST::ConstantFunction<DenseMatrix<Real> >("prestress", prestress);
+    _prestress = new MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> >("prestress", prestress);
     _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
     
     MAST::MaterialPropertyCardBase& mat = *_materials[0];
@@ -891,12 +891,12 @@ MAST::SizingOptimization::_init() {
         _materials.push_back(new MAST::IsotropicMaterialPropertyCard(1));
         MAST::MaterialPropertyCardBase& c_mat = *_materials[1];
         // add the properties to the cards
-        _core_E = new MAST::ConstantFunction<Real>("E", _infile("core_youngs_modulus", 72.e9));
-        _core_nu = new MAST::ConstantFunction<Real>("nu", _infile("core_poisson_ratio", 0.33));
-        _core_rho = new MAST::ConstantFunction<Real>("rho", _infile("core_material_density", 2700.));
-        _core_kappa = new MAST::ConstantFunction<Real>("kappa", _infile("core_shear_corr_factor", 5./6.));
-        _core_h = new MAST::ConstantFunction<Real>("h", _infile("core_thickness", 0.002));
-        _core_alpha = new MAST::ConstantFunction<Real>("alpha", _infile("core_expansion_coefficient", 2.31e-5));
+        _core_E = new MAST::ConstantFunction<libMesh::Real>("E", _infile("core_youngs_modulus", 72.e9));
+        _core_nu = new MAST::ConstantFunction<libMesh::Real>("nu", _infile("core_poisson_ratio", 0.33));
+        _core_rho = new MAST::ConstantFunction<libMesh::Real>("rho", _infile("core_material_density", 2700.));
+        _core_kappa = new MAST::ConstantFunction<libMesh::Real>("kappa", _infile("core_shear_corr_factor", 5./6.));
+        _core_h = new MAST::ConstantFunction<libMesh::Real>("h", _infile("core_thickness", 0.002));
+        _core_alpha = new MAST::ConstantFunction<libMesh::Real>("alpha", _infile("core_expansion_coefficient", 2.31e-5));
         
         c_mat.add(*_core_E);
         c_mat.add(*_core_nu);
@@ -948,9 +948,9 @@ MAST::SizingOptimization::_init() {
                 // create values for each stiffener
                 for (unsigned int i=0; i<_n_stiff; i++) {
                     MAST::Solid1DSectionElementPropertyCard *p = new MAST::Solid1DSectionElementPropertyCard(2);
-                    _h_stiff[i] = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002));
-                    _h_z[i] = new MAST::ConstantFunction<Real>("hz", z_div_loc[1]),
-                    _offset_h_y[i] = new MAST::ConstantFunction<Real>("hy_offset", 0.),
+                    _h_stiff[i] = new MAST::ConstantFunction<libMesh::Real>("hy", _infile("thickness", 0.002));
+                    _h_z[i] = new MAST::ConstantFunction<libMesh::Real>("hz", z_div_loc[1]),
+                    _offset_h_y[i] = new MAST::ConstantFunction<libMesh::Real>("hy_offset", 0.),
                     _offset_h_z[i] = new MAST::BeamOffset("hz_offset", _h_z[i]->clone().release());
                     p->add(*_h_stiff[i]); // width
                     p->add(*_h_z[i]); // height
@@ -1000,13 +1000,13 @@ MAST::SizingOptimization::_init() {
                     MAST::Multilayer1DSectionElementPropertyCard
                     *stiff_p = new MAST::Multilayer1DSectionElementPropertyCard(3*i+3);
                     
-                    MAST::ConstantFunction<Real>
-                    *flange_hy = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002)),
-                    *flange_hz = new MAST::ConstantFunction<Real>("hz", _infile("thickness", 0.002)),
-                    *t_hy = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002)),
-                    *t_hz = new MAST::ConstantFunction<Real>("hz", _infile("thickness", 0.002));
-                    _offset_h_y[2*i] = new MAST::ConstantFunction<Real>("hy_offset", 0.);
-                    _offset_h_y[2*i+1] = new MAST::ConstantFunction<Real>("hy_offset", 0.);
+                    MAST::ConstantFunction<libMesh::Real>
+                    *flange_hy = new MAST::ConstantFunction<libMesh::Real>("hy", _infile("thickness", 0.002)),
+                    *flange_hz = new MAST::ConstantFunction<libMesh::Real>("hz", _infile("thickness", 0.002)),
+                    *t_hy = new MAST::ConstantFunction<libMesh::Real>("hy", _infile("thickness", 0.002)),
+                    *t_hz = new MAST::ConstantFunction<libMesh::Real>("hz", _infile("thickness", 0.002));
+                    _offset_h_y[2*i] = new MAST::ConstantFunction<libMesh::Real>("hy_offset", 0.);
+                    _offset_h_y[2*i+1] = new MAST::ConstantFunction<libMesh::Real>("hy_offset", 0.);
 
                     flange_p->add(*flange_hy);
                     flange_p->add(*flange_hz);
@@ -1066,7 +1066,7 @@ MAST::SizingOptimization::_init() {
         }
         else { // stiffener modeled as shell
             libmesh_error(); // currently not implemented for non-beam stiffeners
-                             //        _h_stiff = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002));
+                             //        _h_stiff = new MAST::ConstantFunction<libMesh::Real>("h", _infile("thickness", 0.002));
                              //        MAST::Solid2DSectionElementPropertyCard *p = new MAST::Solid2DSectionElementPropertyCard(2);
                              //        p->add(*_h_stiff);
                              //        p->set_material(mat);
@@ -1101,7 +1101,7 @@ MAST::SizingOptimization::_init() {
                                *_mesh, *_static_structural_assembly);
     
     /*
-     std::vector<Real> x0, x1, x, f, obj_grad, f_grad;
+     std::vector<libMesh::Real> x0, x1, x, f, obj_grad, f_grad;
      x0 = {0.0272691, 0.002, 0.002, 0.002, 0.002, 0.0936944, 0.00916497, 0.0919679, 0.0105329};
      x1 = {0.0168242, 0.0833279, 0.002, 0.0832506, 0.002, 0.0990313, 0.0067811, 0.0962686, 0.00770932};
      x.resize(_n_vars);
@@ -1112,7 +1112,7 @@ MAST::SizingOptimization::_init() {
      eval_f_grad.resize(_n_ineq);
      std::fill(eval_f_grad.begin(), eval_f_grad.end(), true);
      
-     Real obj;
+     libMesh::Real obj;
      
      x = x0;
      this->evaluate(x, obj, true, obj_grad, f, eval_f_grad, f_grad);
@@ -1168,9 +1168,9 @@ MAST::SizingOptimization::_init() {
 
 inline void
 MAST::SizingOptimization::output(unsigned int iter,
-                                 const std::vector<Real>& x,
-                                 Real obj,
-                                 const std::vector<Real>& fval) const {
+                                 const std::vector<libMesh::Real>& x,
+                                 libMesh::Real obj,
+                                 const std::vector<libMesh::Real>& fval) const {
     
     libmesh_assert_equal_to(x.size(), _n_vars);
     
@@ -1182,7 +1182,7 @@ MAST::SizingOptimization::output(unsigned int iter,
     unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
     
     std::pair<Real, Real> val;
-    Complex eigval;
+    libMesh::Complex eigval;
     
     for (unsigned int i=0; i<n_required; i++) {
         std::ostringstream file_name;

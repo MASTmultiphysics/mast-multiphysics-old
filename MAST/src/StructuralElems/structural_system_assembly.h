@@ -60,7 +60,7 @@ namespace MAST
     {
     public:
         // Constructor
-        StructuralSystemAssembly(System& sys,
+        StructuralSystemAssembly(libMesh::System& sys,
                                  MAST::StructuralAnalysisType t,
                                  GetPot& _infile);
         
@@ -73,7 +73,7 @@ namespace MAST
         /*!
          *   returns a reference to the System object
          */
-        System& get_system() {
+        libMesh::System& get_system() {
             return _system;
         }
 
@@ -95,7 +95,7 @@ namespace MAST
          *    sets a pointer to the static solution system that provides
          *    deformation and its sensitivity for modal and buckling solution
          */
-        void set_static_solution_system(System* sys) {
+        void set_static_solution_system(libMesh::System* sys) {
             // make sure it hasn't already not been set
             libmesh_assert(!_static_sol_system);
             _static_sol_system = sys;
@@ -105,20 +105,20 @@ namespace MAST
          *    @returns a pointer to the static solution system that provides
          *    deformation and its sensitivity for modal and buckling solution
          */
-        System* static_solution_system() {
+        libMesh::System* static_solution_system() {
             return _static_sol_system;
         }
         
         /*!
          *   adds the specified side loads for the boudnary with tag \p b_id
          */
-        void add_side_load(boundary_id_type bid, MAST::BoundaryCondition& load);
+        void add_side_load(libMesh::boundary_id_type bid, MAST::BoundaryCondition& load);
 
         
         /*!
          *    returns a reference to the side boundary conditions
          */
-        const std::multimap<boundary_id_type, MAST::BoundaryCondition*>& side_loads() const{
+        const std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& side_loads() const{
             return _side_bc_map;
         }
         
@@ -127,13 +127,13 @@ namespace MAST
          *   adds the specified volume loads for the elements with
          *   subdomain tag \p s_id
          */
-        void add_volume_load(subdomain_id_type bid, MAST::BoundaryCondition& load);
+        void add_volume_load(libMesh::subdomain_id_type bid, MAST::BoundaryCondition& load);
 
 
         /*!
          *    returns a reference to the bolume boundary conditions
          */
-        const std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& volume_loads() const{
+        const std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& volume_loads() const{
             return _vol_bc_map;
         }
 
@@ -146,13 +146,13 @@ namespace MAST
         /*!
          *    sets the same property for all elements in the specified subdomain
          */
-        void set_property_for_subdomain(const subdomain_id_type sid,
+        void set_property_for_subdomain(const libMesh::subdomain_id_type sid,
                                         const MAST::ElementPropertyCardBase& prop);
         
         /*!
          *    get the material property for the specified element
          */
-        const MAST::ElementPropertyCardBase& get_property_card(const Elem& elem) const;
+        const MAST::ElementPropertyCardBase& get_property_card(const libMesh::Elem& elem) const;
 
         /*!
          *    get the material property for the specified subdomain id \par i
@@ -162,7 +162,7 @@ namespace MAST
         /*!
          *   Adds the parameter and function pairing
          */
-        void add_parameter(MAST::ConstantFunction<Real>& f);
+        void add_parameter(MAST::ConstantFunction<libMesh::Real>& f);
         
         /*!
          *   Returns the function corresponding to a parameter
@@ -178,17 +178,17 @@ namespace MAST
          *    function that assembles the matrices and vectors quantities for
          *    nonlinear solution
          */
-        virtual void residual_and_jacobian (const NumericVector<Number>& X,
-                                            NumericVector<Number>* R,
-                                            SparseMatrix<Number>*  J,
+        virtual void residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
+                                            libMesh::NumericVector<libMesh::Number>* R,
+                                            SparseMatrix<libMesh::Number>*  J,
                                             NonlinearImplicitSystem& S);
         
         /*!
          *    function to assemble the external forces of type specified in the 
          *    set
          */
-        virtual void assemble_small_disturbance_aerodynamic_force (const NumericVector<Number>& X,
-                                                                   NumericVector<Number>& F);
+        virtual void assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Number>& X,
+                                                                   libMesh::NumericVector<libMesh::Number>& F);
 
         /**
          * Assembly function.  This function will be called
@@ -202,7 +202,7 @@ namespace MAST
          */
         virtual bool sensitivity_assemble (const ParameterVector& parameters,
                                            const unsigned int i,
-                                           NumericVector<Number>& sensitivity_rhs);
+                                           libMesh::NumericVector<libMesh::Number>& sensitivity_rhs);
 
         /**
          * Assembly function.  This function will be called
@@ -216,16 +216,16 @@ namespace MAST
          */
         virtual bool sensitivity_assemble (const ParameterVector& parameters,
                                            const unsigned int i,
-                                           SparseMatrix<Number>* sensitivity_A,
-                                           SparseMatrix<Number>* sensitivity_B);
+                                           SparseMatrix<libMesh::Number>* sensitivity_A,
+                                           SparseMatrix<libMesh::Number>* sensitivity_B);
 
         /*!
          *    calculates the maximum element stress for the displacement provided
          *    in \par disp. This method looks at von Mises stresses for all quadrature
          *    points on the element, and returns the one with the maximum value.
          */
-        virtual void calculate_max_elem_stress(const NumericVector<Number>& X,
-                                               std::vector<Real>& stress,
+        virtual void calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Number>& X,
+                                               std::vector<libMesh::Real>& stress,
                                                const MAST::FieldFunctionBase* params);
 
 
@@ -234,9 +234,9 @@ namespace MAST
         /*!
          *    assembles the residual and Jacobian for static or dynamic analyses
          */
-        void _assemble_residual_and_jacobian (const NumericVector<Number>& X,
-                                              NumericVector<Number>* R,
-                                              SparseMatrix<Number>*  J,
+        void _assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
+                                              libMesh::NumericVector<libMesh::Number>* R,
+                                              SparseMatrix<libMesh::Number>*  J,
                                               NonlinearImplicitSystem& S,
                                               const MAST::FieldFunctionBase* params);
 
@@ -251,11 +251,11 @@ namespace MAST
          *    deformation is assumed. If \par params and \par static_sol are 
          *    provided, then \par static_sol_sens should also be given.
          */
-        void _assemble_matrices_for_modal_analysis(SparseMatrix<Number>&  matrix_A,
-                                                   SparseMatrix<Number>&  matrix_B,
+        void _assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
+                                                   SparseMatrix<libMesh::Number>&  matrix_B,
                                                    const MAST::FieldFunctionBase* params,
-                                                   const NumericVector<Number>* static_sol,
-                                                   const NumericVector<Number>* static_sol_sens);
+                                                   const libMesh::NumericVector<libMesh::Number>* static_sol,
+                                                   const libMesh::NumericVector<libMesh::Number>* static_sol_sens);
         
         /*!
          *    Calculates the A and B matrices of a buckling analysis eigenproblem
@@ -267,16 +267,16 @@ namespace MAST
          *    deformation is assumed. If \par params and \par static_sol are
          *    provided, then \par static_sol_sens should also be given.
          */
-        void _assemble_matrices_for_buckling_analysis(SparseMatrix<Number>&  matrix_A,
-                                                      SparseMatrix<Number>&  matrix_B,
+        void _assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
+                                                      SparseMatrix<libMesh::Number>&  matrix_B,
                                                       const MAST::FieldFunctionBase* params,
-                                                      const NumericVector<Number>* static_sol,
-                                                      const NumericVector<Number>* static_sol_sens);
+                                                      const libMesh::NumericVector<libMesh::Number>* static_sol,
+                                                      const libMesh::NumericVector<libMesh::Number>* static_sol_sens);
 
         /*!
          *    System for which analysis is to be performed
          */
-        System& _system;
+        libMesh::System& _system;
         
         
         /*!
@@ -296,7 +296,7 @@ namespace MAST
         /*!
          *   map of element property cards for each element
          */
-        std::map<subdomain_id_type, const MAST::ElementPropertyCardBase*> _element_property;
+        std::map<libMesh::subdomain_id_type, const MAST::ElementPropertyCardBase*> _element_property;
         
         /*!
          *   vector of material property cards
@@ -312,12 +312,12 @@ namespace MAST
         /*!
          *   side boundary condition map of boundary id and load
          */
-        std::multimap<boundary_id_type, MAST::BoundaryCondition*> _side_bc_map;
+        std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*> _side_bc_map;
         
         /*!
          *   volume boundary condition map of boundary id and load
          */
-        std::multimap<subdomain_id_type, MAST::BoundaryCondition*> _vol_bc_map;
+        std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*> _vol_bc_map;
         
     };
 }

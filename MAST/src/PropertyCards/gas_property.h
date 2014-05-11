@@ -51,12 +51,12 @@ public:
     /*!
      *   Property values for ideal gas
      */
-    Real rho, T, pressure, gamma, cp, cv, R, a;
+    libMesh::Real rho, T, pressure, gamma, cp, cv, R, a;
     
     /*!
      *   Properties for viscous analysis
      */
-    Real Pr, k_thermal, mu, lambda;
+    libMesh::Real Pr, k_thermal, mu, lambda;
 
     /*!
      *   initializes the data

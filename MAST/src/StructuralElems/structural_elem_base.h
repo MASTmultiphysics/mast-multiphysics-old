@@ -41,10 +41,10 @@ namespace MAST {
     /*!
      *   stress tensor
      */
-    class Stress: public DenseMatrix<Real> {
+    class Stress: public libMesh::DenseMatrix<libMesh::Real> {
     public:
         Stress():
-        DenseMatrix<Real>()
+        libMesh::DenseMatrix<libMesh::Real>()
         {
             this->resize(3,3);
         }
@@ -55,11 +55,11 @@ namespace MAST {
          *    calculates and returns the von Mises stress for this stress
          *    tensor
          */
-        Real von_mises_stress() const {
+        libMesh::Real von_mises_stress() const {
             
-            const DenseMatrix<Real>& s = *this;
+            const libMesh::DenseMatrix<libMesh::Real>& s = *this;
             
-            Real val =
+            libMesh::Real val =
             pow(s(0,0) - s(1,1), 2) +
             pow(s(1,1) - s(2,2), 2) +
             pow(s(2,2) - s(0,0), 2) +
@@ -82,8 +82,8 @@ namespace MAST {
         /*!
          *   Constructor
          */
-        StructuralElementBase(System& sys,
-                              const Elem& elem,
+        StructuralElementBase(libMesh::System& sys,
+                              const libMesh::Elem& elem,
                               const MAST::ElementPropertyCardBase& p);
         
         virtual ~StructuralElementBase();
@@ -92,7 +92,7 @@ namespace MAST {
         /*!
          *   returns a constant reference to the finite element object
          */
-        System& system()  {
+        libMesh::System& system()  {
             return _system;
         }
 
@@ -107,7 +107,7 @@ namespace MAST {
         /*!
          *   returns a constant reference to the element
          */
-        const Elem& elem() const {
+        const libMesh::Elem& elem() const {
             return _elem;
         }
 
@@ -125,20 +125,20 @@ namespace MAST {
          *    the local coordinate system as the input and maps it to the 
          *    global coordinate system.
          */
-        virtual void global_coordinates(const Point& local,
-                                        Point& global) const = 0;
+        virtual void global_coordinates(const libMesh::Point& local,
+                                        libMesh::Point& global) const = 0;
         
         
         /*!
          *   returns a constant reference to the element in local coordinate system
          */
-        virtual const Elem& get_elem_for_quadrature() const = 0;
+        virtual const libMesh::Elem& get_elem_for_quadrature() const = 0;
 
         
         /*!
          *   returns a constant reference to the quadrature rule
          */
-        QBase& quadrature_rule()  {
+        libMesh::QBase& quadrature_rule()  {
             return *_qrule;
         }
 
@@ -147,7 +147,7 @@ namespace MAST {
         /*!
          *   returns a constant reference to the finite element object
          */
-        FEBase& fe()  {
+        libMesh::FEBase& fe()  {
             return *_fe;
         }
 
@@ -156,101 +156,101 @@ namespace MAST {
          *   internal force contribution to system residual
          */
         virtual bool internal_force (bool request_jacobian,
-                                     DenseVector<Real>& f,
-                                     DenseMatrix<Real>& jac,
+                                     libMesh::DenseVector<libMesh::Real>& f,
+                                     libMesh::DenseMatrix<libMesh::Real>& jac,
                                      bool if_ignore_ho_jac) = 0;
         
         /*!
          *   damping force contribution to system residual
          */
         virtual bool damping_force (bool request_jacobian,
-                                    DenseVector<Real>& f,
-                                    DenseMatrix<Real>& jac);
+                                    libMesh::DenseVector<libMesh::Real>& f,
+                                    libMesh::DenseMatrix<libMesh::Real>& jac);
         
         /*!
          *   inertial force contribution to system residual
          */
         virtual bool inertial_force (bool request_jacobian,
-                                     DenseVector<Real>& f,
-                                     DenseMatrix<Real>& jac);
+                                     libMesh::DenseVector<libMesh::Real>& f,
+                                     libMesh::DenseMatrix<libMesh::Real>& jac);
         
         /*!
          *   side external force contribution to system residual
          */
         virtual bool side_external_force (bool request_jacobian,
-                                          DenseVector<Number>& f,
-                                          DenseMatrix<Number>& jac,
-                                          std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc);
+                                          libMesh::DenseVector<libMesh::Number>& f,
+                                          libMesh::DenseMatrix<libMesh::Number>& jac,
+                                          std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
          *   prestress force contribution to system residual
          */
         virtual bool prestress_force (bool request_jacobian,
-                                      DenseVector<Real>& f,
-                                      DenseMatrix<Real>& jac) = 0;
+                                      libMesh::DenseVector<libMesh::Real>& f,
+                                      libMesh::DenseMatrix<libMesh::Real>& jac) = 0;
         
         /*!
          *   volume external force contribution to system residual
          */
         virtual bool volume_external_force (bool request_jacobian,
-                                            DenseVector<Number>& f,
-                                            DenseMatrix<Number>& jac,
-                                            std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
+                                            libMesh::DenseVector<libMesh::Number>& f,
+                                            libMesh::DenseMatrix<libMesh::Number>& jac,
+                                            std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!
          *   sensitivity of the internal force contribution to system residual
          */
         virtual bool internal_force_sensitivity (bool request_jacobian,
-                                                 DenseVector<Real>& f,
-                                                 DenseMatrix<Real>& jac,
+                                                 libMesh::DenseVector<libMesh::Real>& f,
+                                                 libMesh::DenseMatrix<libMesh::Real>& jac,
                                                  bool if_ignore_ho_jac) = 0;
         /*!
          *   sensitivity of the damping force contribution to system residual
          */
         virtual bool damping_force_sensitivity (bool request_jacobian,
-                                                DenseVector<Real>& f,
-                                                DenseMatrix<Real>& jac);
+                                                libMesh::DenseVector<libMesh::Real>& f,
+                                                libMesh::DenseMatrix<libMesh::Real>& jac);
         
         /*!
          *   sensitivity of the inertial force contribution to system residual
          */
         virtual bool inertial_force_sensitivity (bool request_jacobian,
-                                                 DenseVector<Real>& f,
-                                                 DenseMatrix<Real>& jac);
+                                                 libMesh::DenseVector<libMesh::Real>& f,
+                                                 libMesh::DenseMatrix<libMesh::Real>& jac);
         
         /*!
          *   sensitivity of the side external force contribution to system residual
          */
         virtual bool side_external_force_sensitivity (bool request_jacobian,
-                                                      DenseVector<Number>& f,
-                                                      DenseMatrix<Number>& jac,
-                                                      std::multimap<boundary_id_type, MAST::BoundaryCondition*>& bc);
+                                                      libMesh::DenseVector<libMesh::Number>& f,
+                                                      libMesh::DenseMatrix<libMesh::Number>& jac,
+                                                      std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
          *   sensitivity of the prestress force contribution to system residual
          */
         virtual bool prestress_force_sensitivity (bool request_jacobian,
-                                                  DenseVector<Real>& f,
-                                                  DenseMatrix<Real>& jac) = 0;
+                                                  libMesh::DenseVector<libMesh::Real>& f,
+                                                  libMesh::DenseMatrix<libMesh::Real>& jac) = 0;
         
         /*!
          *   sensitivity of the volume external force contribution to system residual
          */
         virtual bool volume_external_force_sensitivity (bool request_jacobian,
-                                                        DenseVector<Number>& f,
-                                                        DenseMatrix<Number>& jac,
-                                                        std::multimap<subdomain_id_type, MAST::BoundaryCondition*>& bc);
+                                                        libMesh::DenseVector<libMesh::Number>& f,
+                                                        libMesh::DenseMatrix<libMesh::Number>& jac,
+                                                        std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!
          *   returns the value of maximum von Mises stress over the element
          */
-        virtual Real max_von_mises_stress() = 0;
+        virtual libMesh::Real max_von_mises_stress() = 0;
         
         
         /*!
          *   returns the sensitivity of maximum von Mises stress over the element
          */
-        virtual Real max_von_mises_stress_sensitivity() = 0;
+        virtual libMesh::Real max_von_mises_stress_sensitivity() = 0;
         
         
         /*!
@@ -261,17 +261,17 @@ namespace MAST {
         /*!
          *   element solution, and sensitivity in the local coordinate system
          */
-        DenseVector<Real> local_solution, local_solution_sens;
+        libMesh::DenseVector<libMesh::Real> local_solution, local_solution_sens;
         
         /*!
          *   element velocity, and sensitivity in the local coordinate system
          */
-        DenseVector<Real> local_velocity, local_velocity_sens;
+        libMesh::DenseVector<libMesh::Real> local_velocity, local_velocity_sens;
         
         /*!
          *   element acceleration, and sensitivity in the local coordinate system
          */
-        DenseVector<Real> local_acceleration, local_acceleration_sens;
+        libMesh::DenseVector<libMesh::Real> local_acceleration, local_acceleration_sens;
         
         /*!
          *   parameter for which sensitivity has to be calculated.
@@ -280,16 +280,16 @@ namespace MAST {
         
         
         template <typename ValType>
-        void transform_to_global_system(const DenseMatrix<ValType>& local_mat,
-                                                DenseMatrix<ValType>& global_mat) const;
+        void transform_to_global_system(const libMesh::DenseMatrix<ValType>& local_mat,
+                                                libMesh::DenseMatrix<ValType>& global_mat) const;
         
         template <typename ValType>
-        void transform_to_local_system(const DenseVector<ValType>& global_vec,
-                                       DenseVector<ValType>& local_vec) const;
+        void transform_to_local_system(const libMesh::DenseVector<ValType>& global_vec,
+                                       libMesh::DenseVector<ValType>& local_vec) const;
         
         template <typename ValType>
-        void transform_to_global_system(const DenseVector<ValType>& local_vec,
-                                        DenseVector<ValType>& global_vec) const;
+        void transform_to_global_system(const libMesh::DenseVector<ValType>& local_vec,
+                                        libMesh::DenseVector<ValType>& global_vec) const;
         
     protected:
 
@@ -297,24 +297,24 @@ namespace MAST {
          *   matrix that transforms the global dofs to the local element coordinate
          *   system
          */
-        virtual const DenseMatrix<Real>& _transformation_matrix() const = 0;
+        virtual const libMesh::DenseMatrix<libMesh::Real>& _transformation_matrix() const = 0;
         
         /*!
          *   returns the quadrature and finite element for element integration. 
          *   These are raw pointers created using new. The pointers must be 
          *   deleted at the end of scope.
          */
-        virtual void _init_fe_and_qrule(const Elem& e);
+        virtual void _init_fe_and_qrule(const libMesh::Elem& e);
 
         /*!
          *   returns the quadrature and finite element for element side 
          *   integration. These are raw pointers created using new. The 
          *   pointers must be deleted at the end of scope.
          */
-        virtual void _get_side_fe_and_qrule(const Elem& e,
+        virtual void _get_side_fe_and_qrule(const libMesh::Elem& e,
                                             unsigned int s,
-                                            std::auto_ptr<FEBase>& fe,
-                                            std::auto_ptr<QBase>& qrule);
+                                            std::auto_ptr<libMesh::FEBase>& fe,
+                                            std::auto_ptr<libMesh::QBase>& qrule);
 
 
         /*!
@@ -322,8 +322,8 @@ namespace MAST {
          *    this should be implemented for each element type
          */
         virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
+                                            libMesh::DenseVector<libMesh::Real>& f,
+                                            libMesh::DenseMatrix<libMesh::Real>& jac,
                                             const unsigned int side,
                                             MAST::BoundaryCondition& p);
 
@@ -334,8 +334,8 @@ namespace MAST {
          *    only 1D and 2D elements.
          */
         virtual bool surface_pressure_force(bool request_jacobian,
-                                            DenseVector<Real>& f,
-                                            DenseMatrix<Real>& jac,
+                                            libMesh::DenseVector<libMesh::Real>& f,
+                                            libMesh::DenseMatrix<libMesh::Real>& jac,
                                             MAST::BoundaryCondition& p);
 
         
@@ -344,8 +344,8 @@ namespace MAST {
          *    perturbation surface pressure.
          */
         virtual bool small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                              DenseVector<Number>& f,
-                                                              DenseMatrix<Number>& jac,
+                                                              libMesh::DenseVector<libMesh::Number>& f,
+                                                              libMesh::DenseMatrix<libMesh::Number>& jac,
                                                               const unsigned int side,
                                                               MAST::BoundaryCondition& p);
         
@@ -356,8 +356,8 @@ namespace MAST {
          *    only 1D and 2D elements.
          */
         virtual bool small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                              DenseVector<Number>& f,
-                                                              DenseMatrix<Number>& jac,
+                                                              libMesh::DenseVector<libMesh::Number>& f,
+                                                              libMesh::DenseMatrix<libMesh::Number>& jac,
                                                               MAST::BoundaryCondition& p);
 
         
@@ -365,8 +365,8 @@ namespace MAST {
          *    Calculates the force vector and Jacobian due to surface pressure.
          */
         virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
+                                                        libMesh::DenseVector<libMesh::Real>& f,
+                                                        libMesh::DenseMatrix<libMesh::Real>& jac,
                                                         const unsigned int side,
                                                         MAST::BoundaryCondition& p);
         
@@ -376,8 +376,8 @@ namespace MAST {
          *    this should be implemented for each element type
          */
         virtual bool surface_pressure_force_sensitivity(bool request_jacobian,
-                                                        DenseVector<Real>& f,
-                                                        DenseMatrix<Real>& jac,
+                                                        libMesh::DenseVector<libMesh::Real>& f,
+                                                        libMesh::DenseMatrix<libMesh::Real>& jac,
                                                         MAST::BoundaryCondition& p);
 
         
@@ -386,8 +386,8 @@ namespace MAST {
          *    this should be implemented for each element type
          */
         virtual bool thermal_force(bool request_jacobian,
-                                   DenseVector<Real>& f,
-                                   DenseMatrix<Real>& jac,
+                                   libMesh::DenseVector<libMesh::Real>& f,
+                                   libMesh::DenseMatrix<libMesh::Real>& jac,
                                    MAST::BoundaryCondition& p) = 0;
 
         /*!
@@ -395,19 +395,19 @@ namespace MAST {
          *    thermal stresses. this should be implemented for each element type
          */
         virtual bool thermal_force_sensitivity(bool request_jacobian,
-                                               DenseVector<Real>& f,
-                                               DenseMatrix<Real>& jac,
+                                               libMesh::DenseVector<libMesh::Real>& f,
+                                               libMesh::DenseMatrix<libMesh::Real>& jac,
                                                MAST::BoundaryCondition& p) = 0;
 
         /*!
          *    System to which this system belongs
          */
-        System& _system;
+        libMesh::System& _system;
         
         /*!
          *   geometric element for which the computations are performed
          */
-        const Elem& _elem;
+        const libMesh::Elem& _elem;
         
         /*!
          *   element property
@@ -417,20 +417,20 @@ namespace MAST {
         /*!
          *   element finite element for computations
          */
-        std::auto_ptr<FEBase> _fe;
+        std::auto_ptr<libMesh::FEBase> _fe;
 
         /*!
          *   element quadrature rule for computations
          */
-        std::auto_ptr<QBase> _qrule;
+        std::auto_ptr<libMesh::QBase> _qrule;
     };
 
     /*!
      *    builds the structural element for the specified element type
      */
     std::auto_ptr<MAST::StructuralElementBase>
-    build_structural_element(System& sys,
-                             const Elem& elem,
+    build_structural_element(libMesh::System& sys,
+                             const libMesh::Elem& elem,
                              const MAST::ElementPropertyCardBase& p);
 }
 

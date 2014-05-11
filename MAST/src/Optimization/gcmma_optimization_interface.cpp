@@ -80,7 +80,7 @@ MAST::GCMMAOptimizationInterface::optimize() {
     libmesh_assert_greater(M, 0);
     libmesh_assert_greater(N, 0);
     
-    std::vector<Real>  XVAL(N, 0.), XOLD1(N, 0.), XOLD2(N, 0.),
+    std::vector<libMesh::Real>  XVAL(N, 0.), XOLD1(N, 0.), XOLD2(N, 0.),
     XMMA(N, 0.), XMIN(N, 0.), XMAX(N, 0.), XLOW(N, 0.), XUPP(N, 0.),
     ALFA(N, 0.), BETA(N, 0.), DF0DX(N, 0.),
     A(M, 0.), B(M, 0.), C(M, 0.), Y(M, 0.), RAA(M, 0.), ULAM(M, 0.),
@@ -92,15 +92,15 @@ MAST::GCMMAOptimizationInterface::optimize() {
     std::vector<int> IYFREE(M, 0);
     std::vector<bool> eval_grads(M, false);
     
-    Real F0VAL, F0NEW, F0APP, RAA0, Z, GEPS=_feval->tolerance();
+    libMesh::Real F0VAL, F0NEW, F0APP, RAA0, Z, GEPS=_feval->tolerance();
     
     
     /*C********+*********+*********+*********+*********+*********+*********+
      C
      C  The meaning of some of the scalars and vectors in the program:
      C
-     C     N  = Number of variables x_j in the problem.
-     C     M  = Number of constraints in the problem (not including
+     C     N  = libMesh::Number of variables x_j in the problem.
+     C     M  = libMesh::Number of constraints in the problem (not including
      C          the simple upper and lower bounds on the variables).
      C INNMAX = Maximal number of inner iterations within each outer iter.
      C          A reasonable choice is INNMAX=10.
@@ -162,7 +162,7 @@ MAST::GCMMAOptimizationInterface::optimize() {
     // Assumed:  FMAX == A
     _feval->init_dvar(XVAL, XMIN, XMAX);
     // set the value of C[i] to be very large numbers
-    Real max_x = 0.;
+    libMesh::Real max_x = 0.;
     for (unsigned int i=0; i<M; i++)
         if (max_x < fabs(XVAL[i]))
             max_x = fabs(XVAL[i]);
@@ -281,7 +281,7 @@ MAST::GCMMAOptimizationInterface::optimize() {
         
         // relative change in objective
         bool rel_change_conv = true;
-        Real f0_curr = f0_iters[n_rel_change_iters-1];
+        libMesh::Real f0_curr = f0_iters[n_rel_change_iters-1];
         
         for (unsigned int i=0; i<n_rel_change_iters-1; i++) {
             if (f0_curr > sqrt(GEPS))

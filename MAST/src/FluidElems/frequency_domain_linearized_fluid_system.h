@@ -32,7 +32,7 @@ class FlightCondition;
 class FrequencyDomainLinearizedFluidSystem: public FEMSystem, public FluidElemBase
 {
 public:
-    FrequencyDomainLinearizedFluidSystem(EquationSystems& es,
+    FrequencyDomainLinearizedFluidSystem(libMesh::EquationSystems& es,
                                          const std::string& name_in,
                                          const unsigned int number_in):
     FEMSystem(es, name_in, number_in),
@@ -67,7 +67,7 @@ protected:
     
     bool _if_localized_sol;
     
-    AutoPtr<NumericVector<Number> > _local_fluid_solution;
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > _local_fluid_solution;
     
 };
 
@@ -78,7 +78,7 @@ class FrequencyDomainFluidPostProcessSystem : public System
 {
 public:
     // Constructor
-    FrequencyDomainFluidPostProcessSystem(EquationSystems& es,
+    FrequencyDomainFluidPostProcessSystem(libMesh::EquationSystems& es,
                                           const std::string& name_in,
                                           const unsigned int number_in)
     : System(es, name_in, number_in)

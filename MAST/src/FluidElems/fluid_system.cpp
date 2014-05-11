@@ -32,7 +32,7 @@
 using namespace libMesh;
 
 
-Real euler_solution_value(const Point& p,
+libMesh::Real euler_solution_value(const libMesh::Point& p,
                           const Parameters& parameters,
                           const std::string& sys_name,
                           const std::string& var_name)
@@ -44,23 +44,23 @@ Real euler_solution_value(const Point& p,
     if (var_name == "rho")
         
     {
-        return parameters.get<Real> ("rho_inf");
+        return parameters.get<libMesh::Real> ("rho_inf");
     }
     else if (var_name == "rhoux")
     {
-        return parameters.get<Real> ("rhoux_inf");
+        return parameters.get<libMesh::Real> ("rhoux_inf");
     }
     else if (var_name == "rhouy")
     {
-        return parameters.get<Real> ("rhouy_inf");
+        return parameters.get<libMesh::Real> ("rhouy_inf");
     }
     else if (var_name == "rhouz")
     {
-        return parameters.get<Real> ("rhouz_inf");
+        return parameters.get<libMesh::Real> ("rhouz_inf");
     }
     else if (var_name == "rhoe")
     {
-        return parameters.get<Real> ("rhoe_inf");
+        return parameters.get<libMesh::Real> ("rhoe_inf");
     }
     else
         libmesh_assert(false);
@@ -68,7 +68,7 @@ Real euler_solution_value(const Point& p,
 
 
 
-void init_euler_variables(EquationSystems& es,
+void init_euler_variables(libMesh::EquationSystems& es,
                           const std::string& system_name)
 {
     // It is a good idea to make sure we are initializing
@@ -108,29 +108,29 @@ void FluidSystem::init_data ()
     
     vars[0]  = this->add_variable ( "rho", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[0]);
-    params.set<Real> ("rho_inf") = flight_condition->rho();
+    params.set<libMesh::Real> ("rho_inf") = flight_condition->rho();
     
     vars[1] = this->add_variable ("rhoux", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[1]);
-    params.set<Real> ("rhoux_inf") = flight_condition->rho_u1();
+    params.set<libMesh::Real> ("rhoux_inf") = flight_condition->rho_u1();
     
     if (dim > 1)
     {
         vars[2] = this->add_variable ("rhouy", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[2]);
-        params.set<Real> ("rhouy_inf") = flight_condition->rho_u2();
+        params.set<libMesh::Real> ("rhouy_inf") = flight_condition->rho_u2();
     }
     
     if (dim > 2)
     {
         vars[3] = this->add_variable ("rhouz", static_cast<Order>(o), fefamily);
         this->time_evolving(vars[3]);
-        params.set<Real> ("rhouz_inf") = flight_condition->rho_u3();
+        params.set<libMesh::Real> ("rhouz_inf") = flight_condition->rho_u3();
     }
     
     vars[dim+2-1] = this->add_variable ("rhoe", static_cast<Order>(o), fefamily);
     this->time_evolving(vars[dim+2-1]);
-    params.set<Real> ("rhoe_inf") = flight_condition->rho_e();
+    params.set<libMesh::Real> ("rhoe_inf") = flight_condition->rho_e();
     
     // Useful debugging options
     this->verify_analytic_jacobians = _infile("verify_analytic_jacobians", 0.);
@@ -141,7 +141,7 @@ void FluidSystem::init_data ()
     std::multimap<unsigned, FluidBoundaryConditionType>::const_iterator
     bc_it = _boundary_condition.begin(), bc_end = _boundary_condition.end();
     
-    std::set<boundary_id_type> no_slip_boundary, isothermal_boundary;
+    std::set<libMesh::boundary_id_type> no_slip_boundary, isothermal_boundary;
     
     for ( ; bc_it!=bc_end; bc_it++)
     {
@@ -159,7 +159,7 @@ void FluidSystem::init_data ()
     if (_if_viscous && (no_slip_boundary.size() > 0))
     {
         // Dirichlet Boundary condition for the no-slip wall
-        ZeroFunction<Real> zero_function;
+        ZeroFunction<libMesh::Real> zero_function;
         std::vector<unsigned int> rho_ui_vars(dim);
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             rho_ui_vars[i_dim] = vars[i_dim+1];
@@ -179,7 +179,7 @@ void FluidSystem::init_context(DiffContext &context)
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
-    std::vector<FEBase*> elem_fe(dim+2);
+    std::vector<libMesh::FEBase*> elem_fe(dim+2);
     
     for (unsigned int i=0; i<dim+2; i++)
     {
@@ -192,7 +192,7 @@ void FluidSystem::init_context(DiffContext &context)
             elem_fe[i]->get_d2phi();
     }
     
-    std::vector<FEBase*> elem_side_fe(dim+2);
+    std::vector<libMesh::FEBase*> elem_side_fe(dim+2);
     
     for (unsigned int i=0; i<dim+2; i++)
     {
@@ -212,12 +212,12 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
-    FEBase* elem_fe;
+    libMesh::FEBase* elem_fe;
     
     c.get_element_fe(vars[0], elem_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = elem_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The number of local degrees of freedom in each variable
     unsigned int n_dofs = 0;
@@ -227,8 +227,8 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
     
     // The subvectors and submatrices we need to fill:
-    DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
-    DenseVector<Number>& Fvec = c.get_elem_residual();
+    libMesh::DenseMatrix<libMesh::Number>& Kmat = c.get_elem_jacobian();
+    libMesh::DenseVector<libMesh::Number>& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -240,12 +240,12 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<DenseMatrix<Real> >  Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
+    std::vector<libMesh::DenseMatrix<libMesh::Real> >  Ai_advection(dim);
+    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat2_n2n2, tmp_mat3, A_sens, stress_tensor,
     dprim_dcons, dcons_dprim;
     
-    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     conservative_sol, delta_vals, temp_grad;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
@@ -262,7 +262,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<DenseMatrix<Real> > > flux_jacobian_sens;
+    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
@@ -272,11 +272,11 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     }
     
     
-    Real diff_val=0.;
+    libMesh::Real diff_val=0.;
     
-    System& delta_val_system =
+    libMesh::System& delta_val_system =
     this->get_equation_systems().get_system<System>("DeltaValSystem");
-    NumericVector<Real>& diff_val_vec = (*delta_val_system.solution.get());
+    libMesh::NumericVector<libMesh::Real>& diff_val_vec = (*delta_val_system.solution.get());
     
     if (if_use_stored_dc_coeff)
     {
@@ -288,7 +288,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     }
     
     PrimitiveSolution primitive_sol;
-    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = phi.size();
     
     for (unsigned int qp=0; qp != n_qpoints; qp++)
@@ -549,11 +549,11 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     
     libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
     
-    FEBase * side_fe;
+    libMesh::FEBase * side_fe;
     c.get_side_fe(vars[0], side_fe); // assuming all variables have the same FE
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = side_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = side_fe->get_JxW();
     
     // Physical location of the quadrature points
     const std::vector<Point>& qpoint = side_fe->get_xyz();
@@ -561,15 +561,15 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     // boundary normals
     const std::vector<Point>& face_normals = side_fe->get_normals();
     
-    DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
-    DenseVector<Number>& Fvec = c.get_elem_residual();
+    libMesh::DenseMatrix<libMesh::Number>& Kmat = c.get_elem_jacobian();
+    libMesh::DenseVector<libMesh::Number>& Fvec = c.get_elem_residual();
     
     
     
     FEMOperatorMatrix B_mat;
-    DenseVector<Real> tmp_vec1_n2, flux, U_vec_interpolated, tmp_vec2_n1,
+    libMesh::DenseVector<libMesh::Real> tmp_vec1_n2, flux, U_vec_interpolated, tmp_vec2_n1,
     conservative_sol, temp_grad, dnormal, surface_vel, local_normal, uvec;
-    DenseMatrix<Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
+    libMesh::DenseMatrix<libMesh::Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
     tmp_mat1_n1n2, tmp_mat2_n2n2, A_mat, dcons_dprim, dprim_dcons,
     stress_tensor;
     
@@ -586,7 +586,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     stress_tensor.resize(dim, dim);
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<DenseMatrix<Real> > Ai_advection(dim);
+    std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         Ai_advection[i_dim].resize(n1, n1);
     
@@ -602,7 +602,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                            // thermal BC is handled here
         {
             
-            Real ui_ni = 0.;
+            libMesh::Real ui_ni = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -752,7 +752,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                         // tau_ij nj = 0   (because velocity gradient at wall = 0)
                         // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            Real ui_ni = 0.;
+            libMesh::Real ui_ni = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -954,13 +954,13 @@ bool FluidSystem::mass_residual (bool request_jacobian,
 {
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
-    FEBase* elem_fe;
+    libMesh::FEBase* elem_fe;
     
     c.get_element_fe(vars[0], elem_fe);
     
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<Real> &JxW = elem_fe->get_JxW();
+    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The number of local degrees of freedom in each variable
     unsigned int n_dofs = 0;
@@ -970,8 +970,8 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
     
     // The subvectors and submatrices we need to fill:
-    DenseMatrix<Number>& Kmat = c.get_elem_jacobian();
-    DenseVector<Number>& Fvec = c.get_elem_residual();
+    libMesh::DenseMatrix<libMesh::Number>& Kmat = c.get_elem_jacobian();
+    libMesh::DenseVector<libMesh::Number>& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -983,10 +983,10 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<DenseMatrix<Real> > Ai_advection(dim);
-    DenseMatrix<Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
+    std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
+    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
     tmp_mat2_n2n2, tmp_mat3;
-    DenseVector<Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol;
+    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol;
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     tmp_mat2_n2n2.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);  tmp_mat_n1n2.resize(dim+2, n_dofs);
@@ -995,7 +995,7 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<DenseMatrix<Real> > > flux_jacobian_sens;
+    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
@@ -1004,7 +1004,7 @@ bool FluidSystem::mass_residual (bool request_jacobian,
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
     
-    Real diff_val=0.;
+    libMesh::Real diff_val=0.;
     
     PrimitiveSolution primitive_sol;
     
@@ -1096,7 +1096,7 @@ void FluidSystem::postprocess()
 
 void FluidSystem::evaluate_recalculate_dc_flag()
 {
-    Real norm = this->calculate_norm(*(this->solution), this->vars[0], L2),
+    libMesh::Real norm = this->calculate_norm(*(this->solution), this->vars[0], L2),
     relative_change0 = fabs(_rho_norm_curr - _rho_norm_old)/_rho_norm_curr,
     relative_change1 = fabs(norm - _rho_norm_curr)/norm;
     
@@ -1127,8 +1127,8 @@ void FluidSystem::evaluate_recalculate_dc_flag()
 
 
 
-Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol,
-                 Real p0, Real q0)
+libMesh::Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol,
+                 libMesh::Real p0, libMesh::Real q0)
 {
     if (var_name == "ux")
         return p_sol.u1;
@@ -1154,14 +1154,14 @@ Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol,
 
 
 
-class PrimitiveFEMFunction : public FEMFunctionBase<Number>
+class PrimitiveFEMFunction : public FEMFunctionBase<libMesh::Number>
 {
 public:
     // Constructor
-    PrimitiveFEMFunction(AutoPtr<FunctionBase<Number> > fluid_func,
+    PrimitiveFEMFunction(AutoPtr<FunctionBase<libMesh::Number> > fluid_func,
                          std::vector<std::string>& vars,
-                         Real cp, Real cv, Real p0, Real q0):
-    FEMFunctionBase<Number>(),
+                         libMesh::Real cp, libMesh::Real cv, libMesh::Real p0, libMesh::Real q0):
+    FEMFunctionBase<libMesh::Number>(),
     _fluid_function(fluid_func.release()),
     _vars(vars), _cp(cp), _cv(cv), _p0(p0), _q0(q0)
     {
@@ -1171,15 +1171,15 @@ public:
     // Destructor
     virtual ~PrimitiveFEMFunction () {}
     
-    virtual AutoPtr<FEMFunctionBase<Number> > clone () const
-    {return AutoPtr<FEMFunctionBase<Number> >( new PrimitiveFEMFunction
+    virtual AutoPtr<FEMFunctionBase<libMesh::Number> > clone () const
+    {return AutoPtr<FEMFunctionBase<libMesh::Number> >( new PrimitiveFEMFunction
                                               (_fluid_function->clone(), _vars, _cp, _cv,
                                                _p0, _q0) ); }
     
-    virtual void operator() (const FEMContext& c, const Point& p,
-                             const Real t, DenseVector<Number>& val)
+    virtual void operator() (const FEMContext& c, const libMesh::Point& p,
+                             const libMesh::Real t, libMesh::DenseVector<libMesh::Number>& val)
     {
-        DenseVector<Number> fluid_sol;
+        libMesh::DenseVector<libMesh::Number> fluid_sol;
         (*_fluid_function)(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
@@ -1190,10 +1190,10 @@ public:
     }
     
     
-    virtual Number component(const FEMContext& c, unsigned int i_comp,
-                             const Point& p, Real t=0.)
+    virtual libMesh::Number component(const FEMContext& c, unsigned int i_comp,
+                             const libMesh::Point& p, libMesh::Real t=0.)
     {
-        DenseVector<Number> fluid_sol;
+        libMesh::DenseVector<libMesh::Number> fluid_sol;
         (*_fluid_function)(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
@@ -1203,15 +1203,15 @@ public:
     }
     
     
-    virtual Number operator() (const FEMContext&, const Point& p,
-                               const Real time = 0.)
+    virtual libMesh::Number operator() (const FEMContext&, const libMesh::Point& p,
+                               const libMesh::Real time = 0.)
     {libmesh_error();}
     
 private:
     
-    AutoPtr<FunctionBase<Number> > _fluid_function;
+    AutoPtr<FunctionBase<libMesh::Number> > _fluid_function;
     std::vector<std::string>& _vars;
-    Real _cp, _cv, _p0, _q0;
+    libMesh::Real _cp, _cv, _p0, _q0;
 };
 
 
@@ -1259,8 +1259,8 @@ void FluidPostProcessSystem::postprocess()
         post_process_var_names[i] = this->variable_name(i);
     
     
-    AutoPtr<NumericVector<Number> > soln =
-    NumericVector<Number>::build(this->get_equation_systems().comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Number> > soln =
+    libMesh::NumericVector<libMesh::Number>::build(this->get_equation_systems().comm());
     soln->init(fluid.solution->size(), true, SERIAL);
     fluid.solution->localize(*soln,
                              fluid.get_dof_map().get_send_list());
@@ -1271,7 +1271,7 @@ void FluidPostProcessSystem::postprocess()
                       fluid.get_dof_map(), fluid_vars));
     mesh_function->init();
     
-    AutoPtr<FEMFunctionBase<Number> > post_process_function
+    AutoPtr<FEMFunctionBase<libMesh::Number> > post_process_function
     (new PrimitiveFEMFunction(mesh_function->clone(), post_process_var_names,
                               flight_condition->gas_property.cp,
                               flight_condition->gas_property.cv,

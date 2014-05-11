@@ -26,13 +26,13 @@ class FluidSystem;
 
 // ------------------------------------------------------------
 // Solver class definition
-class ResidualBaseAdaptiveTimeSolver : public AdaptiveTimeSolver
+class ResidualBaseAdaptiveTimeSolver : public libMesh::AdaptiveTimeSolver
 {
 public:
     /**
      * The parent class
      */
-    typedef AdaptiveTimeSolver Parent;
+    typedef libMesh::AdaptiveTimeSolver Parent;
     
     /**
      * Constructor. Requires a reference to the system
@@ -52,21 +52,21 @@ public:
 
     unsigned int n_iters_per_update, _iter_counter;
 
-    Real growth_exponent, min_growth;
+    libMesh::Real growth_exponent, min_growth;
 
-    Real _t_old, _x_dot_norm_old;
+    libMesh::Real _t_old, _x_dot_norm_old;
 
     bool _first_solve;
     
     /*!
      *    system solution from previous time-step
      */
-    NumericVector<Number>* _x_old;
+    libMesh::NumericVector<libMesh::Number>* _x_old;
     
     /*!
      *    system velocity estimate
      */
-    NumericVector<Number>* _x_dot;
+    libMesh::NumericVector<libMesh::Number>* _x_dot;
 };
 
 

@@ -38,8 +38,8 @@ namespace MAST {
         void _combine_mesh(UnstructuredMesh& panel,
                            UnstructuredMesh& stiffener,
                            MAST::StiffenedPanel::Component c,
-                           Real stiff_offset,
-                           subdomain_id_type sid);
+                           libMesh::Real stiff_offset,
+                           libMesh::subdomain_id_type sid);
 
     };
 }
@@ -131,8 +131,8 @@ void
 MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
                                     UnstructuredMesh& component,
                                     MAST::StiffenedPanel::Component c,
-                                    Real stiff_offset,
-                                    subdomain_id_type sid) {
+                                    libMesh::Real stiff_offset,
+                                    libMesh::subdomain_id_type sid) {
     BoundaryInfo &panel_binfo = *panel.boundary_info,
     &component_binfo = *component.boundary_info;
 
@@ -147,7 +147,7 @@ MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
     Node *old_node, *new_node;
     
     for ( ; el_it != el_end; el_it++ ) {
-        Elem* old_elem = *el_it;
+        libMesh::Elem* old_elem = *el_it;
         
         Elem *new_elem = panel.add_elem(Elem::build(old_elem->type()).release());
         new_elem->subdomain_id() = sid;
@@ -157,7 +157,7 @@ MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
             for (unsigned short int n=0; n<old_elem->n_sides(); n++)
                 if (component_binfo.n_boundary_ids(old_elem, n)) {
                     // add the boundary tags to the panel mesh
-                    std::vector<boundary_id_type> bc_ids = component_binfo.boundary_ids(old_elem, n);
+                    std::vector<libMesh::boundary_id_type> bc_ids = component_binfo.boundary_ids(old_elem, n);
                     for ( unsigned int bid=0; bid < bc_ids.size(); bid++)
                         panel_binfo.add_side(new_elem, n, bc_ids[bid]);
                 }
@@ -167,7 +167,7 @@ MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
             old_node = old_elem->get_node(n);
             
             if (!old_to_new.count(old_node)) {
-                Point p;
+                libMesh::Point p;
                 switch (c) {
                     case MAST::StiffenedPanel::PANEL:
                         p = (*old_node);

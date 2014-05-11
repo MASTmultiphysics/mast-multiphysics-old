@@ -53,7 +53,7 @@ namespace MAST {
         /*!
          *   returns the value of this function
          */
-        virtual void operator() (const Point& p, const Real t, ValType& v) const
+        virtual void operator() (const libMesh::Point& p, const libMesh::Real t, ValType& v) const
         {   v = *_val; }
         
         
@@ -61,7 +61,7 @@ namespace MAST {
          *   returns the sensitivity of this function
          */
         virtual void partial (const MAST::FieldFunctionBase& f,
-                              const Point& p, const Real t,
+                              const libMesh::Point& p, const libMesh::Real t,
                               ValType& v) const {
             this->total(f, p, t, v);
         }
@@ -72,7 +72,7 @@ namespace MAST {
          *   sensitivity for a constant function.
          */
         virtual void total (const MAST::FieldFunctionBase& f,
-                            const Point& p, const Real t,
+                            const libMesh::Point& p, const libMesh::Real t,
                             ValType& v) const {
             // non-scalar values have a zero sensitivity
             (*this)(p, t, v);
@@ -116,8 +116,8 @@ namespace MAST {
     
 
     template < >
-    inline void MAST::ConstantFunction<Real>::total (const MAST::FieldFunctionBase& f,
-                                                     const Point& p, const Real t,
+    inline void MAST::ConstantFunction<libMesh::Real>::total (const MAST::FieldFunctionBase& f,
+                                                     const libMesh::Point& p, const libMesh::Real t,
                                                      Real& v) const {
         if (this->master() == f.master())
             v = 1.;

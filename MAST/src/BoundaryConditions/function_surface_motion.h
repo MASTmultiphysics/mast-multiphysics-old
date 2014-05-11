@@ -28,10 +28,10 @@ namespace MAST {
          *   The functors that provide the velocity and displacement derivative with
          *   respect to each spatial coordinate.
          */
-        //    virtual void init(std::function<Point(const Point &p, const Real t)> wdot,
-        //                      std::function<Point(const Point &p, const Real t)> dwdx,
-        //                      std::function<Point(const Point &p, const Real t)> dwdy,
-        //                      std::function<Point(const Point &p, const Real t)> dwdz){
+        //    virtual void init(std::function<Point(const libMesh::Point &p, const libMesh::Real t)> wdot,
+        //                      std::function<Point(const libMesh::Point &p, const libMesh::Real t)> dwdx,
+        //                      std::function<Point(const libMesh::Point &p, const libMesh::Real t)> dwdy,
+        //                      std::function<Point(const libMesh::Point &p, const libMesh::Real t)> dwdz){
         //        _wdot = wdot;
         //        _dwdx = dwdx;
         //        _dwdy = dwdy;
@@ -44,43 +44,43 @@ namespace MAST {
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity_frequency_domain(const Point& p,
-                                                       const Point& n,
-                                                       DenseVector<Complex>& u_trans,
-                                                       DenseVector<Complex>& dn_rot);
+        virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
+                                                       const libMesh::Point& n,
+                                                       libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                                       libMesh::DenseVector<libMesh::Complex>& dn_rot);
         
         /*!
          *   calculation of surface velocity in time domain. \p u_trans is
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity_time_domain(const Real t,
-                                                  const Point& p,
-                                                  const Point& n,
-                                                  DenseVector<Number>& u_trans,
-                                                  DenseVector<Number>& dn_rot);
+        virtual void surface_velocity_time_domain(const libMesh::Real t,
+                                                  const libMesh::Point& p,
+                                                  const libMesh::Point& n,
+                                                  libMesh::DenseVector<libMesh::Number>& u_trans,
+                                                  libMesh::DenseVector<libMesh::Number>& dn_rot);
         
     protected:
         
         //    /*!
         //     *   surface velocity functor
         //     */
-        //    std::function<Point(const Point &p, const Real t)> _wdot;
+        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _wdot;
         //
         //    /*!
         //     *   surface displacement gradient with respect to x-coordinate
         //     */
-        //    std::function<Point(const Point &p, const Real t)> _dwdx;
+        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _dwdx;
         //
         //    /*!
         //     *   surface displacement gradient with respect to y-coordinate
         //     */
-        //    std::function<Point(const Point &p, const Real t)> _dwdy;
+        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _dwdy;
         //
         //    /*!
         //     *   surface displacement gradient with respect to z-coordinate
         //     */
-        //    std::function<Point(const Point &p, const Real t)> _dwdz;
+        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _dwdz;
         
     };
 }
@@ -105,10 +105,10 @@ MAST::SurfaceMotionFunction::~SurfaceMotionFunction()
 
 
 inline void
-MAST::SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
-                                                               const Point& n,
-                                                               DenseVector<Complex>& u_trans,
-                                                               DenseVector<Complex>& dn_rot)
+MAST::SurfaceMotionFunction::surface_velocity_frequency_domain(const libMesh::Point& p,
+                                                               const libMesh::Point& n,
+                                                               libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                                               libMesh::DenseVector<libMesh::Complex>& dn_rot)
 {
     libmesh_assert(false); // to be implemented
 }
@@ -116,18 +116,18 @@ MAST::SurfaceMotionFunction::surface_velocity_frequency_domain(const Point& p,
 
 
 inline void
-MAST::SurfaceMotionFunction::surface_velocity_time_domain(const Real t,
-                                                          const Point& p,
-                                                          const Point& n,
-                                                          DenseVector<Number>& u_trans,
-                                                          DenseVector<Number>& dn_rot)
+MAST::SurfaceMotionFunction::surface_velocity_time_domain(const libMesh::Real t,
+                                                          const libMesh::Point& p,
+                                                          const libMesh::Point& n,
+                                                          libMesh::DenseVector<libMesh::Number>& u_trans,
+                                                          libMesh::DenseVector<libMesh::Number>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();
     
     // translation is obtained by direct interpolation of the u,v,w vars
-    Point v, dwdx, dwdy, dwdz;
-    const Real x = p(0) - 0.2, tc = 0.05, c = 0.2, h = tc*c/2., pi = acos(-1.);
+    libMesh::Point v, dwdx, dwdy, dwdz;
+    const libMesh::Real x = p(0) - 0.2, tc = 0.05, c = 0.2, h = tc*c/2., pi = acos(-1.);
     if ( (x>=0.) && (x <= 0.2)){
         v(1)     = h*sin(pi*x/c);
         dwdx(1)  = h*pi/c*cos(pi*x/c);
@@ -138,7 +138,7 @@ MAST::SurfaceMotionFunction::surface_velocity_time_domain(const Real t,
         u_trans(i) = 0.*v(i);
     
     // now prepare the rotation vector
-    DenseVector<Number> rot;
+    libMesh::DenseVector<libMesh::Number> rot;
     rot.resize(3);
     rot(0) = dwdy(2) - dwdz(1); // dwz/dy - dwy/dz
     rot(1) = dwdz(0) - dwdx(2); // dwx/dz - dwz/dx

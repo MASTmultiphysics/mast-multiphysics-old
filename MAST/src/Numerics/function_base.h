@@ -97,34 +97,34 @@ namespace MAST
         }
         
         /*!
-         *   returns the value of this function at Point \par p and time \par t.
+         *   returns the value of this function at libMesh::Point \par p and time \par t.
          *   This is used for FieldFunction objects. The value is returned in 
          *   object \par v.
          */
         template <typename ValType>
-        void operator() (const Point& p, const Real t, ValType& v) const;
+        void operator() (const libMesh::Point& p, const libMesh::Real t, ValType& v) const;
         
         
         /*!
          *   returns the partial derivative of this function with respect to the
-         *   sensitivity parameter \par par at Point \par p and time \par t.
+         *   sensitivity parameter \par par at libMesh::Point \par p and time \par t.
          *   This is used for FieldFunction objects. The value is returned in
          *   object \par v.
          */
         template <typename ValType>
         void partial (const MAST::FieldFunctionBase& f,
-                      const Point& p, const Real t,
+                      const libMesh::Point& p, const libMesh::Real t,
                       ValType& v) const;
         
         /*!
          *   returns the total derivative of this function with respect to the
-         *   sensitivity parameter \par par at Point \par p and time \par t.
+         *   sensitivity parameter \par par at libMesh::Point \par p and time \par t.
          *   This is used for FieldFunction objects. The value is returned in
          *   object \par v.
          */
         template <typename ValType>
         void total (const MAST::FieldFunctionBase& f,
-                    const Point& p, const Real t,
+                    const libMesh::Point& p, const libMesh::Real t,
                     ValType& v) const;
         
     protected:
@@ -172,29 +172,29 @@ namespace MAST
         /*!
          *    Returns the value of this function.
          */
-        virtual void operator() (const Point& p, const Real t, ValType& v) const = 0;
+        virtual void operator() (const libMesh::Point& p, const libMesh::Real t, ValType& v) const = 0;
         
         /*!
          *    Returns the partial derivative of this function with respect to
          *    the sensitivity parameter \par p
          */
         virtual void partial (const MAST::FieldFunctionBase& f,
-                              const Point& p, const Real t, ValType& v) const = 0;
+                              const libMesh::Point& p, const libMesh::Real t, ValType& v) const = 0;
         
         /*!
          *    Returns the total derivative of this function with respect to
          *    the sensitivity parameter \par p
          */
         virtual void total (const MAST::FieldFunctionBase& f,
-                            const Point& p, const Real t, ValType& v) const = 0;
+                            const libMesh::Point& p, const libMesh::Real t, ValType& v) const = 0;
     };
 
     
     
     template <typename ValType>
     void
-    MAST::FieldFunctionBase::operator() (const Point& p,
-                                         const Real t,
+    MAST::FieldFunctionBase::operator() (const libMesh::Point& p,
+                                         const libMesh::Real t,
                                          ValType& v) const {
         return dynamic_cast<FieldFunction<ValType>&>(*this)();
     }
@@ -203,8 +203,8 @@ namespace MAST
     template <typename ValType>
     void
     MAST::FieldFunctionBase::partial (const MAST::FieldFunctionBase& f,
-                                      const Point& p,
-                                      const Real t,
+                                      const libMesh::Point& p,
+                                      const libMesh::Real t,
                                       ValType& v) const {
         dynamic_cast<MAST::FieldFunction<ValType>&>(*this).partial(f, p, t, v);
     }
@@ -213,8 +213,8 @@ namespace MAST
     template <typename ValType>
     void
     MAST::FieldFunctionBase::total (const MAST::FieldFunctionBase& f,
-                                               const Point& p,
-                                               const Real t,
+                                               const libMesh::Point& p,
+                                               const libMesh::Real t,
                                                ValType& v) const {
         dynamic_cast<MAST::FieldFunction<ValType>&>(*this).total(f, p, t, v);
     }

@@ -64,31 +64,31 @@ namespace MAST {
         }
         
         
-        Real tolerance() const{
+        libMesh::Real tolerance() const{
             return _tol;
         }
         
         
-        virtual void init_dvar(std::vector<Real>& x,
-                               std::vector<Real>& xmin,
-                               std::vector<Real>& xmax) = 0;
+        virtual void init_dvar(std::vector<libMesh::Real>& x,
+                               std::vector<libMesh::Real>& xmin,
+                               std::vector<libMesh::Real>& xmax) = 0;
         
         /*!
          *   \par grads(k): Derivative of f_i(x) with respect 
          *   to x_j, where k = (j-1)*M + i.
          */
-        virtual void evaluate(const std::vector<Real>& dvars,
+        virtual void evaluate(const std::vector<libMesh::Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
-                              std::vector<Real>& obj_grad,
-                              std::vector<Real>& fvals,
+                              std::vector<libMesh::Real>& obj_grad,
+                              std::vector<libMesh::Real>& fvals,
                               std::vector<bool>& eval_grads,
-                              std::vector<Real>& grads) = 0;
+                              std::vector<libMesh::Real>& grads) = 0;
         
         virtual void output(unsigned int iter,
-                            const std::vector<Real>& x,
-                            Real obj,
-                            const std::vector<Real>& fval) const;
+                            const std::vector<libMesh::Real>& x,
+                            libMesh::Real obj,
+                            const std::vector<libMesh::Real>& fval) const;
 
     protected:
         
@@ -102,7 +102,7 @@ namespace MAST {
         
         unsigned int _n_rel_change_iters;
         
-        Real _tol;
+        libMesh::Real _tol;
         
         std::ostream& _output;
     };
@@ -137,8 +137,8 @@ namespace MAST {
 
 
 inline void
-MAST::FunctionEvaluation::output(unsigned int iter, const std::vector<Real> &x,
-                                 Real obj, const std::vector<Real> &fval) const {
+MAST::FunctionEvaluation::output(unsigned int iter, const std::vector<libMesh::Real> &x,
+                                 libMesh::Real obj, const std::vector<libMesh::Real> &fval) const {
 
     libmesh_assert_equal_to(x.size(), _n_vars);
     libmesh_assert_equal_to(fval.size(), _n_eq + _n_ineq);

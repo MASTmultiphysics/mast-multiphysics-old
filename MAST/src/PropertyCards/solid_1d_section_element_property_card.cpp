@@ -12,10 +12,10 @@
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix::
-SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                          MAST::FieldFunction<Real> * A,
-                                          MAST::FieldFunction<Real> * J):
-MAST::FieldFunction<DenseMatrix<Real> > ("SectionIntegratedExtensionStiffnessMatrix1D"),
+SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                          MAST::FieldFunction<libMesh::Real> * A,
+                                          MAST::FieldFunction<libMesh::Real> * J):
+MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > ("SectionIntegratedExtensionStiffnessMatrix1D"),
 _material_stiffness(mat),
 _A(A),
 _J(J) {
@@ -30,11 +30,11 @@ _J(J) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedExtensionStiffnessMatrix::operator() (const Point& p,
-                                                       const Real t,
-                                                       DenseMatrix<Real>& m) const {
+SectionIntegratedExtensionStiffnessMatrix::operator() (const libMesh::Point& p,
+                                                       const libMesh::Real t,
+                                                       libMesh::DenseMatrix<libMesh::Real>& m) const {
     // [C]*h
-    Real A, J;
+    libMesh::Real A, J;
     (*_A)(p, t, A);
     (*_J)(p, t, J);
     (*_material_stiffness)(p, t, m);
@@ -47,12 +47,12 @@ SectionIntegratedExtensionStiffnessMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedExtensionStiffnessMatrix::partial (const MAST::FieldFunctionBase& f,
-                                                    const Point& p,
-                                                    const Real t,
-                                                    DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> dm;
+                                                    const libMesh::Point& p,
+                                                    const libMesh::Real t,
+                                                    libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> dm;
     m.resize(2,2);
-    Real A, J, dA, dJ;
+    libMesh::Real A, J, dA, dJ;
     (*_A)(p, t, A); _A->partial(f, p, t, dA);
     (*_J)(p, t, J); _J->partial(f, p, t, dJ);
     (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
@@ -72,12 +72,12 @@ SectionIntegratedExtensionStiffnessMatrix::partial (const MAST::FieldFunctionBas
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedExtensionStiffnessMatrix::total (const MAST::FieldFunctionBase& f,
-                                                  const Point& p,
-                                                  const Real t,
-                                                  DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> dm;
+                                                  const libMesh::Point& p,
+                                                  const libMesh::Real t,
+                                                  libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> dm;
     m.resize(2,2);
-    Real A, J, dA, dJ;
+    libMesh::Real A, J, dA, dJ;
     (*_A)(p, t, A); _A->total(f, p, t, dA);
     (*_J)(p, t, J); _J->total(f, p, t, dJ);
     (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
@@ -98,10 +98,10 @@ SectionIntegratedExtensionStiffnessMatrix::total (const MAST::FieldFunctionBase&
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix::
-SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                                 MAST::FieldFunction<Real> * A_y_moment,
-                                                 MAST::FieldFunction<Real> * A_z_moment):
-MAST::FieldFunction<DenseMatrix<Real> > ("SectionIntegratedExtensionBendingStiffnessMatrix1D"),
+SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                                 MAST::FieldFunction<libMesh::Real> * A_y_moment,
+                                                 MAST::FieldFunction<libMesh::Real> * A_z_moment):
+MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > ("SectionIntegratedExtensionBendingStiffnessMatrix1D"),
 _material_stiffness(mat),
 _A_y_moment(A_y_moment),
 _A_z_moment(A_z_moment) {
@@ -114,10 +114,10 @@ _A_z_moment(A_z_moment) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedExtensionBendingStiffnessMatrix::operator() (const Point& p,
-                                                              const Real t,
-                                                              DenseMatrix<Real>& m) const {
-    Real Ay, Az;
+SectionIntegratedExtensionBendingStiffnessMatrix::operator() (const libMesh::Point& p,
+                                                              const libMesh::Real t,
+                                                              libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real Ay, Az;
     (*_A_y_moment)(p, t, Ay);
     (*_A_z_moment)(p, t, Az);
     (*_material_stiffness)(p, t, m);
@@ -133,11 +133,11 @@ SectionIntegratedExtensionBendingStiffnessMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedExtensionBendingStiffnessMatrix::partial (const MAST::FieldFunctionBase& f,
-                                                           const Point& p,
-                                                           const Real t,
-                                                           DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> dm;
-    Real Ay, Az, dAy, dAz;
+                                                           const libMesh::Point& p,
+                                                           const libMesh::Real t,
+                                                           libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> dm;
+    libMesh::Real Ay, Az, dAy, dAz;
     (*_A_y_moment)(p, t, Ay); _A_y_moment->partial(f, p, t, dAy);
     (*_A_z_moment)(p, t, Az); _A_z_moment->partial(f, p, t, dAz);
     (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
@@ -157,11 +157,11 @@ SectionIntegratedExtensionBendingStiffnessMatrix::partial (const MAST::FieldFunc
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedExtensionBendingStiffnessMatrix::total (const MAST::FieldFunctionBase& f,
-                                                         const Point& p,
-                                                         const Real t,
-                                                         DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> dm;
-    Real Ay, Az, dAy, dAz;
+                                                         const libMesh::Point& p,
+                                                         const libMesh::Real t,
+                                                         libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> dm;
+    libMesh::Real Ay, Az, dAy, dAz;
     (*_A_y_moment)(p, t, Ay); _A_y_moment->total(f, p, t, dAy);
     (*_A_z_moment)(p, t, Az); _A_z_moment->total(f, p, t, dAz);
     (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
@@ -180,9 +180,9 @@ SectionIntegratedExtensionBendingStiffnessMatrix::total (const MAST::FieldFuncti
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix::
-SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat,
-                                        MAST::FieldFunction<DenseMatrix<Real> > *I):
-MAST::FieldFunction<DenseMatrix<Real> > ("SectionIntegratedBendingStiffnessMatrix1D"),
+SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat,
+                                        MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *I):
+MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > ("SectionIntegratedBendingStiffnessMatrix1D"),
 _material_stiffness(mat),
 _I(I) {
     _functions.insert(mat);
@@ -193,10 +193,10 @@ _I(I) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedBendingStiffnessMatrix::operator() (const Point& p,
-                                                     const Real t,
-                                                     DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> mat;
+SectionIntegratedBendingStiffnessMatrix::operator() (const libMesh::Point& p,
+                                                     const libMesh::Real t,
+                                                     libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> mat;
     (*_I)(p, t, m);
     (*_material_stiffness)(p, t, mat);
     
@@ -209,10 +209,10 @@ SectionIntegratedBendingStiffnessMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedBendingStiffnessMatrix::partial (const MAST::FieldFunctionBase& f,
-                                                  const Point& p,
-                                                  const Real t,
-                                                  DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> mat, dmat, dm;
+                                                  const libMesh::Point& p,
+                                                  const libMesh::Real t,
+                                                  libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> mat, dmat, dm;
     (*_I)(p, t, m); _I->partial(f, p, t, dm);
     (*_material_stiffness)(p, t, mat); _material_stiffness->partial(f, p, t, dmat);
     
@@ -228,10 +228,10 @@ SectionIntegratedBendingStiffnessMatrix::partial (const MAST::FieldFunctionBase&
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedBendingStiffnessMatrix::total (const MAST::FieldFunctionBase& f,
-                                                const Point& p,
-                                                const Real t,
-                                                DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> mat, dmat, dm;
+                                                const libMesh::Point& p,
+                                                const libMesh::Real t,
+                                                libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> mat, dmat, dm;
     (*_I)(p, t, m); _I->total(f, p, t, dm);
     (*_material_stiffness)(p, t, mat); _material_stiffness->total(f, p, t, dmat);
     
@@ -247,13 +247,13 @@ SectionIntegratedBendingStiffnessMatrix::total (const MAST::FieldFunctionBase& f
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedInertiaMatrix::
-SectionIntegratedInertiaMatrix(MAST::FieldFunction<Real> * rho,
-                               MAST::FieldFunction<Real> * A,
-                               MAST::FieldFunction<Real> * A_y_moment,
-                               MAST::FieldFunction<Real> * A_z_moment,
-                               MAST::FieldFunction<Real> * Ip,
-                               MAST::FieldFunction<DenseMatrix<Real> >* I):
-MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedInertiaMatrix1D"),
+SectionIntegratedInertiaMatrix(MAST::FieldFunction<libMesh::Real> * rho,
+                               MAST::FieldFunction<libMesh::Real> * A,
+                               MAST::FieldFunction<libMesh::Real> * A_y_moment,
+                               MAST::FieldFunction<libMesh::Real> * A_z_moment,
+                               MAST::FieldFunction<libMesh::Real> * Ip,
+                               MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >* I):
+MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("SectionIntegratedInertiaMatrix1D"),
 _rho(rho),
 _A(A),
 _A_y_moment(A_y_moment),
@@ -273,12 +273,12 @@ _I(I) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedInertiaMatrix::operator() (const Point& p,
-                                            const Real t,
-                                            DenseMatrix<Real>& m) const {
+SectionIntegratedInertiaMatrix::operator() (const libMesh::Point& p,
+                                            const libMesh::Real t,
+                                            libMesh::DenseMatrix<libMesh::Real>& m) const {
     m.resize(6, 6);
-    DenseMatrix<Real> I;
-    Real rho, A, Ay, Az, Ip;
+    libMesh::DenseMatrix<libMesh::Real> I;
+    libMesh::Real rho, A, Ay, Az, Ip;
     (*_rho)(p, t, rho);
     (*_A)(p, t, A);
     (*_A_y_moment)(p, t, Ay);
@@ -314,13 +314,13 @@ SectionIntegratedInertiaMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
-                                         const Point& p,
-                                         const Real t,
-                                         DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> dm;
+                                         const libMesh::Point& p,
+                                         const libMesh::Real t,
+                                         libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> dm;
     m.resize(6, 6); dm.resize(6, 6);
-    DenseMatrix<Real> I, dI;
-    Real rho, A, Ay, Az, Ip, drho, dA, dAy, dAz, dIp;
+    libMesh::DenseMatrix<libMesh::Real> I, dI;
+    libMesh::Real rho, A, Ay, Az, Ip, drho, dA, dAy, dAz, dIp;
     (*_rho)(p, t, rho); _rho->partial(f, p, t, drho);
     (*_A)(p, t, A); _A->partial(f, p, t, dA);
     (*_A_y_moment)(p, t, Ay); _A_y_moment->partial(f, p, t, dAy);
@@ -363,13 +363,13 @@ SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
-                                       const Point& p,
-                                       const Real t,
-                                       DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> dm;
+                                       const libMesh::Point& p,
+                                       const libMesh::Real t,
+                                       libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> dm;
     m.resize(6, 6); dm.resize(6, 6);
-    DenseMatrix<Real> I, dI;
-    Real rho, A, Ay, Az, Ip, drho, dA, dAy, dAz, dIp;
+    libMesh::DenseMatrix<libMesh::Real> I, dI;
+    libMesh::Real rho, A, Ay, Az, Ip, drho, dA, dAy, dAz, dIp;
     (*_rho)(p, t, rho); _rho->total(f, p, t, drho);
     (*_A)(p, t, A); _A->total(f, p, t, dA);
     (*_A_y_moment)(p, t, Ay); _A_y_moment->total(f, p, t, dAy);
@@ -410,10 +410,10 @@ SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix::
-SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
-                                        MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                        MAST::FieldFunction<Real> * A):
-MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionAMatrix1D"),
+SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_stiff,
+                                        MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_expansion,
+                                        MAST::FieldFunction<libMesh::Real> * A):
+MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("SectionIntegratedThermalExpansionAMatrix1D"),
 _material_stiffness(mat_stiff),
 _material_expansion(mat_expansion),
 _A(A) {
@@ -427,11 +427,11 @@ _A(A) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionAMatrix::operator() (const Point& p,
-                                                      const Real t,
-                                                      DenseMatrix<Real>& m) const {
-    Real A;
-    DenseMatrix<Real> at;
+SectionIntegratedThermalExpansionAMatrix::operator() (const libMesh::Point& p,
+                                                      const libMesh::Real t,
+                                                      libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real A;
+    libMesh::DenseMatrix<libMesh::Real> at;
     (*_A)(p, t, A);
     (*_material_stiffness)(p, t, m);
     (*_material_expansion)(p, t, at);
@@ -446,11 +446,11 @@ SectionIntegratedThermalExpansionAMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedThermalExpansionAMatrix::partial (const MAST::FieldFunctionBase& f,
-                                                  const Point& p,
-                                                  const Real t,
-                                                  DenseMatrix<Real>& m) const {
-    Real A, dA;
-    DenseMatrix<Real> m1, at, dat, dm;
+                                                  const libMesh::Point& p,
+                                                  const libMesh::Real t,
+                                                  libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real A, dA;
+    libMesh::DenseMatrix<libMesh::Real> m1, at, dat, dm;
     (*_A)(p, t, A); _A->partial(f, p, t, dA);
     (*_material_stiffness)(p, t, m1); _material_stiffness->partial(f, p, t, dm);
     (*_material_expansion)(p, t, at); _material_expansion->partial(f, p, t, dat);
@@ -473,11 +473,11 @@ SectionIntegratedThermalExpansionAMatrix::partial (const MAST::FieldFunctionBase
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedThermalExpansionAMatrix::total (const MAST::FieldFunctionBase& f,
-                                                const Point& p,
-                                                const Real t,
-                                                DenseMatrix<Real>& m) const {
-    Real A, dA;
-    DenseMatrix<Real> m1, at, dat, dm;
+                                                const libMesh::Point& p,
+                                                const libMesh::Real t,
+                                                libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real A, dA;
+    libMesh::DenseMatrix<libMesh::Real> m1, at, dat, dm;
     (*_A)(p, t, A); _A->total(f, p, t, dA);
     (*_material_stiffness)(p, t, m1); _material_stiffness->total(f, p, t, dm);
     (*_material_expansion)(p, t, at); _material_expansion->total(f, p, t, dat);
@@ -498,11 +498,11 @@ SectionIntegratedThermalExpansionAMatrix::total (const MAST::FieldFunctionBase& 
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix::
-SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *mat_stiff,
-                                         MAST::FieldFunction<DenseMatrix<Real> > *mat_expansion,
-                                         MAST::FieldFunction<Real> * A_y_moment,
-                                         MAST::FieldFunction<Real> * A_z_moment):
-MAST::FieldFunction<DenseMatrix<Real> >("SectionIntegratedThermalExpansionBMatrix1D"),
+SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_stiff,
+                                         MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *mat_expansion,
+                                         MAST::FieldFunction<libMesh::Real> * A_y_moment,
+                                         MAST::FieldFunction<libMesh::Real> * A_z_moment):
+MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("SectionIntegratedThermalExpansionBMatrix1D"),
 _material_stiffness(mat_stiff),
 _material_expansion(mat_expansion),
 _A_y_moment(A_y_moment),
@@ -518,11 +518,11 @@ _A_z_moment(A_z_moment) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedThermalExpansionBMatrix::operator() (const Point& p,
-                                                      const Real t,
-                                                      DenseMatrix<Real>& m) const {
-    Real Ay, Az;
-    DenseMatrix<Real> at;
+SectionIntegratedThermalExpansionBMatrix::operator() (const libMesh::Point& p,
+                                                      const libMesh::Real t,
+                                                      libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real Ay, Az;
+    libMesh::DenseMatrix<libMesh::Real> at;
     (*_A_y_moment)(p, t, Ay);
     (*_A_z_moment)(p, t, Az);
     (*_material_stiffness)(p, t, m);
@@ -539,11 +539,11 @@ SectionIntegratedThermalExpansionBMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedThermalExpansionBMatrix::partial (const MAST::FieldFunctionBase& f,
-                                                   const Point& p,
-                                                   const Real t,
-                                                   DenseMatrix<Real>& m) const {
-    Real Ay, Az, dAy, dAz;
-    DenseMatrix<Real> at, dat, m1, dm;
+                                                   const libMesh::Point& p,
+                                                   const libMesh::Real t,
+                                                   libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real Ay, Az, dAy, dAz;
+    libMesh::DenseMatrix<libMesh::Real> at, dat, m1, dm;
     (*_A_y_moment)(p, t, Ay); _A_y_moment->partial(f, p, t, dAy);
     (*_A_z_moment)(p, t, Az); _A_z_moment->partial(f, p, t, dAz);
     (*_material_stiffness)(p, t, m1); _material_stiffness->partial(f, p, t, dm);
@@ -569,11 +569,11 @@ SectionIntegratedThermalExpansionBMatrix::partial (const MAST::FieldFunctionBase
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedThermalExpansionBMatrix::total (const MAST::FieldFunctionBase& f,
-                                                 const Point& p,
-                                                 const Real t,
-                                                 DenseMatrix<Real>& m) const {
-    Real Ay, Az, dAy, dAz;
-    DenseMatrix<Real> at, dat, m1, dm;
+                                                 const libMesh::Point& p,
+                                                 const libMesh::Real t,
+                                                 libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::Real Ay, Az, dAy, dAz;
+    libMesh::DenseMatrix<libMesh::Real> at, dat, m1, dm;
     (*_A_y_moment)(p, t, Ay); _A_y_moment->total(f, p, t, dAy);
     (*_A_z_moment)(p, t, Az); _A_z_moment->total(f, p, t, dAz);
     (*_material_stiffness)(p, t, m1); _material_stiffness->total(f, p, t, dm);
@@ -597,9 +597,9 @@ SectionIntegratedThermalExpansionBMatrix::total (const MAST::FieldFunctionBase& 
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix::
-SectionIntegratedPrestressAMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
-                                  MAST::FieldFunction<DenseMatrix<Real> > *T,
-                                  MAST::FieldFunction<Real> * A):
+SectionIntegratedPrestressAMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *prestress,
+                                  MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *T,
+                                  MAST::FieldFunction<libMesh::Real> * A):
 MAST::SectionIntegratedPrestressMatrixBase("SectionIntegratedPrestressAMatrix1D"),
 _prestress(prestress),
 _T(T),
@@ -613,12 +613,12 @@ _A(A) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedPrestressAMatrix::operator() (const Point& p,
-                                               const Real t,
-                                               DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> s, T;
+SectionIntegratedPrestressAMatrix::operator() (const libMesh::Point& p,
+                                               const libMesh::Real t,
+                                               libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> s, T;
     m.resize(2, 2);
-    Real A;
+    libMesh::Real A;
     (*_A)(p, t, A);
     (*_prestress)(p, t, s);
     (*_T)(p, t, T);
@@ -637,12 +637,12 @@ SectionIntegratedPrestressAMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedPrestressAMatrix::partial (const MAST::FieldFunctionBase& f,
-                                            const Point& p,
-                                            const Real t,
-                                            DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> s, ds, T, dT;
+                                            const libMesh::Point& p,
+                                            const libMesh::Real t,
+                                            libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> s, ds, T, dT;
     m.resize(2, 2);
-    Real A, dA;
+    libMesh::Real A, dA;
     (*_A)(p, t, A); _A->partial(f, p, t, dA);
     (*_prestress)(p, t, s); _prestress->partial(f, p, t, ds);
     (*_T)(p, t, T); _T->partial(f, p, t, dT);
@@ -652,7 +652,7 @@ SectionIntegratedPrestressAMatrix::partial (const MAST::FieldFunctionBase& f,
     s.left_multiply_transpose(T);
     
     // ds =  dT^T s T + T^T s dT + T^T ds T
-    DenseMatrix<Real> tmp;
+    libMesh::DenseMatrix<libMesh::Real> tmp;
     ds.right_multiply(T);
     ds.left_multiply_transpose(T);
     
@@ -674,12 +674,12 @@ SectionIntegratedPrestressAMatrix::partial (const MAST::FieldFunctionBase& f,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedPrestressAMatrix::total (const MAST::FieldFunctionBase& f,
-                                          const Point& p,
-                                          const Real t,
-                                          DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> s, ds, T, dT;
+                                          const libMesh::Point& p,
+                                          const libMesh::Real t,
+                                          libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> s, ds, T, dT;
     m.resize(2, 2);
-    Real A, dA;
+    libMesh::Real A, dA;
     (*_A)(p, t, A); _A->total(f, p, t, dA);
     (*_prestress)(p, t, s); _prestress->total(f, p, t, ds);
     (*_T)(p, t, T); _T->total(f, p, t, dT);
@@ -689,7 +689,7 @@ SectionIntegratedPrestressAMatrix::total (const MAST::FieldFunctionBase& f,
     s.left_multiply_transpose(T);
     
     // ds =  dT^T s T + T^T s dT + T^T ds T
-    DenseMatrix<Real> tmp;
+    libMesh::DenseMatrix<libMesh::Real> tmp;
     ds.right_multiply(T);
     ds.left_multiply_transpose(T);
     
@@ -710,8 +710,8 @@ SectionIntegratedPrestressAMatrix::total (const MAST::FieldFunctionBase& f,
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedPrestressAMatrix::convert_to_vector(const DenseMatrix<Real> &m,
-                                                     DenseVector<Real> &v)  const {
+SectionIntegratedPrestressAMatrix::convert_to_vector(const libMesh::DenseMatrix<libMesh::Real> &m,
+                                                     libMesh::DenseVector<libMesh::Real> &v)  const {
     libmesh_assert_equal_to(m.m(), 2);
     libmesh_assert_equal_to(m.n(), 2);
     v.resize(2);
@@ -722,10 +722,10 @@ SectionIntegratedPrestressAMatrix::convert_to_vector(const DenseMatrix<Real> &m,
 
 
 MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix::
-SectionIntegratedPrestressBMatrix(MAST::FieldFunction<DenseMatrix<Real> > *prestress,
-                                  MAST::FieldFunction<DenseMatrix<Real> > *T,
-                                  MAST::FieldFunction<Real> * A_y_moment,
-                                  MAST::FieldFunction<Real> * A_z_moment):
+SectionIntegratedPrestressBMatrix(MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *prestress,
+                                  MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *T,
+                                  MAST::FieldFunction<libMesh::Real> * A_y_moment,
+                                  MAST::FieldFunction<libMesh::Real> * A_z_moment):
 MAST::SectionIntegratedPrestressMatrixBase("SectionIntegratedPrestressBMatrix1D"),
 _prestress(prestress),
 _T(T),
@@ -741,12 +741,12 @@ _A_z_moment(A_z_moment) {
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedPrestressBMatrix::operator() (const Point& p,
-                                               const Real t,
-                                               DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> s, T;
+SectionIntegratedPrestressBMatrix::operator() (const libMesh::Point& p,
+                                               const libMesh::Real t,
+                                               libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> s, T;
     m.resize(2, 2);
-    Real Ay, Az;
+    libMesh::Real Ay, Az;
     (*_A_y_moment)(p, t, Ay);
     (*_A_z_moment)(p, t, Az);
     (*_prestress)(p, t, s);
@@ -768,12 +768,12 @@ SectionIntegratedPrestressBMatrix::operator() (const Point& p,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedPrestressBMatrix::partial (const MAST::FieldFunctionBase& f,
-                                            const Point& p,
-                                            const Real t,
-                                            DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> s, ds, T, dT;
+                                            const libMesh::Point& p,
+                                            const libMesh::Real t,
+                                            libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> s, ds, T, dT;
     m.resize(2, 2);
-    Real Ay, Az, dAy, dAz;
+    libMesh::Real Ay, Az, dAy, dAz;
     (*_A_y_moment)(p, t, Ay); _A_y_moment->partial(f, p, t, dAy);
     (*_A_z_moment)(p, t, Az); _A_z_moment->partial(f, p, t, dAz);
     (*_prestress)(p, t, s); _prestress->partial(f, p, t, ds);
@@ -784,7 +784,7 @@ SectionIntegratedPrestressBMatrix::partial (const MAST::FieldFunctionBase& f,
     s.left_multiply_transpose(T);
     
     // ds =  dT^T s T + T^T s dT + T^T ds T
-    DenseMatrix<Real> tmp;
+    libMesh::DenseMatrix<libMesh::Real> tmp;
     ds.right_multiply(T);
     ds.left_multiply_transpose(T);
     
@@ -808,12 +808,12 @@ SectionIntegratedPrestressBMatrix::partial (const MAST::FieldFunctionBase& f,
 void
 MAST::Solid1DSectionElementPropertyCard::
 SectionIntegratedPrestressBMatrix::total (const MAST::FieldFunctionBase& f,
-                                          const Point& p,
-                                          const Real t,
-                                          DenseMatrix<Real>& m) const {
-    DenseMatrix<Real> s, ds, T, dT;
+                                          const libMesh::Point& p,
+                                          const libMesh::Real t,
+                                          libMesh::DenseMatrix<libMesh::Real>& m) const {
+    libMesh::DenseMatrix<libMesh::Real> s, ds, T, dT;
     m.resize(2, 2);
-    Real Ay, Az, dAy, dAz;
+    libMesh::Real Ay, Az, dAy, dAz;
     (*_A_y_moment)(p, t, Ay); _A_y_moment->total(f, p, t, dAy);
     (*_A_z_moment)(p, t, Az); _A_z_moment->total(f, p, t, dAz);
     (*_prestress)(p, t, s); _prestress->total(f, p, t, ds);
@@ -824,7 +824,7 @@ SectionIntegratedPrestressBMatrix::total (const MAST::FieldFunctionBase& f,
     s.left_multiply_transpose(T);
     
     // ds =  dT^T s T + T^T s dT + T^T ds T
-    DenseMatrix<Real> tmp;
+    libMesh::DenseMatrix<libMesh::Real> tmp;
     ds.right_multiply(T);
     ds.left_multiply_transpose(T);
     
@@ -847,8 +847,8 @@ SectionIntegratedPrestressBMatrix::total (const MAST::FieldFunctionBase& f,
 
 void
 MAST::Solid1DSectionElementPropertyCard::
-SectionIntegratedPrestressBMatrix::convert_to_vector(const DenseMatrix<Real> &m,
-                                                     DenseVector<Real> &v)  const {
+SectionIntegratedPrestressBMatrix::convert_to_vector(const libMesh::DenseMatrix<libMesh::Real> &m,
+                                                     libMesh::DenseVector<libMesh::Real> &v)  const {
     libmesh_assert_equal_to(m.m(), 2);
     libmesh_assert_equal_to(m.n(), 2);
     v.resize(2);
@@ -861,30 +861,30 @@ SectionIntegratedPrestressBMatrix::convert_to_vector(const DenseMatrix<Real> &m,
 
 Real
 MAST::Solid1DSectionElementPropertyCard::value(const std::string& val) const {
-    Point p; // dummy value
-    Real v=0.;
+    libMesh::Point p; // dummy value
+    libMesh::Real v=0.;
     
     if (val == "A") {
         MAST::Solid1DSectionElementPropertyCard::Area
-        A(this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-          this->get<MAST::FieldFunction<Real> >("hz").clone().release());
+        A(this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+          this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release());
         A(p, 0., v);
     }
     else if (val == "J") {
         MAST::Solid1DSectionElementPropertyCard::TorsionalConstant
-        J(this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-          this->get<MAST::FieldFunction<Real> >("hz").clone().release());
+        J(this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+          this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release());
         J(p, 0., v);
     }
     else if (val == "IYY" ||
              val == "IZZ" ||
              val == "IYZ") {
-        DenseMatrix<Real> Imat;
+        libMesh::DenseMatrix<libMesh::Real> Imat;
         MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix
-        I(this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-          this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-          this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release(),
-          this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release());
+        I(this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+          this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+          this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release(),
+          this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release());
         I(p, 0., Imat);
         if (val == "IYY")
             v = Imat(0,0);
@@ -904,19 +904,19 @@ MAST::Solid1DSectionElementPropertyCard::value(const std::string& val) const {
 
 
 template <>
-std::auto_ptr<MAST::FieldFunction<Real> >
-MAST::Solid1DSectionElementPropertyCard::section_property<MAST::FieldFunction<Real> >
+std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
+MAST::Solid1DSectionElementPropertyCard::section_property<MAST::FieldFunction<libMesh::Real> >
 (const std::string& val) const {
-    std::auto_ptr<MAST::FieldFunction<Real> > rval;
+    std::auto_ptr<MAST::FieldFunction<libMesh::Real> > rval;
     
     if (val == "A")
         rval.reset( new MAST::Solid1DSectionElementPropertyCard::Area
-                   (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                    this->get<MAST::FieldFunction<Real> >("hz").clone().release()));
+                   (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                    this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release()));
     else if (val == "J")
         rval.reset(new MAST::Solid1DSectionElementPropertyCard::TorsionalConstant
-                   (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                    this->get<MAST::FieldFunction<Real> >("hz").clone().release()));
+                   (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                    this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release()));
     else
         libmesh_error(); // should not get here
     
@@ -925,104 +925,104 @@ MAST::Solid1DSectionElementPropertyCard::section_property<MAST::FieldFunction<Re
 
 
 
-std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > >
+std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
 MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatrixType t,
                                                       const MAST::StructuralElementBase& e) const {
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > rval;
+    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > rval;
     
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix
                        (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 1).release(),
                         new MAST::Solid1DSectionElementPropertyCard::Area
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::TorsionalConstant
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release())));
             break;
             
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix
                        (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 1).release(),
                         new MAST::Solid1DSectionElementPropertyCard::AreaYMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::AreaZMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release())));
             break;
             
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix
                        (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 1).release(),
                         new MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release())));
             break;
 
         case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedTransverseStiffnessMatrix
                        (_material->get_property(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX, *this, 1).release(),
                         new MAST::Solid1DSectionElementPropertyCard::Area
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release())));
             break;
 
         case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedInertiaMatrix
-                       (_material->get<MAST::FieldFunction<Real> >("rho").clone().release(),
+                       (_material->get<MAST::FieldFunction<libMesh::Real> >("rho").clone().release(),
                         new MAST::Solid1DSectionElementPropertyCard::Area
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::AreaYMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::AreaZMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::PolarInertia
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::AreaInertiaMatrix
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release())));
             break;
 
         case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix
-                       (this->get<MAST::FieldFunction<DenseMatrix<Real> > >
+                       (this->get<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                         ("prestress").clone().release(),
                         e.local_elem().T_matrix_function().release(),
                         new MAST::Solid1DSectionElementPropertyCard::Area
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release())));
             break;
             
         case MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX:
             rval.reset(new MAST::Solid1DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix
-                       (this->get<MAST::FieldFunction<DenseMatrix<Real> > >
+                       (this->get<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
                         ("prestress").clone().release(),
                         e.local_elem().T_matrix_function().release(),
                         new MAST::Solid1DSectionElementPropertyCard::AreaYMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release()),
                          new MAST::Solid1DSectionElementPropertyCard::AreaZMoment
-                         (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                          this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                          this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release())));
+                         (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                          this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                          this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release())));
             break;
 
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
@@ -1030,8 +1030,8 @@ MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
                        (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 1).release(),
                         _material->get_property(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, *this, 1).release(),
                         new MAST::Solid1DSectionElementPropertyCard::Area
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release())));
             break;
 
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
@@ -1039,13 +1039,13 @@ MAST::Solid1DSectionElementPropertyCard::get_property(MAST::ElemenetPropertyMatr
                        (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 1).release(),
                         _material->get_property(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, *this, 1).release(),
                         new MAST::Solid1DSectionElementPropertyCard::AreaYMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz_offset").clone().release()),
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz_offset").clone().release()),
                         new MAST::Solid1DSectionElementPropertyCard::AreaZMoment
-                        (this->get<MAST::FieldFunction<Real> >("hy").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hz").clone().release(),
-                         this->get<MAST::FieldFunction<Real> >("hy_offset").clone().release())));
+                        (this->get<MAST::FieldFunction<libMesh::Real> >("hy").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release(),
+                         this->get<MAST::FieldFunction<libMesh::Real> >("hy_offset").clone().release())));
             break;
 
         case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:

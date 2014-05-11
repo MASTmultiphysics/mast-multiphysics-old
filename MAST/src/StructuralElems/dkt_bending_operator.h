@@ -40,7 +40,7 @@ namespace MAST
                 _nodes[i] = new Node;
             
             // first edge
-            Point p;
+            libMesh::Point p;
             p = *_elem.get_node(0); p += *_elem.get_node(1); p*= 0.5;
             (*_nodes[0]) = p;
             _nodes[0]->set_id(3);
@@ -62,7 +62,7 @@ namespace MAST
             }
 
             // now setup the shape functions
-            _fe = FEBase::build(2, FEType(SECOND, LAGRANGE)).release();
+            _fe = libMesh::FEBase::build(2, FEType(SECOND, LAGRANGE)).release();
             _fe->attach_quadrature_rule(&_qrule);
             _fe->get_phi();
             _fe->get_dphi();
@@ -102,7 +102,7 @@ namespace MAST
          * point and z-location.
          */
         void initialize_bending_strain_operator_for_z(const unsigned int qp,
-                                                      const Real z,
+                                                      const libMesh::Real z,
                                                       FEMOperatorMatrix& Bmat_bend);
 
     protected:
@@ -110,7 +110,7 @@ namespace MAST
         /*!
          *   returns the length of the side defined by vector from node i to j
          */
-        Real _get_edge_length(unsigned int i, unsigned int j);
+        libMesh::Real _get_edge_length(unsigned int i, unsigned int j);
         
         /*!
          *   returns the cos of normal to the side defined by vector from node i to j
@@ -119,20 +119,20 @@ namespace MAST
                                          Real& sine, Real& cosine);
         
         
-        void _calculate_dkt_shape_functions(const DenseVector<Real>& phi,
-                                            DenseVector<Real>& betax,
-                                            DenseVector<Real>& betay);
+        void _calculate_dkt_shape_functions(const libMesh::DenseVector<libMesh::Real>& phi,
+                                            libMesh::DenseVector<libMesh::Real>& betax,
+                                            libMesh::DenseVector<libMesh::Real>& betay);
         
         
         /*!
          *   FE object to get shape functions for this element
          */
-        FEBase* _fe;
+        libMesh::FEBase* _fe;
         
         /*!
          *   6 noded triangle that is used to calculate the shape functions
          */
-        Elem* _tri6;
+        libMesh::Elem* _tri6;
         
         /*!
          *    vector to store node pointers for the mid-sized nodes
@@ -153,13 +153,13 @@ MAST::DKTBendingOperator::initialize_bending_strain_operator (const unsigned int
 inline
 void
 MAST::DKTBendingOperator::initialize_bending_strain_operator_for_z (const unsigned int qp,
-                                                                    const Real z,
+                                                                    const libMesh::Real z,
                                                                     FEMOperatorMatrix& Bmat) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
     
-    DenseVector<Real> phi, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy,
+    libMesh::DenseVector<libMesh::Real> phi, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy,
     w, thetax, thetay;
     phi.resize(n_phi); dbetaxdx.resize(9); dbetaxdy.resize(9);
     dbetaydx.resize(9); dbetaydy.resize(9); w.resize(3); thetax.resize(3);
@@ -226,7 +226,7 @@ inline
 Real
 MAST::DKTBendingOperator::_get_edge_length(unsigned int i, unsigned int j)
 {
-    Point l = *_tri6->get_node(j);
+    libMesh::Point l = *_tri6->get_node(j);
     l -= *_tri6->get_node(i);
     
     return l.size();
@@ -240,7 +240,7 @@ void
 MAST::DKTBendingOperator::_get_edge_normal_sine_cosine(unsigned int i, unsigned int j,
                                                        Real& sine, Real& cosine)
 {
-    Point vec0, vec1, vec2, vec3;
+    libMesh::Point vec0, vec1, vec2, vec3;
     
     // calculate the normal to the element
     vec0 = *_elem.get_node(0);
@@ -274,9 +274,9 @@ MAST::DKTBendingOperator::_get_edge_normal_sine_cosine(unsigned int i, unsigned 
 
 inline
 void
-MAST::DKTBendingOperator::_calculate_dkt_shape_functions(const DenseVector<Real>& phi,
-                                                         DenseVector<Real>& betax,
-                                                         DenseVector<Real>& betay)
+MAST::DKTBendingOperator::_calculate_dkt_shape_functions(const libMesh::DenseVector<libMesh::Real>& phi,
+                                                         libMesh::DenseVector<libMesh::Real>& betax,
+                                                         libMesh::DenseVector<libMesh::Real>& betay)
 {
     // -- keep in mind that the index numbers for the elems start at 0.
     // -- also, the mid side node numbers in the Batoz's paper are different from
@@ -293,10 +293,10 @@ MAST::DKTBendingOperator::_calculate_dkt_shape_functions(const DenseVector<Real>
     // And then the same this is followed for Hy (from dofs 9-17)
     
     // local variables for shape functions
-    Real N1, N2, N3, N4, N5, N6;
+    libMesh::Real N1, N2, N3, N4, N5, N6;
     
     // local variables for edge lengths and sine/cosines
-    Real l12, l23, l31, cos4, cos5, cos6, sin4, sin5, sin6;
+    libMesh::Real l12, l23, l31, cos4, cos5, cos6, sin4, sin5, sin6;
     
     N1 = phi(0);
     N2 = phi(1);

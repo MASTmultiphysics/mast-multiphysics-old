@@ -50,7 +50,7 @@ namespace MAST
         /*!
          *   returns the bending model to be used for the 2D element.
          */
-        virtual MAST::BendingOperatorType bending_model(const Elem& elem,
+        virtual MAST::BendingOperatorType bending_model(const libMesh::Elem& elem,
                                                  const FEType& fe) const;
         
         
@@ -59,7 +59,7 @@ namespace MAST
          *    this element should use. This is elevated by two orders for a DKT
          *    element
          */
-        virtual int extra_quadrature_order(const Elem& elem,
+        virtual int extra_quadrature_order(const libMesh::Elem& elem,
                                            const FEType& fe) const {
             if (this->bending_model(elem, fe) == MAST::BERNOULLI)
                 return 2;
@@ -72,13 +72,13 @@ namespace MAST
          *   returns value of the property \par val. The string values for 
          *   \par val are IYY, IZZ, IYZ
          */
-        virtual Real value(const std::string& val) const = 0;
+        virtual libMesh::Real value(const std::string& val) const = 0;
         
         /*!
          *   vector in the x-y plane of the element. This should not be the same
          *   as the element x-axis.
          */
-        Point& y_vector() {
+        libMesh::Point& y_vector() {
             return _local_y;
         }
         
@@ -87,7 +87,7 @@ namespace MAST
          *   constant reference to vector in the x-y plane of the element. 
          *   This should not be the same as the element x-axis.
          */
-        const Point& y_vector() const {
+        const libMesh::Point& y_vector() const {
             return _local_y;
         }
         
@@ -103,7 +103,7 @@ namespace MAST
         /*!
          *   vector in the x-y plane.
          */
-        Point _local_y;
+        libMesh::Point _local_y;
         
     };
     
@@ -114,7 +114,7 @@ namespace MAST
 
 inline
 MAST::BendingOperatorType
-MAST::ElementPropertyCard1D::bending_model(const Elem& elem,
+MAST::ElementPropertyCard1D::bending_model(const libMesh::Elem& elem,
                                            const FEType& fe) const {
     // for an EDGE2 element, default bending is Bernoulli. For all other elements
     // the default is Timoshenko. Otherwise it returns the model set for

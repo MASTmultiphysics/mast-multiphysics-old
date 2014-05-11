@@ -54,16 +54,16 @@ namespace MAST {
          * point and y,z-location.
          */
         virtual void initialize_bending_strain_operator_for_yz(const unsigned int qp,
-                                                               const Real y,
-                                                               const Real z,
+                                                               const libMesh::Real y,
+                                                               const libMesh::Real z,
                                                                FEMOperatorMatrix& Bmat_bend);
         
         /*!
          *   calculate the transverse shear component for the element
          */
         virtual void calculate_transverse_shear_force(bool request_jacobian,
-                                                      DenseVector<Real>& local_f,
-                                                      DenseMatrix<Real>& local_jac,
+                                                      libMesh::DenseVector<libMesh::Real>& local_f,
+                                                      libMesh::DenseMatrix<libMesh::Real>& local_jac,
                                                       const MAST::FieldFunctionBase* sens_params );
         
     protected:
@@ -71,7 +71,7 @@ namespace MAST {
         /*!
          *   reference to finite elmement object for the element
          */
-        FEBase& _fe;
+        libMesh::FEBase& _fe;
         
         /*!
          *   reduction in quadrature for shear energy
@@ -94,16 +94,16 @@ MAST::TimoshenkoBendingOperator::initialize_bending_strain_operator(const unsign
 
 inline void
 MAST::TimoshenkoBendingOperator::initialize_bending_strain_operator_for_yz(const unsigned int qp,
-                                                                           const Real y,
-                                                                           const Real z,
+                                                                           const libMesh::Real y,
+                                                                           const libMesh::Real z,
                                                                            FEMOperatorMatrix& Bmat_bend) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe.get_dphi();
-    const std::vector<std::vector<Real> >& phi = _fe.get_phi();
+    const std::vector<std::vector<libMesh::Real> >& phi = _fe.get_phi();
     
     const unsigned int n_phi = (unsigned int)phi.size();
     
-    DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
+    libMesh::DenseVector<libMesh::Real> phi_vec; phi_vec.resize(n_phi);
     
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
@@ -121,8 +121,8 @@ MAST::TimoshenkoBendingOperator::initialize_bending_strain_operator_for_yz(const
 void
 MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
 (bool request_jacobian,
- DenseVector<Real>& local_f,
- DenseMatrix<Real>& local_jac,
+ libMesh::DenseVector<libMesh::Real>& local_f,
+ libMesh::DenseMatrix<libMesh::Real>& local_jac,
  const MAST::FieldFunctionBase* sens_param)
 {
     const MAST::ElementPropertyCardBase& property = _structural_elem.elem_property();
@@ -130,11 +130,11 @@ MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
     // make an fe and quadrature object for the requested order for integrating
     // transverse shear
     
-    std::auto_ptr<FEBase> fe;
-    std::auto_ptr<QBase> qrule;
+    std::auto_ptr<libMesh::FEBase> fe;
+    std::auto_ptr<libMesh::QBase> qrule;
     FEType fe_type = _fe.get_fe_type();
     
-    fe.reset(FEBase::build(_elem.dim(), fe_type).release());
+    fe.reset(libMesh::FEBase::build(_elem.dim(), fe_type).release());
     qrule.reset(fe_type.default_quadrature_rule
                 (_elem.dim(),
                  property.extra_quadrature_order(_elem, fe->get_fe_type())
@@ -147,15 +147,15 @@ MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
     fe->reinit(&_elem);
     
     const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi();
-    const std::vector<std::vector<Real> >& phi = fe->get_phi();
-    const std::vector<Real>& JxW = fe->get_JxW();
+    const std::vector<std::vector<libMesh::Real> >& phi = fe->get_phi();
+    const std::vector<libMesh::Real>& JxW = fe->get_JxW();
     const std::vector<Point>& xyz = fe->get_xyz();
     
     const unsigned int n_phi = (unsigned int)phi.size(), n2 = 6*n_phi;
-    DenseVector<Real> phi_vec; phi_vec.resize(n_phi);
+    libMesh::DenseVector<libMesh::Real> phi_vec; phi_vec.resize(n_phi);
     
-    DenseVector<Real> tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2;
-    DenseMatrix<Real> material_trans_shear_mat, tmp_mat2_n2n2, tmp_mat4_2n2;
+    libMesh::DenseVector<libMesh::Real> tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2;
+    libMesh::DenseMatrix<libMesh::Real> material_trans_shear_mat, tmp_mat2_n2n2, tmp_mat4_2n2;
     
     tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
     tmp_mat2_n2n2.resize(n2, n2); tmp_mat4_2n2.resize(2, n2);
@@ -164,11 +164,11 @@ MAST::TimoshenkoBendingOperator::calculate_transverse_shear_force
     FEMOperatorMatrix Bmat_trans;
     Bmat_trans.reinit(2, 6, n_phi); // only two shear stresses
     
-    std::auto_ptr<MAST::FieldFunction<DenseMatrix<Real> > > mat_stiff
+    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > mat_stiff
     (property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                            _structural_elem).release());
 
-    Point p;
+    libMesh::Point p;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         

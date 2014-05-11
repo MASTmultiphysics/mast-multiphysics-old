@@ -41,7 +41,7 @@ MAST::RigidSurfaceMotion::zero()
 
 
 void
-MAST::RigidSurfaceMotion::init(Real freq, Real phase)
+MAST::RigidSurfaceMotion::init(libMesh::Real freq, libMesh::Real phase)
 {
     // make unit vectors
     if (pitch_axis.size() > 0.)
@@ -55,31 +55,31 @@ MAST::RigidSurfaceMotion::init(Real freq, Real phase)
 
 
 void
-MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
-                                                            const Point& n,
-                                                            DenseVector<Complex>& u_trans,
-                                                            DenseVector<Complex>& dn_rot)
+MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Point& p,
+                                                            const libMesh::Point& n,
+                                                            libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                                            libMesh::DenseVector<libMesh::Complex>& dn_rot)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
     u_trans.zero();
     dn_rot.zero();
-    const Complex iota(0., 1.);
+    const libMesh::Complex iota(0., 1.);
     
     if (fabs(pitch_amplitude) > 0.)
     {
         // normal distance from pitching axis to the given point
-        Complex pitch_scale;
+        libMesh::Complex pitch_scale;
         pitch_scale = Complex(cos(pitch_phase), sin(pitch_phase));
         pitch_scale *= pitch_amplitude;
         
-        Point r(p); r -= hinge_location;
-        Point r_rot(pitch_axis.cross(r)); // omega x r
+        libMesh::Point r(p); r -= hinge_location;
+        libMesh::Point r_rot(pitch_axis.cross(r)); // omega x r
         for (unsigned int i=0; i<3; i++)
             u_trans(i) = r_rot(i) * pitch_scale;
         
 
-        Point n_rotvec(pitch_axis.cross(n));
+        libMesh::Point n_rotvec(pitch_axis.cross(n));
         for (unsigned int i=0; i<3; i++)
             dn_rot(i) = n_rotvec(i) * pitch_scale;
     }
@@ -96,11 +96,11 @@ MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const Point& p,
 
 
 void
-MAST::RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
-                                                       const Point& p,
-                                                       const Point& n,
-                                                       DenseVector<Number>& u_trans,
-                                                       DenseVector<Number>& dn_rot)
+MAST::RigidSurfaceMotion::surface_velocity_time_domain(const libMesh::Real t,
+                                                       const libMesh::Point& p,
+                                                       const libMesh::Point& n,
+                                                       libMesh::DenseVector<libMesh::Number>& u_trans,
+                                                       libMesh::DenseVector<libMesh::Number>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();
@@ -109,14 +109,14 @@ MAST::RigidSurfaceMotion::surface_velocity_time_domain(const Real t,
     if (fabs(pitch_amplitude) > 0.)
     {
         // normal distance from pitching axis to the given point
-        Point r(p); r -= hinge_location;
-        Point r_rot(pitch_axis.cross(r)); // omega x r
+        libMesh::Point r(p); r -= hinge_location;
+        libMesh::Point r_rot(pitch_axis.cross(r)); // omega x r
         for (unsigned int i=0; i<3; i++)
             u_trans(i) = r_rot(i) * pitch_amplitude *
             cos(frequency*t + pitch_phase + phase_offset); // cosine for velocity
         
         
-        Point n_rotvec(pitch_axis.cross(n));
+        libMesh::Point n_rotvec(pitch_axis.cross(n));
         for (unsigned int i=0; i<3; i++)
             dn_rot(i) = n_rotvec(i) * pitch_amplitude *
             sin(frequency*t + pitch_phase + phase_offset); // sine for position

@@ -59,7 +59,7 @@ public:
      */
     void set_shape_function(unsigned int interpolated_var,
                             unsigned int discrete_var,
-                            const DenseVector<Real>& shape_func);
+                            const libMesh::DenseVector<libMesh::Real>& shape_func);
     
     /*!
      *   this initializes all variables to use the same interpolation function. 
@@ -67,55 +67,55 @@ public:
      *   interpolated vars. This is typically the case for fluid elements and 
      *   for structural element inertial matrix calculations
      */
-    void reinit(unsigned int n_interpolated_vars, const DenseVector<Real>& shape_func);
+    void reinit(unsigned int n_interpolated_vars, const libMesh::DenseVector<libMesh::Real>& shape_func);
     
     /*!
      *   res = [this] * v
      */
     template <typename T>
-    void vector_mult(DenseVector<T>& res, const DenseVector<T>& v) const;
+    void vector_mult(libMesh::DenseVector<T>& res, const libMesh::DenseVector<T>& v) const;
     
 
     /*!
      *   res = v^T * [this]
      */
     template <typename T>
-    void vector_mult_transpose(DenseVector<T>& res, const DenseVector<T>& v) const;
+    void vector_mult_transpose(libMesh::DenseVector<T>& res, const libMesh::DenseVector<T>& v) const;
 
     
     /*!
      *   [R] = [this] * [M]
      */
     template <typename T>
-    void right_multiply(DenseMatrix<T>& r, const DenseMatrix<T>& m) const;
+    void right_multiply(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const;
     
     
     /*!
      *   [R] = [this]^T * [M]
      */
     template <typename T>
-    void right_multiply_transpose(DenseMatrix<T>& r, const DenseMatrix<T>& m) const;
+    void right_multiply_transpose(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const;
 
 
     /*!
      *   [R] = [this]^T * [M]
      */
     template <typename T>
-    void right_multiply_transpose(DenseMatrix<T>& r, const FEMOperatorMatrix& m) const;
+    void right_multiply_transpose(libMesh::DenseMatrix<T>& r, const FEMOperatorMatrix& m) const;
 
     
     /*!
      *   [R] = [M] * [this]
      */
     template <typename T>
-    void left_multiply(DenseMatrix<T>& r, const DenseMatrix<T>& m) const;
+    void left_multiply(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const;
     
     
     /*!
      *   [R] = [M] * [this]^T
      */
     template <typename T>
-    void left_multiply_transpose(DenseMatrix<T>& r, const DenseMatrix<T>& m) const;
+    void left_multiply_transpose(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const;
 
     
 protected:
@@ -141,7 +141,7 @@ protected:
      *    column major format. NULL, if values are zero, otherwise the 
      *    value is set in the vector.
      */
-    std::vector<DenseVector<Real>*>  _var_shape_functions;
+    std::vector<libMesh::DenseVector<libMesh::Real>*>  _var_shape_functions;
 };
 
 
@@ -156,7 +156,7 @@ FEMOperatorMatrix::clear()
     _n_dofs_per_var      = 0;
 
     // iterate over the shape function entries and delete the non-NULL values
-    std::vector<DenseVector<Real>*>::iterator it = _var_shape_functions.begin(),
+    std::vector<libMesh::DenseVector<libMesh::Real>*>::iterator it = _var_shape_functions.begin(),
     end = _var_shape_functions.end();
     
     for ( ; it!=end; it++)
@@ -190,7 +190,7 @@ inline
 void
 FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
                                       unsigned int discrete_var,
-                                      const DenseVector<Real>& shape_func)
+                                      const libMesh::DenseVector<libMesh::Real>& shape_func)
 {
     // make sure that reinit has been called.
     libmesh_assert(_var_shape_functions.size());
@@ -199,10 +199,10 @@ FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
     libmesh_assert(interpolated_var < _n_interpolated_vars);
     libmesh_assert(discrete_var < _n_discrete_vars);
     
-    DenseVector<Real>* vec = _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var];
+    libMesh::DenseVector<libMesh::Real>* vec = _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var];
     if (!vec)
     {
-        vec = new DenseVector<Real>;
+        vec = new libMesh::DenseVector<libMesh::Real>;
         _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var] = vec;
     }
     
@@ -212,7 +212,7 @@ FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
 
 
 inline
-void FEMOperatorMatrix::reinit(unsigned int n_vars, const DenseVector<Real>& shape_func)
+void FEMOperatorMatrix::reinit(unsigned int n_vars, const libMesh::DenseVector<libMesh::Real>& shape_func)
 {
     this->clear();
     
@@ -223,7 +223,7 @@ void FEMOperatorMatrix::reinit(unsigned int n_vars, const DenseVector<Real>& sha
     
     for (unsigned int i=0; i<n_vars; i++)
     {
-        DenseVector<Real>*  vec = new DenseVector<Real>;
+        libMesh::DenseVector<libMesh::Real>*  vec = new libMesh::DenseVector<libMesh::Real>;
         *vec = shape_func;
         _var_shape_functions[i*n_vars+i] = vec;
     }
@@ -233,7 +233,7 @@ void FEMOperatorMatrix::reinit(unsigned int n_vars, const DenseVector<Real>& sha
 
 template <typename T>
 inline
-void FEMOperatorMatrix::vector_mult(DenseVector<T>& res, const DenseVector<T>& v) const
+void FEMOperatorMatrix::vector_mult(libMesh::DenseVector<T>& res, const libMesh::DenseVector<T>& v) const
 {
     libmesh_assert_equal_to(res.size(), _n_interpolated_vars);
     libmesh_assert_equal_to(v.size(), n());
@@ -254,7 +254,7 @@ void FEMOperatorMatrix::vector_mult(DenseVector<T>& res, const DenseVector<T>& v
 
 template <typename T>
 inline
-void FEMOperatorMatrix::vector_mult_transpose(DenseVector<T>& res, const DenseVector<T>& v) const
+void FEMOperatorMatrix::vector_mult_transpose(libMesh::DenseVector<T>& res, const libMesh::DenseVector<T>& v) const
 {
     libmesh_assert_equal_to(res.size(), n());
     libmesh_assert_equal_to(v.size(), _n_interpolated_vars);
@@ -275,7 +275,7 @@ void FEMOperatorMatrix::vector_mult_transpose(DenseVector<T>& res, const DenseVe
 
 template <typename T>
 inline
-void FEMOperatorMatrix::right_multiply(DenseMatrix<T>& r, const DenseMatrix<T>& m) const
+void FEMOperatorMatrix::right_multiply(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const
 {
     libmesh_assert_equal_to(r.m(), _n_interpolated_vars);
     libmesh_assert_equal_to(r.n(), m.n());
@@ -299,7 +299,7 @@ void FEMOperatorMatrix::right_multiply(DenseMatrix<T>& r, const DenseMatrix<T>& 
 
 template <typename T>
 inline
-void FEMOperatorMatrix::right_multiply_transpose(DenseMatrix<T>& r, const DenseMatrix<T>& m) const
+void FEMOperatorMatrix::right_multiply_transpose(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const
 {
     libmesh_assert_equal_to(r.m(), n());
     libmesh_assert_equal_to(r.n(), m.n());
@@ -324,7 +324,7 @@ void FEMOperatorMatrix::right_multiply_transpose(DenseMatrix<T>& r, const DenseM
 
 template <typename T>
 inline
-void FEMOperatorMatrix::right_multiply_transpose(DenseMatrix<T>& r, const FEMOperatorMatrix& m) const
+void FEMOperatorMatrix::right_multiply_transpose(libMesh::DenseMatrix<T>& r, const FEMOperatorMatrix& m) const
 {
     libmesh_assert_equal_to(r.m(), n());
     libmesh_assert_equal_to(r.n(), m.n());
@@ -340,7 +340,7 @@ void FEMOperatorMatrix::right_multiply_transpose(DenseMatrix<T>& r, const FEMOpe
                 index_j = j*m._n_interpolated_vars+k;
                 if (_var_shape_functions[index_i] &&
                     m._var_shape_functions[index_j]) { // if shape function exists for both
-                    const DenseVector<Real> &n1 = *_var_shape_functions[index_i],
+                    const libMesh::DenseVector<libMesh::Real> &n1 = *_var_shape_functions[index_i],
                     &n2 = *m._var_shape_functions[index_j];
                     for (unsigned int i_n1=0; i_n1<n1.size(); i_n1++)
                         for (unsigned int i_n2=0; i_n2<n2.size(); i_n2++)
@@ -355,7 +355,7 @@ void FEMOperatorMatrix::right_multiply_transpose(DenseMatrix<T>& r, const FEMOpe
 
 template <typename T>
 inline
-void FEMOperatorMatrix::left_multiply(DenseMatrix<T>& r, const DenseMatrix<T>& m) const
+void FEMOperatorMatrix::left_multiply(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const
 {
     libmesh_assert_equal_to(r.m(), m.m());
     libmesh_assert_equal_to(r.n(), n());
@@ -379,7 +379,7 @@ void FEMOperatorMatrix::left_multiply(DenseMatrix<T>& r, const DenseMatrix<T>& m
 
 template <typename T>
 inline
-void FEMOperatorMatrix::left_multiply_transpose(DenseMatrix<T>& r, const DenseMatrix<T>& m) const
+void FEMOperatorMatrix::left_multiply_transpose(libMesh::DenseMatrix<T>& r, const libMesh::DenseMatrix<T>& m) const
 {
     libmesh_assert_equal_to(r.m(), m.m());
     libmesh_assert_equal_to(r.n(), _n_interpolated_vars);

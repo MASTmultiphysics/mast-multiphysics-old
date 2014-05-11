@@ -30,7 +30,7 @@ public:
      *   mesh for the provided information, and then uses the provided funciton
      *   move the mesh points.
      */
-    virtual void init (const Real tc,
+    virtual void init (const libMesh::Real tc,
                        const unsigned int panel_bc_id,
                        const unsigned int symmetry_bc_id,
                        const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
@@ -46,11 +46,11 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    Real _tc_ratio;
+    libMesh::Real _tc_ratio;
     
-    Real _x0;
+    libMesh::Real _x0;
     
-    Real _y0, _y1;
+    libMesh::Real _y0, _y1;
     
     unsigned int _panel_bc_id, _symmetry_bc_id;
     
@@ -60,7 +60,7 @@ protected:
 
 
 inline void
-RampMesh2D::init (const Real tc_ratio,
+RampMesh2D::init (const libMesh::Real tc_ratio,
                    const unsigned int panel_bc_id,
                    const unsigned int symmetry_bc_id,
                    const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
@@ -140,8 +140,8 @@ RampMesh2D::process_mesh( )
     MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
     const Mesh::node_iterator n_end = _mesh->nodes_end();
     
-    const Real pi = acos(-1.);
-    Real x, y;
+    const libMesh::Real pi = acos(-1.);
+    libMesh::Real x, y;
     
     for (; n_it != n_end; n_it++)
     {
