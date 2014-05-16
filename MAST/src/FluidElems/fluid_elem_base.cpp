@@ -2192,7 +2192,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         val1 += vec1.dot(vec2);
     }
 
-//    // now calculate the Ducros shock sensor
+/*    // now calculate the Ducros shock sensor
 //    Real d_ducros = 0., div = 0.;
 //    DenseVector<Real> u, dudx, dudy, dudz, dN, curl;
 //    u.resize(dim); dudx.resize(3); dudy.resize(3); dudz.resize(3); curl.resize(3);
@@ -2223,7 +2223,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
 //    curl(0) =   dudy(2)-dudz(1);
 //    curl(1) = -(dudx(2)-dudz(0));
 //    curl(2) =   dudx(1)-dudy(0);
-//    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6);
+//    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6); */
     
     discontinuity_val = sqrt(discontinuity_val/val1);
     

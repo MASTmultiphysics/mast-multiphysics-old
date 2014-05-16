@@ -175,7 +175,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     tmp_mat_n1n2, tmp_mat_n2n2, tmp_mat_n2n1, tmp_mat_n1n1,
     A_sens, stress_tensor, dcons_dprim, dprim_dcons;
     DenseVector<Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
-    temp_grad, flux_real, tmp_vec3_n2_real;
+    temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude;
     DenseVector<Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1,
     tmp_vec5_n1;
     
@@ -190,7 +190,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     tmp_mat_n2n1.resize(n_dofs, dim+2); tmp_mat_n1n1.resize(dim+2, dim+2);
     dcons_dprim.resize(dim+2, dim+2); dprim_dcons.resize(dim+2, dim+2);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
-    tmp_vec3_n2_real.resize(n_dofs);
+    tmp_vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -204,7 +204,9 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
     
-    Real diff_val=0.;
+    Real diff_val=0., diff_val2 = 0.;
+    for (unsigned int i=0; i<n_dofs; i++)
+        sol_magnitude(i) = std::abs(c.get_elem_solution()(i));
     
     PrimitiveSolution primitive_sol;
 
@@ -268,7 +270,14 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         // the discontinuity capturing term is reused from the steady solution
         diff_val = real(diff_val_vec.el(c.get_elem().dof_number
                                         (delta_val_system.number(), 0, 0)));
-
+        
+        calculate_aliabadi_discontinuity_operator(vars, qp, c,
+                                                  primitive_sol,
+                                                  sol_magnitude,
+                                                  dB_mat, Ai_Bi_advection,
+                                                  diff_val2);
+        diff_val += diff_val2;
+        
         // calculate the interpolated solution value at this quadrature point
         B_mat.vector_mult(elem_interpolated_sol, c.get_elem_solution());  // B dU
 
