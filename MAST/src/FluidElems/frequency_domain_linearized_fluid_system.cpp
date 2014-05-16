@@ -276,7 +276,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                                                   sol_magnitude,
                                                   dB_mat, Ai_Bi_advection,
                                                   diff_val2);
-        diff_val += 0.005*diff_val2;
+        diff_val += diff_val2;
         
         // calculate the interpolated solution value at this quadrature point
         B_mat.vector_mult(elem_interpolated_sol, c.get_elem_solution());  // B dU
