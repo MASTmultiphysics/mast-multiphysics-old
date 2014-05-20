@@ -2180,11 +2180,13 @@ void FluidElemBase::calculate_hartmann_discontinuity_operator
         dpdc.vector_mult(vec2, vec1);
         dp(i) = vec2.dot(dpress_dp);
     }
-    
+
+    const unsigned int fe_order = c.get_system().variable(0).type().order;
+
     // now set the value of the dissipation coefficient
     for (unsigned int i=0; i<dim; i++)
         discontinuity_val(i) =
-        (dp.l2_norm() * hk(i) / sol.p) * // pressure switch
+        (dp.l2_norm() * hk(i) / sol.p / (fe_order + 1)) * // pressure switch
         pow(hk(i), 2) * rp;
     discontinuity_val.scale(_dissipation_scaling);
 }
@@ -2283,6 +2285,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     dval = sqrt(dval/val1);
     
     // also add a pressure switch q
+    const unsigned int fe_order = c.get_system().variable(0).type().order;
     libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
     libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
     dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
@@ -2298,7 +2301,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         for (unsigned int j=0; j<dim; j++)
             hk = fmax(hk, fabs(dX_dxi(i, j)));
     }
-    p_sensor = dp.l2_norm() * hk / sol.p;
+    p_sensor = dp.l2_norm() * hk / sol.p / (fe_order + 1.);
     dval *= (p_sensor * _dissipation_scaling);
     
     // set value in all three dimensions to be the same
