@@ -179,7 +179,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     //SerialMesh mesh(init.comm());
     ParallelMesh mesh(init.comm());
 
-    sleep(20);
+    //sleep(20);
     
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -362,10 +362,6 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     FluidPostProcessSystem& fluid_post =
     equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
     fluid_post.flight_condition = &flight_cond;
-    libMesh::System& delta_val_system =
-    equation_systems.add_system<System> ("DeltaValSystem");
-    delta_val_system.add_variable("delta", FEType(CONSTANT, MONOMIAL));
-    
     
     ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(system);
     libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(system);
@@ -511,16 +507,15 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         << system.time << std::endl;
         
         
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+        // before the first iteration the dc vector needs to be localized
+        system.evaluate_recalculate_dc_flag();
+#endif
+
         // Do one last solve before the time step increment
         system.solve();
         //system.assemble_qoi(); // calculate the quantities of interest
         //system.postprocess(); // set the qois to the post-process variables
-        
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        system.evaluate_recalculate_dc_flag();
-        delta_val_system.solution->close();
-        delta_val_system.update();
-#endif
         
         // Advance to the next timestep in a transient problem
         //system.time_solver->advance_timestep();
@@ -532,11 +527,6 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         // Adaptively solve the timestep
         if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
         {
-            
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-            delta_val_system.solution->close();
-            delta_val_system.update();
-#endif
             ErrorVector error;
             
             AutoPtr<ErrorEstimator> error_estimator;
