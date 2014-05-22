@@ -277,6 +277,8 @@ void FluidElemBase::init_data ()
     _if_full_linearization = _infile("if_full_linearization", true);
     _if_update_stabilization_per_quadrature_point =
     _infile("if_update_stabilization_per_quadrature_point", true);
+    _include_pressure_switch =
+    _infile("include_pressure_switch", true);
     _dissipation_scaling = _infile("dissipation_scaling", 10.0);
     
     // read the boundary conditions
@@ -2284,25 +2286,27 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     
     dval = sqrt(dval/val1);
     
-    // also add a pressure switch q
-    const unsigned int fe_order = c.get_system().variable(0).type().order;
-    libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
-    libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
-    dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
-    dp.resize(dim);
-    libMesh::Real p_sensor = 0., hk = 0.;
-    calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
-    dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
-    dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
-    for (unsigned int i=0; i<dim; i++) {
-        dB_mat[i].vector_mult(vec1, elem_solution);
-        dpdc.vector_mult(vec2, vec1);
-        dp(i) = vec2.dot(dpress_dp);
-        for (unsigned int j=0; j<dim; j++)
-            hk = fmax(hk, fabs(dX_dxi(i, j)));
+    if (_include_pressure_switch) {
+        // also add a pressure switch q
+        const unsigned int fe_order = c.get_system().variable(0).type().order;
+        libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
+        libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
+        dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
+        dp.resize(dim);
+        libMesh::Real p_sensor = 0., hk = 0.;
+        calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
+        dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
+        dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
+        for (unsigned int i=0; i<dim; i++) {
+            dB_mat[i].vector_mult(vec1, elem_solution);
+            dpdc.vector_mult(vec2, vec1);
+            dp(i) = vec2.dot(dpress_dp);
+            for (unsigned int j=0; j<dim; j++)
+                hk = fmax(hk, fabs(dX_dxi(i, j)));
+        }
+        p_sensor = dp.l2_norm() * hk / sol.p / (fe_order + 1.);
+        dval *= (p_sensor * _dissipation_scaling);
     }
-    p_sensor = dp.l2_norm() * hk / sol.p / (fe_order + 1.);
-    dval *= (p_sensor * _dissipation_scaling);
     
     // set value in all three dimensions to be the same
     for (unsigned int i=0; i<dim; i++)
