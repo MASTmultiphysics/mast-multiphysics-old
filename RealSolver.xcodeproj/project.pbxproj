@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		690C378B18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 690C378A18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp */; };
 		69456F6D18482C7C009CB00A /* structural_system_assembly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */; };
+		694C430E1926A8BB0040690B /* shock_tube_fluid_elem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694C430C1926A8BA0040690B /* shock_tube_fluid_elem.cpp */; };
 		696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */; };
 		696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C07FA1796CD4100B77C5C /* fluid_newton_solver.cpp */; };
 		696C08151796CD4100B77C5C /* structural_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 696C08081796CD4100B77C5C /* structural_elem_base.cpp */; };
@@ -73,6 +74,8 @@
 		690C378918B45C1C002ED059 /* multilayer_1d_section_element_property_card.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = multilayer_1d_section_element_property_card.h; sourceTree = "<group>"; };
 		690C378A18B4619D002ED059 /* multilayer_1d_section_element_property_card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = multilayer_1d_section_element_property_card.cpp; sourceTree = "<group>"; };
 		69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
+		694C430C1926A8BA0040690B /* shock_tube_fluid_elem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shock_tube_fluid_elem.cpp; sourceTree = "<group>"; };
+		694C430D1926A8BA0040690B /* shock_tube_fluid_elem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shock_tube_fluid_elem.h; sourceTree = "<group>"; };
 		695F3B2B1856C90900052C29 /* stiffened_panel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stiffened_panel.h; sourceTree = "<group>"; };
 		696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aerodynamic_qoi.cpp; sourceTree = "<group>"; };
 		696C07F71796CD4100B77C5C /* aerodynamic_qoi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_qoi.h; sourceTree = "<group>"; };
@@ -257,6 +260,8 @@
 				696C07FD1796CD4100B77C5C /* fluid_system.h */,
 				EBE83D5617A021F4000F013C /* frequency_domain_linearized_fluid_system.cpp */,
 				696C07FF1796CD4100B77C5C /* frequency_domain_linearized_fluid_system.h */,
+				694C430C1926A8BA0040690B /* shock_tube_fluid_elem.cpp */,
+				694C430D1926A8BA0040690B /* shock_tube_fluid_elem.h */,
 			);
 			path = FluidElems;
 			sourceTree = "<group>";
@@ -543,6 +548,7 @@
 				EBE83D5317A021E3000F013C /* fluid_analysis_driver.cpp in Sources */,
 				EBE83D5717A021F4000F013C /* fluid_elem_base.cpp in Sources */,
 				EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */,
+				694C430E1926A8BB0040690B /* shock_tube_fluid_elem.cpp in Sources */,
 				EBED98B5189AEB75008561D5 /* solid_2d_section_element_property_card.cpp in Sources */,
 				EBB0998517F0872B00272355 /* main.cpp in Sources */,
 				EB54E61618FDA2890033E18E /* time_domain_flutter_solver.cpp in Sources */,
