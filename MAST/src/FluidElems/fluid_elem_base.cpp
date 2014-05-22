@@ -2139,26 +2139,83 @@ FluidElemBase::calculate_dxidX (const std::vector<unsigned int>& vars,
 
 
 
-void FluidElemBase::calculate_aliabadi_discontinuity_operator
-( const std::vector<unsigned int>& vars, const unsigned int qp,
-  FEMContext& c,  const PrimitiveSolution& sol,
-  const libMesh::DenseVector<libMesh::Real>& elem_solution,
-  const std::vector<FEMOperatorMatrix>& dB_mat,
-  const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
-  Real& discontinuity_val)
+void FluidElemBase::calculate_hartmann_discontinuity_operator
+(const std::vector<unsigned int>& vars, const unsigned int qp,
+ FEMContext& c,  const PrimitiveSolution& sol,
+ const libMesh::DenseVector<libMesh::Real>& elem_solution,
+ const std::vector<FEMOperatorMatrix>& dB_mat,
+ const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+ libMesh::DenseVector<Real>& discontinuity_val)
 {
-    const unsigned int n1 = 2 + dim, n2 = dB_mat[0].n();
+    discontinuity_val.zero();
+    const unsigned int n1 = 2 + dim;
+    
+    libMesh::DenseMatrix<libMesh::Real> tmpmat1_n1n1, dxi_dX, dX_dxi, dpdc, dcdp;
+    libMesh::DenseVector<libMesh::Real> vec1, vec2, dpress_dp, dp, hk;
+    vec1.resize(n1); vec2.resize(n1); tmpmat1_n1n1.resize(dim+2, dim+2);
+    dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
+    dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
+    hk.resize(dim); dp.resize(dim);
+    
+    // residual of the strong form of the equation: assuming steady flow
+    Ai_Bi_advection.vector_mult(vec2, elem_solution);// Ai dU/dxi
+
+    // calculate dp/dU
+    calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
+    dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
+    dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
+    dpdc.vector_mult_transpose(vec1, dpress_dp); // dpress/dprimitive * dprimitive/dconservative
+    
+    Real rp = fabs(vec2.dot(vec1)) / sol.p;  // sum_i=1..m  (dp/dU_i)*R_i / p
+    
+    // calculate the approximate element size
+    this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
+    for (unsigned int i=0; i<dim; i++) {
+        
+        for (unsigned int j=0; j<dim; j++)
+            hk(i) = fmax(hk(i), fabs(dX_dxi(i, j))); // get the mqximum value out of each xi
+        
+        // calculate gradient of p = dp/dprim * dprim/dcons * dcons/dx_i
+        dB_mat[i].vector_mult(vec1, elem_solution);
+        dpdc.vector_mult(vec2, vec1);
+        dp(i) = vec2.dot(dpress_dp);
+    }
+
+    const unsigned int fe_order = c.get_system().variable(0).type().order;
+
+    // now set the value of the dissipation coefficient
+    for (unsigned int i=0; i<dim; i++)
+        discontinuity_val(i) =
+        (dp.l2_norm() * hk(i) / sol.p / (fe_order + 1)) * // pressure switch
+        pow(hk(i), 2) * rp;
+    discontinuity_val.scale(_dissipation_scaling);
+}
+
+
+
+
+void FluidElemBase::calculate_aliabadi_discontinuity_operator
+(const std::vector<unsigned int>& vars, const unsigned int qp,
+ FEMContext& c,  const PrimitiveSolution& sol,
+ const libMesh::DenseVector<libMesh::Real>& elem_solution,
+ const std::vector<FEMOperatorMatrix>& dB_mat,
+ const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+ libMesh::DenseVector<Real>& discontinuity_val)
+{
+    discontinuity_val.zero();
+    const unsigned int n1 = 2 + dim;
 
     std::vector<libMesh::DenseVector<libMesh::Real> > diff_vec(3);
     libMesh::DenseMatrix<libMesh::Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
-    tmpmat1_n1n2, tmpmat2_n1n2, tmpmat3;
-    libMesh::DenseVector<libMesh::Real> vec1, vec2, vec3_n2, vec4_n2;
-    vec1.resize(n1); vec2.resize(n1); vec3_n2.resize(n2); vec4_n2.resize(n2);
+    tmpmat1_n1n1;
+    libMesh::DenseVector<libMesh::Real> vec1, vec2;
+    vec1.resize(n1); vec2.resize(n1);
     dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
-    tmpmat1_n1n2.resize(dim+2, n2); tmpmat2_n1n2.resize(dim+2, n2);
+    tmpmat1_n1n1.resize(dim+2, dim+2);
     for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
     
+    Real dval;
     
     this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
     this->calculate_entropy_variable_jacobian ( sol, A_entropy, A_inv_entropy );
@@ -2174,7 +2231,7 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
     // capturing term coefficient
     //vec2 += c.elem_solution; // add velocity TODO: how to get the
     A_inv_entropy.vector_mult(vec2, vec1);
-    discontinuity_val = vec1.dot(vec2);  // this is the numerator term
+    dval = vec1.dot(vec2);  // this is the numerator term
     
     // now evaluate the dissipation factor for the discontinuity capturing term
     // this is the denominator term
@@ -2225,9 +2282,10 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
 //    curl(2) =   dudx(1)-dudy(0);
 //    d_ducros = (div*div) / (div*div + pow(curl.l2_norm(),2) + 1.0e-6); */
     
-    discontinuity_val = sqrt(discontinuity_val/val1);
+    dval = sqrt(dval/val1);
     
     // also add a pressure switch q
+    const unsigned int fe_order = c.get_system().variable(0).type().order;
     libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
     libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
     dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
@@ -2241,85 +2299,14 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         dpdc.vector_mult(vec2, vec1);
         dp(i) = vec2.dot(dpress_dp);
         for (unsigned int j=0; j<dim; j++)
-            hk = fmax(hk, dX_dxi(i, j));
+            hk = fmax(hk, fabs(dX_dxi(i, j)));
     }
-    p_sensor = dp.l2_norm() * hk / sol.p;
-    discontinuity_val *= (p_sensor * _dissipation_scaling);
-}
-
-
-
-
-void FluidElemBase::calculate_yzbeta_discontinuity_operator
-(  const std::vector<unsigned int>& vars, const unsigned int qp,
-   FEMContext& c, const libMesh::DenseVector<libMesh::Real>& elem_solution,
-   const std::vector<FEMOperatorMatrix>& dB_mat,
-   const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
-   Real& discontinuity_val )
-{
-    const unsigned int n1 = 2 + dim;
-    const libMesh::Real beta = 2.0;
-
-    libMesh::DenseVector<libMesh::Real> vec1, ref_sol, jvec;
-    vec1.resize(n1); ref_sol.resize(n1); jvec.resize(dim); 
+    p_sensor = dp.l2_norm() * hk / sol.p / (fe_order + 1.);
+    dval *= (p_sensor * _dissipation_scaling);
     
-    this->get_infinity_vars(ref_sol); // Y
-    for (unsigned int i_var=0; i_var<n1; i_var++)
-        if (fabs(ref_sol(i_var)) > 0.)
-            ref_sol(i_var) = 1./ref_sol(i_var); // Y^{-1}
-
-    
-    discontinuity_val = 0.;
+    // set value in all three dimensions to be the same
     for (unsigned int i=0; i<dim; i++)
-    {
-        vec1.zero();
-        dB_mat[i].vector_mult(vec1, elem_solution); // dU/dxi
-        for (unsigned int i_var=0; i_var<n1; i_var++)
-            vec1(i_var) *= ref_sol(i_var);          // Y^{-1} dU/dxi
-        discontinuity_val += vec1.dot(vec1);
-    }
-    discontinuity_val = pow(discontinuity_val, beta/2.-1.);
-
-    
-    // TODO: divergence of diffusive flux
-    Ai_Bi_advection.vector_mult(vec1, elem_solution); // Z = Ai dU/dxi
-    for (unsigned int i_var=0; i_var<n1; i_var++)
-        vec1(i_var) *= ref_sol(i_var);                // Y^{-1} Ai dU/dxi
-    discontinuity_val *= vec1.l2_norm();
-    
-    // calculate the element size along density gradient
-    libMesh::FEBase* fe;
-    c.get_element_fe(vars[0], fe);
-    const std::vector<std::vector<RealVectorValue> >& dphi = fe->get_dphi(); // assuming that all variables have the same interpolation
-
-    libMesh::Point dN, drho;
-    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-    {
-        vec1.zero();
-        dB_mat[i_dim].vector_mult(vec1, elem_solution);
-        drho(i_dim) = vec1(0);
-    }
-    
-    libMesh::Real drho_norm = drho.size(), h = 0;
-
-    if (drho_norm > 0.)
-    {
-        drho *= (1./drho_norm); // scale to unit vec
-        
-        for (unsigned int i_phi=0; i_phi<dphi.size(); i_phi++)
-        {
-            // set value of shape function gradient
-            for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                dN(i_dim) = dphi[i_phi][qp](i_dim);
-            
-            h += fabs(dN * drho);
-        }
-        
-        h = 2.0/h;
-    }
-    
-    discontinuity_val *= pow(h/2., beta);
-
+        discontinuity_val(i) = dval;
 }
 
 
@@ -2332,8 +2319,7 @@ void FluidElemBase::calculate_differential_operator_matrix
  const std::vector<libMesh::DenseMatrix<libMesh::Real> >& Ai_advection,
  const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
  const std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > >& Ai_sens,
- libMesh::DenseMatrix<libMesh::Real>& LS_operator, libMesh::DenseMatrix<libMesh::Real>& LS_sens,
- Real& discontinuity_val)
+ libMesh::DenseMatrix<libMesh::Real>& LS_operator, libMesh::DenseMatrix<libMesh::Real>& LS_sens)
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
@@ -2398,15 +2384,6 @@ void FluidElemBase::calculate_differential_operator_matrix
             }
         }
     }
-    
-    calculate_aliabadi_discontinuity_operator(vars, qp, c, sol, elem_solution,
-                                              dB_mat, Ai_Bi_advection,
-                                              discontinuity_val);
-
-//    calculate_yzbeta_discontinuity_operator(vars, qp, c, elem_solution,
-//                                            dB_mat, Ai_Bi_advection,
-//                                            discontinuity_val);
-
     
     // scale the LS matrix with the correct factor
     if (if_diagonal_tau)

@@ -223,21 +223,23 @@ protected:
                                        libMesh::DenseMatrix<libMesh::Real>& tau,
                                        std::vector<libMesh::DenseMatrix<libMesh::Real> >& tau_sens);
     
+    void calculate_hartmann_discontinuity_operator
+    (const std::vector<unsigned int>& vars, const unsigned int qp,
+     FEMContext& c,  const PrimitiveSolution& sol,
+     const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     const std::vector<FEMOperatorMatrix>& dB_mat,
+     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+     libMesh::DenseVector<Real>& discontinuity_val);
+
+    
     void calculate_aliabadi_discontinuity_operator
     (const std::vector<unsigned int>& vars, const unsigned int qp,
      FEMContext& c,  const PrimitiveSolution& sol,
      const libMesh::DenseVector<libMesh::Real>& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
-     Real& discontinuity_val);
+     libMesh::DenseVector<Real>& discontinuity_val);
 
-    
-    void calculate_yzbeta_discontinuity_operator
-    (const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c, const libMesh::DenseVector<libMesh::Real>& elem_solution,
-     const std::vector<FEMOperatorMatrix>& dB_mat,
-     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
-     Real& discontinuity_val );
     
     
     void calculate_differential_operator_matrix
@@ -248,8 +250,7 @@ protected:
      const std::vector<libMesh::DenseMatrix<libMesh::Real> >& Ai_advection,
      const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
      const std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > >& Ai_sens,
-     libMesh::DenseMatrix<libMesh::Real>& LS_operator, libMesh::DenseMatrix<libMesh::Real>& LS_sens,
-     Real& discontinuity_val);
+     libMesh::DenseMatrix<libMesh::Real>& LS_operator, libMesh::DenseMatrix<libMesh::Real>& LS_sens);
     
     std::vector<FluidPrimitiveVars> _active_primitive_vars;
 

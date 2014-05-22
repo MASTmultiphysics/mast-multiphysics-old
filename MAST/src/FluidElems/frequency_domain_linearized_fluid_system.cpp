@@ -110,6 +110,8 @@ void FrequencyDomainLinearizedFluidSystem::init_context(libMesh::DiffContext &co
         if (_if_viscous)
             elem_side_fe[i]->get_dphi();
     }
+    
+    FEMSystem::init_context(context);
 }
 
 
@@ -175,9 +177,9 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     tmp_mat_n1n2, tmp_mat_n2n2, tmp_mat_n2n1, tmp_mat_n1n1,
     A_sens, stress_tensor, dcons_dprim, dprim_dcons;
     libMesh::DenseVector<libMesh::Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
-    temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude;
-    libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec3_n2, tmp_vec4_n1,
-    tmp_vec5_n1;
+    temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude, diff_val, diff_val2;
+    libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec3_n2,
+    tmp_vec4_n1, tmp_vec5_n1;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
     Ai_Bi_advection.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
@@ -191,6 +193,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     dcons_dprim.resize(dim+2, dim+2); dprim_dcons.resize(dim+2, dim+2);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     tmp_vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
+    diff_val.resize(dim); diff_val2.resize(dim);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -204,10 +207,6 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
     
-    libMesh::Real diff_val=0., diff_val2 = 0.;
-    for (unsigned int i=0; i<n_dofs; i++)
-        sol_magnitude(i) = std::abs(c.get_elem_solution()(i));
-    
     PrimitiveSolution primitive_sol;
 
     // element dofs from steady solution to calculate the linearized quantities
@@ -217,18 +216,17 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     std::vector<dof_id_type> fluid_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
     
-    for (unsigned int i=0; i<c.get_dof_indices().size(); i++)
+    for (unsigned int i=0; i<n_dofs; i++) {
+        sol_magnitude(i) = std::real(c.get_elem_solution()(i));
         ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
+    }
+    sol_magnitude.add(1., ref_sol);
     
     libMesh::Number iota(0, 1.), mass_scaling = iota*perturbed_surface_motion->frequency,
     stiffness_scaling = 1.0;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
         flight_condition->velocity_magnitude;
-    
-    libMesh::System& delta_val_system =
-    this->get_equation_systems().get_system<System>("DeltaValSystem");
-    libMesh::NumericVector<libMesh::Number>& diff_val_vec = (*delta_val_system.solution.get());
     
     const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = phi.size();
@@ -261,22 +259,26 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                 (i_dim, primitive_sol, flux_jacobian_sens[i_dim]);
         }
         
-        if (_if_update_stabilization_per_quadrature_point || (qp == 0))
+        if (_if_update_stabilization_per_quadrature_point || (qp == 0)) {
             this->calculate_differential_operator_matrix
             (vars, qp, c, ref_sol, primitive_sol, B_mat,
              dB_mat, Ai_advection, Ai_Bi_advection, flux_jacobian_sens,
-             LS_mat, LS_sens, diff_val);
-        
-        // the discontinuity capturing term is reused from the steady solution
-        diff_val = real(diff_val_vec.el(c.get_elem().dof_number
-                                        (delta_val_system.number(), 0, 0)));
-        
-        calculate_aliabadi_discontinuity_operator(vars, qp, c,
-                                                  primitive_sol,
-                                                  sol_magnitude,
-                                                  dB_mat, Ai_Bi_advection,
-                                                  diff_val2);
-        diff_val += 0.005*diff_val2;
+             LS_mat, LS_sens);
+            
+            
+            calculate_aliabadi_discontinuity_operator(vars, qp, c,
+                                                      primitive_sol,
+                                                      ref_sol,
+                                                      dB_mat, Ai_Bi_advection,
+                                                      diff_val);
+            
+            calculate_aliabadi_discontinuity_operator(vars, qp, c,
+                                                      primitive_sol,
+                                                      sol_magnitude,
+                                                      dB_mat, Ai_Bi_advection,
+                                                      diff_val2);
+            diff_val += diff_val2;
+        }
         
         // calculate the interpolated solution value at this quadrature point
         B_mat.vector_mult(elem_interpolated_sol, c.get_elem_solution());  // B dU
@@ -336,7 +338,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.get_elem_solution());  // d dU/ dx_i
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dB/dx_i d dU/ dx_i
-            Fvec.add(JxW[qp]*diff_val*stiffness_scaling, tmp_vec3_n2);
+            Fvec.add(JxW[qp]*diff_val(i_dim)*stiffness_scaling, tmp_vec3_n2);
         }
         
         // Least square contribution from flux
@@ -380,7 +382,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                 // discontinuity capturing term
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat_n2n2,
                                                        dB_mat[i_dim]);
-                Kmat.add(JxW[qp]*diff_val*stiffness_scaling, tmp_mat_n2n2);
+                Kmat.add(JxW[qp]*diff_val(i_dim)*stiffness_scaling, tmp_mat_n2n2);
 
                 if (_if_full_linearization)
                 {

@@ -85,6 +85,11 @@ public:
 protected:
     
     /*!
+     *   localized reference solution for calculation of dc_val
+     */
+    std::auto_ptr<libMesh::NumericVector<Real> > _dc_ref_sol;
+    
+    /*!
      *    Current and old norms of density in the flow-field
      */
     libMesh::Real _rho_norm_old, _rho_norm_curr;

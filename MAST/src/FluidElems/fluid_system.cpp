@@ -177,6 +177,8 @@ void FluidSystem::init_data ()
 
 void FluidSystem::init_context(DiffContext &context)
 {
+    context.add_localized_vector(*_dc_ref_sol, *this);
+    
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
     std::vector<libMesh::FEBase*> elem_fe(dim+2);
@@ -203,6 +205,8 @@ void FluidSystem::init_context(DiffContext &context)
         if (_if_viscous)
             elem_side_fe[i]->get_dphi();
     }
+    
+    FEMSystem::init_context(context);
 }
 
 
@@ -246,7 +250,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     dprim_dcons, dcons_dprim;
     
     libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    conservative_sol, delta_vals, temp_grad;
+    conservative_sol, temp_grad, diff_val, dc_ref_sol;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);
@@ -257,7 +261,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
     tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
-    delta_vals.resize(n_qpoints); temp_grad.resize(dim);
+    temp_grad.resize(dim); diff_val.resize(dim);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -270,22 +274,11 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
-    
-    
-    libMesh::Real diff_val=0.;
-    
-    libMesh::System& delta_val_system =
-    this->get_equation_systems().get_system<System>("DeltaValSystem");
-    libMesh::NumericVector<libMesh::Real>& diff_val_vec = (*delta_val_system.solution.get());
-    
-    if (if_use_stored_dc_coeff)
-    {
-        diff_val = diff_val_vec.el(c.get_elem().dof_number
-                                   (delta_val_system.number(), 0, 0));
-        
-        for (unsigned int qp=0; qp<n_qpoints; qp++)
-            delta_vals(qp) = diff_val;
-    }
+
+    if (!if_use_stored_dc_coeff)
+        dc_ref_sol = c.get_elem_solution();
+    else
+        dc_ref_sol = c.get_localized_vector(*_dc_ref_sol);
     
     PrimitiveSolution primitive_sol;
     const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
@@ -332,18 +325,21 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
                 this->calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
                 (i_dim, primitive_sol, flux_jacobian_sens[i_dim]);
         }
-        if (_if_update_stabilization_per_quadrature_point || (qp == 0))
+        if (_if_update_stabilization_per_quadrature_point || (qp == 0)) {
             this->calculate_differential_operator_matrix
             (vars, qp, c,
              c.get_elem_solution(), primitive_sol,
              B_mat, dB_mat, Ai_advection,
              Ai_Bi_advection, flux_jacobian_sens,
-             LS_mat, LS_sens, diff_val);
-        
-        if (if_use_stored_dc_coeff)
-            diff_val = delta_vals(qp);
-        else
-            delta_vals(qp) = diff_val;
+             LS_mat, LS_sens);
+            
+            this->calculate_hartmann_discontinuity_operator(vars, qp, c,
+                                                            primitive_sol,
+                                                            dc_ref_sol,
+                                                            dB_mat,
+                                                            Ai_Bi_advection,
+                                                            diff_val);
+        }
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
@@ -365,7 +361,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.get_elem_solution());
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-            Fvec.add(-JxW[qp]*diff_val, tmp_vec3_n2);
+            Fvec.add(-JxW[qp]*diff_val(i_dim), tmp_vec3_n2);
         }
         
         // Least square contribution from divergence of advection flux
@@ -392,7 +388,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
                 // discontinuity capturing term
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2,
                                                        dB_mat[i_dim]);
-                Kmat.add(-JxW[qp]*diff_val, tmp_mat2_n2n2);
+                Kmat.add(-JxW[qp]*diff_val(i_dim), tmp_mat2_n2n2);
 
                 if (_if_full_linearization)
                 {
@@ -443,16 +439,6 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
             }
         }
     } // end of the quadrature point qp-loop
-    
-    if (!if_use_stored_dc_coeff)
-    {
-        diff_val = 0.;
-        for (unsigned int qp=0; qp<n_qpoints; qp++)
-            diff_val += delta_vals(qp);
-        diff_val /= (1.*n_qpoints);
-        diff_val_vec.set(c.get_elem().dof_number
-                         (delta_val_system.number(), 0, 0), diff_val);
-    }
     
     //    std::cout << "inside element time derivative " << std::endl;
     //    c.elem->print_info();
@@ -986,11 +972,13 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
     libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
     tmp_mat2_n2n2, tmp_mat3;
-    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec3_n2, conservative_sol;
+    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec3_n2,
+    conservative_sol, diff_val, dc_ref_sol;
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     tmp_mat2_n2n2.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);  tmp_mat_n1n2.resize(dim+2, n_dofs);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
+    diff_val.resize(dim);
     conservative_sol.resize(dim+2);
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -1003,11 +991,14 @@ bool FluidSystem::mass_residual (bool request_jacobian,
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
-    
-    libMesh::Real diff_val=0.;
-    
+
+    if (!if_use_stored_dc_coeff)
+        dc_ref_sol = c.get_elem_fixed_solution();
+    else
+        dc_ref_sol = c.get_localized_vector(*_dc_ref_sol);
+
     PrimitiveSolution primitive_sol;
-    
+
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
@@ -1029,13 +1020,20 @@ bool FluidSystem::mass_residual (bool request_jacobian,
             Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
         }
         
-        if (_if_update_stabilization_per_quadrature_point || (qp == 0))
+        if (_if_update_stabilization_per_quadrature_point || (qp == 0)) {
             this->calculate_differential_operator_matrix
             (vars, qp, c, c.get_elem_fixed_solution(),
              primitive_sol, B_mat, dB_mat,
              Ai_advection, Ai_Bi_advection,
-             flux_jacobian_sens, LS_mat, LS_sens, diff_val);
-        
+             flux_jacobian_sens, LS_mat, LS_sens);
+            
+            this->calculate_hartmann_discontinuity_operator(vars, qp, c,
+                                                            primitive_sol,
+                                                            dc_ref_sol,
+                                                            dB_mat,
+                                                            Ai_Bi_advection,
+                                                            diff_val);
+        }
         // Galerkin contribution to velocity
         B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );
         B_mat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
@@ -1100,7 +1098,6 @@ void FluidSystem::evaluate_recalculate_dc_flag()
     relative_change0 = fabs(_rho_norm_curr - _rho_norm_old)/_rho_norm_curr,
     relative_change1 = fabs(norm - _rho_norm_curr)/norm;
     
-    
     libMesh::out
     << "Rho L2-norm delta: " << relative_change0
     << " , " << relative_change1 << std::endl;
@@ -1110,11 +1107,28 @@ void FluidSystem::evaluate_recalculate_dc_flag()
     if ((relative_change0 < this->dc_recalculate_tolerance) &&
         (relative_change1 < this->dc_recalculate_tolerance))
     {
+        // if the previous flag was false, then update the solution
+        if (!this->if_use_stored_dc_coeff) {
+            _dc_ref_sol.reset(libMesh::NumericVector<Real>::build(this->comm()).release());
+            _dc_ref_sol->init(this->n_dofs(), this->n_local_dofs(),
+                              this->get_dof_map().get_send_list(),
+                              false, GHOSTED);
+            this->solution->localize(*_dc_ref_sol, this->get_dof_map().get_send_list());
+        }
+        
+        // use the last updated dc_ref_sol
         this->if_use_stored_dc_coeff = true;
         libMesh::out << "Using stored dc coeff" << std::endl;
     }
     else
     {
+        // update the dc_ref_sol
+        _dc_ref_sol.reset(libMesh::NumericVector<Real>::build(this->comm()).release());
+        _dc_ref_sol->init(this->n_dofs(), this->n_local_dofs(),
+                          this->get_dof_map().get_send_list(),
+                          false, GHOSTED);
+        this->solution->localize(*_dc_ref_sol, this->get_dof_map().get_send_list());
+        
         if_use_stored_dc_coeff = false;
         libMesh::out << "Recalculating dc coeff" << std::endl;
     }
