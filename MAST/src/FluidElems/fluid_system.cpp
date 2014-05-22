@@ -201,9 +201,8 @@ void FluidSystem::init_context(DiffContext &context)
         c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
+        elem_side_fe[i]->get_dphi();
         elem_side_fe[i]->get_xyz();
-        if (_if_viscous)
-            elem_side_fe[i]->get_dphi();
     }
     
     FEMSystem::init_context(context);

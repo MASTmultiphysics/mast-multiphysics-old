@@ -106,9 +106,8 @@ void FrequencyDomainLinearizedFluidSystem::init_context(libMesh::DiffContext &co
         c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
+        elem_side_fe[i]->get_dphi();
         elem_side_fe[i]->get_xyz();
-        if (_if_viscous)
-            elem_side_fe[i]->get_dphi();
     }
     
     FEMSystem::init_context(context);
@@ -563,16 +562,17 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     libMesh::DenseMatrix<libMesh::Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
-    libMesh::DenseVector<libMesh::Real>  normal, normal_local, tmp_vec1, U_vec_interpolated,
-    conservative_sol, ref_sol, temp_grad, uvec, dnormal_steady_real;
+    libMesh::DenseVector<libMesh::Real>  normal, normal_local, tmp_vec1, tmp_vec2_n1,
+    tmp_vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
+    dnormal_steady_real;
     libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec1_n2,
     surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol,
     dnormal_steady, surface_steady_vel;
     
     conservative_sol.resize(dim+2);
     normal.resize(spatial_dim); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
-    flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
-    conservative_deltasol.resize(dim+2);
+    flux.resize(n1); tmp_vec1_n2.resize(n_dofs); tmp_vec2_n1.resize(dim+2);
+    tmp_vec3_n1.resize(dim+2); conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
@@ -822,6 +822,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                  ref_sol, conservative_sol,
                  p_sol, B_mat, dB_mat);
                 
+                // calculate the conservative flow variable Jacobians
+                this->calculate_conservative_variable_jacobian
+                (p_sol, dcons_dprim, dprim_dcons);
+
                 // initialize flux to interpolated sol for initialization
                 // of perturbed vars
                 B_mat.vector_mult(conservative_deltasol, elem_sol);
@@ -879,6 +883,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
 
+                // add the contribution from divergence of ui_ni
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
+                    dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol); // dU/dx_i
+                    dprim_dcons.vector_mult(tmp_vec3_n1, tmp_vec2_n1);  // dU_primitive / dx_i
+                    for (unsigned int j_dim=0; j_dim<dim; j_dim++)
+                        dui_ni_unsteady -= tmp_vec3_n1(j_dim+1) *
+                        (face_normals[qp](j_dim) + std::real(dnormal_steady(j_dim)));
+                }
                 
                 // now prepare the flux vector
                 flux.zero();
