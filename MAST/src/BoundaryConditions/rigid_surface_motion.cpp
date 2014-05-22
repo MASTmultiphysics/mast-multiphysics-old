@@ -57,11 +57,12 @@ MAST::RigidSurfaceMotion::init(libMesh::Real freq, libMesh::Real phase)
 void
 MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Point& p,
                                                             const libMesh::Point& n,
+                                                            libMesh::DenseVector<libMesh::Complex>& w_trans,
                                                             libMesh::DenseVector<libMesh::Complex>& u_trans,
                                                             libMesh::DenseVector<libMesh::Complex>& dn_rot)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
-
+    w_trans.zero();
     u_trans.zero();
     dn_rot.zero();
     const libMesh::Complex iota(0., 1.);
@@ -89,6 +90,7 @@ MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Point
             u_trans(i) += plunge_vector(i) * plunge_amplitude;
 
     // u_trans is in phase with velocity
+    w_trans = u_trans;
     u_trans.scale(iota*frequency);
 #endif
 }

@@ -566,8 +566,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     tmp_vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
     dnormal_steady_real;
     libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec1_n2,
-    surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol,
-    dnormal_steady, surface_steady_vel;
+    surface_unsteady_disp, surface_unsteady_vel, dnormal_unsteady, duvec,
+    conservative_deltasol, dnormal_steady, surface_steady_vel;
     
     conservative_sol.resize(dim+2);
     normal.resize(spatial_dim); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
@@ -576,9 +576,9 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
-    surface_steady_vel.resize(spatial_dim); uvec.resize(spatial_dim);
-    duvec.resize(spatial_dim); dnormal_unsteady.resize(spatial_dim);
-    surface_unsteady_vel.resize(spatial_dim);
+    surface_unsteady_disp.resize(spatial_dim);  surface_steady_vel.resize(spatial_dim);
+    uvec.resize(spatial_dim); duvec.resize(spatial_dim);
+    dnormal_unsteady.resize(spatial_dim); surface_unsteady_vel.resize(spatial_dim);
     
     
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
@@ -654,7 +654,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // calculate the surface velocity perturbations
                 perturbed_surface_motion->surface_velocity_frequency_domain
-                (qpoint[qp], face_normals[qp],
+                (qpoint[qp], face_normals[qp], surface_unsteady_disp,
                  surface_unsteady_vel, dnormal_unsteady);
                 
                 // scale surface_unsteady_vel, which is the only
@@ -839,7 +839,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
                 // calculate the surface velocity perturbations
                 perturbed_surface_motion->surface_velocity_frequency_domain
-                (qpoint[qp], face_normals[qp],
+                (qpoint[qp], face_normals[qp], surface_unsteady_disp,
                  surface_unsteady_vel, dnormal_unsteady);
                 
                 // scale just the unsteady velocity term by 1/stiffness_scaling
@@ -888,7 +888,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol); // dU/dx_i
                     dprim_dcons.vector_mult(tmp_vec3_n1, tmp_vec2_n1);  // dU_primitive / dx_i
                     for (unsigned int j_dim=0; j_dim<dim; j_dim++)
-                        dui_ni_unsteady -= tmp_vec3_n1(j_dim+1) *
+                        dui_ni_unsteady -= tmp_vec3_n1(j_dim+1) * surface_unsteady_disp(i_dim) *
                         (face_normals[qp](j_dim) + std::real(dnormal_steady(j_dim)));
                 }
                 
