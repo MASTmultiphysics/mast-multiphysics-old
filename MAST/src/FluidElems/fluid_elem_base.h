@@ -96,6 +96,7 @@ public:
     FluidElemBase(GetPot& infile):
     _if_viscous(false), _if_full_linearization(false),
     _if_update_stabilization_per_quadrature_point(true),
+    _include_pressure_switch(false),
     surface_motion(NULL),
     flight_condition(NULL),
     dim(0),
@@ -257,7 +258,9 @@ protected:
     std::vector<FluidConservativeVars> _active_conservative_vars;
     
     bool _if_viscous, _if_full_linearization,
-    _if_update_stabilization_per_quadrature_point;
+    _if_update_stabilization_per_quadrature_point,
+    _include_pressure_switch;
+    
     libMesh::Real _dissipation_scaling;
     
     GetPot& _infile;

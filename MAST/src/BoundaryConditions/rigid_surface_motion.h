@@ -45,6 +45,7 @@ namespace MAST {
          */
         virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
                                                        const libMesh::Point& n,
+                                                       libMesh::DenseVector<libMesh::Complex>& w_trans,
                                                        libMesh::DenseVector<libMesh::Complex>& u_trans,
                                                        libMesh::DenseVector<libMesh::Complex>& dn_rot);
         

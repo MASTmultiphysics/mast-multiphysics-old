@@ -650,8 +650,8 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     libMesh::Number press, dpress;
     libMesh::DenseVector<libMesh::Real> phi_vec;
-    libMesh::DenseVector<libMesh::Number> utrans, dn_rot, force, local_f, tmp_vec_n2;
-    utrans.resize(3); dn_rot.resize(3);
+    libMesh::DenseVector<libMesh::Number> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
+    wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
@@ -670,7 +670,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         // get pressure and deformation information
         surf_press.surface_pressure(pt, press, dpress);
         surf_motion.surface_velocity_frequency_domain(pt, face_normals[qp],
-                                                      utrans, dn_rot);
+                                                      wtrans, utrans, dn_rot);
         
         //            press = 0.;
         //            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
@@ -743,8 +743,8 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     libMesh::Number press, dpress;
     libMesh::DenseVector<libMesh::Real> phi_vec;
-    libMesh::DenseVector<libMesh::Number> utrans, dn_rot, force, local_f, tmp_vec_n2;
-    utrans.resize(3); dn_rot.resize(3);
+    libMesh::DenseVector<libMesh::Number> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
+    wtrans, utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
@@ -763,7 +763,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         // get pressure and deformation information
         surf_press.surface_pressure(pt, press, dpress);
         surf_motion.surface_velocity_frequency_domain(pt, normal,
-                                                      utrans, dn_rot);
+                                                      wtrans, utrans, dn_rot);
 //        std::cout << std::setw(15) << pt(0)
 //        << std::setw(15) << std::real(press)
 //        << std::setw(15) << std::imag(press)

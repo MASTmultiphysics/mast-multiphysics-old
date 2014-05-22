@@ -106,9 +106,8 @@ void FrequencyDomainLinearizedFluidSystem::init_context(libMesh::DiffContext &co
         c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
+        elem_side_fe[i]->get_dphi();
         elem_side_fe[i]->get_xyz();
-        if (_if_viscous)
-            elem_side_fe[i]->get_dphi();
     }
     
     FEMSystem::init_context(context);
@@ -179,7 +178,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     libMesh::DenseVector<libMesh::Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
     temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude, diff_val, diff_val2;
     libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec3_n2,
-    tmp_vec4_n1, tmp_vec5_n1;
+    tmp_vec4_n1, tmp_vec5_n1, conservative_deltasol;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
     Ai_Bi_advection.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
@@ -194,6 +193,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     tmp_vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
     diff_val.resize(dim); diff_val2.resize(dim);
+    conservative_deltasol.resize(n1);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -208,6 +208,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     }
     
     PrimitiveSolution primitive_sol;
+    SmallPerturbationPrimitiveSolution<Number> delta_p_sol;
 
     // element dofs from steady solution to calculate the linearized quantities
     libMesh::System& fluid =
@@ -217,8 +218,8 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
     
     for (unsigned int i=0; i<n_dofs; i++) {
-        sol_magnitude(i) = std::real(c.get_elem_solution()(i));
-        ref_sol(i) = real((*_local_fluid_solution)(fluid_dof_indices[i]));
+        sol_magnitude(i) = std::abs(c.get_elem_solution()(i));
+        ref_sol(i) = std::real((*_local_fluid_solution)(fluid_dof_indices[i]));
     }
     sol_magnitude.add(1., ref_sol);
     
@@ -251,6 +252,12 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             dB_mat[i_dim].left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
             Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
         }
+
+        // initialize the delta_p_sol
+        B_mat.vector_mult(conservative_deltasol, c.get_elem_solution());
+        
+        delta_p_sol.zero();
+        delta_p_sol.init(primitive_sol, conservative_deltasol);
         
         if (_if_full_linearization)
         {
@@ -272,11 +279,13 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                                                       dB_mat, Ai_Bi_advection,
                                                       diff_val);
             
-            calculate_aliabadi_discontinuity_operator(vars, qp, c,
-                                                      primitive_sol,
-                                                      sol_magnitude,
-                                                      dB_mat, Ai_Bi_advection,
-                                                      diff_val2);
+            calculate_small_disturbance_aliabadi_discontinuity_operator(vars, qp, c,
+                                                                        primitive_sol,
+                                                                        delta_p_sol,
+                                                                        sol_magnitude,
+                                                                        dB_mat,
+                                                                        Ai_Bi_advection,
+                                                                        diff_val2);
             diff_val += diff_val2;
         }
         
@@ -553,22 +562,23 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     libMesh::DenseMatrix<libMesh::Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
-    libMesh::DenseVector<libMesh::Real>  normal, normal_local, tmp_vec1, U_vec_interpolated,
-    conservative_sol, ref_sol, temp_grad, uvec, dnormal_steady_real;
+    libMesh::DenseVector<libMesh::Real>  normal, normal_local, tmp_vec1, tmp_vec2_n1,
+    tmp_vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
+    dnormal_steady_real;
     libMesh::DenseVector<libMesh::Number> elem_interpolated_sol, flux, tmp_vec1_n2,
-    surface_unsteady_vel, dnormal_unsteady, duvec, conservative_deltasol,
-    dnormal_steady, surface_steady_vel;
+    surface_unsteady_disp, surface_unsteady_vel, dnormal_unsteady, duvec,
+    conservative_deltasol, dnormal_steady, surface_steady_vel;
     
     conservative_sol.resize(dim+2);
     normal.resize(spatial_dim); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
-    flux.resize(n1); tmp_vec1_n2.resize(n_dofs);
-    conservative_deltasol.resize(dim+2);
+    flux.resize(n1); tmp_vec1_n2.resize(n_dofs); tmp_vec2_n1.resize(dim+2);
+    tmp_vec3_n1.resize(dim+2); conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     elem_interpolated_sol.resize(n1); ref_sol.resize(n_dofs);
     dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
-    surface_steady_vel.resize(spatial_dim); uvec.resize(spatial_dim);
-    duvec.resize(spatial_dim); dnormal_unsteady.resize(spatial_dim);
-    surface_unsteady_vel.resize(spatial_dim);
+    surface_unsteady_disp.resize(spatial_dim);  surface_steady_vel.resize(spatial_dim);
+    uvec.resize(spatial_dim); duvec.resize(spatial_dim);
+    dnormal_unsteady.resize(spatial_dim); surface_unsteady_vel.resize(spatial_dim);
     
     
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
@@ -644,7 +654,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // calculate the surface velocity perturbations
                 perturbed_surface_motion->surface_velocity_frequency_domain
-                (qpoint[qp], face_normals[qp],
+                (qpoint[qp], face_normals[qp], surface_unsteady_disp,
                  surface_unsteady_vel, dnormal_unsteady);
                 
                 // scale surface_unsteady_vel, which is the only
@@ -812,6 +822,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                  ref_sol, conservative_sol,
                  p_sol, B_mat, dB_mat);
                 
+                // calculate the conservative flow variable Jacobians
+                this->calculate_conservative_variable_jacobian
+                (p_sol, dcons_dprim, dprim_dcons);
+
                 // initialize flux to interpolated sol for initialization
                 // of perturbed vars
                 B_mat.vector_mult(conservative_deltasol, elem_sol);
@@ -825,7 +839,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
                 // calculate the surface velocity perturbations
                 perturbed_surface_motion->surface_velocity_frequency_domain
-                (qpoint[qp], face_normals[qp],
+                (qpoint[qp], face_normals[qp], surface_unsteady_disp,
                  surface_unsteady_vel, dnormal_unsteady);
                 
                 // scale just the unsteady velocity term by 1/stiffness_scaling
@@ -869,6 +883,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
 
+                // add the contribution from divergence of ui_ni
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
+                    dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol); // dU/dx_i
+                    dprim_dcons.vector_mult(tmp_vec3_n1, tmp_vec2_n1);  // dU_primitive / dx_i
+                    for (unsigned int j_dim=0; j_dim<dim; j_dim++)
+                        dui_ni_unsteady -= tmp_vec3_n1(j_dim+1) * surface_unsteady_disp(i_dim) *
+                        (face_normals[qp](j_dim) + std::real(dnormal_steady(j_dim)));
+                }
                 
                 // now prepare the flux vector
                 flux.zero();
@@ -1013,6 +1035,96 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
 
 
+
+void
+FrequencyDomainLinearizedFluidSystem::calculate_small_disturbance_aliabadi_discontinuity_operator
+(const std::vector<unsigned int>& vars, const unsigned int qp,
+ FEMContext& c,  const PrimitiveSolution& sol,
+ const SmallPerturbationPrimitiveSolution<Complex>& dsol,
+ const libMesh::DenseVector<libMesh::Real>& elem_solution,
+ const std::vector<FEMOperatorMatrix>& dB_mat,
+ const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+ libMesh::DenseVector<Real>& discontinuity_val)
+{
+    discontinuity_val.zero();
+    const unsigned int n1 = 2 + dim;
+    
+    std::vector<libMesh::DenseVector<libMesh::Real> > diff_vec(3);
+    libMesh::DenseMatrix<libMesh::Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
+    tmpmat1_n1n1;
+    libMesh::DenseVector<libMesh::Real> vec1, vec2;
+    vec1.resize(n1); vec2.resize(n1);
+    dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
+    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
+    tmpmat1_n1n1.resize(dim+2, dim+2);
+    for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
+    
+    Real dval;
+    
+    this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
+    this->calculate_entropy_variable_jacobian ( sol, A_entropy, A_inv_entropy );
+    
+    
+    for (unsigned int i=0; i<dim; i++)
+        dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
+    Ai_Bi_advection.vector_mult(vec1, elem_solution); // Ai dU/dxi
+    
+    // TODO: divergence of diffusive flux
+    
+    // add the velocity and calculate the numerator of the discontinuity
+    // capturing term coefficient
+    //vec2 += c.elem_solution; // add velocity TODO: how to get the
+    A_inv_entropy.vector_mult(vec2, vec1);
+    dval = vec1.dot(vec2);  // this is the numerator term
+    
+    // now evaluate the dissipation factor for the discontinuity capturing term
+    // this is the denominator term
+    
+    // add a small number to avoid division of zero by zero
+    libMesh::Real val1 = 1.0e-6;
+    for (unsigned int i=0; i<dim; i++) {
+        vec1.zero();
+        
+        for (unsigned int j=0; j<dim; j++)
+            vec1.add(dxi_dX(i, j), diff_vec[j]);
+        
+        // calculate the value of denominator
+        A_inv_entropy.vector_mult(vec2, vec1);
+        val1 += vec1.dot(vec2);
+    }
+    
+    dval = std::min(1., sqrt(dval/val1));
+    
+    if (_include_pressure_switch) {
+        // also add a pressure switch q
+        const unsigned int fe_order = c.get_system().variable(0).type().order;
+        libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
+        libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
+        dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
+        dp.resize(dim);
+        libMesh::Real p_sensor = 0., hk = 0.;
+        calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
+        dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
+        dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
+        for (unsigned int i=0; i<dim; i++) {
+            dB_mat[i].vector_mult(vec1, elem_solution);
+            dpdc.vector_mult(vec2, vec1);
+            dp(i) = vec2.dot(dpress_dp);
+            for (unsigned int j=0; j<dim; j++)
+                hk = fmax(hk, fabs(dX_dxi(i, j)));
+        }
+        p_sensor = std::min(1.,
+                            dp.l2_norm() * hk /
+                            (sol.p + abs(dsol.dp)) /
+                            (fe_order + 1.));
+        dval *= (p_sensor * _dissipation_scaling);
+    }
+    
+    
+    // set value in all three dimensions to be the same
+    for (unsigned int i=0; i<dim; i++)
+        discontinuity_val(i) = dval;
+}
 
 
 

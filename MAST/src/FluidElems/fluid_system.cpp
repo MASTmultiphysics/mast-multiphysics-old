@@ -201,9 +201,8 @@ void FluidSystem::init_context(DiffContext &context)
         c.get_side_fe( vars[i], elem_side_fe[i]);
         elem_side_fe[i]->get_JxW();
         elem_side_fe[i]->get_phi();
+        elem_side_fe[i]->get_dphi();
         elem_side_fe[i]->get_xyz();
-        if (_if_viscous)
-            elem_side_fe[i]->get_dphi();
     }
     
     FEMSystem::init_context(context);
@@ -333,7 +332,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
              Ai_Bi_advection, flux_jacobian_sens,
              LS_mat, LS_sens);
             
-            this->calculate_hartmann_discontinuity_operator(vars, qp, c,
+            this->calculate_aliabadi_discontinuity_operator(vars, qp, c,
                                                             primitive_sol,
                                                             dc_ref_sol,
                                                             dB_mat,
@@ -973,12 +972,11 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
     tmp_mat2_n2n2, tmp_mat3;
     libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec3_n2,
-    conservative_sol, diff_val, dc_ref_sol;
+    conservative_sol, dc_ref_sol;
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     tmp_mat2_n2n2.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);  tmp_mat_n1n2.resize(dim+2, n_dofs);
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
-    diff_val.resize(dim);
     conservative_sol.resize(dim+2);
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -1026,13 +1024,6 @@ bool FluidSystem::mass_residual (bool request_jacobian,
              primitive_sol, B_mat, dB_mat,
              Ai_advection, Ai_Bi_advection,
              flux_jacobian_sens, LS_mat, LS_sens);
-            
-            this->calculate_hartmann_discontinuity_operator(vars, qp, c,
-                                                            primitive_sol,
-                                                            dc_ref_sol,
-                                                            dB_mat,
-                                                            Ai_Bi_advection,
-                                                            diff_val);
         }
         // Galerkin contribution to velocity
         B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );

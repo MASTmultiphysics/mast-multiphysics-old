@@ -46,6 +46,7 @@ namespace MAST {
          */
         virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
                                                        const libMesh::Point& n,
+                                                       libMesh::DenseVector<libMesh::Complex>& w_trans,
                                                        libMesh::DenseVector<libMesh::Complex>& u_trans,
                                                        libMesh::DenseVector<libMesh::Complex>& dn_rot);
         
@@ -107,6 +108,7 @@ MAST::SurfaceMotionFunction::~SurfaceMotionFunction()
 inline void
 MAST::SurfaceMotionFunction::surface_velocity_frequency_domain(const libMesh::Point& p,
                                                                const libMesh::Point& n,
+                                                               libMesh::DenseVector<libMesh::Complex>& w_trans,
                                                                libMesh::DenseVector<libMesh::Complex>& u_trans,
                                                                libMesh::DenseVector<libMesh::Complex>& dn_rot)
 {
@@ -127,8 +129,8 @@ MAST::SurfaceMotionFunction::surface_velocity_time_domain(const libMesh::Real t,
     
     // translation is obtained by direct interpolation of the u,v,w vars
     libMesh::Point v, dwdx, dwdy, dwdz;
-    const libMesh::Real x = p(0) - 0.2, tc = 0.05, c = 0.2, h = tc*c/2., pi = acos(-1.);
-    if ( (x>=0.) && (x <= 0.2)){
+    const libMesh::Real x = p(0) - 2., tc = 0.05, c = 2., h = tc*c/2., pi = acos(-1.);
+    if ( (x>=0.) && (x <= c)){
         v(1)     = h*sin(pi*x/c);
         dwdx(1)  = h*pi/c*cos(pi*x/c);
     }

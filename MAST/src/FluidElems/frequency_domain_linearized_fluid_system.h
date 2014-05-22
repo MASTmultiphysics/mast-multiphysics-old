@@ -65,6 +65,15 @@ public:
     
 protected:
     
+    void calculate_small_disturbance_aliabadi_discontinuity_operator
+    (const std::vector<unsigned int>& vars, const unsigned int qp,
+     FEMContext& c,  const PrimitiveSolution& sol,
+     const SmallPerturbationPrimitiveSolution<Complex>& dsol,
+     const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     const std::vector<FEMOperatorMatrix>& dB_mat,
+     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+     libMesh::DenseVector<Real>& discontinuity_val);
+    
     bool _if_localized_sol;
     
     AutoPtr<libMesh::NumericVector<libMesh::Number> > _local_fluid_solution;

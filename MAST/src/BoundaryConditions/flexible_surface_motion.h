@@ -51,6 +51,7 @@ namespace MAST {
          */
         virtual void surface_velocity_frequency_domain(const libMesh::Point& p,
                                                        const libMesh::Point& n,
+                                                       libMesh::DenseVector<libMesh::Complex>& w_trans,
                                                        libMesh::DenseVector<libMesh::Complex>& u_trans,
                                                        libMesh::DenseVector<libMesh::Complex>& dn_rot);
         
@@ -130,10 +131,12 @@ inline
 void
 MAST::FlexibleSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Point& p,
                                                                const libMesh::Point& n,
+                                                               libMesh::DenseVector<libMesh::Complex>& w_trans,
                                                                libMesh::DenseVector<libMesh::Complex>& u_trans,
                                                                libMesh::DenseVector<libMesh::Complex>& dn_rot)
 {
 #ifdef LIBMESH_USE_COMPLEX_NUMBERS
+    w_trans.zero();
     u_trans.zero();
     dn_rot.zero();
     
@@ -145,8 +148,10 @@ MAST::FlexibleSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Po
     
     // now copy the values to u_trans
     libMesh::Complex iota(0., 1.);
-    for (unsigned int i=0; i<3; i++)
+    for (unsigned int i=0; i<3; i++) {
+        w_trans(i) = v(i);
         u_trans(i) = v(i) * iota * frequency;
+    }
     
     // perturbation of the normal requires calculation of the curl of
     // displacement at the given point
