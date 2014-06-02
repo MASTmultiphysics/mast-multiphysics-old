@@ -9,6 +9,11 @@
 #ifndef __MAST_shock_tube_fluid_elem_h__
 #define __MAST_shock_tube_fluid_elem_h__
 
+// libMesh includes
+#include "libmesh/libmesh_config.h"
+
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 // MAST includes
 #include "FluidElems/fluid_system.h"
 
@@ -37,5 +42,6 @@ namespace MAST {
 }
 
 
+#endif
 
 #endif // __MAST_shock_tube_fluid_elem_h__

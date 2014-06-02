@@ -15,6 +15,8 @@
 // libMesh includes
 #include "libmesh/quadrature.h"
 
+#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
 MAST::ShockTubeFluidElem::ShockTubeFluidElem(libMesh::EquationSystems& es,
                                              const std::string& name_in,
@@ -70,7 +72,7 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     dprim_dcons, dcons_dprim;
     
     libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    conservative_sol, delta_vals, temp_grad;
+    conservative_sol, delta_vals, diff_val, temp_grad;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);
@@ -81,7 +83,7 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     
     flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
     tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
-    delta_vals.resize(n_qpoints); temp_grad.resize(dim);
+    delta_vals.resize(n_qpoints); temp_grad.resize(dim); diff_val.resize(dim);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -96,20 +98,6 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     }
     
     
-    libMesh::Real diff_val=0.;
-    
-    libMesh::System& delta_val_system =
-    this->get_equation_systems().get_system<System>("DeltaValSystem");
-    libMesh::NumericVector<libMesh::Real>& diff_val_vec = (*delta_val_system.solution.get());
-    
-    if (if_use_stored_dc_coeff)
-    {
-        diff_val = diff_val_vec.el(c.get_elem().dof_number
-                                   (delta_val_system.number(), 0, 0));
-        
-        for (unsigned int qp=0; qp<n_qpoints; qp++)
-            delta_vals(qp) = diff_val;
-    }
     
     PrimitiveSolution primitive_sol;
     const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
@@ -151,12 +139,14 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
          c.get_elem_solution(), primitive_sol,
          B_mat, dB_mat, Ai_advection,
          Ai_Bi_advection, flux_jacobian_sens,
-         LS_mat, LS_sens, diff_val);
+         LS_mat, LS_sens);
         
-        if (if_use_stored_dc_coeff)
-            diff_val = delta_vals(qp);
-        else
-            delta_vals(qp) = diff_val;
+        this->calculate_aliabadi_discontinuity_operator(vars, qp, c,
+                                                        primitive_sol,
+                                                        c.get_elem_solution(),
+                                                        dB_mat,
+                                                        Ai_Bi_advection,
+                                                        diff_val);
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
@@ -168,7 +158,7 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.get_elem_solution());
             dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-            Fvec.add(-JxW[qp]*diff_val, tmp_vec3_n2);
+            Fvec.add(-JxW[qp]*diff_val(i_dim), tmp_vec3_n2);
         }
         
         // Least square contribution from divergence of advection flux
@@ -202,7 +192,7 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
                 // discontinuity capturing term
                 dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2,
                                                        dB_mat[i_dim]);
-                Kmat.add(-JxW[qp]*diff_val, tmp_mat2_n2n2);
+                Kmat.add(-JxW[qp]*diff_val(i_dim), tmp_mat2_n2n2);
                 
                 // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
                 dB_mat[i_dim].vector_mult(tmp_vec2_n1,
@@ -243,16 +233,6 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
             
         }
     } // end of the quadrature point qp-loop
-    
-    if (!if_use_stored_dc_coeff)
-    {
-        diff_val = 0.;
-        for (unsigned int qp=0; qp<n_qpoints; qp++)
-            diff_val += delta_vals(qp);
-        diff_val /= (1.*n_qpoints);
-        diff_val_vec.set(c.get_elem().dof_number
-                         (delta_val_system.number(), 0, 0), diff_val);
-    }
     
     //    std::cout << "inside element time derivative " << std::endl;
     //    c.elem->print_info();
@@ -298,4 +278,4 @@ MAST::ShockTubeFluidElem::calculate_source_flux_jacobian(const PrimitiveSolution
     mat.scale(-1.);
 }
 
-
+#endif
