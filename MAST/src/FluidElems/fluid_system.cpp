@@ -965,7 +965,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 U_vec_interpolated.scale(rho_constrained/conservative_sol(0));  // value is not constrained to density at exhaust
 
                 // use the constrained vector to calculate the flux value
-                tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
+                tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U{-}
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
                 Fvec.add(-JxW[qp], tmp_vec1_n2);
@@ -981,7 +981,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                         tmp_mat_n1n1.scale_column(j, 0.0);
                 
                 tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                tmp_mat_n1n1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
+                tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated); // f_{+} = A_{+} B U{+}
                 
                 B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
                 Fvec.add(-JxW[qp], tmp_vec1_n2);
@@ -1058,6 +1058,19 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                         else
                             tmp_mat_n1n1.scale_column(j, 0.0);
                     tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+
+                    // now do the same operation on the outoging characteristics
+                    // the term dU{-}/dU_p is calculated by scaling the value from interior solution
+                    tmp_mat3_n1n1 = dcons_dprim;
+                    tmp_mat3_n1n1.scale(rho_constrained/conservative_sol(0));
+                    // zero the first column since the U{-} is not a function of interior density value
+                    for (unsigned int i=0; i<n1; i++)
+                        tmp_mat3_n1n1(i,0) = 0.;
+                    
+                    // now multiply the matrices and get the
+                    tmp_mat3_n1n1.right_multiply(dprim_dcons);
+                    tmp_mat_n1n1.right_multiply(tmp_mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
+
                     B_mat.left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1);
                     B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
 
