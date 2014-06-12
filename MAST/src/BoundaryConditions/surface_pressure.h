@@ -75,7 +75,8 @@ namespace MAST {
         
         // calculation in frequency domain
         template <typename ValType>
-        void surface_pressure(const libMesh::Point& p,
+        void surface_pressure(const libMesh::Real t,
+                              const libMesh::Point& p,
                               libMesh::Real& cp,
                               ValType& dcp);
         

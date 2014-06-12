@@ -89,7 +89,8 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
 
 template <typename ValType>
 void
-MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
+MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Real t,
+                                                        const libMesh::Point& p,
                                                         libMesh::Real& cp,
                                                         ValType& dcp)
 {
@@ -103,8 +104,8 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
     // get the nonlinear and linearized solution
     libMesh::DenseVector<ValType> v_lin;
     libMesh::DenseVector<libMesh::Real> v_nonlin, v_lin_real;
-    (*_function_nonlinear)(p, 0., v_nonlin);
-    (*_function_linear)(p, 0., v_lin_real);
+    (*_function_nonlinear)(p, t, v_nonlin);
+    (*_function_linear)(p, t, v_lin_real);
     
     MAST::transform_to_elem_vector(v_lin, v_lin_real);
     
@@ -123,4 +124,21 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
     dcp = delta_p_sol.c_pressure(_flt_cond->q0());
 //#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
+
+
+
+// template explicit instantiations
+template
+void MAST::SmallDisturbanceSurfacePressure::surface_pressure<libMesh::Real>(const libMesh::Real t,
+                                                                            const libMesh::Point& p,
+                                                                            libMesh::Real& cp,
+                                                                            libMesh::Real& dcp);
+
+template
+void MAST::SmallDisturbanceSurfacePressure::surface_pressure<libMesh::Complex>(const libMesh::Real t,
+                                                                               const libMesh::Point& p,
+                                                                               libMesh::Real& cp,
+                                                                               libMesh::Complex& dcp);
+
+
 

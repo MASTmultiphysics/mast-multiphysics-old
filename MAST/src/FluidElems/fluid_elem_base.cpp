@@ -279,7 +279,7 @@ void FluidElemBase::init_data ()
     _infile("if_update_stabilization_per_quadrature_point", true);
     _include_pressure_switch =
     _infile("include_pressure_switch", true);
-    _dissipation_scaling = _infile("dissipation_scaling", 10.0);
+    _dissipation_scaling = _infile("dissipation_scaling", 1.0);
     
     // read the boundary conditions
     unsigned int n_bc, bc_id;
@@ -431,7 +431,6 @@ void FluidElemBase::update_solution_at_quadrature_point
 
     libMesh::DenseVector<libMesh::Real> phi_vals;
     
-//    for ( unsigned int i_var=0; i_var<c.n_vars(); i_var++ )
     unsigned int i_var = 0; // assuming that all FE are same
     {
         if (if_elem_domain)
@@ -447,7 +446,7 @@ void FluidElemBase::update_solution_at_quadrature_point
         for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
             phi_vals(i_nd) = phi[i_nd][qp];
         
-        B_mat.reinit(c.n_vars(), phi_vals); // initialize the operator matrix
+        B_mat.reinit(dim+2, phi_vals); // initialize the operator matrix
         
         const std::vector<std::vector<RealVectorValue> >& dphi =
         fe->get_dphi();
@@ -457,7 +456,7 @@ void FluidElemBase::update_solution_at_quadrature_point
         {
             for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
                 phi_vals(i_nd) = dphi[i_nd][qp](i_dim);
-            dB_mat[i_dim].reinit(c.n_vars(), phi_vals);
+            dB_mat[i_dim].reinit(dim+2, phi_vals);
         }
     }
     
@@ -2359,10 +2358,10 @@ void FluidElemBase::calculate_differential_operator_matrix
     vec2.zero();
     Ai_Bi_advection.vector_mult(vec2, elem_solution); // sum A_i dU/dx_i
     
-    if_diagonal_tau = this->calculate_aliabadi_tau_matrix
-    (vars, qp, c, sol, tau, tau_sens);
-    //if_diagonal_tau = this->calculate_barth_tau_matrix
+    //if_diagonal_tau = this->calculate_aliabadi_tau_matrix
     //(vars, qp, c, sol, tau, tau_sens);
+    if_diagonal_tau = this->calculate_barth_tau_matrix
+    (vars, qp, c, sol, tau, tau_sens);
     
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
@@ -2412,3 +2411,5 @@ void FluidElemBase::calculate_differential_operator_matrix
 
 
 template class SmallPerturbationPrimitiveSolution<libMesh::Complex>;
+template class SmallPerturbationPrimitiveSolution<libMesh::Real>;
+

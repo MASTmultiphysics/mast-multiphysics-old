@@ -175,6 +175,10 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
+    const std::string analysis           = infile("analysis", "nonlinear"),
+    input_solution_file                  = infile("input_solution_file", "saved_solution.xdr"),
+    output_mesh_file                     = infile("output_mesh_file", "saved_mesh.xdr"),
+    output_solution_file                 = infile("output_solution_file", "saved_solution.xdr");
     
     // Create a mesh.
     //SerialMesh mesh(init.comm());
@@ -347,22 +351,26 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     
     FEMSystem* system = nullptr;
-    
-    
+    FrequencyDomainLinearizedFluidSystem * frequency_system = nullptr;
+    FluidSystem* fluid_system = nullptr;
+    FluidPostProcessSystem* fluid_post = nullptr;
+    FrequencyDomainFluidPostProcessSystem* frequency_fluid_post = nullptr;
+    std::auto_ptr<MAST::RigidSurfaceMotion> surface_motion;
+
     if (analysis == "nonlinear") {
         // Declare the system for fluid analysis
-        FluidSystem* fluid_system =
+        fluid_system =
         &(equation_systems.add_system<FluidSystem> ("FluidSystem"));
         system = fluid_system;
         
         fluid_system->flight_condition = &flight_cond;
         fluid_system->attach_init_function (init_euler_variables);
         
-        FluidPostProcessSystem& fluid_post =
-        equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
-        fluid_post.flight_condition = &flight_cond;
+        fluid_post =
+        &(equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem"));
+        fluid_post->flight_condition = &flight_cond;
         
-        ResidualBaseAdaptiveTimemailSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(*fluid_system);
+        ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(*fluid_system);
         libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(*fluid_system);
         
         timesolver->quiet              = infile("timesolver_solver_quiet", true);
@@ -406,16 +414,16 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     else if (analysis == "frequency_domain") {
         
         // Declare the system fluid system
-        FrequencyDomainLinearizedFluidSystem * frequency_system =
+        frequency_system =
         &(equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
         ("FrequencyDomainLinearizedFluidSystem"));
         system = frequency_system;
         frequency_system->flight_condition = &flight_cond;
         
-        FrequencyDomainFluidPostProcessSystem& fluid_post =
-        equation_systems.add_system<FrequencyDomainFluidPostProcessSystem>
-        ("DeltaFluidPostProcessSystem");
-        fluid_post.flight_condition = &flight_cond;
+        frequency_fluid_post =
+        & (equation_systems.add_system<FrequencyDomainFluidPostProcessSystem>
+        ("DeltaFluidPostProcessSystem"));
+        frequency_fluid_post->flight_condition = &flight_cond;
         
         frequency_system->time_solver =
         AutoPtr<TimeSolver>(new SteadySolver(*frequency_system));
@@ -429,7 +437,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         frequency_system->localize_fluid_solution();
         
         // initialize the surface motion definition
-        std::auto_ptr<MAST::RigidSurfaceMotion> surface_motion(new MAST::RigidSurfaceMotion);
+        surface_motion.reset(new MAST::RigidSurfaceMotion);
         frequency_system->perturbed_surface_motion = surface_motion.get();
         
         surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
@@ -520,7 +528,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         // Advance to the next timestep in a transient problem
         //system.time_solver->advance_timestep();
         if (analysis == "nonlinear")
-            sol_norm = timesolver->_x_dot_norm_old;
+            sol_norm = dynamic_cast<ResidualBaseAdaptiveTimeSolver*>(fluid_system->time_solver.get())->_x_dot_norm_old;
         
         
         // Adaptively solve the timestep
@@ -643,9 +651,15 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         // Write out this timestep if we're requested to
         if ((t_step%write_interval == 0) || !continue_iterations)
         {
-            fluid_post.postprocess();
-            system.assemble_qoi(); // calculate the quantities of interest
-            system.postprocess(); // set the qois to the post-process variables
+            if (analysis == "nonlinear")
+                fluid_post->postprocess();
+            else if (analysis == "frequency_domain")
+                frequency_fluid_post->postprocess();
+            else
+                libmesh_error();
+                
+            system->assemble_qoi(); // calculate the quantities of interest
+            system->postprocess(); // set the qois to the post-process variables
             
             std::ostringstream file_name, b_file_name;
             

@@ -35,7 +35,7 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     
     dim = this->get_mesh().mesh_dimension();
     
-    vars.resize(dim+2);
+    vars.resize(2*(dim+2));
     
     // initialize the fluid values
     FluidElemBase::init_data();
@@ -50,27 +50,36 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
-    vars[0]  = this->add_variable ( "drho", static_cast<Order>(o), fefamily);
+    vars[0]  = this->add_variable ( "drho_re", static_cast<Order>(o), fefamily);
     params.set<libMesh::Real> ("rho_inf") = flight_condition->rho();
     
-    vars[1] = this->add_variable ("drhoux", static_cast<Order>(o), fefamily);
+    vars[1] = this->add_variable ("drhoux_re", static_cast<Order>(o), fefamily);
     params.set<libMesh::Real> ("rhoux_inf") = flight_condition->rho_u1();
     
     if (dim > 1)
     {
-        vars[2] = this->add_variable ("drhouy", static_cast<Order>(o), fefamily);
+        vars[2] = this->add_variable ("drhouy_re", static_cast<Order>(o), fefamily);
         params.set<libMesh::Real> ("rhouy_inf") = flight_condition->rho_u2();
     }
     
     if (dim > 2)
     {
-        vars[3] = this->add_variable ("drhouz", static_cast<Order>(o), fefamily);
+        vars[3] = this->add_variable ("drhouz_re", static_cast<Order>(o), fefamily);
         params.set<libMesh::Real> ("rhouz_inf") = flight_condition->rho_u3();
     }
     
-    vars[dim+2-1] = this->add_variable ("drhoe", static_cast<Order>(o), fefamily);
+    vars[dim+2-1] = this->add_variable ("drhoe_re", static_cast<Order>(o), fefamily);
     params.set<libMesh::Real> ("rhoe_inf") = flight_condition->rho_e();
     
+    // now add the imaginary part of the variables
+    vars[dim+2+0]  = this->add_variable ( "drho_im", static_cast<Order>(o), fefamily);
+    vars[dim+2+1] = this->add_variable ("drhoux_im", static_cast<Order>(o), fefamily);
+    if (dim > 1)
+        vars[dim+2+2] = this->add_variable ("drhouy_im", static_cast<Order>(o), fefamily);
+    if (dim > 2)
+        vars[dim+2+3] = this->add_variable ("drhouz_im", static_cast<Order>(o), fefamily);
+    vars[2*(dim+2)-1] = this->add_variable ("drhoe_im", static_cast<Order>(o), fefamily);
+
     // Useful debugging options
     // Set verify_analytic_jacobians to 1e-6 to use
     this->verify_analytic_jacobians = _infile("verify_analytic_jacobians", 0.);
@@ -189,7 +198,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     ref_sol.resize(n_dofs);
     tmp_vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
     diff_val.resize(dim); diff_val2.resize(dim);
-    conservative_deltasol.resize(n1); complex_elem_sol.resize(2*n_dofs);
+    conservative_deltasol.resize(n1); complex_elem_sol.resize(n_dofs);
     
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -441,7 +450,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             // Lease square contribution of flux gradient
             LS_mat.get_transpose(tmp_mat_n2n1);
             tmp_mat_n2n1.right_multiply(Ai_Bi_advection); // LS^T tau d^2 dF^adv_i / dx dU
-            tmp_mat_n2n2_complex = tmp_mat_n2n2;
+            tmp_mat_n2n2_complex = tmp_mat_n2n1;
             tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
             MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
             
@@ -449,7 +458,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             {
                 LS_mat.get_transpose(tmp_mat_n2n1);
                 tmp_mat_n2n1.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
-                tmp_mat_n2n2_complex = tmp_mat_n2n2;
+                tmp_mat_n2n2_complex = tmp_mat_n2n1;
                 tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
                 MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
                 
@@ -591,7 +600,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     flux.resize(n1); tmp_vec1_n2.resize(n_dofs); tmp_vec2_n1.resize(dim+2);
     tmp_vec3_n1.resize(dim+2); conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
-    ref_sol.resize(n_dofs); complex_elem_sol.resize(n_dofs*2);
+    ref_sol.resize(n_dofs); complex_elem_sol.resize(n_dofs);
     dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
     surface_unsteady_disp.resize(spatial_dim);  surface_steady_vel.resize(spatial_dim);
     uvec.resize(spatial_dim); duvec.resize(spatial_dim);
@@ -615,7 +624,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     std::vector<dof_id_type> fluid_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
     
-    for (unsigned int i=0; i<c.get_dof_indices().size(); i++)
+    for (unsigned int i=0; i<n_dofs; i++)
         ref_sol(i) = (*_local_fluid_solution)(fluid_dof_indices[i]);
     
     MAST::transform_to_elem_vector(complex_elem_sol, c.get_elem_solution());
@@ -923,14 +932,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
 
-                // add the contribution from divergence of ui_ni
+                /*// add the contribution from divergence of ui_ni
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
                     dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol); // dU/dx_i
                     dprim_dcons.vector_mult(tmp_vec3_n1, tmp_vec2_n1);  // dU_primitive / dx_i
                     for (unsigned int j_dim=0; j_dim<dim; j_dim++)
                         dui_ni_unsteady -= tmp_vec3_n1(j_dim+1) * surface_unsteady_disp(i_dim) *
                         (face_normals[qp](j_dim) + std::real(dnormal_steady(j_dim)));
-                }
+                }*/
                 
                 // now prepare the flux vector
                 flux.zero();
@@ -1364,6 +1373,15 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     ("FrequencyDomainLinearizedFluidSystem");
     fluid.get_mesh().sub_point_locator();
     sd_fluid.get_mesh().sub_point_locator();
+    std::vector<unsigned int> fluid_vars(sd_fluid.dim+2);
+    fluid_vars[0] = fluid.variable_number("rho");
+    fluid_vars[1] = fluid.variable_number("rhoux");
+    if (sd_fluid.dim > 1)
+        fluid_vars[2] = fluid.variable_number("rhouy");
+    if (sd_fluid.dim > 2)
+        fluid_vars[3] = fluid.variable_number("rhouz");
+    fluid_vars[sd_fluid.dim+2-1] = fluid.variable_number("rhoe");
+    
     
     std::vector<std::string> post_process_var_names(this->n_vars());
     for (unsigned int i=0; i<this->n_vars(); i++)
@@ -1390,7 +1408,7 @@ void FrequencyDomainFluidPostProcessSystem::postprocess()
     AutoPtr<MeshFunction>
     fluid_mesh_function
     (new MeshFunction(this->get_equation_systems(), *fluid_sol,
-                      fluid.get_dof_map(), sd_fluid.vars)),
+                      fluid.get_dof_map(), fluid_vars)),
     sd_fluid_mesh_function
     (new MeshFunction(this->get_equation_systems(), *sd_fluid_sol,
                       sd_fluid.get_dof_map(), sd_fluid.vars));

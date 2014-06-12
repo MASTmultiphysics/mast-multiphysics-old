@@ -25,8 +25,8 @@ namespace MAST {
     
     
     template <>
-    void transform_to_elem_vector(libMesh::DenseVector<libMesh::Real>& v,
-                                  const libMesh::DenseVector<libMesh::Real>& v_real) {
+    inline void transform_to_elem_vector(libMesh::DenseVector<libMesh::Real>& v,
+                                         const libMesh::DenseVector<libMesh::Real>& v_real) {
         // make sure that the real vector is twice the size of the dense vector
         const unsigned int n = v.size();
         libmesh_assert_equal_to(v_real.size(), n);
@@ -34,8 +34,8 @@ namespace MAST {
     }
     
     
-    template <typename ValType>
-    void transform_to_elem_vector(libMesh::DenseVector<libMesh::Complex>& v,
+    template <>
+    inline void transform_to_elem_vector(libMesh::DenseVector<libMesh::Complex>& v,
                                   const libMesh::DenseVector<libMesh::Real>& v_real) {
         // make sure that the real vector is twice the size of the dense vector
         const unsigned int n = v.size();
@@ -64,12 +64,12 @@ namespace MAST {
      *    or complex matrix to the assembled matrix.
      */
     template <typename ValType>
-    void add_to_assembled_matrix(libMesh::DenseMatrix<libMesh::Real>& assembled_mat,
+    inline void add_to_assembled_matrix(libMesh::DenseMatrix<libMesh::Real>& assembled_mat,
                                  const libMesh::DenseMatrix<ValType>& elem_mat);
     
     
     template <>
-    void
+    inline void
     add_to_assembled_matrix(libMesh::DenseMatrix<libMesh::Real>& assembled_mat,
                             const libMesh::DenseMatrix<libMesh::Real>& elem_mat) {
         assembled_mat += elem_mat;
@@ -77,7 +77,7 @@ namespace MAST {
     
     
     template <>
-    void
+    inline void
     add_to_assembled_vector(libMesh::DenseVector<libMesh::Real>& assembled_vec,
                             const libMesh::DenseVector<libMesh::Real>& elem_vec) {
         assembled_vec += elem_vec;
@@ -85,7 +85,7 @@ namespace MAST {
     
     
     template <>
-    void
+    inline void
     add_to_assembled_matrix(libMesh::DenseMatrix<libMesh::Real>& assembled_mat,
                             const libMesh::DenseMatrix<libMesh::Complex>& elem_mat) {
         
@@ -95,16 +95,16 @@ namespace MAST {
         libmesh_assert_equal_to(assembled_mat.n(), n*2);
         for (unsigned int i=0; i<m; i++)
             for (unsigned int j=0; j<n; j++) {
-                assembled_mat(i,j)     =  std::real(elem_mat(i,j));
-                assembled_mat(i+m,j+n) =  std::real(elem_mat(i,j));
-                assembled_mat(i,j+n)   = -std::imag(elem_mat(i,j));
-                assembled_mat(i+m,j)   =  std::imag(elem_mat(i,j));
+                assembled_mat(i,j)     +=  std::real(elem_mat(i,j));
+                assembled_mat(i+m,j+n) +=  std::real(elem_mat(i,j));
+                assembled_mat(i,j+n)   += -std::imag(elem_mat(i,j));
+                assembled_mat(i+m,j)   +=  std::imag(elem_mat(i,j));
             }
     }
     
     
     template <>
-    void
+    inline void
     add_to_assembled_vector(libMesh::DenseVector<libMesh::Real>& assembled_vec,
                             const libMesh::DenseVector<libMesh::Complex>& elem_vec) {
         // make sure the the assembled mat is twice the size of the elem mat
@@ -112,8 +112,8 @@ namespace MAST {
         libmesh_assert_equal_to(assembled_vec.size(), n*2);
         
         for (unsigned int i=0; i<n; i++) {
-            assembled_vec(i)     =   std::real(elem_vec(i));
-            assembled_vec(i+n)   =  std::imag(elem_vec(i));
+            assembled_vec(i)     +=   std::real(elem_vec(i));
+            assembled_vec(i+n)   +=  std::imag(elem_vec(i));
         }
     }
     
@@ -122,4 +122,4 @@ namespace MAST {
 
 
 
-#endif
+#endif // __MAST_utility_h__
