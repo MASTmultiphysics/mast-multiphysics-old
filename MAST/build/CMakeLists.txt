@@ -51,10 +51,10 @@ add_executable (mast ${mast_source_files} ${mast_header_files})
 
 set_property (TARGET mast APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
-	     ${libmesh_dir}/real/include) 
+	     ${libmesh_dir}/include) 
 
-find_library (mesh_dbg mesh_dbg ${libmesh_dir}/real/lib)
-find_library (mesh_opt mesh_opt ${libmesh_dir}/real/lib)
+find_library (mesh_dbg mesh_dbg ${libmesh_dir}/lib)
+find_library (mesh_opt mesh_opt ${libmesh_dir}/lib)
 
 find_library (mpicxx_lib    mpi_cxx              ${mpi_lib_dir})
 find_library (mpi_lib       mpi                  ${mpi_lib_dir})
@@ -77,8 +77,8 @@ endforeach (f)
 
 
 target_link_libraries (mast  
-		      debug ${mesh_dbg_real}
-		      optimized ${mesh_opt_real}
+		      debug ${mesh_dbg}
+		      optimized ${mesh_opt}
 		      gcmma
 		      ${lapack_lib}
 		      ${blas_lib}
