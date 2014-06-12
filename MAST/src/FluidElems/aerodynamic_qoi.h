@@ -45,7 +45,7 @@ public:
     
     virtual ~AerodynamicQoI(){}
     
-    virtual void init_qoi( std::vector<libMesh::Number>& sys_qoi);
+    virtual void init_qoi( std::vector<libMesh::Real>& sys_qoi);
 
     virtual void element_qoi_derivative (DiffContext&, const QoISet& qois);
 

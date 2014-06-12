@@ -13,7 +13,7 @@
 #include "libmesh/libmesh_config.h"
 #include "libmesh/equation_systems.h"
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 // DiffSystem framework files
 #include "libmesh/fem_system.h"
@@ -76,7 +76,7 @@ protected:
     
     bool _if_localized_sol;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > _local_fluid_solution;
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > _local_fluid_solution;
     
 };
 
@@ -105,6 +105,6 @@ public:
 };
 
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 #endif /* defined(__MAST__frequency_domain_linearized_euler__) */

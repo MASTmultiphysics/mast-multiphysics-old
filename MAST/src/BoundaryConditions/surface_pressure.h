@@ -50,7 +50,7 @@ namespace MAST {
         _flt_cond(NULL),
         _dim(0)
         {
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
             
             MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
             _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
@@ -64,18 +64,20 @@ namespace MAST {
             // copy the pointer for flight condition data
             _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>
             (lin_sys).flight_condition;
-#endif
+//#endif
         }
         
         virtual ~SmallDisturbanceSurfacePressure()
         { }
         
-        virtual void init(libMesh::NumericVector<libMesh::Number>& nonlinear_sol,
-                          libMesh::NumericVector<libMesh::Number>& linearized_sol);
+        virtual void init(libMesh::NumericVector<libMesh::Real>& nonlinear_sol,
+                          libMesh::NumericVector<libMesh::Real>& linearized_sol);
         
         // calculation in frequency domain
-        virtual void surface_pressure(const libMesh::Point& p,
-                                      Number& cp, Number& dcp);
+        template <typename ValType>
+        void surface_pressure(const libMesh::Point& p,
+                              libMesh::Real& cp,
+                              ValType& dcp);
         
     protected:
         
@@ -98,12 +100,12 @@ namespace MAST {
         /*!
          *    numeric vector that stores the solution for nonlinear system
          */
-        std::auto_ptr<libMesh::NumericVector<libMesh::Number> > _sol_nonlinear;
+        std::auto_ptr<libMesh::NumericVector<libMesh::Real> > _sol_nonlinear;
         
         /*!
          *    numeric vector that stores the solution for linearized system
          */
-        std::auto_ptr<libMesh::NumericVector<libMesh::Number> > _sol_linear;
+        std::auto_ptr<libMesh::NumericVector<libMesh::Real> > _sol_linear;
         
         /*!
          *    this provides the fluid values for calculation of cp

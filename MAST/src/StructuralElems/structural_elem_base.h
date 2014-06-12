@@ -177,10 +177,11 @@ namespace MAST {
         /*!
          *   side external force contribution to system residual
          */
-        virtual bool side_external_force (bool request_jacobian,
-                                          libMesh::DenseVector<libMesh::Number>& f,
-                                          libMesh::DenseMatrix<libMesh::Number>& jac,
-                                          std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc);
+        template <typename ValType>
+        bool side_external_force (bool request_jacobian,
+                                  libMesh::DenseVector<libMesh::Real>& f,
+                                  libMesh::DenseMatrix<libMesh::Real>& jac,
+                                  std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
          *   prestress force contribution to system residual
@@ -192,11 +193,12 @@ namespace MAST {
         /*!
          *   volume external force contribution to system residual
          */
-        virtual bool volume_external_force (bool request_jacobian,
-                                            libMesh::DenseVector<libMesh::Number>& f,
-                                            libMesh::DenseMatrix<libMesh::Number>& jac,
-                                            std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
-
+        template <typename ValType>
+        bool volume_external_force (bool request_jacobian,
+                                    libMesh::DenseVector<libMesh::Real>& f,
+                                    libMesh::DenseMatrix<libMesh::Real>& jac,
+                                    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
+        
         /*!
          *   sensitivity of the internal force contribution to system residual
          */
@@ -221,10 +223,11 @@ namespace MAST {
         /*!
          *   sensitivity of the side external force contribution to system residual
          */
-        virtual bool side_external_force_sensitivity (bool request_jacobian,
-                                                      libMesh::DenseVector<libMesh::Number>& f,
-                                                      libMesh::DenseMatrix<libMesh::Number>& jac,
-                                                      std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc);
+        template <typename ValType>
+        bool side_external_force_sensitivity (bool request_jacobian,
+                                              libMesh::DenseVector<libMesh::Real>& f,
+                                              libMesh::DenseMatrix<libMesh::Real>& jac,
+                                              std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc);
         
         /*!
          *   sensitivity of the prestress force contribution to system residual
@@ -236,10 +239,11 @@ namespace MAST {
         /*!
          *   sensitivity of the volume external force contribution to system residual
          */
-        virtual bool volume_external_force_sensitivity (bool request_jacobian,
-                                                        libMesh::DenseVector<libMesh::Number>& f,
-                                                        libMesh::DenseMatrix<libMesh::Number>& jac,
-                                                        std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
+        template <typename ValType>
+        bool volume_external_force_sensitivity (bool request_jacobian,
+                                                libMesh::DenseVector<libMesh::Real>& f,
+                                                libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
         /*!
          *   returns the value of maximum von Mises stress over the element
@@ -343,11 +347,12 @@ namespace MAST {
          *    Calculates the force vector and Jacobian due to small 
          *    perturbation surface pressure.
          */
-        virtual bool small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                              libMesh::DenseVector<libMesh::Number>& f,
-                                                              libMesh::DenseMatrix<libMesh::Number>& jac,
-                                                              const unsigned int side,
-                                                              MAST::BoundaryCondition& p);
+        template <typename ValType>
+        bool small_disturbance_surface_pressure_force(bool request_jacobian,
+                                                      libMesh::DenseVector<libMesh::Real>& f,
+                                                      libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                      const unsigned int side,
+                                                      MAST::BoundaryCondition& p);
         
         
         /*!
@@ -355,10 +360,11 @@ namespace MAST {
          *    applied on the entire element domain. This is applicable for
          *    only 1D and 2D elements.
          */
-        virtual bool small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                              libMesh::DenseVector<libMesh::Number>& f,
-                                                              libMesh::DenseMatrix<libMesh::Number>& jac,
-                                                              MAST::BoundaryCondition& p);
+        template <typename ValType>
+        bool small_disturbance_surface_pressure_force(bool request_jacobian,
+                                                      libMesh::DenseVector<libMesh::Real>& f,
+                                                      libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                      MAST::BoundaryCondition& p);
 
         
         /*!

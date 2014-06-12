@@ -40,16 +40,16 @@ int main (int argc, char* const argv[])
         rval = fluid_driver(init, infile, argc, argv);
     else if (type == "compressible_potential_fluid")
         rval = potential_fluid_driver(init, infile, argc, argv);
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     else if (type == "structures")
         rval = structural_driver(init, infile, argc, argv);
     else if (type == "optimization")
         rval = optimization_driver(init, infile, argc, argv);
-#else
+//#else
 
     else if (type == "flutter")
         rval = flutter_driver(init, infile, argc, argv);
-#endif
+//#endif
     else {
         libMesh::out
         << "Invalid analysis type: "

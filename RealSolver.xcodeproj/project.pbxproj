@@ -76,6 +76,7 @@
 		69456F6C18482C7C009CB00A /* structural_system_assembly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_system_assembly.cpp; sourceTree = "<group>"; };
 		694C430C1926A8BA0040690B /* shock_tube_fluid_elem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shock_tube_fluid_elem.cpp; sourceTree = "<group>"; };
 		694C430D1926A8BA0040690B /* shock_tube_fluid_elem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shock_tube_fluid_elem.h; sourceTree = "<group>"; };
+		6952AC1E194789980072132B /* utility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utility.h; sourceTree = "<group>"; };
 		695F3B2B1856C90900052C29 /* stiffened_panel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stiffened_panel.h; sourceTree = "<group>"; };
 		696C07F61796CD4100B77C5C /* aerodynamic_qoi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aerodynamic_qoi.cpp; sourceTree = "<group>"; };
 		696C07F71796CD4100B77C5C /* aerodynamic_qoi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_qoi.h; sourceTree = "<group>"; };
@@ -276,6 +277,7 @@
 				EB817341182D902300E03740 /* function_base.cpp */,
 				EBF2785E180DD0E000DC81A3 /* function_base.h */,
 				EBDEF68D1891BE8D007F3D6F /* constant_function.h */,
+				6952AC1E194789980072132B /* utility.h */,
 			);
 			path = Numerics;
 			sourceTree = "<group>";

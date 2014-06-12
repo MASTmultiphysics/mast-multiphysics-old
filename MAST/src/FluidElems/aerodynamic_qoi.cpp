@@ -13,7 +13,7 @@
 
 using namespace libMesh;
 
-void AerodynamicQoI::init_qoi( std::vector<libMesh::Number>& sys_qoi)
+void AerodynamicQoI::init_qoi( std::vector<libMesh::Real>& sys_qoi)
 {
     //Two qois are calculated: lift and drag
     sys_qoi.resize(4);
@@ -33,7 +33,7 @@ void AerodynamicQoI::element_qoi_derivative (DiffContext& context,
 
 void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
 {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
 
@@ -74,7 +74,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
                            flight_condition->gas_property.gamma)), 2);
     }
     
-    std::vector<libMesh::Number> vals(2);
+    std::vector<libMesh::Real> vals(2);
     vals[0] = total_volume;
     vals[1] = entropy_error;
 
@@ -82,7 +82,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     for (unsigned int i=2; i<4; i++)
         if (qois.has_index(i))
             c.get_qois()[i] += vals[i-2];
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -99,7 +99,7 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
 // This function computes the actual QoI
 void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
 {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
     FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
     
@@ -193,7 +193,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
             break;
     }
     
-    std::vector<libMesh::Number> vals(2);
+    std::vector<libMesh::Real> vals(2);
     vals[0] = integrated_force.dot(flight_condition->lift_normal);
     vals[1] = integrated_force.dot(flight_condition->drag_normal);
     
@@ -202,6 +202,6 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
         if (qois.has_index(i))
             c.get_qois()[i] += vals[i];
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 

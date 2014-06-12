@@ -17,7 +17,7 @@
 // libMesh includes
 #include "libmesh/equation_systems.h"
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 
 class CoupledFluidStructureSystem: public CoupledAeroStructuralModel
@@ -63,7 +63,7 @@ protected:
 void assemble_force_vec(libMesh::System& sys,
                         MAST::SmallDisturbanceSurfacePressure& press,
                         MAST::SurfaceMotionBase& motion,
-                        libMesh::NumericVector<libMesh::Number>& fvec)
+                        libMesh::NumericVector<libMesh::Real>& fvec)
 { }
 
 //#include "libmesh/mesh_function.h"
@@ -80,11 +80,11 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(libMesh::Real k_ref,
     dynamic_cast<CFDAerodynamicModel&> (aerodynamic_model);
 
     // get the structural basis
-    BasisMatrix<libMesh::Number>& structural_basis = structure.get_basis_matrix();
+    BasisMatrix<libMesh::Real>& structural_basis = structure.get_basis_matrix();
 
     if (!structure.structural_system.have_vector("fvec"))
         structure.structural_system.add_vector("fvec");
-    libMesh::NumericVector<libMesh::Number>& f_vec = structure.structural_system.get_vector("fvec");
+    libMesh::NumericVector<libMesh::Real>& f_vec = structure.structural_system.get_vector("fvec");
     
     ComplexVectorX projected_force;
     a.setZero(structural_basis.n(), structural_basis.n());
@@ -96,37 +96,37 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(libMesh::Real k_ref,
         aero.linearized_fluid_system.perturbed_surface_motion = surface_motion.get();
         aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
 
-        libMesh::System& dsys = aero.linearized_fluid_system.get_equation_systems().get_system<System>("DeltaValSystem");
-        
-        std::vector<unsigned int> vars(4), dval(1);
-        vars[0] = aero.linearized_fluid_system.variable_number("drho");
-        vars[1] = aero.linearized_fluid_system.variable_number("drhoux");
-        vars[2] = aero.linearized_fluid_system.variable_number("drhouy");
-        vars[3] = aero.linearized_fluid_system.variable_number("drhoe");
-        dval[0] = dsys.variable_number("delta");
-        MeshFunction function( aero.linearized_fluid_system.get_equation_systems(),
-                              *aero.linearized_fluid_system.solution,
-                              aero.linearized_fluid_system.get_dof_map(), vars),
-        dval_function( dsys.get_equation_systems(),
-                      *dsys.solution,
-                      dsys.get_dof_map(), dval);
-        function.init();
-        dval_function.init();
-        libMesh::DenseVector<libMesh::Number> sol, dsol; sol.resize(4); dsol.resize(1);
-        libMesh::Point pt;
-        for (unsigned int i=0; i<300; i++) {
-            pt(0) = 0 + (6)*(1.*i)/299.;
-            function(pt, 0., sol);
-            dval_function(pt, 0., dsol);
-            std::cout
-            << std::setw(15) << pt(0)
-            << std::setw(15) << std::real(sol(0))
-            << std::setw(15) << std::imag(sol(0))
-            << std::setw(15) << std::real(sol(3))
-            << std::setw(15) << std::imag(sol(3))
-            << std::setw(15) << std::real(dsol(0)) << std::endl;
-            
-        }
+//        libMesh::System& dsys = aero.linearized_fluid_system.get_equation_systems().get_system<System>("DeltaValSystem");
+//        
+//        std::vector<unsigned int> vars(4), dval(1);
+//        vars[0] = aero.linearized_fluid_system.variable_number("drho");
+//        vars[1] = aero.linearized_fluid_system.variable_number("drhoux");
+//        vars[2] = aero.linearized_fluid_system.variable_number("drhouy");
+//        vars[3] = aero.linearized_fluid_system.variable_number("drhoe");
+//        dval[0] = dsys.variable_number("delta");
+//        MeshFunction function( aero.linearized_fluid_system.get_equation_systems(),
+//                              *aero.linearized_fluid_system.solution,
+//                              aero.linearized_fluid_system.get_dof_map(), vars),
+//        dval_function( dsys.get_equation_systems(),
+//                      *dsys.solution,
+//                      dsys.get_dof_map(), dval);
+//        function.init();
+//        dval_function.init();
+//        libMesh::DenseVector<libMesh::Real> sol, dsol; sol.resize(4); dsol.resize(1);
+//        libMesh::Point pt;
+//        for (unsigned int i=0; i<300; i++) {
+//            pt(0) = 0 + (6)*(1.*i)/299.;
+//            function(pt, 0., sol);
+//            dval_function(pt, 0., dsol);
+//            std::cout
+//            << std::setw(15) << pt(0)
+//            << std::setw(15) << std::real(sol(0))
+//            << std::setw(15) << std::imag(sol(0))
+//            << std::setw(15) << std::real(sol(3))
+//            << std::setw(15) << std::imag(sol(3))
+//            << std::setw(15) << std::real(dsol(0)) << std::endl;
+//            
+//        }
 
         //libmesh_error();
         
@@ -146,7 +146,7 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(libMesh::Real k_ref,
     return true;
 }
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 
 #endif

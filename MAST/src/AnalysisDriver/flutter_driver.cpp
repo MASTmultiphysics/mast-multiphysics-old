@@ -30,7 +30,7 @@
 #include "libmesh/condensed_eigen_system.h"
 
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
                     int argc, char* const argv[])
@@ -181,5 +181,5 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     return 0;
 }
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
