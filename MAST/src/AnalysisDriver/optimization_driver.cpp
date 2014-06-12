@@ -53,7 +53,7 @@
 #include "libmesh/gmsh_io.h"
 #include "libmesh/exodusII_io.h"
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
 // The main program.
@@ -81,4 +81,4 @@ int optimization_driver (libMesh::LibMeshInit& init, GetPot& infile,
     return 0;
 }
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS

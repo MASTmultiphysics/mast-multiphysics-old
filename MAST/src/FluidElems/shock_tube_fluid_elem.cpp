@@ -15,7 +15,7 @@
 // libMesh includes
 #include "libmesh/quadrature.h"
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
 MAST::ShockTubeFluidElem::ShockTubeFluidElem(libMesh::EquationSystems& es,
@@ -45,16 +45,9 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     // Element Jacobian * quadrature weights for interior integration
     const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
-    // The number of local degrees of freedom in each variable
-    unsigned int n_dofs = 0;
-    for (unsigned int i=0; i<dim+2; i++)
-        n_dofs += c.get_dof_indices( vars[i] ).size();
-    
-    libmesh_assert_equal_to (n_dofs, (dim+2)*c.get_dof_indices( vars[0] ).size());
-    
     // The subvectors and submatrices we need to fill:
-    libMesh::DenseMatrix<libMesh::Number>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Number>& Fvec = c.get_elem_residual();
+    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
+    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -62,7 +55,8 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     // calculated at each quadrature point by summing the
     // solution degree-of-freedom values by the appropriate
     // weight functions.
-    const unsigned int n_qpoints = c.get_element_qrule().n_points(), n1 = dim+2;
+    const unsigned int n_qpoints = c.get_element_qrule().n_points(), n1 = dim+2,
+    n_dofs = n1*elem_fe->n_shape_functions();
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
@@ -278,4 +272,4 @@ MAST::ShockTubeFluidElem::calculate_source_flux_jacobian(const PrimitiveSolution
     mat.scale(-1.);
 }
 
-#endif
+//#endif

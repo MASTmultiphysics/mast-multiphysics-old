@@ -53,7 +53,7 @@
 #include "libmesh/gmsh_io.h"
 #include "libmesh/exodusII_io.h"
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
 // The main program.
@@ -92,7 +92,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     std::string strategy = infile("refine_strategy", std::string("error_fraction")),
     error_norm = infile("error_norm", std::string("kelly"));
     
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     if (if_panel_mesh)
     {
         
@@ -197,11 +197,11 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         
         mesh.prepare_for_use();
     }
-#else
+//#else
     
     mesh.read("saved_mesh.xdr");
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
     
     // uniformly refine the mesh
     for (unsigned int i=0; i<n_uniform_refine; i++)
@@ -576,4 +576,4 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     return 0;
 }
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS

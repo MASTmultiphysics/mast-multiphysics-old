@@ -99,8 +99,8 @@ MAST::GCMMAOptimizationInterface::optimize() {
      C
      C  The meaning of some of the scalars and vectors in the program:
      C
-     C     N  = libMesh::Number of variables x_j in the problem.
-     C     M  = libMesh::Number of constraints in the problem (not including
+     C     N  = libMesh::Complex of variables x_j in the problem.
+     C     M  = libMesh::Complex of constraints in the problem (not including
      C          the simple upper and lower bounds on the variables).
      C INNMAX = Maximal number of inner iterations within each outer iter.
      C          A reasonable choice is INNMAX=10.

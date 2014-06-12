@@ -61,12 +61,12 @@ public:
     /*!
      *    system solution from previous time-step
      */
-    libMesh::NumericVector<libMesh::Number>* _x_old;
+    libMesh::NumericVector<libMesh::Real>* _x_old;
     
     /*!
      *    system velocity estimate
      */
-    libMesh::NumericVector<libMesh::Number>* _x_dot;
+    libMesh::NumericVector<libMesh::Real>* _x_dot;
 };
 
 

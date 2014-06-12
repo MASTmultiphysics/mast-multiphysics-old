@@ -178,17 +178,17 @@ namespace MAST
          *    function that assembles the matrices and vectors quantities for
          *    nonlinear solution
          */
-        virtual void residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
-                                            libMesh::NumericVector<libMesh::Number>* R,
-                                            SparseMatrix<libMesh::Number>*  J,
+        virtual void residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,
+                                            libMesh::NumericVector<libMesh::Real>* R,
+                                            SparseMatrix<libMesh::Real>*  J,
                                             NonlinearImplicitSystem& S);
         
         /*!
          *    function to assemble the external forces of type specified in the 
          *    set
          */
-        virtual void assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Number>& X,
-                                                                   libMesh::NumericVector<libMesh::Number>& F);
+        virtual void assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Real>& X,
+                                                                   libMesh::NumericVector<libMesh::Real>& F);
 
         /**
          * Assembly function.  This function will be called
@@ -202,7 +202,7 @@ namespace MAST
          */
         virtual bool sensitivity_assemble (const ParameterVector& parameters,
                                            const unsigned int i,
-                                           libMesh::NumericVector<libMesh::Number>& sensitivity_rhs);
+                                           libMesh::NumericVector<libMesh::Real>& sensitivity_rhs);
 
         /**
          * Assembly function.  This function will be called
@@ -216,15 +216,15 @@ namespace MAST
          */
         virtual bool sensitivity_assemble (const ParameterVector& parameters,
                                            const unsigned int i,
-                                           SparseMatrix<libMesh::Number>* sensitivity_A,
-                                           SparseMatrix<libMesh::Number>* sensitivity_B);
+                                           SparseMatrix<libMesh::Real>* sensitivity_A,
+                                           SparseMatrix<libMesh::Real>* sensitivity_B);
 
         /*!
          *    calculates the maximum element stress for the displacement provided
          *    in \par disp. This method looks at von Mises stresses for all quadrature
          *    points on the element, and returns the one with the maximum value.
          */
-        virtual void calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Number>& X,
+        virtual void calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Real>& X,
                                                std::vector<libMesh::Real>& stress,
                                                const MAST::FieldFunctionBase* params);
 
@@ -234,9 +234,9 @@ namespace MAST
         /*!
          *    assembles the residual and Jacobian for static or dynamic analyses
          */
-        void _assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
-                                              libMesh::NumericVector<libMesh::Number>* R,
-                                              SparseMatrix<libMesh::Number>*  J,
+        void _assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,
+                                              libMesh::NumericVector<libMesh::Real>* R,
+                                              SparseMatrix<libMesh::Real>*  J,
                                               NonlinearImplicitSystem& S,
                                               const MAST::FieldFunctionBase* params);
 
@@ -251,11 +251,11 @@ namespace MAST
          *    deformation is assumed. If \par params and \par static_sol are 
          *    provided, then \par static_sol_sens should also be given.
          */
-        void _assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
-                                                   SparseMatrix<libMesh::Number>&  matrix_B,
+        void _assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Real>&  matrix_A,
+                                                   SparseMatrix<libMesh::Real>&  matrix_B,
                                                    const MAST::FieldFunctionBase* params,
-                                                   const libMesh::NumericVector<libMesh::Number>* static_sol,
-                                                   const libMesh::NumericVector<libMesh::Number>* static_sol_sens);
+                                                   const libMesh::NumericVector<libMesh::Real>* static_sol,
+                                                   const libMesh::NumericVector<libMesh::Real>* static_sol_sens);
         
         /*!
          *    Calculates the A and B matrices of a buckling analysis eigenproblem
@@ -267,11 +267,11 @@ namespace MAST
          *    deformation is assumed. If \par params and \par static_sol are
          *    provided, then \par static_sol_sens should also be given.
          */
-        void _assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
-                                                      SparseMatrix<libMesh::Number>&  matrix_B,
+        void _assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Real>&  matrix_A,
+                                                      SparseMatrix<libMesh::Real>&  matrix_B,
                                                       const MAST::FieldFunctionBase* params,
-                                                      const libMesh::NumericVector<libMesh::Number>* static_sol,
-                                                      const libMesh::NumericVector<libMesh::Number>* static_sol_sens);
+                                                      const libMesh::NumericVector<libMesh::Real>* static_sol,
+                                                      const libMesh::NumericVector<libMesh::Real>* static_sol_sens);
 
         /*!
          *    System for which analysis is to be performed

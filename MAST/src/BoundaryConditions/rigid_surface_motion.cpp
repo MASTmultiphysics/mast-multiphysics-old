@@ -55,13 +55,14 @@ MAST::RigidSurfaceMotion::init(libMesh::Real freq, libMesh::Real phase)
 
 
 void
-MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Point& p,
-                                                            const libMesh::Point& n,
-                                                            libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                                            libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                                            libMesh::DenseVector<libMesh::Complex>& dn_rot)
+MAST::RigidSurfaceMotion::surface_velocity(const libMesh::Real t,
+                                           const libMesh::Point& p,
+                                           const libMesh::Point& n,
+                                           libMesh::DenseVector<libMesh::Complex>& w_trans,
+                                           libMesh::DenseVector<libMesh::Complex>& u_trans,
+                                           libMesh::DenseVector<libMesh::Complex>& dn_rot)
 {
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     w_trans.zero();
     u_trans.zero();
     dn_rot.zero();
@@ -92,17 +93,18 @@ MAST::RigidSurfaceMotion::surface_velocity_frequency_domain(const libMesh::Point
     // u_trans is in phase with velocity
     w_trans = u_trans;
     u_trans.scale(iota*frequency);
-#endif
+//#endif
 }
 
 
 
 void
-MAST::RigidSurfaceMotion::surface_velocity_time_domain(const libMesh::Real t,
-                                                       const libMesh::Point& p,
-                                                       const libMesh::Point& n,
-                                                       libMesh::DenseVector<libMesh::Number>& u_trans,
-                                                       libMesh::DenseVector<libMesh::Number>& dn_rot)
+MAST::RigidSurfaceMotion::surface_velocity(const libMesh::Real t,
+                                           const libMesh::Point& p,
+                                           const libMesh::Point& n,
+                                           libMesh::DenseVector<libMesh::Real>& w_trans,
+                                           libMesh::DenseVector<libMesh::Real>& u_trans,
+                                           libMesh::DenseVector<libMesh::Real>& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();

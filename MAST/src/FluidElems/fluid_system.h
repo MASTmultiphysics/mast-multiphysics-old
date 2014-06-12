@@ -12,7 +12,7 @@
 // libmesh includes
 #include "libmesh/libmesh_config.h"
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 // DiffSystem framework files
 #include "libmesh/fem_system.h"
@@ -118,6 +118,6 @@ public:
     FlightCondition* flight_condition;
 };
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 #endif /* defined(__MAST__assembleEuler__) */

@@ -60,14 +60,14 @@ int main_fem_operator (int argc, char* const argv[])
     
     for (unsigned int i=0; i<shp.size(); i++)
         shp(i) = i+1;
-
+    
     for (unsigned int i=0; i<vec1.size(); i++)
         vec1(i) = i+100;
     
     shp.print(std::cout);
     vec1.print(std::cout);
     mat1.print(std::cout);
-
+    
     FEMOperatorMatrix b1, b2;
     b1.reinit(3, shp); b2.reinit(3, shp);
     bmat1.resize(3, shp.size()*3); bmat2.resize(3, shp.size()*3);
@@ -76,7 +76,7 @@ int main_fem_operator (int argc, char* const argv[])
             bmat1(i, i*shp.size()+j) = shp(j);
             bmat2(i, i*shp.size()+j) = shp(j);
         }
-
+    
     
     vec2.resize(3);
     b1.vector_mult(vec2, vec1);
@@ -93,7 +93,7 @@ int main_fem_operator (int argc, char* const argv[])
     bmat1.vector_mult_transpose(vec2, vec1);
     std::cout << "Matrix:      " << std::endl; vec2.print(std::cout);
     
-
+    
     mat1.resize(5,3);
     mat2.resize(5, 12);
     for (unsigned int i=0; i<5; i++)
@@ -105,8 +105,8 @@ int main_fem_operator (int argc, char* const argv[])
     tmp = bmat1;
     tmp.left_multiply(mat1);
     std::cout << "Matrix:      " << std::endl;  tmp.print();
-
-
+    
+    
     mat1.resize(5,12);
     mat2.resize(5, 3);
     for (unsigned int i=0; i<5; i++)
@@ -144,8 +144,8 @@ int main_fem_operator (int argc, char* const argv[])
     bmat1.get_transpose(tmp);
     tmp.right_multiply(mat1);
     std::cout << "Matrix:      " << std::endl;  tmp.print();
-
-
+    
+    
     mat2.resize(12, 12);
     b1.right_multiply_transpose(mat2, b1);
     std::cout << "FEMOperator: " << std::endl;  mat2.print();
@@ -192,8 +192,6 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     std::string strategy = infile("refine_strategy", std::string("error_fraction")),
     error_norm = infile("error_norm", std::string("kelly"));
     
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-    
     if (if_panel_mesh)
     {
         const unsigned int nx_divs = infile("nx_divs",0),
@@ -202,7 +200,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         const libMesh::Real t_by_c =  infile("t_by_c", 0.0);
         ElemType elem_type =
         Utility::string_to_enum<ElemType>(infile("elem_type", "QUAD4"));
-
+        
         std::vector<libMesh::Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
         y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
         z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
@@ -226,7 +224,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             divs[0] = x_coord_divs.get();
             x_coord_divs->init(nx_divs, x_div_loc, x_relative_dx, x_divs);
         }
-
+        
         // now read in the values: y-coord
         if ((dim > 1) && (ny_divs > 0))
         {
@@ -240,7 +238,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             divs[1] = y_coord_divs.get();
             y_coord_divs->init(ny_divs, y_div_loc, y_relative_dx, y_divs);
         }
-
+        
         // now read in the values: z-coord
         if ((dim == 3) && (nz_divs > 0))
         {
@@ -269,7 +267,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             else if (dim == 2)
                 PanelMesh2D().init(t_by_c, if_cos_bump, n_max_bumps_x,
                                    panel_bc_id, symmetry_bc_id,
-                                    divs, mesh, elem_type);
+                                   divs, mesh, elem_type);
             else if (dim == 3)
                 PanelMesh3D().init(t_by_c, if_cos_bump,
                                    n_max_bumps_x, n_max_bumps_y,
@@ -308,16 +306,13 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             ExodusII_IO(mesh).read_parallel(mesh_input_file);
         else if (mesh_type == "nemesis")
             Nemesis_IO(mesh).read(mesh_input_file);
+        else if (mesh_type == "xdr")
+            mesh.read(mesh_input_file);
         else
             libmesh_error();
         
         mesh.prepare_for_use();
     }
-#else
-
-    mesh.read("saved_mesh.xdr");
-    
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
     
     // uniformly refine the mesh
     for (unsigned int i=0; i<n_uniform_refine; i++)
@@ -351,121 +346,127 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     flight_cond.init();
     
     
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-    // Declare the system for fluid analysis
-    FluidSystem & system =
-    equation_systems.add_system<FluidSystem> ("FluidSystem");
-    system.flight_condition = &flight_cond;
-    
-    system.attach_init_function (init_euler_variables);
-    
-    FluidPostProcessSystem& fluid_post =
-    equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
-    fluid_post.flight_condition = &flight_cond;
-    
-    ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(system);
-    libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(system);
-    
-    timesolver->quiet              = infile("timesolver_solver_quiet", true);
-    timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
-    timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
-    timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
-    timesolver->max_growth         = infile("timesolver_maxgrowth", 4.0);
-    timesolver->min_growth         = infile("timesolver_mingrowth", 0.25);
-    timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
-
-    core_time_solver->theta        = infile("timesolver_theta", 1.0);
-    
-    timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
-    timesolver->diff_solver().reset(new NewtonSolver(system));
-    system.time_solver = AutoPtr<UnsteadySolver>(timesolver);
-
-    system.dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
-    
-    equation_systems.init ();
-    
-    AerodynamicQoI aero_qoi(infile);
-    aero_qoi.flight_condition = &flight_cond;
-    
-    system.attach_qoi(&aero_qoi);
-    
-//    std::auto_ptr<SurfaceMotionFunction> surface_motion (new SurfaceMotionFunction);
-//    //system.surface_motion = surface_motion.get();
-
-//    // initialize the surface motion definition
-//    std::auto_ptr<RigidSurfaceMotion> surface_motion(new RigidSurfaceMotion);
-//    system.surface_motion = surface_motion.get();
-//    
-//    surface_motion->pitch_amplitude = 0.01745;
-//    surface_motion->pitch_phase = 0.;
-//    surface_motion->plunge_amplitude = 0.;
-//    
-//    surface_motion->pitch_axis(2) = 1.;
-//    surface_motion->hinge_location(0) = 0.;
-//    surface_motion->init(0., pi/2);
-
-    
-#else
-    // Declare the system fluid system
-    FrequencyDomainLinearizedFluidSystem & system =
-    equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
-    ("FrequencyDomainLinearizedFluidSystem");
-    system.flight_condition = &flight_cond;
-
-    FrequencyDomainFluidPostProcessSystem& fluid_post =
-    equation_systems.add_system<FrequencyDomainFluidPostProcessSystem>
-    ("DeltaFluidPostProcessSystem");
-    fluid_post.flight_condition = &flight_cond;
-    
-    system.time_solver =
-    AutoPtr<TimeSolver>(new SteadySolver(system));
-    libmesh_assert_equal_to (n_timesteps, 1);
-    
-    equation_systems.read<libMesh::Real>("saved_solution.xdr", libMesh::DECODE,
-                                (libMesh::EquationSystems::READ_HEADER |
-                                 libMesh::EquationSystems::READ_DATA));
-    
-    // now initilaize the nonlinear solution
-    system.localize_fluid_solution();
-    
-    // initialize the surface motion definition
-    std::auto_ptr<MAST::RigidSurfaceMotion> surface_motion(new MAST::RigidSurfaceMotion);
-    system.perturbed_surface_motion = surface_motion.get();
-    
-    surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
-    surface_motion->pitch_phase = infile("pitch_phase",0.);
-    surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
-
-    for (unsigned int i=0; i<3; i++)
-        surface_motion->pitch_axis(i) = infile("pitch_axis", 0., i);
-    
-    for (unsigned int i=0; i<3; i++)
-        surface_motion->hinge_location(i) = infile("hinge", 0., i);
-    
-    for (unsigned int i=0; i<3; i++)
-        surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
-    
-    libMesh::Real frequency = infile("frequency",0.);
-    surface_motion->init(frequency, 0.);
-    equation_systems.parameters.set<bool>("if_reduced_freq") =
-    infile("if_reduced_freq", false);
-    
-#endif
+    FEMSystem* system = nullptr;
     
     
-    system.print_residual_norms = infile("print_residual_norms", false);
-    system.print_residuals = infile("print_residuals", false);
-    system.print_jacobian_norms = infile("print_jacobian_norms", false);
-    system.print_jacobians = infile("print_jacobians", false);
+    if (analysis == "nonlinear") {
+        // Declare the system for fluid analysis
+        FluidSystem* fluid_system =
+        &(equation_systems.add_system<FluidSystem> ("FluidSystem"));
+        system = fluid_system;
+        
+        fluid_system->flight_condition = &flight_cond;
+        fluid_system->attach_init_function (init_euler_variables);
+        
+        FluidPostProcessSystem& fluid_post =
+        equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
+        fluid_post.flight_condition = &flight_cond;
+        
+        ResidualBaseAdaptiveTimemailSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(*fluid_system);
+        libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(*fluid_system);
+        
+        timesolver->quiet              = infile("timesolver_solver_quiet", true);
+        timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
+        timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
+        timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
+        timesolver->max_growth         = infile("timesolver_maxgrowth", 4.0);
+        timesolver->min_growth         = infile("timesolver_mingrowth", 0.25);
+        timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
+        
+        core_time_solver->theta        = infile("timesolver_theta", 1.0);
+        
+        timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
+        timesolver->diff_solver().reset(new NewtonSolver(*fluid_system));
+        fluid_system->time_solver = AutoPtr<UnsteadySolver>(timesolver);
+        
+        fluid_system->dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
+        
+        equation_systems.init ();
+        
+        AerodynamicQoI aero_qoi(infile);
+        aero_qoi.flight_condition = &flight_cond;
+        
+        fluid_system->attach_qoi(&aero_qoi);
+        
+        //    std::auto_ptr<SurfaceMotionFunction> surface_motion (new SurfaceMotionFunction);
+        //    //system.surface_motion = surface_motion.get();
+        
+        //    // initialize the surface motion definition
+        //    std::auto_ptr<RigidSurfaceMotion> surface_motion(new RigidSurfaceMotion);
+        //    system.surface_motion = surface_motion.get();
+        //
+        //    surface_motion->pitch_amplitude = 0.01745;
+        //    surface_motion->pitch_phase = 0.;
+        //    surface_motion->plunge_amplitude = 0.;
+        //
+        //    surface_motion->pitch_axis(2) = 1.;
+        //    surface_motion->hinge_location(0) = 0.;
+        //    surface_motion->init(0., pi/2);
+    }
+    else if (analysis == "frequency_domain") {
+        
+        // Declare the system fluid system
+        FrequencyDomainLinearizedFluidSystem * frequency_system =
+        &(equation_systems.add_system<FrequencyDomainLinearizedFluidSystem>
+        ("FrequencyDomainLinearizedFluidSystem"));
+        system = frequency_system;
+        frequency_system->flight_condition = &flight_cond;
+        
+        FrequencyDomainFluidPostProcessSystem& fluid_post =
+        equation_systems.add_system<FrequencyDomainFluidPostProcessSystem>
+        ("DeltaFluidPostProcessSystem");
+        fluid_post.flight_condition = &flight_cond;
+        
+        frequency_system->time_solver =
+        AutoPtr<TimeSolver>(new SteadySolver(*frequency_system));
+        libmesh_assert_equal_to (n_timesteps, 1);
+        
+        equation_systems.read<libMesh::Real>(input_solution_file, libMesh::DECODE,
+                                             (libMesh::EquationSystems::READ_HEADER |
+                                              libMesh::EquationSystems::READ_DATA));
+        
+        // now initilaize the nonlinear solution
+        frequency_system->localize_fluid_solution();
+        
+        // initialize the surface motion definition
+        std::auto_ptr<MAST::RigidSurfaceMotion> surface_motion(new MAST::RigidSurfaceMotion);
+        frequency_system->perturbed_surface_motion = surface_motion.get();
+        
+        surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
+        surface_motion->pitch_phase = infile("pitch_phase",0.);
+        surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
+        
+        for (unsigned int i=0; i<3; i++)
+            surface_motion->pitch_axis(i) = infile("pitch_axis", 0., i);
+        
+        for (unsigned int i=0; i<3; i++)
+            surface_motion->hinge_location(i) = infile("hinge", 0., i);
+        
+        for (unsigned int i=0; i<3; i++)
+            surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
+        
+        libMesh::Real frequency = infile("frequency",0.);
+        surface_motion->init(frequency, 0.);
+        equation_systems.parameters.set<bool>("if_reduced_freq") =
+        infile("if_reduced_freq", false);
+    }
+    else
+        libmesh_error();
+    
+    
+    system->print_residual_norms = infile("print_residual_norms", false);
+    system->print_residuals = infile("print_residuals", false);
+    system->print_jacobian_norms = infile("print_jacobian_norms", false);
+    system->print_jacobians = infile("print_jacobians", false);
     //system.verify_analytic_jacobians = 1.0e-3;
-    system.extra_quadrature_order = infile("extra_quadrature_order", 0);
+    system->extra_quadrature_order = infile("extra_quadrature_order", 0);
     
     // Set the time stepping options
-    system.deltat = deltat;
+    system->deltat = deltat;
     
     // And the nonlinear solver options
     NewtonSolver &solver = dynamic_cast<NewtonSolver&>
-    (*(system.time_solver->diff_solver().get()));
+    (*(system->time_solver->diff_solver().get()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
     solver.brent_line_search = false;
@@ -504,25 +505,23 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     {
         // A pretty update message
         std::cout << "\n\nSolving time step " << t_step << ", time = "
-        << system.time << std::endl;
+        << system->time << std::endl;
         
         
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        // before the first iteration the dc vector needs to be localized
-        system.evaluate_recalculate_dc_flag();
-#endif
-
+        if (analysis == "nonlinear")
+            // before the first iteration the dc vector needs to be localized
+            fluid_system->evaluate_recalculate_dc_flag();
+        
         // Do one last solve before the time step increment
-        system.solve();
+        system->solve();
         //system.assemble_qoi(); // calculate the quantities of interest
         //system.postprocess(); // set the qois to the post-process variables
         
         // Advance to the next timestep in a transient problem
         //system.time_solver->advance_timestep();
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
-        sol_norm = timesolver->_x_dot_norm_old;
-#endif
-
+        if (analysis == "nonlinear")
+            sol_norm = timesolver->_x_dot_norm_old;
+        
         
         // Adaptively solve the timestep
         if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
@@ -564,7 +563,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             norms(1, error_estimator->error_norm.type(0));
             error_estimator->error_norm = SystemNorm(norms, weights);
             
-            error_estimator->estimate_error(system, error);
+            error_estimator->estimate_error(*system, error);
             
             // Print out status at each adaptive step.
             libMesh::Real global_error = error.l2_norm();
@@ -611,10 +610,10 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             const MeshBase::const_element_iterator end_el = mesh.local_elements_end();
             for ( ; el != end_el; el++)
                 (*el)->print_info();
-
+            
             
             // reduce the time step size by a factor
-            system.deltat *= amr_time_shrink_factor;
+            system->deltat *= amr_time_shrink_factor;
             
             std::cout << "Refined mesh to "
             << mesh.n_active_elem()
@@ -625,16 +624,15 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             // decrement the amr counter
             amr_steps--;
             a_step++;
-
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+            
             // tell the solver to recalculte the dc coeffs post refinement
-            system.if_use_stored_dc_coeff = false;
-#endif
+            if (analysis == "nonlinaer")
+                fluid_system->if_use_stored_dc_coeff = false;
         }
-
+        
         // check for termination criteria
         t_step++;
-
+        
         if (((t_step >= n_timesteps) || (sol_norm < terminate_tolerance)) &&
             (amr_steps == 0))
         {
@@ -648,7 +646,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             fluid_post.postprocess();
             system.assemble_qoi(); // calculate the quantities of interest
             system.postprocess(); // set the qois to the post-process variables
-
+            
             std::ostringstream file_name, b_file_name;
             
             // We write the file in the ExodusII format.
@@ -664,42 +662,40 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             
             
             // output of data along a line
-//            std::ostringstream out_name;
-//            out_name << "out_"
-//            << std::setw(3)
-//            << std::setfill('0')
-//            << std::right
-//            << t_step
-//            << ".txt";
-//            std::ofstream file;
-//            file.open(out_name.str().c_str(), std::ofstream::out);
-//            
-//            std::vector<unsigned int> v(1); v[0] = system.variable_number("rho");
-//            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
-//            m.init();
-//            unsigned int ndivs=10000; libMesh::Real dx=5.0/(ndivs*1.);
-//            libMesh::Point p; libMesh::DenseVector<libMesh::Real> vals; vals.resize(4);
-//            p(0) = 0.; p(1) = .026;
-//            while (p(0) < 5.) {
-//                m(p, 0., vals);
-//                file << p(0) << "  " << vals(0) << std::endl;
-//                p(0) += dx;
-//            }
-//            file.close();
-
+            //            std::ostringstream out_name;
+            //            out_name << "out_"
+            //            << std::setw(3)
+            //            << std::setfill('0')
+            //            << std::right
+            //            << t_step
+            //            << ".txt";
+            //            std::ofstream file;
+            //            file.open(out_name.str().c_str(), std::ofstream::out);
+            //
+            //            std::vector<unsigned int> v(1); v[0] = system.variable_number("rho");
+            //            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
+            //            m.init();
+            //            unsigned int ndivs=10000; libMesh::Real dx=5.0/(ndivs*1.);
+            //            libMesh::Point p; libMesh::DenseVector<libMesh::Real> vals; vals.resize(4);
+            //            p(0) = 0.; p(1) = .026;
+            //            while (p(0) < 5.) {
+            //                m(p, 0., vals);
+            //                file << p(0) << "  " << vals(0) << std::endl;
+            //                p(0) += dx;
+            //            }
+            //            file.close();
+            
         }
         
     }
     
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     MeshSerializer serializer(mesh);
     XdrIO xdr(mesh, true);
     xdr.set_write_parallel(false);
-    xdr.write("saved_mesh.xdr");
-    equation_systems.write("saved_solution.xdr", libMesh::ENCODE,
+    xdr.write(output_mesh_file);
+    equation_systems.write(output_solution_file, libMesh::ENCODE,
                            (libMesh::EquationSystems::WRITE_SERIAL_FILES |
                             libMesh::EquationSystems::WRITE_DATA));
-#endif
     
     // All done.
     return 0;

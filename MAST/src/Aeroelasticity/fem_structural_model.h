@@ -79,7 +79,7 @@ public:
     /*!
      *     returns the basis matrix for this structural model
      */
-    virtual BasisMatrix<libMesh::Number>& get_basis_matrix()
+    virtual BasisMatrix<libMesh::Real>& get_basis_matrix()
     {
         return *basis_matrix;
     }
@@ -90,7 +90,7 @@ public:
      */
     void assemble_force_vec(MAST::SmallDisturbanceSurfacePressure& press,
                             MAST::SurfaceMotionBase& displ,
-                            libMesh::NumericVector<libMesh::Number>& f_vec);
+                            libMesh::NumericVector<libMesh::Real>& f_vec);
 
     
     /*!
@@ -113,7 +113,7 @@ public:
     /*!
      *    returns the basis matrix using the modal data in structural system
      */
-    std::auto_ptr<BasisMatrix<libMesh::Number> > basis_matrix;
+    std::auto_ptr<BasisMatrix<libMesh::Real> > basis_matrix;
 };
 
 
@@ -126,7 +126,7 @@ FEMStructuralModel::init()
     
     unsigned int n_eig = eigen_vals.size();
     
-    basis_matrix.reset(new BasisMatrix<libMesh::Number>(structural_system.comm()));
+    basis_matrix.reset(new BasisMatrix<libMesh::Real>(structural_system.comm()));
     basis_matrix->modes.resize(n_eig);
     
     for (unsigned int i=0; i<n_eig; i++)
@@ -142,7 +142,7 @@ inline
 void
 FEMStructuralModel::assemble_force_vec(MAST::SmallDisturbanceSurfacePressure& press,
                                        MAST::SurfaceMotionBase& displ,
-                                       libMesh::NumericVector<libMesh::Number>& f_vec) {
+                                       libMesh::NumericVector<libMesh::Real>& f_vec) {
     MAST::SmallDisturbanceMotion load;
     load.set_deformation(displ);
     load.set_pressure(press);

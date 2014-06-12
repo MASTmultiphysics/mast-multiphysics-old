@@ -15,7 +15,7 @@
 #include "libmesh/diff_system.h"
 #include "libmesh/mesh_base.h"
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 
 FluidNewtonSolver::FluidNewtonSolver(sys_type& system):
@@ -29,8 +29,8 @@ FluidNewtonSolver::~FluidNewtonSolver()
 
 void
 FluidNewtonSolver::line_search(Real& current_residual,
-                               libMesh::NumericVector<libMesh::Number> &newton_iterate,
-                               const libMesh::NumericVector<libMesh::Number> &linear_solution)
+                               libMesh::NumericVector<libMesh::Real> &newton_iterate,
+                               const libMesh::NumericVector<libMesh::Real> &linear_solution)
 {
   const libMesh::Real cp =  dynamic_cast<const FluidSystem&>
     (this->system()).flight_condition->gas_property.cp;
@@ -115,11 +115,11 @@ FluidNewtonSolver::solve()
     // Reset any prior solve result
     _solve_result = INVALID_SOLVE_RESULT;
     
-    libMesh::NumericVector<libMesh::Number> &newton_iterate = *(_system.solution);
+    libMesh::NumericVector<libMesh::Real> &newton_iterate = *(_system.solution);
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > linear_solution_ptr = newton_iterate.zero_clone();
-    libMesh::NumericVector<libMesh::Number> &linear_solution = *linear_solution_ptr;
-    libMesh::NumericVector<libMesh::Number> &rhs = *(_system.rhs);
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > linear_solution_ptr = newton_iterate.zero_clone();
+    libMesh::NumericVector<libMesh::Real> &linear_solution = *linear_solution_ptr;
+    libMesh::NumericVector<libMesh::Real> &rhs = *(_system.rhs);
     
     newton_iterate.close();
     linear_solution.close();
@@ -129,7 +129,7 @@ FluidNewtonSolver::solve()
     _system.get_dof_map().enforce_constraints_exactly(_system);
 #endif
     
-    SparseMatrix<libMesh::Number> &matrix = *(_system.matrix);
+    SparseMatrix<libMesh::Real> &matrix = *(_system.matrix);
     
     // Prepare to take incomplete steps
     libMesh::Real last_residual=0.;
@@ -315,7 +315,7 @@ FluidNewtonSolver::solve()
     return _solve_result;
 }
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 
 

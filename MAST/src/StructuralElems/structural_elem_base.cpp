@@ -14,6 +14,7 @@
 #include "StructuralElems/structural_elem_base.h"
 #include "PropertyCards/element_property_card_base.h"
 #include "Numerics/fem_operator_matrix.h"
+#include "Numerics/utility.h"
 #include "StructuralElems/structural_element_3D.h"
 #include "StructuralElems/structural_element_2D.h"
 #include "StructuralElems/structural_element_1D.h"
@@ -253,10 +254,11 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
 
 
 
+template <typename ValType>
 bool
 MAST::StructuralElementBase::side_external_force(bool request_jacobian,
-                                                 libMesh::DenseVector<libMesh::Number> &f,
-                                                 libMesh::DenseMatrix<libMesh::Number> &jac,
+                                                 libMesh::DenseVector<libMesh::Real> &f,
+                                                 libMesh::DenseMatrix<libMesh::Real> &jac,
                                                  std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
     // iterate over the boundary ids given in the provided force map
@@ -283,22 +285,22 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                 // apply all the types of loading
                 switch (it.first->second->type()) {
                     case MAST::SURFACE_PRESSURE:
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
                         calculate_jac = (calculate_jac ||
                                          surface_pressure_force(request_jacobian,
                                                                 f, jac,
                                                                 n,
                                                                 *it.first->second));
                         break;
-#else
+//#else
                     case MAST::SMALL_DISTURBANCE_MOTION:
                         calculate_jac = (calculate_jac ||
-                                         small_disturbance_surface_pressure_force(request_jacobian,
-                                                                                  f, jac,
-                                                                                  n,
-                                                                                  *it.first->second));
+                                         small_disturbance_surface_pressure_force<ValType>(request_jacobian,
+                                                                                           f, jac,
+                                                                                           n,
+                                                                                           *it.first->second));
                         break;
-#endif
+//#endif
 
                     case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
@@ -317,10 +319,11 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
 
 
 
+template <typename ValType>
 bool
 MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobian,
-                                                             libMesh::DenseVector<libMesh::Number> &f,
-                                                             libMesh::DenseMatrix<libMesh::Number> &jac,
+                                                             libMesh::DenseVector<libMesh::Real> &f,
+                                                             libMesh::DenseMatrix<libMesh::Real> &jac,
                                                              std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
     // iterate over the boundary ids given in the provided force map
@@ -346,7 +349,7 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
             for ( ; it.first != it.second; it.first++) {
                 // apply all the types of loading
                 switch (it.first->second->type()) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
                     case MAST::SURFACE_PRESSURE:
                         calculate_jac = (calculate_jac ||
                                          surface_pressure_force_sensitivity(request_jacobian,
@@ -354,7 +357,7 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                                                                             n,
                                                                             *it.first->second));
                         break;
-#endif
+//#endif
                     case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
                         break;
@@ -372,10 +375,11 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
 
 
 
+template <typename ValType>
 bool
 MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
-                                                   libMesh::DenseVector<libMesh::Number> &f,
-                                                   libMesh::DenseMatrix<libMesh::Number> &jac,
+                                                   libMesh::DenseVector<libMesh::Real> &f,
+                                                   libMesh::DenseMatrix<libMesh::Real> &jac,
                                                    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc) {
     // iterate over the boundary ids given in the provided force map
     std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
@@ -392,7 +396,7 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
     for ( ; it.first != it.second; it.first++) {
         // apply all the types of loading
         switch (it.first->second->type()) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
             case MAST::SURFACE_PRESSURE:
                 calculate_jac = (calculate_jac ||
                                  surface_pressure_force(request_jacobian,
@@ -405,14 +409,14 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                f, jac,
                                                *it.first->second));
                 break;
-#else
+//#else
             case MAST::SMALL_DISTURBANCE_MOTION:
                 calculate_jac = (calculate_jac ||
-                                 small_disturbance_surface_pressure_force(request_jacobian,
-                                                                          f, jac,
-                                                                          *it.first->second));
+                                 small_disturbance_surface_pressure_force<ValType>(request_jacobian,
+                                                                                   f, jac,
+                                                                                   *it.first->second));
                 break;
-#endif
+//#endif
             default:
                 // not implemented yet
                 libmesh_error();
@@ -426,10 +430,11 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
 
 
 
+template <typename ValType>
 bool
 MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jacobian,
-                                                               libMesh::DenseVector<libMesh::Number> &f,
-                                                               libMesh::DenseMatrix<libMesh::Number> &jac,
+                                                               libMesh::DenseVector<libMesh::Real> &f,
+                                                               libMesh::DenseMatrix<libMesh::Real> &jac,
                                                                std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc) {
     // iterate over the boundary ids given in the provided force map
     std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
@@ -446,7 +451,7 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
     for ( ; it.first != it.second; it.first++) {
         // apply all the types of loading
         switch (it.first->second->type()) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
             case MAST::SURFACE_PRESSURE:
                 calculate_jac = (calculate_jac ||
                                  surface_pressure_force_sensitivity(request_jacobian,
@@ -461,7 +466,7 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
                                                            *it.first->second));
                 break;
 
-#endif
+//#endif
                 
             default:
                 // not implemented yet
@@ -481,14 +486,14 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
                                                     libMesh::DenseMatrix<libMesh::Real> &jac,
                                                     const unsigned int side,
                                                     MAST::BoundaryCondition &p) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
     FEMOperatorMatrix Bmat;
     
     // get the function from this boundary condition
-    MAST::FieldFunction<libMesh::Number>& func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Number>&>(p.function());
+    MAST::FieldFunction<libMesh::Real>& func =
+    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>(p.function());
     std::auto_ptr<libMesh::FEBase> fe;
     std::auto_ptr<libMesh::QBase> qrule;
     _get_side_fe_and_qrule(this->get_elem_for_quadrature(), side, fe, qrule);
@@ -541,7 +546,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     else
         f.add(1., local_f);
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 
@@ -553,15 +558,15 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
                                                     libMesh::DenseVector<libMesh::Real> &f,
                                                     libMesh::DenseMatrix<libMesh::Real> &jac,
                                                     MAST::BoundaryCondition &p) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
     FEMOperatorMatrix Bmat;
     
     // get the function from this boundary condition
-    MAST::FieldFunction<libMesh::Number>& func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Number>&>(p.function());
+    MAST::FieldFunction<libMesh::Real>& func =
+    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>(p.function());
     const std::vector<libMesh::Real> &JxW = _fe->get_JxW();
     
     // Physical location of the quadrature points
@@ -611,18 +616,19 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     transform_to_global_system(local_f, tmp_vec_n2);
     f.add(1., tmp_vec_n2);
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 
 
+template <typename ValType>
 bool
 MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                                      libMesh::DenseVector<libMesh::Number> &f,
-                                                                      libMesh::DenseMatrix<libMesh::Number> &jac,
+                                                                      libMesh::DenseVector<libMesh::Real> &f,
+                                                                      libMesh::DenseMatrix<libMesh::Real> &jac,
                                                                       const unsigned int side,
                                                                       MAST::BoundaryCondition &p) {
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
     
@@ -648,9 +654,10 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     // boundary normals
     const std::vector<Point>& face_normals = fe->get_normals();
     
-    libMesh::Number press, dpress;
+    libMesh::Real press;
+    ValType dpress;
     libMesh::DenseVector<libMesh::Real> phi_vec;
-    libMesh::DenseVector<libMesh::Number> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
+    libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
     wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
@@ -668,9 +675,9 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         Bmat.reinit(2*n1, phi_vec);
 
         // get pressure and deformation information
-        surf_press.surface_pressure(pt, press, dpress);
-        surf_motion.surface_velocity_frequency_domain(pt, face_normals[qp],
-                                                      wtrans, utrans, dn_rot);
+        surf_press.surface_pressure<ValType>(_system.time, pt, press, dpress);
+        surf_motion.surface_velocity(_system.time, pt, face_normals[qp],
+                                     wtrans, utrans, dn_rot);
         
         //            press = 0.;
         //            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
@@ -698,24 +705,25 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     // now transform to the global system and add
     if (_elem.dim() < 3) {
         transform_to_global_system(local_f, tmp_vec_n2);
-        f.add(1., tmp_vec_n2);
+        MAST::add_to_assembled_vector(f, tmp_vec_n2);
     }
     else
-        f.add(1., local_f);
+        MAST::add_to_assembled_vector(f, local_f);
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 
 
 
 
+template <typename ValType>
 bool
 MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                                      libMesh::DenseVector<libMesh::Number> &f,
-                                                                      libMesh::DenseMatrix<libMesh::Number> &jac,
+                                                                      libMesh::DenseVector<libMesh::Real> &f,
+                                                                      libMesh::DenseMatrix<libMesh::Real> &jac,
                                                                       MAST::BoundaryCondition &p) {
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements.
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
@@ -741,9 +749,10 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     // to the element face for 2D and along local y-axis for 1D element.
     normal(_elem.dim()) = 1.;
     
-    libMesh::Number press, dpress;
+    libMesh::Real press;
+    libMesh::Complex dpress;
     libMesh::DenseVector<libMesh::Real> phi_vec;
-    libMesh::DenseVector<libMesh::Number> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
+    libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
     wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
@@ -762,8 +771,8 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         
         // get pressure and deformation information
         surf_press.surface_pressure(pt, press, dpress);
-        surf_motion.surface_velocity_frequency_domain(pt, normal,
-                                                      wtrans, utrans, dn_rot);
+        surf_motion.surface_velocity(pt, normal,
+                                     wtrans, utrans, dn_rot);
 //        std::cout << std::setw(15) << pt(0)
 //        << std::setw(15) << std::real(press)
 //        << std::setw(15) << std::imag(press)
@@ -787,9 +796,9 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     // now transform to the global system and add
     transform_to_global_system(local_f, tmp_vec_n2);
-    f.add(1., tmp_vec_n2);
-        
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+    MAST::add_to_assembled_vector(f, tmp_vec_n2);
+    
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return (request_jacobian && follower_forces);
 }
 
@@ -1047,7 +1056,7 @@ void
 MAST::StructuralElementBase::transform_to_global_system<libMesh::Real>(const libMesh::DenseVector<libMesh::Real>& local_vec,
                                                               libMesh::DenseVector<libMesh::Real>& global_vec) const;
 
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 template
 void
@@ -1064,6 +1073,6 @@ void
 MAST::StructuralElementBase::transform_to_global_system<libMesh::Complex>(const libMesh::DenseVector<libMesh::Complex>& local_vec,
                                                               libMesh::DenseVector<libMesh::Complex>& global_vec) const;
 
-#endif
+//#endif
 
 

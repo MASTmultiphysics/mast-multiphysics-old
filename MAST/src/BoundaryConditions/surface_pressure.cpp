@@ -9,14 +9,14 @@
 
 // MAST includes
 #include "BoundaryConditions/surface_pressure.h"
-
+#include "Numerics/utility.h"
 
 
 void
-MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Number>& nonlinear_sol,
-                                            libMesh::NumericVector<libMesh::Number>& linearized_sol)
+MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real>& nonlinear_sol,
+                                            libMesh::NumericVector<libMesh::Real>& linearized_sol)
 {
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert_equal_to(nonlinear_sol.size(),
                             nonlinear_sys.solution->size());
     libmesh_assert_equal_to(linearized_sol.size(),
@@ -28,12 +28,12 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Numb
     {
         // vector to store the nonlinear solution
         _sol_nonlinear.reset
-        (libMesh::NumericVector<libMesh::Number>::build(nonlinear_sys.comm()).release());
+        (libMesh::NumericVector<libMesh::Real>::build(nonlinear_sys.comm()).release());
         _sol_nonlinear->init(nonlinear_sol.size(), true, SERIAL);
         
         // vector to store the linear solution
         _sol_linear.reset
-        (libMesh::NumericVector<libMesh::Number>::build(linearized_sys.comm()).release());
+        (libMesh::NumericVector<libMesh::Real>::build(linearized_sys.comm()).release());
         _sol_linear->init(linearized_sol.size(), true, SERIAL);
     }
     
@@ -81,17 +81,19 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Numb
                           vars));
         _function_linear->init();
     }
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
 
 
+template <typename ValType>
 void
 MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
-                                                        Number& cp, Number& dcp)
+                                                        libMesh::Real& cp,
+                                                        ValType& dcp)
 {
-#ifdef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_function_nonlinear.get()); // should be initialized before this call
     libmesh_assert(_function_linear.get()); // should be initialized before this call
     
@@ -99,20 +101,18 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
     cp = 0.; dcp = 0.;
     
     // get the nonlinear and linearized solution
-    libMesh::DenseVector<libMesh::Number> v_nonlin, v_lin;
-    libMesh::DenseVector<libMesh::Real> v_nonlin_real;
+    libMesh::DenseVector<ValType> v_lin;
+    libMesh::DenseVector<libMesh::Real> v_nonlin, v_lin_real;
     (*_function_nonlinear)(p, 0., v_nonlin);
-    (*_function_linear)(p, 0., v_lin);
+    (*_function_linear)(p, 0., v_lin_real);
+    
+    MAST::transform_to_elem_vector(v_lin, v_lin_real);
     
     PrimitiveSolution p_sol;
-    SmallPerturbationPrimitiveSolution<libMesh::Number> delta_p_sol;
-    
-    v_nonlin_real.resize(v_nonlin.size());
-    for (unsigned int i=0; i<v_nonlin.size(); i++)
-        v_nonlin_real(i) = std::real(v_nonlin(i));
+    SmallPerturbationPrimitiveSolution<ValType> delta_p_sol;
     
     // now initialize the primitive variable contexts
-    p_sol.init(_dim, v_nonlin_real,
+    p_sol.init(_dim, v_nonlin,
                _flt_cond->gas_property.cp,
                _flt_cond->gas_property.cv,
                false);
@@ -121,6 +121,6 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Point& p,
     cp = p_sol.c_pressure(_flt_cond->p0(),
                           _flt_cond->q0());
     dcp = delta_p_sol.c_pressure(_flt_cond->q0());
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 

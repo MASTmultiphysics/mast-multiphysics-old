@@ -181,9 +181,9 @@ MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
 
 
 void
-MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
-                                                       libMesh::NumericVector<libMesh::Number>* R,
-                                                       SparseMatrix<libMesh::Number>*  J,
+MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,
+                                                       libMesh::NumericVector<libMesh::Real>* R,
+                                                       SparseMatrix<libMesh::Real>*  J,
                                                        NonlinearImplicitSystem& S) {
     
     if (R) R->zero();
@@ -211,8 +211,8 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVec
 bool
 MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
-                                                      libMesh::NumericVector<libMesh::Number>& sensitivity_rhs) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+                                                      libMesh::NumericVector<libMesh::Real>& sensitivity_rhs) {
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
     
@@ -237,7 +237,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     // currently, all relevant parameter sensitivities are calculated
     return true;
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
@@ -245,13 +245,13 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 void
 MAST::StructuralSystemAssembly::assemble() {
     
-    SparseMatrix<libMesh::Number>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
-    SparseMatrix<libMesh::Number>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
+    SparseMatrix<libMesh::Real>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
+    SparseMatrix<libMesh::Real>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
     
     matrix_A.zero();
     matrix_B.zero();
 
-    libMesh::NumericVector<libMesh::Number> *sol = NULL;
+    libMesh::NumericVector<libMesh::Real> *sol = NULL;
     
     // if a system is provided for getting the static solution, then get the vectors
     if (_static_sol_system)
@@ -289,16 +289,16 @@ MAST::StructuralSystemAssembly::assemble() {
 bool
 MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
-                                                      SparseMatrix<libMesh::Number>* sensitivity_A,
-                                                      SparseMatrix<libMesh::Number>* sensitivity_B) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+                                                      SparseMatrix<libMesh::Real>* sensitivity_A,
+                                                      SparseMatrix<libMesh::Real>* sensitivity_B) {
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
     
     sensitivity_A->zero();
     sensitivity_B->zero();
     
-    libMesh::NumericVector<libMesh::Number> *sol = NULL, *sol_sens = NULL;
+    libMesh::NumericVector<libMesh::Real> *sol = NULL, *sol_sens = NULL;
     
     // if a system is provided for getting the static solution, then get the vectors
     if (_static_sol_system) {
@@ -330,19 +330,19 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_B->close();
 
     // currently, all relevant parameter sensitivities are calculated
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
     return true;
 }
 
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Number>& X,
-                                                                 libMesh::NumericVector<libMesh::Number>* R,
-                                                                 SparseMatrix<libMesh::Number>*  J,
+MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,
+                                                                 libMesh::NumericVector<libMesh::Real>* R,
+                                                                 SparseMatrix<libMesh::Real>*  J,
                                                                  NonlinearImplicitSystem& S,
                                                                  const MAST::FieldFunctionBase* param) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     libMesh::DenseVector<libMesh::Real> vec, sol;
@@ -351,8 +351,8 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution =
-    libMesh::NumericVector<libMesh::Number>::build(_system.comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution =
+    libMesh::NumericVector<libMesh::Real>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
@@ -393,12 +393,12 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
             if (_analysis_type == MAST::DYNAMIC)
                 structural_elem->inertial_force(J!=NULL?true:false,
                                                 vec, mat);
-            structural_elem->side_external_force(J!=NULL?true:false,
-                                                 vec, mat,
-                                                 _side_bc_map);
-            structural_elem->volume_external_force(J!=NULL?true:false,
-                                                   vec, mat,
-                                                   _vol_bc_map);
+            structural_elem->side_external_force<libMesh::Real>(J!=NULL?true:false,
+                                                                vec, mat,
+                                                                _side_bc_map);
+            structural_elem->volume_external_force<libMesh::Real>(J!=NULL?true:false,
+                                                                  vec, mat,
+                                                                  _vol_bc_map);
         }
         else {
             structural_elem->sensitivity_param = param;
@@ -409,12 +409,12 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
             if (_analysis_type == MAST::DYNAMIC)
                 structural_elem->inertial_force_sensitivity(J!=NULL?true:false,
                                                             vec, mat);
-            structural_elem->side_external_force_sensitivity(J!=NULL?true:false,
-                                                             vec, mat,
-                                                             _side_bc_map);
-            structural_elem->volume_external_force_sensitivity(J!=NULL?true:false,
-                                                               vec, mat,
-                                                               _vol_bc_map);
+            structural_elem->side_external_force_sensitivity<libMesh::Real>(J!=NULL?true:false,
+                                                                            vec, mat,
+                                                                            _side_bc_map);
+            structural_elem->volume_external_force_sensitivity<libMesh::Real>(J!=NULL?true:false,
+                                                                              vec, mat,
+                                                                              _vol_bc_map);
             // scale vector by -1 to account for the fact that the sensitivity
             // appears on RHS of the system with a -ve sign on it
             vec.scale(-1.);
@@ -431,26 +431,26 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
         if (R) R->add_vector(vec, dof_indices);
         if (J) J->add_matrix(mat, dof_indices);
     }
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
 
 void
-MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Number>& X,
-                                                                              libMesh::NumericVector<libMesh::Number>& F) {
+MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Real>& X,
+                                                                              libMesh::NumericVector<libMesh::Real>& F) {
     F.zero();
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Number> vec, sol;
-    libMesh::DenseMatrix<libMesh::Number> mat;
+    libMesh::DenseVector<libMesh::Real> vec, sol;
+    libMesh::DenseMatrix<libMesh::Real> mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution =
-    libMesh::NumericVector<libMesh::Number>::build(_system.comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution =
+    libMesh::NumericVector<libMesh::Real>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
@@ -504,10 +504,10 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
         //structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         
         // now get the vector values
-        structural_elem->side_external_force(false, vec, mat,
-                                             local_side_bc_map);
-        structural_elem->volume_external_force(false, vec, mat,
-                                               local_vol_bc_map);
+        structural_elem->side_external_force<libMesh::Complex>(false, vec, mat,
+                                                               local_side_bc_map);
+        structural_elem->volume_external_force<libMesh::Complex>(false, vec, mat,
+                                                                 local_vol_bc_map);
         
         // constrain the vector
         _system.get_dof_map().constrain_element_vector(vec, dof_indices);
@@ -524,12 +524,12 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
-                                                                      SparseMatrix<libMesh::Number>&  matrix_B,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Real>&  matrix_A,
+                                                                      SparseMatrix<libMesh::Real>&  matrix_B,
                                                                       const MAST::FieldFunctionBase* param,
-                                                                      const libMesh::NumericVector<libMesh::Number>* static_sol,
-                                                                      const libMesh::NumericVector<libMesh::Number>* static_sol_sens) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+                                                                      const libMesh::NumericVector<libMesh::Real>* static_sol,
+                                                                      const libMesh::NumericVector<libMesh::Real>* static_sol_sens) {
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -542,9 +542,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution, localized_solution_sens;
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
-        localized_solution.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
+        localized_solution.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
         localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
                                  false, GHOSTED);
@@ -554,7 +554,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
-            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
+            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                      _system.get_dof_map().get_send_list(),
                                      false, GHOSTED);
@@ -605,10 +605,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             structural_elem->prestress_force(true, vec, mat1);
 
             // get the Jacobian due to external loads, including thermal stresses
-            structural_elem->side_external_force(true, vec, mat1,
-                                                 _side_bc_map);
-            structural_elem->volume_external_force(true, vec, mat1,
-                                                   _vol_bc_map);
+            structural_elem->side_external_force<libMesh::Real>(true, vec, mat1,
+                                                                _side_bc_map);
+            structural_elem->volume_external_force<libMesh::Real>(true, vec, mat1,
+                                                                  _vol_bc_map);
             
             mat1.scale(-1.);
             structural_elem->inertial_force(true, vec, mat2);
@@ -629,10 +629,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
 
             structural_elem->internal_force_sensitivity(true, vec, mat1, false);
             structural_elem->prestress_force_sensitivity(true, vec, mat1);
-            structural_elem->side_external_force_sensitivity(true, vec, mat1,
-                                                             _side_bc_map);
-            structural_elem->volume_external_force_sensitivity(true, vec, mat1,
-                                                               _vol_bc_map);
+            structural_elem->side_external_force_sensitivity<libMesh::Real>(true, vec, mat1,
+                                                                            _side_bc_map);
+            structural_elem->volume_external_force_sensitivity<libMesh::Real>(true, vec, mat1,
+                                                                              _vol_bc_map);
             
             mat1.scale(-1.);
             structural_elem->inertial_force_sensitivity(true, vec, mat2);
@@ -654,18 +654,18 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             matrix_B.add_matrix (mat2, dof_indices); // mass
         }
     }
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Number>&  matrix_A,
-                                                                         SparseMatrix<libMesh::Number>&  matrix_B,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Real>&  matrix_A,
+                                                                         SparseMatrix<libMesh::Real>&  matrix_B,
                                                                          const MAST::FieldFunctionBase* param,
-                                                                         const libMesh::NumericVector<libMesh::Number>* static_sol,
-                                                                         const libMesh::NumericVector<libMesh::Number>* static_sol_sens) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+                                                                         const libMesh::NumericVector<libMesh::Real>* static_sol,
+                                                                         const libMesh::NumericVector<libMesh::Real>* static_sol_sens) {
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -678,9 +678,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution, localized_solution_sens;
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
-        localized_solution.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
+        localized_solution.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
         localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
                                  false, GHOSTED);
@@ -690,7 +690,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
-            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Number>::build(_system.comm()).release());
+            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                           _system.get_dof_map().get_send_list(),
                                           false, GHOSTED);
@@ -743,10 +743,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             structural_elem->internal_force(true, vec, mat2, true);
             mat2.add(1., mat1); // subtract to get the purely load dependent part
             
-            structural_elem->side_external_force(true, vec, mat2,
-                                                 _side_bc_map);
-            structural_elem->volume_external_force(true, vec, mat2,
-                                                   _vol_bc_map);
+            structural_elem->side_external_force<libMesh::Real>(true, vec, mat2,
+                                                                _side_bc_map);
+            structural_elem->volume_external_force<libMesh::Real>(true, vec, mat2,
+                                                                  _vol_bc_map);
             
             structural_elem->prestress_force(true, vec, mat2);
         }
@@ -773,10 +773,10 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             // if displacement is zero, mat1 = mat2
             structural_elem->internal_force_sensitivity(true, vec, mat2, true);
             mat2.add(1., mat1); // subtract to get the purely load dependent part
-            structural_elem->side_external_force_sensitivity(true, vec, mat2,
-                                                             _side_bc_map);
-            structural_elem->volume_external_force_sensitivity(true, vec, mat2,
-                                                               _vol_bc_map);
+            structural_elem->side_external_force_sensitivity<libMesh::Real>(true, vec, mat2,
+                                                                            _side_bc_map);
+            structural_elem->volume_external_force_sensitivity<libMesh::Real>(true, vec, mat2,
+                                                                              _vol_bc_map);
             
             structural_elem->prestress_force_sensitivity(true, vec, mat2);
         }
@@ -798,16 +798,16 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
         }
     }
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 
 
 void
-MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Number>& X,
+MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Real>& X,
                                                           std::vector<libMesh::Real>& stress,
                                                           const MAST::FieldFunctionBase* param) {
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
     // resize the stress vector to store values for each element
     stress.resize(_system.get_mesh().n_active_local_elem());
@@ -820,8 +820,8 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::Numeric
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Number> > localized_solution =
-    libMesh::NumericVector<libMesh::Number>::build(_system.comm());
+    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution =
+    libMesh::NumericVector<libMesh::Real>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
                              false, GHOSTED);
@@ -865,7 +865,7 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::Numeric
         counter++;
     }
     
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 }
 
 

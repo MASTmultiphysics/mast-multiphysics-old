@@ -14,7 +14,7 @@
 
 using namespace libMesh;
 
-#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
 
 class FluidNewtonSolver: public NewtonSolver
 {
@@ -32,11 +32,11 @@ protected:
      *   so that each variable continues to stay physically consistent.
      */
     virtual void line_search(Real& current_residual,
-                             libMesh::NumericVector<libMesh::Number> &newton_iterate,
-                             const libMesh::NumericVector<libMesh::Number> &linear_solution);
+                             libMesh::NumericVector<libMesh::Real> &newton_iterate,
+                             const libMesh::NumericVector<libMesh::Real> &linear_solution);
     
 };
 
-#endif // LIBMESH_USE_COMPLEX_NUMBERS
+//#endif // LIBMESH_USE_COMPLEX_NUMBERS
 
 #endif // __MAST_fluid_newton_solver_h__

@@ -2411,4 +2411,4 @@ void FluidElemBase::calculate_differential_operator_matrix
 
 
 
-template class SmallPerturbationPrimitiveSolution<libMesh::Number>;
+template class SmallPerturbationPrimitiveSolution<libMesh::Complex>;
