@@ -47,22 +47,14 @@ include_directories (../src
 
 include_directories (SYSTEM ${mpi_include_dir})
 
-add_executable (mast-real ${mast_source_files} ${mast_header_files})
-add_executable (mast-complex ${mast_source_files} ${mast_header_files})
+add_executable (mast ${mast_source_files} ${mast_header_files})
 
-set_property (TARGET mast-real APPEND 
+set_property (TARGET mast APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/real/include) 
 
-set_property (TARGET mast-complex APPEND 
-	     PROPERTY INCLUDE_DIRECTORIES 
-	     ${libmesh_dir}/complex/include) 
-
-
-find_library (mesh_dbg_real mesh_dbg ${libmesh_dir}/real/lib)
-find_library (mesh_opt_real mesh_opt ${libmesh_dir}/real/lib)
-find_library (mesh_dbg_complex mesh_dbg ${libmesh_dir}/complex/lib)
-find_library (mesh_opt_complex mesh_opt ${libmesh_dir}/complex/lib)
+find_library (mesh_dbg mesh_dbg ${libmesh_dir}/real/lib)
+find_library (mesh_opt mesh_opt ${libmesh_dir}/real/lib)
 
 find_library (mpicxx_lib    mpi_cxx              ${mpi_lib_dir})
 find_library (mpi_lib       mpi                  ${mpi_lib_dir})
@@ -84,7 +76,7 @@ find_library (blas_lib      ${f}     ${blas_lib_dir})
 endforeach (f)
 
 
-target_link_libraries (mast-real  
+target_link_libraries (mast  
 		      debug ${mesh_dbg_real}
 		      optimized ${mesh_opt_real}
 		      gcmma
@@ -94,15 +86,3 @@ target_link_libraries (mast-real
 		      ${tbb_lib}
 		      ${mpicxx_lib}
 		      ${mpi_lib})
-
-target_link_libraries (mast-complex  
-		      debug ${mesh_dbg_complex}
-		      optimized ${mesh_opt_complex}
-		      gcmma
-		      ${lapack_lib}
-		      ${blas_lib}
-	              ${vtk_lib}
-	              ${tbb_lib}
-		      ${mpicxx_lib}
-		      ${mpi_lib})
-
