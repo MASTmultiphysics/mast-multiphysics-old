@@ -212,7 +212,7 @@ bool
 MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
                                                       const unsigned int i,
                                                       libMesh::NumericVector<libMesh::Real>& sensitivity_rhs) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
     
@@ -237,7 +237,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     // currently, all relevant parameter sensitivities are calculated
     return true;
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -291,7 +291,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
                                                       const unsigned int i,
                                                       SparseMatrix<libMesh::Real>* sensitivity_A,
                                                       SparseMatrix<libMesh::Real>* sensitivity_B) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
     
@@ -330,7 +330,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_B->close();
 
     // currently, all relevant parameter sensitivities are calculated
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     return true;
 }
 
@@ -342,7 +342,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
                                                                  SparseMatrix<libMesh::Real>*  J,
                                                                  NonlinearImplicitSystem& S,
                                                                  const MAST::FieldFunctionBase* param) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     libMesh::DenseVector<libMesh::Real> vec, sol;
@@ -431,7 +431,7 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
         if (R) R->add_vector(vec, dof_indices);
         if (J) J->add_matrix(mat, dof_indices);
     }
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -529,7 +529,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
                                                                       const MAST::FieldFunctionBase* param,
                                                                       const libMesh::NumericVector<libMesh::Real>* static_sol,
                                                                       const libMesh::NumericVector<libMesh::Real>* static_sol_sens) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -654,7 +654,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             matrix_B.add_matrix (mat2, dof_indices); // mass
         }
     }
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -665,7 +665,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
                                                                          const MAST::FieldFunctionBase* param,
                                                                          const libMesh::NumericVector<libMesh::Real>* static_sol,
                                                                          const libMesh::NumericVector<libMesh::Real>* static_sol_sens) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -798,7 +798,7 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
         }
     }
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -807,7 +807,7 @@ void
 MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Real>& X,
                                                           std::vector<libMesh::Real>& stress,
                                                           const MAST::FieldFunctionBase* param) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
     // resize the stress vector to store values for each element
     stress.resize(_system.get_mesh().n_active_local_elem());
@@ -865,7 +865,7 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::Numeric
         counter++;
     }
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 

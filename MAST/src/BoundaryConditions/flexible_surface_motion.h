@@ -178,7 +178,7 @@ MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
     dn_rot(0) =   rot(1) * n(2) - rot(2) * n(1);
     dn_rot(1) = -(rot(0) * n(2) - rot(2) * n(0));
     dn_rot(2) =   rot(0) * n(1) - rot(1) * n(0);
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 

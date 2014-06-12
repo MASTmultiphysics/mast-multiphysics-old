@@ -105,6 +105,6 @@ public:
 };
 
 
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 
 #endif /* defined(__MAST__frequency_domain_linearized_euler__) */

@@ -14,7 +14,7 @@
 
 using namespace libMesh;
 
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
 class FluidNewtonSolver: public NewtonSolver
 {
@@ -37,6 +37,6 @@ protected:
     
 };
 
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 
 #endif // __MAST_fluid_newton_solver_h__

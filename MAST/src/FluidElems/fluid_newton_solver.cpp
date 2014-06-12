@@ -15,7 +15,7 @@
 #include "libmesh/diff_system.h"
 #include "libmesh/mesh_base.h"
 
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
 
 FluidNewtonSolver::FluidNewtonSolver(sys_type& system):
@@ -315,7 +315,7 @@ FluidNewtonSolver::solve()
     return _solve_result;
 }
 
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 
 
 

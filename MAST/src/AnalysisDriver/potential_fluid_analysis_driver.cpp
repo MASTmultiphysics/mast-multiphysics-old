@@ -79,7 +79,7 @@ int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     std::string strategy = infile("refine_strategy", std::string("error_fraction")),
     error_norm = infile("error_norm", std::string("kelly"));
     
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     
     if (if_panel_mesh)
     {
@@ -214,7 +214,7 @@ int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     mesh.read("saved_mesh.xdr");
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     
     // uniformly refine the mesh
     for (unsigned int i=0; i<n_uniform_refine; i++)

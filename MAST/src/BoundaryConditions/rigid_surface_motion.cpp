@@ -93,7 +93,6 @@ MAST::RigidSurfaceMotion::surface_velocity(const libMesh::Real t,
     // u_trans is in phase with velocity
     w_trans = u_trans;
     u_trans.scale(iota*frequency);
-//#endif
 }
 
 

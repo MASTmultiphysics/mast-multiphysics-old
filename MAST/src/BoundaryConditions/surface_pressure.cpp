@@ -81,7 +81,7 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
                           vars));
         _function_linear->init();
     }
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -122,7 +122,7 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Real t,
     cp = p_sol.c_pressure(_flt_cond->p0(),
                           _flt_cond->q0());
     dcp = delta_p_sol.c_pressure(_flt_cond->q0());
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 

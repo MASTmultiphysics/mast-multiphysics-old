@@ -285,14 +285,14 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                 // apply all the types of loading
                 switch (it.first->second->type()) {
                     case MAST::SURFACE_PRESSURE:
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
                         calculate_jac = (calculate_jac ||
                                          surface_pressure_force(request_jacobian,
                                                                 f, jac,
                                                                 n,
                                                                 *it.first->second));
                         break;
-//#else
+                        
                     case MAST::SMALL_DISTURBANCE_MOTION:
                         calculate_jac = (calculate_jac ||
                                          small_disturbance_surface_pressure_force<ValType>(request_jacobian,
@@ -300,7 +300,6 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
                                                                                            n,
                                                                                            *it.first->second));
                         break;
-//#endif
 
                     case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
@@ -349,7 +348,7 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
             for ( ; it.first != it.second; it.first++) {
                 // apply all the types of loading
                 switch (it.first->second->type()) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
                     case MAST::SURFACE_PRESSURE:
                         calculate_jac = (calculate_jac ||
                                          surface_pressure_force_sensitivity(request_jacobian,
@@ -357,7 +356,7 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                                                                             n,
                                                                             *it.first->second));
                         break;
-//#endif
+                        
                     case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
                         break;
@@ -396,7 +395,7 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
     for ( ; it.first != it.second; it.first++) {
         // apply all the types of loading
         switch (it.first->second->type()) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
             case MAST::SURFACE_PRESSURE:
                 calculate_jac = (calculate_jac ||
                                  surface_pressure_force(request_jacobian,
@@ -409,14 +408,14 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
                                                f, jac,
                                                *it.first->second));
                 break;
-//#else
+
             case MAST::SMALL_DISTURBANCE_MOTION:
                 calculate_jac = (calculate_jac ||
                                  small_disturbance_surface_pressure_force<ValType>(request_jacobian,
                                                                                    f, jac,
                                                                                    *it.first->second));
                 break;
-//#endif
+
             default:
                 // not implemented yet
                 libmesh_error();
@@ -451,7 +450,7 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
     for ( ; it.first != it.second; it.first++) {
         // apply all the types of loading
         switch (it.first->second->type()) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
             case MAST::SURFACE_PRESSURE:
                 calculate_jac = (calculate_jac ||
                                  surface_pressure_force_sensitivity(request_jacobian,
@@ -465,8 +464,6 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
                                                            f, jac,
                                                            *it.first->second));
                 break;
-
-//#endif
                 
             default:
                 // not implemented yet
@@ -486,7 +483,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
                                                     libMesh::DenseMatrix<libMesh::Real> &jac,
                                                     const unsigned int side,
                                                     MAST::BoundaryCondition &p) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
     FEMOperatorMatrix Bmat;
@@ -546,7 +543,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     else
         f.add(1., local_f);
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     return (request_jacobian && follower_forces);
 }
 
@@ -558,7 +555,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
                                                     libMesh::DenseVector<libMesh::Real> &f,
                                                     libMesh::DenseMatrix<libMesh::Real> &jac,
                                                     MAST::BoundaryCondition &p) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
@@ -616,7 +613,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     transform_to_global_system(local_f, tmp_vec_n2);
     f.add(1., tmp_vec_n2);
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     return (request_jacobian && follower_forces);
 }
 
@@ -710,7 +707,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     else
         MAST::add_to_assembled_vector(f, local_f);
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     return (request_jacobian && follower_forces);
 }
 
@@ -798,7 +795,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     transform_to_global_system(local_f, tmp_vec_n2);
     MAST::add_to_assembled_vector(f, tmp_vec_n2);
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
     return (request_jacobian && follower_forces);
 }
 
@@ -1135,7 +1132,5 @@ MAST::StructuralElementBase::volume_external_force_sensitivity<libMesh::Complex>
                                                                                  libMesh::DenseMatrix<libMesh::Real>& jac,
                                                                                  std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
-
-//#endif
 
 

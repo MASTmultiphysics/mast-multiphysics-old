@@ -50,7 +50,6 @@ namespace MAST {
         _flt_cond(NULL),
         _dim(0)
         {
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
             
             MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
             _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
@@ -64,7 +63,6 @@ namespace MAST {
             // copy the pointer for flight condition data
             _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>
             (lin_sys).flight_condition;
-//#endif
         }
         
         virtual ~SmallDisturbanceSurfacePressure()

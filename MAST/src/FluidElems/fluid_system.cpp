@@ -12,7 +12,7 @@
 // MAST includes
 #include "FluidElems/fluid_system.h"
 
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
 // Basic include files
 #include "libmesh/equation_systems.h"
@@ -1453,5 +1453,5 @@ void FluidPostProcessSystem::postprocess()
 
 
 
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 

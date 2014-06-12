@@ -15,7 +15,7 @@
 // libMesh includes
 #include "libmesh/quadrature.h"
 
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
 
 
 MAST::ShockTubeFluidElem::ShockTubeFluidElem(libMesh::EquationSystems& es,
@@ -272,4 +272,3 @@ MAST::ShockTubeFluidElem::calculate_source_flux_jacobian(const PrimitiveSolution
     mat.scale(-1.);
 }
 
-//#endif

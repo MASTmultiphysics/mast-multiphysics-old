@@ -547,7 +547,7 @@ MAST::SizingOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
                                    std::vector<libMesh::Real>& fvals,
                                    std::vector<bool>& eval_grads,
                                    std::vector<libMesh::Real>& grads) {
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     
     libmesh_assert_equal_to(dvars.size(), _n_vars);
     
@@ -639,7 +639,7 @@ MAST::SizingOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
             libmesh_error(); // should not get here
     }
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -647,7 +647,7 @@ inline
 void
 MAST::SizingOptimization::_init() {
     
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     _mesh = new SerialMesh(_libmesh_init.comm());
     
     const unsigned int
@@ -1162,7 +1162,7 @@ MAST::SizingOptimization::_init() {
      }
      */
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 

@@ -245,7 +245,7 @@ MAST::TopologyOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
         for (unsigned int i=0; i<dvars.size(); i++)
             grads[i] = _elem_vol[i];
 
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -253,7 +253,7 @@ inline
 void
 MAST::TopologyOptimization::_init() {
 
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     _mesh = new SerialMesh(_libmesh_init.comm());
     _mesh->set_mesh_dimension(2);
     
@@ -377,7 +377,7 @@ MAST::TopologyOptimization::_init() {
     for (unsigned int i=0; i<_elem_vol.size(); i++)
         _elem_vol[i] /= total_vol;
     
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
@@ -402,7 +402,7 @@ MAST::TopologyOptimization::output(unsigned int iter,
 
 inline void
 MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
-//#ifndef LIBMESH_USE_COMPLEX_NUMBERS
+
     if (qoi_indices.has_index(0)) {
         
         std::auto_ptr<libMesh::NumericVector<libMesh::Real> >
@@ -412,7 +412,7 @@ MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
         _system.matrix->vector_mult(*vec, *_system.solution);
         _system.qoi[0] = -1 * vec->dot(*_system.solution); // negative, since J = -K
     }
-//#endif // LIBMESH_USE_COMPLEX_NUMBERS
+
 }
 
 
