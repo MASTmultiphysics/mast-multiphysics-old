@@ -744,7 +744,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     libMesh::Number press, dpress;
     libMesh::DenseVector<libMesh::Real> phi_vec;
     libMesh::DenseVector<libMesh::Number> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
-    wtrans, utrans.resize(3); dn_rot.resize(3);
+    wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
