@@ -58,7 +58,7 @@ namespace MAST {
             _nonlinear_mesh_serializer.reset(new MeshSerializer(nonlinear_sys_mesh, true));
             
             
-            _dim = linearized_sys.n_vars()-2;
+            _dim = nonlinear_sys.n_vars()-2;
             
             // copy the pointer for flight condition data
             _flt_cond = dynamic_cast<FrequencyDomainLinearizedFluidSystem&>

@@ -46,7 +46,7 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
     {
         // initialize the nonlinear solution
         unsigned int n_vars = nonlinear_sys.n_vars();
-        libmesh_assert(linearized_sys.n_vars() == n_vars);
+        libmesh_assert(linearized_sys.n_vars() == 2*n_vars);
         
         std::vector<unsigned int> vars(_dim+2);
         vars[0] = nonlinear_sys.variable_number("rho");
@@ -65,14 +65,22 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
         _function_nonlinear->init();
         
         // now initialize the linearized fluid system
-        vars.resize(_dim+2);
-        vars[0] = linearized_sys.variable_number("drho");
-        vars[1] = linearized_sys.variable_number("drhoux");
-        if (_dim > 1)
-            vars[2] = linearized_sys.variable_number("drhouy");
-        if (_dim > 2)
-            vars[3] = linearized_sys.variable_number("drhouz");
-        vars[_dim +2-1] = linearized_sys.variable_number("drhoe");
+        vars.resize(2*(_dim+2));
+        vars[0] = linearized_sys.variable_number("drho_re");
+        vars[_dim+2+0] = linearized_sys.variable_number("drho_im");
+        vars[1] = linearized_sys.variable_number("drhoux_re");
+        vars[_dim+2+1] = linearized_sys.variable_number("drhoux_im");
+        if (_dim > 1) {
+            vars[2] = linearized_sys.variable_number("drhouy_re");
+            vars[_dim+2+2] = linearized_sys.variable_number("drhouy_im");
+        }
+        if (_dim > 2) {
+            vars[3] = linearized_sys.variable_number("drhouz_re");
+            vars[_dim+2+3] = linearized_sys.variable_number("drhouz_im");
+        }
+        vars[_dim +2-1] = linearized_sys.variable_number("drhoe_re");
+        vars[2*(_dim +2)-1] = linearized_sys.variable_number("drhoe_im");
+        
         
         _function_linear.reset
         (new MeshFunction( linearized_sys.get_equation_systems(),
@@ -106,6 +114,7 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Real t,
     libMesh::DenseVector<libMesh::Real> v_nonlin, v_lin_real;
     (*_function_nonlinear)(p, t, v_nonlin);
     (*_function_linear)(p, t, v_lin_real);
+    v_lin.resize(v_nonlin.size());
     
     MAST::transform_to_elem_vector(v_lin, v_lin_real);
     

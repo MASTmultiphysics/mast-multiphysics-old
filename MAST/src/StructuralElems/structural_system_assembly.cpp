@@ -438,12 +438,14 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
 
 void
 MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Real>& X,
-                                                                              libMesh::NumericVector<libMesh::Real>& F) {
-    F.zero();
+                                                                              libMesh::NumericVector<libMesh::Real>& F_real,
+                                                                              libMesh::NumericVector<libMesh::Real>& F_imag) {
+    F_real.zero();
+    F_imag.zero();
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Real> vec, sol;
+    libMesh::DenseVector<libMesh::Real> vec, vec2, sol;
     libMesh::DenseMatrix<libMesh::Real> mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
@@ -495,8 +497,9 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
         // get the solution
         unsigned int ndofs = (unsigned int)dof_indices.size();
         sol.resize(ndofs);
-        vec.resize(ndofs);
-        mat.resize(ndofs, ndofs);
+        vec.resize(ndofs*2);
+        vec2.resize(ndofs);
+        mat.resize(ndofs*2, ndofs*2);
         
         //for (unsigned int i=0; i<dof_indices.size(); i++)
         //    sol(i) = (*localized_solution)(dof_indices[i]);
@@ -509,14 +512,24 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
         structural_elem->volume_external_force<libMesh::Complex>(false, vec, mat,
                                                                  local_vol_bc_map);
         
-        // constrain the vector
-        _system.get_dof_map().constrain_element_vector(vec, dof_indices);
+        // copy the real part of the force vector and add that to the global vector
+        for (unsigned int i=0; i<ndofs; i++)
+            vec2(i) = vec(i);
+
+        // constrain the vector and then add it to the global vector
+        _system.get_dof_map().constrain_element_vector(vec2, dof_indices);
+        F_real.add_vector(vec2, dof_indices);
+
+        // now the imaginary part
+        for (unsigned int i=0; i<ndofs; i++)
+            vec2(i) = vec(i+ndofs);
         
-        // add to the global vector
-        F.add_vector(vec, dof_indices);
+        _system.get_dof_map().constrain_element_vector(vec2, dof_indices);
+        F_imag.add_vector(vec2, dof_indices);
     }
     
-    F.close();
+    F_real.close();
+    F_imag.close();
 }
 
 

@@ -150,8 +150,7 @@ MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
     libMesh::DenseVector<libMesh::Real> v_real;
     libMesh::DenseVector<libMesh::Complex> v;
     (*_function)(p, t, v_real);
-    v.resize(v_real.size());
-    MAST::transform_to_elem_vector(v, v_real);
+    v = v_real;
     
     // now copy the values to u_trans
     libMesh::Complex iota(0., 1.);

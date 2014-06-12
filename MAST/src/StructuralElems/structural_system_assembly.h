@@ -188,7 +188,8 @@ namespace MAST
          *    set
          */
         virtual void assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Real>& X,
-                                                                   libMesh::NumericVector<libMesh::Real>& F);
+                                                                   libMesh::NumericVector<libMesh::Real>& F_real,
+                                                                   libMesh::NumericVector<libMesh::Real>& F_imag);
 
         /**
          * Assembly function.  This function will be called

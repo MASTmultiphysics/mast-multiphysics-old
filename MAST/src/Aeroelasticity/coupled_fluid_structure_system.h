@@ -82,12 +82,17 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(libMesh::Real k_ref,
     // get the structural basis
     BasisMatrix<libMesh::Real>& structural_basis = structure.get_basis_matrix();
 
-    if (!structure.structural_system.have_vector("fvec"))
-        structure.structural_system.add_vector("fvec");
-    libMesh::NumericVector<libMesh::Real>& f_vec = structure.structural_system.get_vector("fvec");
+    if (!structure.structural_system.have_vector("fvec_real")) {
+        structure.structural_system.add_vector("fvec_real");
+        structure.structural_system.add_vector("fvec_imag");
+    }
+    libMesh::NumericVector<libMesh::Real>
+    &f_vec_real = structure.structural_system.get_vector("fvec_real"),
+    &f_vec_imag = structure.structural_system.get_vector("fvec_imag");
     
     ComplexVectorX projected_force;
     a.setZero(structural_basis.n(), structural_basis.n());
+    libMesh::Complex iota(0., 1.);
     
     for (unsigned int j_basis=0; j_basis<structural_basis.n(); j_basis++)
     {
@@ -135,12 +140,21 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(libMesh::Real k_ref,
         
         structure.assemble_force_vec(*surface_pressure,
                                      *surface_motion,
-                                     f_vec); // A_FS X_F
+                                     f_vec_real,
+                                     f_vec_imag); // A_FS X_F
 
+        // Phi^T A_FS X_F
+        // the real part
         structure.basis_matrix->vector_mult_transpose
-        (projected_force, f_vec); // Phi^T A_FS X_F
+        (projected_force, f_vec_real);
 
         a.col(j_basis) = projected_force;
+        
+        // the imaginary part is scaled with iota and then added
+        structure.basis_matrix->vector_mult_transpose
+        (projected_force, f_vec_imag);
+        projected_force *= iota;
+        a.col(j_basis) += projected_force;
     }
     
     return true;
