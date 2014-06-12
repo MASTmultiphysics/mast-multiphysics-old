@@ -325,6 +325,19 @@ void FluidElemBase::init_data ()
         }
     }
     
+    // exhaust bc
+    n_bc = _infile("n_exhaust_bc", 0);
+    if (n_bc > 0)
+    {
+        for (unsigned int i_bc=0; i_bc<n_bc; i_bc++)
+        {
+            bc_id = _infile("exhaust_bc", 0, i_bc);
+            _boundary_condition.insert
+            (std::multimap<unsigned int, FluidBoundaryConditionType>::value_type
+             (bc_id, EXHAUST));
+        }
+    }
+
     // now the viscous boundary conditions
     if (_if_viscous)
     {

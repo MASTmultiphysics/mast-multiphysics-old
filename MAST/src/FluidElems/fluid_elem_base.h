@@ -37,7 +37,7 @@ enum FluidPrimitiveVars
 enum FluidConservativeVars
 { RHO_CONS, RHOVEL1, RHOVEL2, RHOVEL3, ETOT };
 enum FluidBoundaryConditionType
-{ NO_SLIP_WALL, SYMMETRY_WALL, SLIP_WALL, FAR_FIELD, ISOTHERMAL, ADIABATIC };
+{ NO_SLIP_WALL, SYMMETRY_WALL, SLIP_WALL, FAR_FIELD, EXHAUST, ISOTHERMAL, ADIABATIC };
 
 
 class PrimitiveSolution

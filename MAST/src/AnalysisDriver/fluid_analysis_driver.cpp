@@ -11,6 +11,7 @@
 
 // MAST includes
 #include "FluidElems/fluid_system.h"
+#include "FluidElems/shock_tube_fluid_elem.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Solvers/residual_based_adaptive_time_solver.h"
 #include "FluidElems/aerodynamic_qoi.h"
@@ -178,8 +179,6 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     // Create a mesh.
     //SerialMesh mesh(init.comm());
     ParallelMesh mesh(init.comm());
-
-    //sleep(20);
     
     // And an object to refine it
     MeshRefinement mesh_refinement(mesh);
@@ -265,8 +264,9 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             panel_bc_id = infile("panel_bc_id", 10),
             symmetry_bc_id = infile("symmetry_bc_id", 11);
             
-            
-            if (dim == 2)
+            if (dim == 1)
+                MeshInitializer().init(divs, mesh, elem_type);
+            else if (dim == 2)
                 PanelMesh2D().init(t_by_c, if_cos_bump, n_max_bumps_x,
                                    panel_bc_id, symmetry_bc_id,
                                     divs, mesh, elem_type);

@@ -260,12 +260,6 @@ MAST::StructuralElement1D::internal_force (bool request_jacobian,
     transform_to_global_system(local_f, tmp_vec3_n2);
     f.add(1., tmp_vec3_n2);
     if (request_jacobian) {
-        // for 2D elements
-        if (_elem.dim() == 2) {
-            // add small values to the diagonal of the theta_z dofs
-            for (unsigned int i=0; i<n_phi; i++)
-                local_jac(5*n_phi+i, 5*n_phi+i) = -1.0e-8;
-        }
         transform_to_global_system(local_jac, tmp_mat2_n2n2);
         jac.add(1., tmp_mat2_n2n2);
     }
