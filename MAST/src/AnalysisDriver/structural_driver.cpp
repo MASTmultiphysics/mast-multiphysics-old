@@ -75,6 +75,8 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
+    const std::string output_mesh_file   = infile("output_mesh_file", "saved_structural_mesh.xdr"),
+    output_solution_file   = infile("output_solution_file", "saved_structural_solution.xdr");
     
     // Create a mesh.
     //SerialMesh mesh(init.comm());
@@ -192,14 +194,14 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
             ExodusII_IO(mesh).read_parallel(mesh_input_file);
         else if (mesh_type == "nemesis")
             Nemesis_IO(mesh).read(mesh_input_file);
+        else if (mesh_type == "xdr")
+            mesh.read(mesh_input_file);
         else
             libmesh_error();
         
         mesh.prepare_for_use();
     }
-//#else
     
-    mesh.read("saved_mesh.xdr");
     
 
     
@@ -246,7 +248,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
                                MAST::STATIC,
                                infile),
     eigen_structural_assembly(eigen_system,
-                              MAST::BUCKLING,
+                              MAST::MODAL,
                               infile);
     
     // Set the type of the problem, here we deal with
@@ -255,16 +257,17 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
     
     
-    MAST::ConstantFunction<libMesh::Real> press("pressure", 1.e6);
+    MAST::ConstantFunction<libMesh::Real> press("pressure", 1.e2);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
-    //static_structural_assembly.add_volume_load(0, bc);
-    MAST::ConstantFunction<libMesh::Real> temp("temp", 100.), ref_temp("ref_temp", 0.);
+    static_structural_assembly.add_volume_load(0, bc);
+    eigen_structural_assembly.add_volume_load(0, bc);
+    MAST::ConstantFunction<libMesh::Real> temp("temp", 1.), ref_temp("ref_temp", 0.);
     MAST::Temperature temp_bc;
     temp_bc.set_function(temp);
     temp_bc.set_reference_temperature_function(ref_temp);
-    static_structural_assembly.add_volume_load(0, temp_bc);
-    eigen_structural_assembly.add_volume_load(0, temp_bc);
+    //static_structural_assembly.add_volume_load(0, temp_bc);
+    //eigen_structural_assembly.add_volume_load(0, temp_bc);
     
     static_system.attach_assemble_object(static_structural_assembly);
     eigen_system.attach_assemble_object(eigen_structural_assembly);
@@ -339,10 +342,10 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     kappa("kappa", infile("shear_corr_factor", 5./6.)),
     h("h", infile("thickness", 0.002)),
     h_stiff("h", infile("thickness", 0.002)),
-    hy("hy", infile("thickness", 0.002)),
+    hy("hy", 1.0001*infile("thickness", 0.002)),
     hz("hz", infile("width", 0.002)),
     h_off("off", 0.), // plate offset
-    off_hy("hy_offset", 0.),
+    off_hy("hy_offset", 0.0*infile("thickness", 0.002)),
     off_hz("hz_offset", 0.);
     
     // add the properties to the cards
@@ -412,7 +415,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     multi_prop1d.set_layers(-1., layers); // offset wrt bottom layer
     
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);
@@ -463,13 +466,15 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
 //            }
         }
     }
-    
+
     ParameterVector params;
-    params.resize(1); params[0] = h.ptr();
+    params.resize(1); params[0] = hy.ptr();
     static_system.solve();
     static_system.attach_sensitivity_assemble_object(static_structural_assembly);
-    static_structural_assembly.add_parameter(h);
+    static_structural_assembly.add_parameter(hy);
     static_system.sensitivity_solve(params);
+    static_system.solution->print();
+    static_system.get_sensitivity_solution().print();
     //return 0;
     
     eigen_structural_assembly.set_static_solution_system(&static_system);
@@ -477,7 +482,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     eigen_system.solve();
     std::vector<libMesh::Real> sens;
-    eigen_structural_assembly.add_parameter(h);
+    eigen_structural_assembly.add_parameter(hy);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
     eigen_system.sensitivity_solve(params, sens);
     std::cout << "sens>: ";
@@ -561,8 +566,8 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     // now write the data to an output file
     MAST::NastranIO(static_structural_assembly).write("nast.txt");
     XdrIO xdr(mesh, true);
-    xdr.write("saved_structural_mesh.xdr");
-    equation_systems.write("saved_structural_solution.xdr",
+    xdr.write(output_mesh_file);
+    equation_systems.write(output_solution_file,
                            libMesh::ENCODE,
                            (libMesh::EquationSystems::WRITE_SERIAL_FILES |
                             libMesh::EquationSystems::WRITE_DATA |
