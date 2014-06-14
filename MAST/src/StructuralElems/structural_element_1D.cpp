@@ -364,8 +364,7 @@ MAST::StructuralElement1D::internal_force_sensitivity (bool request_jacobian,
         
         // this accounts for the sensitivity of the linear stress as a result of
         // static solution. This is needed only for cases that require linearized
-        // geometric stiffness matrix, for example in buckling or natural frequency
-        // analysis
+        // geometric stiffness matrix, for example in buckling analysis
         if (if_bending && if_vk && if_ignore_ho_jac && request_jacobian) {
             (*mat_stiff_A)(p, _system.time, material_A_mat);
             (*mat_stiff_B)(p, _system.time, material_B_mat);

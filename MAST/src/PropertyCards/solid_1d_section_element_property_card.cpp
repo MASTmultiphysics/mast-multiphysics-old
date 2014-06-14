@@ -330,7 +330,7 @@ SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
     
     // translation velocities
     m(0,0) = A;  m(1,1) = A;  m(2,2) = A;
-    dm(0,0) = A; dm(1,1) = A; dm(2,2) = A;
+    dm(0,0) = dA; dm(1,1) = dA; dm(2,2) = dA;
     
     // torsion
     m(3,3) = Ip;
@@ -350,8 +350,10 @@ SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
         }
     
     // reduce the rotation inertia component
-    for (unsigned int i=0; i<3; i++)
+    for (unsigned int i=0; i<3; i++) {
         m(i+3,i+3) *= 1.0e-16;
+        dm(i+3,i+3) *= 1.0e-16;
+    }
 
     m.scale(drho);
     m.add(rho, dm);
@@ -379,7 +381,7 @@ SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
     
     // translation velocities
     m(0,0) = A;  m(1,1) = A;  m(2,2) = A;
-    dm(0,0) = A; dm(1,1) = A; dm(2,2) = A;
+    dm(0,0) = dA; dm(1,1) = dA; dm(2,2) = dA;
     
     // torsion
     m(3,3) = Ip;
@@ -399,8 +401,10 @@ SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
         }
     
     // reduce the rotation inertia component
-    for (unsigned int i=0; i<3; i++)
+    for (unsigned int i=0; i<3; i++) {
         m(i+3,i+3) *= 1.0e-16;
+        dm(i+3,i+3) *= 1.0e-16;
+    }
 
     m.scale(drho);
     m.add(rho, dm);

@@ -25,6 +25,7 @@
 MAST::StructuralElementBase::StructuralElementBase(libMesh::System& sys,
                                                    const libMesh::Elem& elem,
                                                    const MAST::ElementPropertyCardBase& p):
+sensitivity_param(nullptr),
 follower_forces(false),
 _system(sys),
 _elem(elem),
