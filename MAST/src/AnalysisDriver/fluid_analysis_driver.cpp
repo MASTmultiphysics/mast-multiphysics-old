@@ -53,8 +53,8 @@
 
 int main_fem_operator (int argc, char* const argv[])
 {
-    libMesh::DenseVector<libMesh::Real> vec1, vec2, shp;
-    libMesh::DenseMatrix<libMesh::Real> mat1, mat2, bmat1, bmat2, tmp;
+    DenseRealVector vec1, vec2, shp;
+    DenseRealMatrix mat1, mat2, bmat1, bmat2, tmp;
     
     vec1.resize(12); shp.resize(4);
     
@@ -690,7 +690,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             //            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
             //            m.init();
             //            unsigned int ndivs=10000; libMesh::Real dx=5.0/(ndivs*1.);
-            //            libMesh::Point p; libMesh::DenseVector<libMesh::Real> vals; vals.resize(4);
+            //            libMesh::Point p; DenseRealVector vals; vals.resize(4);
             //            p(0) = 0.; p(1) = .026;
             //            while (p(0) < 5.) {
             //                m(p, 0., vals);

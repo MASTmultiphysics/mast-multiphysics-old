@@ -223,8 +223,8 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
-    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
+    DenseRealMatrix& Kmat = c.get_elem_jacobian();
+    DenseRealVector& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -237,12 +237,12 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<libMesh::DenseMatrix<libMesh::Real> >  Ai_advection(dim);
-    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
+    std::vector<DenseRealMatrix >  Ai_advection(dim);
+    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat2_n2n2, tmp_mat3, A_sens, stress_tensor,
     dprim_dcons, dcons_dprim;
     
-    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     conservative_sol, temp_grad, diff_val, dc_ref_sol;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
@@ -259,7 +259,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
+    std::vector<std::vector<DenseRealMatrix > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
@@ -540,15 +540,15 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     // boundary normals
     const std::vector<Point>& face_normals = side_fe->get_normals();
     
-    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
+    DenseRealMatrix& Kmat = c.get_elem_jacobian();
+    DenseRealVector& Fvec = c.get_elem_residual();
     
     
     
     FEMOperatorMatrix B_mat;
-    libMesh::DenseVector<libMesh::Real> tmp_vec1_n2, flux, U_vec_interpolated, tmp_vec2_n1,
+    DenseRealVector tmp_vec1_n2, flux, U_vec_interpolated, tmp_vec2_n1,
     conservative_sol, temp_grad, dnormal, surface_def, surface_vel, local_normal, uvec;
-    libMesh::DenseMatrix<libMesh::Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
+    DenseRealMatrix  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
     tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3_n1n1, A_mat, dcons_dprim, dprim_dcons,
     stress_tensor;
     
@@ -565,7 +565,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     stress_tensor.resize(dim, dim); tmp_mat3_n1n1.resize(n1, n1);
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
+    std::vector<DenseRealMatrix > Ai_advection(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         Ai_advection[i_dim].resize(n1, n1);
     
@@ -1116,8 +1116,8 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
-    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
+    DenseRealMatrix& Kmat = c.get_elem_jacobian();
+    DenseRealVector& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -1130,10 +1130,10 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
-    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
+    std::vector<DenseRealMatrix > Ai_advection(dim);
+    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
     tmp_mat2_n2n2, tmp_mat3;
-    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec3_n2,
+    DenseRealVector flux, tmp_vec1_n1, tmp_vec3_n2,
     conservative_sol, dc_ref_sol;
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     tmp_mat2_n2n2.resize(n_dofs, n_dofs);
@@ -1143,7 +1143,7 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
+    std::vector<std::vector<DenseRealMatrix > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
@@ -1344,9 +1344,9 @@ public:
                                                _p0, _q0) ); }
     
     virtual void operator() (const FEMContext& c, const libMesh::Point& p,
-                             const libMesh::Real t, libMesh::DenseVector<libMesh::Real>& val)
+                             const libMesh::Real t, DenseRealVector& val)
     {
-        libMesh::DenseVector<libMesh::Real> fluid_sol;
+        DenseRealVector fluid_sol;
         (*_fluid_function)(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         
@@ -1360,7 +1360,7 @@ public:
     virtual libMesh::Real component(const FEMContext& c, unsigned int i_comp,
                              const libMesh::Point& p, libMesh::Real t=0.)
     {
-        libMesh::DenseVector<libMesh::Real> fluid_sol;
+        DenseRealVector fluid_sol;
         (*_fluid_function)(p, t, fluid_sol);
         PrimitiveSolution p_sol;
         

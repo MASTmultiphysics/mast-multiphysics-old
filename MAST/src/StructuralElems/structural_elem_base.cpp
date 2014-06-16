@@ -42,8 +42,8 @@ MAST::StructuralElementBase::~StructuralElementBase()
 
 bool
 MAST::StructuralElementBase::damping_force (bool request_jacobian,
-                                            libMesh::DenseVector<libMesh::Real>& f,
-                                            libMesh::DenseMatrix<libMesh::Real>& jac)
+                                            DenseRealVector& f,
+                                            DenseRealMatrix& jac)
 {
     libmesh_error(); // to be implemented
     
@@ -53,8 +53,8 @@ MAST::StructuralElementBase::damping_force (bool request_jacobian,
 
 bool
 MAST::StructuralElementBase::damping_force_sensitivity(bool request_jacobian,
-                                                       libMesh::DenseVector<libMesh::Real>& f,
-                                                       libMesh::DenseMatrix<libMesh::Real>& jac)
+                                                       DenseRealVector& f,
+                                                       DenseRealMatrix& jac)
 {
     libmesh_error(); // to be implemented
 }
@@ -63,8 +63,8 @@ MAST::StructuralElementBase::damping_force_sensitivity(bool request_jacobian,
 
 bool
 MAST::StructuralElementBase::inertial_force (bool request_jacobian,
-                                             libMesh::DenseVector<libMesh::Real>& f,
-                                             libMesh::DenseMatrix<libMesh::Real>& jac)
+                                             DenseRealVector& f,
+                                             DenseRealMatrix& jac)
 {
     FEMOperatorMatrix Bmat;
     
@@ -73,13 +73,13 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     const std::vector<std::vector<libMesh::Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
-    libMesh::DenseMatrix<libMesh::Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
-    libMesh::DenseVector<libMesh::Real>  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
+    DenseRealMatrix material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
+    DenseRealVector  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     local_f.resize(n2);
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > mat_inertia
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_inertia
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                             *this).release());
 
@@ -151,8 +151,8 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
 
 bool
 MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
-                                                        libMesh::DenseVector<libMesh::Real>& f,
-                                                        libMesh::DenseMatrix<libMesh::Real>& jac)
+                                                        DenseRealVector& f,
+                                                        DenseRealMatrix& jac)
 {
     // this should be true if the function is called
     libmesh_assert(this->sensitivity_param);
@@ -176,13 +176,13 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     const std::vector<std::vector<libMesh::Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
-    libMesh::DenseMatrix<libMesh::Real> material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
-    libMesh::DenseVector<libMesh::Real>  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
+    DenseRealMatrix material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
+    DenseRealVector  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
     phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
     local_f.resize(n2);
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > mat_inertia
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_inertia
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX,
                             *this).release());
     
@@ -258,8 +258,8 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
 template <typename ValType>
 bool
 MAST::StructuralElementBase::side_external_force(bool request_jacobian,
-                                                 libMesh::DenseVector<libMesh::Real> &f,
-                                                 libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                 DenseRealVector &f,
+                                                 DenseRealMatrix &jac,
                                                  std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
     // iterate over the boundary ids given in the provided force map
@@ -322,8 +322,8 @@ MAST::StructuralElementBase::side_external_force(bool request_jacobian,
 template <typename ValType>
 bool
 MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobian,
-                                                             libMesh::DenseVector<libMesh::Real> &f,
-                                                             libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                             DenseRealVector &f,
+                                                             DenseRealMatrix &jac,
                                                              std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& bc) {
     
     // iterate over the boundary ids given in the provided force map
@@ -378,8 +378,8 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
 template <typename ValType>
 bool
 MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
-                                                   libMesh::DenseVector<libMesh::Real> &f,
-                                                   libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                   DenseRealVector &f,
+                                                   DenseRealMatrix &jac,
                                                    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc) {
     // iterate over the boundary ids given in the provided force map
     std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
@@ -433,8 +433,8 @@ MAST::StructuralElementBase::volume_external_force(bool request_jacobian,
 template <typename ValType>
 bool
 MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jacobian,
-                                                               libMesh::DenseVector<libMesh::Real> &f,
-                                                               libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                               DenseRealVector &f,
+                                                               DenseRealMatrix &jac,
                                                                std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc) {
     // iterate over the boundary ids given in the provided force map
     std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
@@ -480,8 +480,8 @@ MAST::StructuralElementBase::volume_external_force_sensitivity(bool request_jaco
 
 bool
 MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
-                                                    libMesh::DenseVector<libMesh::Real> &f,
-                                                    libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                    DenseRealVector &f,
+                                                    DenseRealMatrix &jac,
                                                     const unsigned int side,
                                                     MAST::BoundaryCondition &p) {
 
@@ -508,7 +508,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     const std::vector<Point>& face_normals = fe->get_normals();
     libMesh::Real press;
     
-    libMesh::DenseVector<libMesh::Real> phi_vec, force, local_f, tmp_vec_n2;
+    DenseRealVector phi_vec, force, local_f, tmp_vec_n2;
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
@@ -553,8 +553,8 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
 
 bool
 MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
-                                                    libMesh::DenseVector<libMesh::Real> &f,
-                                                    libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                    DenseRealVector &f,
+                                                    DenseRealMatrix &jac,
                                                     MAST::BoundaryCondition &p) {
 
     libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements
@@ -581,7 +581,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     
     libMesh::Real press;
     
-    libMesh::DenseVector<libMesh::Real> phi_vec, force, local_f, tmp_vec_n2;
+    DenseRealVector phi_vec, force, local_f, tmp_vec_n2;
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
     tmp_vec_n2.resize(n2);
     
@@ -622,8 +622,8 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
 template <typename ValType>
 bool
 MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                                      libMesh::DenseVector<libMesh::Real> &f,
-                                                                      libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                      DenseRealVector &f,
+                                                                      DenseRealMatrix &jac,
                                                                       const unsigned int side,
                                                                       MAST::BoundaryCondition &p) {
 //#ifdef LIBMESH_USE_COMPLEX_NUMBERS
@@ -654,7 +654,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     libMesh::Real press;
     ValType dpress;
-    libMesh::DenseVector<libMesh::Real> phi_vec;
+    DenseRealVector phi_vec;
     libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
     wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
@@ -718,8 +718,8 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
 template <typename ValType>
 bool
 MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                                      libMesh::DenseVector<libMesh::Real> &f,
-                                                                      libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                      DenseRealVector &f,
+                                                                      DenseRealMatrix &jac,
                                                                       MAST::BoundaryCondition &p) {
 //#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements.
@@ -749,7 +749,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     
     libMesh::Real press;
     ValType dpress;
-    libMesh::DenseVector<libMesh::Real> phi_vec;
+    DenseRealVector phi_vec;
     libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
     wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
@@ -804,8 +804,8 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
 
 bool
 MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jacobian,
-                                                                libMesh::DenseVector<libMesh::Real> &f,
-                                                                libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                DenseRealVector &f,
+                                                                DenseRealMatrix &jac,
                                                                 const unsigned int side,
                                                                 MAST::BoundaryCondition &p) {
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
@@ -837,8 +837,8 @@ MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jac
 
 bool
 MAST::StructuralElementBase::surface_pressure_force_sensitivity(bool request_jacobian,
-                                                                libMesh::DenseVector<libMesh::Real> &f,
-                                                                libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                DenseRealVector &f,
+                                                                DenseRealMatrix &jac,
                                                                 MAST::BoundaryCondition &p) {
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     
@@ -881,7 +881,7 @@ MAST::StructuralElementBase::transform_to_global_system(const libMesh::DenseMatr
     libMesh::DenseMatrix<ValType> tmp_mat;
     tmp_mat.resize(6*n_dofs, 6*n_dofs);
     
-    const libMesh::DenseMatrix<libMesh::Real>& Tmat = _transformation_matrix();
+    const DenseRealMatrix& Tmat = _transformation_matrix();
     // now initialize the global T matrix
     for (unsigned int i=0; i<n_dofs; i++)
         for (unsigned int j=0; j<3; j++)
@@ -906,10 +906,10 @@ MAST::StructuralElementBase::transform_to_local_system(const libMesh::DenseVecto
     
     const unsigned int n_dofs = _fe->n_shape_functions();
     local_vec.zero();
-    libMesh::DenseMatrix<libMesh::Real> tmp_mat;
+    DenseRealMatrix tmp_mat;
     tmp_mat.resize(6*n_dofs, 6*n_dofs);
     
-    const libMesh::DenseMatrix<libMesh::Real>& Tmat = _transformation_matrix();
+    const DenseRealMatrix& Tmat = _transformation_matrix();
     // now initialize the global T matrix
     for (unsigned int i=0; i<n_dofs; i++)
         for (unsigned int j=0; j<3; j++)
@@ -932,10 +932,10 @@ MAST::StructuralElementBase::transform_to_global_system(const libMesh::DenseVect
     
     const unsigned int n_dofs = _fe->n_shape_functions();
     global_vec.zero();
-    libMesh::DenseMatrix<libMesh::Real> tmp_mat;
+    DenseRealMatrix tmp_mat;
     tmp_mat.resize(6*n_dofs, 6*n_dofs);
     
-    const libMesh::DenseMatrix<libMesh::Real>& Tmat = _transformation_matrix();
+    const DenseRealMatrix& Tmat = _transformation_matrix();
     // now initialize the global T matrix
     for (unsigned int i=0; i<n_dofs; i++)
         for (unsigned int j=0; j<3; j++)
@@ -1041,49 +1041,49 @@ MAST::build_structural_element(libMesh::System& sys,
 // template instantiations
 template
 void
-MAST::StructuralElementBase::transform_to_global_system<libMesh::Real>(const libMesh::DenseMatrix<libMesh::Real>& local_mat,
-                                                              libMesh::DenseMatrix<libMesh::Real>& global_mat) const;
+MAST::StructuralElementBase::transform_to_global_system<libMesh::Real>(const DenseRealMatrix& local_mat,
+                                                              DenseRealMatrix& global_mat) const;
 
 template
 void
-MAST::StructuralElementBase::transform_to_local_system<libMesh::Real>(const libMesh::DenseVector<libMesh::Real>& global_vec,
-                                                             libMesh::DenseVector<libMesh::Real>& local_vec) const;
+MAST::StructuralElementBase::transform_to_local_system<libMesh::Real>(const DenseRealVector& global_vec,
+                                                             DenseRealVector& local_vec) const;
 
 template
 void
-MAST::StructuralElementBase::transform_to_global_system<libMesh::Real>(const libMesh::DenseVector<libMesh::Real>& local_vec,
-                                                              libMesh::DenseVector<libMesh::Real>& global_vec) const;
+MAST::StructuralElementBase::transform_to_global_system<libMesh::Real>(const DenseRealVector& local_vec,
+                                                              DenseRealVector& global_vec) const;
 
 //#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 template
 void
-MAST::StructuralElementBase::transform_to_global_system<libMesh::Complex>(const libMesh::DenseMatrix<libMesh::Complex>& local_mat,
-                                                              libMesh::DenseMatrix<libMesh::Complex>& global_mat) const;
+MAST::StructuralElementBase::transform_to_global_system<libMesh::Complex>(const DenseComplexMatrix& local_mat,
+                                                              DenseComplexMatrix& global_mat) const;
 
 template
 void
-MAST::StructuralElementBase::transform_to_local_system<libMesh::Complex>(const libMesh::DenseVector<libMesh::Complex>& global_vec,
-                                                             libMesh::DenseVector<libMesh::Complex>& local_vec) const;
+MAST::StructuralElementBase::transform_to_local_system<libMesh::Complex>(const DenseComplexVector& global_vec,
+                                                             DenseComplexVector& local_vec) const;
 
 template
 void
-MAST::StructuralElementBase::transform_to_global_system<libMesh::Complex>(const libMesh::DenseVector<libMesh::Complex>& local_vec,
-                                                              libMesh::DenseVector<libMesh::Complex>& global_vec) const;
+MAST::StructuralElementBase::transform_to_global_system<libMesh::Complex>(const DenseComplexVector& local_vec,
+                                                              DenseComplexVector& global_vec) const;
 
 template
 bool
 MAST::StructuralElementBase::side_external_force<libMesh::Real>(bool request_jacobian,
-                                                                libMesh::DenseVector<libMesh::Real> &f,
-                                                                libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                DenseRealVector &f,
+                                                                DenseRealMatrix &jac,
                                                                 std::multimap<libMesh::boundary_id_type,
                                                                 MAST::BoundaryCondition *> &bc);
 
 template
 bool
 MAST::StructuralElementBase::side_external_force<libMesh::Complex>(bool request_jacobian,
-                                                                   libMesh::DenseVector<libMesh::Real> &f,
-                                                                   libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                   DenseRealVector &f,
+                                                                   DenseRealMatrix &jac,
                                                                    std::multimap<libMesh::boundary_id_type,
                                                                    MAST::BoundaryCondition *> &bc);
 
@@ -1091,46 +1091,46 @@ MAST::StructuralElementBase::side_external_force<libMesh::Complex>(bool request_
 template
 bool
 MAST::StructuralElementBase::side_external_force_sensitivity<libMesh::Real>(bool request_jacobian,
-                                                                            libMesh::DenseVector<libMesh::Real> &f,
-                                                                            libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                            DenseRealVector &f,
+                                                                            DenseRealMatrix &jac,
                                                                             std::multimap<libMesh::boundary_id_type,
                                                                             MAST::BoundaryCondition *> &bc);
 
 template
 bool
 MAST::StructuralElementBase::side_external_force_sensitivity<libMesh::Complex>(bool request_jacobian,
-                                                                               libMesh::DenseVector<libMesh::Real> &f,
-                                                                               libMesh::DenseMatrix<libMesh::Real> &jac,
+                                                                               DenseRealVector &f,
+                                                                               DenseRealMatrix &jac,
                                                                                std::multimap<libMesh::boundary_id_type,
                                                                                MAST::BoundaryCondition *> &bc);
 
 template
 bool
 MAST::StructuralElementBase::volume_external_force<libMesh::Real>(bool request_jacobian,
-                                                                  libMesh::DenseVector<libMesh::Real>& f,
-                                                                  libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                                  DenseRealVector& f,
+                                                                  DenseRealMatrix& jac,
                                                                   std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
 template
 bool
 MAST::StructuralElementBase::volume_external_force<libMesh::Complex>(bool request_jacobian,
-                                                                     libMesh::DenseVector<libMesh::Real>& f,
-                                                                     libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                                     DenseRealVector& f,
+                                                                     DenseRealMatrix& jac,
                                                                      std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
 
 template
 bool
 MAST::StructuralElementBase::volume_external_force_sensitivity<libMesh::Real>(bool request_jacobian,
-                                                                              libMesh::DenseVector<libMesh::Real>& f,
-                                                                              libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                                              DenseRealVector& f,
+                                                                              DenseRealMatrix& jac,
                                                                               std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
 template
 bool
 MAST::StructuralElementBase::volume_external_force_sensitivity<libMesh::Complex>(bool request_jacobian,
-                                                                                 libMesh::DenseVector<libMesh::Real>& f,
-                                                                                 libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                                                 DenseRealVector& f,
+                                                                                 DenseRealMatrix& jac,
                                                                                  std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& bc);
 
 

@@ -12,10 +12,8 @@
 // C++ includes
 #include <vector>
 
-
-// libMesh includes
-#include "libmesh/dense_vector.h"
-#include "libmesh/dense_matrix.h"
+// MAST includes
+#include "Base/MAST_data_types.h"
 
 
 using namespace libMesh;
@@ -59,7 +57,7 @@ public:
      */
     void set_shape_function(unsigned int interpolated_var,
                             unsigned int discrete_var,
-                            const libMesh::DenseVector<libMesh::Real>& shape_func);
+                            const DenseRealVector& shape_func);
     
     /*!
      *   this initializes all variables to use the same interpolation function. 
@@ -67,7 +65,7 @@ public:
      *   interpolated vars. This is typically the case for fluid elements and 
      *   for structural element inertial matrix calculations
      */
-    void reinit(unsigned int n_interpolated_vars, const libMesh::DenseVector<libMesh::Real>& shape_func);
+    void reinit(unsigned int n_interpolated_vars, const DenseRealVector& shape_func);
     
     /*!
      *   res = [this] * v
@@ -141,7 +139,7 @@ protected:
      *    column major format. NULL, if values are zero, otherwise the 
      *    value is set in the vector.
      */
-    std::vector<libMesh::DenseVector<libMesh::Real>*>  _var_shape_functions;
+    std::vector<DenseRealVector*>  _var_shape_functions;
 };
 
 
@@ -156,7 +154,7 @@ FEMOperatorMatrix::clear()
     _n_dofs_per_var      = 0;
 
     // iterate over the shape function entries and delete the non-NULL values
-    std::vector<libMesh::DenseVector<libMesh::Real>*>::iterator it = _var_shape_functions.begin(),
+    std::vector<DenseRealVector*>::iterator it = _var_shape_functions.begin(),
     end = _var_shape_functions.end();
     
     for ( ; it!=end; it++)
@@ -190,7 +188,7 @@ inline
 void
 FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
                                       unsigned int discrete_var,
-                                      const libMesh::DenseVector<libMesh::Real>& shape_func)
+                                      const DenseRealVector& shape_func)
 {
     // make sure that reinit has been called.
     libmesh_assert(_var_shape_functions.size());
@@ -199,10 +197,10 @@ FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
     libmesh_assert(interpolated_var < _n_interpolated_vars);
     libmesh_assert(discrete_var < _n_discrete_vars);
     
-    libMesh::DenseVector<libMesh::Real>* vec = _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var];
+    DenseRealVector* vec = _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var];
     if (!vec)
     {
-        vec = new libMesh::DenseVector<libMesh::Real>;
+        vec = new DenseRealVector;
         _var_shape_functions[discrete_var*_n_interpolated_vars+interpolated_var] = vec;
     }
     
@@ -212,7 +210,7 @@ FEMOperatorMatrix::set_shape_function(unsigned int interpolated_var,
 
 
 inline
-void FEMOperatorMatrix::reinit(unsigned int n_vars, const libMesh::DenseVector<libMesh::Real>& shape_func)
+void FEMOperatorMatrix::reinit(unsigned int n_vars, const DenseRealVector& shape_func)
 {
     this->clear();
     
@@ -223,7 +221,7 @@ void FEMOperatorMatrix::reinit(unsigned int n_vars, const libMesh::DenseVector<l
     
     for (unsigned int i=0; i<n_vars; i++)
     {
-        libMesh::DenseVector<libMesh::Real>*  vec = new libMesh::DenseVector<libMesh::Real>;
+        DenseRealVector*  vec = new DenseRealVector;
         *vec = shape_func;
         _var_shape_functions[i*n_vars+i] = vec;
     }
@@ -340,7 +338,7 @@ void FEMOperatorMatrix::right_multiply_transpose(libMesh::DenseMatrix<T>& r, con
                 index_j = j*m._n_interpolated_vars+k;
                 if (_var_shape_functions[index_i] &&
                     m._var_shape_functions[index_j]) { // if shape function exists for both
-                    const libMesh::DenseVector<libMesh::Real> &n1 = *_var_shape_functions[index_i],
+                    const DenseRealVector &n1 = *_var_shape_functions[index_i],
                     &n2 = *m._var_shape_functions[index_j];
                     for (unsigned int i_n1=0; i_n1<n1.size(); i_n1++)
                         for (unsigned int i_n2=0; i_n2<n2.size(); i_n2++)

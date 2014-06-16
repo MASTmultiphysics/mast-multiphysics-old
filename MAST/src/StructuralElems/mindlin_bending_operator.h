@@ -59,8 +59,8 @@ namespace MAST {
          *   calculate the transverse shear component for the element
          */
         virtual void calculate_transverse_shear_force(bool request_jacobian,
-                                                      libMesh::DenseVector<libMesh::Real>& local_f,
-                                                      libMesh::DenseMatrix<libMesh::Real>& local_jac,
+                                                      DenseRealVector& local_f,
+                                                      DenseRealMatrix& local_jac,
                                                       const MAST::FieldFunctionBase* sens_params );
         
     protected:
@@ -98,7 +98,7 @@ MAST::MindlinBendingOperator::initialize_bending_strain_operator_for_z(const uns
     
     const unsigned int n_phi = (unsigned int)phi.size();
     
-    libMesh::DenseVector<libMesh::Real> phi_vec; phi_vec.resize(n_phi);
+    DenseRealVector phi_vec; phi_vec.resize(n_phi);
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ )
         phi_vec(i_nd) = dphi[i_nd][qp](0);  // dphi/dx
     
@@ -130,8 +130,8 @@ MAST::MindlinBendingOperator::initialize_bending_strain_operator_for_z(const uns
 void
 MAST::MindlinBendingOperator::calculate_transverse_shear_force
 (bool request_jacobian,
- libMesh::DenseVector<libMesh::Real>& local_f,
- libMesh::DenseMatrix<libMesh::Real>& local_jac,
+ DenseRealVector& local_f,
+ DenseRealMatrix& local_jac,
  const MAST::FieldFunctionBase* sens_param)
 {
     const MAST::ElementPropertyCardBase& property = _structural_elem.elem_property();
@@ -161,10 +161,10 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     const std::vector<Point>& xyz = fe->get_xyz();
     
     const unsigned int n_phi = (unsigned int)phi.size(), n2 = 6*n_phi;
-    libMesh::DenseVector<libMesh::Real> phi_vec; phi_vec.resize(n_phi);
+    DenseRealVector phi_vec; phi_vec.resize(n_phi);
     
-    libMesh::DenseVector<libMesh::Real> tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2;
-    libMesh::DenseMatrix<libMesh::Real> material_trans_shear_mat, tmp_mat2_n2n2, tmp_mat4_2n2;
+    DenseRealVector tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2;
+    DenseRealMatrix material_trans_shear_mat, tmp_mat2_n2n2, tmp_mat4_2n2;
     
     tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
     tmp_mat2_n2n2.resize(n2, n2); tmp_mat4_2n2.resize(2, n2);
@@ -173,7 +173,7 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     FEMOperatorMatrix Bmat_trans;
     Bmat_trans.reinit(2, 6, n_phi); // only two shear stresses
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > mat_stiff
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_stiff
     (property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX,
                            _structural_elem).release());
     

@@ -31,14 +31,14 @@ namespace MAST {
         { }
         
         
-        class StiffnessMatrix1D: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+        class StiffnessMatrix1D: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             
             StiffnessMatrix1D( MAST::FieldFunction<libMesh::Real>* E,
                               MAST::FieldFunction<libMesh::Real>* nu);
 
             StiffnessMatrix1D(const MAST::IsotropicMaterialPropertyCard::StiffnessMatrix1D& f):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
+            MAST::FieldFunction<DenseRealMatrix >(f),
             _E(f._E->clone().release()),
             _nu(f._nu->clone().release()){
                 _functions.insert(_E);
@@ -48,20 +48,20 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
                 (new MAST::IsotropicMaterialPropertyCard::StiffnessMatrix1D(*this));
             }
 
             virtual ~StiffnessMatrix1D();
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
         protected:
@@ -72,14 +72,14 @@ namespace MAST {
         
         
         
-        class TransverseShearStiffnessMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+        class TransverseShearStiffnessMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             TransverseShearStiffnessMatrix( MAST::FieldFunction<libMesh::Real>* E,
                                            MAST::FieldFunction<libMesh::Real>* nu,
                                            MAST::FieldFunction<libMesh::Real>* kappa);
 
             TransverseShearStiffnessMatrix(const MAST::IsotropicMaterialPropertyCard::TransverseShearStiffnessMatrix& f):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
+            MAST::FieldFunction<DenseRealMatrix >(f),
             _E(f._E->clone().release()),
             _nu(f._nu->clone().release()) {
                 _functions.insert(_E);
@@ -89,21 +89,21 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const  {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > clone() const  {
+                return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
                 (new MAST::IsotropicMaterialPropertyCard::TransverseShearStiffnessMatrix(*this));
             }
 
             virtual ~TransverseShearStiffnessMatrix();
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
         protected:
@@ -114,14 +114,14 @@ namespace MAST {
         };
         
         
-        class StiffnessMatrix2D: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+        class StiffnessMatrix2D: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             StiffnessMatrix2D(MAST::FieldFunction<libMesh::Real>* E,
                               MAST::FieldFunction<libMesh::Real>* nu,
                               bool plane_stress);
 
             StiffnessMatrix2D(const MAST::IsotropicMaterialPropertyCard::StiffnessMatrix2D& f):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
+            MAST::FieldFunction<DenseRealMatrix >(f),
             _E(f._E->clone().release()),
             _nu(f._nu->clone().release()),
             _plane_stress(f._plane_stress) {
@@ -132,22 +132,22 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
                 (new MAST::IsotropicMaterialPropertyCard::StiffnessMatrix2D(*this));
             }
 
             virtual ~StiffnessMatrix2D();
             
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
         protected:
@@ -159,13 +159,13 @@ namespace MAST {
         
         
         
-        class StiffnessMatrix3D: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+        class StiffnessMatrix3D: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             StiffnessMatrix3D(MAST::FieldFunction<libMesh::Real>* E,
                               MAST::FieldFunction<libMesh::Real>* nu);
 
             StiffnessMatrix3D(const MAST::IsotropicMaterialPropertyCard::StiffnessMatrix3D &f):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
+            MAST::FieldFunction<DenseRealMatrix >(f),
             _E(f._E->clone().release()),
             _nu(f._nu->clone().release()) {
                 _functions.insert(_E);
@@ -175,21 +175,21 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
                 (new MAST::IsotropicMaterialPropertyCard::StiffnessMatrix3D(*this));
             }
 
             virtual ~StiffnessMatrix3D();
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const;
+                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
             
             
         protected:
@@ -200,19 +200,19 @@ namespace MAST {
         
         
         
-        class ThermalExpansionMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+        class ThermalExpansionMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             
             ThermalExpansionMatrix(unsigned int dim,
                                    MAST::FieldFunction<libMesh::Real>* alpha):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("ThermalExpansionMatrix"),
+            MAST::FieldFunction<DenseRealMatrix >("ThermalExpansionMatrix"),
             _dim(dim),
             _alpha(alpha) {
                 _functions.insert(_alpha);
             }
             
             ThermalExpansionMatrix(const MAST::IsotropicMaterialPropertyCard::ThermalExpansionMatrix& f):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f),
+            MAST::FieldFunction<DenseRealMatrix >(f),
             _dim(f._dim),
             _alpha(f._alpha->clone().release()) {
                 _functions.insert(_alpha);
@@ -221,8 +221,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
                 (new MAST::IsotropicMaterialPropertyCard::ThermalExpansionMatrix(*this));
             }
             
@@ -230,7 +230,7 @@ namespace MAST {
                 delete _alpha;
             }
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
                 
                 libMesh::Real alpha;
                 (*_alpha)(p, t, alpha);
@@ -253,7 +253,7 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
                 libMesh::Real alpha;
                 _alpha->partial(f, p, t, alpha);
                 switch (_dim) {
@@ -276,7 +276,7 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
                 libMesh::Real alpha;
                 _alpha->total(f, p, t, alpha);
                 switch (_dim) {
@@ -310,7 +310,7 @@ namespace MAST {
          *   @returns the function object to calculate the requested quantity
          *   \par t, for an element of dimension \par dim
          */
-        virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+        virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
         get_property(MAST::MaterialPropertyMatrixType t,
                      const MAST::ElementPropertyCardBase& p,
                      const unsigned int dim) const;

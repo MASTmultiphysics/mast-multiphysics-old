@@ -70,10 +70,10 @@ protected:
     
     void update_solution_at_quadrature_point
     ( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
-     const bool if_elem_domain, const libMesh::DenseVector<libMesh::Real>& elem_solution,
-     libMesh::DenseVector<libMesh::Real>& conservative_sol, libMesh::Point& uvec,
+     const bool if_elem_domain, const DenseRealVector& elem_solution,
+     DenseRealVector& conservative_sol, libMesh::Point& uvec,
      FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat,
-     libMesh::DenseMatrix<libMesh::Real>& LS_mat);
+     DenseRealMatrix& LS_mat);
 };
 
 

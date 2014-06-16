@@ -490,7 +490,7 @@ int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             //            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
             //            m.init();
             //            unsigned int ndivs=10000; libMesh::Real dx=5.0/(ndivs*1.);
-            //            libMesh::Point p; libMesh::DenseVector<libMesh::Real> vals; vals.resize(4);
+            //            libMesh::Point p; DenseRealVector vals; vals.resize(4);
             //            p(0) = 0.; p(1) = .026;
             //            while (p(0) < 5.) {
             //                m(p, 0., vals);

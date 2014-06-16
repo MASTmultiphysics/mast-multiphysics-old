@@ -122,9 +122,9 @@ public:
     virtual void surface_velocity(const libMesh::Real t,
                                   const libMesh::Point& p,
                                   const libMesh::Point& n,
-                                  libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                  libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                  libMesh::DenseVector<libMesh::Complex>& dn_rot)
+                                  DenseComplexVector& w_trans,
+                                  DenseComplexVector& u_trans,
+                                  DenseComplexVector& dn_rot)
     { libmesh_error();}
     
     /*!
@@ -135,9 +135,9 @@ public:
     virtual void surface_velocity(const libMesh::Real t,
                                   const libMesh::Point& p,
                                   const libMesh::Point& n,
-                                  libMesh::DenseVector<libMesh::Real>& w_trans,
-                                  libMesh::DenseVector<libMesh::Real>& u_trans,
-                                  libMesh::DenseVector<libMesh::Real>& dn_rot);
+                                  DenseRealVector& w_trans,
+                                  DenseRealVector& u_trans,
+                                  DenseRealVector& dn_rot);
     
     protected:
     
@@ -150,9 +150,9 @@ inline void
 GaussianBumpSurfaceNormalCorrection2D::surface_velocity(const libMesh::Real t,
                                                         const libMesh::Point& p,
                                                         const libMesh::Point& n,
-                                                        libMesh::DenseVector<libMesh::Real>& w_trans,
-                                                        libMesh::DenseVector<libMesh::Real>& u_trans,
-                                                        libMesh::DenseVector<libMesh::Real>& dn_rot)
+                                                        DenseRealVector& w_trans,
+                                                        DenseRealVector& u_trans,
+                                                        DenseRealVector& dn_rot)
 {
     // for the point p, add the correction of surface normal n to dn_rot
     libMesh::Real x = p(0),

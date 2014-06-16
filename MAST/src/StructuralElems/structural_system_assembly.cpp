@@ -345,8 +345,8 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
 
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Real> vec, sol;
-    libMesh::DenseMatrix<libMesh::Real> mat;
+    DenseRealVector vec, sol;
+    DenseRealMatrix mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
@@ -445,8 +445,8 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Real> vec, vec2, sol;
-    libMesh::DenseMatrix<libMesh::Real> mat;
+    DenseRealVector vec, vec2, sol;
+    DenseRealMatrix mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
@@ -546,8 +546,8 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Real> vec, sol;
-    libMesh::DenseMatrix<libMesh::Real> mat1, mat2;
+    DenseRealVector vec, sol;
+    DenseRealMatrix mat1, mat2;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
@@ -682,8 +682,8 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Real> vec, sol;
-    libMesh::DenseMatrix<libMesh::Real> mat1, mat2, mat3;
+    DenseRealVector vec, sol;
+    DenseRealMatrix mat1, mat2, mat3;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
@@ -827,8 +827,8 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::Numeric
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
-    libMesh::DenseVector<libMesh::Real> sol;
-    libMesh::DenseMatrix<libMesh::Real> mat;
+    DenseRealVector sol;
+    DenseRealMatrix mat;
     std::vector<dof_id_type> dof_indices;
     const DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;

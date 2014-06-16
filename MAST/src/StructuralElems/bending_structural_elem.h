@@ -64,7 +64,7 @@ namespace MAST {
          *    returns the transformation matrix for this element. This is used
          *    to map the coordinates from local to global coordinate system
          */
-        const libMesh::DenseMatrix<libMesh::Real>& T_matrix() const {
+        const DenseRealMatrix& T_matrix() const {
             return _T_mat;
         }
 
@@ -73,9 +73,9 @@ namespace MAST {
          *    returns the transformation matrix for this element. This is used
          *    to map the coordinates from local to global coordinate system
          */
-        std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > T_matrix_function() const {
-            return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
-            (new MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> >("T_mat", _T_mat));
+        std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > T_matrix_function() const {
+            return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
+            (new MAST::ConstantFunction<DenseRealMatrix >("T_mat", _T_mat));
         }
 
         
@@ -125,7 +125,7 @@ namespace MAST {
          *    local cs,    an_j = T^t a_i, and the reverse transformation is
          *    obtained as  a_j  = T  an_i
          */
-        libMesh::DenseMatrix<libMesh::Real> _T_mat;
+        DenseRealMatrix _T_mat;
     };
     
     
@@ -200,7 +200,7 @@ namespace MAST {
          *   matrix that transforms the global dofs to the local element coordinate
          *   system
          */
-        virtual const libMesh::DenseMatrix<libMesh::Real>& _transformation_matrix() const {
+        virtual const DenseRealMatrix& _transformation_matrix() const {
             return _local_elem->T_matrix();
         }
         

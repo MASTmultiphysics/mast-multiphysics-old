@@ -53,9 +53,9 @@ namespace MAST {
         virtual void surface_velocity(const libMesh::Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
-                                      libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                      libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                      libMesh::DenseVector<libMesh::Complex>& dn_rot);
+                                      DenseComplexVector& w_trans,
+                                      DenseComplexVector& u_trans,
+                                      DenseComplexVector& dn_rot);
         
         /*!
          *   calculation of surface velocity in time domain. \p u_trans is
@@ -65,9 +65,9 @@ namespace MAST {
         virtual void surface_velocity(const libMesh::Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
-                                      libMesh::DenseVector<libMesh::Real>& w_trans,
-                                      libMesh::DenseVector<libMesh::Real>& u_trans,
-                                      libMesh::DenseVector<libMesh::Real>& dn_rot);
+                                      DenseRealVector& w_trans,
+                                      DenseRealVector& u_trans,
+                                      DenseRealVector& dn_rot);
         
     protected:
         
@@ -135,9 +135,9 @@ void
 MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
                                               const libMesh::Point& p,
                                               const libMesh::Point& n,
-                                              libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                              libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                              libMesh::DenseVector<libMesh::Complex>& dn_rot)
+                                              DenseComplexVector& w_trans,
+                                              DenseComplexVector& u_trans,
+                                              DenseComplexVector& dn_rot)
 {
 //#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     w_trans.zero();
@@ -147,8 +147,8 @@ MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
     libmesh_assert(_function.get()); // should be initialized before this call
     
     // translation is obtained by direct interpolation of the u,v,w vars
-    libMesh::DenseVector<libMesh::Real> v_real;
-    libMesh::DenseVector<libMesh::Complex> v;
+    DenseRealVector v_real;
+    DenseComplexVector v;
     (*_function)(p, t, v_real);
     v = v_real;
     
@@ -167,7 +167,7 @@ MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
     // TODO: these need to be mapped from local 2D to 3D space
     
     // now prepare the rotation vector
-    libMesh::DenseVector<libMesh::Complex> rot;
+    DenseComplexVector rot;
     rot.resize(3);
     rot(0) = gradients[2](1) - gradients[1](2); // dwz/dy - dwy/dz
     rot(1) = gradients[0](2) - gradients[2](0); // dwx/dz - dwz/dx
@@ -187,9 +187,9 @@ void
 MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
                                               const libMesh::Point& p,
                                               const libMesh::Point& n,
-                                              libMesh::DenseVector<libMesh::Real>& w_trans,
-                                              libMesh::DenseVector<libMesh::Real>& u_trans,
-                                              libMesh::DenseVector<libMesh::Real>& dn_rot)
+                                              DenseRealVector& w_trans,
+                                              DenseRealVector& u_trans,
+                                              DenseRealVector& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();
@@ -197,7 +197,7 @@ MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
     libmesh_assert(_function.get()); // should be initialized before this call
     
     // translation is obtained by direct interpolation of the u,v,w vars
-    libMesh::DenseVector<libMesh::Real> v;
+    DenseRealVector v;
     (*_function)(p, t, v);
     
     // now copy the values to u_trans
@@ -214,7 +214,7 @@ MAST::FlexibleSurfaceMotion::surface_velocity(const libMesh::Real t,
     // TODO: these need to be mapped from local 2D to 3D space
     
     // now prepare the rotation vector
-    libMesh::DenseVector<libMesh::Real> rot;
+    DenseRealVector rot;
     rot.resize(3);
     rot(0) = gradients[2](1) - gradients[1](2); // dwz/dy - dwy/dz
     rot(1) = gradients[0](2) - gradients[2](0); // dwx/dz - dwz/dx

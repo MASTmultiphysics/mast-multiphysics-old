@@ -66,8 +66,8 @@ namespace MAST {
          *   calculate the transverse shear component for the element
          */
         virtual void calculate_transverse_shear_force(bool request_jacobian,
-                                                      libMesh::DenseVector<libMesh::Real>& local_f,
-                                                      libMesh::DenseMatrix<libMesh::Real>& local_jac,
+                                                      DenseRealVector& local_f,
+                                                      DenseRealMatrix& local_jac,
                                                       const MAST::FieldFunctionBase* sens_params )
         { libmesh_error(); }
         

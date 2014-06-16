@@ -79,7 +79,7 @@ namespace MAST
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+        virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const = 0;
         
@@ -189,19 +189,19 @@ namespace MAST
      *    local cs,    an_j = T^t a_i, and the reverse transformation is
      *    obtained as  a_j  = T  an_i
      */
-    class SectionIntegratedPrestressMatrixBase: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+    class SectionIntegratedPrestressMatrixBase: public MAST::FieldFunction<DenseRealMatrix > {
     public:
         SectionIntegratedPrestressMatrixBase(const std::string& nm):
-        MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(nm)
+        MAST::FieldFunction<DenseRealMatrix >(nm)
         { }
 
         SectionIntegratedPrestressMatrixBase(const MAST::SectionIntegratedPrestressMatrixBase& f):
-        MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f)
+        MAST::FieldFunction<DenseRealMatrix >(f)
         { }
 
         virtual ~SectionIntegratedPrestressMatrixBase() { }
         
-        virtual void convert_to_vector(const libMesh::DenseMatrix<libMesh::Real>& m, libMesh::DenseVector<libMesh::Real>& v) const = 0;
+        virtual void convert_to_vector(const DenseRealMatrix& m, DenseRealVector& v) const = 0;
     };
     
     

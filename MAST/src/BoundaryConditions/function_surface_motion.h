@@ -47,9 +47,9 @@ namespace MAST {
         virtual void surface_velocity(const libMesh::Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
-                                      libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                      libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                      libMesh::DenseVector<libMesh::Complex>& dn_rot);
+                                      DenseComplexVector& w_trans,
+                                      DenseComplexVector& u_trans,
+                                      DenseComplexVector& dn_rot);
         
         /*!
          *   calculation of surface velocity in time domain. \p u_trans is
@@ -59,9 +59,9 @@ namespace MAST {
         virtual void surface_velocity(const libMesh::Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
-                                      libMesh::DenseVector<libMesh::Real>& w_trans,
-                                      libMesh::DenseVector<libMesh::Real>& u_trans,
-                                      libMesh::DenseVector<libMesh::Real>& dn_rot);
+                                      DenseRealVector& w_trans,
+                                      DenseRealVector& u_trans,
+                                      DenseRealVector& dn_rot);
         
     protected:
         
@@ -111,9 +111,9 @@ inline void
 MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
                                               const libMesh::Point& p,
                                               const libMesh::Point& n,
-                                              libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                              libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                              libMesh::DenseVector<libMesh::Complex>& dn_rot)
+                                              DenseComplexVector& w_trans,
+                                              DenseComplexVector& u_trans,
+                                              DenseComplexVector& dn_rot)
 {
     libmesh_assert(false); // to be implemented
 }
@@ -124,9 +124,9 @@ inline void
 MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
                                               const libMesh::Point& p,
                                               const libMesh::Point& n,
-                                              libMesh::DenseVector<libMesh::Real>& w_trans,
-                                              libMesh::DenseVector<libMesh::Real>& u_trans,
-                                              libMesh::DenseVector<libMesh::Real>& dn_rot)
+                                              DenseRealVector& w_trans,
+                                              DenseRealVector& u_trans,
+                                              DenseRealVector& dn_rot)
 {
     u_trans.zero();
     dn_rot.zero();
@@ -144,7 +144,7 @@ MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
         u_trans(i) = 0.*v(i);
     
     // now prepare the rotation vector
-    libMesh::DenseVector<libMesh::Real> rot;
+    DenseRealVector rot;
     rot.resize(3);
     rot(0) = dwdy(2) - dwdz(1); // dwz/dy - dwy/dz
     rot(1) = dwdz(0) - dwdx(2); // dwx/dz - dwz/dx

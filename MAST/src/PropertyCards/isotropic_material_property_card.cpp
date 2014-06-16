@@ -16,7 +16,7 @@
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix1D::StiffnessMatrix1D(MAST::FieldFunction<libMesh::Real>* E,
                                      MAST::FieldFunction<libMesh::Real>* nu ):
-MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("StiffnessMatrix1D"),
+MAST::FieldFunction<DenseRealMatrix >("StiffnessMatrix1D"),
 _E(E),
 _nu(nu)
 {
@@ -37,7 +37,7 @@ void
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix1D::operator() (const libMesh::Point& p,
                                const libMesh::Real t,
-                               libMesh::DenseMatrix<libMesh::Real>& m) const {
+                               DenseRealMatrix& m) const {
     m.resize(2,2);
     libMesh::Real E, nu, G;
     (*_E)(p, t, E); (*_nu)(p, t, nu);
@@ -52,8 +52,8 @@ MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix1D::partial (const MAST::FieldFunctionBase& f,
                             const libMesh::Point& p,
                             const libMesh::Real t,
-                            libMesh::DenseMatrix<libMesh::Real>& m) const {
-    libMesh::DenseMatrix<libMesh::Real> dm;
+                            DenseRealMatrix& m) const {
+    DenseRealMatrix dm;
     m.resize(2,2); dm.resize(2,2);
     libMesh::Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->partial(f, p, t, dEdf);
@@ -75,10 +75,10 @@ StiffnessMatrix1D::partial (const MAST::FieldFunctionBase& f,
 void
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix1D::total (const MAST::FieldFunctionBase& f,
-                          const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                          const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
     
     
-    libMesh::DenseMatrix<libMesh::Real> dm;
+    DenseRealMatrix dm;
     m.resize(2,2); dm.resize(2,2);
     libMesh::Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->total(f, p, t, dEdf);
@@ -101,7 +101,7 @@ MAST::IsotropicMaterialPropertyCard::
 TransverseShearStiffnessMatrix::TransverseShearStiffnessMatrix( MAST::FieldFunction<libMesh::Real> * E,
                                                                MAST::FieldFunction<libMesh::Real> * nu,
                                                                MAST::FieldFunction<libMesh::Real> * kappa):
-MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("TransverseShearStiffnessMatrix"),
+MAST::FieldFunction<DenseRealMatrix >("TransverseShearStiffnessMatrix"),
 _E(E),
 _nu(nu),
 _kappa(kappa)
@@ -125,7 +125,7 @@ void
 MAST::IsotropicMaterialPropertyCard::
 TransverseShearStiffnessMatrix::operator() (const libMesh::Point& p,
                                             const libMesh::Real t,
-                                            libMesh::DenseMatrix<libMesh::Real>& m) const {
+                                            DenseRealMatrix& m) const {
     m.resize(2,2);
     libMesh::Real E, nu, kappa, G;
     (*_E)(p, t, E); (*_nu)(p, t, nu); (*_kappa)(p, t, kappa);
@@ -140,9 +140,9 @@ MAST::IsotropicMaterialPropertyCard::
 TransverseShearStiffnessMatrix::partial (const MAST::FieldFunctionBase& f,
                                          const libMesh::Point& p,
                                          const libMesh::Real t,
-                                         libMesh::DenseMatrix<libMesh::Real>& m) const {
+                                         DenseRealMatrix& m) const {
     
-    libMesh::DenseMatrix<libMesh::Real> dm;
+    DenseRealMatrix dm;
     m.resize(2,2); dm.resize(2, 2);
     libMesh::Real E, nu, kappa, dEdf, dnudf, dkappadf, G;
     (*_E)(p, t, E); _E->partial(f, p, t, dEdf);
@@ -176,8 +176,8 @@ MAST::IsotropicMaterialPropertyCard::
 TransverseShearStiffnessMatrix::total (const MAST::FieldFunctionBase& f,
                                        const libMesh::Point& p,
                                        const libMesh::Real t,
-                                       libMesh::DenseMatrix<libMesh::Real>& m) const {
-    libMesh::DenseMatrix<libMesh::Real> dm;
+                                       DenseRealMatrix& m) const {
+    DenseRealMatrix dm;
     m.resize(2,2); dm.resize(2, 2);
     libMesh::Real E, nu, kappa, dEdf, dnudf, dkappadf, G;
     (*_E)(p, t, E); _E->total(f, p, t, dEdf);
@@ -210,7 +210,7 @@ MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix2D::StiffnessMatrix2D(MAST::FieldFunction<libMesh::Real> * E,
                                      MAST::FieldFunction<libMesh::Real> * nu ,
                                      bool plane_stress ):
-MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("StiffnessMatrix2D"),
+MAST::FieldFunction<DenseRealMatrix >("StiffnessMatrix2D"),
 _E(E),
 _nu(nu),
 _plane_stress(plane_stress)
@@ -233,7 +233,7 @@ void
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix2D::operator() (const libMesh::Point& p,
                                const libMesh::Real t,
-                               libMesh::DenseMatrix<libMesh::Real>& m) const {
+                               DenseRealMatrix& m) const {
     libmesh_assert(_plane_stress); // currently only implemented for plane stress
     m.resize(3,3);
     libMesh::Real E, nu;
@@ -255,9 +255,9 @@ MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix2D::partial (const MAST::FieldFunctionBase& f,
                             const libMesh::Point& p,
                             const libMesh::Real t,
-                            libMesh::DenseMatrix<libMesh::Real>& m) const {
+                            DenseRealMatrix& m) const {
     libmesh_assert(_plane_stress); // currently only implemented for plane stress
-    libMesh::DenseMatrix<libMesh::Real> dm;
+    DenseRealMatrix dm;
     m.resize(3,3); dm.resize(3, 3);
     libMesh::Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->partial(f, p, t, dEdf);
@@ -293,9 +293,9 @@ StiffnessMatrix2D::partial (const MAST::FieldFunctionBase& f,
 void
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix2D::total (const MAST::FieldFunctionBase& f,
-                          const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                          const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
     libmesh_assert(_plane_stress); // currently only implemented for plane stress
-    libMesh::DenseMatrix<libMesh::Real> dm;
+    DenseRealMatrix dm;
     m.resize(3,3); dm.resize(3, 3);
     libMesh::Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->total(f, p, t, dEdf);
@@ -330,7 +330,7 @@ StiffnessMatrix2D::total (const MAST::FieldFunctionBase& f,
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix3D::StiffnessMatrix3D(MAST::FieldFunction<libMesh::Real> * E,
                                      MAST::FieldFunction<libMesh::Real> * nu):
-MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("StiffnessMatrix2D"),
+MAST::FieldFunction<DenseRealMatrix >("StiffnessMatrix2D"),
 _E(E),
 _nu(nu)
 {
@@ -351,7 +351,7 @@ void
 MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix3D::operator() (const libMesh::Point& p,
                                const libMesh::Real t,
-                               libMesh::DenseMatrix<libMesh::Real>& m) const {
+                               DenseRealMatrix& m) const {
     m.resize(3,3);
     libMesh::Real E, nu;
     (*_E)(p, t, E); (*_nu)(p, t, nu);
@@ -372,8 +372,8 @@ MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix3D::partial (const MAST::FieldFunctionBase& f,
                             const libMesh::Point& p,
                             const libMesh::Real t,
-                            libMesh::DenseMatrix<libMesh::Real>& m) const {
-    libMesh::DenseMatrix<libMesh::Real> dm;
+                            DenseRealMatrix& m) const {
+    DenseRealMatrix dm;
     m.resize(3,3); dm.resize(3, 3);
     libMesh::Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->partial(f, p, t, dEdf);
@@ -411,8 +411,8 @@ MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix3D::total (const MAST::FieldFunctionBase& f,
                           const libMesh::Point& p,
                           const libMesh::Real t,
-                          libMesh::DenseMatrix<libMesh::Real>& m) const {
-    libMesh::DenseMatrix<libMesh::Real> dm;
+                          DenseRealMatrix& m) const {
+    DenseRealMatrix dm;
     m.resize(3,3); dm.resize(3, 3);
     libMesh::Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->total(f, p, t, dEdf);
@@ -444,11 +444,11 @@ StiffnessMatrix3D::total (const MAST::FieldFunctionBase& f,
 
 
 
-std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
 MAST::IsotropicMaterialPropertyCard::get_property(MAST::MaterialPropertyMatrixType t,
                                                   const MAST::ElementPropertyCardBase& p,
                                                   const unsigned int dim) const  {
-    MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > *rval = NULL;
+    MAST::FieldFunction<DenseRealMatrix > *rval = NULL;
     
     switch (t) {
         case MAST::MATERIAL_STIFFNESS_MATRIX:
@@ -496,5 +496,5 @@ MAST::IsotropicMaterialPropertyCard::get_property(MAST::MaterialPropertyMatrixTy
     // make sure that this is not null
     libmesh_assert(rval);
     
-    return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >(rval);
+    return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >(rval);
 }

@@ -46,8 +46,8 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
-    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
+    DenseRealMatrix& Kmat = c.get_elem_jacobian();
+    DenseRealVector& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -60,12 +60,12 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<libMesh::DenseMatrix<libMesh::Real> >  Ai_advection(dim);
-    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
+    std::vector<DenseRealMatrix >  Ai_advection(dim);
+    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
     tmp_mat_n1n2, tmp_mat2_n2n2, tmp_mat3, A_sens, stress_tensor,
     dprim_dcons, dcons_dprim;
     
-    libMesh::DenseVector<libMesh::Real> flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     conservative_sol, delta_vals, diff_val, temp_grad;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
@@ -82,7 +82,7 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
+    std::vector<std::vector<DenseRealMatrix > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {

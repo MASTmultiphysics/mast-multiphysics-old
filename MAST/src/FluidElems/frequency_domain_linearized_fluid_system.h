@@ -69,9 +69,9 @@ protected:
     (const std::vector<unsigned int>& vars, const unsigned int qp,
      FEMContext& c,  const PrimitiveSolution& sol,
      const SmallPerturbationPrimitiveSolution<Complex>& dsol,
-     const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
-     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+     const DenseRealMatrix& Ai_Bi_advection,
      libMesh::DenseVector<Real>& discontinuity_val);
     
     bool _if_localized_sol;

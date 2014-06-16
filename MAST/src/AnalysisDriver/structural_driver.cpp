@@ -260,8 +260,8 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     MAST::ConstantFunction<libMesh::Real> press("pressure", 1.e2);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
-    //static_structural_assembly.add_volume_load(0, bc);
-    //eigen_structural_assembly.add_volume_load(0, bc);
+    static_structural_assembly.add_volume_load(0, bc);
+    eigen_structural_assembly.add_volume_load(0, bc);
     MAST::ConstantFunction<libMesh::Real> temp("temp", 1.), ref_temp("ref_temp", 0.);
     MAST::Temperature temp_bc;
     temp_bc.set_function(temp);
@@ -345,7 +345,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     hy("hy", 1.000*infile("thickness", 0.002)),
     hz("hz", infile("width", 0.002)),
     h_off("off", 0.), // plate offset
-    off_hy("hy_offset", 0.*infile("thickness", 0.002)),
+    off_hy("hy_offset", 0.5*infile("thickness", 0.002)),
     off_hz("hz_offset", 0.);
     
     // add the properties to the cards
@@ -365,9 +365,9 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     prop1d.add(off_hz);
     
     
-    libMesh::DenseMatrix<libMesh::Real> prestress; prestress.resize(3,3);
-    prestress(0,0) = -1.31345e6/.0044;
-    MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> > prestress_func("prestress", prestress);
+    DenseRealMatrix prestress; prestress.resize(3,3);
+    prestress(0,0) = -1.31345e6/.0044*1.0e-3;
+    MAST::ConstantFunction<DenseRealMatrix > prestress_func("prestress", prestress);
     
     prop3d.set_material(mat);
     prop2d.set_material(mat); prop2d_stiff.set_material(mat);
@@ -376,7 +376,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
     //prop2d.add(prestress_func); // no prestress for stiffener
-    //prop1d.add(prestress_func);
+    prop1d.add(prestress_func);
 
     
     // multilayer material
@@ -415,7 +415,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     multi_prop1d.set_layers(-1., layers); // offset wrt bottom layer
     
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);

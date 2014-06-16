@@ -119,9 +119,9 @@ namespace MAST
                                          Real& sine, Real& cosine);
         
         
-        void _calculate_dkt_shape_functions(const libMesh::DenseVector<libMesh::Real>& phi,
-                                            libMesh::DenseVector<libMesh::Real>& betax,
-                                            libMesh::DenseVector<libMesh::Real>& betay);
+        void _calculate_dkt_shape_functions(const DenseRealVector& phi,
+                                            DenseRealVector& betax,
+                                            DenseRealVector& betay);
         
         
         /*!
@@ -159,7 +159,7 @@ MAST::DKTBendingOperator::initialize_bending_strain_operator_for_z (const unsign
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
     
-    libMesh::DenseVector<libMesh::Real> phi, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy,
+    DenseRealVector phi, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy,
     w, thetax, thetay;
     phi.resize(n_phi); dbetaxdx.resize(9); dbetaxdy.resize(9);
     dbetaydx.resize(9); dbetaydy.resize(9); w.resize(3); thetax.resize(3);
@@ -274,9 +274,9 @@ MAST::DKTBendingOperator::_get_edge_normal_sine_cosine(unsigned int i, unsigned 
 
 inline
 void
-MAST::DKTBendingOperator::_calculate_dkt_shape_functions(const libMesh::DenseVector<libMesh::Real>& phi,
-                                                         libMesh::DenseVector<libMesh::Real>& betax,
-                                                         libMesh::DenseVector<libMesh::Real>& betay)
+MAST::DKTBendingOperator::_calculate_dkt_shape_functions(const DenseRealVector& phi,
+                                                         DenseRealVector& betax,
+                                                         DenseRealVector& betay)
 {
     // -- keep in mind that the index numbers for the elems start at 0.
     // -- also, the mid side node numbers in the Batoz's paper are different from

@@ -111,7 +111,7 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Real t,
     
     // get the nonlinear and linearized solution
     libMesh::DenseVector<ValType> v_lin;
-    libMesh::DenseVector<libMesh::Real> v_nonlin, v_lin_real;
+    DenseRealVector v_nonlin, v_lin_real;
     (*_function_nonlinear)(p, t, v_nonlin);
     (*_function_linear)(p, t, v_lin_real);
     v_lin.resize(v_nonlin.size());

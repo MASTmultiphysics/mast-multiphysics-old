@@ -147,10 +147,10 @@ namespace MAST {
         };
         
         
-        class SectionIntegratedMatrix: public MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > {
+        class SectionIntegratedMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
-            SectionIntegratedMatrix(std::vector<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >*>& layer_mats):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >("SectionIntegratedMatrix2D"),
+            SectionIntegratedMatrix(std::vector<MAST::FieldFunction<DenseRealMatrix >*>& layer_mats):
+            MAST::FieldFunction<DenseRealMatrix >("SectionIntegratedMatrix2D"),
             _layer_mats(layer_mats) {
                 for (unsigned int i=0; i < _layer_mats.size(); i++) {
                     _functions.insert(_layer_mats[i]);
@@ -158,7 +158,7 @@ namespace MAST {
             }
             
             SectionIntegratedMatrix(const MAST::Multilayer2DSectionElementPropertyCard::SectionIntegratedMatrix &f):
-            MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >(f) {
+            MAST::FieldFunction<DenseRealMatrix >(f) {
                 // initialize the vector
                 _layer_mats.resize(f._layer_mats.size());
                 for (unsigned int i=0; i < _layer_mats.size(); i++) {
@@ -170,8 +170,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+            virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
                 (new MAST::Multilayer2DSectionElementPropertyCard::SectionIntegratedMatrix(*this));
             }
             
@@ -181,9 +181,9 @@ namespace MAST {
                     delete _layer_mats[i];
             }
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
                 // add the values of each matrix to get the integrated value
-                libMesh::DenseMatrix<libMesh::Real> mi;
+                DenseRealMatrix mi;
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     (*_layer_mats[i])(p, t, mi);
                     // use the size of the layer matrix to resize the output
@@ -195,9 +195,9 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
                 // add the values of each matrix to get the integrated value
-                libMesh::DenseMatrix<libMesh::Real> mi;
+                DenseRealMatrix mi;
                 m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     _layer_mats[i]->partial(f, p, t, mi);
@@ -210,9 +210,9 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, libMesh::DenseMatrix<libMesh::Real>& m) const {
+                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
                 // add the values of each matrix to get the integrated value
-                libMesh::DenseMatrix<libMesh::Real> mi;
+                DenseRealMatrix mi;
                 m.resize(2,2);
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
                     _layer_mats[i]->total(f, p, t, mi);
@@ -227,7 +227,7 @@ namespace MAST {
             
         protected:
             
-            std::vector<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> >*> _layer_mats;
+            std::vector<MAST::FieldFunction<DenseRealMatrix >*> _layer_mats;
         };
         
         
@@ -286,7 +286,7 @@ namespace MAST {
          *   returns a function to evaluate the specified quantitys
          *   type \par t.
          */
-        virtual std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+        virtual std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
         get_property(MAST::ElemenetPropertyMatrixType t,
                      const MAST::StructuralElementBase& e) const;
         

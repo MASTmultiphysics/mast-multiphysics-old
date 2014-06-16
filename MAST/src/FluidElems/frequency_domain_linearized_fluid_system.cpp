@@ -161,8 +161,8 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
-    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
+    DenseRealMatrix& Kmat = c.get_elem_jacobian();
+    DenseRealVector& Fvec = c.get_elem_residual();
     
     // Now we will build the element Jacobian and residual.
     // Constructing the residual requires the solution and its
@@ -174,15 +174,15 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     n_dofs = n1*elem_fe->n_shape_functions();
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    std::vector<libMesh::DenseMatrix<libMesh::Real> > Ai_advection(dim);
+    std::vector<DenseRealMatrix > Ai_advection(dim);
     FEMOperatorMatrix B_mat;
-    libMesh::DenseMatrix<libMesh::Real> LS_mat, LS_sens, Ai_Bi_advection,
+    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection,
     tmp_mat_n1n2, tmp_mat_n2n1, tmp_mat_n2n2, tmp_mat_n1n1,
     A_sens, stress_tensor, dcons_dprim, dprim_dcons;
-    libMesh::DenseMatrix<libMesh::Complex> tmp_mat_n2n2_complex;
-    libMesh::DenseVector<libMesh::Real> tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
+    DenseComplexMatrix tmp_mat_n2n2_complex;
+    DenseRealVector tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
     temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude, diff_val, diff_val2;
-    libMesh::DenseVector<libMesh::Complex> flux, tmp_vec3_n2,
+    DenseComplexVector flux, tmp_vec3_n2,
     tmp_vec4_n1, tmp_vec5_n1, conservative_deltasol, complex_elem_sol;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
@@ -203,7 +203,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
     
-    std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > > flux_jacobian_sens;
+    std::vector<std::vector<DenseRealMatrix > > flux_jacobian_sens;
     flux_jacobian_sens.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
     {
@@ -558,8 +558,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     
     
     // The subvectors and submatrices we need to fill:
-    libMesh::DenseMatrix<libMesh::Real>& Kmat = c.get_elem_jacobian();
-    libMesh::DenseVector<libMesh::Real>& Fvec = c.get_elem_residual();
+    DenseRealMatrix& Kmat = c.get_elem_jacobian();
+    DenseRealVector& Fvec = c.get_elem_residual();
     
     libMesh::FEBase * side_fe;
     c.get_side_fe(vars[0], side_fe);
@@ -584,14 +584,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     FEMOperatorMatrix B_mat;
 
-    libMesh::DenseMatrix<libMesh::Real>  eig_val, l_eig_vec, l_eig_vec_inv_tr,
+    DenseRealMatrix  eig_val, l_eig_vec, l_eig_vec_inv_tr,
     tmp_mat_n1n1, tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
-    libMesh::DenseMatrix<libMesh::Complex> tmp_mat_n2n2_complex;
-    libMesh::DenseVector<libMesh::Real>  normal, normal_local, tmp_vec1, tmp_vec2_n1,
+    DenseComplexMatrix tmp_mat_n2n2_complex;
+    DenseRealVector  normal, normal_local, tmp_vec1, tmp_vec2_n1,
     tmp_vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
     dnormal_steady_real, surface_steady_disp, surface_steady_vel, dnormal_steady;
-    libMesh::DenseVector<libMesh::Complex> flux, tmp_vec1_n2,
+    DenseComplexVector flux, tmp_vec1_n2,
     surface_unsteady_vel, dnormal_unsteady, duvec, surface_unsteady_disp,
     conservative_deltasol, complex_elem_sol;
     
@@ -638,7 +638,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<libMesh::Complex> delta_p_sol;
     
-    const libMesh::DenseVector<libMesh::Real>& elem_sol = c.get_elem_solution();
+    const DenseRealVector& elem_sol = c.get_elem_solution();
     
     switch (mechanical_bc_type)
     // adiabatic and isothermal are handled in the no-slip wall BC
@@ -1100,18 +1100,18 @@ FrequencyDomainLinearizedFluidSystem::calculate_small_disturbance_aliabadi_disco
 (const std::vector<unsigned int>& vars, const unsigned int qp,
  FEMContext& c,  const PrimitiveSolution& sol,
  const SmallPerturbationPrimitiveSolution<Complex>& dsol,
- const libMesh::DenseVector<libMesh::Real>& elem_solution,
+ const DenseRealVector& elem_solution,
  const std::vector<FEMOperatorMatrix>& dB_mat,
- const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+ const DenseRealMatrix& Ai_Bi_advection,
  libMesh::DenseVector<Real>& discontinuity_val)
 {
     discontinuity_val.zero();
     const unsigned int n1 = 2 + dim;
     
-    std::vector<libMesh::DenseVector<libMesh::Real> > diff_vec(3);
-    libMesh::DenseMatrix<libMesh::Real> A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
+    std::vector<DenseRealVector > diff_vec(3);
+    DenseRealMatrix A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
     tmpmat1_n1n1;
-    libMesh::DenseVector<libMesh::Real> vec1, vec2;
+    DenseRealVector vec1, vec2;
     vec1.resize(n1); vec2.resize(n1);
     dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
     A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
@@ -1157,8 +1157,8 @@ FrequencyDomainLinearizedFluidSystem::calculate_small_disturbance_aliabadi_disco
     if (_include_pressure_switch) {
         // also add a pressure switch q
         const unsigned int fe_order = c.get_system().variable(0).type().order;
-        libMesh::DenseMatrix<libMesh::Real> dpdc, dcdp;
-        libMesh::DenseVector<libMesh::Real> dpress_dp, dp;
+        DenseRealMatrix dpdc, dcdp;
+        DenseRealVector dpress_dp, dp;
         dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
         dp.resize(dim);
         libMesh::Real p_sensor = 0., hk = 0.;
@@ -1259,10 +1259,10 @@ public:
                                                _q0) ); }
     
     virtual void operator() (const FEMContext& c, const libMesh::Point& p,
-                             const libMesh::Real t, libMesh::DenseVector<libMesh::Real>& val)
+                             const libMesh::Real t, DenseRealVector& val)
     {
-        libMesh::DenseVector<libMesh::Complex> sd_fluid_sol;
-        libMesh::DenseVector<libMesh::Real> fluid_sol, sd_fluid_sol_real;
+        DenseComplexVector sd_fluid_sol;
+        DenseRealVector fluid_sol, sd_fluid_sol_real;
         
         // get the solution values at the point
         (*_fluid_function)(p, t, fluid_sol);
@@ -1286,8 +1286,8 @@ public:
     virtual libMesh::Real component(const FEMContext& c, unsigned int i_comp,
                              const libMesh::Point& p, libMesh::Real t=0.)
     {
-        libMesh::DenseVector<libMesh::Complex> sd_fluid_sol;
-        libMesh::DenseVector<libMesh::Real> fluid_sol, sd_fluid_sol_real;
+        DenseComplexVector sd_fluid_sol;
+        DenseRealVector fluid_sol, sd_fluid_sol_real;
         
         // get the solution values at the point
         (*_fluid_function)(p, t, fluid_sol);

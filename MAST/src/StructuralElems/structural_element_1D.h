@@ -100,8 +100,8 @@ namespace MAST {
          *    strain energy
          */
         virtual bool internal_force(bool request_jacobian,
-                                    libMesh::DenseVector<libMesh::Real>& f,
-                                    libMesh::DenseMatrix<libMesh::Real>& jac,
+                                    DenseRealVector& f,
+                                    DenseRealMatrix& jac,
                                     bool if_ignore_ho_jac);
         
         /*!
@@ -109,8 +109,8 @@ namespace MAST {
          *    strain energy
          */
         virtual bool internal_force_sensitivity(bool request_jacobian,
-                                                libMesh::DenseVector<libMesh::Real>& f,
-                                                libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                DenseRealVector& f,
+                                                DenseRealMatrix& jac,
                                                 bool if_ignore_ho_jac);
         
         /*!
@@ -118,16 +118,16 @@ namespace MAST {
          *    strain energy coming from a prestress
          */
         virtual bool prestress_force (bool request_jacobian,
-                                      libMesh::DenseVector<libMesh::Real>& f,
-                                      libMesh::DenseMatrix<libMesh::Real>& jac);
+                                      DenseRealVector& f,
+                                      DenseRealMatrix& jac);
         
         /*!
          *    Calculates the internal force vector and Jacobian due to
          *    strain energy coming from a prestress
          */
         virtual bool prestress_force_sensitivity (bool request_jacobian,
-                                                  libMesh::DenseVector<libMesh::Real>& f,
-                                                  libMesh::DenseMatrix<libMesh::Real>& jac);
+                                                  DenseRealVector& f,
+                                                  DenseRealMatrix& jac);
 
         /*!
          *   returns the value of maximum von Mises stress over the element
@@ -151,8 +151,8 @@ namespace MAST {
          *    Calculates the force vector and Jacobian due to thermal stresses
          */
         virtual bool thermal_force(bool request_jacobian,
-                                   libMesh::DenseVector<libMesh::Real>& f,
-                                   libMesh::DenseMatrix<libMesh::Real>& jac,
+                                   DenseRealVector& f,
+                                   DenseRealMatrix& jac,
                                    MAST::BoundaryCondition& p);
         
         /*!
@@ -160,8 +160,8 @@ namespace MAST {
          *    thermal stresses
          */
         virtual bool thermal_force_sensitivity(bool request_jacobian,
-                                               libMesh::DenseVector<libMesh::Real>& f,
-                                               libMesh::DenseMatrix<libMesh::Real>& jac,
+                                               DenseRealVector& f,
+                                               DenseRealMatrix& jac,
                                                MAST::BoundaryCondition& p);
 
         /*!
@@ -177,9 +177,9 @@ namespace MAST {
          *   Bmat_vk   = [dw/dx; dw/dy]
          */
         virtual void initialize_von_karman_strain_operator(const unsigned int qp,
-                                                           libMesh::DenseVector<libMesh::Real>& vk_strain,
-                                                           libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat,
-                                                           libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat,
+                                                           DenseRealVector& vk_strain,
+                                                           DenseRealMatrix& vk_dvdxi_mat,
+                                                           DenseRealMatrix& vk_dwdxi_mat,
                                                            FEMOperatorMatrix& Bmat_v_vk,
                                                            FEMOperatorMatrix& Bmat_w_vk);
         
@@ -190,8 +190,8 @@ namespace MAST {
          */
         void initialize_von_karman_strain_operator_sensitivity
         (const unsigned int qp,
-         libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat_sens,
-         libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat_sens);
+         DenseRealMatrix& vk_dvdxi_mat_sens,
+         DenseRealMatrix& vk_dwdxi_mat_sens);
         
 
         /*!
@@ -206,28 +206,28 @@ namespace MAST {
                                                const std::vector<libMesh::Real>& JxW,
                                                bool request_jacobian,
                                                bool if_ignore_ho_jac,
-                                               libMesh::DenseVector<libMesh::Real>& local_f,
-                                               libMesh::DenseMatrix<libMesh::Real>& local_jac,
+                                               DenseRealVector& local_f,
+                                               DenseRealMatrix& local_jac,
                                                FEMOperatorMatrix& Bmat_mem,
                                                FEMOperatorMatrix& Bmat_bend,
                                                FEMOperatorMatrix& Bmat_v_vk,
                                                FEMOperatorMatrix& Bmat_w_vk,
-                                               libMesh::DenseMatrix<libMesh::Real>& stress,
-                                               libMesh::DenseMatrix<libMesh::Real>& stress_l,
-                                               libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat,
-                                               libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat,
-                                               libMesh::DenseMatrix<libMesh::Real>& material_A_mat,
-                                               libMesh::DenseMatrix<libMesh::Real>& material_B_mat,
-                                               libMesh::DenseMatrix<libMesh::Real>& material_D_mat,
-                                               libMesh::DenseVector<libMesh::Real>& tmp_vec1_n1,
-                                               libMesh::DenseVector<libMesh::Real>& tmp_vec2_n1,
-                                               libMesh::DenseVector<libMesh::Real>& tmp_vec3_n2,
-                                               libMesh::DenseVector<libMesh::Real>& tmp_vec4_2,
-                                               libMesh::DenseVector<libMesh::Real>& tmp_vec5_2,
-                                               libMesh::DenseMatrix<libMesh::Real>& tmp_mat1_n1n2,
-                                               libMesh::DenseMatrix<libMesh::Real>& tmp_mat2_n2n2,
-                                               libMesh::DenseMatrix<libMesh::Real>& tmp_mat3,
-                                               libMesh::DenseMatrix<libMesh::Real>& tmp_mat4_2n2);
+                                               DenseRealMatrix& stress,
+                                               DenseRealMatrix& stress_l,
+                                               DenseRealMatrix& vk_dvdxi_mat,
+                                               DenseRealMatrix& vk_dwdxi_mat,
+                                               DenseRealMatrix& material_A_mat,
+                                               DenseRealMatrix& material_B_mat,
+                                               DenseRealMatrix& material_D_mat,
+                                               DenseRealVector& tmp_vec1_n1,
+                                               DenseRealVector& tmp_vec2_n1,
+                                               DenseRealVector& tmp_vec3_n2,
+                                               DenseRealVector& tmp_vec4_2,
+                                               DenseRealVector& tmp_vec5_2,
+                                               DenseRealMatrix& tmp_mat1_n1n2,
+                                               DenseRealMatrix& tmp_mat2_n2n2,
+                                               DenseRealMatrix& tmp_mat3,
+                                               DenseRealMatrix& tmp_mat4_2n2);
         
         
         /*!
@@ -237,21 +237,21 @@ namespace MAST {
         (const unsigned int n2,
          const unsigned int qp,
          const std::vector<libMesh::Real>& JxW,
-         libMesh::DenseMatrix<libMesh::Real>& local_jac,
+         DenseRealMatrix& local_jac,
          FEMOperatorMatrix& Bmat_mem,
          FEMOperatorMatrix& Bmat_bend,
          FEMOperatorMatrix& Bmat_v_vk,
          FEMOperatorMatrix& Bmat_w_vk,
-         libMesh::DenseMatrix<libMesh::Real>& stress_l,
-         libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat,
-         libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat,
-         libMesh::DenseMatrix<libMesh::Real>& material_A_mat,
-         libMesh::DenseMatrix<libMesh::Real>& material_B_mat,
-         libMesh::DenseVector<libMesh::Real>& tmp_vec1_n1,
-         libMesh::DenseVector<libMesh::Real>& tmp_vec2_n1,
-         libMesh::DenseMatrix<libMesh::Real>& tmp_mat1_n1n2,
-         libMesh::DenseMatrix<libMesh::Real>& tmp_mat2_n2n2,
-         libMesh::DenseMatrix<libMesh::Real>& tmp_mat3);
+         DenseRealMatrix& stress_l,
+         DenseRealMatrix& vk_dvdxi_mat,
+         DenseRealMatrix& vk_dwdxi_mat,
+         DenseRealMatrix& material_A_mat,
+         DenseRealMatrix& material_B_mat,
+         DenseRealVector& tmp_vec1_n1,
+         DenseRealVector& tmp_vec2_n1,
+         DenseRealMatrix& tmp_mat1_n1n2,
+         DenseRealMatrix& tmp_mat2_n2n2,
+         DenseRealMatrix& tmp_mat3);
         
     };
 }

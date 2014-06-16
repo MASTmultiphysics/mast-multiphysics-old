@@ -47,7 +47,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     // Physical location of the quadrature points
     const std::vector<Point>& qpoint = elem_fe->get_xyz();
     
-    libMesh::DenseVector<libMesh::Real> conservative_sol, integrated_force;
+    DenseRealVector conservative_sol, integrated_force;
     FEMOperatorMatrix  B_mat;
     integrated_force.resize(dim); conservative_sol.resize(dim+2);
     
@@ -157,7 +157,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     // boundary normals
     const std::vector<Point>& face_normals = side_fe->get_normals();
     
-    libMesh::DenseVector<libMesh::Real> conservative_sol;
+    DenseRealVector conservative_sol;
     FEMOperatorMatrix  B_mat;
     conservative_sol.resize(dim+2);
     

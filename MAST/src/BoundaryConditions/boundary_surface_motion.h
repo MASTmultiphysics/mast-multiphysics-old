@@ -66,9 +66,9 @@ namespace MAST {
         virtual void surface_velocity(const libMesh::Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
-                                      libMesh::DenseVector<libMesh::Complex>& w_trans,
-                                      libMesh::DenseVector<libMesh::Complex>& u_trans,
-                                      libMesh::DenseVector<libMesh::Complex>& dn_rot) = 0;
+                                      DenseComplexVector& w_trans,
+                                      DenseComplexVector& u_trans,
+                                      DenseComplexVector& dn_rot) = 0;
         
         /*!
          *   calculation of surface velocity in time domain. \p u_trans is
@@ -78,9 +78,9 @@ namespace MAST {
         virtual void surface_velocity(const libMesh::Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
-                                      libMesh::DenseVector<libMesh::Real>& w_trans,
-                                      libMesh::DenseVector<libMesh::Real>& u_trans,
-                                      libMesh::DenseVector<libMesh::Real>& dn_rot) = 0;
+                                      DenseRealVector& w_trans,
+                                      DenseRealVector& u_trans,
+                                      DenseRealVector& dn_rot) = 0;
         
     protected:
         

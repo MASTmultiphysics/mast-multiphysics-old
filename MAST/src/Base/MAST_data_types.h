@@ -11,6 +11,8 @@
 
 // libMesh includes
 #include "libmesh/libmesh_common.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/dense_vector.h"
 
 // Eigen includes
 #include "Eigen/Dense"
@@ -26,5 +28,11 @@ typedef Matrix<Real, Dynamic, Dynamic> RealMatrixX;
 typedef Matrix<Real, 3, 3> RealMatrix3;
 typedef Matrix<Complex, Dynamic, Dynamic> ComplexMatrixX;
 typedef Matrix<Complex, 3, 3> ComplexMatrix3;
+
+typedef libMesh::DenseMatrix<libMesh::Real> DenseRealMatrix;
+typedef libMesh::DenseMatrix<libMesh::Complex> DenseComplexMatrix;
+
+typedef libMesh::DenseVector<libMesh::Real> DenseRealVector;
+typedef libMesh::DenseVector<libMesh::Complex> DenseComplexVector;
 
 #endif

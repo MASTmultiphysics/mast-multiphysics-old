@@ -501,7 +501,7 @@ namespace MAST {
         
         std::vector<MAST::BeamOffset*> _offset_h_z;
         
-        MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> > *_prestress;
+        MAST::ConstantFunction<DenseRealMatrix > *_prestress;
         
         MAST::ConstantFunction<libMesh::Real> *_temperature, *_ref_temperature;
         
@@ -857,7 +857,7 @@ MAST::SizingOptimization::_init() {
     _parameters.resize(_n_vars);
     _parameter_functions.resize(_n_vars);
     
-    libMesh::DenseMatrix<libMesh::Real> prestress; prestress.resize(3,3);
+    DenseRealMatrix prestress; prestress.resize(3,3);
     prestress(0,0) = -1.31345e6;
     
     _E = new MAST::ConstantFunction<libMesh::Real>("E", _infile("youngs_modulus", 72.e9)),
@@ -868,7 +868,7 @@ MAST::SizingOptimization::_init() {
     _panel_off = new MAST::ConstantFunction<libMesh::Real>("off", 0.);
     _alpha = new MAST::ConstantFunction<libMesh::Real>("alpha", _infile("expansion_coefficient", 2.31e-5)),
     
-    _prestress = new MAST::ConstantFunction<libMesh::DenseMatrix<libMesh::Real> >("prestress", prestress);
+    _prestress = new MAST::ConstantFunction<DenseRealMatrix >("prestress", prestress);
     _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
     
     MAST::MaterialPropertyCardBase& mat = *_materials[0];

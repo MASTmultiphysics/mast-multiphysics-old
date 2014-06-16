@@ -117,7 +117,7 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(libMesh::Real k_ref,
 //                      dsys.get_dof_map(), dval);
 //        function.init();
 //        dval_function.init();
-//        libMesh::DenseVector<libMesh::Real> sol, dsol; sol.resize(4); dsol.resize(1);
+//        DenseRealVector sol, dsol; sol.resize(4); dsol.resize(1);
 //        libMesh::Point pt;
 //        for (unsigned int i=0; i<300; i++) {
 //            pt(0) = 0 + (6)*(1.*i)/299.;

@@ -46,14 +46,14 @@ public:
     PrimitiveSolution();
     
     void zero();
-    void init(const unsigned int dim, const libMesh::DenseVector<libMesh::Real>& conservative_sol, const libMesh::Real cp_val, const libMesh::Real cv_val,
+    void init(const unsigned int dim, const DenseRealVector& conservative_sol, const libMesh::Real cp_val, const libMesh::Real cv_val,
               bool if_viscous);
     void print(std::ostream& out) const;
     
     libMesh::Real c_pressure(const libMesh::Real p0, const libMesh::Real q0) const;
-    void get_uvec(libMesh::DenseVector<libMesh::Real>& u) const;
+    void get_uvec(DenseRealVector& u) const;
     
-    libMesh::DenseVector<libMesh::Real> primitive_sol;
+    DenseRealVector primitive_sol;
     unsigned int dimension;
     libMesh::Real cp, cv;
     libMesh::Real rho, u1, u2, u3, T, p, a, e_tot, k, entropy, mach;
@@ -110,7 +110,7 @@ public:
     void init_data();
 
     
-    void get_infinity_vars( libMesh::DenseVector<libMesh::Real>& vars_inf ) const;
+    void get_infinity_vars( DenseRealVector& vars_inf ) const;
     
     /*!
      *    This defines the surface motion for use with the nonlinear 
@@ -128,14 +128,14 @@ protected:
     
     void calculate_dxidX (const std::vector<unsigned int>& vars,
                           const unsigned int qp, FEMContext& c,
-                          libMesh::DenseMatrix<libMesh::Real>& dxi_dX,
-                          libMesh::DenseMatrix<libMesh::Real>& dX_dxi);
+                          DenseRealMatrix& dxi_dX,
+                          DenseRealMatrix& dX_dxi);
     
     
     void update_solution_at_quadrature_point
     ( const std::vector<unsigned int>& vars, const unsigned int qp,
      FEMContext& c, const bool if_elem_domain,
-     const libMesh::DenseVector<libMesh::Real>& elem_solution, libMesh::DenseVector<libMesh::Real>& conservative_sol,
+     const DenseRealVector& elem_solution, DenseRealVector& conservative_sol,
      PrimitiveSolution& primitive_sol, FEMOperatorMatrix& B_mat,
      std::vector<FEMOperatorMatrix>& dB_mat);
     
@@ -143,115 +143,115 @@ protected:
     
     void calculate_advection_flux(const unsigned int calculate_dim,
                                   const PrimitiveSolution& sol,
-                                  libMesh::DenseVector<libMesh::Real>& flux);
+                                  DenseRealVector& flux);
 
     void calculate_diffusion_flux(const unsigned int calculate_dim,
                                   const PrimitiveSolution& sol,
-                                  const libMesh::DenseMatrix<libMesh::Real>& stress_tensor,
-                                  const libMesh::DenseVector<libMesh::Real>& temp_gradient,
-                                  libMesh::DenseVector<libMesh::Real>& flux);
+                                  const DenseRealMatrix& stress_tensor,
+                                  const DenseRealVector& temp_gradient,
+                                  DenseRealVector& flux);
 
     /*!
      *    calculates and returns the stress tensor in \p stress_tensor.
      */
-    void calculate_diffusion_tensors(const libMesh::DenseVector<libMesh::Real>& elem_sol,
+    void calculate_diffusion_tensors(const DenseRealVector& elem_sol,
                                      const std::vector<FEMOperatorMatrix>& dB_mat,
-                                     const libMesh::DenseMatrix<libMesh::Real>& dprim_dcons,
+                                     const DenseRealMatrix& dprim_dcons,
                                      const PrimitiveSolution& psol,
-                                     libMesh::DenseMatrix<libMesh::Real>& stress_tensor,
-                                     libMesh::DenseVector<libMesh::Real>& temp_gradient);
+                                     DenseRealMatrix& stress_tensor,
+                                     DenseRealVector& temp_gradient);
 
     void calculate_conservative_variable_jacobian(const PrimitiveSolution& sol,
-                                                  libMesh::DenseMatrix<libMesh::Real>& dcons_dprim,
-                                                  libMesh::DenseMatrix<libMesh::Real>& dprim_dcons);
+                                                  DenseRealMatrix& dcons_dprim,
+                                                  DenseRealMatrix& dprim_dcons);
 
     void calculate_advection_flux_jacobian(const unsigned int calculate_dim,
                                            const PrimitiveSolution& sol,
-                                           libMesh::DenseMatrix<libMesh::Real>& mat);
+                                           DenseRealMatrix& mat);
 
     void calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
                                            const unsigned int deriv_dim,
                                            const PrimitiveSolution& sol,
-                                           libMesh::DenseMatrix<libMesh::Real>& mat);
+                                           DenseRealMatrix& mat);
 
     void calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
     (const unsigned int calculate_dim,
      const PrimitiveSolution& sol,
-     std::vector<libMesh::DenseMatrix<libMesh::Real> >& mat);
+     std::vector<DenseRealMatrix >& mat);
     
     
     void calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
     (const unsigned int calculate_dim, const unsigned int primitive_var,
-     const PrimitiveSolution& sol, libMesh::DenseMatrix<libMesh::Real>& mat);
+     const PrimitiveSolution& sol, DenseRealMatrix& mat);
     
 
     void calculate_advection_left_eigenvector_and_inverse_for_normal
     (const PrimitiveSolution& sol, const libMesh::Point& normal,
-     libMesh::DenseMatrix<libMesh::Real>& eig_vals, libMesh::DenseMatrix<libMesh::Real>& l_eig_mat,
-     libMesh::DenseMatrix<libMesh::Real>& l_eig_mat_inv_tr);
+     DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
+     DenseRealMatrix& l_eig_mat_inv_tr);
     
     void calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
-                                             libMesh::DenseMatrix<libMesh::Real>& dUdV,
-                                             libMesh::DenseMatrix<libMesh::Real>& dVdU);
+                                             DenseRealMatrix& dUdV,
+                                             DenseRealMatrix& dVdU);
     
     
     void calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
     (const PrimitiveSolution& sol,
      const libMesh::Real ui_ni, const libMesh::Point& nvec,
-     const libMesh::DenseVector<libMesh::Real>& dnvec, libMesh::DenseMatrix<libMesh::Real>& mat);
+     const DenseRealVector& dnvec, DenseRealMatrix& mat);
     
     
     void calculate_advection_flux_spatial_derivative
-    (const unsigned int i, libMesh::DenseVector<libMesh::Real>* flux,
-     libMesh::DenseMatrix<libMesh::Real>* dflux_dU);
+    (const unsigned int i, DenseRealVector* flux,
+     DenseRealMatrix* dflux_dU);
     
     
     
     void calculate_diffusive_flux_jacobian(unsigned int div_coord,
                                            unsigned int flux_coord,
-                                           libMesh::DenseMatrix<libMesh::Real>& mat);
+                                           DenseRealMatrix& mat);
     
     
     bool calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
                                     const unsigned int qp, FEMContext& c,
                                     const PrimitiveSolution& sol,
-                                    libMesh::DenseMatrix<libMesh::Real>& tau,
-                                    std::vector<libMesh::DenseMatrix<libMesh::Real> >& tau_sens);
+                                    DenseRealMatrix& tau,
+                                    std::vector<DenseRealMatrix >& tau_sens);
     
     bool calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars,
                                        const unsigned int qp, FEMContext& c,
                                        const PrimitiveSolution& sol,
-                                       libMesh::DenseMatrix<libMesh::Real>& tau,
-                                       std::vector<libMesh::DenseMatrix<libMesh::Real> >& tau_sens);
+                                       DenseRealMatrix& tau,
+                                       std::vector<DenseRealMatrix >& tau_sens);
     
     void calculate_hartmann_discontinuity_operator
     (const std::vector<unsigned int>& vars, const unsigned int qp,
      FEMContext& c,  const PrimitiveSolution& sol,
-     const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
-     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+     const DenseRealMatrix& Ai_Bi_advection,
      libMesh::DenseVector<Real>& discontinuity_val);
 
     
     void calculate_aliabadi_discontinuity_operator
     (const std::vector<unsigned int>& vars, const unsigned int qp,
      FEMContext& c,  const PrimitiveSolution& sol,
-     const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
-     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
+     const DenseRealMatrix& Ai_Bi_advection,
      libMesh::DenseVector<Real>& discontinuity_val);
 
     
     
     void calculate_differential_operator_matrix
     (const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c, const libMesh::DenseVector<libMesh::Real>& elem_solution,
+     FEMContext& c, const DenseRealVector& elem_solution,
      const PrimitiveSolution& sol, const FEMOperatorMatrix& B_mat,
      const std::vector<FEMOperatorMatrix>& dB_mat,
-     const std::vector<libMesh::DenseMatrix<libMesh::Real> >& Ai_advection,
-     const libMesh::DenseMatrix<libMesh::Real>& Ai_Bi_advection,
-     const std::vector<std::vector<libMesh::DenseMatrix<libMesh::Real> > >& Ai_sens,
-     libMesh::DenseMatrix<libMesh::Real>& LS_operator, libMesh::DenseMatrix<libMesh::Real>& LS_sens);
+     const std::vector<DenseRealMatrix >& Ai_advection,
+     const DenseRealMatrix& Ai_Bi_advection,
+     const std::vector<std::vector<DenseRealMatrix > >& Ai_sens,
+     DenseRealMatrix& LS_operator, DenseRealMatrix& LS_sens);
     
     std::vector<FluidPrimitiveVars> _active_primitive_vars;
 

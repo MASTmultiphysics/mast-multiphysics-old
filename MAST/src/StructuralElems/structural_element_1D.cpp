@@ -81,7 +81,7 @@ MAST::StructuralElement1D::initialize_direct_strain_operator(const unsigned int 
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     
     unsigned int n_phi = (unsigned int)dphi.size();
-    libMesh::DenseVector<libMesh::Real> phi; phi.resize(n_phi);
+    DenseRealVector phi; phi.resize(n_phi);
     
     libmesh_assert_equal_to(Bmat.m(), 2);
     libmesh_assert_equal_to(Bmat.n(), 6*n_phi);
@@ -98,9 +98,9 @@ MAST::StructuralElement1D::initialize_direct_strain_operator(const unsigned int 
 
 void
 MAST::StructuralElement1D::initialize_von_karman_strain_operator(const unsigned int qp,
-                                                                 libMesh::DenseVector<libMesh::Real>& vk_strain,
-                                                                 libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat,
-                                                                 libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat,
+                                                                 DenseRealVector& vk_strain,
+                                                                 DenseRealMatrix& vk_dvdxi_mat,
+                                                                 DenseRealMatrix& vk_dwdxi_mat,
                                                                  FEMOperatorMatrix& Bmat_v_vk,
                                                                  FEMOperatorMatrix& Bmat_w_vk) {
 
@@ -122,7 +122,7 @@ MAST::StructuralElement1D::initialize_von_karman_strain_operator(const unsigned 
     vk_dvdxi_mat.zero();
     vk_dwdxi_mat.zero();
     
-    libMesh::DenseVector<libMesh::Real> phi_vec; phi_vec.resize(n_phi);
+    DenseRealVector phi_vec; phi_vec.resize(n_phi);
     
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ ) {
         phi_vec(i_nd) = dphi[i_nd][qp](0);                // dphi/dx
@@ -143,8 +143,8 @@ MAST::StructuralElement1D::initialize_von_karman_strain_operator(const unsigned 
 void
 MAST::StructuralElement1D::initialize_von_karman_strain_operator_sensitivity
 (const unsigned int qp,
- libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat_sens,
- libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat_sens) {
+ DenseRealMatrix& vk_dvdxi_mat_sens,
+ DenseRealMatrix& vk_dwdxi_mat_sens) {
     
     const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
@@ -158,7 +158,7 @@ MAST::StructuralElement1D::initialize_von_karman_strain_operator_sensitivity
     vk_dvdxi_mat_sens.zero();
     vk_dwdxi_mat_sens.zero();
     
-    libMesh::DenseVector<libMesh::Real> phi_vec; phi_vec.resize(n_phi);
+    DenseRealVector phi_vec; phi_vec.resize(n_phi);
     
     for ( unsigned int i_nd=0; i_nd<n_phi; i_nd++ ) {
         phi_vec(i_nd) = dphi[i_nd][qp](0);                // dphi/dx
@@ -174,8 +174,8 @@ MAST::StructuralElement1D::initialize_von_karman_strain_operator_sensitivity
 
 bool
 MAST::StructuralElement1D::internal_force (bool request_jacobian,
-                                             libMesh::DenseVector<libMesh::Real>& f,
-                                             libMesh::DenseMatrix<libMesh::Real>& jac,
+                                             DenseRealVector& f,
+                                             DenseRealMatrix& jac,
                                              bool if_ignore_ho_jac)
 {
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_v_vk, Bmat_w_vk;
@@ -185,10 +185,10 @@ MAST::StructuralElement1D::internal_force (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    libMesh::DenseMatrix<libMesh::Real> material_A_mat, material_B_mat, material_D_mat,
+    DenseRealMatrix material_A_mat, material_B_mat, material_D_mat,
     tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
     tmp_mat4_n3n2, vk_dvdxi_mat, vk_dwdxi_mat, stress, stress_l, local_jac;
-    libMesh::DenseVector<libMesh::Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     tmp_vec4_n3, tmp_vec5_n3, local_f;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
@@ -207,7 +207,7 @@ MAST::StructuralElement1D::internal_force (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
     mat_stiff_A(_property.get_property
                 (MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                  *this).release()),
@@ -273,8 +273,8 @@ MAST::StructuralElement1D::internal_force (bool request_jacobian,
 
 bool
 MAST::StructuralElement1D::internal_force_sensitivity (bool request_jacobian,
-                                                         libMesh::DenseVector<libMesh::Real>& f,
-                                                         libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                         DenseRealVector& f,
+                                                         DenseRealMatrix& jac,
                                                          bool if_ignore_ho_jac)
 {
     // this should be true if the function is called
@@ -299,10 +299,10 @@ MAST::StructuralElement1D::internal_force_sensitivity (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    libMesh::DenseMatrix<libMesh::Real> material_A_mat, material_B_mat, material_D_mat,
+    DenseRealMatrix material_A_mat, material_B_mat, material_D_mat,
     material_trans_shear_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
     tmp_mat4_n3n2, vk_dvdxi_mat, vk_dwdxi_mat, stress, stress_l, local_jac;
-    libMesh::DenseVector<libMesh::Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     tmp_vec4_n3, tmp_vec5_n3, local_f;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
@@ -321,7 +321,7 @@ MAST::StructuralElement1D::internal_force_sensitivity (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > >
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > >
     mat_stiff_A
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                             *this).release()),
@@ -408,28 +408,28 @@ MAST::StructuralElement1D::_internal_force_operation
  const std::vector<libMesh::Real>& JxW,
  bool request_jacobian,
  bool if_ignore_ho_jac,
- libMesh::DenseVector<libMesh::Real>& local_f,
- libMesh::DenseMatrix<libMesh::Real>& local_jac,
+ DenseRealVector& local_f,
+ DenseRealMatrix& local_jac,
  FEMOperatorMatrix& Bmat_mem,
  FEMOperatorMatrix& Bmat_bend,
  FEMOperatorMatrix& Bmat_v_vk,
  FEMOperatorMatrix& Bmat_w_vk,
- libMesh::DenseMatrix<libMesh::Real>& stress,
- libMesh::DenseMatrix<libMesh::Real>& stress_l,
- libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat,
- libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat,
- libMesh::DenseMatrix<libMesh::Real>& material_A_mat,
- libMesh::DenseMatrix<libMesh::Real>& material_B_mat,
- libMesh::DenseMatrix<libMesh::Real>& material_D_mat,
- libMesh::DenseVector<libMesh::Real>& tmp_vec1_n1,
- libMesh::DenseVector<libMesh::Real>& tmp_vec2_n1,
- libMesh::DenseVector<libMesh::Real>& tmp_vec3_n2,
- libMesh::DenseVector<libMesh::Real>& tmp_vec4_2,
- libMesh::DenseVector<libMesh::Real>& tmp_vec5_2,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat1_n1n2,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat2_n2n2,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat3,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat4_2n2)
+ DenseRealMatrix& stress,
+ DenseRealMatrix& stress_l,
+ DenseRealMatrix& vk_dvdxi_mat,
+ DenseRealMatrix& vk_dwdxi_mat,
+ DenseRealMatrix& material_A_mat,
+ DenseRealMatrix& material_B_mat,
+ DenseRealMatrix& material_D_mat,
+ DenseRealVector& tmp_vec1_n1,
+ DenseRealVector& tmp_vec2_n1,
+ DenseRealVector& tmp_vec3_n2,
+ DenseRealVector& tmp_vec4_2,
+ DenseRealVector& tmp_vec5_2,
+ DenseRealMatrix& tmp_mat1_n1n2,
+ DenseRealMatrix& tmp_mat2_n2n2,
+ DenseRealMatrix& tmp_mat3,
+ DenseRealMatrix& tmp_mat4_2n2)
 {
     this->initialize_direct_strain_operator(qp, Bmat_mem);
     
@@ -534,21 +534,21 @@ MAST::StructuralElement1D::_internal_force_operation
                 tmp_mat3.left_multiply(material_A_mat);
                 Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
                 local_jac.add(-JxW[qp], tmp_mat2_n2n2);
-
+                
                 // vk - membrane: v-displacement
                 Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
                 vk_dvdxi_mat.get_transpose(tmp_mat3);
                 tmp_mat3.right_multiply(tmp_mat1_n1n2);
                 Bmat_v_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
                 local_jac.add(-JxW[qp], tmp_mat2_n2n2);
-
+                
                 // vk - membrane: w-displacement
                 Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
                 vk_dwdxi_mat.get_transpose(tmp_mat3);
                 tmp_mat3.right_multiply(tmp_mat1_n1n2);
                 Bmat_w_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
                 local_jac.add(-JxW[qp], tmp_mat2_n2n2);
-
+                
                 // if only the first order term of the Jacobian is needed, for
                 // example for linearized buckling analysis, then the linear
                 // stress combined with the variation of the von Karman strain
@@ -667,21 +667,21 @@ MAST::StructuralElement1D::_linearized_geometric_stiffness_sensitivity_with_stat
 (const unsigned int n2,
  const unsigned int qp,
  const std::vector<libMesh::Real>& JxW,
- libMesh::DenseMatrix<libMesh::Real>& local_jac,
+ DenseRealMatrix& local_jac,
  FEMOperatorMatrix& Bmat_mem,
  FEMOperatorMatrix& Bmat_bend,
  FEMOperatorMatrix& Bmat_v_vk,
  FEMOperatorMatrix& Bmat_w_vk,
- libMesh::DenseMatrix<libMesh::Real>& stress_l,
- libMesh::DenseMatrix<libMesh::Real>& vk_dvdxi_mat,
- libMesh::DenseMatrix<libMesh::Real>& vk_dwdxi_mat,
- libMesh::DenseMatrix<libMesh::Real>& material_A_mat,
- libMesh::DenseMatrix<libMesh::Real>& material_B_mat,
- libMesh::DenseVector<libMesh::Real>& tmp_vec1_n1,
- libMesh::DenseVector<libMesh::Real>& tmp_vec2_n1,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat1_n1n2,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat2_n2n2,
- libMesh::DenseMatrix<libMesh::Real>& tmp_mat3)
+ DenseRealMatrix& stress_l,
+ DenseRealMatrix& vk_dvdxi_mat,
+ DenseRealMatrix& vk_dwdxi_mat,
+ DenseRealMatrix& material_A_mat,
+ DenseRealMatrix& material_B_mat,
+ DenseRealVector& tmp_vec1_n1,
+ DenseRealVector& tmp_vec2_n1,
+ DenseRealMatrix& tmp_mat1_n1n2,
+ DenseRealMatrix& tmp_mat2_n2n2,
+ DenseRealMatrix& tmp_mat3)
 {
     this->initialize_direct_strain_operator(qp, Bmat_mem);
     _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
@@ -780,8 +780,8 @@ MAST::StructuralElement1D::_linearized_geometric_stiffness_sensitivity_with_stat
 
 bool
 MAST::StructuralElement1D::prestress_force (bool request_jacobian,
-                                            libMesh::DenseVector<libMesh::Real>& f,
-                                            libMesh::DenseMatrix<libMesh::Real>& jac)
+                                            DenseRealVector& f,
+                                            DenseRealMatrix& jac)
 {
     if (!_property.if_prestressed())
         return false;
@@ -793,9 +793,9 @@ MAST::StructuralElement1D::prestress_force (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    libMesh::DenseMatrix<libMesh::Real> tmp_mat2_n2n2, tmp_mat3, vk_dvdxi_mat, vk_dwdxi_mat,
+    DenseRealMatrix tmp_mat2_n2n2, tmp_mat3, vk_dvdxi_mat, vk_dwdxi_mat,
     local_jac, prestress_mat_A, prestress_mat_B;
-    libMesh::DenseVector<libMesh::Real> tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
+    DenseRealVector tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
     local_f, prestress_vec_A, prestress_vec_B;
     
     tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2); vk_dvdxi_mat.resize(n1,n3);
@@ -908,8 +908,8 @@ MAST::StructuralElement1D::prestress_force (bool request_jacobian,
 
 bool
 MAST::StructuralElement1D::prestress_force_sensitivity (bool request_jacobian,
-                                                        libMesh::DenseVector<libMesh::Real>& f,
-                                                        libMesh::DenseMatrix<libMesh::Real>& jac)
+                                                        DenseRealVector& f,
+                                                        DenseRealMatrix& jac)
 {
     if (!_property.if_prestressed())
         return false;
@@ -921,9 +921,9 @@ MAST::StructuralElement1D::prestress_force_sensitivity (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    libMesh::DenseMatrix<libMesh::Real> tmp_mat2_n2n2, tmp_mat3, vk_dwdxi_mat, vk_dvdxi_mat,
+    DenseRealMatrix tmp_mat2_n2n2, tmp_mat3, vk_dwdxi_mat, vk_dvdxi_mat,
     local_jac, prestress_mat_A, prestress_mat_B;
-    libMesh::DenseVector<libMesh::Real> tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
+    DenseRealVector tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
     local_f, prestress_vec_A, prestress_vec_B;
     
     tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2); vk_dvdxi_mat.resize(n1,n3);
@@ -1038,8 +1038,8 @@ MAST::StructuralElement1D::prestress_force_sensitivity (bool request_jacobian,
 
 bool
 MAST::StructuralElement1D::thermal_force (bool request_jacobian,
-                                          libMesh::DenseVector<libMesh::Real>& f,
-                                          libMesh::DenseMatrix<libMesh::Real>& jac,
+                                          DenseRealVector& f,
+                                          DenseRealMatrix& jac,
                                           MAST::BoundaryCondition& p)
 {
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_v_vk, Bmat_w_vk;
@@ -1049,10 +1049,10 @@ MAST::StructuralElement1D::thermal_force (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    libMesh::DenseMatrix<libMesh::Real> material_exp_A_mat, material_exp_B_mat,
+    DenseRealMatrix material_exp_A_mat, material_exp_B_mat,
     tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
     tmp_mat4_n3n2, vk_dvdxi_mat, vk_dwdxi_mat, stress, local_jac;
-    libMesh::DenseVector<libMesh::Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     tmp_vec4_2, tmp_vec5_n3, local_f, delta_t;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
@@ -1071,14 +1071,14 @@ MAST::StructuralElement1D::thermal_force (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > expansion_A
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > expansion_A
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release()),
     expansion_B
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX,
                             *this).release());
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > mat
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
     
@@ -1176,8 +1176,8 @@ MAST::StructuralElement1D::thermal_force (bool request_jacobian,
 
 bool
 MAST::StructuralElement1D::thermal_force_sensitivity (bool request_jacobian,
-                                                      libMesh::DenseVector<libMesh::Real>& f,
-                                                      libMesh::DenseMatrix<libMesh::Real>& jac,
+                                                      DenseRealVector& f,
+                                                      DenseRealMatrix& jac,
                                                       MAST::BoundaryCondition& p)
 {
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_v_vk, Bmat_w_vk;
@@ -1187,11 +1187,11 @@ MAST::StructuralElement1D::thermal_force_sensitivity (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    libMesh::DenseMatrix<libMesh::Real> material_exp_A_mat, material_exp_B_mat,
+    DenseRealMatrix material_exp_A_mat, material_exp_B_mat,
     material_exp_A_mat_sens, material_exp_B_mat_sens,
     tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
     tmp_mat4_n3n2, vk_dvdxi_mat, vk_dwdxi_mat, stress, local_jac;
-    libMesh::DenseVector<libMesh::Real>  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
     tmp_vec4_2, tmp_vec5_n1, local_f, delta_t, delta_t_sens;
     
     tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
@@ -1211,14 +1211,14 @@ MAST::StructuralElement1D::thermal_force_sensitivity (bool request_jacobian,
     bool if_vk = (_property.strain_type() == MAST::VON_KARMAN_STRAIN),
     if_bending = (_property.bending_model(_elem, _fe->get_fe_type()) != MAST::NO_BENDING);
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > expansion_A
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > expansion_A
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release()),
     expansion_B
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX,
                             *this).release());
     
-    std::auto_ptr<MAST::FieldFunction<libMesh::DenseMatrix<libMesh::Real> > > mat
+    std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
     
