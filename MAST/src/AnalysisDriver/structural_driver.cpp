@@ -260,14 +260,14 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     MAST::ConstantFunction<libMesh::Real> press("pressure", 1.e2);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
-    static_structural_assembly.add_volume_load(0, bc);
-    eigen_structural_assembly.add_volume_load(0, bc);
-    MAST::ConstantFunction<libMesh::Real> temp("temp", 1.), ref_temp("ref_temp", 0.);
+    //static_structural_assembly.add_volume_load(0, bc);
+    //eigen_structural_assembly.add_volume_load(0, bc);
+    MAST::ConstantFunction<libMesh::Real> temp("temp", 10.), ref_temp("ref_temp", 0.);
     MAST::Temperature temp_bc;
     temp_bc.set_function(temp);
     temp_bc.set_reference_temperature_function(ref_temp);
-    //static_structural_assembly.add_volume_load(0, temp_bc);
-    //eigen_structural_assembly.add_volume_load(0, temp_bc);
+    static_structural_assembly.add_volume_load(0, temp_bc);
+    eigen_structural_assembly.add_volume_load(0, temp_bc);
     
     static_system.attach_assemble_object(static_structural_assembly);
     eigen_system.attach_assemble_object(eigen_structural_assembly);
@@ -342,7 +342,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     kappa("kappa", infile("shear_corr_factor", 5./6.)),
     h("h", infile("thickness", 0.002)),
     h_stiff("h", infile("thickness", 0.002)),
-    hy("hy", 1.000*infile("thickness", 0.002)),
+    hy("hy", 1.00001*infile("thickness", 0.002)),
     hz("hz", infile("width", 0.002)),
     h_off("off", 0.), // plate offset
     off_hy("hy_offset", 0.5*infile("thickness", 0.002)),
@@ -477,14 +477,14 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     static_system.get_sensitivity_solution().print();
     //return 0;
     
-    //eigen_structural_assembly.set_static_solution_system(&static_system);
+    eigen_structural_assembly.set_static_solution_system(&static_system);
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
-    eigen_system.solve();
+    //eigen_system.solve();
     std::vector<libMesh::Real> sens;
     eigen_structural_assembly.add_parameter(hy);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
-    eigen_system.sensitivity_solve(params, sens);
+    //eigen_system.sensitivity_solve(params, sens);
     
     std::vector<libMesh::Real> stress;
     //static_structural_assembly.calculate_max_elem_stress(*static_system.solution,

@@ -25,6 +25,7 @@
 		EB1438C318FD5F6B0053C19C /* flutter_solution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB1438C118FD5F6B0053C19C /* flutter_solution.cpp */; };
 		EB54E61318FD6A850033E18E /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB54E61218FD6A850033E18E /* ug_flutter_solver.cpp */; };
 		EB54E61618FDA2890033E18E /* time_domain_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB54E61418FDA2890033E18E /* time_domain_flutter_solver.cpp */; };
+		EB8033F5194F5F6400469EBD /* beam_postbuckling_sizing.h in Sources */ = {isa = PBXBuildFile; fileRef = EB8033F3194F5F6400469EBD /* beam_postbuckling_sizing.h */; };
 		EB817343182D902300E03740 /* basis_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81733F182D902300E03740 /* basis_matrix.cpp */; };
 		EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817340182D902300E03740 /* fem_operator_matrix.cpp */; };
 		EB817345182D902300E03740 /* function_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817341182D902300E03740 /* function_base.cpp */; };
@@ -129,6 +130,7 @@
 		EB54E61518FDA2890033E18E /* time_domain_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = time_domain_flutter_solver.h; sourceTree = "<group>"; };
 		EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_1D.h; sourceTree = "<group>"; };
 		EB7D8B6D181AC0E800D275D6 /* bernoulli_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bernoulli_bending_operator.h; sourceTree = "<group>"; };
+		EB8033F3194F5F6400469EBD /* beam_postbuckling_sizing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = beam_postbuckling_sizing.h; sourceTree = "<group>"; };
 		EB81733F182D902300E03740 /* basis_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basis_matrix.cpp; sourceTree = "<group>"; };
 		EB817340182D902300E03740 /* fem_operator_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fem_operator_matrix.cpp; sourceTree = "<group>"; };
 		EB817341182D902300E03740 /* function_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = function_base.cpp; sourceTree = "<group>"; };
@@ -391,6 +393,15 @@
 			path = Mesh;
 			sourceTree = "<group>";
 		};
+		EB8033F2194F5F3A00469EBD /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				EB8033F3194F5F6400469EBD /* beam_postbuckling_sizing.h */,
+			);
+			name = examples;
+			path = MAST/examples;
+			sourceTree = "<group>";
+		};
 		EB8173481832789200E03740 /* Optimization */ = {
 			isa = PBXGroup;
 			children = (
@@ -463,6 +474,7 @@
 				EB8173511832A91E00E03740 /* libgfortran.dylib */,
 				EBF96DEF16EA6C6F00316D86 /* libmesh_dbg.0.dylib */,
 				EBF96D9616EA6B1100316D86 /* Products */,
+				EB8033F2194F5F3A00469EBD /* examples */,
 				696C07F21796CD4100B77C5C /* src */,
 			);
 			sourceTree = "<group>";
@@ -535,6 +547,7 @@
 				EB817343182D902300E03740 /* basis_matrix.cpp in Sources */,
 				EB1438C318FD5F6B0053C19C /* flutter_solution.cpp in Sources */,
 				EBD795F91846834F007FA3A7 /* bending_structural_elem.cpp in Sources */,
+				EB8033F5194F5F6400469EBD /* beam_postbuckling_sizing.h in Sources */,
 				696C08101796CD4100B77C5C /* fluid_newton_solver.cpp in Sources */,
 				EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */,
 				EBED98AD189AB7E7008561D5 /* isotropic_material_property_card.cpp in Sources */,
@@ -598,7 +611,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -621,7 +634,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -651,7 +664,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/MAST/examples\"";
 			};
 			name = Debug;
 		};
@@ -680,7 +693,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = MAST;
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/MAST/src\" \"$(SRCROOT)/../libmesh/real/include\" /opt/local/tbb41_20121003oss/include \"$(SRCROOT)/MAST/examples\"";
 			};
 			name = Release;
 		};

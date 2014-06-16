@@ -279,10 +279,10 @@ namespace MAST {
             virtual void total (const MAST::FieldFunctionBase& f,
                                 const libMesh::Point& p, const libMesh::Real t, Real& m) const {
                 libMesh::Real hy, hz, dhy, dhz, offy, offz, doffy, doffz;
-                (*_hy)(p, t, hy); _hy->partial(f, p, t, dhy);
-                (*_hz)(p, t, hz); _hz->partial(f, p, t, dhz);
-                (*_hy_offset)(p, t, offy); _hy_offset->partial(f, p, t, doffy);
-                (*_hz_offset)(p, t, offz); _hz_offset->partial(f, p, t, doffz);
+                (*_hy)(p, t, hy); _hy->total(f, p, t, dhy);
+                (*_hz)(p, t, hz); _hz->total(f, p, t, dhz);
+                (*_hy_offset)(p, t, offy); _hy_offset->total(f, p, t, doffy);
+                (*_hz_offset)(p, t, offz); _hz_offset->total(f, p, t, doffz);
                 
                 
                 m =

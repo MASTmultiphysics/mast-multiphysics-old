@@ -24,8 +24,9 @@
 #include "Mesh/stiffened_panel.h"
 #include "Mesh/nastran_io.h"
 #include "AnalysisDriver/topology_optimization.h"
-#include "AnalysisDriver/sizing_optimization.h"
+//#include "AnalysisDriver/sizing_optimization.h"
 #include "Optimization/gcmma_optimization_interface.h"
+#include "beam_postbuckling_sizing.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
