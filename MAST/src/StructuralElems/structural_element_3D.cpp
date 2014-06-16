@@ -25,11 +25,11 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
-    DenseRealMatrix material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseRealVector tmp_vec1_n1, tmp_vec2_n2;
+    DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2;
+    DenseRealVector vec1_n1, vec2_n2;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
@@ -45,17 +45,17 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
         (*mat_stiff)(xyz[qp], _system.time, material_mat);
         
         // calculate the stress
-        Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
-        tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_solution); // this is stress
+        Bmat.left_multiply(mat1_n1n2, material_mat);
+        mat1_n1n2.vector_mult(vec1_n1, local_solution); // this is stress
         
         // now calculate the internal force vector
-        Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        f.add(-JxW[qp], tmp_vec2_n2);
+        Bmat.vector_mult_transpose(vec2_n2, vec1_n1);
+        f.add(-JxW[qp], vec2_n2);
         
         if (request_jacobian) {
             
-            Bmat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-            jac.add(-JxW[qp], tmp_mat2_n2n2);
+            Bmat.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+            jac.add(-JxW[qp], mat2_n2n2);
         }
     }
     
@@ -91,11 +91,11 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
-    DenseRealMatrix material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseRealVector tmp_vec1_n1, tmp_vec2_n2;
+    DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2;
+    DenseRealVector vec1_n1, vec2_n2;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
@@ -112,17 +112,17 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
                          xyz[qp], _system.time, material_mat);
 
         // calculate the stress
-        Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
-        tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_solution); // this is stress
+        Bmat.left_multiply(mat1_n1n2, material_mat);
+        mat1_n1n2.vector_mult(vec1_n1, local_solution); // this is stress
         
         // now calculate the internal force vector
-        Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        f.add(-JxW[qp], tmp_vec2_n2);
+        Bmat.vector_mult_transpose(vec2_n2, vec1_n1);
+        f.add(-JxW[qp], vec2_n2);
         
         if (request_jacobian) {
             
-            Bmat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-            jac.add(-JxW[qp], tmp_mat2_n2n2);
+            Bmat.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+            jac.add(-JxW[qp], mat2_n2n2);
         }
     }
     
@@ -143,11 +143,11 @@ MAST::StructuralElement3D::prestress_force (bool request_jacobian,
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
-    DenseRealMatrix prestress_mat_A, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n2, prestress_vec_A;
+    DenseRealMatrix prestress_mat_A, mat1_n1n2, mat2_n2n2;
+    DenseRealVector  vec1_n1, vec2_n2, prestress_vec_A;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
     
@@ -165,8 +165,8 @@ MAST::StructuralElement3D::prestress_force (bool request_jacobian,
         prestress_A->convert_to_vector(prestress_mat_A, prestress_vec_A);
         
         // now calculate the force vector
-        Bmat.vector_mult_transpose(tmp_vec2_n2, prestress_vec_A);
-        f.add(-JxW[qp], tmp_vec2_n2);
+        Bmat.vector_mult_transpose(vec2_n2, prestress_vec_A);
+        f.add(-JxW[qp], vec2_n2);
         
         if (request_jacobian) {
             // nothing to be done here unless a nonlinear strain is included
@@ -204,11 +204,11 @@ MAST::StructuralElement3D::prestress_force_sensitivity (bool request_jacobian,
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
-    DenseRealMatrix prestress_mat_A, tmp_mat1_n1n2, tmp_mat2_n2n2;
-    DenseRealVector prestress_vec_A, tmp_vec1_n1, tmp_vec2_n2;
+    DenseRealMatrix prestress_mat_A, mat1_n1n2, mat2_n2n2;
+    DenseRealVector prestress_vec_A, vec1_n1, vec2_n2;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     
     Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
@@ -228,8 +228,8 @@ MAST::StructuralElement3D::prestress_force_sensitivity (bool request_jacobian,
         prestress_A->convert_to_vector(prestress_mat_A, prestress_vec_A);
         
         // now calculate the force vector
-        Bmat.vector_mult_transpose(tmp_vec2_n2, prestress_vec_A);
-        f.add(-JxW[qp], tmp_vec2_n2);
+        Bmat.vector_mult_transpose(vec2_n2, prestress_vec_A);
+        f.add(-JxW[qp], vec2_n2);
         
         if (request_jacobian) {
             // nothing to be done here unless a nonlinear strain is included
@@ -255,12 +255,12 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     const std::vector<Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= 6, n2=6*n_phi;
-    DenseRealMatrix material_exp_A_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, stress;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, delta_t;
+    DenseRealMatrix material_exp_A_mat, mat1_n1n2, mat2_n2n2, stress;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n2, delta_t;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); delta_t.resize(1);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); delta_t.resize(1);
     
     
     
@@ -284,12 +284,12 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
         ref_temp_func(xyz[qp], _system.time, t0);
         delta_t(0) = t-t0;
         
-        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)}
+        material_exp_A_mat.vector_mult(vec1_n1, delta_t); // [C]{alpha (T - T0)}
         
         this->initialize_strain_operator(qp, Bmat);
         
-        Bmat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        f.add(JxW[qp], tmp_vec3_n2);
+        Bmat.vector_mult_transpose(vec3_n2, vec1_n1);
+        f.add(JxW[qp], vec3_n2);
     }
     
     // Jacobian contribution from von Karman strain
@@ -312,13 +312,13 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= 6, n2=6*n_phi;
     DenseRealMatrix material_exp_A_mat, material_exp_A_mat_sens,
-    tmp_mat1_n1n2, tmp_mat2_n2n2, stress;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2, delta_t,
+    mat1_n1n2, mat2_n2n2, stress;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n2, delta_t,
     delta_t_sens;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); delta_t.resize(1); delta_t_sens.resize(1);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); delta_t.resize(1); delta_t_sens.resize(1);
     
     
     
@@ -351,13 +351,13 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
         
         this->initialize_strain_operator(qp, Bmat);
         
-        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t_sens); // [C]{alpha dT/dp}
-        Bmat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        f.add(JxW[qp], tmp_vec3_n2);
+        material_exp_A_mat.vector_mult(vec1_n1, delta_t_sens); // [C]{alpha dT/dp}
+        Bmat.vector_mult_transpose(vec3_n2, vec1_n1);
+        f.add(JxW[qp], vec3_n2);
         
-        material_exp_A_mat_sens.vector_mult(tmp_vec1_n1, delta_t); // d([C].{alpha})/dp (T - T0)}
-        Bmat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        f.add(JxW[qp], tmp_vec3_n2);
+        material_exp_A_mat_sens.vector_mult(vec1_n1, delta_t); // d([C].{alpha})/dp (T - T0)}
+        Bmat.vector_mult_transpose(vec3_n2, vec1_n1);
+        f.add(JxW[qp], vec3_n2);
     }
     
     // Jacobian contribution from von Karman strain

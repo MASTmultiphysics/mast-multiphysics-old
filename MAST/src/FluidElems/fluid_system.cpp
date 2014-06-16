@@ -238,22 +238,22 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseRealMatrix >  Ai_advection(dim);
-    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n1,
-    tmp_mat_n1n2, tmp_mat2_n2n2, tmp_mat3, A_sens, stress_tensor,
+    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, mat_n1n1,
+    mat_n1n2, mat2_n2n2, mat3, A_sens, stress_tensor,
     dprim_dcons, dcons_dprim;
     
-    DenseRealVector flux, tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
+    DenseRealVector flux, vec1_n1, vec2_n1, vec3_n2,
     conservative_sol, temp_grad, diff_val, dc_ref_sol;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
     Ai_Bi_advection.resize(dim+2, n_dofs);
-    tmp_mat_n1n2.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
+    mat_n1n2.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
     stress_tensor.resize(dim, dim); dprim_dcons.resize(dim+2, dim+2);
     dcons_dprim.resize(dim+2, dim+2);
-    tmp_mat2_n2n2.resize(n_dofs, n_dofs);
+    mat2_n2n2.resize(n_dofs, n_dofs);
     
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
+    flux.resize(n1); vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n_dofs); conservative_sol.resize(dim+2);
     temp_grad.resize(dim); diff_val.resize(dim);
     
     for (unsigned int i=0; i<dim; i++)
@@ -308,8 +308,8 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
-            dB_mat[i_dim].left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
-            Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
+            dB_mat[i_dim].left_multiply(mat_n1n2, Ai_advection[i_dim]);
+            Ai_Bi_advection.add(1.0, mat_n1n2);
         }
         
         if (_if_full_linearization)
@@ -338,8 +338,8 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
         {
             // Galerkin contribution from the advection flux terms
             this->calculate_advection_flux(i_dim, primitive_sol, flux); // F^adv_i
-            dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^adv_i
-            Fvec.add(JxW[qp], tmp_vec3_n2);
+            dB_mat[i_dim].vector_mult_transpose(vec3_n2, flux); // dBw/dx_i F^adv_i
+            Fvec.add(JxW[qp], vec3_n2);
             
             if (_if_viscous)
             {
@@ -347,20 +347,20 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
                 this->calculate_diffusion_flux(i_dim, primitive_sol,
                                                stress_tensor, temp_grad,
                                                flux); // F^diff_i
-                dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i F^diff_i
-                Fvec.add(-JxW[qp], tmp_vec3_n2);
+                dB_mat[i_dim].vector_mult_transpose(vec3_n2, flux); // dBw/dx_i F^diff_i
+                Fvec.add(-JxW[qp], vec3_n2);
             }
             
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, c.get_elem_solution());
-            dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux);
-            Fvec.add(-JxW[qp]*diff_val(i_dim), tmp_vec3_n2);
+            dB_mat[i_dim].vector_mult_transpose(vec3_n2, flux);
+            Fvec.add(-JxW[qp]*diff_val(i_dim), vec3_n2);
         }
         
         // Least square contribution from divergence of advection flux
         Ai_Bi_advection.vector_mult(flux, c.get_elem_solution()); // d F^adv_i / dxi
-        LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau F^adv_i
-        Fvec.add(-JxW[qp], tmp_vec3_n2);
+        LS_mat.vector_mult_transpose(vec3_n2, flux); // LS^T tau F^adv_i
+        Fvec.add(-JxW[qp], vec3_n2);
         
         // Least square contribution from divergence of diffusion flux
         // TODO: this requires a 2nd order differential of the flux
@@ -373,29 +373,29 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
             for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             {
                 // Galerkin contribution from the advection flux terms
-                B_mat.left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
-                dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2,
-                                                       tmp_mat_n1n2);// dBw/dx_i^T  dF^adv_i/ dU
-                Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                B_mat.left_multiply(mat_n1n2, Ai_advection[i_dim]);
+                dB_mat[i_dim].right_multiply_transpose(mat2_n2n2,
+                                                       mat_n1n2);// dBw/dx_i^T  dF^adv_i/ dU
+                Kmat.add(JxW[qp], mat2_n2n2);
                 
                 // discontinuity capturing term
-                dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2,
+                dB_mat[i_dim].right_multiply_transpose(mat2_n2n2,
                                                        dB_mat[i_dim]);
-                Kmat.add(-JxW[qp]*diff_val(i_dim), tmp_mat2_n2n2);
+                Kmat.add(-JxW[qp]*diff_val(i_dim), mat2_n2n2);
 
                 if (_if_full_linearization)
                 {
                     // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
-                    dB_mat[i_dim].vector_mult(tmp_vec2_n1,
+                    dB_mat[i_dim].vector_mult(vec2_n1,
                                               c.get_elem_solution());
                     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
                     {
-                        flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1,
-                                                                      tmp_vec2_n1);
+                        flux_jacobian_sens[i_dim][i_cvar].vector_mult(vec1_n1,
+                                                                      vec2_n1);
                         for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
                             A_sens.add_column((n_phi*i_cvar)+i_phi,
                                               phi[i_phi][qp],
-                                              tmp_vec1_n1); // assuming that all variables have same n_phi
+                                              vec1_n1); // assuming that all variables have same n_phi
                     }
                 }
                 
@@ -405,27 +405,27 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
                     {
                         this->calculate_diffusion_flux_jacobian
                         (i_dim, deriv_dim,
-                         primitive_sol, tmp_mat_n1n1); // Kij
-                        dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2,
-                                                        tmp_mat_n1n1); // Kij dB/dx_j
-                        dB_mat[i_dim].right_multiply_transpose(tmp_mat2_n2n2,
-                                                               tmp_mat_n1n2); // dB/dx_i^T Kij dB/dx_j
-                        Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                         primitive_sol, mat_n1n1); // Kij
+                        dB_mat[deriv_dim].left_multiply(mat_n1n2,
+                                                        mat_n1n1); // Kij dB/dx_j
+                        dB_mat[i_dim].right_multiply_transpose(mat2_n2n2,
+                                                               mat_n1n2); // dB/dx_i^T Kij dB/dx_j
+                        Kmat.add(-JxW[qp], mat2_n2n2);
                     }
                     
                 }
             }
             
             // Least square contribution of flux gradient
-            LS_mat.get_transpose(tmp_mat3);
-            tmp_mat3.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU   (Ai constant)
-            Kmat.add(-JxW[qp], tmp_mat3);
+            LS_mat.get_transpose(mat3);
+            mat3.right_multiply(Ai_Bi_advection); // LS^T tau d^2F^adv_i / dx dU   (Ai constant)
+            Kmat.add(-JxW[qp], mat3);
             
             if (_if_full_linearization)
             {
-                LS_mat.get_transpose(tmp_mat3);
-                tmp_mat3.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
-                Kmat.add(-JxW[qp], tmp_mat3);
+                LS_mat.get_transpose(mat3);
+                mat3.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
+                Kmat.add(-JxW[qp], mat3);
                 
                 // contribution sensitivity of the LS.tau matrix
                 Kmat.add(-JxW[qp], LS_sens);
@@ -546,23 +546,23 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     
     
     FEMOperatorMatrix B_mat;
-    DenseRealVector tmp_vec1_n2, flux, U_vec_interpolated, tmp_vec2_n1,
+    DenseRealVector vec1_n2, flux, U_vec_interpolated, vec2_n1,
     conservative_sol, temp_grad, dnormal, surface_def, surface_vel, local_normal, uvec;
-    DenseRealMatrix  eig_val, l_eig_vec, l_eig_vec_inv_tr, tmp_mat_n1n1,
-    tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3_n1n1, A_mat, dcons_dprim, dprim_dcons,
+    DenseRealMatrix  eig_val, l_eig_vec, l_eig_vec_inv_tr, mat_n1n1,
+    mat1_n1n2, mat2_n2n2, mat3_n1n1, A_mat, dcons_dprim, dprim_dcons,
     stress_tensor;
     
     conservative_sol.resize(dim+2); temp_grad.resize(dim);
-    tmp_vec1_n2.resize(n_dofs); flux.resize(n1); tmp_vec2_n1.resize(n1);
+    vec1_n2.resize(n_dofs); flux.resize(n1); vec2_n1.resize(n1);
     U_vec_interpolated.resize(n1); dnormal.resize(spatial_dim);
     uvec.resize(spatial_dim); surface_def.resize(spatial_dim);
     surface_vel.resize(spatial_dim); local_normal.resize(spatial_dim);
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
     l_eig_vec_inv_tr.resize(n1, n1);
-    tmp_mat1_n1n2.resize(n1, n_dofs); tmp_mat2_n2n2.resize(n_dofs, n_dofs);
-    A_mat.resize(dim+2, dim+2); tmp_mat_n1n1.resize(n1, n1);
+    mat1_n1n2.resize(n1, n_dofs); mat2_n2n2.resize(n_dofs, n_dofs);
+    A_mat.resize(dim+2, dim+2); mat_n1n1.resize(n1, n1);
     dcons_dprim.resize(n1, n1); dprim_dcons.resize(n1, n1);
-    stress_tensor.resize(dim, dim); tmp_mat3_n1n1.resize(n1, n1);
+    stress_tensor.resize(dim, dim); mat3_n1n1.resize(n1, n1);
     
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseRealMatrix > Ai_advection(dim);
@@ -645,19 +645,19 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     flux(i_dim+1) += p_sol.p * face_normals[qp](i_dim);
                 
                 // contribution from advection flux
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 // contribution from diffusion flux
                 flux.zero();
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                 {
                     this->calculate_diffusion_flux(i_dim, p_sol, stress_tensor,
-                                                   temp_grad, tmp_vec2_n1);
-                    flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
+                                                   temp_grad, vec2_n1);
+                    flux.add(face_normals[qp](i_dim), vec2_n1); // fi ni
                 }
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);
+                Fvec.add(JxW[qp], vec1_n2);
                 
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
@@ -666,21 +666,21 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     (p_sol, ui_ni, face_normals[qp], dnormal, A_mat);
                     
                     // contribution from advection flux
-                    B_mat.left_multiply(tmp_mat1_n1n2, A_mat);
-                    B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    B_mat.left_multiply(mat1_n1n2, A_mat);
+                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+                    Kmat.add(-JxW[qp], mat2_n2n2);
                     
                     // contribution from diffusion flux
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                         for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                         {
                             this->calculate_diffusion_flux_jacobian
-                            (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                            (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
                             dB_mat[deriv_dim].left_multiply
-                            (tmp_mat1_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                            (mat1_n1n2, mat_n1n1); // Kij dB/dx_j
                             B_mat.right_multiply_transpose
-                            (tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T Kij dB/dx_j
-                            Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                            (mat2_n2n2, mat1_n1n2); // B^T Kij dB/dx_j
+                            Kmat.add(JxW[qp], mat2_n2n2);
                         }
                 }
             }
@@ -708,17 +708,17 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += p_sol.p * face_normals[qp](i_dim);
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
                     (p_sol, 0., face_normals[qp], dnormal, A_mat);
                     
-                    B_mat.left_multiply(tmp_mat1_n1n2, A_mat);
-                    B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    B_mat.left_multiply(mat1_n1n2, A_mat);
+                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+                    Kmat.add(-JxW[qp], mat2_n2n2);
                 }
             }
         }
@@ -783,17 +783,17 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += p_sol.p * face_normals[qp](i_dim);
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
                     (p_sol, ui_ni, face_normals[qp], dnormal, A_mat);
                     
-                    B_mat.left_multiply(tmp_mat1_n1n2, A_mat);
-                    B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    B_mat.left_multiply(mat1_n1n2, A_mat);
+                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+                    Kmat.add(-JxW[qp], mat2_n2n2);
                 }
             }
         }
@@ -820,36 +820,36 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 
                 // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
                 // evaluate them using the given solution.
-                tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                mat_n1n1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) < 0)
-                        tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
+                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
                     else
-                        tmp_mat_n1n1.scale_column(j, 0.0);
+                        mat_n1n1.scale_column(j, 0.0);
                 
-                tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
+                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
                 
                 this->get_infinity_vars( U_vec_interpolated );
-                tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
+                mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 // now calculate the flux for eigenvalues greater than 0,
                 // the characteristics go out of the domain, so that
                 // the flux is evaluated using the local solution
-                tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                mat_n1n1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) > 0)
-                        tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                     else
-                        tmp_mat_n1n1.scale_column(j, 0.0);
+                        mat_n1n1.scale_column(j, 0.0);
                 
-                tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                tmp_mat_n1n1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
+                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                mat_n1n1.vector_mult(flux, conservative_sol); // f_{+} = A_{+} B U
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 
                 if (_if_viscous) // evaluate the viscous flux using the domain solution
@@ -867,11 +867,11 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     {
                         this->calculate_diffusion_flux
                         (i_dim, p_sol, stress_tensor,
-                         temp_grad, tmp_vec2_n1);
-                        flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
+                         temp_grad, vec2_n1);
+                        flux.add(face_normals[qp](i_dim), vec2_n1); // fi ni
                     }
-                    B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                    Fvec.add(JxW[qp], tmp_vec1_n2);
+                    B_mat.vector_mult_transpose(vec1_n2, flux);
+                    Fvec.add(JxW[qp], vec1_n2);
                 }
                 
                 
@@ -882,17 +882,17 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     // now calculate the Jacobian for eigenvalues greater than 0,
                     // the characteristics go out of the domain, so that
                     // the flux is evaluated using the local solution
-                    tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                    mat_n1n1 = l_eig_vec_inv_tr;
                     for (unsigned int j=0; j<n1; j++)
                         if (eig_val(j, j) > 0)
-                            tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                            mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                         else
-                            tmp_mat_n1n1.scale_column(j, 0.0);
-                    tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                    B_mat.left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1);
-                    B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
+                            mat_n1n1.scale_column(j, 0.0);
+                    mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                    B_mat.left_multiply(mat1_n1n2, mat_n1n1);
+                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
                     
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    Kmat.add(-JxW[qp], mat2_n2n2);
                     
                     if (_if_viscous)
                     {
@@ -901,12 +901,12 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                             for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                             {
                                 this->calculate_diffusion_flux_jacobian
-                                (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                                (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
                                 dB_mat[deriv_dim].left_multiply
-                                (tmp_mat1_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                                (mat1_n1n2, mat_n1n1); // Kij dB/dx_j
                                 B_mat.right_multiply_transpose
-                                (tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T Kij dB/dx_j
-                                Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                                (mat2_n2n2, mat1_n1n2); // B^T Kij dB/dx_j
+                                Kmat.add(JxW[qp], mat2_n2n2);
                             }
                     }
                 }
@@ -937,14 +937,14 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 
                 // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
                 // evaluate them using the given solution.
-                tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                mat_n1n1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) < 0)
-                        tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
+                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
                     else
-                        tmp_mat_n1n1.scale_column(j, 0.0);
+                        mat_n1n1.scale_column(j, 0.0);
                 
-                tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
+                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
                 
                 // instead of using the infinity vars, the constrained variable is used
                 // and the others are used from the local solution
@@ -954,26 +954,26 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 U_vec_interpolated.scale(rho_constrained/conservative_sol(0));  // value is not constrained to density at exhaust
 
                 // use the constrained vector to calculate the flux value
-                tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U{-}
+                mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U{-}
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 // now calculate the flux for eigenvalues greater than 0,
                 // the characteristics go out of the domain, so that
                 // the flux is evaluated using the local solution
-                tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                mat_n1n1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) > 0)
-                        tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                     else
-                        tmp_mat_n1n1.scale_column(j, 0.0);
+                        mat_n1n1.scale_column(j, 0.0);
                 
-                tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                tmp_mat_n1n1.vector_mult(flux, U_vec_interpolated); // f_{+} = A_{+} B U{+}
+                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                mat_n1n1.vector_mult(flux, U_vec_interpolated); // f_{+} = A_{+} B U{+}
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-                Fvec.add(-JxW[qp], tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
+                Fvec.add(-JxW[qp], vec1_n2);
                 
                 
                 if (_if_viscous) // evaluate the viscous flux using the domain solution
@@ -991,11 +991,11 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     {
                         this->calculate_diffusion_flux
                         (i_dim, p_sol, stress_tensor,
-                         temp_grad, tmp_vec2_n1);
-                        flux.add(face_normals[qp](i_dim), tmp_vec2_n1); // fi ni
+                         temp_grad, vec2_n1);
+                        flux.add(face_normals[qp](i_dim), vec2_n1); // fi ni
                     }
-                    B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                    Fvec.add(JxW[qp], tmp_vec1_n2);
+                    B_mat.vector_mult_transpose(vec1_n2, flux);
+                    Fvec.add(JxW[qp], vec1_n2);
                 }
                 
                 
@@ -1003,13 +1003,13 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 {
                     // terms with negative eigenvalues will contribute to the Jacobian, but only for
                     // the unconstrained variables
-                    tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                    mat_n1n1 = l_eig_vec_inv_tr;
                     for (unsigned int j=0; j<n1; j++)
                         if (eig_val(j, j) < 0)
-                            tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
+                            mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
                         else
-                            tmp_mat_n1n1.scale_column(j, 0.0);
-                    tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
+                            mat_n1n1.scale_column(j, 0.0);
+                    mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
                     
                     // now project this matrix to the constraint at the exhause
                     // df{-}/dU_c = A{-} dU{-}/dU_c
@@ -1021,49 +1021,49 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     (p_sol, dcons_dprim, dprim_dcons);
                     
                     // the term dU{-}/dU_p is calculated by scaling the value from interior solution
-                    tmp_mat3_n1n1 = dcons_dprim;
-                    tmp_mat3_n1n1.scale(rho_constrained/conservative_sol(0));
+                    mat3_n1n1 = dcons_dprim;
+                    mat3_n1n1.scale(rho_constrained/conservative_sol(0));
                     // zero the first column since the U{-} is not a function of interior density value
                     for (unsigned int i=0; i<n1; i++)
-                        tmp_mat3_n1n1(i,0) = 0.;
+                        mat3_n1n1(i,0) = 0.;
                     
                     // now multiply the matrices and get the
-                    tmp_mat3_n1n1.right_multiply(dprim_dcons);
-                    tmp_mat_n1n1.right_multiply(tmp_mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
+                    mat3_n1n1.right_multiply(dprim_dcons);
+                    mat_n1n1.right_multiply(mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
                     
-                    B_mat.left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1);
-                    B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T A_{-} B   (this is flux coming into the solution domain)
+                    B_mat.left_multiply(mat1_n1n2, mat_n1n1);
+                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2); // B^T A_{-} B   (this is flux coming into the solution domain)
                     
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    Kmat.add(-JxW[qp], mat2_n2n2);
                     
                     
                     // now calculate the Jacobian for eigenvalues greater than 0,
                     // the characteristics go out of the domain, so that
                     // the flux is evaluated using the local solution
-                    tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                    mat_n1n1 = l_eig_vec_inv_tr;
                     for (unsigned int j=0; j<n1; j++)
                         if (eig_val(j, j) > 0)
-                            tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                            mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                         else
-                            tmp_mat_n1n1.scale_column(j, 0.0);
-                    tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                            mat_n1n1.scale_column(j, 0.0);
+                    mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
 
                     // now do the same operation on the outoging characteristics
                     // the term dU{-}/dU_p is calculated by scaling the value from interior solution
-                    tmp_mat3_n1n1 = dcons_dprim;
-                    tmp_mat3_n1n1.scale(rho_constrained/conservative_sol(0));
+                    mat3_n1n1 = dcons_dprim;
+                    mat3_n1n1.scale(rho_constrained/conservative_sol(0));
                     // zero the first column since the U{-} is not a function of interior density value
                     for (unsigned int i=0; i<n1; i++)
-                        tmp_mat3_n1n1(i,0) = 0.;
+                        mat3_n1n1(i,0) = 0.;
                     
                     // now multiply the matrices and get the
-                    tmp_mat3_n1n1.right_multiply(dprim_dcons);
-                    tmp_mat_n1n1.right_multiply(tmp_mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
+                    mat3_n1n1.right_multiply(dprim_dcons);
+                    mat_n1n1.right_multiply(mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
 
-                    B_mat.left_multiply(tmp_mat1_n1n2, tmp_mat_n1n1);
-                    B_mat.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
+                    B_mat.left_multiply(mat1_n1n2, mat_n1n1);
+                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
 
-                    Kmat.add(-JxW[qp], tmp_mat2_n2n2);
+                    Kmat.add(-JxW[qp], mat2_n2n2);
                     
                     if (_if_viscous)
                     {
@@ -1072,12 +1072,12 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                             for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                             {
                                 this->calculate_diffusion_flux_jacobian
-                                (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                                (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
                                 dB_mat[deriv_dim].left_multiply
-                                (tmp_mat1_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                                (mat1_n1n2, mat_n1n1); // Kij dB/dx_j
                                 B_mat.right_multiply_transpose
-                                (tmp_mat2_n2n2, tmp_mat1_n1n2); // B^T Kij dB/dx_j
-                                Kmat.add(JxW[qp], tmp_mat2_n2n2);
+                                (mat2_n2n2, mat1_n1n2); // B^T Kij dB/dx_j
+                                Kmat.add(JxW[qp], mat2_n2n2);
                             }
                     }
                 }
@@ -1131,14 +1131,14 @@ bool FluidSystem::mass_residual (bool request_jacobian,
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
     std::vector<DenseRealMatrix > Ai_advection(dim);
-    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, tmp_mat_n1n2,
-    tmp_mat2_n2n2, tmp_mat3;
-    DenseRealVector flux, tmp_vec1_n1, tmp_vec3_n2,
+    DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection, mat_n1n2,
+    mat2_n2n2, mat3;
+    DenseRealVector flux, vec1_n1, vec3_n2,
     conservative_sol, dc_ref_sol;
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs);
-    tmp_mat2_n2n2.resize(n_dofs, n_dofs);
-    Ai_Bi_advection.resize(dim+2, n_dofs);  tmp_mat_n1n2.resize(dim+2, n_dofs);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec3_n2.resize(n_dofs);
+    mat2_n2n2.resize(n_dofs, n_dofs);
+    Ai_Bi_advection.resize(dim+2, n_dofs);  mat_n1n2.resize(dim+2, n_dofs);
+    flux.resize(n1); vec1_n1.resize(n1); vec3_n2.resize(n_dofs);
     conservative_sol.resize(dim+2);
     for (unsigned int i=0; i<dim; i++)
         Ai_advection[i].resize(dim+2, dim+2);
@@ -1176,8 +1176,8 @@ bool FluidSystem::mass_residual (bool request_jacobian,
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
-            dB_mat[i_dim].left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
-            Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
+            dB_mat[i_dim].left_multiply(mat_n1n2, Ai_advection[i_dim]);
+            Ai_Bi_advection.add(1.0, mat_n1n2);
         }
         
         if (_if_update_stabilization_per_quadrature_point || (qp == 0)) {
@@ -1188,27 +1188,27 @@ bool FluidSystem::mass_residual (bool request_jacobian,
              flux_jacobian_sens, LS_mat, LS_sens);
         }
         // Galerkin contribution to velocity
-        B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );
-        B_mat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        Fvec.add(JxW[qp], tmp_vec3_n2);
+        B_mat.vector_mult( vec1_n1, c.get_elem_solution() );
+        B_mat.vector_mult_transpose(vec3_n2, vec1_n1);
+        Fvec.add(JxW[qp], vec3_n2);
         
         // LS contribution to velocity
-        B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );
-        LS_mat.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        Fvec.add(JxW[qp], tmp_vec3_n2);
+        B_mat.vector_mult( vec1_n1, c.get_elem_solution() );
+        LS_mat.vector_mult_transpose(vec3_n2, vec1_n1);
+        Fvec.add(JxW[qp], vec3_n2);
         
         
         if (request_jacobian && c.get_elem_solution_derivative())
         {
             // contribution from unsteady term
             // Galerkin contribution of velocity
-            B_mat.right_multiply_transpose(tmp_mat2_n2n2, B_mat);
-            Kmat.add(JxW[qp], tmp_mat2_n2n2);
+            B_mat.right_multiply_transpose(mat2_n2n2, B_mat);
+            Kmat.add(JxW[qp], mat2_n2n2);
             
             // LS contribution of velocity
-            LS_mat.get_transpose(tmp_mat3);
-            B_mat.left_multiply(tmp_mat2_n2n2, tmp_mat3); // LS^T tau Bmat
-            Kmat.add(JxW[qp], tmp_mat2_n2n2);
+            LS_mat.get_transpose(mat3);
+            B_mat.left_multiply(mat2_n2n2, mat3); // LS^T tau Bmat
+            Kmat.add(JxW[qp], mat2_n2n2);
         }
     } // end of the quadrature point qp-loop
     

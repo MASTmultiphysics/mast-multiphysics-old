@@ -163,11 +163,11 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
     const unsigned int n_phi = (unsigned int)phi.size(), n2 = 6*n_phi;
     DenseRealVector phi_vec; phi_vec.resize(n_phi);
     
-    DenseRealVector tmp_vec3_n2, tmp_vec4_2, tmp_vec5_2;
-    DenseRealMatrix material_trans_shear_mat, tmp_mat2_n2n2, tmp_mat4_2n2;
+    DenseRealVector vec3_n2, vec4_2, vec5_2;
+    DenseRealMatrix material_trans_shear_mat, mat2_n2n2, mat4_2n2;
     
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_2.resize(2);
-    tmp_mat2_n2n2.resize(n2, n2); tmp_mat4_2n2.resize(2, n2);
+    vec3_n2.resize(n2); vec4_2.resize(2); vec5_2.resize(2);
+    mat2_n2n2.resize(n2, n2); mat4_2n2.resize(2, n2);
     
     
     FEMOperatorMatrix Bmat_trans;
@@ -213,16 +213,16 @@ MAST::MindlinBendingOperator::calculate_transverse_shear_force
         
         
         // now add the transverse shear component
-        Bmat_trans.vector_mult(tmp_vec4_2, _structural_elem.local_solution);
-        material_trans_shear_mat.vector_mult(tmp_vec5_2, tmp_vec4_2);
-        Bmat_trans.vector_mult_transpose(tmp_vec3_n2, tmp_vec5_2);
-        local_f.add(-JxW[qp], tmp_vec3_n2);
+        Bmat_trans.vector_mult(vec4_2, _structural_elem.local_solution);
+        material_trans_shear_mat.vector_mult(vec5_2, vec4_2);
+        Bmat_trans.vector_mult_transpose(vec3_n2, vec5_2);
+        local_f.add(-JxW[qp], vec3_n2);
         
         if (request_jacobian) {
             // now add the transverse shear component
-            Bmat_trans.left_multiply(tmp_mat4_2n2, material_trans_shear_mat);
-            Bmat_trans.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat4_2n2);
-            local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+            Bmat_trans.left_multiply(mat4_2n2, material_trans_shear_mat);
+            Bmat_trans.right_multiply_transpose(mat2_n2n2, mat4_2n2);
+            local_jac.add(-JxW[qp], mat2_n2n2);
         }
     }
 }

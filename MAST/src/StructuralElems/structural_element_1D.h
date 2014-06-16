@@ -219,15 +219,15 @@ namespace MAST {
                                                DenseRealMatrix& material_A_mat,
                                                DenseRealMatrix& material_B_mat,
                                                DenseRealMatrix& material_D_mat,
-                                               DenseRealVector& tmp_vec1_n1,
-                                               DenseRealVector& tmp_vec2_n1,
-                                               DenseRealVector& tmp_vec3_n2,
-                                               DenseRealVector& tmp_vec4_2,
-                                               DenseRealVector& tmp_vec5_2,
-                                               DenseRealMatrix& tmp_mat1_n1n2,
-                                               DenseRealMatrix& tmp_mat2_n2n2,
-                                               DenseRealMatrix& tmp_mat3,
-                                               DenseRealMatrix& tmp_mat4_2n2);
+                                               DenseRealVector& vec1_n1,
+                                               DenseRealVector& vec2_n1,
+                                               DenseRealVector& vec3_n2,
+                                               DenseRealVector& vec4_2,
+                                               DenseRealVector& vec5_2,
+                                               DenseRealMatrix& mat1_n1n2,
+                                               DenseRealMatrix& mat2_n2n2,
+                                               DenseRealMatrix& mat3,
+                                               DenseRealMatrix& mat4_2n2);
         
         
         /*!
@@ -247,11 +247,11 @@ namespace MAST {
          DenseRealMatrix& vk_dwdxi_mat,
          DenseRealMatrix& material_A_mat,
          DenseRealMatrix& material_B_mat,
-         DenseRealVector& tmp_vec1_n1,
-         DenseRealVector& tmp_vec2_n1,
-         DenseRealMatrix& tmp_mat1_n1n2,
-         DenseRealMatrix& tmp_mat2_n2n2,
-         DenseRealMatrix& tmp_mat3);
+         DenseRealVector& vec1_n1,
+         DenseRealVector& vec2_n1,
+         DenseRealMatrix& mat1_n1n2,
+         DenseRealMatrix& mat2_n2n2,
+         DenseRealMatrix& mat3);
         
     };
 }

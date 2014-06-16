@@ -177,26 +177,26 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     std::vector<DenseRealMatrix > Ai_advection(dim);
     FEMOperatorMatrix B_mat;
     DenseRealMatrix LS_mat, LS_sens, Ai_Bi_advection,
-    tmp_mat_n1n2, tmp_mat_n2n1, tmp_mat_n2n2, tmp_mat_n1n1,
+    mat_n1n2, mat_n2n1, mat_n2n2, mat_n1n1,
     A_sens, stress_tensor, dcons_dprim, dprim_dcons;
-    DenseComplexMatrix tmp_mat_n2n2_complex;
-    DenseRealVector tmp_vec1_n1, tmp_vec2_n1, conservative_sol, ref_sol,
-    temp_grad, flux_real, tmp_vec3_n2_real, sol_magnitude, diff_val, diff_val2;
-    DenseComplexVector flux, tmp_vec3_n2,
-    tmp_vec4_n1, tmp_vec5_n1, conservative_deltasol, complex_elem_sol;
+    DenseComplexMatrix mat_n2n2_complex;
+    DenseRealVector vec1_n1, vec2_n1, conservative_sol, ref_sol,
+    temp_grad, flux_real, vec3_n2_real, sol_magnitude, diff_val, diff_val2;
+    DenseComplexVector flux, vec3_n2,
+    vec4_n1, vec5_n1, conservative_deltasol, complex_elem_sol;
     
     LS_mat.resize(n1, n_dofs); LS_sens.resize(n_dofs, n_dofs),
     Ai_Bi_advection.resize(dim+2, n_dofs); A_sens.resize(n1, n_dofs);
     stress_tensor.resize(dim, dim);
-    flux.resize(n1); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n_dofs);
-    conservative_sol.resize(dim+2); temp_grad.resize(dim); tmp_vec4_n1.resize(dim+2);
-    tmp_vec5_n1.resize(dim+2); tmp_mat_n1n2.resize(dim+2, n_dofs);
-    tmp_mat_n2n2.resize(n_dofs, n_dofs);
-    tmp_mat_n2n1.resize(n_dofs, dim+2); tmp_mat_n1n1.resize(dim+2, dim+2);
+    flux.resize(n1); vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n_dofs);
+    conservative_sol.resize(dim+2); temp_grad.resize(dim); vec4_n1.resize(dim+2);
+    vec5_n1.resize(dim+2); mat_n1n2.resize(dim+2, n_dofs);
+    mat_n2n2.resize(n_dofs, n_dofs);
+    mat_n2n1.resize(n_dofs, dim+2); mat_n1n1.resize(dim+2, dim+2);
     dcons_dprim.resize(dim+2, dim+2); dprim_dcons.resize(dim+2, dim+2);
     ref_sol.resize(n_dofs);
-    tmp_vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
+    vec3_n2_real.resize(n_dofs); sol_magnitude.resize(n_dofs);
     diff_val.resize(dim); diff_val2.resize(dim);
     conservative_deltasol.resize(n1); complex_elem_sol.resize(n_dofs);
     
@@ -257,8 +257,8 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
-            dB_mat[i_dim].left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
-            Ai_Bi_advection.add(1.0, tmp_mat_n1n2);
+            dB_mat[i_dim].left_multiply(mat_n1n2, Ai_advection[i_dim]);
+            Ai_Bi_advection.add(1.0, mat_n1n2);
         }
 
         // initialize the delta_p_sol
@@ -298,14 +298,14 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         }
         
         // Galerkin contribution to solution
-        B_mat.vector_mult_transpose(tmp_vec3_n2, conservative_deltasol); // B^T B dU
-        tmp_vec3_n2.scale(JxW[qp]*mass_scaling); // mass term
-        MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+        B_mat.vector_mult_transpose(vec3_n2, conservative_deltasol); // B^T B dU
+        vec3_n2.scale(JxW[qp]*mass_scaling); // mass term
+        MAST::add_to_assembled_vector(Fvec, vec3_n2);
         
         // Galerkin contribution to solution
-        LS_mat.vector_mult_transpose(tmp_vec3_n2, conservative_deltasol); // LS^T tau B dU
-        tmp_vec3_n2.scale(JxW[qp]*mass_scaling); // mass term
-        MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+        LS_mat.vector_mult_transpose(vec3_n2, conservative_deltasol); // LS^T tau B dU
+        vec3_n2.scale(JxW[qp]*mass_scaling); // mass term
+        MAST::add_to_assembled_vector(Fvec, vec3_n2);
 
         
         
@@ -314,27 +314,27 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             // Galerkin contribution from the advection flux terms
             // linearized advection flux is obtained using the Ai dU  product
             Ai_advection[i_dim].vector_mult(flux, conservative_deltasol); // dF^adv_i
-            dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dBw/dx_i dF^adv_i
-            tmp_vec3_n2.scale(-JxW[qp]*stiffness_scaling);
-            MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+            dB_mat[i_dim].vector_mult_transpose(vec3_n2, flux); // dBw/dx_i dF^adv_i
+            vec3_n2.scale(-JxW[qp]*stiffness_scaling);
+            MAST::add_to_assembled_vector(Fvec, vec3_n2);
             
             if (_if_full_linearization)
             {
                 // contribution from sensitivity of A matrix
                 A_sens.zero();
-                dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol);
+                dB_mat[i_dim].vector_mult(vec2_n1, ref_sol);
                 for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
                 {
-                    flux_jacobian_sens[i_dim][i_cvar].vector_mult(tmp_vec1_n1,
-                                                                  tmp_vec2_n1);
+                    flux_jacobian_sens[i_dim][i_cvar].vector_mult(vec1_n1,
+                                                                  vec2_n1);
                     for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
                         A_sens.add_column((n_phi*i_cvar)+i_phi,
-                                          phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                                          phi[i_phi][qp], vec1_n1); // assuming that all variables have same n_phi
                 }
                 A_sens.vector_mult(flux, complex_elem_sol);
-                LS_mat.vector_mult_transpose(tmp_vec3_n2 , flux);
-                tmp_vec3_n2.scale(JxW[qp]*stiffness_scaling); // contribution from sensitivity of Ai Jacobians
-                MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+                LS_mat.vector_mult_transpose(vec3_n2 , flux);
+                vec3_n2.scale(JxW[qp]*stiffness_scaling); // contribution from sensitivity of Ai Jacobians
+                MAST::add_to_assembled_vector(Fvec, vec3_n2);
             }
             
             if (_if_viscous)
@@ -342,37 +342,37 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                 // Galerkin contribution from the diffusion flux terms
                 for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                 {
-                    dB_mat[deriv_dim].vector_mult(tmp_vec4_n1,
+                    dB_mat[deriv_dim].vector_mult(vec4_n1,
                                                   complex_elem_sol); // dU/dx_j
                     this->calculate_diffusion_flux_jacobian
-                    (i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
-                    tmp_mat_n1n1.vector_mult(tmp_vec5_n1, tmp_vec4_n1); // Kij dB/dx_j
+                    (i_dim, deriv_dim, primitive_sol, mat_n1n1); // Kij
+                    mat_n1n1.vector_mult(vec5_n1, vec4_n1); // Kij dB/dx_j
                     dB_mat[i_dim].vector_mult_transpose
-                    (tmp_vec3_n2, tmp_vec5_n1); // dB/dx_i Kij dB/dx_j
-                    tmp_vec3_n2.scale(JxW[qp]*stiffness_scaling);
-                    MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+                    (vec3_n2, vec5_n1); // dB/dx_i Kij dB/dx_j
+                    vec3_n2.scale(JxW[qp]*stiffness_scaling);
+                    MAST::add_to_assembled_vector(Fvec, vec3_n2);
                 }
             }
 
             // discontinuity capturing operator
             dB_mat[i_dim].vector_mult(flux, complex_elem_sol);  // d dU/ dx_i
-            dB_mat[i_dim].vector_mult_transpose(tmp_vec3_n2, flux); // dB/dx_i d dU/ dx_i
-            tmp_vec3_n2.scale(JxW[qp]*diff_val(i_dim)*stiffness_scaling);
-            MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+            dB_mat[i_dim].vector_mult_transpose(vec3_n2, flux); // dB/dx_i d dU/ dx_i
+            vec3_n2.scale(JxW[qp]*diff_val(i_dim)*stiffness_scaling);
+            MAST::add_to_assembled_vector(Fvec, vec3_n2);
         }
         
         // Least square contribution from flux
         Ai_Bi_advection.vector_mult(flux, complex_elem_sol); // d dF^adv_i / dxi
-        LS_mat.vector_mult_transpose(tmp_vec3_n2, flux); // LS^T tau dF^adv_i
-        tmp_vec3_n2.scale(JxW[qp]*stiffness_scaling);
-        MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+        LS_mat.vector_mult_transpose(vec3_n2, flux); // LS^T tau dF^adv_i
+        vec3_n2.scale(JxW[qp]*stiffness_scaling);
+        MAST::add_to_assembled_vector(Fvec, vec3_n2);
 
         if (_if_full_linearization)
         {
             // sensitivity of LS term
-            LS_sens.vector_mult(tmp_vec3_n2, complex_elem_sol);
-            tmp_vec3_n2.scale(JxW[qp]*stiffness_scaling); // contribution from sensitivity of LS matrix
-            MAST::add_to_assembled_vector(Fvec, tmp_vec3_n2);
+            LS_sens.vector_mult(vec3_n2, complex_elem_sol);
+            vec3_n2.scale(JxW[qp]*stiffness_scaling); // contribution from sensitivity of LS matrix
+            MAST::add_to_assembled_vector(Fvec, vec3_n2);
         }
 
         // Least square contribution from divergence of diffusion flux
@@ -382,17 +382,17 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         {
             // contribution from unsteady term
             // Galerkin contribution of velocity
-            B_mat.right_multiply_transpose(tmp_mat_n2n2, B_mat); // B^T B
-            tmp_mat_n2n2_complex = tmp_mat_n2n2;
-            tmp_mat_n2n2_complex *= JxW[qp]*mass_scaling; // mass term
-            MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+            B_mat.right_multiply_transpose(mat_n2n2, B_mat); // B^T B
+            mat_n2n2_complex = mat_n2n2;
+            mat_n2n2_complex *= JxW[qp]*mass_scaling; // mass term
+            MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
             
             // LS contribution of velocity
-            LS_mat.get_transpose(tmp_mat_n2n1);
-            B_mat.left_multiply(tmp_mat_n2n2, tmp_mat_n2n1); // LS^T tau Bmat
-            tmp_mat_n2n2_complex = tmp_mat_n2n2;
-            tmp_mat_n2n2_complex *= JxW[qp]*mass_scaling; // mass term
-            MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+            LS_mat.get_transpose(mat_n2n1);
+            B_mat.left_multiply(mat_n2n2, mat_n2n1); // LS^T tau Bmat
+            mat_n2n2_complex = mat_n2n2;
+            mat_n2n2_complex *= JxW[qp]*mass_scaling; // mass term
+            MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
 
             
             A_sens.zero();
@@ -400,33 +400,33 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
             for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             {
                 // Galerkin contribution from the advection flux terms
-                B_mat.left_multiply(tmp_mat_n1n2, Ai_advection[i_dim]);
+                B_mat.left_multiply(mat_n1n2, Ai_advection[i_dim]);
                 dB_mat[i_dim].right_multiply_transpose
-                (tmp_mat_n2n2, tmp_mat_n1n2); // dBw/dx_i^T  d dF^adv_i/ dU
-                tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                tmp_mat_n2n2_complex *= -JxW[qp]*stiffness_scaling;
-                MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                (mat_n2n2, mat_n1n2); // dBw/dx_i^T  d dF^adv_i/ dU
+                mat_n2n2_complex = mat_n2n2;
+                mat_n2n2_complex *= -JxW[qp]*stiffness_scaling;
+                MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                 
                 
                 // discontinuity capturing term
-                dB_mat[i_dim].right_multiply_transpose(tmp_mat_n2n2,
+                dB_mat[i_dim].right_multiply_transpose(mat_n2n2,
                                                        dB_mat[i_dim]);
-                tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                tmp_mat_n2n2_complex *= JxW[qp]*diff_val(i_dim)*stiffness_scaling;
-                MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                mat_n2n2_complex = mat_n2n2;
+                mat_n2n2_complex *= JxW[qp]*diff_val(i_dim)*stiffness_scaling;
+                MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                 
                 
                 if (_if_full_linearization)
                 {
                     // contribution from sensitivity of A matrix
-                    dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol);
+                    dB_mat[i_dim].vector_mult(vec2_n1, ref_sol);
                     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
                     {
                         flux_jacobian_sens[i_dim][i_cvar].vector_mult
-                        (tmp_vec1_n1, tmp_vec2_n1);
+                        (vec1_n1, vec2_n1);
                         for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
                             A_sens.add_column((n_phi*i_cvar)+i_phi,
-                                              phi[i_phi][qp], tmp_vec1_n1); // assuming that all variables have same n_phi
+                                              phi[i_phi][qp], vec1_n1); // assuming that all variables have same n_phi
                     }
                 }
                 
@@ -435,37 +435,37 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
                     for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                     {
                         this->calculate_diffusion_flux_jacobian
-                        (i_dim, deriv_dim, primitive_sol, tmp_mat_n1n1); // Kij
-                        dB_mat[deriv_dim].left_multiply(tmp_mat_n1n2,
-                                                        tmp_mat_n1n1); // Kij dB/dx_j
+                        (i_dim, deriv_dim, primitive_sol, mat_n1n1); // Kij
+                        dB_mat[deriv_dim].left_multiply(mat_n1n2,
+                                                        mat_n1n1); // Kij dB/dx_j
                         dB_mat[i_dim].right_multiply_transpose
-                        (tmp_mat_n2n2, tmp_mat_n1n2); // dB/dx_i^T Kij dB/dx_j
-                        tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                        tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                        MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                        (mat_n2n2, mat_n1n2); // dB/dx_i^T Kij dB/dx_j
+                        mat_n2n2_complex = mat_n2n2;
+                        mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                        MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                     }
                 }
             }
             
             // Lease square contribution of flux gradient
-            LS_mat.get_transpose(tmp_mat_n2n1);
-            tmp_mat_n2n1.right_multiply(Ai_Bi_advection); // LS^T tau d^2 dF^adv_i / dx dU
-            tmp_mat_n2n2_complex = tmp_mat_n2n1;
-            tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-            MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+            LS_mat.get_transpose(mat_n2n1);
+            mat_n2n1.right_multiply(Ai_Bi_advection); // LS^T tau d^2 dF^adv_i / dx dU
+            mat_n2n2_complex = mat_n2n1;
+            mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+            MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
             
             if (_if_full_linearization)
             {
-                LS_mat.get_transpose(tmp_mat_n2n1);
-                tmp_mat_n2n1.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
-                tmp_mat_n2n2_complex = tmp_mat_n2n1;
-                tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                LS_mat.get_transpose(mat_n2n1);
+                mat_n2n1.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
+                mat_n2n2_complex = mat_n2n1;
+                mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                 
                 // contribution from sensitivity of the LS.tau matrix
-                tmp_mat_n2n2_complex = LS_sens;
-                tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                mat_n2n2_complex = LS_sens;
+                mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
             }
         }
     } // end of the quadrature point qp-loop
@@ -585,20 +585,20 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     FEMOperatorMatrix B_mat;
 
     DenseRealMatrix  eig_val, l_eig_vec, l_eig_vec_inv_tr,
-    tmp_mat_n1n1, tmp_mat_n1n2, tmp_mat_n2n2, A_mat,
+    mat_n1n1, mat_n1n2, mat_n2n2, A_mat,
     dcons_dprim, dprim_dcons, stress_tensor, Kmat_viscous;
-    DenseComplexMatrix tmp_mat_n2n2_complex;
-    DenseRealVector  normal, normal_local, tmp_vec1, tmp_vec2_n1,
-    tmp_vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
+    DenseComplexMatrix mat_n2n2_complex;
+    DenseRealVector  normal, normal_local, vec1, vec2_n1,
+    vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
     dnormal_steady_real, surface_steady_disp, surface_steady_vel, dnormal_steady;
-    DenseComplexVector flux, tmp_vec1_n2,
+    DenseComplexVector flux, vec1_n2,
     surface_unsteady_vel, dnormal_unsteady, duvec, surface_unsteady_disp,
     conservative_deltasol, complex_elem_sol;
     
     conservative_sol.resize(dim+2);
-    normal.resize(spatial_dim); normal_local.resize(dim); tmp_vec1.resize(n_dofs);
-    flux.resize(n1); tmp_vec1_n2.resize(n_dofs); tmp_vec2_n1.resize(dim+2);
-    tmp_vec3_n1.resize(dim+2); conservative_deltasol.resize(dim+2);
+    normal.resize(spatial_dim); normal_local.resize(dim); vec1.resize(n_dofs);
+    flux.resize(n1); vec1_n2.resize(n_dofs); vec2_n1.resize(dim+2);
+    vec3_n1.resize(dim+2); conservative_deltasol.resize(dim+2);
     U_vec_interpolated.resize(n1); temp_grad.resize(dim);
     ref_sol.resize(n_dofs); complex_elem_sol.resize(n_dofs);
     dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
@@ -609,8 +609,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     
     eig_val.resize(n1, n1); l_eig_vec.resize(n1, n1);
     l_eig_vec_inv_tr.resize(n1, n1);
-    tmp_mat_n1n1.resize(n1, n1); tmp_mat_n1n2.resize(n1, n_dofs);
-    tmp_mat_n2n2.resize(n_dofs, n_dofs);
+    mat_n1n1.resize(n1, n1); mat_n1n2.resize(n1, n_dofs);
+    mat_n2n2.resize(n_dofs, n_dofs);
     dcons_dprim.resize(n1, n1); dprim_dcons.resize(n1, n1);
     Kmat_viscous.resize(n1, n_dofs);
     A_mat.resize(dim+2, dim+2); stress_tensor.resize(dim, dim);
@@ -740,9 +740,9 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // inviscid flux contribution
-                tmp_vec1_n2.scale(JxW[qp]*stiffness_scaling);
-                MAST::add_to_assembled_vector(Fvec, tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux); // inviscid flux contribution
+                vec1_n2.scale(JxW[qp]*stiffness_scaling);
+                MAST::add_to_assembled_vector(Fvec, vec1_n2);
                 
                 // for viscous flux contribution, multiply the viscous flux Jacobian with the
                 // solution, and add it to the force vector
@@ -751,16 +751,16 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                     {
                         this->calculate_diffusion_flux_jacobian
-                        (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                        (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
                         dB_mat[deriv_dim].left_multiply
-                        (tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
-                        Kmat_viscous.add(1.0, tmp_mat_n1n2);
+                        (mat_n1n2, mat_n1n1); // Kij dB/dx_j
+                        Kmat_viscous.add(1.0, mat_n1n2);
                     }
                 
                 Kmat_viscous.vector_mult(flux, conservative_deltasol);  // Kij dB/dx_j dU
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);   // B^T Kij dB/dx_j dU
-                tmp_vec1_n2.scale(-JxW[qp]*stiffness_scaling);
-                MAST::add_to_assembled_vector(Fvec, tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);   // B^T Kij dB/dx_j dU
+                vec1_n2.scale(-JxW[qp]*stiffness_scaling);
+                MAST::add_to_assembled_vector(Fvec, vec1_n2);
 
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
@@ -772,11 +772,11 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     (p_sol, std::real(ui_ni_steady), face_normals[qp],
                      dnormal_steady_real, A_mat);
                     
-                    B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
-                    B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T A B
-                    tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                    tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                    MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                    B_mat.left_multiply(mat_n1n2, A_mat); // A B
+                    B_mat.right_multiply_transpose(mat_n2n2, mat_n1n2); // B^T A B
+                    mat_n2n2_complex = mat_n2n2;
+                    mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                    MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                     
                     // contribution from diffusion flux
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -784,14 +784,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                              deriv_dim<dim; deriv_dim++)
                         {
                             this->calculate_diffusion_flux_jacobian
-                            (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                            (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
                             dB_mat[deriv_dim].left_multiply
-                            (tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                            (mat_n1n2, mat_n1n1); // Kij dB/dx_j
                             B_mat.right_multiply_transpose
-                            (tmp_mat_n2n2, tmp_mat_n1n2); // B^T Kij dB/dx_j
-                            tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                            tmp_mat_n2n2_complex *= -JxW[qp]*stiffness_scaling;
-                            MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                            (mat_n2n2, mat_n1n2); // B^T Kij dB/dx_j
+                            mat_n2n2_complex = mat_n2n2;
+                            mat_n2n2_complex *= -JxW[qp]*stiffness_scaling;
+                            MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                         }
                 }
             }
@@ -828,21 +828,21 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                tmp_vec1_n2.scale(JxW[qp] * stiffness_scaling);
-                MAST::add_to_assembled_vector(Fvec, tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);
+                vec1_n2.scale(JxW[qp] * stiffness_scaling);
+                MAST::add_to_assembled_vector(Fvec, vec1_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
                     (p_sol, 0., face_normals[qp], dnormal_steady_real, A_mat);
                     
-                    B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
-                    B_mat.right_multiply_transpose(tmp_mat_n2n2,
-                                                   tmp_mat_n1n2); // B^T A B
-                    tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                    tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                    MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                    B_mat.left_multiply(mat_n1n2, A_mat); // A B
+                    B_mat.right_multiply_transpose(mat_n2n2,
+                                                   mat_n1n2); // B^T A B
+                    mat_n2n2_complex = mat_n2n2;
+                    mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                    MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                 }
             }
         }
@@ -934,10 +934,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
                 /*// add the contribution from divergence of ui_ni
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
-                    dB_mat[i_dim].vector_mult(tmp_vec2_n1, ref_sol); // dU/dx_i
-                    dprim_dcons.vector_mult(tmp_vec3_n1, tmp_vec2_n1);  // dU_primitive / dx_i
+                    dB_mat[i_dim].vector_mult(vec2_n1, ref_sol); // dU/dx_i
+                    dprim_dcons.vector_mult(vec3_n1, vec2_n1);  // dU_primitive / dx_i
                     for (unsigned int j_dim=0; j_dim<dim; j_dim++)
-                        dui_ni_unsteady -= tmp_vec3_n1(j_dim+1) * surface_unsteady_disp(i_dim) *
+                        dui_ni_unsteady -= vec3_n1(j_dim+1) * surface_unsteady_disp(i_dim) *
                         (face_normals[qp](j_dim) + std::real(dnormal_steady(j_dim)));
                 }*/
                 
@@ -949,9 +949,9 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                tmp_vec1_n2.scale(JxW[qp]*stiffness_scaling);
-                MAST::add_to_assembled_vector(Fvec, tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux);
+                vec1_n2.scale(JxW[qp]*stiffness_scaling);
+                MAST::add_to_assembled_vector(Fvec, vec1_n2);
 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
@@ -962,12 +962,12 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     (p_sol, std::real(ui_ni_steady), face_normals[qp],
                      dnormal_steady_real, A_mat);
                     
-                    B_mat.left_multiply(tmp_mat_n1n2, A_mat); // A B
-                    B_mat.right_multiply_transpose(tmp_mat_n2n2,
-                                                   tmp_mat_n1n2); // B^T A B
-                    tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                    tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                    MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                    B_mat.left_multiply(mat_n1n2, A_mat); // A B
+                    B_mat.right_multiply_transpose(mat_n2n2,
+                                                   mat_n1n2); // B^T A B
+                    mat_n2n2_complex = mat_n2n2;
+                    mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                    MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                 }
             }
         }
@@ -999,22 +999,22 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                 
                 // now calculate the flux for eigenvalues greater than 0, the characteristics go out of the domain, so that
                 // the flux is evaluated using the local solution
-                tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                mat_n1n1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) > 0)
-                        tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                     else
-                        tmp_mat_n1n1.scale_column(j, 0.0);
+                        mat_n1n1.scale_column(j, 0.0);
                 
-                tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
                 
                 B_mat.vector_mult(conservative_deltasol, complex_elem_sol); // B dU
                 
-                tmp_mat_n1n1.vector_mult(flux, conservative_deltasol); // f_{+} = A_{+} B dU
+                mat_n1n1.vector_mult(flux, conservative_deltasol); // f_{+} = A_{+} B dU
                 
-                B_mat.vector_mult_transpose(tmp_vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-                tmp_vec1_n2.scale(JxW[qp]*stiffness_scaling);
-                MAST::add_to_assembled_vector(Fvec, tmp_vec1_n2);
+                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
+                vec1_n2.scale(JxW[qp]*stiffness_scaling);
+                MAST::add_to_assembled_vector(Fvec, vec1_n2);
                 
                 
                 if (_if_viscous) // evaluate the viscous flux using the domain solution
@@ -1031,12 +1031,12 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     {
                         this->calculate_diffusion_flux(i_dim, p_sol, stress_tensor,
-                                                       temp_grad, tmp_vec1);
-                        flux.add(face_normals[qp](i_dim), tmp_vec1); // fi ni
+                                                       temp_grad, vec1);
+                        flux.add(face_normals[qp](i_dim), vec1); // fi ni
                     }
-                    B_mat.vector_mult_transpose(tmp_vec1_n2, flux);
-                    tmp_vec1_n2.scale(-JxW[qp]*stiffness_scaling);
-                    MAST::add_to_assembled_vector(Fvec, tmp_vec1_n2);
+                    B_mat.vector_mult_transpose(vec1_n2, flux);
+                    vec1_n2.scale(-JxW[qp]*stiffness_scaling);
+                    MAST::add_to_assembled_vector(Fvec, vec1_n2);
                 }
 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
@@ -1045,19 +1045,19 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     
                     // now calculate the Jacobian for eigenvalues greater than 0, the characteristics
                     // go out of the domain, so that the flux is evaluated using the local solution
-                    tmp_mat_n1n1 = l_eig_vec_inv_tr;
+                    mat_n1n1 = l_eig_vec_inv_tr;
                     for (unsigned int j=0; j<n1; j++)
                         if (eig_val(j, j) > 0)
-                            tmp_mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                            mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
                         else
-                            tmp_mat_n1n1.scale_column(j, 0.0);
-                    tmp_mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                    B_mat.left_multiply(tmp_mat_n1n2, tmp_mat_n1n1);
-                    B_mat.right_multiply_transpose(tmp_mat_n2n2, tmp_mat_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
+                            mat_n1n1.scale_column(j, 0.0);
+                    mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                    B_mat.left_multiply(mat_n1n2, mat_n1n1);
+                    B_mat.right_multiply_transpose(mat_n2n2, mat_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
                     
-                    tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                    tmp_mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
-                    MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                    mat_n2n2_complex = mat_n2n2;
+                    mat_n2n2_complex *= JxW[qp]*stiffness_scaling;
+                    MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
 
                     if (_if_viscous)
                     {
@@ -1066,14 +1066,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                             for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
                             {
                                 this->calculate_diffusion_flux_jacobian
-                                (i_dim, deriv_dim, p_sol, tmp_mat_n1n1); // Kij
+                                (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
                                 dB_mat[deriv_dim].left_multiply
-                                (tmp_mat_n1n2, tmp_mat_n1n1); // Kij dB/dx_j
+                                (mat_n1n2, mat_n1n1); // Kij dB/dx_j
                                 B_mat.right_multiply_transpose
-                                (tmp_mat_n2n2, tmp_mat_n1n2); // B^T Kij dB/dx_j
-                                tmp_mat_n2n2_complex = tmp_mat_n2n2;
-                                tmp_mat_n2n2_complex *= -JxW[qp]*stiffness_scaling;
-                                MAST::add_to_assembled_matrix(Kmat, tmp_mat_n2n2_complex);
+                                (mat_n2n2, mat_n1n2); // B^T Kij dB/dx_j
+                                mat_n2n2_complex = mat_n2n2;
+                                mat_n2n2_complex *= -JxW[qp]*stiffness_scaling;
+                                MAST::add_to_assembled_matrix(Kmat, mat_n2n2_complex);
                             }
                     }
                 }

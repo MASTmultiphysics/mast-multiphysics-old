@@ -1057,27 +1057,27 @@ FluidElemBase::calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
 void
 FluidElemBase::calculate_advection_flux_jacobian_sensitivity_for_conservative_variable
 (const unsigned int calculate_dim, const PrimitiveSolution& sol,
- std::vector<DenseRealMatrix >& mat)
+ std::vector<DenseRealMatrix >& jac)
 {
     const unsigned int n1 = 2 + dim;
     
-    DenseRealMatrix dprim_dcons, tmp_mat;
-    dprim_dcons.resize(n1, n1); tmp_mat.resize(n1, n1);
+    DenseRealMatrix dprim_dcons, mat;
+    dprim_dcons.resize(n1, n1); mat.resize(n1, n1);
 
     for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
-        mat[i_cvar].zero();
+        jac[i_cvar].zero();
 
-    this->calculate_conservative_variable_jacobian(sol, tmp_mat, dprim_dcons);
+    this->calculate_conservative_variable_jacobian(sol, mat, dprim_dcons);
     
     // calculate based on chain rule of the primary variables
     for (unsigned int i_pvar=0; i_pvar<n1; i_pvar++) // iterate over the primitive variables for chain rule
     {
         this->calculate_advection_flux_jacobian_sensitivity_for_primitive_variable
-        (calculate_dim, i_pvar, sol, tmp_mat);
+        (calculate_dim, i_pvar, sol, mat);
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
         {
             if (fabs(dprim_dcons(i_pvar, i_cvar)) > 0.0)
-                mat[i_cvar].add(dprim_dcons(i_pvar, i_cvar), tmp_mat);
+                jac[i_cvar].add(dprim_dcons(i_pvar, i_cvar), mat);
         }
     }
 }
@@ -2336,9 +2336,9 @@ void FluidElemBase::calculate_differential_operator_matrix
 {
     const unsigned int n1 = 2 + dim, n2 = B_mat.n();
     
-    DenseRealMatrix tmp_mat, tmp_mat2, tau;
+    DenseRealMatrix mat, mat2, tau;
     DenseRealVector vec1, vec2, vec3, vec4_n2;
-    tmp_mat.resize(n1, n2); tmp_mat2.resize(n1, n2); tau.resize(n1, n1);
+    mat.resize(n1, n2); mat2.resize(n1, n2); tau.resize(n1, n1);
     vec1.resize(n1); vec2.resize(n1); vec3.resize(n1); vec4_n2.resize(n2);
     
     libMesh::FEBase* elem_fe;
@@ -2366,9 +2366,9 @@ void FluidElemBase::calculate_differential_operator_matrix
     // contribution of advection flux term
     for (unsigned int i=0; i<dim; i++)
     {
-        Ai_advection[i].get_transpose(tmp_mat);
-        dB_mat[i].left_multiply(tmp_mat2, tmp_mat);
-        LS_operator.add(1.0, tmp_mat2);  // A_i^T dB/dx_i
+        Ai_advection[i].get_transpose(mat);
+        dB_mat[i].left_multiply(mat2, mat);
+        LS_operator.add(1.0, mat2);  // A_i^T dB/dx_i
         
 
         if (_if_full_linearization)

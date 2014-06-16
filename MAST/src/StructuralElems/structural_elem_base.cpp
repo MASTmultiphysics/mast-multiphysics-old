@@ -73,10 +73,10 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     const std::vector<std::vector<libMesh::Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
-    DenseRealMatrix material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
-    DenseRealVector  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
-    phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2, local_jac;
+    DenseRealVector  phi_vec, vec1_n1, vec2_n2, local_f;
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
+    phi_vec.resize(n_phi); vec1_n1.resize(n1); vec2_n2.resize(n2);
     local_f.resize(n2);
     
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_inertia
@@ -113,17 +113,17 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
             
             Bmat.reinit(_system.n_vars(), phi_vec);
             
-            Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
+            Bmat.left_multiply(mat1_n1n2, material_mat);
             
-            tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_acceleration);
-            Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-            local_f.add(JxW[qp], tmp_vec2_n2);
+            mat1_n1n2.vector_mult(vec1_n1, local_acceleration);
+            Bmat.vector_mult_transpose(vec2_n2, vec1_n1);
+            local_f.add(JxW[qp], vec2_n2);
             
             if (request_jacobian) {
                 
-                Bmat.right_multiply_transpose(tmp_mat2_n2n2,
-                                              tmp_mat1_n1n2);
-                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+                Bmat.right_multiply_transpose(mat2_n2n2,
+                                              mat1_n1n2);
+                local_jac.add(JxW[qp], mat2_n2n2);
             }
             
         }
@@ -131,11 +131,11 @@ MAST::StructuralElementBase::inertial_force (bool request_jacobian,
     
     // now transform to the global coorodinate system
     if (_elem.dim() < 3) {
-        transform_to_global_system(local_f, tmp_vec2_n2);
-        f.add(1., tmp_vec2_n2);
+        transform_to_global_system(local_f, vec2_n2);
+        f.add(1., vec2_n2);
         if (request_jacobian) {
-            transform_to_global_system(local_jac, tmp_mat2_n2n2);
-            jac.add(1., tmp_mat2_n2n2);
+            transform_to_global_system(local_jac, mat2_n2n2);
+            jac.add(1., mat2_n2n2);
         }
     }
     else {
@@ -176,10 +176,10 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     const std::vector<std::vector<libMesh::Real> >& phi = _fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size(), n1=6, n2=6*n_phi;
     
-    DenseRealMatrix material_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, local_jac;
-    DenseRealVector  phi_vec, tmp_vec1_n1, tmp_vec2_n2, local_f;
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
-    phi_vec.resize(n_phi); tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n2);
+    DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2, local_jac;
+    DenseRealVector  phi_vec, vec1_n1, vec2_n2, local_f;
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
+    phi_vec.resize(n_phi); vec1_n1.resize(n1); vec2_n2.resize(n2);
     local_f.resize(n2);
     
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_inertia
@@ -218,17 +218,17 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
             
             Bmat.reinit(_system.n_vars(), phi_vec);
             
-            Bmat.left_multiply(tmp_mat1_n1n2, material_mat);
+            Bmat.left_multiply(mat1_n1n2, material_mat);
             
-            tmp_mat1_n1n2.vector_mult(tmp_vec1_n1, local_acceleration);
-            Bmat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-            local_f.add(JxW[qp], tmp_vec2_n2);
+            mat1_n1n2.vector_mult(vec1_n1, local_acceleration);
+            Bmat.vector_mult_transpose(vec2_n2, vec1_n1);
+            local_f.add(JxW[qp], vec2_n2);
             
             if (request_jacobian) {
                 
-                Bmat.right_multiply_transpose(tmp_mat2_n2n2,
-                                              tmp_mat1_n1n2);
-                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+                Bmat.right_multiply_transpose(mat2_n2n2,
+                                              mat1_n1n2);
+                local_jac.add(JxW[qp], mat2_n2n2);
             }
             
         }
@@ -236,11 +236,11 @@ MAST::StructuralElementBase::inertial_force_sensitivity(bool request_jacobian,
     
     // now transform to the global coorodinate system
     if (_elem.dim() < 3) {
-        transform_to_global_system(local_f, tmp_vec2_n2);
-        f.add(1., tmp_vec2_n2);
+        transform_to_global_system(local_f, vec2_n2);
+        f.add(1., vec2_n2);
         if (request_jacobian) {
-            transform_to_global_system(local_jac, tmp_mat2_n2n2);
-            jac.add(1., tmp_mat2_n2n2);
+            transform_to_global_system(local_jac, mat2_n2n2);
+            jac.add(1., mat2_n2n2);
         }
     }
     else {
@@ -508,9 +508,9 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     const std::vector<Point>& face_normals = fe->get_normals();
     libMesh::Real press;
     
-    DenseRealVector phi_vec, force, local_f, tmp_vec_n2;
+    DenseRealVector phi_vec, force, local_f, vec_n2;
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
-    tmp_vec_n2.resize(n2);
+    vec_n2.resize(n2);
     
     libMesh::Point pt;
     
@@ -531,15 +531,15 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)
             force(i_dim) = press * face_normals[qp](i_dim);
         
-        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], tmp_vec_n2);
+        local_f.add(-JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add
     if (_elem.dim() < 3) {
-        transform_to_global_system(local_f, tmp_vec_n2);
-        f.add(1., tmp_vec_n2);
+        transform_to_global_system(local_f, vec_n2);
+        f.add(1., vec_n2);
     }
     else
         f.add(1., local_f);
@@ -581,9 +581,9 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     
     libMesh::Real press;
     
-    DenseRealVector phi_vec, force, local_f, tmp_vec_n2;
+    DenseRealVector phi_vec, force, local_f, vec_n2;
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
-    tmp_vec_n2.resize(n2);
+    vec_n2.resize(n2);
     
     libMesh::Point pt;
     
@@ -605,14 +605,14 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         for (unsigned int i_dim=0; i_dim<n1; i_dim++)
             force(i_dim) = press * normal(i_dim);
         
-        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], tmp_vec_n2);
+        local_f.add(-JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add
-    transform_to_global_system(local_f, tmp_vec_n2);
-    f.add(1., tmp_vec_n2);
+    transform_to_global_system(local_f, vec_n2);
+    f.add(1., vec_n2);
     
 
     return (request_jacobian && follower_forces);
@@ -655,10 +655,10 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     libMesh::Real press;
     ValType dpress;
     DenseRealVector phi_vec;
-    libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
+    libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, vec_n2;
     wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
-    tmp_vec_n2.resize(n2);
+    vec_n2.resize(n2);
     
     libMesh::Point pt;
     
@@ -695,15 +695,15 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
                              dpress * face_normals[qp](i_dim)); // unsteady pressure
 
         
-        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], tmp_vec_n2);
+        local_f.add(-JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add
     if (_elem.dim() < 3) {
-        transform_to_global_system(local_f, tmp_vec_n2);
-        MAST::add_to_assembled_vector(f, tmp_vec_n2);
+        transform_to_global_system(local_f, vec_n2);
+        MAST::add_to_assembled_vector(f, vec_n2);
     }
     else
         MAST::add_to_assembled_vector(f, local_f);
@@ -750,10 +750,10 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     libMesh::Real press;
     ValType dpress;
     DenseRealVector phi_vec;
-    libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, tmp_vec_n2;
+    libMesh::DenseVector<ValType> wtrans, utrans, dn_rot, force, local_f, vec_n2;
     wtrans.resize(3); utrans.resize(3); dn_rot.resize(3);
     phi_vec.resize(n_phi); force.resize(2*n1); local_f.resize(n2);
-    tmp_vec_n2.resize(n2);
+    vec_n2.resize(n2);
     
     libMesh::Point pt;
     
@@ -787,14 +787,14 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
             force(i_dim) = ( press * dn_rot(i_dim) + // steady pressure
                             dpress * normal(i_dim)); // unsteady pressure
         
-        Bmat.vector_mult_transpose(tmp_vec_n2, force);
+        Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], tmp_vec_n2);
+        local_f.add(-JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add
-    transform_to_global_system(local_f, tmp_vec_n2);
-    MAST::add_to_assembled_vector(f, tmp_vec_n2);
+    transform_to_global_system(local_f, vec_n2);
+    MAST::add_to_assembled_vector(f, vec_n2);
     
 
     return (request_jacobian && follower_forces);
@@ -878,22 +878,22 @@ MAST::StructuralElementBase::transform_to_global_system(const libMesh::DenseMatr
     
     const unsigned int n_dofs = _fe->n_shape_functions();
     global_mat.zero();
-    libMesh::DenseMatrix<ValType> tmp_mat;
-    tmp_mat.resize(6*n_dofs, 6*n_dofs);
+    libMesh::DenseMatrix<ValType> mat;
+    mat.resize(6*n_dofs, 6*n_dofs);
     
     const DenseRealMatrix& Tmat = _transformation_matrix();
     // now initialize the global T matrix
     for (unsigned int i=0; i<n_dofs; i++)
         for (unsigned int j=0; j<3; j++)
             for (unsigned int k=0; k<3; k++) {
-                tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
-                tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
+                mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
+                mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
             }
     
     // right multiply with T^T, and left multiply with T.
     global_mat = local_mat;
-    global_mat.right_multiply_transpose(tmp_mat);
-    global_mat.left_multiply(tmp_mat);
+    global_mat.right_multiply_transpose(mat);
+    global_mat.left_multiply(mat);
 }
 
 
@@ -906,20 +906,20 @@ MAST::StructuralElementBase::transform_to_local_system(const libMesh::DenseVecto
     
     const unsigned int n_dofs = _fe->n_shape_functions();
     local_vec.zero();
-    DenseRealMatrix tmp_mat;
-    tmp_mat.resize(6*n_dofs, 6*n_dofs);
+    DenseRealMatrix mat;
+    mat.resize(6*n_dofs, 6*n_dofs);
     
     const DenseRealMatrix& Tmat = _transformation_matrix();
     // now initialize the global T matrix
     for (unsigned int i=0; i<n_dofs; i++)
         for (unsigned int j=0; j<3; j++)
             for (unsigned int k=0; k<3; k++) {
-                tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
-                tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
+                mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
+                mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
             }
     
     // left multiply with T^T
-    tmp_mat.vector_mult_transpose(local_vec, global_vec);
+    mat.vector_mult_transpose(local_vec, global_vec);
 }
 
 
@@ -932,20 +932,20 @@ MAST::StructuralElementBase::transform_to_global_system(const libMesh::DenseVect
     
     const unsigned int n_dofs = _fe->n_shape_functions();
     global_vec.zero();
-    DenseRealMatrix tmp_mat;
-    tmp_mat.resize(6*n_dofs, 6*n_dofs);
+    DenseRealMatrix mat;
+    mat.resize(6*n_dofs, 6*n_dofs);
     
     const DenseRealMatrix& Tmat = _transformation_matrix();
     // now initialize the global T matrix
     for (unsigned int i=0; i<n_dofs; i++)
         for (unsigned int j=0; j<3; j++)
             for (unsigned int k=0; k<3; k++) {
-                tmp_mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
-                tmp_mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
+                mat(j*n_dofs+i, k*n_dofs+i) = Tmat(j,k); // for u,v,w
+                mat((j+3)*n_dofs+i, (k+3)*n_dofs+i) = Tmat(j,k); // for tx,ty,tz
             }
     
     // left multiply with T
-    tmp_mat.vector_mult(global_vec, local_vec);
+    mat.vector_mult(global_vec, local_vec);
 }
 
 

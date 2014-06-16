@@ -196,16 +196,16 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
     DenseRealMatrix material_A_mat, material_B_mat, material_D_mat,
-    tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
-    tmp_mat4_n3n2, vk_dwdxi_mat, stress, stress_l, local_jac;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    tmp_vec4_n3, tmp_vec5_n3, local_f;
+    mat1_n1n2, mat2_n2n2, mat3,
+    mat4_n3n2, vk_dwdxi_mat, stress, stress_l, local_jac;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n2,
+    vec4_n3, vec5_n3, local_f;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
     vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); stress_l.resize(2, 2);
-    local_f.resize(n2); tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
+    local_f.resize(n2); vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); vec4_n3.resize(n3); vec5_n3.resize(n3);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
@@ -247,10 +247,10 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
                                   local_f, local_jac,
                                   Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, stress_l, vk_dwdxi_mat, material_A_mat,
-                                  material_B_mat, material_D_mat, tmp_vec1_n1,
-                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
-                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
-                                  tmp_mat3, tmp_mat4_n3n2);
+                                  material_B_mat, material_D_mat, vec1_n1,
+                                  vec2_n1, vec3_n2, vec4_n3,
+                                  vec5_n3, mat1_n1n2, mat2_n2n2,
+                                  mat3, mat4_n3n2);
         
     }
     
@@ -264,8 +264,8 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
     
     
     // now transform to the global coorodinate system
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(1., tmp_vec3_n2);
+    transform_to_global_system(local_f, vec3_n2);
+    f.add(1., vec3_n2);
     if (request_jacobian) {
         // for 2D elements
         if (_elem.dim() == 2) {
@@ -273,8 +273,8 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
             for (unsigned int i=0; i<n_phi; i++)
                 local_jac(5*n_phi+i, 5*n_phi+i) = -1.0e-8;
         }
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(1., tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, mat2_n2n2);
+        jac.add(1., mat2_n2n2);
     }
     
     return request_jacobian;
@@ -313,17 +313,17 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
     DenseRealMatrix material_A_mat, material_B_mat, material_D_mat,
-    material_trans_shear_mat, tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
-    tmp_mat4_n3n2, vk_dwdxi_mat, stress, stress_l, local_jac;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    tmp_vec4_n3, tmp_vec5_n3, local_f;
+    material_trans_shear_mat, mat1_n1n2, mat2_n2n2, mat3,
+    mat4_n3n2, vk_dwdxi_mat, stress, stress_l, local_jac;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n2,
+    vec4_n3, vec5_n3, local_f;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
     vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); stress_l.resize(2, 2);
     local_f.resize(n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
+    vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); vec4_n3.resize(n3); vec5_n3.resize(n3);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
@@ -369,10 +369,10 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
                                   local_f, local_jac,
                                   Bmat_mem, Bmat_bend, Bmat_vk,
                                   stress, stress_l, vk_dwdxi_mat, material_A_mat,
-                                  material_B_mat, material_D_mat, tmp_vec1_n1,
-                                  tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3,
-                                  tmp_vec5_n3, tmp_mat1_n1n2, tmp_mat2_n2n2,
-                                  tmp_mat3, tmp_mat4_n3n2);
+                                  material_B_mat, material_D_mat, vec1_n1,
+                                  vec2_n1, vec3_n2, vec4_n3,
+                                  vec5_n3, mat1_n1n2, mat2_n2n2,
+                                  mat3, mat4_n3n2);
         
         // this accounts for the sensitivity of the linear stress as a result of
         // static solution. This is needed only for cases that require linearized
@@ -384,17 +384,17 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
             
             _linearized_geometric_stiffness_sensitivity_with_static_solution
             (n2, qp, JxW, local_jac, Bmat_mem, Bmat_bend, Bmat_vk, stress_l,
-             vk_dwdxi_mat, material_A_mat, material_B_mat, tmp_vec1_n1,
-             tmp_vec2_n1, tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3);
+             vk_dwdxi_mat, material_A_mat, material_B_mat, vec1_n1,
+             vec2_n1, mat1_n1n2, mat2_n2n2, mat3);
         }
     }
     
     // now transform to the global coorodinate system
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(1., tmp_vec3_n2);
+    transform_to_global_system(local_f, vec3_n2);
+    f.add(1., vec3_n2);
     if (request_jacobian) {
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(1., tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, mat2_n2n2);
+        jac.add(1., mat2_n2n2);
     }
     
     // now calculate the transverse shear contribution if appropriate for the
@@ -428,113 +428,113 @@ MAST::StructuralElement2D::_internal_force_operation
  DenseRealMatrix& material_A_mat,
  DenseRealMatrix& material_B_mat,
  DenseRealMatrix& material_D_mat,
- DenseRealVector& tmp_vec1_n1,
- DenseRealVector& tmp_vec2_n1,
- DenseRealVector& tmp_vec3_n2,
- DenseRealVector& tmp_vec4_2,
- DenseRealVector& tmp_vec5_2,
- DenseRealMatrix& tmp_mat1_n1n2,
- DenseRealMatrix& tmp_mat2_n2n2,
- DenseRealMatrix& tmp_mat3,
- DenseRealMatrix& tmp_mat4_2n2)
+ DenseRealVector& vec1_n1,
+ DenseRealVector& vec2_n1,
+ DenseRealVector& vec3_n2,
+ DenseRealVector& vec4_2,
+ DenseRealVector& vec5_2,
+ DenseRealMatrix& mat1_n1n2,
+ DenseRealMatrix& mat2_n2n2,
+ DenseRealMatrix& mat3,
+ DenseRealMatrix& mat4_2n2)
 {
     this->initialize_direct_strain_operator(qp, Bmat_mem);
     
     // first handle constant throught the thickness stresses: membrane and vonKarman
-    Bmat_mem.vector_mult(tmp_vec1_n1, local_solution);
-    material_A_mat.vector_mult(tmp_vec2_n1, tmp_vec1_n1); // linear direct stress
+    Bmat_mem.vector_mult(vec1_n1, local_solution);
+    material_A_mat.vector_mult(vec2_n1, vec1_n1); // linear direct stress
     
     // copy the stress values to a matrix
-    stress_l(0,0) = tmp_vec2_n1(0); // sigma_xx
-    stress_l(0,1) = tmp_vec2_n1(2); // sigma_xy
-    stress_l(1,0) = tmp_vec2_n1(2); // sigma_yx
-    stress_l(1,1) = tmp_vec2_n1(1); // sigma_yy
+    stress_l(0,0) = vec2_n1(0); // sigma_xx
+    stress_l(0,1) = vec2_n1(2); // sigma_xy
+    stress_l(1,0) = vec2_n1(2); // sigma_yx
+    stress_l(1,1) = vec2_n1(1); // sigma_yy
     
     
     // get the bending strain operator
-    tmp_vec2_n1.zero(); // used to store vk strain, if applicable
+    vec2_n1.zero(); // used to store vk strain, if applicable
     if (if_bending) {
         _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
         
         if (if_vk)  // get the vonKarman strain operator if needed
             this->initialize_von_karman_strain_operator(qp,
-                                                        tmp_vec2_n1, // epsilon_vk
+                                                        vec2_n1, // epsilon_vk
                                                         vk_dwdxi_mat,
                                                         Bmat_vk);
     }
     
     // add the linear and nonlinear direct strains
-    tmp_vec2_n1.add(1., tmp_vec1_n1);  // epsilon_mem + epsilon_vk
+    vec2_n1.add(1., vec1_n1);  // epsilon_mem + epsilon_vk
     
     // multiply this with the constant-through-the-thickness strain
     // membrane strain
-    material_A_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1); // stress
-    Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-    local_f.add(-JxW[qp], tmp_vec3_n2);
+    material_A_mat.vector_mult(vec1_n1, vec2_n1); // stress
+    Bmat_mem.vector_mult_transpose(vec3_n2, vec1_n1);
+    local_f.add(-JxW[qp], vec3_n2);
     // copy the stress values to a matrix
-    stress(0,0) = tmp_vec1_n1(0); // sigma_xx
-    stress(0,1) = tmp_vec1_n1(2); // sigma_xy
-    stress(1,0) = tmp_vec1_n1(2); // sigma_yx
-    stress(1,1) = tmp_vec1_n1(1); // sigma_yy
+    stress(0,0) = vec1_n1(0); // sigma_xx
+    stress(0,1) = vec1_n1(2); // sigma_xy
+    stress(1,0) = vec1_n1(2); // sigma_yx
+    stress(1,1) = vec1_n1(1); // sigma_yy
     
     if (if_bending) {
         if (if_vk) {
             // von Karman strain
-            vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
-            Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
-            local_f.add(-JxW[qp], tmp_vec3_n2);
+            vk_dwdxi_mat.vector_mult_transpose(vec4_2, vec1_n1);
+            Bmat_vk.vector_mult_transpose(vec3_n2, vec4_2);
+            local_f.add(-JxW[qp], vec3_n2);
         }
         
         // now coupling with the bending strain
         // B_bend^T [B]^T B_mem
-        material_B_mat.vector_mult_transpose(tmp_vec1_n1, tmp_vec2_n1);
-        Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        local_f.add(-JxW[qp], tmp_vec3_n2);
+        material_B_mat.vector_mult_transpose(vec1_n1, vec2_n1);
+        Bmat_bend.vector_mult_transpose(vec3_n2, vec1_n1);
+        local_f.add(-JxW[qp], vec3_n2);
         
         // now bending stress and its coupling
-        Bmat_bend.vector_mult(tmp_vec2_n1, local_solution);
+        Bmat_bend.vector_mult(vec2_n1, local_solution);
         
         // now get its projection onto the constant through thickness
         // and membrane operators
         // B_mem^T [B] B_bend
-        material_B_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1);
-        Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        local_f.add(-JxW[qp], tmp_vec3_n2);
+        material_B_mat.vector_mult(vec1_n1, vec2_n1);
+        Bmat_mem.vector_mult_transpose(vec3_n2, vec1_n1);
+        local_f.add(-JxW[qp], vec3_n2);
         
         if (if_vk) {
             // von Karman strain
-            vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
-            Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
-            local_f.add(-JxW[qp], tmp_vec3_n2);
+            vk_dwdxi_mat.vector_mult_transpose(vec4_2, vec1_n1);
+            Bmat_vk.vector_mult_transpose(vec3_n2, vec4_2);
+            local_f.add(-JxW[qp], vec3_n2);
         }
         
         // and the bending operator
-        material_D_mat.vector_mult(tmp_vec1_n1, tmp_vec2_n1);
-        Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        local_f.add(-JxW[qp], tmp_vec3_n2);
+        material_D_mat.vector_mult(vec1_n1, vec2_n1);
+        Bmat_bend.vector_mult_transpose(vec3_n2, vec1_n1);
+        local_f.add(-JxW[qp], vec3_n2);
     }
     
     if (request_jacobian) {
         // membrane - membrane
-        Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
-        Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-        local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+        Bmat_mem.left_multiply(mat1_n1n2, material_A_mat);
+        Bmat_mem.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+        local_jac.add(-JxW[qp], mat2_n2n2);
         
         if (if_bending) {
             if (if_vk) {
                 // membrane - vk
-                tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
-                Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
-                tmp_mat3.left_multiply(material_A_mat);
-                Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                mat3.resize(vk_dwdxi_mat.m(), n2);
+                Bmat_vk.left_multiply(mat3, vk_dwdxi_mat);
+                mat3.left_multiply(material_A_mat);
+                Bmat_mem.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(-JxW[qp], mat2_n2n2);
                 
                 // vk - membrane
-                Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
-                vk_dwdxi_mat.get_transpose(tmp_mat3);
-                tmp_mat3.right_multiply(tmp_mat1_n1n2);
-                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                Bmat_mem.left_multiply(mat1_n1n2, material_A_mat);
+                vk_dwdxi_mat.get_transpose(mat3);
+                mat3.right_multiply(mat1_n1n2);
+                Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(-JxW[qp], mat2_n2n2);
                 
                 // if only the first order term of the Jacobian is needed, for
                 // example for linearized buckling analysis, then the linear
@@ -542,56 +542,56 @@ MAST::StructuralElement2D::_internal_force_operation
                 // is included. Otherwise, all terms are included
                 if (if_ignore_ho_jac) {
                     // vk - vk: first order term
-                    tmp_mat3.resize(2, n2);
-                    Bmat_vk.left_multiply(tmp_mat3, stress_l);
-                    Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                    mat3.resize(2, n2);
+                    Bmat_vk.left_multiply(mat3, stress_l);
+                    Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                    local_jac.add(-JxW[qp], mat2_n2n2);
                 }
                 else {
                     // vk - vk
-                    tmp_mat3.resize(2, n2);
-                    Bmat_vk.left_multiply(tmp_mat3, stress);
-                    Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                    mat3.resize(2, n2);
+                    Bmat_vk.left_multiply(mat3, stress);
+                    Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                    local_jac.add(-JxW[qp], mat2_n2n2);
                     
-                    tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
-                    Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
-                    tmp_mat3.left_multiply(material_A_mat);
-                    tmp_mat3.left_multiply_transpose(vk_dwdxi_mat);
-                    Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                    mat3.resize(vk_dwdxi_mat.m(), n2);
+                    Bmat_vk.left_multiply(mat3, vk_dwdxi_mat);
+                    mat3.left_multiply(material_A_mat);
+                    mat3.left_multiply_transpose(vk_dwdxi_mat);
+                    Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                    local_jac.add(-JxW[qp], mat2_n2n2);
                 }
                 
                 // bending - vk
-                tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
-                Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
-                tmp_mat3.left_multiply_transpose(material_B_mat);
-                Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                mat3.resize(vk_dwdxi_mat.m(), n2);
+                Bmat_vk.left_multiply(mat3, vk_dwdxi_mat);
+                mat3.left_multiply_transpose(material_B_mat);
+                Bmat_bend.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(-JxW[qp], mat2_n2n2);
                 
                 // vk - bending
-                Bmat_bend.left_multiply(tmp_mat1_n1n2, material_B_mat);
-                vk_dwdxi_mat.get_transpose(tmp_mat3);
-                tmp_mat3.right_multiply(tmp_mat1_n1n2);
-                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                Bmat_bend.left_multiply(mat1_n1n2, material_B_mat);
+                vk_dwdxi_mat.get_transpose(mat3);
+                mat3.right_multiply(mat1_n1n2);
+                Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(-JxW[qp], mat2_n2n2);
             }
             
             // bending - membrane
-            material_B_mat.get_transpose(tmp_mat3);
-            Bmat_mem.left_multiply(tmp_mat1_n1n2, tmp_mat3);
-            Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-            local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+            material_B_mat.get_transpose(mat3);
+            Bmat_mem.left_multiply(mat1_n1n2, mat3);
+            Bmat_bend.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+            local_jac.add(-JxW[qp], mat2_n2n2);
             
             // membrane - bending
-            Bmat_bend.left_multiply(tmp_mat1_n1n2, material_B_mat);
-            Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-            local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+            Bmat_bend.left_multiply(mat1_n1n2, material_B_mat);
+            Bmat_mem.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+            local_jac.add(-JxW[qp], mat2_n2n2);
             
             // bending - bending
-            Bmat_bend.left_multiply(tmp_mat1_n1n2, material_D_mat);
-            Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat1_n1n2);
-            local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+            Bmat_bend.left_multiply(mat1_n1n2, material_D_mat);
+            Bmat_bend.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
+            local_jac.add(-JxW[qp], mat2_n2n2);
         }
     }
 }
@@ -612,28 +612,28 @@ MAST::StructuralElement2D::_linearized_geometric_stiffness_sensitivity_with_stat
  DenseRealMatrix& vk_dwdxi_mat,
  DenseRealMatrix& material_A_mat,
  DenseRealMatrix& material_B_mat,
- DenseRealVector& tmp_vec1_n1,
- DenseRealVector& tmp_vec2_n1,
- DenseRealMatrix& tmp_mat1_n1n2,
- DenseRealMatrix& tmp_mat2_n2n2,
- DenseRealMatrix& tmp_mat3)
+ DenseRealVector& vec1_n1,
+ DenseRealVector& vec2_n1,
+ DenseRealMatrix& mat1_n1n2,
+ DenseRealMatrix& mat2_n2n2,
+ DenseRealMatrix& mat3)
 {
     this->initialize_direct_strain_operator(qp, Bmat_mem);
     _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
 
     // first handle constant throught the thickness stresses: membrane and vonKarman
-    Bmat_mem.vector_mult(tmp_vec1_n1, local_solution_sens);
-    material_A_mat.vector_mult(tmp_vec2_n1, tmp_vec1_n1); // linear direct stress
+    Bmat_mem.vector_mult(vec1_n1, local_solution_sens);
+    material_A_mat.vector_mult(vec2_n1, vec1_n1); // linear direct stress
     
     // copy the stress values to a matrix
-    stress_l(0,0) = tmp_vec2_n1(0); // sigma_xx
-    stress_l(0,1) = tmp_vec2_n1(2); // sigma_xy
-    stress_l(1,0) = tmp_vec2_n1(2); // sigma_yx
-    stress_l(1,1) = tmp_vec2_n1(1); // sigma_yy
+    stress_l(0,0) = vec2_n1(0); // sigma_xx
+    stress_l(0,1) = vec2_n1(2); // sigma_xy
+    stress_l(1,0) = vec2_n1(2); // sigma_yx
+    stress_l(1,1) = vec2_n1(1); // sigma_yy
 
     // get the von Karman operator matrix
     this->initialize_von_karman_strain_operator(qp,
-                                                tmp_vec2_n1, // epsilon_vk
+                                                vec2_n1, // epsilon_vk
                                                 vk_dwdxi_mat,
                                                 Bmat_vk);
 
@@ -642,38 +642,38 @@ MAST::StructuralElement2D::_linearized_geometric_stiffness_sensitivity_with_stat
                                                             vk_dwdxi_mat);
 
     // membrane - vk
-    tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
-    Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
-    tmp_mat3.left_multiply(material_A_mat);
-    Bmat_mem.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    mat3.resize(vk_dwdxi_mat.m(), n2);
+    Bmat_vk.left_multiply(mat3, vk_dwdxi_mat);
+    mat3.left_multiply(material_A_mat);
+    Bmat_mem.right_multiply_transpose(mat2_n2n2, mat3);
+    local_jac.add(-JxW[qp], mat2_n2n2);
     
     // vk - membrane
-    Bmat_mem.left_multiply(tmp_mat1_n1n2, material_A_mat);
-    vk_dwdxi_mat.get_transpose(tmp_mat3);
-    tmp_mat3.right_multiply(tmp_mat1_n1n2);
-    Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    Bmat_mem.left_multiply(mat1_n1n2, material_A_mat);
+    vk_dwdxi_mat.get_transpose(mat3);
+    mat3.right_multiply(mat1_n1n2);
+    Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+    local_jac.add(-JxW[qp], mat2_n2n2);
     
     // vk - vk: first order term
-    tmp_mat3.resize(2, n2);
-    Bmat_vk.left_multiply(tmp_mat3, stress_l);
-    Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    mat3.resize(2, n2);
+    Bmat_vk.left_multiply(mat3, stress_l);
+    Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+    local_jac.add(-JxW[qp], mat2_n2n2);
 
     // bending - vk
-    tmp_mat3.resize(vk_dwdxi_mat.m(), n2);
-    Bmat_vk.left_multiply(tmp_mat3, vk_dwdxi_mat);
-    tmp_mat3.left_multiply_transpose(material_B_mat);
-    Bmat_bend.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    mat3.resize(vk_dwdxi_mat.m(), n2);
+    Bmat_vk.left_multiply(mat3, vk_dwdxi_mat);
+    mat3.left_multiply_transpose(material_B_mat);
+    Bmat_bend.right_multiply_transpose(mat2_n2n2, mat3);
+    local_jac.add(-JxW[qp], mat2_n2n2);
     
     // vk - bending
-    Bmat_bend.left_multiply(tmp_mat1_n1n2, material_B_mat);
-    vk_dwdxi_mat.get_transpose(tmp_mat3);
-    tmp_mat3.right_multiply(tmp_mat1_n1n2);
-    Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-    local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+    Bmat_bend.left_multiply(mat1_n1n2, material_B_mat);
+    vk_dwdxi_mat.get_transpose(mat3);
+    mat3.right_multiply(mat1_n1n2);
+    Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+    local_jac.add(-JxW[qp], mat2_n2n2);
 }
 
 
@@ -694,14 +694,14 @@ MAST::StructuralElement2D::prestress_force (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    DenseRealMatrix tmp_mat2_n2n2, tmp_mat3, vk_dwdxi_mat, local_jac,
+    DenseRealMatrix mat2_n2n2, mat3, vk_dwdxi_mat, local_jac,
     prestress_mat_A, prestress_mat_B;
-    DenseRealVector tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
+    DenseRealVector vec2_n1, vec3_n2, vec4_n3, vec5_n3,
     local_f, prestress_vec_A, prestress_vec_B;
     
-    tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
-    vk_dwdxi_mat.resize(n1,n3); local_f.resize(n2); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
+    mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
+    vk_dwdxi_mat.resize(n1,n3); local_f.resize(n2); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); vec4_n3.resize(n3); vec5_n3.resize(n3);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
@@ -736,13 +736,13 @@ MAST::StructuralElement2D::prestress_force (bool request_jacobian,
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         
         // get the bending strain operator if needed
-        tmp_vec2_n1.zero(); // used to store vk strain, if applicable
+        vec2_n1.zero(); // used to store vk strain, if applicable
         if (if_bending) {
             _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
             
             if (if_vk)  // get the vonKarman strain operator if needed
                 this->initialize_von_karman_strain_operator(qp,
-                                                            tmp_vec2_n1,
+                                                            vec2_n1,
                                                             vk_dwdxi_mat,
                                                             Bmat_vk);
         }
@@ -750,38 +750,38 @@ MAST::StructuralElement2D::prestress_force (bool request_jacobian,
         // first handle constant throught the thickness stresses: membrane and vonKarman
         // multiply this with the constant through the thickness strain
         // membrane strain
-        Bmat_mem.vector_mult_transpose(tmp_vec3_n2, prestress_vec_A);
-        local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_mem * sigma_0
+        Bmat_mem.vector_mult_transpose(vec3_n2, prestress_vec_A);
+        local_f.add(-JxW[qp], vec3_n2); // epsilon_mem * sigma_0
         
         if (if_bending) {
             if (if_vk) {
                 // von Karman strain
-                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_n3, prestress_vec_A);
-                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_n3);
-                local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_vk * sigma_0
+                vk_dwdxi_mat.vector_mult_transpose(vec4_n3, prestress_vec_A);
+                Bmat_vk.vector_mult_transpose(vec3_n2, vec4_n3);
+                local_f.add(-JxW[qp], vec3_n2); // epsilon_vk * sigma_0
             }
             
             // now coupling with the bending strain
-            Bmat_bend.vector_mult_transpose(tmp_vec3_n2, prestress_vec_B);
-            local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_bend * sigma_0
+            Bmat_bend.vector_mult_transpose(vec3_n2, prestress_vec_B);
+            local_f.add(-JxW[qp], vec3_n2); // epsilon_bend * sigma_0
         }
         
         if (request_jacobian) {
             if (if_bending && if_vk) {
-                tmp_mat3.resize(2, n2);
-                Bmat_vk.left_multiply(tmp_mat3, prestress_mat_A);
-                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                mat3.resize(2, n2);
+                Bmat_vk.left_multiply(mat3, prestress_mat_A);
+                Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(-JxW[qp], mat2_n2n2);
             }
         }
     }
     
     // now transform to the global coorodinate system
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(1., tmp_vec3_n2);
+    transform_to_global_system(local_f, vec3_n2);
+    f.add(1., vec3_n2);
     if (request_jacobian && if_vk) {
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(1., tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, mat2_n2n2);
+        jac.add(1., mat2_n2n2);
     }
     
     // only the nonlinear strain returns a Jacobian for prestressing
@@ -807,14 +807,14 @@ MAST::StructuralElement2D::prestress_force_sensitivity (bool request_jacobian,
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
-    DenseRealMatrix tmp_mat2_n2n2, tmp_mat3, vk_dwdxi_mat, local_jac,
+    DenseRealMatrix mat2_n2n2, mat3, vk_dwdxi_mat, local_jac,
     prestress_mat_A, prestress_mat_B;
-    DenseRealVector tmp_vec2_n1, tmp_vec3_n2, tmp_vec4_n3, tmp_vec5_n3,
+    DenseRealVector vec2_n1, vec3_n2, vec4_n3, vec5_n3,
     local_f, prestress_vec_A, prestress_vec_B;
     
-    tmp_mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
-    vk_dwdxi_mat.resize(n1,n3); local_f.resize(n2); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_n3.resize(n3); tmp_vec5_n3.resize(n3);
+    mat2_n2n2.resize(n2, n2); local_jac.resize(n2, n2);
+    vk_dwdxi_mat.resize(n1,n3); local_f.resize(n2); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); vec4_n3.resize(n3); vec5_n3.resize(n3);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
@@ -851,13 +851,13 @@ MAST::StructuralElement2D::prestress_force_sensitivity (bool request_jacobian,
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         
         // get the bending strain operator if needed
-        tmp_vec2_n1.zero(); // used to store vk strain, if applicable
+        vec2_n1.zero(); // used to store vk strain, if applicable
         if (if_bending) {
             _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
             
             if (if_vk)  // get the vonKarman strain operator if needed
                 this->initialize_von_karman_strain_operator(qp,
-                                                            tmp_vec2_n1,
+                                                            vec2_n1,
                                                             vk_dwdxi_mat,
                                                             Bmat_vk);
         }
@@ -865,38 +865,38 @@ MAST::StructuralElement2D::prestress_force_sensitivity (bool request_jacobian,
         // first handle constant throught the thickness stresses: membrane and vonKarman
         // multiply this with the constant through the thickness strain
         // membrane strain
-        Bmat_mem.vector_mult_transpose(tmp_vec3_n2, prestress_vec_A);
-        local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_mem * sigma_0
+        Bmat_mem.vector_mult_transpose(vec3_n2, prestress_vec_A);
+        local_f.add(-JxW[qp], vec3_n2); // epsilon_mem * sigma_0
         
         if (if_bending) {
             if (if_vk) {
                 // von Karman strain
-                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_n3, prestress_vec_A);
-                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_n3);
-                local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_vk * sigma_0
+                vk_dwdxi_mat.vector_mult_transpose(vec4_n3, prestress_vec_A);
+                Bmat_vk.vector_mult_transpose(vec3_n2, vec4_n3);
+                local_f.add(-JxW[qp], vec3_n2); // epsilon_vk * sigma_0
             }
             
             // now coupling with the bending strain
-            Bmat_bend.vector_mult_transpose(tmp_vec3_n2, prestress_vec_B);
-            local_f.add(-JxW[qp], tmp_vec3_n2); // epsilon_bend * sigma_0
+            Bmat_bend.vector_mult_transpose(vec3_n2, prestress_vec_B);
+            local_f.add(-JxW[qp], vec3_n2); // epsilon_bend * sigma_0
         }
         
         if (request_jacobian) {
             if (if_bending && if_vk) {
-                tmp_mat3.resize(2, n2);
-                Bmat_vk.left_multiply(tmp_mat3, prestress_mat_A);
-                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(-JxW[qp], tmp_mat2_n2n2);
+                mat3.resize(2, n2);
+                Bmat_vk.left_multiply(mat3, prestress_mat_A);
+                Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(-JxW[qp], mat2_n2n2);
             }
         }
     }
     
     // now transform to the global coorodinate system
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(1., tmp_vec3_n2);
+    transform_to_global_system(local_f, vec3_n2);
+    f.add(1., vec3_n2);
     if (request_jacobian && if_vk) {
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(1., tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, mat2_n2n2);
+        jac.add(1., mat2_n2n2);
     }
     
     // only the nonlinear strain returns a Jacobian for prestressing
@@ -921,16 +921,16 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
     DenseRealMatrix material_exp_A_mat, material_exp_B_mat,
-    tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
-    tmp_mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    tmp_vec4_2, tmp_vec5_n3, local_f, delta_t;
+    mat1_n1n2, mat2_n2n2, mat3,
+    mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n2,
+    vec4_2, vec5_n3, local_f, delta_t;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
     vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_n3.resize(n3);
+    vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); vec4_2.resize(2); vec5_n3.resize(n3);
     delta_t.resize(1);
     
     
@@ -971,54 +971,54 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
         ref_temp_func(xyz[qp], _system.time, t0);
         delta_t(0) = t-t0;
 
-        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t); // [C]{alpha (T - T0)} (with membrane strain)
-        material_exp_B_mat.vector_mult(tmp_vec2_n1, delta_t); // [C]{alpha (T - T0)} (with bending strain)
-        stress(0,0) = tmp_vec1_n1(0); // sigma_xx
-        stress(0,1) = tmp_vec1_n1(2); // sigma_xy
-        stress(1,0) = tmp_vec1_n1(2); // sigma_yx
-        stress(1,1) = tmp_vec1_n1(1); // sigma_yy
+        material_exp_A_mat.vector_mult(vec1_n1, delta_t); // [C]{alpha (T - T0)} (with membrane strain)
+        material_exp_B_mat.vector_mult(vec2_n1, delta_t); // [C]{alpha (T - T0)} (with bending strain)
+        stress(0,0) = vec1_n1(0); // sigma_xx
+        stress(0,1) = vec1_n1(2); // sigma_xy
+        stress(1,0) = vec1_n1(2); // sigma_yx
+        stress(1,1) = vec1_n1(1); // sigma_yy
         
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         
         // membrane strain
-        Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        local_f.add(JxW[qp], tmp_vec3_n2);
+        Bmat_mem.vector_mult_transpose(vec3_n2, vec1_n1);
+        local_f.add(JxW[qp], vec3_n2);
         
         if (if_bending) {
             // bending strain
             _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
-            Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec2_n1);
-            local_f.add(JxW[qp], tmp_vec3_n2);
+            Bmat_bend.vector_mult_transpose(vec3_n2, vec2_n1);
+            local_f.add(JxW[qp], vec3_n2);
             
             // von Karman strain
             if (if_vk) {
                 // get the vonKarman strain operator if needed
                 this->initialize_von_karman_strain_operator(qp,
-                                                            tmp_vec2_n1, // epsilon_vk
+                                                            vec2_n1, // epsilon_vk
                                                             vk_dwdxi_mat,
                                                             Bmat_vk);
                 // von Karman strain
-                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
-                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
-                local_f.add(JxW[qp], tmp_vec3_n2);
+                vk_dwdxi_mat.vector_mult_transpose(vec4_2, vec1_n1);
+                Bmat_vk.vector_mult_transpose(vec3_n2, vec4_2);
+                local_f.add(JxW[qp], vec3_n2);
             }
             
             if (request_jacobian && if_vk) { // Jacobian only for vk strain
                 // vk - vk
-                tmp_mat3.resize(2, n2);
-                Bmat_vk.left_multiply(tmp_mat3, stress);
-                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+                mat3.resize(2, n2);
+                Bmat_vk.left_multiply(mat3, stress);
+                Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(JxW[qp], mat2_n2n2);
             }
         }
     }
     
     // now transform to the global coorodinate system
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(1., tmp_vec3_n2);
+    transform_to_global_system(local_f, vec3_n2);
+    f.add(1., vec3_n2);
     if (request_jacobian && if_vk) {
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(1., tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, mat2_n2n2);
+        jac.add(1., mat2_n2n2);
     }
     
     // Jacobian contribution from von Karman strain
@@ -1043,16 +1043,16 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
     n3 = this->n_von_karman_strain_components();
     DenseRealMatrix material_exp_A_mat, material_exp_B_mat,
     material_exp_A_mat_sens, material_exp_B_mat_sens,
-    tmp_mat1_n1n2, tmp_mat2_n2n2, tmp_mat3,
-    tmp_mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n2,
-    tmp_vec4_2, tmp_vec5_n1, local_f, delta_t, delta_t_sens;
+    mat1_n1n2, mat2_n2n2, mat3,
+    mat4_n3n2, vk_dwdxi_mat, stress, local_jac;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n2,
+    vec4_2, vec5_n1, local_f, delta_t, delta_t_sens;
     
-    tmp_mat1_n1n2.resize(n1, n2); tmp_mat2_n2n2.resize(n2, n2);
-    tmp_mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
+    mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
+    mat4_n3n2.resize(n3, n2); local_jac.resize(n2, n2);
     vk_dwdxi_mat.resize(n1,n3); stress.resize(2,2); local_f.resize(n2);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n2.resize(n2); tmp_vec4_2.resize(2); tmp_vec5_n1.resize(n1);
+    vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n2.resize(n2); vec4_2.resize(2); vec5_n1.resize(n1);
     delta_t.resize(1); delta_t_sens.resize(1);
     
     
@@ -1106,62 +1106,62 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
         delta_t_sens(0) = t_sens;
 
         // now prepare the membrane force sensitivity
-        material_exp_A_mat.vector_mult(tmp_vec1_n1, delta_t_sens); // [C]{alpha dT/dp} (with membrane strain)
-        material_exp_A_mat_sens.vector_mult(tmp_vec2_n1, delta_t); // d([C]alpha)/dp (T - T0)} (with membrane strain)
-        tmp_vec1_n1.add(1., tmp_vec2_n1);
-        stress(0,0) = tmp_vec1_n1(0); // sigma_xx
-        stress(0,1) = tmp_vec1_n1(2); // sigma_xy
-        stress(1,0) = tmp_vec1_n1(2); // sigma_yx
-        stress(1,1) = tmp_vec1_n1(1); // sigma_yy
+        material_exp_A_mat.vector_mult(vec1_n1, delta_t_sens); // [C]{alpha dT/dp} (with membrane strain)
+        material_exp_A_mat_sens.vector_mult(vec2_n1, delta_t); // d([C]alpha)/dp (T - T0)} (with membrane strain)
+        vec1_n1.add(1., vec2_n1);
+        stress(0,0) = vec1_n1(0); // sigma_xx
+        stress(0,1) = vec1_n1(2); // sigma_xy
+        stress(1,0) = vec1_n1(2); // sigma_yx
+        stress(1,1) = vec1_n1(1); // sigma_yy
         
-        material_exp_B_mat.vector_mult(tmp_vec2_n1, delta_t_sens); // [C]{alpha dT/dp} (with bending strain)
-        material_exp_B_mat_sens.vector_mult(tmp_vec5_n1, delta_t); // d([C] alpha)/dp (T - T0) (with bending strain)
-        tmp_vec2_n1.add(1., tmp_vec5_n1);
+        material_exp_B_mat.vector_mult(vec2_n1, delta_t_sens); // [C]{alpha dT/dp} (with bending strain)
+        material_exp_B_mat_sens.vector_mult(vec5_n1, delta_t); // d([C] alpha)/dp (T - T0) (with bending strain)
+        vec2_n1.add(1., vec5_n1);
         
         
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         
         // membrane strain
-        Bmat_mem.vector_mult_transpose(tmp_vec3_n2, tmp_vec1_n1);
-        local_f.add(JxW[qp], tmp_vec3_n2);
+        Bmat_mem.vector_mult_transpose(vec3_n2, vec1_n1);
+        local_f.add(JxW[qp], vec3_n2);
         
         if (if_bending) {
             // bending strain
             _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
-            Bmat_bend.vector_mult_transpose(tmp_vec3_n2, tmp_vec2_n1);
-            local_f.add(JxW[qp], tmp_vec3_n2);
+            Bmat_bend.vector_mult_transpose(vec3_n2, vec2_n1);
+            local_f.add(JxW[qp], vec3_n2);
             
             // von Karman strain
             if (if_vk) {
                 // get the vonKarman strain operator if needed
                 this->initialize_von_karman_strain_operator(qp,
-                                                            tmp_vec2_n1, // epsilon_vk
+                                                            vec2_n1, // epsilon_vk
                                                             vk_dwdxi_mat,
                                                             Bmat_vk);
                 // von Karman strain
-                vk_dwdxi_mat.vector_mult_transpose(tmp_vec4_2, tmp_vec1_n1);
-                Bmat_vk.vector_mult_transpose(tmp_vec3_n2, tmp_vec4_2);
-                local_f.add(JxW[qp], tmp_vec3_n2);
+                vk_dwdxi_mat.vector_mult_transpose(vec4_2, vec1_n1);
+                Bmat_vk.vector_mult_transpose(vec3_n2, vec4_2);
+                local_f.add(JxW[qp], vec3_n2);
             }
             
             if (request_jacobian && if_vk) { // Jacobian only for vk strain
                 
                 // vk - vk
-                tmp_mat3.resize(2, n2);
-                Bmat_vk.left_multiply(tmp_mat3, stress);
-                Bmat_vk.right_multiply_transpose(tmp_mat2_n2n2, tmp_mat3);
-                local_jac.add(JxW[qp], tmp_mat2_n2n2);
+                mat3.resize(2, n2);
+                Bmat_vk.left_multiply(mat3, stress);
+                Bmat_vk.right_multiply_transpose(mat2_n2n2, mat3);
+                local_jac.add(JxW[qp], mat2_n2n2);
             }
         }
     }
     
     
     // now transform to the global coorodinate system
-    transform_to_global_system(local_f, tmp_vec3_n2);
-    f.add(1., tmp_vec3_n2);
+    transform_to_global_system(local_f, vec3_n2);
+    f.add(1., vec3_n2);
     if (request_jacobian && if_vk) {
-        transform_to_global_system(local_jac, tmp_mat2_n2n2);
-        jac.add(1., tmp_mat2_n2n2);
+        transform_to_global_system(local_jac, mat2_n2n2);
+        jac.add(1., mat2_n2n2);
     }
     
     // Jacobian contribution from von Karman strain
@@ -1188,11 +1188,11 @@ MAST::StructuralElement2D::max_von_mises_stress() {
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
     DenseRealMatrix material_mat, vk_dwdxi_mat;
-    DenseRealVector  tmp_vec1_n1, tmp_vec2_n1, tmp_vec3_n1, strain;
+    DenseRealVector  vec1_n1, vec2_n1, vec3_n1, strain;
     
     vk_dwdxi_mat.resize(n1,n3);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n1.resize(n1);
-    tmp_vec3_n1.resize(n1); strain.resize(n1);
+    vec1_n1.resize(n1); vec2_n1.resize(n1);
+    vec3_n1.resize(n1); strain.resize(n1);
     
     
     Bmat_mem.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
@@ -1220,54 +1220,54 @@ MAST::StructuralElement2D::max_von_mises_stress() {
         this->initialize_direct_strain_operator(qp, Bmat_mem);
         
         // get the bending strain operator if needed
-        tmp_vec2_n1.zero(); // used to store vk strain, if applicable
+        vec2_n1.zero(); // used to store vk strain, if applicable
         if (if_bending && if_vk)  // get the vonKarman strain operator if needed
             this->initialize_von_karman_strain_operator(qp,
-                                                        tmp_vec2_n1, // epsilon_vk
+                                                        vec2_n1, // epsilon_vk
                                                         vk_dwdxi_mat,
                                                         Bmat_vk);
     
         
         // first handle constant throught the thickness stresses: membrane and vonKarman
-        Bmat_mem.vector_mult(tmp_vec1_n1, local_solution);
-        tmp_vec2_n1.add(1., tmp_vec1_n1);  // epsilon_mem + epsilon_vk
+        Bmat_mem.vector_mult(vec1_n1, local_solution);
+        vec2_n1.add(1., vec1_n1);  // epsilon_mem + epsilon_vk
         
         if (if_bending) {
             bending_2d.initialize_bending_strain_operator_for_z(qp, 1., Bmat_bend);
             // calculate the strain at z=1, and the strain at z=-1 would be
             // negative of this
-            Bmat_bend.vector_mult(tmp_vec3_n1, local_solution);
+            Bmat_bend.vector_mult(vec3_n1, local_solution);
         }
         
-        strain = tmp_vec2_n1;
-        strain += tmp_vec3_n1; // extension and bending strain at +z
+        strain = vec2_n1;
+        strain += vec3_n1; // extension and bending strain at +z
         
         // multiply this with the constant-through-the-thickness strain
         // membrane strain
-        material_mat.vector_mult(tmp_vec1_n1, strain); // stress
+        material_mat.vector_mult(vec1_n1, strain); // stress
 
         // copy the stress values to the stress tensor
-        s(0,0) = tmp_vec1_n1(0); // sigma_xx
-        s(0,1) = tmp_vec1_n1(2); // sigma_xy
-        s(1,0) = tmp_vec1_n1(2); // sigma_yx
-        s(1,1) = tmp_vec1_n1(1); // sigma_yy
+        s(0,0) = vec1_n1(0); // sigma_xx
+        s(0,1) = vec1_n1(2); // sigma_xy
+        s(1,0) = vec1_n1(2); // sigma_yx
+        s(1,1) = vec1_n1(1); // sigma_yy
 
         // store the maximum value
         max_val = std::max(s.von_mises_stress(), max_val);
         
         // now do the same for -z
-        strain = tmp_vec2_n1;
-        strain -= tmp_vec3_n1;
+        strain = vec2_n1;
+        strain -= vec3_n1;
         
         // multiply this with the constant-through-the-thickness strain
         // membrane strain
-        material_mat.vector_mult(tmp_vec1_n1, strain); // stress
+        material_mat.vector_mult(vec1_n1, strain); // stress
         
         // copy the stress values to the stress tensor
-        s(0,0) = tmp_vec1_n1(0); // sigma_xx
-        s(0,1) = tmp_vec1_n1(2); // sigma_xy
-        s(1,0) = tmp_vec1_n1(2); // sigma_yx
-        s(1,1) = tmp_vec1_n1(1); // sigma_yy
+        s(0,0) = vec1_n1(0); // sigma_xx
+        s(0,1) = vec1_n1(2); // sigma_xy
+        s(1,0) = vec1_n1(2); // sigma_yx
+        s(1,1) = vec1_n1(1); // sigma_yy
         
         // store the maximum value
         max_val = std::max(s.von_mises_stress(), max_val);

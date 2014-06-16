@@ -177,12 +177,12 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    DenseRealMatrix LS_mat, tmp_mat1_n1n1, tmp_mat2_n1n2, tmp_mat3_n2n2, tmp_mat4;
-    DenseRealVector tmp_vec1_n1, tmp_vec2_n2;
+    DenseRealMatrix LS_mat, mat1_n1n1, mat2_n1n2, mat3_n2n2, mat4;
+    DenseRealVector vec1_n1, vec2_n2;
     
-    LS_mat.resize(n1, n_dofs); tmp_mat1_n1n1.resize(n1, n1);
-    tmp_mat2_n1n2.resize(n1, n_dofs); tmp_mat3_n2n2.resize(n_dofs, n_dofs);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n_dofs);
+    LS_mat.resize(n1, n_dofs); mat1_n1n1.resize(n1, n1);
+    mat2_n1n2.resize(n1, n_dofs); mat3_n2n2.resize(n_dofs, n_dofs);
+    vec1_n1.resize(n1); vec2_n2.resize(n_dofs);
     
     libMesh::Point uvec;
     libMesh::Real rho;
@@ -198,61 +198,61 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
         // first update the variables at the current quadrature point
         this->update_solution_at_quadrature_point(vars, qp, c,
                                                   true, c.get_elem_solution(),
-                                                  tmp_vec1_n1, uvec,
+                                                  vec1_n1, uvec,
                                                   B_mat, dB_mat,
                                                   LS_mat);
-        rho = tmp_vec1_n1(1); // get value from the interpolated sol
+        rho = vec1_n1(1); // get value from the interpolated sol
         
         for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
             // convective: Galerkin
-            dB_mat[i_dim].vector_mult(tmp_vec1_n1, c.get_elem_solution()); // dB/dx_i V
-            tmp_vec1_n1(0) *= 0.5*uvec(i_dim);  // [u_i 0] dphi/dx_i  : potential
-            tmp_vec1_n1(1)  = 0.;               // 0                  : density
-            B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);  // B [C1] dB/dx_i V
-            Fvec.add(-JxW[qp], tmp_vec2_n2);
+            dB_mat[i_dim].vector_mult(vec1_n1, c.get_elem_solution()); // dB/dx_i V
+            vec1_n1(0) *= 0.5*uvec(i_dim);  // [u_i 0] dphi/dx_i  : potential
+            vec1_n1(1)  = 0.;               // 0                  : density
+            B_mat.vector_mult_transpose(vec2_n2, vec1_n1);  // B [C1] dB/dx_i V
+            Fvec.add(-JxW[qp], vec2_n2);
             
             // convective: Least-Squares
-            LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);  // L*^T tau [C1] dB/dx_i V
-            Fvec.add(-JxW[qp], tmp_vec2_n2);
+            LS_mat.vector_mult_transpose(vec2_n2, vec1_n1);  // L*^T tau [C1] dB/dx_i V
+            Fvec.add(-JxW[qp], vec2_n2);
             
             
             // diffusive : Galerkin
-            dB_mat[i_dim].vector_mult(tmp_vec1_n1, c.get_elem_solution()); // dB/dx_i V
-            tmp_vec1_n1(1) = rho*tmp_vec1_n1(0);               // [rho  0] dphi/dx_i  : density
-            tmp_vec1_n1(0) *= 0.;                              // [0    0] 0          : potential
-            dB_mat[i_dim].vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);  // dB/dx_i [C2] dB/dx_i V
-            Fvec.add(JxW[qp], tmp_vec2_n2);
+            dB_mat[i_dim].vector_mult(vec1_n1, c.get_elem_solution()); // dB/dx_i V
+            vec1_n1(1) = rho*vec1_n1(0);               // [rho  0] dphi/dx_i  : density
+            vec1_n1(0) *= 0.;                              // [0    0] 0          : potential
+            dB_mat[i_dim].vector_mult_transpose(vec2_n2, vec1_n1);  // dB/dx_i [C2] dB/dx_i V
+            Fvec.add(JxW[qp], vec2_n2);
 
             // diffusive: Least-Squares: only the density derivative is included
             // TODO: this requires a 2nd order differential of the flux
-            dB_mat[i_dim].vector_mult(tmp_vec1_n1, c.get_elem_solution());
-            tmp_vec1_n1(0) = 0.;
-            tmp_vec1_n1(1) *= uvec(i_dim);
-            LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-            Fvec.add(-JxW[qp], tmp_vec2_n2);
+            dB_mat[i_dim].vector_mult(vec1_n1, c.get_elem_solution());
+            vec1_n1(0) = 0.;
+            vec1_n1(1) *= uvec(i_dim);
+            LS_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+            Fvec.add(-JxW[qp], vec2_n2);
         }
 
         
         // reactive term: Galerkin
-        tmp_vec1_n1.zero();
-        tmp_vec1_n1(0) = pow(ainf,2)/(gamma-1.) * pow(rho/rhoinf, gamma-1.);
-        B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        Fvec.add(-JxW[qp], tmp_vec2_n2);
+        vec1_n1.zero();
+        vec1_n1(0) = pow(ainf,2)/(gamma-1.) * pow(rho/rhoinf, gamma-1.);
+        B_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+        Fvec.add(-JxW[qp], vec2_n2);
         
         // reactive term: Least-Square
-        LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        Fvec.add(-JxW[qp], tmp_vec2_n2);
+        LS_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+        Fvec.add(-JxW[qp], vec2_n2);
 
         
         // source term: Galerkin
-        tmp_vec1_n1.zero();
-        tmp_vec1_n1(0) = 0.5*pow(uinf,2) + pow(ainf,2)/(gamma-1.);
-        B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        Fvec.add(JxW[qp], tmp_vec2_n2);
+        vec1_n1.zero();
+        vec1_n1(0) = 0.5*pow(uinf,2) + pow(ainf,2)/(gamma-1.);
+        B_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+        Fvec.add(JxW[qp], vec2_n2);
         
         // source term: Least-Square
-        LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        Fvec.add(JxW[qp], tmp_vec2_n2);
+        LS_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+        Fvec.add(JxW[qp], vec2_n2);
         
         
         if (request_jacobian && c.elem_solution_derivative)
@@ -260,46 +260,46 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
             for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             {
                 // convective: Galerkin
-                tmp_mat1_n1n1.zero();
-                tmp_mat1_n1n1(0,0) = 0.5*uvec(i_dim);
-                dB_mat[i_dim].left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
-                B_mat.right_multiply_transpose(tmp_mat3_n2n2,
-                                               tmp_mat2_n1n2);// B^T C1 dB/dx_i
-                Kmat.add(-JxW[qp], tmp_mat3_n2n2);
+                mat1_n1n1.zero();
+                mat1_n1n1(0,0) = 0.5*uvec(i_dim);
+                dB_mat[i_dim].left_multiply(mat2_n1n2, mat1_n1n1);
+                B_mat.right_multiply_transpose(mat3_n2n2,
+                                               mat2_n1n2);// B^T C1 dB/dx_i
+                Kmat.add(-JxW[qp], mat3_n2n2);
                 
                 // convective: Least-Squares
-                LS_mat.get_transpose(tmp_mat4);
-                tmp_mat4.right_multiply(tmp_mat2_n1n2);// LS^T C1 dB/dx_i
-                Kmat.add(-JxW[qp], tmp_mat4);
+                LS_mat.get_transpose(mat4);
+                mat4.right_multiply(mat2_n1n2);// LS^T C1 dB/dx_i
+                Kmat.add(-JxW[qp], mat4);
                 
                 // diffusive: Galerkin
-                tmp_mat1_n1n1.zero();
-                tmp_mat1_n1n1(1,0) = rho;
-                dB_mat[i_dim].left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
-                dB_mat[i_dim].right_multiply_transpose(tmp_mat3_n2n2,
-                                                       tmp_mat2_n1n2);// dB/dx_i^T C2 dB/dx_i
-                Kmat.add(JxW[qp], tmp_mat3_n2n2);
+                mat1_n1n1.zero();
+                mat1_n1n1(1,0) = rho;
+                dB_mat[i_dim].left_multiply(mat2_n1n2, mat1_n1n1);
+                dB_mat[i_dim].right_multiply_transpose(mat3_n2n2,
+                                                       mat2_n1n2);// dB/dx_i^T C2 dB/dx_i
+                Kmat.add(JxW[qp], mat3_n2n2);
                 
                 // diffusive: Least-Squares
-                tmp_mat1_n1n1.zero();
-                tmp_mat1_n1n1(1,1) = uvec(i_dim);
-                dB_mat[i_dim].left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
-                LS_mat.get_transpose(tmp_mat4);
-                tmp_mat4.right_multiply(tmp_mat2_n1n2);
-                Kmat.add(-JxW[qp], tmp_mat4);
+                mat1_n1n1.zero();
+                mat1_n1n1(1,1) = uvec(i_dim);
+                dB_mat[i_dim].left_multiply(mat2_n1n2, mat1_n1n1);
+                LS_mat.get_transpose(mat4);
+                mat4.right_multiply(mat2_n1n2);
+                Kmat.add(-JxW[qp], mat4);
             }
             
             // reactive term: Galerkin
-            tmp_mat1_n1n1.zero();
-            tmp_mat1_n1n1(0,1) = pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
-            B_mat.left_multiply(tmp_mat2_n1n2, tmp_mat1_n1n1);
-            B_mat.right_multiply_transpose(tmp_mat3_n2n2, tmp_mat2_n1n2);
-            Kmat.add(-JxW[qp], tmp_mat3_n2n2);
+            mat1_n1n1.zero();
+            mat1_n1n1(0,1) = pow(ainf,2)/pow(rhoinf,gamma-1.)*pow(rho,gamma-2.);
+            B_mat.left_multiply(mat2_n1n2, mat1_n1n1);
+            B_mat.right_multiply_transpose(mat3_n2n2, mat2_n1n2);
+            Kmat.add(-JxW[qp], mat3_n2n2);
             
             // reactive term: Least-Squares
-            LS_mat.get_transpose(tmp_mat4);
-            tmp_mat4.right_multiply(tmp_mat2_n1n2);// LS^T C2 B
-            Kmat.add(-JxW[qp], tmp_mat4);
+            LS_mat.get_transpose(mat4);
+            mat4.right_multiply(mat2_n1n2);// LS^T C2 B
+            Kmat.add(-JxW[qp], mat4);
         }
     } // end of the quadrature point qp-loop
     
@@ -385,9 +385,9 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
     DenseRealMatrix& Kmat = c.get_elem_jacobian();
     DenseRealVector& Fvec = c.get_elem_residual();
     DenseRealMatrix LS_mat;
-    DenseRealVector tmp_vec1_n1, tmp_vec2_n2;
+    DenseRealVector vec1_n1, vec2_n2;
     
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n_dofs);
+    vec1_n1.resize(n1); vec2_n2.resize(n_dofs);
     LS_mat.resize(n1, n_dofs);
     
     FEMOperatorMatrix B_mat;
@@ -420,10 +420,10 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
                 // first update the variables at the current quadrature point
                 this->update_solution_at_quadrature_point (vars, qp, c,
                                                            false, c.get_elem_solution(),
-                                                           tmp_vec1_n1, uvec,
+                                                           vec1_n1, uvec,
                                                            B_mat, dB_mat,
                                                            LS_mat);
-                rho = tmp_vec1_n1(1); // get value from the interpolated sol
+                rho = vec1_n1(1); // get value from the interpolated sol
                 
                 // copy the surface normal
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -462,11 +462,11 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
                         ui_ni -= uvec(i_dim) * dnormal(i_dim);
                 }
                 
-                tmp_vec1_n1.zero();
-                tmp_vec1_n1(1) = rho*ui_ni;
+                vec1_n1.zero();
+                vec1_n1(1) = rho*ui_ni;
                 
-                B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-                Fvec.add(-JxW[qp], tmp_vec2_n2);
+                B_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+                Fvec.add(-JxW[qp], vec2_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() ) {
                     // since the velocity is independent of solution, Jacobian is zero
@@ -488,10 +488,10 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
                 // first update the variables at the current quadrature point
                 this->update_solution_at_quadrature_point (vars, qp, c,
                                                            false, c.get_elem_solution(),
-                                                           tmp_vec1_n1, uvec,
+                                                           vec1_n1, uvec,
                                                            B_mat, dB_mat,
                                                            LS_mat);
-                rho = tmp_vec1_n1(1); // get value from the interpolated sol
+                rho = vec1_n1(1); // get value from the interpolated sol
                 
                 ui_ni = 0.;
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -499,11 +499,11 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
                     flight_condition->velocity_magnitude *
                     flight_condition->drag_normal(i_dim);
 
-                tmp_vec1_n1.zero();
-                tmp_vec1_n1(1) = flight_condition->rho()*ui_ni;
+                vec1_n1.zero();
+                vec1_n1(1) = flight_condition->rho()*ui_ni;
                 
-                B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-                Fvec.add(-JxW[qp], tmp_vec2_n2);
+                B_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+                Fvec.add(-JxW[qp], vec2_n2);
                 
                 if ( request_jacobian && c.get_elem_solution_derivative() ) {
                     // since the velocity is independent of solution, Jacobian is zero
@@ -554,10 +554,10 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
     
     FEMOperatorMatrix B_mat;
     std::vector<FEMOperatorMatrix> dB_mat(dim);
-    DenseRealMatrix LS_mat, tmp_mat1_n2n2, tmp_mat3;
-    DenseRealVector tmp_vec1_n1, tmp_vec2_n2;
-    LS_mat.resize(n1, n_dofs); tmp_mat1_n2n2.resize(n_dofs, n_dofs);
-    tmp_vec1_n1.resize(n1); tmp_vec2_n2.resize(n_dofs);
+    DenseRealMatrix LS_mat, mat1_n2n2, mat3;
+    DenseRealVector vec1_n1, vec2_n2;
+    LS_mat.resize(n1, n_dofs); mat1_n2n2.resize(n_dofs, n_dofs);
+    vec1_n1.resize(n1); vec2_n2.resize(n_dofs);
     
     libMesh::Point uvec;
     libMesh::Real rho;
@@ -567,33 +567,33 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
         // first update the variables at the current quadrature point
         this->update_solution_at_quadrature_point (vars, qp, c,
                                                    true, c.get_elem_fixed_solution(),
-                                                   tmp_vec1_n1, uvec,
+                                                   vec1_n1, uvec,
                                                    B_mat, dB_mat,
                                                    LS_mat);
-        rho = tmp_vec1_n1(1); // get value from the interpolated sol
+        rho = vec1_n1(1); // get value from the interpolated sol
         
         
         // Galerkin contribution to velocity
-        B_mat.vector_mult( tmp_vec1_n1, c.get_elem_solution() );
-        B_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        Fvec.add(JxW[qp], tmp_vec2_n2);
+        B_mat.vector_mult( vec1_n1, c.get_elem_solution() );
+        B_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+        Fvec.add(JxW[qp], vec2_n2);
         
         // LS contribution to velocity
-        LS_mat.vector_mult_transpose(tmp_vec2_n2, tmp_vec1_n1);
-        Fvec.add(JxW[qp], tmp_vec2_n2);
+        LS_mat.vector_mult_transpose(vec2_n2, vec1_n1);
+        Fvec.add(JxW[qp], vec2_n2);
         
         
         if (request_jacobian && c.get_elem_solution_derivative())
         {
             // contribution from unsteady term
             // Galerkin contribution of velocity
-            B_mat.right_multiply_transpose(tmp_mat1_n2n2, B_mat);
-            Kmat.add(JxW[qp], tmp_mat1_n2n2);
+            B_mat.right_multiply_transpose(mat1_n2n2, B_mat);
+            Kmat.add(JxW[qp], mat1_n2n2);
             
             // LS contribution of velocity
-            LS_mat.get_transpose(tmp_mat3);
-            B_mat.left_multiply(tmp_mat1_n2n2, tmp_mat3); // LS^T tau Bmat
-            Kmat.add(JxW[qp], tmp_mat1_n2n2);
+            LS_mat.get_transpose(mat3);
+            B_mat.left_multiply(mat1_n2n2, mat3); // LS^T tau Bmat
+            Kmat.add(JxW[qp], mat1_n2n2);
         }
     } // end of the quadrature point qp-loop
     
