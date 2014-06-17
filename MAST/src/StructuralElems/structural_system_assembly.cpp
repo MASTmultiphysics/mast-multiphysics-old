@@ -335,6 +335,29 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 }
 
 
+void calculate_fd_jacobian(MAST::StructuralElementBase& e) {
+    DenseRealVector sol, f, df;
+    DenseRealMatrix jac;
+    Real dval = 1.0e-8;
+    sol = e.local_solution;
+    f = sol; f.zero(); df = sol; df.zero();
+    jac.resize(sol.size(), sol.size());
+    
+    e.internal_force(false, f, jac, false);
+    
+    for (unsigned int i=0; i<sol.size(); i++) {
+        df.zero();
+        e.local_solution = sol;
+        e.local_solution(i) += dval;
+        e.internal_force(false, df, jac, false);
+        for (unsigned int j=0; j<sol.size(); j++)
+            jac(j,i) = (df(j)-f(j))/dval;
+    }
+    std::cout << "numerical jacobian" << std::endl;
+    jac.print();
+    e.local_solution = sol;
+}
+
 
 void
 MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,

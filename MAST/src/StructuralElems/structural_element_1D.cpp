@@ -439,32 +439,43 @@ MAST::StructuralElement1D::_internal_force_operation
     
     // copy the stress values to a matrix
     stress_l(0,0) = vec2_n1(0); // sigma_xx
-    
+    stress(0,0)   = vec2_n1(0);
+    stress(1,1) = vec1_n1(0); // temporary storage of the membrane strain
     
     // get the bending strain operator
     vec2_n1.zero(); // used to store vk strain, if applicable
     if (if_bending) {
         _bending_operator->initialize_bending_strain_operator(qp, Bmat_bend);
-        
-        if (if_vk)  // get the vonKarman strain operator if needed
+
+        //  evaluate the bending stress and add that to the stress vector
+        // for evaluation in the nonlinear stress term
+        Bmat_bend.vector_mult(vec2_n1, local_solution);
+        material_B_mat.vector_mult(vec1_n1, vec2_n1);
+        stress_l(0,0) += vec1_n1(0);
+        stress(0,0)   += vec1_n1(0);
+
+        if (if_vk) {  // get the vonKarman strain operator if needed
+            
             this->initialize_von_karman_strain_operator(qp,
                                                         vec2_n1, // epsilon_vk
                                                         vk_dvdxi_mat,
                                                         vk_dwdxi_mat,
                                                         Bmat_v_vk,
                                                         Bmat_w_vk);
+            material_A_mat.vector_mult(vec1_n1, vec2_n1);
+            stress(0,0) += vec1_n1(0); // total strain that multiplies with the membrane strain
+            stress(1,1) += vec2_n1(0); // add the two strains to get the direct strain
+        }
     }
     
-    // add the linear and nonlinear direct strains
-    vec2_n1.add(1., vec1_n1);  // epsilon_mem + epsilon_vk
-    
-    // multiply this with the constant-through-the-thickness strain
-    // membrane strain
-    material_A_mat.vector_mult(vec1_n1, vec2_n1); // stress
+    // copy the stress to use here.
+    vec1_n1.zero();
+    vec1_n1(0) = stress(0,0);
+
+    // now the internal force vector
+    // this includes the membrane strain operator with all A and B material operators
     Bmat_mem.vector_mult_transpose(vec3_n2, vec1_n1);
     local_f.add(-JxW[qp], vec3_n2);
-    // copy the stress values to a matrix
-    stress(0,0) = vec1_n1(0); // sigma_xx
     
     if (if_bending) {
         if (if_vk) {
@@ -479,35 +490,17 @@ MAST::StructuralElement1D::_internal_force_operation
             local_f.add(-JxW[qp], vec3_n2);
         }
         
+        // use the direct strain from the temprary storage
+        vec2_n1(0)  = stress(1,1);
+        stress(1,1) = 0.;
         // now coupling with the bending strain
-        // B_bend^T [B]^T B_mem
-        material_B_mat.vector_mult_transpose(vec1_n1, vec2_n1);
+        // B_bend^T [B] B_mem
+        material_B_mat.vector_mult(vec1_n1, vec2_n1);
         Bmat_bend.vector_mult_transpose(vec3_n2, vec1_n1);
         local_f.add(-JxW[qp], vec3_n2);
         
-        // now bending stress and its coupling
+        // now bending stress
         Bmat_bend.vector_mult(vec2_n1, local_solution);
-        
-        // now get its projection onto the constant through thickness
-        // and membrane operators
-        // B_mem^T [B] B_bend
-        material_B_mat.vector_mult(vec1_n1, vec2_n1);
-        Bmat_mem.vector_mult_transpose(vec3_n2, vec1_n1);
-        local_f.add(-JxW[qp], vec3_n2);
-        
-        if (if_vk) {
-            // von Karman strain: bending stress
-            vk_dvdxi_mat.vector_mult_transpose(vec4_2, vec1_n1);
-            Bmat_v_vk.vector_mult_transpose(vec3_n2, vec4_2);
-            local_f.add(-JxW[qp], vec3_n2);
-
-            // von Karman strain: bending stress
-            vk_dwdxi_mat.vector_mult_transpose(vec4_2, vec1_n1);
-            Bmat_w_vk.vector_mult_transpose(vec3_n2, vec4_2);
-            local_f.add(-JxW[qp], vec3_n2);
-        }
-        
-        // and the bending operator
         material_D_mat.vector_mult(vec1_n1, vec2_n1);
         Bmat_bend.vector_mult_transpose(vec3_n2, vec1_n1);
         local_f.add(-JxW[qp], vec3_n2);
@@ -640,8 +633,7 @@ MAST::StructuralElement1D::_internal_force_operation
             }
             
             // bending - membrane
-            material_B_mat.get_transpose(mat3);
-            Bmat_mem.left_multiply(mat1_n1n2, mat3);
+            Bmat_mem.left_multiply(mat1_n1n2, material_B_mat);
             Bmat_bend.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
             local_jac.add(-JxW[qp], mat2_n2n2);
             

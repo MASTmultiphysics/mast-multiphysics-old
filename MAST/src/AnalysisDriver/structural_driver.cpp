@@ -52,6 +52,7 @@
 #include "libmesh/nonlinear_solver.h"
 #include "libmesh/gmsh_io.h"
 #include "libmesh/exodusII_io.h"
+#include "libmesh/vtk_io.h"
 
 
 
@@ -229,19 +230,19 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = static_system.add_variable ( "ux", static_cast<Order>(o), fefamily);
-    var_id["uy"] = static_system.add_variable ( "uy", static_cast<Order>(o), fefamily);
-    var_id["uz"] = static_system.add_variable ( "uz", static_cast<Order>(o), fefamily);
-    var_id["tx"] = static_system.add_variable ( "tx", static_cast<Order>(o), fefamily);
-    var_id["ty"] = static_system.add_variable ( "ty", static_cast<Order>(o), fefamily);
-    var_id["tz"] = static_system.add_variable ( "tz", static_cast<Order>(o), fefamily);
+    var_id["ux"] = static_system.add_variable ( "sux", static_cast<Order>(o), fefamily);
+    var_id["uy"] = static_system.add_variable ( "suy", static_cast<Order>(o), fefamily);
+    var_id["uz"] = static_system.add_variable ( "suz", static_cast<Order>(o), fefamily);
+    var_id["tx"] = static_system.add_variable ( "stx", static_cast<Order>(o), fefamily);
+    var_id["ty"] = static_system.add_variable ( "sty", static_cast<Order>(o), fefamily);
+    var_id["tz"] = static_system.add_variable ( "stz", static_cast<Order>(o), fefamily);
 
-    eigen_system.add_variable ( "ux", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "uy", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "uz", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "tx", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "ty", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "tz", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "eux", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "euy", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "euz", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "etx", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "ety", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "etz", static_cast<Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly
     static_structural_assembly(static_system,
@@ -366,7 +367,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     
     DenseRealMatrix prestress; prestress.resize(3,3);
-    prestress(0,0) = -1.31345e6/.0044*1.0e-3;
+    prestress(0,0) = -1.31345e6/.0044*1.0e-1;
     MAST::ConstantFunction<DenseRealMatrix > prestress_func("prestress", prestress);
     
     prop3d.set_material(mat);
@@ -376,7 +377,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     prop1d.set_diagonal_mass_matrix(false);
     prop1d.y_vector()(1) = 1.;
     //prop2d.add(prestress_func); // no prestress for stiffener
-    prop1d.add(prestress_func);
+    //prop1d.add(prestress_func);
 
     
     // multilayer material
