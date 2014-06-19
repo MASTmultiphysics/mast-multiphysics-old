@@ -24,14 +24,14 @@
 
 
 namespace MAST {
-    class NastranIO:  public MeshInput<MeshBase>,
-    public MeshOutput<MeshBase> {
+    class NastranIO:  public libMesh::MeshInput<libMesh::MeshBase>,
+    public libMesh::MeshOutput<libMesh::MeshBase> {
       
     public:
         
         NastranIO(MAST::StructuralSystemAssembly& assembly):
-        MeshInput<MeshBase>(assembly.get_system().get_mesh()),
-        MeshOutput<MeshBase>(assembly.get_system().get_mesh()),
+        libMesh::MeshInput<libMesh::MeshBase>(assembly.get_system().get_mesh()),
+        libMesh::MeshOutput<libMesh::MeshBase>(assembly.get_system().get_mesh()),
         _assembly(assembly)
         { }
         
@@ -54,7 +54,7 @@ namespace MAST {
         void write_mesh (std::ostream& out_stream);
       
         
-        void _nastran_element(const ElemType t,
+        void _nastran_element(const libMesh::ElemType t,
                               std::string& nm,
                               unsigned int& n_nodes);
         
@@ -78,7 +78,7 @@ inline
 void
 MAST::NastranIO::write(const std::string& name) {
 
-    if (MeshOutput<MeshBase>::mesh().processor_id() == 0)
+    if (libMesh::MeshOutput<libMesh::MeshBase>::mesh().processor_id() == 0)
     {
         // Open the output file stream
         std::ofstream out_stream (name.c_str());
@@ -103,7 +103,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
     libmesh_assert (out_stream.good());
     
     // Get a const reference to the mesh
-    const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
+    const libMesh::MeshBase& mesh = libMesh::MeshOutput<libMesh::MeshBase>::mesh();
     
     // Note: we are using version 2.0 of the gmsh output format.
     
@@ -164,8 +164,8 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
     
     {
         // write the connectivity
-        MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-        const MeshBase::const_element_iterator end = mesh.active_elements_end();
+        libMesh::MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
+        const libMesh::MeshBase::const_element_iterator end = mesh.active_elements_end();
         
         // loop over the elements
         for ( ; it != end; ++it)
@@ -226,30 +226,30 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
         
         // store the nodes that have already been written so that no
         // duplicate temperatures are specified
-        std::set<Node*> nodes;
+        std::set<libMesh::Node*> nodes;
 
         for ( ; it != end; it++)
             if (it->second->type() == MAST::TEMPERATURE) {
                 libMesh::subdomain_id_type sid = it->first;
-                const MAST::FieldFunction<libMesh::Real> &temp =
-                dynamic_cast<const MAST::FieldFunction<libMesh::Real>&>(it->second->function()),
-                &tempref = dynamic_cast<const MAST::FieldFunction<libMesh::Real>&>
+                const MAST::FieldFunction<Real> &temp =
+                dynamic_cast<const MAST::FieldFunction<Real>&>(it->second->function()),
+                &tempref = dynamic_cast<const MAST::FieldFunction<Real>&>
                 (dynamic_cast<const MAST::Temperature*>(it->second)->reference_temperature_function());
                 
                 // get iterator to the nodes for which the mesh is to be written
-                MeshBase::const_element_iterator       eit  = mesh.active_subdomain_elements_begin(sid);
-                const MeshBase::const_element_iterator eend = mesh.active_subdomain_elements_end(sid);
+                libMesh::MeshBase::const_element_iterator       eit  = mesh.active_subdomain_elements_begin(sid);
+                const libMesh::MeshBase::const_element_iterator eend = mesh.active_subdomain_elements_end(sid);
                 
                 std::string nm = "TEMP*", t;
                 unsigned int n_nastran_nodes;
-                libMesh::Real tval, tref;
+                Real tval, tref;
                 
                 // loop over the elements
                 for ( ; eit != eend; ++eit) {
                     const libMesh::Elem* elem = *eit;
                     _nastran_element(elem->type(), t, n_nastran_nodes);
                     for (unsigned int i=0; i<n_nastran_nodes; i++) {
-                        Node* n = elem->get_node(i);
+                        libMesh::Node* n = elem->get_node(i);
                         // write only if it has not been written
                         if (!nodes.count(n)) {
                             temp(*n, 0., tval);
@@ -283,15 +283,15 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
         for ( ; it != end; it++)
             if (it->second->type() == MAST::DISPLACEMENT_DIRICHLET) {
                 // get the displacement dirichlet condition
-                DirichletBoundary& dirichlet_b =
+                libMesh::DirichletBoundary& dirichlet_b =
                 (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition*>(it->second))->dirichlet_boundary();
                 
                 constrained_vars_map[it->first] = dirichlet_b.variables;
             }
         
         // iterate over elements to write the displacement boudnary conditions
-        MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-        const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+        libMesh::MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+        const libMesh::MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
         
         for ( ; el != end_el; ++el) {
             const libMesh::Elem* elem = *el;
@@ -305,7 +305,7 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
                     std::vector<libMesh::boundary_id_type> bc_ids = mesh.boundary_info->boundary_ids(elem, s);
                     
                     // the boundary element
-                    AutoPtr<Elem> side(elem->build_side(s).release());
+                    libMesh::AutoPtr<libMesh::Elem> side(elem->build_side(s).release());
                     // variables that are constrainted
                     std::stringstream oss;
                     
@@ -336,59 +336,59 @@ MAST::NastranIO::write_mesh (std::ostream& out_stream)
 
 inline
 void
-MAST::NastranIO::_nastran_element(const ElemType t,
+MAST::NastranIO::_nastran_element(const libMesh::ElemType t,
                                   std::string& nm,
                                   unsigned int& n_nodes) {
     switch (t) {
             
-        case EDGE2:
+        case libMesh::EDGE2:
             nm = "CBEAM";
             n_nodes = 2;
             break;
             
-        case EDGE3:
+        case libMesh::EDGE3:
             nm = "CBEAM3";
             n_nodes = 2;
             break;
 
-        case TRI3:
+        case libMesh::TRI3:
             nm = "CTRIA3";
             n_nodes = 3;
             break;
 
-        case TRI6:
+        case libMesh::TRI6:
             nm = "CTRIA6";
             n_nodes = 6;
             break;
 
-        case QUAD4:
+        case libMesh::QUAD4:
             nm = "CQUAD4";
             n_nodes = 4;
             break;
             
-        case QUAD8:
-        case QUAD9:
+        case libMesh::QUAD8:
+        case libMesh::QUAD9:
             nm = "CQUAD8";
             n_nodes = 8;
             break;
 
-        case TET4:
+        case libMesh::TET4:
             nm = "CTETRA";
             n_nodes = 4;
             break;
 
-        case TET10:
+        case libMesh::TET10:
             nm = "CTETRA";
             n_nodes = 10;
             break;
 
-        case HEX8:
+        case libMesh::HEX8:
             nm = "CHEXA";
             n_nodes = 8;
             break;
 
-        case HEX20:
-        case HEX27:
+        case libMesh::HEX20:
+        case libMesh::HEX27:
             nm = "CHEXA";
             n_nodes = 20;
             break;
@@ -408,7 +408,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
     // set of material cards to be written
     std::set<const MAST::MaterialPropertyCardBase*> mcards;
     libMesh::Point p; // dummy point for calling FieldFunciton objects
-    libMesh::Real val;
+    Real val;
     
     {
         std::set<const MAST::ElementPropertyCardBase*>::const_iterator
@@ -440,7 +440,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
                     break;
                     
                 case 2: {
-                    prop.get<MAST::FieldFunction<libMesh::Real> >("h")(p, 0., val);
+                    prop.get<MAST::FieldFunction<Real> >("h")(p, 0., val);
                     
                     out_stream
                     << std::setw(8)  << "PSHELL* "
@@ -455,7 +455,7 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
                     
                     val = 0.;
                     if (prop.get_material().contains("kappa"))
-                        prop.get_material().get<MAST::FieldFunction<libMesh::Real> >("kappa")(p, 0., val);
+                        prop.get_material().get<MAST::FieldFunction<Real> >("kappa")(p, 0., val);
                     
                     out_stream
                     << std::setw(16) << val
@@ -488,10 +488,10 @@ MAST::NastranIO::_write_property_cards(std::ostream& out_stream,
         for ( ; it != end; it++) {
             const MAST::MaterialPropertyCardBase& prop = **it;
             
-            libMesh::Real E, nu, G, rho;
-            prop.get<MAST::FieldFunction<libMesh::Real> >("E")(p, 0., E);
-            prop.get<MAST::FieldFunction<libMesh::Real> >("nu")(p, 0., nu);
-            prop.get<MAST::FieldFunction<libMesh::Real> >("rho")(p, 0., rho);
+            Real E, nu, G, rho;
+            prop.get<MAST::FieldFunction<Real> >("E")(p, 0., E);
+            prop.get<MAST::FieldFunction<Real> >("nu")(p, 0., nu);
+            prop.get<MAST::FieldFunction<Real> >("rho")(p, 0., rho);
             G = E/2./(1.+nu);
 
             out_stream

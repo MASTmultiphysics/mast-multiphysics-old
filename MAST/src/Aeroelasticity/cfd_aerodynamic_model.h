@@ -17,8 +17,6 @@
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "BoundaryConditions/flexible_surface_motion.h"
 
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-
 
 class CFDAerodynamicModel: public AerodynamicModel
 {

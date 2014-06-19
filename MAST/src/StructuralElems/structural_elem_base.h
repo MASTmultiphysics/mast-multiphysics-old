@@ -58,11 +58,11 @@ namespace MAST {
          *    calculates and returns the von Mises stress for this stress
          *    tensor
          */
-        libMesh::Real von_mises_stress() const {
+        Real von_mises_stress() const {
             
             const DenseRealMatrix& s = *this;
             
-            libMesh::Real val =
+            Real val =
             pow(s(0,0) - s(1,1), 2) +
             pow(s(1,1) - s(2,2), 2) +
             pow(s(2,2) - s(0,0), 2) +
@@ -251,13 +251,13 @@ namespace MAST {
         /*!
          *   returns the value of maximum von Mises stress over the element
          */
-        virtual libMesh::Real max_von_mises_stress() = 0;
+        virtual Real max_von_mises_stress() = 0;
         
         
         /*!
          *   returns the sensitivity of maximum von Mises stress over the element
          */
-        virtual libMesh::Real max_von_mises_stress_sensitivity() = 0;
+        virtual Real max_von_mises_stress_sensitivity() = 0;
         
         
         /*!
@@ -409,7 +409,7 @@ namespace MAST {
                                                MAST::BoundaryCondition& p) = 0;
 
         /*!
-         *    System to which this system belongs
+         *    libMesh::System to which this system belongs
          */
         libMesh::System& _system;
         

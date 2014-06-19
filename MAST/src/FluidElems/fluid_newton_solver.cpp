@@ -29,19 +29,19 @@ FluidNewtonSolver::~FluidNewtonSolver()
 
 void
 FluidNewtonSolver::line_search(Real& current_residual,
-                               libMesh::NumericVector<libMesh::Real> &newton_iterate,
-                               const libMesh::NumericVector<libMesh::Real> &linear_solution)
+                               libMesh::NumericVector<Real> &newton_iterate,
+                               const libMesh::NumericVector<Real> &linear_solution)
 {
-  const libMesh::Real cp =  dynamic_cast<const FluidSystem&>
+  const Real cp =  dynamic_cast<const FluidSystem&>
     (this->system()).flight_condition->gas_property.cp;
-  const libMesh::Real min_density = 1.0e-3, min_cpT = 1.*cp, max_relative_change = 0.1;
+  const Real min_density = 1.0e-3, min_cpT = 1.*cp, max_relative_change = 0.1;
     
     const unsigned int sys_id = this->system().number();
-    dof_id_type dof_num;
+    libMesh::dof_id_type dof_num;
     
     bool if_lagrange = true;
     for (unsigned int ivar=0; ivar<this->system().n_vars(); ivar++)
-        if (this->system().variable_type(ivar).family != LAGRANGE)
+        if (this->system().variable_type(ivar).family != libMesh::LAGRANGE)
             if_lagrange = false;
     
     
@@ -50,11 +50,11 @@ FluidNewtonSolver::line_search(Real& current_residual,
     // control their step size.
     if (if_lagrange)
     {
-        libMesh::Real eta=1., var0, dvar, rho, kval;
+        Real eta=1., var0, dvar, rho, kval;
         // iterate over each nodal dof and set the value
-        MeshBase::node_iterator node_it  =
+        libMesh::MeshBase::node_iterator node_it  =
         this->system().get_mesh().pid_nodes_begin(libMesh::global_processor_id());
-        MeshBase::node_iterator node_end =
+        libMesh::MeshBase::node_iterator node_end =
         this->system().get_mesh().pid_nodes_end(libMesh::global_processor_id());
         
         for ( ; node_it != node_end; node_it++)
@@ -115,11 +115,11 @@ FluidNewtonSolver::solve()
     // Reset any prior solve result
     _solve_result = INVALID_SOLVE_RESULT;
     
-    libMesh::NumericVector<libMesh::Real> &newton_iterate = *(_system.solution);
+    libMesh::NumericVector<Real> &newton_iterate = *(_system.solution);
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > linear_solution_ptr = newton_iterate.zero_clone();
-    libMesh::NumericVector<libMesh::Real> &linear_solution = *linear_solution_ptr;
-    libMesh::NumericVector<libMesh::Real> &rhs = *(_system.rhs);
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > linear_solution_ptr = newton_iterate.zero_clone();
+    libMesh::NumericVector<Real> &linear_solution = *linear_solution_ptr;
+    libMesh::NumericVector<Real> &rhs = *(_system.rhs);
     
     newton_iterate.close();
     linear_solution.close();
@@ -129,13 +129,13 @@ FluidNewtonSolver::solve()
     _system.get_dof_map().enforce_constraints_exactly(_system);
 #endif
     
-    SparseMatrix<libMesh::Real> &matrix = *(_system.matrix);
+    libMesh::SparseMatrix<Real> &matrix = *(_system.matrix);
     
     // Prepare to take incomplete steps
-    libMesh::Real last_residual=0.;
+    Real last_residual=0.;
     
     // Set starting linear tolerance
-    libMesh::Real current_linear_tolerance = initial_linear_tolerance;
+    Real current_linear_tolerance = initial_linear_tolerance;
     
     // Start counting our linear solver steps
     _inner_iterations = 0;
@@ -145,14 +145,14 @@ FluidNewtonSolver::solve()
          ++_outer_iterations)
     {
         if (verbose)
-            libMesh::out << "Assembling the System" << std::endl;
+            libMesh::out << "Assembling the libMesh::System" << std::endl;
         
         _system.assembly(true, true);
         rhs.close();
-        libMesh::Real current_residual = rhs.l2_norm();
+        Real current_residual = rhs.l2_norm();
         last_residual = current_residual;
         
-        if (libmesh_isnan(current_residual))
+        if (libMesh::libmesh_isnan(current_residual))
         {
             libMesh::out << "  Nonlinear solver DIVERGED at step "
             << _outer_iterations
@@ -166,7 +166,7 @@ FluidNewtonSolver::solve()
                                       max_residual_norm);
         
         // Compute the l2 norm of the whole solution
-        libMesh::Real norm_total = newton_iterate.l2_norm();
+        Real norm_total = newton_iterate.l2_norm();
         
         max_solution_norm = std::max(max_solution_norm, norm_total);
         
@@ -222,7 +222,7 @@ FluidNewtonSolver::solve()
             << std::endl;
         
         // Compute the l2 norm of the nonlinear update
-        libMesh::Real norm_delta = linear_solution.l2_norm();
+        Real norm_delta = linear_solution.l2_norm();
         
         if (verbose)
             libMesh::out << "Performing line search" << std::endl;

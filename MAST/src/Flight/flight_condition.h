@@ -65,12 +65,12 @@ public:
     /*!
      *   Flight Mach number
      */
-    libMesh::Real mach;
+    Real mach;
     
     /*!
      *  Velocity magnitude, whose direction is evaluated from the Euler angles.
      */
-    libMesh::Real velocity_magnitude;
+    Real velocity_magnitude;
     
     /*!
      *   Ambient air properties
@@ -80,28 +80,28 @@ public:
     /*!
      *   reference chord
      */
-    libMesh::Real ref_chord;
+    Real ref_chord;
     
     /*!
      *   Flight altitude. This need not be set, but can be used to evaluate the 
      *   ambient properties if needed.
      */
-    libMesh::Real altitude;
+    Real altitude;
     
     /*!
      *   returns the flight dynamic pressure
      */
-    libMesh::Real q0() const
+    Real q0() const
     {
         return 0.5 * gas_property.rho * pow(velocity_magnitude, 2);
     }
     
-    libMesh::Real p0()
+    Real p0()
     {
         return gas_property.pressure;
     }
 
-    libMesh::Real rho() const
+    Real rho() const
     {
         return gas_property.rho;
     }
@@ -112,22 +112,22 @@ public:
     void init();
     
     
-    libMesh::Real rho_u1() const
+    Real rho_u1() const
     {
         return gas_property.rho * velocity_magnitude * drag_normal(0);
     }
     
-    libMesh::Real rho_u2() const
+    Real rho_u2() const
     {
         return gas_property.rho * velocity_magnitude * drag_normal(1);
     }
     
-    libMesh::Real rho_u3() const
+    Real rho_u3() const
     {
         return gas_property.rho * velocity_magnitude * drag_normal(2);
     }
     
-    libMesh::Real rho_e() const
+    Real rho_e() const
     {
         return gas_property.rho * gas_property.cv * gas_property.T + q0();
     }

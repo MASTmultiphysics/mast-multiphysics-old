@@ -18,7 +18,7 @@
 #include "BoundaryConditions/boundary_condition.h"
 
 
-using namespace libMesh;
+
 
 
 namespace MAST {
@@ -47,7 +47,7 @@ namespace MAST {
          *   dimensional frequency in rad/sec, otherwise this is the reduced
          *   frequency
          */
-        libMesh::Real frequency;
+        Real frequency;
         
         
         /*!
@@ -56,14 +56,14 @@ namespace MAST {
          *    zero amplitude at t=0. This constant can be set to pi/2
          *    to use a consine multiplier.
          */
-        libMesh::Real phase_offset;
+        Real phase_offset;
         
         /*!
          *   calculation of surface velocity in frequency domain. \p u_trans is
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity(const libMesh::Real t,
+        virtual void surface_velocity(const Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
                                       DenseComplexVector& w_trans,
@@ -75,7 +75,7 @@ namespace MAST {
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity(const libMesh::Real t,
+        virtual void surface_velocity(const Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
                                       DenseRealVector& w_trans,
@@ -87,7 +87,7 @@ namespace MAST {
         /*!
          *   initialization function for this object
          */
-        virtual void init(libMesh::Real freq, libMesh::Real phase)
+        virtual void init(Real freq, Real phase)
         {
             frequency = freq;
             phase_offset = phase;

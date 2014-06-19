@@ -50,7 +50,7 @@ public:
         /*!
          *   location at each division along the coordinate.
          */
-        std::vector<libMesh::Real> _div_locations;
+        std::vector<Real> _div_locations;
         
         /*!
          *   number of elements within each division
@@ -61,12 +61,12 @@ public:
          *   relative numbers specifying the expected mesh size at each
          *   division point
          */
-        std::vector<libMesh::Real> _relative_mesh_size_at_div;
+        std::vector<Real> _relative_mesh_size_at_div;
 
         /*!
          *   map of computational and nodal location along the coordinate
          */
-        std::vector<libMesh::Real> _points;
+        std::vector<Real> _points;
 
     public:
         
@@ -74,8 +74,8 @@ public:
         _n_divs(0)
         { }
         
-        void init(unsigned int n, const std::vector<libMesh::Real>& div_loc,
-                  const std::vector<libMesh::Real>& dx_relative,
+        void init(unsigned int n, const std::vector<Real>& div_loc,
+                  const std::vector<Real>& dx_relative,
                   const std::vector<unsigned int>& n_dx)
         {
             libmesh_assert ( n > 0 );
@@ -105,7 +105,7 @@ public:
         /*!
          *   returns location of division point \par i
          */
-        libMesh::Real div_location(unsigned int i) const {
+        Real div_location(unsigned int i) const {
             libmesh_assert(_n_divs > 0);
             libmesh_assert(i <= _n_divs);
             return _div_locations[i];
@@ -114,7 +114,7 @@ public:
         /*!
          *   returns number of elements in division \par i
          */
-        libMesh::Real n_elements_in_div(unsigned int i) const {
+        Real n_elements_in_div(unsigned int i) const {
             libmesh_assert(_n_divs > 0);
             libmesh_assert(i < _n_divs);
             return _n_subdivs_in_div[i];
@@ -124,7 +124,7 @@ public:
         /*!
          *    returns the length of the mesh along this coordinate
          */
-        libMesh::Real length() const {
+        Real length() const {
             libmesh_assert( _n_divs > 0);
             return (*_div_locations.rbegin());
         }
@@ -145,7 +145,7 @@ public:
         /*!
          *   returns the location of the specified node
          */
-        libMesh::Real operator() (const libMesh::Real eta) {
+        Real operator() (const Real eta) {
             libmesh_assert ((eta >= 0.) && (eta <= 1.));
             
             // idx provides the approximate location of the computational coordinate
@@ -158,7 +158,7 @@ public:
                 return (*_points.rbegin());
             else
             {
-                libMesh::Real idx_eta0 = Real(idx)/Real(_points.size()-1),
+                Real idx_eta0 = Real(idx)/Real(_points.size()-1),
                 idx_eta1 = Real(idx+1)/Real(_points.size()-1);
                 return _points[idx] + (eta-idx_eta0)/(idx_eta1-idx_eta0)*
                 (_points[idx+1]-_points[idx]);
@@ -188,7 +188,7 @@ public:
             }
             
             n=1;
-            libMesh::Real dx=0.0, growth_factor = 0.0;
+            Real dx=0.0, growth_factor = 0.0;
             // now calculate the base mesh size, and calculate the nodal points
             for (unsigned int i=0; i<_n_divs; i++)
             {
@@ -221,7 +221,7 @@ public:
      *   move the mesh points.
      */
     void init (const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-               UnstructuredMesh& mesh, ElemType t);
+               libMesh::UnstructuredMesh& mesh, libMesh::ElemType t);
     
 
 protected:
@@ -235,14 +235,14 @@ protected:
     /*!
      *    mesh associated with this initialization object
      */
-    UnstructuredMesh* _mesh;
+    libMesh::UnstructuredMesh* _mesh;
 };
 
 
 
 inline void
 MeshInitializer::init (const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                       UnstructuredMesh& mesh, ElemType t)
+                       libMesh::UnstructuredMesh& mesh, libMesh::ElemType t)
 {
     unsigned int dim = divs.size();
     _mesh = &mesh;
@@ -250,7 +250,7 @@ MeshInitializer::init (const std::vector<MeshInitializer::CoordinateDivisions*>&
     // first create the mesh
     switch (dim) {
         case 1: {
-            MeshTools::Generation::build_line (mesh,
+            libMesh::MeshTools::Generation::build_line (mesh,
                                                divs[0]->total_elem_divs(),
                                                0., 1., t);
             
@@ -258,7 +258,7 @@ MeshInitializer::init (const std::vector<MeshInitializer::CoordinateDivisions*>&
             break;
 
         case 2: {
-            MeshTools::Generation::build_square (mesh,
+            libMesh::MeshTools::Generation::build_square (mesh,
                                                  divs[0]->total_elem_divs(),
                                                  divs[1]->total_elem_divs(),
                                                  0., 1., 0., 1., t);
@@ -266,7 +266,7 @@ MeshInitializer::init (const std::vector<MeshInitializer::CoordinateDivisions*>&
             break;
 
         case 3: {
-            MeshTools::Generation::build_cube (mesh,
+            libMesh::MeshTools::Generation::build_cube (mesh,
                                                divs[0]->total_elem_divs(),
                                                divs[1]->total_elem_divs(),
                                                divs[2]->total_elem_divs(),
@@ -280,9 +280,9 @@ MeshInitializer::init (const std::vector<MeshInitializer::CoordinateDivisions*>&
     }
     
     // now iterate over the nodes in this mesh and update its coordinate
-    MeshBase::node_iterator n_it = mesh.nodes_begin();
+    libMesh::MeshBase::node_iterator n_it = mesh.nodes_begin();
     for (; n_it != mesh.nodes_end(); n_it++) {
-        Node& n = **n_it;
+        libMesh::Node& n = **n_it;
         for (unsigned int i_dim=0; i_dim<dim; i_dim++)
             n(i_dim) = (*divs[i_dim])(n(i_dim));
     }

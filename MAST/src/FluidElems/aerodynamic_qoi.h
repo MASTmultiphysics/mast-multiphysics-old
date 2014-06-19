@@ -17,10 +17,10 @@
 #include "FluidElems/fluid_elem_base.h"
 
 
-// Bring in everything from the libMesh namespace
-using namespace libMesh;
 
-class AerodynamicQoI : public FluidElemBase, public DifferentiableQoI
+
+
+class AerodynamicQoI : public FluidElemBase, public libMesh::DifferentiableQoI
 {
 public:
     AerodynamicQoI(GetPot& infile):
@@ -45,22 +45,22 @@ public:
     
     virtual ~AerodynamicQoI(){}
     
-    virtual void init_qoi( std::vector<libMesh::Real>& sys_qoi);
+    virtual void init_qoi( std::vector<Real>& sys_qoi);
 
-    virtual void element_qoi_derivative (DiffContext&, const QoISet& qois);
+    virtual void element_qoi_derivative (libMesh::DiffContext&, const libMesh::QoISet& qois);
 
-    virtual void element_qoi (DiffContext&, const QoISet& qois);
+    virtual void element_qoi (libMesh::DiffContext&, const libMesh::QoISet& qois);
 
-    virtual void side_qoi_derivative(DiffContext &context, const QoISet & qois);
+    virtual void side_qoi_derivative(libMesh::DiffContext &context, const libMesh::QoISet & qois);
     
-    virtual void side_qoi(DiffContext &context, const QoISet & qois);
+    virtual void side_qoi(libMesh::DiffContext &context, const libMesh::QoISet & qois);
     
-    virtual AutoPtr<DifferentiableQoI> clone( )
+    virtual libMesh::AutoPtr<libMesh::DifferentiableQoI> clone( )
     {
         AerodynamicQoI* new_qoi = new AerodynamicQoI(_infile);
         new_qoi->flight_condition = this->flight_condition;
         
-        AutoPtr<DifferentiableQoI> my_clone(new_qoi);
+        libMesh::AutoPtr<libMesh::DifferentiableQoI> my_clone(new_qoi);
         *my_clone = *this;
         
         return my_clone;

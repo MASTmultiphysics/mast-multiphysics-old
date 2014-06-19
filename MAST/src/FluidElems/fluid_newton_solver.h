@@ -9,14 +9,17 @@
 #ifndef __MAST_fluid_newton_solver_h__
 #define __MAST_fluid_newton_solver_h__
 
+// MAST includes
+#include "Base/MAST_data_types.h"
+
 // libMesh includes
 #include "libmesh/newton_solver.h"
 
-using namespace libMesh;
 
 
 
-class FluidNewtonSolver: public NewtonSolver
+
+class FluidNewtonSolver: public libMesh::NewtonSolver
 {
 public:
     FluidNewtonSolver(sys_type& system);
@@ -32,8 +35,8 @@ protected:
      *   so that each variable continues to stay physically consistent.
      */
     virtual void line_search(Real& current_residual,
-                             libMesh::NumericVector<libMesh::Real> &newton_iterate,
-                             const libMesh::NumericVector<libMesh::Real> &linear_solution);
+                             libMesh::NumericVector<Real> &newton_iterate,
+                             const libMesh::NumericVector<Real> &linear_solution);
     
 };
 

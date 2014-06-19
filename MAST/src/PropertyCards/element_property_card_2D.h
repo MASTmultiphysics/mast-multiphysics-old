@@ -43,7 +43,7 @@ namespace MAST
          *   returns the bending model to be used for the 2D element.
          */
         MAST::BendingOperatorType bending_model(const libMesh::Elem& elem,
-                                         const FEType& fe) const;
+                                         const libMesh::FEType& fe) const;
         
         
         /*!
@@ -52,7 +52,7 @@ namespace MAST
          *    element
          */
         virtual int extra_quadrature_order(const libMesh::Elem& elem,
-                                           const FEType& fe) const {
+                                           const libMesh::FEType& fe) const {
             if (this->bending_model(elem, fe) == MAST::DKT)
                 return 2;
             else
@@ -95,14 +95,14 @@ namespace MAST
 inline
 MAST::BendingOperatorType
 MAST::ElementPropertyCard2D::bending_model(const libMesh::Elem& elem,
-                                           const FEType& fe) const {
+                                           const libMesh::FEType& fe) const {
     // for a TRI3 element, default bending is DKT. For all other elements
     // the default is Mindlin. Otherwise it returns the model set for
     // this card.
     switch (elem.type()) {
-        case TRI3:
-            if ((fe.family == LAGRANGE) &&
-                (fe.order  == FIRST) &&
+        case libMesh::TRI3:
+            if ((fe.family == libMesh::LAGRANGE) &&
+                (fe.order  == libMesh::FIRST) &&
                 (_bending_model == MAST::DEFAULT_BENDING))
                 return MAST::DKT;
             else

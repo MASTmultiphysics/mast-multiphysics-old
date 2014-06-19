@@ -63,16 +63,16 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
 {
     
     // Read in parameters from the input file
-    const libMesh::Real global_tolerance          = infile("global_tolerance", 0.);
+    const Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
-    const libMesh::Real deltat                    = infile("deltat", 0.005);
-    const libMesh::Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
+    const Real deltat                    = infile("deltat", 0.005);
+    const Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
     unsigned int n_timesteps             = infile("n_timesteps", 1);
     const unsigned int write_interval    = infile("write_interval", 5);
     const bool if_use_amr                = infile("if_use_amr", false);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
-    const libMesh::Real amr_threshold             = infile("amr_threshold", 1.0e1);
-    const libMesh::Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
+    const Real amr_threshold             = infile("amr_threshold", 1.0e1);
+    const Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
@@ -81,10 +81,10 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     // Create a mesh.
     //SerialMesh mesh(init.comm());
-    ParallelMesh mesh(init.comm());
+    libMesh::ParallelMesh mesh(init.comm());
     
     // And an object to refine it
-    MeshRefinement mesh_refinement(mesh);
+    libMesh::MeshRefinement mesh_refinement(mesh);
     mesh_refinement.coarsen_by_parents() = true;
     mesh_refinement.absolute_global_tolerance() = global_tolerance;
     mesh_refinement.nelem_target() = nelem_target;
@@ -102,10 +102,10 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         const unsigned int nx_divs = infile("nx_divs",0),
         ny_divs = infile("ny_divs",0),
         nz_divs = infile("nz_divs",0);
-        ElemType elem_type =
-        Utility::string_to_enum<ElemType>(infile("elem_type", "QUAD4"));
+        libMesh::ElemType elem_type =
+        libMesh::Utility::string_to_enum<libMesh::ElemType>(infile("elem_type", "QUAD4"));
         
-        std::vector<libMesh::Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
+        std::vector<Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
         y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
         z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
         std::vector<unsigned int> x_divs(nx_divs), y_divs(ny_divs), z_divs(nz_divs);
@@ -186,15 +186,15 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         mesh_input_file = infile("mesh_input", std::string("")),
         mesh_type = infile("mesh_type", std::string(""));
         
-        std::auto_ptr<MeshInput<UnstructuredMesh> > mesh_io;
+        std::auto_ptr<libMesh::MeshInput<libMesh::UnstructuredMesh> > mesh_io;
         if (mesh_type == "gmsh")
-            GmshIO(mesh).read(mesh_input_file);
+            libMesh::GmshIO(mesh).read(mesh_input_file);
         else if (mesh_type == "exodus")
-            ExodusII_IO(mesh).read(mesh_input_file);
+            libMesh::ExodusII_IO(mesh).read(mesh_input_file);
         else if (mesh_type == "exodus_parallel")
-            ExodusII_IO(mesh).read_parallel(mesh_input_file);
+            libMesh::ExodusII_IO(mesh).read_parallel(mesh_input_file);
         else if (mesh_type == "nemesis")
-            Nemesis_IO(mesh).read(mesh_input_file);
+            libMesh::Nemesis_IO(mesh).read(mesh_input_file);
         else if (mesh_type == "xdr")
             mesh.read(mesh_input_file);
         else
@@ -219,30 +219,30 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
 
 
     // Declare the system
-    NonlinearImplicitSystem & static_system =
-    equation_systems.add_system<NonlinearImplicitSystem> ("StaticStructuralSystem");
-    CondensedEigenSystem & eigen_system =
-    equation_systems.add_system<CondensedEigenSystem> ("StructuralSystem");
+    libMesh::NonlinearImplicitSystem & static_system =
+    equation_systems.add_system<libMesh::NonlinearImplicitSystem> ("StaticStructuralSystem");
+    libMesh::CondensedEigenSystem & eigen_system =
+    equation_systems.add_system<libMesh::CondensedEigenSystem> ("StructuralSystem");
     
     
     unsigned int o = infile("fe_order", 1);
     std::string fe_family = infile("fe_family", std::string("LAGRANGE"));
-    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
+    libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = static_system.add_variable ( "sux", static_cast<Order>(o), fefamily);
-    var_id["uy"] = static_system.add_variable ( "suy", static_cast<Order>(o), fefamily);
-    var_id["uz"] = static_system.add_variable ( "suz", static_cast<Order>(o), fefamily);
-    var_id["tx"] = static_system.add_variable ( "stx", static_cast<Order>(o), fefamily);
-    var_id["ty"] = static_system.add_variable ( "sty", static_cast<Order>(o), fefamily);
-    var_id["tz"] = static_system.add_variable ( "stz", static_cast<Order>(o), fefamily);
+    var_id["ux"] = static_system.add_variable ( "sux", static_cast<libMesh::Order>(o), fefamily);
+    var_id["uy"] = static_system.add_variable ( "suy", static_cast<libMesh::Order>(o), fefamily);
+    var_id["uz"] = static_system.add_variable ( "suz", static_cast<libMesh::Order>(o), fefamily);
+    var_id["tx"] = static_system.add_variable ( "stx", static_cast<libMesh::Order>(o), fefamily);
+    var_id["ty"] = static_system.add_variable ( "sty", static_cast<libMesh::Order>(o), fefamily);
+    var_id["tz"] = static_system.add_variable ( "stz", static_cast<libMesh::Order>(o), fefamily);
 
-    eigen_system.add_variable ( "eux", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "euy", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "euz", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "etx", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "ety", static_cast<Order>(o), fefamily);
-    eigen_system.add_variable ( "etz", static_cast<Order>(o), fefamily);
+    eigen_system.add_variable ( "eux", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "euy", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "euz", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "etx", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "ety", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "etz", static_cast<libMesh::Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly
     static_structural_assembly(static_system,
@@ -258,22 +258,22 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     eigen_system.extra_quadrature_order = infile("extra_quadrature_order", 0);
     
     
-    MAST::ConstantFunction<libMesh::Real> press("pressure", 1.e2);
+    MAST::ConstantFunction<Real> press("pressure", 1.e2);
     MAST::BoundaryCondition bc(MAST::SURFACE_PRESSURE);
     bc.set_function(press);
     //static_structural_assembly.add_volume_load(0, bc);
     //eigen_structural_assembly.add_volume_load(0, bc);
-    MAST::ConstantFunction<libMesh::Real> temp("temp", 10.), ref_temp("ref_temp", 0.);
+    MAST::ConstantFunction<Real> temp("temp", 10.), ref_temp("ref_temp", 0.);
     MAST::Temperature temp_bc;
     temp_bc.set_function(temp);
     temp_bc.set_reference_temperature_function(ref_temp);
-    static_structural_assembly.add_volume_load(0, temp_bc);
-    eigen_structural_assembly.add_volume_load(0, temp_bc);
+    //static_structural_assembly.add_volume_load(0, temp_bc);
+    //eigen_structural_assembly.add_volume_load(0, temp_bc);
     
     static_system.attach_assemble_object(static_structural_assembly);
     eigen_system.attach_assemble_object(eigen_structural_assembly);
     
-    // Pass the Dirichlet dof IDs to the CondensedEigenSystem
+    // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
     std::set<libMesh::boundary_id_type> dirichlet_boundary;
     // read and initialize the boundary conditions
     std::map<libMesh::boundary_id_type, std::vector<unsigned int> > boundary_constraint_map;
@@ -313,8 +313,8 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     }
     
     // this needs to be done before equation system init
-    eigen_system.set_eigenproblem_type(GHEP);
-    eigen_system.eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+    eigen_system.set_eigenproblem_type(libMesh::GHEP);
+    eigen_system.eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
     
     equation_systems.init ();
     equation_systems.print_info();
@@ -336,7 +336,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     MAST::Solid1DSectionElementPropertyCard prop1d(3);
     
     // create the scalar function values
-    MAST::ConstantFunction<libMesh::Real> E("E", infile("youngs_modulus", 72.e9)),
+    MAST::ConstantFunction<Real> E("E", infile("youngs_modulus", 72.e9)),
     nu("nu", infile("poisson_ratio", 0.33)),
     alpha("alpha", infile("expansion_coefficient", 2.31e-5)),
     rho("rho", infile("material_density", 2700.)),
@@ -384,7 +384,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     MAST::Multilayer1DSectionElementPropertyCard multi_prop1d(4);
     MAST::Solid1DSectionElementPropertyCard bottom(5), middle(6), top(7);
     MAST::IsotropicMaterialPropertyCard void_material(8);
-    MAST::ConstantFunction<libMesh::Real> zeroE("E", 0.),
+    MAST::ConstantFunction<Real> zeroE("E", 0.),
     hz_bottom("hz", 0.01),
     hz_middle("hz", 0.02),
     hz_top("hz", 0.01);
@@ -416,7 +416,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     multi_prop1d.set_layers(-1., layers); // offset wrt bottom layer
     
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
-    prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
+    //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
     
     if (dim == 1) {
         static_structural_assembly.set_property_for_subdomain(0, prop1d);
@@ -454,7 +454,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
 //            // domain id and material property
 //            static_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
 //            eigen_structural_assembly.set_property_for_subdomain(n_stiff+1, multi_prop1d);
-//            MeshBase::const_element_iterator
+//            libMesh::MeshBase::const_element_iterator
 //            el_it = mesh.elements_begin(),
 //            el_end = mesh.elements_end();
 //            for ( ; el_it != el_end; el_it++ ) {
@@ -468,7 +468,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         }
     }
 
-    ParameterVector params;
+    libMesh::ParameterVector params;
     params.resize(1); params[0] = hy.ptr();
     static_system.solve();
     static_system.attach_sensitivity_assemble_object(static_structural_assembly);
@@ -481,18 +481,18 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     eigen_structural_assembly.set_static_solution_system(&static_system);
     //prop2d.set_strain(MAST::VON_KARMAN_STRAIN); prop2d_stiff.set_strain(MAST::VON_KARMAN_STRAIN);
     //prop1d.set_strain(MAST::VON_KARMAN_STRAIN);
-    //eigen_system.solve();
-    std::vector<libMesh::Real> sens;
+    eigen_system.solve();
+    std::vector<Real> sens;
     eigen_structural_assembly.add_parameter(hy);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
     //eigen_system.sensitivity_solve(params, sens);
     
-    std::vector<libMesh::Real> stress;
+    std::vector<Real> stress;
     //static_structural_assembly.calculate_max_elem_stress(*static_system.solution,
     //                                                     stress, NULL);
     
     // We write the file in the ExodusII format.
-    Nemesis_IO(mesh).write_equation_systems("out.exo",
+    libMesh::Nemesis_IO(mesh).write_equation_systems("out.exo",
                                             equation_systems);
     // Get the number of converged eigen pairs.
     unsigned int nconv = std::min(eigen_system.get_n_converged(),
@@ -519,7 +519,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         std::pair<Real, Real> val = eigen_system.get_eigenpair(i);
         
         // We write the file in the ExodusII format.
-        Nemesis_IO(mesh).write_equation_systems(file_name.str(),
+        libMesh::Nemesis_IO(mesh).write_equation_systems(file_name.str(),
                                                 equation_systems);
         
         
@@ -527,9 +527,9 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         // be read in
         std::ostringstream vec_name;
         vec_name << "mode_" << i;
-        libMesh::NumericVector<libMesh::Real>& vec = eigen_system.add_vector(vec_name.str());
+        libMesh::NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
         vec = *eigen_system.solution;
-        std::complex<libMesh::Real> eigval;
+        std::complex<Real> eigval;
         std::streamsize prec = std::cout.precision();
         if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
         {
@@ -540,7 +540,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
             vec.close();
             
             // now write the eigenvalues
-            eigval = std::complex<libMesh::Real>(val.first, val.second);
+            eigval = std::complex<Real>(val.first, val.second);
             eigval = 1./eigval;
             std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
             
@@ -570,7 +570,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     // now write the data to an output file
     MAST::NastranIO(static_structural_assembly).write("nast.txt");
-    XdrIO xdr(mesh, true);
+    libMesh::XdrIO xdr(mesh, true);
     xdr.write(output_mesh_file);
     equation_systems.write(output_solution_file,
                            libMesh::ENCODE,

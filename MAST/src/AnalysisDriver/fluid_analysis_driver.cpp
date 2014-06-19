@@ -162,16 +162,16 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
                   int argc, char* const argv[])
 {
     // Read in parameters from the input file
-    const libMesh::Real global_tolerance          = infile("global_tolerance", 0.);
+    const Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
-    const libMesh::Real deltat                    = infile("deltat", 0.005);
-    const libMesh::Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
+    const Real deltat                    = infile("deltat", 0.005);
+    const Real terminate_tolerance       = infile("pseudo_time_terminate_tolerance", 1.0e-5);
     unsigned int n_timesteps             = infile("n_timesteps", 1);
     const unsigned int write_interval    = infile("write_interval", 5);
     const bool if_use_amr                = infile("if_use_amr", false);
     const unsigned int max_adaptivesteps = infile("max_adaptivesteps", 0);
-    const libMesh::Real amr_threshold             = infile("amr_threshold", 1.0e1);
-    const libMesh::Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
+    const Real amr_threshold             = infile("amr_threshold", 1.0e1);
+    const Real amr_time_shrink_factor    = infile("amr_time_shrink_factor", 0.25);
     const unsigned int n_uniform_refine  = infile("n_uniform_refine", 0);
     const unsigned int dim               = infile("dimension", 2);
     const bool if_panel_mesh             = infile("use_panel_mesh", true);
@@ -182,10 +182,10 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     // Create a mesh.
     //SerialMesh mesh(init.comm());
-    ParallelMesh mesh(init.comm());
+    libMesh::ParallelMesh mesh(init.comm());
     
     // And an object to refine it
-    MeshRefinement mesh_refinement(mesh);
+    libMesh::MeshRefinement mesh_refinement(mesh);
     mesh_refinement.coarsen_by_parents() = true;
     mesh_refinement.absolute_global_tolerance() = global_tolerance;
     mesh_refinement.nelem_target() = nelem_target;
@@ -201,11 +201,11 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         const unsigned int nx_divs = infile("nx_divs",0),
         ny_divs = infile("ny_divs",0),
         nz_divs = infile("nz_divs",0);
-        const libMesh::Real t_by_c =  infile("t_by_c", 0.0);
-        ElemType elem_type =
-        Utility::string_to_enum<ElemType>(infile("elem_type", "QUAD4"));
+        const Real t_by_c =  infile("t_by_c", 0.0);
+        libMesh::ElemType elem_type =
+        libMesh::Utility::string_to_enum<libMesh::ElemType>(infile("elem_type", "QUAD4"));
         
-        std::vector<libMesh::Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
+        std::vector<Real> x_div_loc(nx_divs+1), x_relative_dx(nx_divs+1),
         y_div_loc(ny_divs+1), y_relative_dx(ny_divs+1),
         z_div_loc(nz_divs+1), z_relative_dx(nz_divs+1);
         std::vector<unsigned int> x_divs(nx_divs), y_divs(ny_divs), z_divs(nz_divs);
@@ -301,15 +301,15 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         mesh_input_file = infile("mesh_input", std::string("")),
         mesh_type = infile("mesh_type", std::string(""));
         
-        std::auto_ptr<MeshInput<UnstructuredMesh> > mesh_io;
+        std::auto_ptr<libMesh::MeshInput<libMesh::UnstructuredMesh> > mesh_io;
         if (mesh_type == "gmsh")
-            GmshIO(mesh).read(mesh_input_file);
+            libMesh::GmshIO(mesh).read(mesh_input_file);
         else if (mesh_type == "exodus")
-            ExodusII_IO(mesh).read(mesh_input_file);
+            libMesh::ExodusII_IO(mesh).read(mesh_input_file);
         else if (mesh_type == "exodus_parallel")
-            ExodusII_IO(mesh).read_parallel(mesh_input_file);
+            libMesh::ExodusII_IO(mesh).read_parallel(mesh_input_file);
         else if (mesh_type == "nemesis")
-            Nemesis_IO(mesh).read(mesh_input_file);
+            libMesh::Nemesis_IO(mesh).read(mesh_input_file);
         else if (mesh_type == "xdr")
             mesh.read(mesh_input_file);
         else
@@ -350,7 +350,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     flight_cond.init();
     
     
-    FEMSystem* system = nullptr;
+    libMesh::FEMSystem* system = nullptr;
     FrequencyDomainLinearizedFluidSystem * frequency_system = nullptr;
     FluidSystem* fluid_system = nullptr;
     FluidPostProcessSystem* fluid_post = nullptr;
@@ -383,9 +383,9 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         
         core_time_solver->theta        = infile("timesolver_theta", 1.0);
         
-        timesolver->core_time_solver = AutoPtr<UnsteadySolver>(core_time_solver);
-        timesolver->diff_solver().reset(new NewtonSolver(*fluid_system));
-        fluid_system->time_solver = AutoPtr<UnsteadySolver>(timesolver);
+        timesolver->core_time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(core_time_solver);
+        timesolver->diff_solver().reset(new libMesh::NewtonSolver(*fluid_system));
+        fluid_system->time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
         
         fluid_system->dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
         
@@ -426,10 +426,10 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         frequency_fluid_post->flight_condition = &flight_cond;
         
         frequency_system->time_solver =
-        AutoPtr<TimeSolver>(new SteadySolver(*frequency_system));
+        libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(*frequency_system));
         libmesh_assert_equal_to (n_timesteps, 1);
         
-        equation_systems.read<libMesh::Real>(input_solution_file, libMesh::DECODE,
+        equation_systems.read<Real>(input_solution_file, libMesh::DECODE,
                                              (libMesh::EquationSystems::READ_HEADER |
                                               libMesh::EquationSystems::READ_DATA));
         
@@ -453,7 +453,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         for (unsigned int i=0; i<3; i++)
             surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
         
-        libMesh::Real frequency = infile("frequency",0.);
+        Real frequency = infile("frequency",0.);
         surface_motion->init(frequency, 0.);
         equation_systems.parameters.set<bool>("if_reduced_freq") =
         infile("if_reduced_freq", false);
@@ -473,7 +473,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     system->deltat = deltat;
     
     // And the nonlinear solver options
-    NewtonSolver &solver = dynamic_cast<NewtonSolver&>
+    libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
     (*(system->time_solver->diff_solver().get()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
@@ -506,7 +506,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     // solution of the equations.
     bool continue_iterations = true;
     unsigned int t_step=0, amr_steps = max_adaptivesteps, a_step = 0;
-    libMesh::Real sol_norm = 1.0e10;
+    Real sol_norm = 1.0e10;
     if (!if_use_amr) amr_steps = 0;
     
     while (continue_iterations)
@@ -534,9 +534,9 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         // Adaptively solve the timestep
         if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
         {
-            ErrorVector error;
+            libMesh::ErrorVector error;
             
-            AutoPtr<ErrorEstimator> error_estimator;
+            libMesh::AutoPtr<libMesh::ErrorEstimator> error_estimator;
             
             // To solve to a tolerance in this problem we
             // need a better estimator than Kelly
@@ -547,34 +547,34 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
                 libmesh_assert_greater (global_tolerance, 0);
                 libmesh_assert_equal_to (nelem_target, 0);
                 
-                UniformRefinementEstimator *u = new UniformRefinementEstimator;
-                u->error_norm = L2;
+                libMesh::UniformRefinementEstimator *u = new libMesh::UniformRefinementEstimator;
+                u->error_norm = libMesh::L2;
                 error_estimator.reset(u);
             }
             else if (error_norm == "kelly")
             {
                 libmesh_assert_greater (nelem_target, 0);
-                error_estimator.reset(new KellyErrorEstimator);
+                error_estimator.reset(new libMesh::KellyErrorEstimator);
             }
             else if (error_norm == "patch")
             {
-                error_estimator.reset(new PatchRecoveryErrorEstimator);
+                error_estimator.reset(new libMesh::PatchRecoveryErrorEstimator);
             }
             else
                 libmesh_assert(false);
             
             // Calculate error based on u and v (and w?) but not p
-            std::vector<libMesh::Real> weights(dim+2,0.0);  // all set to 1.0
+            std::vector<Real> weights(dim+2,0.0);  // all set to 1.0
             weights[0] = 1.0;
             // Keep the same default norm type.
-            std::vector<FEMNormType>
+            std::vector<libMesh::FEMNormType>
             norms(1, error_estimator->error_norm.type(0));
-            error_estimator->error_norm = SystemNorm(norms, weights);
+            error_estimator->error_norm = libMesh::SystemNorm(norms, weights);
             
             error_estimator->estimate_error(*system, error);
             
             // Print out status at each adaptive step.
-            libMesh::Real global_error = error.l2_norm();
+            Real global_error = error.l2_norm();
             std::cout << "Adaptive step " << a_step << ": " << std::endl;
             if (global_tolerance != 0.)
                 std::cout << "Global_error = " << global_error
@@ -614,8 +614,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             mesh_refinement.refine_and_coarsen_elements();
             equation_systems.reinit();
             
-            MeshBase::const_element_iterator       el     = mesh.local_elements_begin();
-            const MeshBase::const_element_iterator end_el = mesh.local_elements_end();
+            libMesh::MeshBase::const_element_iterator       el     = mesh.local_elements_begin();
+            const libMesh::MeshBase::const_element_iterator end_el = mesh.local_elements_end();
             for ( ; el != end_el; el++)
                 (*el)->print_info();
             
@@ -671,7 +671,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             << t_step
             << ".exo";
             
-            ExodusII_IO(mesh).write_equation_systems(file_name.str(),
+            libMesh::ExodusII_IO(mesh).write_equation_systems(file_name.str(),
                                                      equation_systems);
             
             
@@ -687,9 +687,9 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             //            file.open(out_name.str().c_str(), std::ofstream::out);
             //
             //            std::vector<unsigned int> v(1); v[0] = system.variable_number("rho");
-            //            MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
+            //            libMesh::MeshFunction m(equation_systems, *system.solution, system.get_dof_map(), v);
             //            m.init();
-            //            unsigned int ndivs=10000; libMesh::Real dx=5.0/(ndivs*1.);
+            //            unsigned int ndivs=10000; Real dx=5.0/(ndivs*1.);
             //            libMesh::Point p; DenseRealVector vals; vals.resize(4);
             //            p(0) = 0.; p(1) = .026;
             //            while (p(0) < 5.) {
@@ -703,8 +703,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         
     }
     
-    MeshSerializer serializer(mesh);
-    XdrIO xdr(mesh, true);
+    libMesh::MeshSerializer serializer(mesh);
+    libMesh::XdrIO xdr(mesh, true);
     xdr.set_write_parallel(false);
     xdr.write(output_mesh_file);
     equation_systems.write(output_solution_file, libMesh::ENCODE,

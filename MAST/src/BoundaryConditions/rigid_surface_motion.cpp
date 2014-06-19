@@ -41,7 +41,7 @@ MAST::RigidSurfaceMotion::zero()
 
 
 void
-MAST::RigidSurfaceMotion::init(libMesh::Real freq, libMesh::Real phase)
+MAST::RigidSurfaceMotion::init(Real freq, Real phase)
 {
     // make unit vectors
     if (pitch_axis.size() > 0.)
@@ -55,23 +55,22 @@ MAST::RigidSurfaceMotion::init(libMesh::Real freq, libMesh::Real phase)
 
 
 void
-MAST::RigidSurfaceMotion::surface_velocity(const libMesh::Real t,
+MAST::RigidSurfaceMotion::surface_velocity(const Real t,
                                            const libMesh::Point& p,
                                            const libMesh::Point& n,
                                            DenseComplexVector& w_trans,
                                            DenseComplexVector& u_trans,
                                            DenseComplexVector& dn_rot)
 {
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     w_trans.zero();
     u_trans.zero();
     dn_rot.zero();
-    const libMesh::Complex iota(0., 1.);
+    const Complex iota(0., 1.);
     
     if (fabs(pitch_amplitude) > 0.)
     {
         // normal distance from pitching axis to the given point
-        libMesh::Complex pitch_scale;
+        Complex pitch_scale;
         pitch_scale = Complex(cos(pitch_phase), sin(pitch_phase));
         pitch_scale *= pitch_amplitude;
         
@@ -98,7 +97,7 @@ MAST::RigidSurfaceMotion::surface_velocity(const libMesh::Real t,
 
 
 void
-MAST::RigidSurfaceMotion::surface_velocity(const libMesh::Real t,
+MAST::RigidSurfaceMotion::surface_velocity(const Real t,
                                            const libMesh::Point& p,
                                            const libMesh::Point& n,
                                            DenseRealVector& w_trans,

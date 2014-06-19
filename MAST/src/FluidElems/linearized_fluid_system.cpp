@@ -1,10 +1,15 @@
 //
-//  assembleEuler.cpp
+//  linearized_fluid_system.cpp
 //  MAST
 //
-//  Created by Manav Bhatia on 2/21/13.
+//  Created by Manav Bhatia on 6/19/14.
+//  Copyright (c) 2014 Manav Bhatia. All rights reserved.
 //
-//
+
+
+// MAST includes
+#include "FluidElems/linearized_fluid_system.h"
+
 
 // C++ includes
 #include <iomanip>
@@ -31,61 +36,7 @@
 
 
 
-
-Real euler_solution_value(const libMesh::Point& p,
-                                   const libMesh::Parameters& parameters,
-                                   const std::string& sys_name,
-                                   const std::string& var_name)
-{
-    libmesh_assert_equal_to (sys_name, "FluidSystem");
-    
-    // since we are initializing the solution, variable values at all points is same
-    
-    if (var_name == "rho")
-        
-    {
-        return parameters.get<Real> ("rho_inf");
-    }
-    else if (var_name == "rhoux")
-    {
-        return parameters.get<Real> ("rhoux_inf");
-    }
-    else if (var_name == "rhouy")
-    {
-        return parameters.get<Real> ("rhouy_inf");
-    }
-    else if (var_name == "rhouz")
-    {
-        return parameters.get<Real> ("rhouz_inf");
-    }
-    else if (var_name == "rhoe")
-    {
-        return parameters.get<Real> ("rhoe_inf");
-    }
-    else
-        libmesh_assert(false);
-}
-
-
-
-void init_euler_variables(libMesh::EquationSystems& es,
-                          const std::string& system_name)
-{
-    // It is a good idea to make sure we are initializing
-    // the proper system.
-    libmesh_assert_equal_to (system_name, "FluidSystem");
-    
-    // Get a reference to the Convection-Diffusion system object.
-    FluidSystem & system = es.get_system<FluidSystem>("FluidSystem");
-    
-    // Project initial conditions at time 0
-    libmesh_assert_equal_to(system.time, 0.);
-    
-    system.project_solution(euler_solution_value, NULL, es.parameters);
-}
-
-
-void FluidSystem::init_data ()
+void LinearizedFluidSystem::init_data ()
 {
     this->use_fixed_solution = true;
     
@@ -106,9 +57,8 @@ void FluidSystem::init_data ()
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
-    vars[0]  = this->add_variable ( "rho", static_cast<libMesh::Order>(o), fefamily);
+    vars[0]  = this->add_variable ( "drho", static_cast<libMesh::Order>(o), fefamily);
     this->time_evolving(vars[0]);
-    params.set<Real> ("rho_inf") = flight_condition->rho();
     
     vars[1] = this->add_variable ("rhoux", static_cast<libMesh::Order>(o), fefamily);
     this->time_evolving(vars[1]);
@@ -175,7 +125,7 @@ void FluidSystem::init_data ()
 
 
 
-void FluidSystem::init_context(libMesh::DiffContext &context)
+void LinearizedFluidSystem::init_context(libMesh::DiffContext &context)
 {
     context.add_localized_vector(*_dc_ref_sol, *this);
     
@@ -210,7 +160,7 @@ void FluidSystem::init_context(libMesh::DiffContext &context)
 
 
 
-bool FluidSystem::element_time_derivative (bool request_jacobian,
+bool LinearizedFluidSystem::element_time_derivative (bool request_jacobian,
                                            libMesh::DiffContext &context)
 {
     libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
@@ -267,7 +217,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
-
+    
     if (!if_use_stored_dc_coeff)
         dc_ref_sol = c.get_elem_solution();
     else
@@ -382,7 +332,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
                 dB_mat[i_dim].right_multiply_transpose(mat2_n2n2,
                                                        dB_mat[i_dim]);
                 Kmat.add(-JxW[qp]*diff_val(i_dim), mat2_n2n2);
-
+                
                 if (_if_full_linearization)
                 {
                     // sensitivity of Ai_Bi with respect to U:   [dAi/dUj.Bi.U  ...  dAi/dUn.Bi.U]
@@ -445,7 +395,7 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
 
 
 
-bool FluidSystem::side_time_derivative (bool request_jacobian,
+bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                                         libMesh::DiffContext &context)
 {
     libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
@@ -471,7 +421,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     mechanical_bc_type = SLIP_WALL;
                     n_mechanical_bc++;
                     break;
-             
+                    
                 case SYMMETRY_WALL:
                     mechanical_bc_type = SYMMETRY_WALL;
                     n_mechanical_bc++;
@@ -487,12 +437,12 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     mechanical_bc_type = FAR_FIELD;
                     n_mechanical_bc++;
                     break;
-
+                    
                 case EXHAUST:
                     mechanical_bc_type = EXHAUST;
                     n_mechanical_bc++;
                     break;
-
+                    
                 case ISOTHERMAL:
                     libmesh_assert(_if_viscous);
                     libmesh_assert_equal_to(mechanical_bc_type, NO_SLIP_WALL);
@@ -525,7 +475,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     
     libMesh::FEBase * side_fe;
     c.get_side_fe(vars[0], side_fe); // assuming all variables have the same FE
-
+    
     const unsigned int n1 = dim+2, n_dofs = n1*side_fe->n_shape_functions(),
     spatial_dim = this->get_mesh().spatial_dimension();
     
@@ -601,7 +551,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 
                 if (thermal_bc_type == ADIABATIC)
                     temp_grad.zero();
-
+                
                 
                 // copy the surface normal
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -624,7 +574,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     // deformed, although the geometry of the flow mesh does
                     // not conform to that deformation
                     local_normal.add(1., dnormal);
-
+                    
                     //    ui * (ni + dni) = wi_dot * (ni + dni)
                     // => ui * ni = wi_dot * (ni + dni) - ui * dni
                     
@@ -688,10 +638,10 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
             break;
             
         case SYMMETRY_WALL: // inviscid boundary condition without any diffusive component
-                        // conditions enforced are
-                        // vi ni = 0       (slip wall)
-                        // tau_ij nj = 0   (because velocity gradient at wall = 0)
-                        // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
+                            // conditions enforced are
+                            // vi ni = 0       (slip wall)
+                            // tau_ij nj = 0   (because velocity gradient at wall = 0)
+                            // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -723,8 +673,8 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
             }
         }
             break;
-
-        
+            
+            
         case SLIP_WALL: // inviscid boundary condition without any diffusive component
                         // conditions enforced are
                         // vi ni = wi_dot (ni + dni) - ui dni   (moving slip wall with deformation)
@@ -745,7 +695,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 // copy the surface normal
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     local_normal(i_dim) = face_normals[qp](i_dim);
-
+                
                 // now check if the surface deformation is defined and
                 // needs to be applied through transpiration boundary
                 // condition
@@ -913,7 +863,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
             }
         }
             break;
-
+            
             
         case EXHAUST:
             // conditions enforced are:
@@ -952,7 +902,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                 Real rho_constrained = 0.7519;
                 U_vec_interpolated = conservative_sol;
                 U_vec_interpolated.scale(rho_constrained/conservative_sol(0));  // value is not constrained to density at exhaust
-
+                
                 // use the constrained vector to calculate the flux value
                 mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U{-}
                 
@@ -1047,7 +997,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                         else
                             mat_n1n1.scale_column(j, 0.0);
                     mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-
+                    
                     // now do the same operation on the outoging characteristics
                     // the term dU{-}/dU_p is calculated by scaling the value from interior solution
                     mat3_n1n1 = dcons_dprim;
@@ -1059,10 +1009,10 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
                     // now multiply the matrices and get the
                     mat3_n1n1.right_multiply(dprim_dcons);
                     mat_n1n1.right_multiply(mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
-
+                    
                     B_mat.left_multiply(mat1_n1n2, mat_n1n1);
                     B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
-
+                    
                     Kmat.add(-JxW[qp], mat2_n2n2);
                     
                     if (_if_viscous)
@@ -1084,7 +1034,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
             }
         }
             break;
-
+            
     }
     
     
@@ -1102,7 +1052,7 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
 
 
 
-bool FluidSystem::mass_residual (bool request_jacobian,
+bool LinearizedFluidSystem::mass_residual (bool request_jacobian,
                                  libMesh::DiffContext &context)
 {
     libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
@@ -1151,14 +1101,14 @@ bool FluidSystem::mass_residual (bool request_jacobian,
         for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
             flux_jacobian_sens[i_dim][i_cvar].resize(n1, n1);
     }
-
+    
     if (!if_use_stored_dc_coeff)
         dc_ref_sol = c.get_elem_fixed_solution();
     else
         dc_ref_sol = c.get_localized_vector(*_dc_ref_sol);
-
+    
     PrimitiveSolution primitive_sol;
-
+    
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
         // first update the variables at the current quadrature point
@@ -1224,28 +1174,14 @@ bool FluidSystem::mass_residual (bool request_jacobian,
 
 
 
-void FluidSystem::postprocess()
-{
-    for (unsigned int i=0; i<this->qoi.size(); i++)
-        if (i == 0)
-            libMesh::out << "Lift: " << std::setw(25)
-            << std::setprecision(14) << qoi[i] << std::endl;
-        else if (i == 1)
-            libMesh::out << "Drag: " << std::setw(25)
-            << std::setprecision(14) << qoi[i] << std::endl;
-        else if (i == 2)
-            libMesh::out << "Total V: " << std::setw(25)
-            << std::setprecision(14) << qoi[i] << std::endl;
-        else if (i == 3)
-            libMesh::out << "Entropy Error: " << std::setw(25)
-            << std::setprecision(14) << sqrt(qoi[i]/qoi[i-1]) << std::endl;
-}
+void LinearizedFluidSystem::postprocess()
+{ }
 
 
 
 
 
-void FluidSystem::evaluate_recalculate_dc_flag()
+void LinearizedFluidSystem::evaluate_recalculate_dc_flag()
 {
     Real norm = this->calculate_norm(*(this->solution), this->vars[0], libMesh::L2),
     relative_change0 = fabs(_rho_norm_curr - _rho_norm_old)/_rho_norm_curr,
@@ -1289,167 +1225,6 @@ void FluidSystem::evaluate_recalculate_dc_flag()
     _rho_norm_old = _rho_norm_curr;
     _rho_norm_curr = norm;
 }
-
-
-
-
-
-Real get_var_val(const std::string& var_name, const PrimitiveSolution& p_sol,
-                 Real p0, Real q0)
-{
-    if (var_name == "ux")
-        return p_sol.u1;
-    else if (var_name == "uy")
-        return p_sol.u2;
-    else if (var_name == "uz")
-        return p_sol.u3;
-    else if (var_name == "T")
-        return p_sol.T;
-    else if (var_name == "s")
-        return p_sol.entropy;
-    else if (var_name == "p")
-        return p_sol.p;
-    else if (var_name == "cp")
-        return p_sol.c_pressure(p0, q0);
-    else if (var_name == "a")
-        return p_sol.a;
-    else if (var_name == "M")
-        return p_sol.mach;
-    else
-        libmesh_assert(false);
-}
-
-
-
-class PrimitiveFEMFunction : public libMesh::FEMFunctionBase<Real>
-{
-public:
-    // Constructor
-    PrimitiveFEMFunction(libMesh::AutoPtr<libMesh::FunctionBase<Real> > fluid_func,
-                         std::vector<std::string>& vars,
-                         Real cp, Real cv, Real p0, Real q0):
-    libMesh::FEMFunctionBase<Real>(),
-    _fluid_function(fluid_func.release()),
-    _vars(vars), _cp(cp), _cv(cv), _p0(p0), _q0(q0)
-    {
-        _fluid_function->init();
-    }
-    
-    // Destructor
-    virtual ~PrimitiveFEMFunction () {}
-    
-    virtual libMesh::AutoPtr<libMesh::FEMFunctionBase<Real> > clone () const
-    {return libMesh::AutoPtr<libMesh::FEMFunctionBase<Real> >( new PrimitiveFEMFunction
-                                              (_fluid_function->clone(), _vars, _cp, _cv,
-                                               _p0, _q0) ); }
-    
-    virtual void operator() (const libMesh::FEMContext& c, const libMesh::Point& p,
-                             const Real t, DenseRealVector& val)
-    {
-        DenseRealVector fluid_sol;
-        (*_fluid_function)(p, t, fluid_sol);
-        PrimitiveSolution p_sol;
-        
-        p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
-        
-        for (unsigned int i=0; i<_vars.size(); i++)
-            val(i) = get_var_val(_vars[i], p_sol, _p0, _q0);
-    }
-    
-    
-    virtual Real component(const libMesh::FEMContext& c, unsigned int i_comp,
-                             const libMesh::Point& p, Real t=0.)
-    {
-        DenseRealVector fluid_sol;
-        (*_fluid_function)(p, t, fluid_sol);
-        PrimitiveSolution p_sol;
-        
-        p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
-        
-        return get_var_val(_vars[i_comp], p_sol, _p0, _q0);
-    }
-    
-    
-    virtual Real operator() (const libMesh::FEMContext&, const libMesh::Point& p,
-                               const Real time = 0.)
-    {libmesh_error();}
-    
-private:
-    
-    libMesh::AutoPtr<libMesh::FunctionBase<Real> > _fluid_function;
-    std::vector<std::string>& _vars;
-    Real _cp, _cv, _p0, _q0;
-};
-
-
-
-
-void FluidPostProcessSystem::init_data()
-{
-    const unsigned int dim = this->get_mesh().mesh_dimension();
-    
-    const libMesh::FEFamily fefamily = libMesh::LAGRANGE;
-    const libMesh::Order order = libMesh::FIRST;
-    
-    u = this->add_variable("ux", order, fefamily);
-    if (dim > 1)
-        v = this->add_variable("uy", order, fefamily);
-    if (dim > 2)
-        w = this->add_variable("uz", order, fefamily);
-    T = this->add_variable("T", order, fefamily);
-    s = this->add_variable("s", order, fefamily);
-    p = this->add_variable("p", order, fefamily);
-    cp = this->add_variable("cp", order, fefamily);
-    a = this->add_variable("a", order, fefamily);
-    M = this->add_variable("M", order, fefamily);
-    
-    libMesh::System::init_data();
-}
-
-
-
-
-
-void FluidPostProcessSystem::postprocess()
-{
-    // get the solution vector from
-    const FluidSystem& fluid =
-    this->get_equation_systems().get_system<FluidSystem>("FluidSystem");
-    fluid.get_mesh().sub_point_locator();
-    
-    std::vector<unsigned int> fluid_vars(fluid.n_vars());
-    std::vector<std::string> post_process_var_names(this->n_vars());
-    
-    for (unsigned int i=0; i<fluid_vars.size(); i++)
-        fluid_vars[i] = i;
-    for (unsigned int i=0; i<this->n_vars(); i++)
-        post_process_var_names[i] = this->variable_name(i);
-    
-    
-    libMesh::AutoPtr<libMesh::NumericVector<Real> > soln =
-    libMesh::NumericVector<Real>::build(this->get_equation_systems().comm());
-    soln->init(fluid.solution->size(), true, libMesh::SERIAL);
-    fluid.solution->localize(*soln,
-                             fluid.get_dof_map().get_send_list());
-    
-    
-    libMesh::AutoPtr<libMesh::MeshFunction> mesh_function
-    (new libMesh::MeshFunction(this->get_equation_systems(), *soln,
-                      fluid.get_dof_map(), fluid_vars));
-    mesh_function->init();
-    
-    libMesh::AutoPtr<libMesh::FEMFunctionBase<Real> > post_process_function
-    (new PrimitiveFEMFunction(mesh_function->clone(), post_process_var_names,
-                              flight_condition->gas_property.cp,
-                              flight_condition->gas_property.cv,
-                              flight_condition->p0(),
-                              flight_condition->q0()));
-    
-    this->project_solution(post_process_function.get());
-    
-    this->update();
-}
-
 
 
 

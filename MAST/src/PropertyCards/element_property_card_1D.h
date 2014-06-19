@@ -51,7 +51,7 @@ namespace MAST
          *   returns the bending model to be used for the 2D element.
          */
         virtual MAST::BendingOperatorType bending_model(const libMesh::Elem& elem,
-                                                 const FEType& fe) const;
+                                                        const libMesh::FEType& fe) const;
         
         
         /*!
@@ -60,7 +60,7 @@ namespace MAST
          *    element
          */
         virtual int extra_quadrature_order(const libMesh::Elem& elem,
-                                           const FEType& fe) const {
+                                           const libMesh::FEType& fe) const {
             if (this->bending_model(elem, fe) == MAST::BERNOULLI)
                 return 2;
             else
@@ -72,7 +72,7 @@ namespace MAST
          *   returns value of the property \par val. The string values for 
          *   \par val are IYY, IZZ, IYZ
          */
-        virtual libMesh::Real value(const std::string& val) const = 0;
+        virtual Real value(const std::string& val) const = 0;
         
         /*!
          *   vector in the x-y plane of the element. This should not be the same
@@ -115,14 +115,14 @@ namespace MAST
 inline
 MAST::BendingOperatorType
 MAST::ElementPropertyCard1D::bending_model(const libMesh::Elem& elem,
-                                           const FEType& fe) const {
+                                           const libMesh::FEType& fe) const {
     // for an EDGE2 element, default bending is Bernoulli. For all other elements
     // the default is Timoshenko. Otherwise it returns the model set for
     // this card.
     switch (elem.type()) {
-        case EDGE2:
-            if ((fe.family == LAGRANGE) &&
-                (fe.order  == FIRST) &&
+        case libMesh::EDGE2:
+            if ((fe.family == libMesh::LAGRANGE) &&
+                (fe.order  == libMesh::FIRST) &&
                 (_bending_model == MAST::DEFAULT_BENDING))
                 return MAST::BERNOULLI;
             else

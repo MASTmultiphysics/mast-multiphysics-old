@@ -106,8 +106,8 @@ namespace MAST {
          *   initialze the bending strain operator for the specified quadrature point
          */
         virtual void initialize_bending_strain_operator_for_yz (const unsigned int qp,
-                                                                const libMesh::Real y,
-                                                                const libMesh::Real z,
+                                                                const Real y,
+                                                                const Real z,
                                                                 FEMOperatorMatrix& Bmat) = 0;
 
     };
@@ -126,7 +126,7 @@ namespace MAST {
          *   initialze the bending strain operator for the specified quadrature point
          */
         virtual void initialize_bending_strain_operator_for_z (const unsigned int qp,
-                                                                const libMesh::Real z,
+                                                                const Real z,
                                                                 FEMOperatorMatrix& Bmat) = 0;
         
     };

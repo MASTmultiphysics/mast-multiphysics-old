@@ -16,8 +16,8 @@
 #include "libmesh/fem_system.h"
 #include "libmesh/equation_systems.h"
 
-libMesh::Real unsteady_compressible_potential_solution_value(const libMesh::Point& p,
-                                                    const Parameters& parameters,
+Real unsteady_compressible_potential_solution_value(const libMesh::Point& p,
+                                                    const libMesh::Parameters& parameters,
                                                     const std::string& sys_name,
                                                     const std::string& var_name);
 
@@ -32,13 +32,13 @@ void init_compressible_potential_variables(libMesh::EquationSystems& es,
  */
 
 class UnsteadyCompressiblePotentialFlow :
-public FEMSystem, public MAST::PotentialFlowElemBase
+public libMesh::FEMSystem, public MAST::PotentialFlowElemBase
 {
 public:
     UnsteadyCompressiblePotentialFlow(libMesh::EquationSystems& es,
                                       const std::string& name_in,
                                       const unsigned int number_in):
-    FEMSystem(es, name_in, number_in),
+    libMesh::FEMSystem(es, name_in, number_in),
     PotentialFlowElemBase (*es.parameters.get<GetPot*>("input_file"))
     { }
 
@@ -48,17 +48,17 @@ public:
 
     void init_data();
     
-    virtual void init_context(DiffContext &context);
+    virtual void init_context(libMesh::DiffContext &context);
 
     
     virtual bool element_time_derivative (bool request_jacobian,
-                                          DiffContext &context);
+                                          libMesh::DiffContext &context);
     
     virtual bool side_time_derivative (bool request_jacobian,
-                                       DiffContext &context);
+                                       libMesh::DiffContext &context);
     
     virtual bool mass_residual (bool request_jacobian,
-                                DiffContext& context);
+                                libMesh::DiffContext& context);
     
 protected:
     
@@ -69,7 +69,7 @@ protected:
   
     
     void update_solution_at_quadrature_point
-    ( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+    ( const std::vector<unsigned int>& vars, const unsigned int qp, libMesh::FEMContext& c,
      const bool if_elem_domain, const DenseRealVector& elem_solution,
      DenseRealVector& conservative_sol, libMesh::Point& uvec,
      FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat,

@@ -36,12 +36,12 @@ namespace MAST {
         }
         
         
-        class LayerOffset: public MAST::FieldFunction<libMesh::Real> {
+        class LayerOffset: public MAST::FieldFunction<Real> {
         public:
-            LayerOffset(const libMesh::Real base,
+            LayerOffset(const Real base,
                         unsigned int layer_num,
-                        std::vector<MAST::FieldFunction<libMesh::Real>*>& layer_hz):
-            MAST::FieldFunction<libMesh::Real>("hz_offset"),
+                        std::vector<MAST::FieldFunction<Real>*>& layer_hz):
+            MAST::FieldFunction<Real>("hz_offset"),
             _base(base),
             _layer_num(layer_num),
             _layer_hz(layer_hz) {
@@ -50,7 +50,7 @@ namespace MAST {
             }
             
             LayerOffset(const MAST::Multilayer1DSectionElementPropertyCard::LayerOffset &f):
-            MAST::FieldFunction<libMesh::Real>(f),
+            MAST::FieldFunction<Real>(f),
             _base(f._base),
             _layer_num(f._layer_num)
             {
@@ -65,8 +65,8 @@ namespace MAST {
             /*!
              *   @returns a clone of the function
              */
-            virtual std::auto_ptr<MAST::FieldFunction<libMesh::Real> > clone() const {
-                return std::auto_ptr<MAST::FieldFunction<libMesh::Real> >
+            virtual std::auto_ptr<MAST::FieldFunction<Real> > clone() const {
+                return std::auto_ptr<MAST::FieldFunction<Real> >
                 (new MAST::Multilayer1DSectionElementPropertyCard::LayerOffset(*this));
             }
             
@@ -76,8 +76,8 @@ namespace MAST {
                     delete _layer_hz[i];
             }
 
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, Real& m) const {
-                libMesh::Real val = 0.;
+            virtual void operator() (const libMesh::Point& p, const Real t, Real& m) const {
+                Real val = 0.;
                 m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     (*_layer_hz[i])(p, t, val);
@@ -95,8 +95,8 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, Real& m) const {
-                libMesh::Real val = 0.;
+                                  const libMesh::Point& p, const Real t, Real& m) const {
+                Real val = 0.;
                 m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     _layer_hz[i]->partial(f, p, t, val);
@@ -114,8 +114,8 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, Real& m) const {
-                libMesh::Real val = 0.;
+                                const libMesh::Point& p, const Real t, Real& m) const {
+                Real val = 0.;
                 m = 0.;
                 for (unsigned int i=0; i<_layer_num; i++) {
                     _layer_hz[i]->total(f, p, t, val);
@@ -134,9 +134,9 @@ namespace MAST {
             
         protected:
             
-            const libMesh::Real _base;
+            const Real _base;
             const unsigned int _layer_num;
-            std::vector<MAST::FieldFunction<libMesh::Real>*> _layer_hz;
+            std::vector<MAST::FieldFunction<Real>*> _layer_hz;
         };
         
         
@@ -174,7 +174,7 @@ namespace MAST {
                     delete _layer_mats[i];
             }
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseRealMatrix mi;
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
@@ -188,7 +188,7 @@ namespace MAST {
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseRealMatrix mi;
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
@@ -202,7 +202,7 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const {
                 // add the values of each matrix to get the integrated value
                 DenseRealMatrix mi;
                 for (unsigned int i=0; i<_layer_mats.size(); i++) {
@@ -229,7 +229,7 @@ namespace MAST {
          *    base = 0 implies section mid-point
          *    base = +1 implies section upper thickness.
          */
-        void set_layers(const libMesh::Real base,
+        void set_layers(const Real base,
                         std::vector<MAST::Solid1DSectionElementPropertyCard*>& layers) {
             
             // make sure that this has not been already set
@@ -244,9 +244,9 @@ namespace MAST {
             for (unsigned int i=0; i<n_layers; i++) {
                 
                 // offsets to be provided as functions to each layer
-                std::vector<MAST::FieldFunction<libMesh::Real>*> layer_hz(n_layers);
+                std::vector<MAST::FieldFunction<Real>*> layer_hz(n_layers);
                 for (unsigned int j=0; j<n_layers; j++)
-                    layer_hz[j] = _layers[j]->get<MAST::FieldFunction<libMesh::Real> >("hz").clone().release();
+                    layer_hz[j] = _layers[j]->get<MAST::FieldFunction<Real> >("hz").clone().release();
 
                 // create the offset function
                 _layer_offsets[i] = new MAST::Multilayer1DSectionElementPropertyCard::LayerOffset
@@ -279,7 +279,7 @@ namespace MAST {
          *   returns value of the property \par val. The string values for
          *   \par val are A, J, IYY, IZZ, IYZ
          */
-        virtual libMesh::Real value(const std::string& val) const {
+        virtual Real value(const std::string& val) const {
             libmesh_assert(false); // not implemented for multilayered sections yet
         }
         
@@ -311,7 +311,7 @@ namespace MAST {
         
     protected:
 
-        std::vector<MAST::FieldFunction<libMesh::Real>*> _layer_offsets;
+        std::vector<MAST::FieldFunction<Real>*> _layer_offsets;
         
         /*!
          *   vector of thickness function for each layer

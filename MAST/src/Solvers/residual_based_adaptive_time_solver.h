@@ -10,7 +10,10 @@
 #define __MAST_residual_based_adaptive_time_solver_h__
 
 
-// Local includes
+// MAST includes
+#include "Base/MAST_data_types.h"
+
+// libMesh includes
 #include "libmesh/adaptive_time_solver.h"
 
 // Forward declerations
@@ -18,7 +21,7 @@ class FluidSystem;
 
 
 /**
- * This class wraps another UnsteadySolver derived class, and uses the
+ * This class wraps another libMesh::UnsteadySolver derived class, and uses the
  * approximations of the velocity L-infty norm to adapt the time step.
  *
  * @author Manav Bhatia 2013
@@ -52,21 +55,21 @@ public:
 
     unsigned int n_iters_per_update, _iter_counter;
 
-    libMesh::Real growth_exponent, min_growth;
+    Real growth_exponent, min_growth;
 
-    libMesh::Real _t_old, _x_dot_norm_old;
+    Real _t_old, _x_dot_norm_old;
 
     bool _first_solve;
     
     /*!
      *    system solution from previous time-step
      */
-    libMesh::NumericVector<libMesh::Real>* _x_old;
+    libMesh::NumericVector<Real>* _x_old;
     
     /*!
      *    system velocity estimate
      */
-    libMesh::NumericVector<libMesh::Real>* _x_dot;
+    libMesh::NumericVector<Real>* _x_dot;
 };
 
 

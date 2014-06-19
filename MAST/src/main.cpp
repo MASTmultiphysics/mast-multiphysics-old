@@ -24,14 +24,14 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
 int optimization_driver (libMesh::LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[]);
 
-using namespace libMesh;
+
 
 int main (int argc, char* const argv[])
 {
     libMesh::LibMeshInit init(argc, argv);
     
     // get the input file
-    std::string nm = command_line_value("-i", std::string("system_input.in"));
+    std::string nm = libMesh::command_line_value("-i", std::string("system_input.in"));
     GetPot infile(nm);
     int rval = 0;
     

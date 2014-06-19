@@ -14,9 +14,9 @@
 
 
 void
-MAST::UGFlutterRoot::init(const libMesh::Real k, const libMesh::Real b_ref,
-                          const libMesh::Complex num,
-                          const libMesh::Complex den,
+MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
+                          const Complex num,
+                          const Complex den,
                           const ComplexMatrixX& Bmat,
                           const ComplexVectorX& eig_vec)
 {
@@ -70,7 +70,7 @@ MAST::UGFlutterSolver::build_flutter_root() {
 void MAST::UGFlutterSolver::_identify_crossover_points()
 {
     // if the initial scanning has not been done, then do it now
-    const libMesh::Real tol = 1.0e-5, max_allowable_g = 0.75;
+    const Real tol = 1.0e-5, max_allowable_g = 0.75;
     
     const unsigned int nvals = _flutter_solutions.begin()->second->n_roots();
     // make sure that the solution has been generated
@@ -93,7 +93,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
         std::map<Real, MAST::FlutterSolutionBase*>::const_iterator
         sol_it    = _flutter_solutions.begin(),
         sol_end   = _flutter_solutions.end();
-        libMesh::Real max_g_val = 0., val = 0.;
+        Real max_g_val = 0., val = 0.;
         for ( ; sol_it!=sol_end; sol_it++) {
             val = fabs(sol_it->second->get_root(i).g);
             if (val > max_g_val)
@@ -195,7 +195,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
 
 
 MAST::FlutterSolutionBase*
-MAST::UGFlutterSolver::analyze(const libMesh::Real k_ref,
+MAST::UGFlutterSolver::analyze(const Real k_ref,
                                const MAST::FlutterSolutionBase* prev_sol) {
     ComplexMatrixX m, k;
     
@@ -231,7 +231,7 @@ MAST::UGFlutterSolver::analyze(const libMesh::Real k_ref,
 
 
 
-void MAST::UGFlutterSolver::initialize_matrices(libMesh::Real k_ref,
+void MAST::UGFlutterSolver::initialize_matrices(Real k_ref,
                                                 ComplexMatrixX& m, // mass & aero
                                                 ComplexMatrixX& k) // stiffness
 {
@@ -240,7 +240,7 @@ void MAST::UGFlutterSolver::initialize_matrices(libMesh::Real k_ref,
     
     // stiffness matrix forms the rhs of the eigenvalue problem
     has_matrix = aero_structural_model->get_structural_stiffness_matrix(mat_r);
-    k = mat_r.cast<libMesh::Complex>();
+    k = mat_r.cast<Complex>();
     libmesh_assert(has_matrix);
     
     // combination of mass and aero matrix forms lhs of the eigenvalue problem
@@ -253,7 +253,7 @@ void MAST::UGFlutterSolver::initialize_matrices(libMesh::Real k_ref,
     
     m *= 0.5 * flight_condition->gas_property.rho;
     mat_r *= pow(k_ref/flight_condition->ref_chord, 2);
-    m += mat_r.cast<libMesh::Complex>();
+    m += mat_r.cast<Complex>();
 }
 
 

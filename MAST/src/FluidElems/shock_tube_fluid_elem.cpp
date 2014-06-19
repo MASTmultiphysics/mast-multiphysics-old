@@ -36,14 +36,14 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     
     libmesh_assert(dim == 1);
     
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     libMesh::FEBase* elem_fe;
     
     c.get_element_fe(vars[0], elem_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
+    const std::vector<Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
     DenseRealMatrix& Kmat = c.get_elem_jacobian();
@@ -94,9 +94,9 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
     
     
     PrimitiveSolution primitive_sol;
-    const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = phi.size();
-    libMesh::Real area, darea_dx, x;
+    Real area, darea_dx, x;
     
     
     for (unsigned int qp=0; qp != n_qpoints; qp++)
@@ -242,7 +242,7 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
 
 void
 MAST::ShockTubeFluidElem::calculate_source_flux(const PrimitiveSolution& sol,
-                                                DenseVector<Real>& vec) {
+                                                DenseRealVector& vec) {
     calculate_advection_flux(0, sol, vec);
     vec(1) -= sol.p;
     vec.scale(-1.);
@@ -252,9 +252,9 @@ MAST::ShockTubeFluidElem::calculate_source_flux(const PrimitiveSolution& sol,
 
 void
 MAST::ShockTubeFluidElem::calculate_source_flux_jacobian(const PrimitiveSolution& sol,
-                                                         DenseMatrix<Real>& mat) {
-    libMesh::DenseVector<Real> dpress_dp, vec;
-    libMesh::DenseMatrix<Real> dcdp, dpdc;
+                                                         DenseRealMatrix& mat) {
+    DenseRealVector dpress_dp, vec;
+    DenseRealMatrix dcdp, dpdc;
     dpress_dp.resize(3); vec.resize(3);
     dcdp.resize(3,3); dpdc.resize(3,3);
     

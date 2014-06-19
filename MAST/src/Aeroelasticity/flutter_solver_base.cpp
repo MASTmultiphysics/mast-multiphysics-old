@@ -79,10 +79,10 @@ void MAST::FlutterSolverBase::scan_for_roots()
     // if the initial scanning has not been done, then do it now
     if (!_flutter_solutions.size()) {
         // march from the upper limit to the lower to find the roots
-        libMesh::Real current_k_ref = ref_val_range.second,
+        Real current_k_ref = ref_val_range.second,
         delta_k_ref = (ref_val_range.second-ref_val_range.first)/n_ref_val_divs;
         
-        std::vector<libMesh::Real> k_vals(n_ref_val_divs+1);
+        std::vector<Real> k_vals(n_ref_val_divs+1);
         for (unsigned int i=0; i<n_ref_val_divs+1; i++) {
             k_vals[i] = current_k_ref;
             current_k_ref -= delta_k_ref;
@@ -187,12 +187,12 @@ std::pair<bool, MAST::FlutterSolutionBase*>
 MAST::FlutterSolverBase::bisection_search(const std::pair<MAST::FlutterSolutionBase*,
                                           MAST::FlutterSolutionBase*>& ref_sol_range,
                                           const unsigned int root_num,
-                                          const libMesh::Real g_tol,
+                                          const Real g_tol,
                                           const unsigned int max_iters)
 {
     // assumes that the upper k_val has +ve g val and lower k_val has -ve
     // k_val
-    libMesh::Real lower_ref_val = ref_sol_range.first->ref_val(),
+    Real lower_ref_val = ref_sol_range.first->ref_val(),
     lower_g = ref_sol_range.first->get_root(root_num).g,
     upper_ref_val = ref_sol_range.second->ref_val(),
     upper_g = ref_sol_range.second->get_root(root_num).g,

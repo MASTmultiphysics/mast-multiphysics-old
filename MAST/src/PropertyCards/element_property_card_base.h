@@ -62,7 +62,7 @@ namespace MAST
          *   reimplemented in the derived classes
          */
         virtual MAST::BendingOperatorType bending_model(const libMesh::Elem& elem,
-                                                        const FEType& fe) const
+                                                        const libMesh::FEType& fe) const
         { libmesh_error(); }
         
         /*!
@@ -71,7 +71,7 @@ namespace MAST
          *    changed by the derived classes
          */
         virtual int extra_quadrature_order(const libMesh::Elem& elem,
-                                           const FEType& fe) const {
+                                           const libMesh::FEType& fe) const {
             return 0;
         }
         

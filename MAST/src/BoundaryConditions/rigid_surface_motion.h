@@ -28,22 +28,22 @@ namespace MAST {
         
         libMesh::Point hinge_location;
         
-        libMesh::Real plunge_amplitude;
+        Real plunge_amplitude;
         
-        libMesh::Real pitch_amplitude;
+        Real pitch_amplitude;
         
-        libMesh::Real pitch_phase;
+        Real pitch_phase;
         
         virtual void zero();
         
-        virtual void init(libMesh::Real freq, libMesh::Real phase);
+        virtual void init(Real freq, Real phase);
         
         /*!
          *   calculation of surface velocity in frequency domain. 
          *   \p u_trans is the pure translation velocity component,
          *   while \p dn_rot defines the surface normal perturbation.
          */
-        virtual void surface_velocity(const libMesh::Real t,
+        virtual void surface_velocity(const Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
                                       DenseComplexVector& w_trans,
@@ -55,7 +55,7 @@ namespace MAST {
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity(const libMesh::Real t,
+        virtual void surface_velocity(const Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
                                       DenseRealVector& w_trans,

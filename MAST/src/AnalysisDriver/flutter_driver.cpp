@@ -30,7 +30,6 @@
 #include "libmesh/condensed_eigen_system.h"
 
 
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
 
 int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
                     int argc, char* const argv[])
@@ -59,7 +58,7 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     // *****************************************
     // initialize the fluid system
     // *****************************************
-    ParallelMesh fluid_mesh(init.comm());
+    libMesh::ParallelMesh fluid_mesh(init.comm());
     fluid_mesh.read("saved_mesh.xdr");
     
     libMesh::EquationSystems fluid_equation_systems (fluid_mesh);
@@ -70,10 +69,10 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     ("FrequencyDomainLinearizedFluidSystem");
     linearized_fluid_system.flight_condition = &flight_cond;
     linearized_fluid_system.time_solver =
-    AutoPtr<TimeSolver>(new SteadySolver(linearized_fluid_system));
+    libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(linearized_fluid_system));
     linearized_fluid_system.time_solver->quiet = false;
     // read the fluid system from the saved file
-    fluid_equation_systems.read<libMesh::Real>("saved_solution.xdr",
+    fluid_equation_systems.read<Real>("saved_solution.xdr",
                                       libMesh::DECODE);
     // now initilaize the nonlinear solution
     linearized_fluid_system.localize_fluid_solution();
@@ -86,7 +85,7 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     fluid_mesh.print_info();
     fluid_equation_systems.print_info();
     
-    NewtonSolver &solver = dynamic_cast<NewtonSolver&>
+    libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
     (*(linearized_fluid_system.time_solver->diff_solver()));
     solver.quiet = infile("solver_quiet", true);
     solver.verbose = !solver.quiet;
@@ -115,17 +114,17 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     // *****************************************
     // now initialize the structural system
     // *****************************************
-    ParallelMesh structural_mesh(init.comm());
+    libMesh::ParallelMesh structural_mesh(init.comm());
     structural_mesh.read("saved_structural_mesh.xdr");
     
     libMesh::EquationSystems structural_equation_systems (structural_mesh);
-    structural_equation_systems.read<libMesh::Real>("saved_structural_solution.xdr",
+    structural_equation_systems.read<Real>("saved_structural_solution.xdr",
                                            libMesh::DECODE,
                                            (libMesh::EquationSystems::READ_HEADER |
                                             libMesh::EquationSystems::READ_DATA |
                                             libMesh::EquationSystems::READ_ADDITIONAL_DATA));
-    System & structural_system =
-    structural_equation_systems.get_system<System> ("StructuralSystem");
+    libMesh::System & structural_system =
+    structural_equation_systems.get_system<libMesh::System> ("StructuralSystem");
     
     // Prints information about the system to the screen.
     structural_mesh.print_info();
@@ -155,7 +154,7 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     
     // attach the fluid and structural systems to the models
     libMesh::System& nonlinear_fluid_system =
-    fluid_equation_systems.get_system<System>("FluidSystem");
+    fluid_equation_systems.get_system<libMesh::System>("FluidSystem");
     CFDAerodynamicModel aero_model(nonlinear_fluid_system,
                                    linearized_fluid_system);
     CoupledFluidStructureSystem

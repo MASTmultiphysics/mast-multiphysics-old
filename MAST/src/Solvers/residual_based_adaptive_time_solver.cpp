@@ -48,7 +48,7 @@ void ResidualBaseAdaptiveTimeSolver::solve()
     libmesh_assert(this->n_iters_per_update > 2); // need information from atleast three iterations to adapt
 
     // set the counter only for the first solve
-    libMesh::Real x_dot_norm = 1.0e10; // an arbitrary norm to begin with
+    Real x_dot_norm = 1.0e10; // an arbitrary norm to begin with
     if (_first_solve) {
         _iter_counter = this->n_iters_per_update;
         _first_solve = false;
@@ -76,7 +76,7 @@ void ResidualBaseAdaptiveTimeSolver::solve()
         if (!quiet)
             libMesh::out << "\n ===  Computing new time step ====" << std::endl;
         
-        libMesh::Real growth_factor = pow( _x_dot_norm_old/x_dot_norm , growth_exponent);
+        Real growth_factor = pow( _x_dot_norm_old/x_dot_norm , growth_exponent);
         
         if (growth_factor > this->max_growth)
         {

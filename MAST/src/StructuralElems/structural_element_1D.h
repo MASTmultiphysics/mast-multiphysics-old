@@ -132,7 +132,7 @@ namespace MAST {
         /*!
          *   returns the value of maximum von Mises stress over the element
          */
-        virtual libMesh::Real max_von_mises_stress(){
+        virtual Real max_von_mises_stress(){
             libmesh_error();
         }
         
@@ -140,7 +140,7 @@ namespace MAST {
         /*!
          *   returns the sensitivity of maximum von Mises stress over the element
          */
-        virtual libMesh::Real max_von_mises_stress_sensitivity(){
+        virtual Real max_von_mises_stress_sensitivity(){
             libmesh_error();
         }
 
@@ -203,7 +203,7 @@ namespace MAST {
                                                bool if_vk,
                                                const unsigned int n2,
                                                const unsigned int qp,
-                                               const std::vector<libMesh::Real>& JxW,
+                                               const std::vector<Real>& JxW,
                                                bool request_jacobian,
                                                bool if_ignore_ho_jac,
                                                DenseRealVector& local_f,
@@ -236,7 +236,7 @@ namespace MAST {
         void _linearized_geometric_stiffness_sensitivity_with_static_solution
         (const unsigned int n2,
          const unsigned int qp,
-         const std::vector<libMesh::Real>& JxW,
+         const std::vector<Real>& JxW,
          DenseRealMatrix& local_jac,
          FEMOperatorMatrix& Bmat_mem,
          FEMOperatorMatrix& Bmat_bend,

@@ -49,8 +49,8 @@ namespace MAST {
          * point and y,z-location.
          */
         void initialize_bending_strain_operator_for_yz(const unsigned int qp,
-                                                       const libMesh::Real y,
-                                                       const libMesh::Real z,
+                                                       const Real y,
+                                                       const Real z,
                                                        FEMOperatorMatrix& Bmat_bend);
 
     protected:
@@ -58,7 +58,7 @@ namespace MAST {
         /*!
          *   element length
          */
-        libMesh::Real _length;
+        Real _length;
     };
 }
 
@@ -73,10 +73,10 @@ MAST::BernoulliBendingOperator::initialize_bending_strain_operator (const unsign
 
 inline void
 MAST::BernoulliBendingOperator::initialize_bending_strain_operator_for_yz (const unsigned int qp,
-                                                                           const libMesh::Real y,
-                                                                           const libMesh::Real z,
+                                                                           const Real y,
+                                                                           const Real z,
                                                                            FEMOperatorMatrix& Bmat) {
-    const libMesh::Real xi = _qrule.get_points()[qp](0);
+    const Real xi = _qrule.get_points()[qp](0);
     
     // shape function values
     // N1 = (length/8.0) * (4.0/length -  6.0/length*xi + 0.0 +  2.0/length*pow(xi,3));

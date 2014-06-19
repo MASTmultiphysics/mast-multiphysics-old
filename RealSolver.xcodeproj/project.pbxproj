@@ -26,6 +26,7 @@
 		EB54E61318FD6A850033E18E /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB54E61218FD6A850033E18E /* ug_flutter_solver.cpp */; };
 		EB54E61618FDA2890033E18E /* time_domain_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB54E61418FDA2890033E18E /* time_domain_flutter_solver.cpp */; };
 		EB8033F5194F5F6400469EBD /* beam_postbuckling_sizing.h in Sources */ = {isa = PBXBuildFile; fileRef = EB8033F3194F5F6400469EBD /* beam_postbuckling_sizing.h */; };
+		EB8033F81953277F00469EBD /* linearized_fluid_system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB8033F61953277F00469EBD /* linearized_fluid_system.cpp */; };
 		EB817343182D902300E03740 /* basis_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB81733F182D902300E03740 /* basis_matrix.cpp */; };
 		EB817344182D902300E03740 /* fem_operator_matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817340182D902300E03740 /* fem_operator_matrix.cpp */; };
 		EB817345182D902300E03740 /* function_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB817341182D902300E03740 /* function_base.cpp */; };
@@ -131,6 +132,8 @@
 		EB7D8B6C181AB5F400D275D6 /* element_property_card_1D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = element_property_card_1D.h; sourceTree = "<group>"; };
 		EB7D8B6D181AC0E800D275D6 /* bernoulli_bending_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bernoulli_bending_operator.h; sourceTree = "<group>"; };
 		EB8033F3194F5F6400469EBD /* beam_postbuckling_sizing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = beam_postbuckling_sizing.h; sourceTree = "<group>"; };
+		EB8033F61953277F00469EBD /* linearized_fluid_system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = linearized_fluid_system.cpp; sourceTree = "<group>"; };
+		EB8033F71953277F00469EBD /* linearized_fluid_system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linearized_fluid_system.h; sourceTree = "<group>"; };
 		EB81733F182D902300E03740 /* basis_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basis_matrix.cpp; sourceTree = "<group>"; };
 		EB817340182D902300E03740 /* fem_operator_matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fem_operator_matrix.cpp; sourceTree = "<group>"; };
 		EB817341182D902300E03740 /* function_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = function_base.cpp; sourceTree = "<group>"; };
@@ -265,6 +268,8 @@
 				696C07FF1796CD4100B77C5C /* frequency_domain_linearized_fluid_system.h */,
 				694C430C1926A8BA0040690B /* shock_tube_fluid_elem.cpp */,
 				694C430D1926A8BA0040690B /* shock_tube_fluid_elem.h */,
+				EB8033F61953277F00469EBD /* linearized_fluid_system.cpp */,
+				EB8033F71953277F00469EBD /* linearized_fluid_system.h */,
 			);
 			path = FluidElems;
 			sourceTree = "<group>";
@@ -541,6 +546,7 @@
 				EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */,
 				EBD7964918492E3C007FA3A7 /* boundary_condition.cpp in Sources */,
 				EBD79634184903E2007FA3A7 /* rigid_surface_motion.cpp in Sources */,
+				EB8033F81953277F00469EBD /* linearized_fluid_system.cpp in Sources */,
 				EBD704071871C9DE0050676A /* optimization_driver.cpp in Sources */,
 				6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */,
 				696C080E1796CD4100B77C5C /* aerodynamic_qoi.cpp in Sources */,

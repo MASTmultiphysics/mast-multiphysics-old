@@ -41,13 +41,13 @@ namespace MAST {
          *   pointer is NULL, then no sorting is performed
          */
         virtual MAST::FlutterSolutionBase*
-        analyze(const libMesh::Real ref_val,
+        analyze(const Real ref_val,
                 const MAST::FlutterSolutionBase* prev_sol=NULL);
         
         /*!
          *    initializes the matrices for the specified velocity.
          */
-        void initialize_matrices(libMesh::Real ref_val,
+        void initialize_matrices(Real ref_val,
                                  RealMatrixX& a,  // LHS matrix operator
                                  RealMatrixX& b); // RHS matrix operator
     };

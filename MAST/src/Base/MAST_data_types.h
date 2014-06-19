@@ -17,7 +17,9 @@
 // Eigen includes
 #include "Eigen/Dense"
 using namespace Eigen;
-using namespace libMesh;
+
+typedef libMesh::Real Real;
+typedef libMesh::Complex Complex;
 
 typedef Matrix<Real, Dynamic, 1> RealVectorX;
 typedef Matrix<Real, 3, 1> RealVector3;
@@ -29,10 +31,10 @@ typedef Matrix<Real, 3, 3> RealMatrix3;
 typedef Matrix<Complex, Dynamic, Dynamic> ComplexMatrixX;
 typedef Matrix<Complex, 3, 3> ComplexMatrix3;
 
-typedef libMesh::DenseMatrix<libMesh::Real> DenseRealMatrix;
-typedef libMesh::DenseMatrix<libMesh::Complex> DenseComplexMatrix;
+typedef libMesh::DenseMatrix<Real> DenseRealMatrix;
+typedef libMesh::DenseMatrix<Complex> DenseComplexMatrix;
 
-typedef libMesh::DenseVector<libMesh::Real> DenseRealVector;
-typedef libMesh::DenseVector<libMesh::Complex> DenseComplexVector;
+typedef libMesh::DenseVector<Real> DenseRealVector;
+typedef libMesh::DenseVector<Complex> DenseComplexVector;
 
 #endif

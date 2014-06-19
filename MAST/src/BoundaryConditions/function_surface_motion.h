@@ -28,10 +28,10 @@ namespace MAST {
          *   The functors that provide the velocity and displacement derivative with
          *   respect to each spatial coordinate.
          */
-        //    virtual void init(std::function<Point(const libMesh::Point &p, const libMesh::Real t)> wdot,
-        //                      std::function<Point(const libMesh::Point &p, const libMesh::Real t)> dwdx,
-        //                      std::function<Point(const libMesh::Point &p, const libMesh::Real t)> dwdy,
-        //                      std::function<Point(const libMesh::Point &p, const libMesh::Real t)> dwdz){
+        //    virtual void init(std::function<Point(const libMesh::Point &p, const Real t)> wdot,
+        //                      std::function<Point(const libMesh::Point &p, const Real t)> dwdx,
+        //                      std::function<Point(const libMesh::Point &p, const Real t)> dwdy,
+        //                      std::function<Point(const libMesh::Point &p, const Real t)> dwdz){
         //        _wdot = wdot;
         //        _dwdx = dwdx;
         //        _dwdy = dwdy;
@@ -44,7 +44,7 @@ namespace MAST {
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity(const libMesh::Real t,
+        virtual void surface_velocity(const Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
                                       DenseComplexVector& w_trans,
@@ -56,7 +56,7 @@ namespace MAST {
          *   the pure translation velocity component, while \p dn_rot defines the
          *   surface normal perturbation
          */
-        virtual void surface_velocity(const libMesh::Real t,
+        virtual void surface_velocity(const Real t,
                                       const libMesh::Point& p,
                                       const libMesh::Point& n,
                                       DenseRealVector& w_trans,
@@ -68,22 +68,22 @@ namespace MAST {
         //    /*!
         //     *   surface velocity functor
         //     */
-        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _wdot;
+        //    std::function<Point(const libMesh::Point &p, const Real t)> _wdot;
         //
         //    /*!
         //     *   surface displacement gradient with respect to x-coordinate
         //     */
-        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _dwdx;
+        //    std::function<Point(const libMesh::Point &p, const Real t)> _dwdx;
         //
         //    /*!
         //     *   surface displacement gradient with respect to y-coordinate
         //     */
-        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _dwdy;
+        //    std::function<Point(const libMesh::Point &p, const Real t)> _dwdy;
         //
         //    /*!
         //     *   surface displacement gradient with respect to z-coordinate
         //     */
-        //    std::function<Point(const libMesh::Point &p, const libMesh::Real t)> _dwdz;
+        //    std::function<Point(const libMesh::Point &p, const Real t)> _dwdz;
         
     };
 }
@@ -108,7 +108,7 @@ MAST::SurfaceMotionFunction::~SurfaceMotionFunction()
 
 
 inline void
-MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
+MAST::SurfaceMotionFunction::surface_velocity(const Real t,
                                               const libMesh::Point& p,
                                               const libMesh::Point& n,
                                               DenseComplexVector& w_trans,
@@ -121,7 +121,7 @@ MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
 
 
 inline void
-MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
+MAST::SurfaceMotionFunction::surface_velocity(const Real t,
                                               const libMesh::Point& p,
                                               const libMesh::Point& n,
                                               DenseRealVector& w_trans,
@@ -133,7 +133,7 @@ MAST::SurfaceMotionFunction::surface_velocity(const libMesh::Real t,
     
     // translation is obtained by direct interpolation of the u,v,w vars
     libMesh::Point v, dwdx, dwdy, dwdz;
-    const libMesh::Real x = p(0) - 2., tc = 0.05, c = 2., h = tc*c/2., pi = acos(-1.);
+    const Real x = p(0) - 2., tc = 0.05, c = 2., h = tc*c/2., pi = acos(-1.);
     if ( (x>=0.) && (x <= c)){
         v(1)     = h*sin(pi*x/c);
         dwdx(1)  = h*pi/c*cos(pi*x/c);

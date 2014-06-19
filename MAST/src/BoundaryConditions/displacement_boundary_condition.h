@@ -44,7 +44,7 @@ namespace MAST {
         /*!
          *    Returns a reference to the Dirichlet boundary condition object
          */
-        DirichletBoundary& dirichlet_boundary() {
+        libMesh::DirichletBoundary& dirichlet_boundary() {
             return *_dirichlet_boundary;
         }
         
@@ -53,7 +53,7 @@ namespace MAST {
         /*!
          *    Dirichlet boundary function for this boundary
          */
-        std::auto_ptr<DirichletBoundary> _dirichlet_boundary;
+        std::auto_ptr<libMesh::DirichletBoundary> _dirichlet_boundary;
     };
 }
 
@@ -66,10 +66,10 @@ MAST::DisplacementDirichletBoundaryCondition::init(const libMesh::boundary_id_ty
     // should not have been initialized if this is called
     libmesh_assert(_dirichlet_boundary.get() == NULL);
 
-    ZeroFunction<libMesh::Real> zero_function;
+    libMesh::ZeroFunction<Real> zero_function;
     std::set<libMesh::boundary_id_type> bid_set; bid_set.insert(bid);
     
-    _dirichlet_boundary.reset(new DirichletBoundary(bid_set,
+    _dirichlet_boundary.reset(new libMesh::DirichletBoundary(bid_set,
                                                     constrained_comp,
                                                     &zero_function));
 }

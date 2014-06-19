@@ -11,9 +11,9 @@
 #include "FluidElems/aerodynamic_qoi.h"
 
 
-using namespace libMesh;
 
-void AerodynamicQoI::init_qoi( std::vector<libMesh::Real>& sys_qoi)
+
+void AerodynamicQoI::init_qoi( std::vector<Real>& sys_qoi)
 {
     //Two qois are calculated: lift and drag
     sys_qoi.resize(4);
@@ -23,29 +23,29 @@ void AerodynamicQoI::init_qoi( std::vector<libMesh::Real>& sys_qoi)
 
 
 
-void AerodynamicQoI::element_qoi_derivative (DiffContext& context,
-                                             const QoISet& qois)
+void AerodynamicQoI::element_qoi_derivative (libMesh::DiffContext& context,
+                                             const libMesh::QoISet& qois)
 {
     
 }
 
 
 
-void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
+void AerodynamicQoI::element_qoi (libMesh::DiffContext& context, const libMesh::QoISet& qois)
 {
 
     
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
 
     libMesh::FEBase* elem_fe;
     
     c.get_element_fe(_fluid_vars[0], elem_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
+    const std::vector<Real> &JxW = elem_fe->get_JxW();
     
     // Physical location of the quadrature points
-    const std::vector<Point>& qpoint = elem_fe->get_xyz();
+    const std::vector<libMesh::Point>& qpoint = elem_fe->get_xyz();
     
     DenseRealVector conservative_sol, integrated_force;
     FEMOperatorMatrix  B_mat;
@@ -55,7 +55,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
     
     PrimitiveSolution p_sol;
 
-    libMesh::Real total_volume=0., entropy_error=0.;
+    Real total_volume=0., entropy_error=0.;
     
     for (unsigned int qp=0; qp<qpoint.size(); qp++)
     {
@@ -74,7 +74,7 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
                            flight_condition->gas_property.gamma)), 2);
     }
     
-    std::vector<libMesh::Real> vals(2);
+    std::vector<Real> vals(2);
     vals[0] = total_volume;
     vals[1] = entropy_error;
 
@@ -87,8 +87,8 @@ void AerodynamicQoI::element_qoi (DiffContext& context, const QoISet& qois)
 
 
 
-void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
-                                          const QoISet& qois)
+void AerodynamicQoI::side_qoi_derivative (libMesh::DiffContext &context,
+                                          const libMesh::QoISet& qois)
 {
     libmesh_error(); // to be implemented
 }
@@ -97,11 +97,12 @@ void AerodynamicQoI::side_qoi_derivative (DiffContext &context,
 
 
 // This function computes the actual QoI
-void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
+void AerodynamicQoI::side_qoi(libMesh::DiffContext &context, const libMesh::QoISet& qois)
 {
 
 
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c =
+    libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
     
@@ -149,13 +150,13 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
     c.get_side_fe(_fluid_vars[0], side_fe); // assuming all variables have the same FE
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<libMesh::Real> &JxW = side_fe->get_JxW();
+    const std::vector<Real> &JxW = side_fe->get_JxW();
     
     // Physical location of the quadrature points
-    const std::vector<Point>& qpoint = side_fe->get_xyz();
+    const std::vector<libMesh::Point>& qpoint = side_fe->get_xyz();
     
     // boundary normals
-    const std::vector<Point>& face_normals = side_fe->get_normals();
+    const std::vector<libMesh::Point>& face_normals = side_fe->get_normals();
     
     DenseRealVector conservative_sol;
     FEMOperatorMatrix  B_mat;
@@ -193,7 +194,7 @@ void AerodynamicQoI::side_qoi(DiffContext &context, const QoISet& qois)
             break;
     }
     
-    std::vector<libMesh::Real> vals(2);
+    std::vector<Real> vals(2);
     vals[0] = integrated_force.dot(flight_condition->lift_normal);
     vals[1] = integrated_force.dot(flight_condition->drag_normal);
     

@@ -25,7 +25,7 @@ void
 MAST::TimeDomainFlutterSolver::_identify_crossover_points()
 {
     // if the initial scanning has not been done, then do it now
-    const libMesh::Real tol = 1.0e-5, max_allowable_g = 0.75;
+    const Real tol = 1.0e-5, max_allowable_g = 0.75;
     
     const unsigned int nvals = _flutter_solutions.begin()->second->n_roots();
     // make sure that the solution has been generated
@@ -48,7 +48,7 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
         std::map<Real, MAST::FlutterSolutionBase*>::const_iterator
         sol_it    = _flutter_solutions.begin(),
         sol_end   = _flutter_solutions.end();
-        libMesh::Real max_g_val = 0., val = 0.;
+        Real max_g_val = 0., val = 0.;
         for ( ; sol_it!=sol_end; sol_it++) {
             val = fabs(sol_it->second->get_root(i).g);
             if (val > max_g_val)
@@ -150,7 +150,7 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
 
 
 MAST::FlutterSolutionBase*
-MAST::TimeDomainFlutterSolver::analyze(const libMesh::Real ref_val,
+MAST::TimeDomainFlutterSolver::analyze(const Real ref_val,
                                        const MAST::FlutterSolutionBase* prev_sol) {
     RealMatrixX a, b;
     
@@ -186,13 +186,13 @@ MAST::TimeDomainFlutterSolver::analyze(const libMesh::Real ref_val,
 
 
 
-void MAST::TimeDomainFlutterSolver::initialize_matrices(libMesh::Real ref_val,
+void MAST::TimeDomainFlutterSolver::initialize_matrices(Real ref_val,
                                                         RealMatrixX& a, // LHS
                                                         RealMatrixX& b) // RHS
 {
     bool has_matrix = false;
     RealMatrixX mat1, mat2;
-    libMesh::Real q0 = flight_condition->q0();
+    Real q0 = flight_condition->q0();
     
     // mass matrix forms the LHS of the eigenvalue problem
     has_matrix = aero_structural_model->get_structural_mass_matrix(mat1);

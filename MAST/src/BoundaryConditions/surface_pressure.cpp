@@ -13,10 +13,9 @@
 
 
 void
-MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real>& nonlinear_sol,
-                                            libMesh::NumericVector<libMesh::Real>& linearized_sol)
+MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<Real>& nonlinear_sol,
+                                            libMesh::NumericVector<Real>& linearized_sol)
 {
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert_equal_to(nonlinear_sol.size(),
                             nonlinear_sys.solution->size());
     libmesh_assert_equal_to(linearized_sol.size(),
@@ -28,13 +27,13 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
     {
         // vector to store the nonlinear solution
         _sol_nonlinear.reset
-        (libMesh::NumericVector<libMesh::Real>::build(nonlinear_sys.comm()).release());
-        _sol_nonlinear->init(nonlinear_sol.size(), true, SERIAL);
+        (libMesh::NumericVector<Real>::build(nonlinear_sys.comm()).release());
+        _sol_nonlinear->init(nonlinear_sol.size(), true, libMesh::SERIAL);
         
         // vector to store the linear solution
         _sol_linear.reset
-        (libMesh::NumericVector<libMesh::Real>::build(linearized_sys.comm()).release());
-        _sol_linear->init(linearized_sol.size(), true, SERIAL);
+        (libMesh::NumericVector<Real>::build(linearized_sys.comm()).release());
+        _sol_linear->init(linearized_sol.size(), true, libMesh::SERIAL);
     }
     
     // now localize the give solution to this objects's vector
@@ -59,7 +58,7 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
         
         
         _function_nonlinear.reset
-        (new MeshFunction( nonlinear_sys.get_equation_systems(),
+        (new libMesh::MeshFunction( nonlinear_sys.get_equation_systems(),
                           *_sol_nonlinear, nonlinear_sys.get_dof_map(),
                           vars));
         _function_nonlinear->init();
@@ -83,7 +82,7 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
         
         
         _function_linear.reset
-        (new MeshFunction( linearized_sys.get_equation_systems(),
+        (new libMesh::MeshFunction( linearized_sys.get_equation_systems(),
                           *_sol_linear,
                           linearized_sys.get_dof_map(),
                           vars));
@@ -97,12 +96,11 @@ MAST::SmallDisturbanceSurfacePressure::init(libMesh::NumericVector<libMesh::Real
 
 template <typename ValType>
 void
-MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Real t,
+MAST::SmallDisturbanceSurfacePressure::surface_pressure(const Real t,
                                                         const libMesh::Point& p,
-                                                        libMesh::Real& cp,
+                                                        Real& cp,
                                                         ValType& dcp)
 {
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
     libmesh_assert(_function_nonlinear.get()); // should be initialized before this call
     libmesh_assert(_function_linear.get()); // should be initialized before this call
     
@@ -138,16 +136,16 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const libMesh::Real t,
 
 // template explicit instantiations
 template
-void MAST::SmallDisturbanceSurfacePressure::surface_pressure<libMesh::Real>(const libMesh::Real t,
+void MAST::SmallDisturbanceSurfacePressure::surface_pressure<Real>(const Real t,
                                                                             const libMesh::Point& p,
-                                                                            libMesh::Real& cp,
-                                                                            libMesh::Real& dcp);
+                                                                            Real& cp,
+                                                                            Real& dcp);
 
 template
-void MAST::SmallDisturbanceSurfacePressure::surface_pressure<libMesh::Complex>(const libMesh::Real t,
+void MAST::SmallDisturbanceSurfacePressure::surface_pressure<Complex>(const Real t,
                                                                                const libMesh::Point& p,
-                                                                               libMesh::Real& cp,
-                                                                               libMesh::Complex& dcp);
+                                                                               Real& cp,
+                                                                               Complex& dcp);
 
 
 

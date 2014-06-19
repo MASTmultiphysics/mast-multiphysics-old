@@ -9,13 +9,9 @@
 #ifndef __MAST__frequency_domain_linearized_euler__
 #define __MAST__frequency_domain_linearized_euler__
 
-// libmesh config includes
+// libMesh includes
 #include "libmesh/libmesh_config.h"
 #include "libmesh/equation_systems.h"
-
-//#ifdef LIBMESH_USE_COMPLEX_NUMBERS
-
-// DiffSystem framework files
 #include "libmesh/fem_system.h"
 #include "libmesh/auto_ptr.h"
 #include "libmesh/mesh_function.h"
@@ -24,18 +20,18 @@
 #include "FluidElems/fluid_elem_base.h"
 
 
-using namespace libMesh;
+
 
 class SurfaceMotionBase;
 class FlightCondition;
 
-class FrequencyDomainLinearizedFluidSystem: public FEMSystem, public FluidElemBase
+class FrequencyDomainLinearizedFluidSystem: public libMesh::FEMSystem, public FluidElemBase
 {
 public:
     FrequencyDomainLinearizedFluidSystem(libMesh::EquationSystems& es,
                                          const std::string& name_in,
                                          const unsigned int number_in):
-    FEMSystem(es, name_in, number_in),
+    libMesh::FEMSystem(es, name_in, number_in),
     FluidElemBase(*es.parameters.get<GetPot*>("input_file")),
     perturbed_surface_motion(NULL),
     _if_localized_sol(false)
@@ -43,17 +39,17 @@ public:
     
     void init_data();
     
-    virtual void init_context(DiffContext &context);
+    virtual void init_context(libMesh::DiffContext &context);
     
     
     void localize_fluid_solution();
     
     
     virtual bool element_time_derivative (bool request_jacobian,
-                                          DiffContext &context);
+                                          libMesh::DiffContext &context);
     
     virtual bool side_time_derivative (bool request_jacobian,
-                                       DiffContext &context);
+                                       libMesh::DiffContext &context);
     
     std::vector<unsigned int> vars;
 
@@ -67,7 +63,7 @@ protected:
     
     void calculate_small_disturbance_aliabadi_discontinuity_operator
     (const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c,  const PrimitiveSolution& sol,
+     libMesh::FEMContext& c,  const PrimitiveSolution& sol,
      const SmallPerturbationPrimitiveSolution<Complex>& dsol,
      const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
@@ -76,21 +72,21 @@ protected:
     
     bool _if_localized_sol;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > _local_fluid_solution;
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > _local_fluid_solution;
     
 };
 
 
 
 
-class FrequencyDomainFluidPostProcessSystem : public System
+class FrequencyDomainFluidPostProcessSystem : public libMesh::System
 {
 public:
     // Constructor
     FrequencyDomainFluidPostProcessSystem(libMesh::EquationSystems& es,
                                           const std::string& name_in,
                                           const unsigned int number_in)
-    : System(es, name_in, number_in)
+    : libMesh::System(es, name_in, number_in)
     {}
     
     virtual void init_data();

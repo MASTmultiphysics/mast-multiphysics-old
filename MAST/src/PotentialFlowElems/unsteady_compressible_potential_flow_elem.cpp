@@ -17,8 +17,8 @@
 #include "libmesh/dense_vector.h"
 
 
-libMesh::Real unsteady_compressible_potential_solution_value(const libMesh::Point& p,
-                                                    const Parameters& parameters,
+Real unsteady_compressible_potential_solution_value(const libMesh::Point& p,
+                                                    const libMesh::Parameters& parameters,
                                                     const std::string& sys_name,
                                                     const std::string& var_name)
 {
@@ -29,18 +29,18 @@ libMesh::Real unsteady_compressible_potential_solution_value(const libMesh::Poin
     if (var_name == "rho")
         
     {
-        return parameters.get<libMesh::Real> ("rho_inf");
+        return parameters.get<Real> ("rho_inf");
     }
     else if (var_name == "phi")
     {
         libMesh::Point dphi;
-        dphi(0) = parameters.get<libMesh::Real>("u1_inf"),
-        dphi(1) = parameters.get<libMesh::Real>("u2_inf"),
-        dphi(2) = parameters.get<libMesh::Real>("u3_inf");
+        dphi(0) = parameters.get<Real>("u1_inf"),
+        dphi(1) = parameters.get<Real>("u2_inf"),
+        dphi(2) = parameters.get<Real>("u3_inf");
         // assuming phi=0 at (0,0,0), and using the gradients, calculate the
         // value of phi at point p
         
-        libMesh::Real phi=0.;
+        Real phi=0.;
         for (unsigned int i=0; i<3; i++)
             phi += dphi(i) * p(i);
         
@@ -88,26 +88,26 @@ void UnsteadyCompressiblePotentialFlow::init_data ()
     // approximation type
     
     // set parameter values
-    Parameters& params = this->get_equation_systems().parameters;
+    libMesh::Parameters& params = this->get_equation_systems().parameters;
     
     unsigned int o = _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
-    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
+    libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
 
     // velocity potential
-    vars[0]  = this->add_variable ( "phi", static_cast<Order>(o), fefamily);
+    vars[0]  = this->add_variable ( "phi", static_cast<libMesh::Order>(o), fefamily);
     this->time_evolving(vars[0]);
-    params.set<libMesh::Real> ("u1_inf") =
+    params.set<Real> ("u1_inf") =
     flight_condition->velocity_magnitude*flight_condition->drag_normal(0);
-    params.set<libMesh::Real> ("u2_inf") =
+    params.set<Real> ("u2_inf") =
     flight_condition->velocity_magnitude*flight_condition->drag_normal(1);
-    params.set<libMesh::Real> ("u3_inf") =
+    params.set<Real> ("u3_inf") =
     flight_condition->velocity_magnitude*flight_condition->drag_normal(2);
     
     // density
-    vars[1] = this->add_variable ("rho", static_cast<Order>(o), fefamily);
+    vars[1] = this->add_variable ("rho", static_cast<libMesh::Order>(o), fefamily);
     this->time_evolving(vars[1]);
-    params.set<libMesh::Real> ("rho_inf") = flight_condition->rho();
+    params.set<Real> ("rho_inf") = flight_condition->rho();
     
     // Useful debugging options
     this->verify_analytic_jacobians = _infile("verify_analytic_jacobians", 0.);
@@ -115,14 +115,14 @@ void UnsteadyCompressiblePotentialFlow::init_data ()
     this->print_element_jacobians = _infile("print_element_jacobians", false);
     
     // Do the parent's initialization after variables and boundary constraints are defined
-    FEMSystem::init_data();
+    libMesh::FEMSystem::init_data();
 }
 
 
 
-void UnsteadyCompressiblePotentialFlow::init_context(DiffContext &context)
+void UnsteadyCompressiblePotentialFlow::init_context(libMesh::DiffContext &context)
 {
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     std::vector<libMesh::FEBase*> elem_fe(2);
     
@@ -149,18 +149,18 @@ void UnsteadyCompressiblePotentialFlow::init_context(DiffContext &context)
 
 
 bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_jacobian,
-                                                                 DiffContext &context)
+                                                                 libMesh::DiffContext &context)
 {
 
 
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     libMesh::FEBase* elem_fe;
     
     c.get_element_fe(vars[0], elem_fe);
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
+    const std::vector<Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
     DenseRealMatrix& Kmat = c.get_elem_jacobian();
@@ -185,13 +185,13 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
     vec1_n1.resize(n1); vec2_n2.resize(n_dofs);
     
     libMesh::Point uvec;
-    libMesh::Real rho;
-    const libMesh::Real uinf = flight_condition->velocity_magnitude,
+    Real rho;
+    const Real uinf = flight_condition->velocity_magnitude,
     gamma = flight_condition->gas_property.gamma,
     ainf  = flight_condition->gas_property.a,
     rhoinf = flight_condition->gas_property.rho;
     
-    const std::vector<std::vector<libMesh::Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
+    const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
     const unsigned int n_phi = (unsigned int)phi.size();
     
     for (unsigned int qp=0; qp != n_qpoints; qp++) {
@@ -319,10 +319,10 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
 
 
 bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacobian,
-                                                              DiffContext &context)
+                                                              libMesh::DiffContext &context)
 {
 
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     // check for the boundary tags to check if the boundary condition needs to be applied to this element
     
@@ -374,13 +374,13 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
     
 
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<libMesh::Real> &JxW = side_fe->get_JxW();
+    const std::vector<Real> &JxW = side_fe->get_JxW();
     
     // Physical location of the quadrature points
-    const std::vector<Point>& qpoint = side_fe->get_xyz();
+    const std::vector<libMesh::Point>& qpoint = side_fe->get_xyz();
     
     // boundary normals
-    const std::vector<Point>& face_normals = side_fe->get_normals();
+    const std::vector<libMesh::Point>& face_normals = side_fe->get_normals();
     
     DenseRealMatrix& Kmat = c.get_elem_jacobian();
     DenseRealVector& Fvec = c.get_elem_residual();
@@ -394,7 +394,7 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
     std::vector<FEMOperatorMatrix> dB_mat(dim);
 
     libMesh::Point uvec;
-    libMesh::Real rho;
+    Real rho;
     
     switch (mechanical_bc_type)
     // adiabatic and isothermal are handled in the no-slip wall BC
@@ -411,7 +411,7 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
         case SLIP_WALL: // inviscid boundary condition
                         // vi ni = wi_dot (ni + dni) - ui dni   (moving slip wall with deformation)
         {
-            libMesh::Real ui_ni = 0.;
+            Real ui_ni = 0.;
             DenseRealVector local_normal, surface_def,
             surface_vel, dnormal;
             local_normal.resize(spatial_dim);
@@ -480,7 +480,7 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
             // conditions enforced are:
             // -- ui_ni = ui_inf ni + (ui_interior ni - ui_inf ni)
         {
-            libMesh::Real ui_ni = 0.;
+            Real ui_ni = 0.;
             DenseRealVector local_normal;
             local_normal.resize(spatial_dim);
 
@@ -526,10 +526,10 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
 
 
 bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
-                                                       DiffContext &context)
+                                                       libMesh::DiffContext &context)
 {
 
-    FEMContext &c = libmesh_cast_ref<FEMContext&>(context);
+    libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     libMesh::FEBase* elem_fe;
     
@@ -537,7 +537,7 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
     
     
     // Element Jacobian * quadrature weights for interior integration
-    const std::vector<libMesh::Real> &JxW = elem_fe->get_JxW();
+    const std::vector<Real> &JxW = elem_fe->get_JxW();
     
     // The subvectors and submatrices we need to fill:
     DenseRealMatrix& Kmat = c.get_elem_jacobian();
@@ -560,7 +560,7 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
     vec1_n1.resize(n1); vec2_n2.resize(n_dofs);
     
     libMesh::Point uvec;
-    libMesh::Real rho;
+    Real rho;
     
     for (unsigned int qp=0; qp != n_qpoints; qp++)
     {
@@ -612,7 +612,7 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
 
 
 void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
-( const std::vector<unsigned int>& vars, const unsigned int qp, FEMContext& c,
+( const std::vector<unsigned int>& vars, const unsigned int qp, libMesh::FEMContext& c,
  const bool if_elem_domain, const DenseRealVector& elem_solution,
  DenseRealVector& conservative_sol, libMesh::Point& uvec,
  FEMOperatorMatrix& B_mat, std::vector<FEMOperatorMatrix>& dB_mat,
@@ -631,7 +631,7 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     else
         c.get_side_fe(vars[i_var], fe);
     
-    const std::vector<std::vector<libMesh::Real> >& phi = fe->get_phi();
+    const std::vector<std::vector<Real> >& phi = fe->get_phi();
     const unsigned int n_phi = (unsigned int)phi.size();
     
     phi_vals.resize(n_phi);
@@ -643,7 +643,7 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     
     // since the velocity needs to be evaluated even for boundaries, the
     // shape function derivatives are always calculated
-    const std::vector<std::vector<RealVectorValue> >& dphi =
+    const std::vector<std::vector<libMesh::RealVectorValue> >& dphi =
     fe->get_dphi();
     
     for ( unsigned int i_dim=0; i_dim<dim; i_dim++ )
@@ -683,7 +683,7 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     
 
     // source term
-    const libMesh::Real gamma = flight_condition->gas_property.gamma,
+    const Real gamma = flight_condition->gas_property.gamma,
     ainf  = flight_condition->gas_property.a,
     rhoinf = flight_condition->gas_property.rho,
     rho = conservative_sol(1);
@@ -697,7 +697,7 @@ void UnsteadyCompressiblePotentialFlow::update_solution_at_quadrature_point
     // calculate the tau matrix
     // calculate the dot product of velocity times gradient of shape function
     DenseRealVector dN; dN.resize(dim);
-    libMesh::Real tau = 0., h = 0, u_val = uvec.size();
+    Real tau = 0., h = 0, u_val = uvec.size();
     DenseRealVector u; u.resize(dim);
     for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         u(i_dim) = uvec(i_dim);

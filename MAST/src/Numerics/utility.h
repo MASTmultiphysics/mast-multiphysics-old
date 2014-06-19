@@ -42,7 +42,7 @@ namespace MAST {
         libmesh_assert_equal_to(v_real.size(), 2*n);
         
         for (unsigned int i=0; i<n; i++)
-            v(i) = libMesh::Complex(v_real(i), v_real(i+n));
+            v(i) = Complex(v_real(i), v_real(i+n));
     }
 
     

@@ -51,11 +51,11 @@ namespace MAST {
         _dim(0)
         {
             
-            MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
-            _linear_mesh_serializer.reset(new MeshSerializer(linear_sys_mesh, true));
+            libMesh::MeshBase& linear_sys_mesh = linearized_sys.get_mesh();
+            _linear_mesh_serializer.reset(new libMesh::MeshSerializer(linear_sys_mesh, true));
             
-            MeshBase& nonlinear_sys_mesh = nonlinear_sys.get_mesh();
-            _nonlinear_mesh_serializer.reset(new MeshSerializer(nonlinear_sys_mesh, true));
+            libMesh::MeshBase& nonlinear_sys_mesh = nonlinear_sys.get_mesh();
+            _nonlinear_mesh_serializer.reset(new libMesh::MeshSerializer(nonlinear_sys_mesh, true));
             
             
             _dim = nonlinear_sys.n_vars()-2;
@@ -68,14 +68,14 @@ namespace MAST {
         virtual ~SmallDisturbanceSurfacePressure()
         { }
         
-        virtual void init(libMesh::NumericVector<libMesh::Real>& nonlinear_sol,
-                          libMesh::NumericVector<libMesh::Real>& linearized_sol);
+        virtual void init(libMesh::NumericVector<Real>& nonlinear_sol,
+                          libMesh::NumericVector<Real>& linearized_sol);
         
         // calculation in frequency domain
         template <typename ValType>
-        void surface_pressure(const libMesh::Real t,
+        void surface_pressure(const Real t,
                               const libMesh::Point& p,
-                              libMesh::Real& cp,
+                              Real& cp,
                               ValType& dcp);
         
     protected:
@@ -89,22 +89,22 @@ namespace MAST {
         /*!
          *   mesh function that interpolates the nonlinear solution
          */
-        std::auto_ptr<MeshFunction> _function_nonlinear;
+        std::auto_ptr<libMesh::MeshFunction> _function_nonlinear;
         
         /*!
          *   mesh function that interpolates the linearized solution
          */
-        std::auto_ptr<MeshFunction> _function_linear;
+        std::auto_ptr<libMesh::MeshFunction> _function_linear;
         
         /*!
          *    numeric vector that stores the solution for nonlinear system
          */
-        std::auto_ptr<libMesh::NumericVector<libMesh::Real> > _sol_nonlinear;
+        std::auto_ptr<libMesh::NumericVector<Real> > _sol_nonlinear;
         
         /*!
          *    numeric vector that stores the solution for linearized system
          */
-        std::auto_ptr<libMesh::NumericVector<libMesh::Real> > _sol_linear;
+        std::auto_ptr<libMesh::NumericVector<Real> > _sol_linear;
         
         /*!
          *    this provides the fluid values for calculation of cp
@@ -119,8 +119,8 @@ namespace MAST {
         /*!
          *   this serializes the mesh for use in interpolation
          */
-        std::auto_ptr<MeshSerializer> _nonlinear_mesh_serializer;
-        std::auto_ptr<MeshSerializer> _linear_mesh_serializer;
+        std::auto_ptr<libMesh::MeshSerializer> _nonlinear_mesh_serializer;
+        std::auto_ptr<libMesh::MeshSerializer> _linear_mesh_serializer;
         
     };
 }

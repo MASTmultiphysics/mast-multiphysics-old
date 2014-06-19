@@ -21,7 +21,7 @@ _material_stiffness(mat) {
 void
 MAST::ElementPropertyCard3D::
 SectionIntegratedStiffnessMatrix::operator() (const libMesh::Point& p,
-                                              const libMesh::Real t,
+                                              const Real t,
                                               DenseRealMatrix& m) const {
     // this only returns the material stiffness
     (*_material_stiffness)
@@ -33,7 +33,7 @@ void
 MAST::ElementPropertyCard3D::
 SectionIntegratedStiffnessMatrix::partial (const MAST::FieldFunctionBase& f,
                                            const libMesh::Point& p,
-                                           const libMesh::Real t,
+                                           const Real t,
                                            DenseRealMatrix& m) const {
     // this only returns the material stiffness
     _material_stiffness->partial(f, p, t, m);
@@ -44,7 +44,7 @@ void
 MAST::ElementPropertyCard3D::
 SectionIntegratedStiffnessMatrix::total (const MAST::FieldFunctionBase& f,
                                          const libMesh::Point& p,
-                                         const libMesh::Real t,
+                                         const Real t,
                                          DenseRealMatrix& m) const {
     // this only returns the material stiffness
     _material_stiffness->total(f, p, t, m);
@@ -65,7 +65,7 @@ _material_inertia(mat) {
 void
 MAST::ElementPropertyCard3D::
 SectionIntegratedInertiaMatrix::operator() (const libMesh::Point& p,
-                                            const libMesh::Real t,
+                                            const Real t,
                                             DenseRealMatrix& m) const {
     DenseRealMatrix mat;
     m.resize(6, 6);
@@ -85,7 +85,7 @@ void
 MAST::ElementPropertyCard3D::
 SectionIntegratedInertiaMatrix::partial (const MAST::FieldFunctionBase& f,
                                          const libMesh::Point& p,
-                                         const libMesh::Real t,
+                                         const Real t,
                                          DenseRealMatrix& m) const {
     DenseRealMatrix mat;
     m.resize(6, 6);
@@ -102,7 +102,7 @@ void
 MAST::ElementPropertyCard3D::
 SectionIntegratedInertiaMatrix::total (const MAST::FieldFunctionBase& f,
                                        const libMesh::Point& p,
-                                       const libMesh::Real t,
+                                       const Real t,
                                        DenseRealMatrix& m) const {
     DenseRealMatrix mat;
     m.resize(6, 6);
@@ -132,7 +132,7 @@ _material_expansion(mat_expansion) {
 
 void
 MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::operator() (const libMesh::Point& p,
-                                                                                  const libMesh::Real t,
+                                                                                  const Real t,
                                                                                   DenseRealMatrix& m) const {
     DenseRealMatrix mat;
     (*_material_stiffness)(p, t, m);
@@ -146,7 +146,7 @@ MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::operator()
 void
 MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::partial (const MAST::FieldFunctionBase& f,
                                                                                const libMesh::Point& p,
-                                                                               const libMesh::Real t,
+                                                                               const Real t,
                                                                                DenseRealMatrix& m) const {
     libmesh_error();
 }
@@ -157,7 +157,7 @@ MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::partial (c
 void
 MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix::total (const MAST::FieldFunctionBase& f,
                                                                              const libMesh::Point& p,
-                                                                             const libMesh::Real t,
+                                                                             const Real t,
                                                                              DenseRealMatrix& m) const {
     libmesh_error();
 }
@@ -178,7 +178,7 @@ _prestress(prestress){
 void
 MAST::ElementPropertyCard3D::
 SectionIntegratedPrestressAMatrix::operator() (const libMesh::Point& p,
-                                               const libMesh::Real t,
+                                               const Real t,
                                                DenseRealMatrix& m) const {
     (*_prestress)(p, t, m);
 }
@@ -191,7 +191,7 @@ void
 MAST::ElementPropertyCard3D::
 SectionIntegratedPrestressAMatrix::partial (const MAST::FieldFunctionBase& f,
                                             const libMesh::Point& p,
-                                            const libMesh::Real t,
+                                            const Real t,
                                             DenseRealMatrix& m) const {
     _prestress->partial(f, p, t, m);
 }
@@ -202,7 +202,7 @@ void
 MAST::ElementPropertyCard3D::
 SectionIntegratedPrestressAMatrix::total (const MAST::FieldFunctionBase& f,
                                           const libMesh::Point& p,
-                                          const libMesh::Real t,
+                                          const Real t,
                                           DenseRealMatrix& m) const {
     _prestress->total(f, p, t, m);
 }

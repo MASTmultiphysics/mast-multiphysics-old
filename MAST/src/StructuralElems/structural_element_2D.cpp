@@ -30,10 +30,10 @@ MAST::Local2DElem::_create_local_elem() {
     
     _T_mat.resize(3,3);
 
-    _local_elem = Elem::build(_elem.type()).release();
+    _local_elem = libMesh::Elem::build(_elem.type()).release();
     _local_nodes.resize(_elem.n_nodes());
     for (unsigned int i=0; i<_elem.n_nodes(); i++) {
-        _local_nodes[i] = new Node;
+        _local_nodes[i] = new libMesh::Node;
         _local_nodes[i]->set_id() = _elem.get_node(i)->id();
         _local_elem->set_node(i) = _local_nodes[i];
     }
@@ -76,7 +76,7 @@ void
 MAST::StructuralElement2D::initialize_direct_strain_operator(const unsigned int qp,
                                                              FEMOperatorMatrix& Bmat) {
     
-    const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+    const std::vector<std::vector<libMesh::RealVectorValue> >& dphi = _fe->get_dphi();
     
     unsigned int n_phi = (unsigned int)dphi.size();
     DenseRealVector phi; phi.resize(n_phi);
@@ -106,7 +106,7 @@ MAST::StructuralElement2D::initialize_von_karman_strain_operator(const unsigned 
                                                                  DenseRealMatrix& vk_dwdxi_mat,
                                                                  FEMOperatorMatrix& Bmat_vk) {
     
-    const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+    const std::vector<std::vector<libMesh::RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
     
     libmesh_assert_equal_to(vk_strain.size(), 3);
@@ -115,7 +115,7 @@ MAST::StructuralElement2D::initialize_von_karman_strain_operator(const unsigned 
     libmesh_assert_equal_to(Bmat_vk.m(), 2);
     libmesh_assert_equal_to(Bmat_vk.n(), 6*n_phi);
 
-    libMesh::Real dw=0.;
+    Real dw=0.;
     vk_strain.zero();
     vk_dwdxi_mat.zero();
     
@@ -151,13 +151,13 @@ void
 MAST::StructuralElement2D::initialize_von_karman_strain_operator_sensitivity
 (const unsigned int qp,
  DenseRealMatrix &vk_dwdxi_mat_sens) {
-    const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+    const std::vector<std::vector<libMesh::RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
     
     libmesh_assert_equal_to(vk_dwdxi_mat_sens.m(), 3);
     libmesh_assert_equal_to(vk_dwdxi_mat_sens.n(), 2);
     
-    libMesh::Real dw=0.;
+    Real dw=0.;
     vk_dwdxi_mat_sens.zero();
     
     DenseRealVector phi_vec; phi_vec.resize(n_phi);
@@ -190,8 +190,8 @@ MAST::StructuralElement2D::internal_force (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
@@ -307,8 +307,8 @@ MAST::StructuralElement2D::internal_force_sensitivity (bool request_jacobian,
     
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
@@ -414,7 +414,7 @@ MAST::StructuralElement2D::_internal_force_operation
  bool if_vk,
  const unsigned int n2,
  const unsigned int qp,
- const std::vector<libMesh::Real>& JxW,
+ const std::vector<Real>& JxW,
  bool request_jacobian,
  bool if_ignore_ho_jac,
  DenseRealVector& local_f,
@@ -608,7 +608,7 @@ void
 MAST::StructuralElement2D::_linearized_geometric_stiffness_sensitivity_with_static_solution
 (const unsigned int n2,
  const unsigned int qp,
- const std::vector<libMesh::Real>& JxW,
+ const std::vector<Real>& JxW,
  DenseRealMatrix& local_jac,
  FEMOperatorMatrix& Bmat_mem,
  FEMOperatorMatrix& Bmat_bend,
@@ -694,8 +694,8 @@ MAST::StructuralElement2D::prestress_force (bool request_jacobian,
     
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
@@ -807,8 +807,8 @@ MAST::StructuralElement2D::prestress_force_sensitivity (bool request_jacobian,
     
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
@@ -920,8 +920,8 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
@@ -954,13 +954,13 @@ MAST::StructuralElement2D::thermal_force (bool request_jacobian,
                             *this).release());
     
     // temperature function
-    MAST::FieldFunction<libMesh::Real>& temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>(p.function());
-    MAST::FieldFunction<libMesh::Real>& ref_temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
     (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
     
-    libMesh::Real t, t0;
+    Real t, t0;
     libMesh::Point pt;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
@@ -1041,8 +1041,8 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();
@@ -1076,13 +1076,13 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
                             *this).release());
     
     // temperature function
-    MAST::FieldFunction<libMesh::Real>& temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>(p.function());
-    MAST::FieldFunction<libMesh::Real>& ref_temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
     (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
     
-    libMesh::Real t, t0, t_sens;
+    Real t, t0, t_sens;
     libMesh::Point pt;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
@@ -1182,13 +1182,13 @@ MAST::StructuralElement2D::thermal_force_sensitivity (bool request_jacobian,
 
 Real
 MAST::StructuralElement2D::max_von_mises_stress() {
-    libMesh::Real max_val = 0.;
+    Real max_val = 0.;
     MAST::Stress s;
     
     FEMOperatorMatrix Bmat_mem, Bmat_bend, Bmat_vk;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= this->n_direct_strain_components(), n2=6*n_phi,
     n3 = this->n_von_karman_strain_components();

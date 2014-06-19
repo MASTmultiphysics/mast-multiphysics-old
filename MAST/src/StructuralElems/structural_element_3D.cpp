@@ -21,8 +21,8 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2;
@@ -87,8 +87,8 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     
     FEMOperatorMatrix Bmat;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2;
@@ -139,8 +139,8 @@ MAST::StructuralElement3D::prestress_force (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix prestress_mat_A, mat1_n1n2, mat2_n2n2;
@@ -200,8 +200,8 @@ MAST::StructuralElement3D::prestress_force_sensitivity (bool request_jacobian,
     
     FEMOperatorMatrix Bmat;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)JxW.size();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix prestress_mat_A, mat1_n1n2, mat2_n2n2;
@@ -251,8 +251,8 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= 6, n2=6*n_phi;
     DenseRealMatrix material_exp_A_mat, mat1_n1n2, mat2_n2n2, stress;
@@ -269,13 +269,13 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
-    MAST::FieldFunction<libMesh::Real>& temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>(p.function());
-    MAST::FieldFunction<libMesh::Real>& ref_temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
     (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
     
-    libMesh::Real t, t0;
+    Real t, t0;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
@@ -307,8 +307,8 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
 {
     FEMOperatorMatrix Bmat;
     
-    const std::vector<libMesh::Real>& JxW = _fe->get_JxW();
-    const std::vector<Point>& xyz = _fe->get_xyz();
+    const std::vector<Real>& JxW = _fe->get_JxW();
+    const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
     const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
     const unsigned int n1= 6, n2=6*n_phi;
     DenseRealMatrix material_exp_A_mat, material_exp_A_mat_sens,
@@ -327,13 +327,13 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
                             *this).release());
-    MAST::FieldFunction<libMesh::Real>& temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>(p.function());
-    MAST::FieldFunction<libMesh::Real>& ref_temp_func =
-    dynamic_cast<MAST::FieldFunction<libMesh::Real>&>
+    MAST::FieldFunction<Real>& temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>(p.function());
+    MAST::FieldFunction<Real>& ref_temp_func =
+    dynamic_cast<MAST::FieldFunction<Real>&>
     (dynamic_cast<MAST::Temperature&>(p).reference_temperature_function());
     
-    libMesh::Real t, t0, t_sens;
+    Real t, t0, t_sens;
     
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         
@@ -370,7 +370,7 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
 void
 MAST::StructuralElement3D::initialize_strain_operator(const unsigned int qp,
                                                       FEMOperatorMatrix& Bmat) {
-    const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+    const std::vector<std::vector<libMesh::RealVectorValue> >& dphi = _fe->get_dphi();
     
     unsigned int n_phi = (unsigned int)dphi.size();
     DenseRealVector phi; phi.resize(n_phi);

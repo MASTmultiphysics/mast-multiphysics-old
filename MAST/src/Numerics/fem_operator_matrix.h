@@ -16,7 +16,7 @@
 #include "Base/MAST_data_types.h"
 
 
-using namespace libMesh;
+
 
 
 class FEMOperatorMatrix

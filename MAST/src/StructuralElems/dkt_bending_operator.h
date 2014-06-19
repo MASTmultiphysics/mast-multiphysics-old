@@ -31,13 +31,13 @@ namespace MAST
         _tri6(NULL),
         _nodes(3)
         {
-            libmesh_assert(_elem.type() == TRI3);
+            libmesh_assert(_elem.type() == libMesh::TRI3);
             
-            _tri6 = new Tri6;
+            _tri6 = new libMesh::Tri6;
             
             // next three nodes are created using the corner nodes
             for (unsigned int i=0; i<3; i++)
-                _nodes[i] = new Node;
+                _nodes[i] = new libMesh::Node;
             
             // first edge
             libMesh::Point p;
@@ -62,7 +62,7 @@ namespace MAST
             }
 
             // now setup the shape functions
-            _fe = libMesh::FEBase::build(2, FEType(SECOND, LAGRANGE)).release();
+            _fe = libMesh::FEBase::build(2, libMesh::FEType(libMesh::SECOND, libMesh::LAGRANGE)).release();
             _fe->attach_quadrature_rule(&_qrule);
             _fe->get_phi();
             _fe->get_dphi();
@@ -102,7 +102,7 @@ namespace MAST
          * point and z-location.
          */
         void initialize_bending_strain_operator_for_z(const unsigned int qp,
-                                                      const libMesh::Real z,
+                                                      const Real z,
                                                       FEMOperatorMatrix& Bmat_bend);
 
     protected:
@@ -110,7 +110,7 @@ namespace MAST
         /*!
          *   returns the length of the side defined by vector from node i to j
          */
-        libMesh::Real _get_edge_length(unsigned int i, unsigned int j);
+        Real _get_edge_length(unsigned int i, unsigned int j);
         
         /*!
          *   returns the cos of normal to the side defined by vector from node i to j
@@ -137,7 +137,7 @@ namespace MAST
         /*!
          *    vector to store node pointers for the mid-sized nodes
          */
-        std::vector<Node*> _nodes;
+        std::vector<libMesh::Node*> _nodes;
     };
 }
 
@@ -153,10 +153,10 @@ MAST::DKTBendingOperator::initialize_bending_strain_operator (const unsigned int
 inline
 void
 MAST::DKTBendingOperator::initialize_bending_strain_operator_for_z (const unsigned int qp,
-                                                                    const libMesh::Real z,
+                                                                    const Real z,
                                                                     FEMOperatorMatrix& Bmat) {
     
-    const std::vector<std::vector<RealVectorValue> >& dphi = _fe->get_dphi();
+    const std::vector<std::vector<libMesh::RealVectorValue> >& dphi = _fe->get_dphi();
     const unsigned int n_phi = (unsigned int)dphi.size();
     
     DenseRealVector phi, dbetaxdx, dbetaxdy, dbetaydx, dbetaydy,
@@ -293,10 +293,10 @@ MAST::DKTBendingOperator::_calculate_dkt_shape_functions(const DenseRealVector& 
     // And then the same this is followed for Hy (from dofs 9-17)
     
     // local variables for shape functions
-    libMesh::Real N1, N2, N3, N4, N5, N6;
+    Real N1, N2, N3, N4, N5, N6;
     
     // local variables for edge lengths and sine/cosines
-    libMesh::Real l12, l23, l31, cos4, cos5, cos6, sin4, sin5, sin6;
+    Real l12, l23, l31, cos4, cos5, cos6, sin4, sin5, sin6;
     
     N1 = phi(0);
     N2 = phi(1);

@@ -1,47 +1,30 @@
 //
-//  assembleEuler.h
+//  linearized_fluid_system.h
 //  MAST
 //
-//  Created by Manav Bhatia on 2/21/13.
-//
+//  Created by Manav Bhatia on 6/19/14.
+//  Copyright (c) 2014 Manav Bhatia. All rights reserved.
 //
 
-#ifndef __MAST__assembleEuler__
-#define __MAST__assembleEuler__
+#ifndef __MAST_linearized_fluid_system_h__
+#define __MAST_linearized_fluid_system_h__
 
-// libmesh includes
+// libMesh includes
 #include "libmesh/libmesh_config.h"
-
-
-
-// DiffSystem framework files
-#include "libmesh/fem_system.h"
 #include "libmesh/equation_systems.h"
-
+#include "libmesh/fem_system.h"
+#include "libmesh/auto_ptr.h"
+#include "libmesh/mesh_function.h"
 
 // MAST includes
 #include "FluidElems/fluid_elem_base.h"
 
 
-
-
-Real euler_solution_value(const libMesh::Point& p,
-                          const libMesh::Parameters& parameters,
-                          const std::string& sys_name,
-                          const std::string& var_name);
-
-
-
-void init_euler_variables(libMesh::EquationSystems& es,
-                          const std::string& system_name);
-
-
-
-class FluidSystem : public libMesh::FEMSystem, public FluidElemBase
+class LinearizedFluidSystem : public libMesh::FEMSystem, public FluidElemBase
 {
 public:
     // Constructor
-    FluidSystem(libMesh::EquationSystems& es,
+    LinearizedFluidSystem(libMesh::EquationSystems& es,
                 const std::string& name_in,
                 const unsigned int number_in)
     : libMesh::FEMSystem(es, name_in, number_in),
@@ -67,7 +50,7 @@ public:
     
     virtual void postprocess();
     
-
+    
     void evaluate_recalculate_dc_flag();
     
     /*!
@@ -79,9 +62,9 @@ public:
      *     flag to tell the system to use the stored discontinuity capturing terms
      */
     bool if_use_stored_dc_coeff;
-
+    
     std::vector<unsigned int> vars;
-
+    
 protected:
     
     /*!
@@ -97,27 +80,4 @@ protected:
 
 
 
-
-
-class FluidPostProcessSystem : public libMesh::System
-{
-public:
-    // Constructor
-    FluidPostProcessSystem(libMesh::EquationSystems& es,
-                           const std::string& name_in,
-                           const unsigned int number_in)
-    : libMesh::System(es, name_in, number_in)
-    {}
-    
-    virtual void init_data();
-    
-    virtual void postprocess();
-    
-    unsigned int u, v, w, T, s, p, cp, a, M;
-    
-    FlightCondition* flight_condition;
-};
-
-
-
-#endif /* defined(__MAST__assembleEuler__) */
+#endif // __MAST_linearized_fluid_system_h__

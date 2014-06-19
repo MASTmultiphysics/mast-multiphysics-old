@@ -23,8 +23,8 @@ namespace MAST {
         
         virtual ~UGFlutterRoot() {}
         
-        virtual void init(const libMesh::Real ref_val, const libMesh::Real b_ref,
-                          const libMesh::Complex num, const libMesh::Complex den,
+        virtual void init(const Real ref_val, const Real b_ref,
+                          const Complex num, const Complex den,
                           const ComplexMatrixX& Bmat,
                           const ComplexVectorX& eig_vec);
     };
@@ -64,14 +64,14 @@ namespace MAST {
          *   pointer is NULL, then no sorting is performed
          */
         virtual MAST::FlutterSolutionBase*
-        analyze(const libMesh::Real ref_val,
+        analyze(const Real ref_val,
                 const MAST::FlutterSolutionBase* prev_sol=NULL);
         
         /*!
          *    initializes the matrices for the specified k_ref. UG does not account
          *    for structural damping.
          */
-        void initialize_matrices(libMesh::Real k_ref,
+        void initialize_matrices(Real k_ref,
                                  ComplexMatrixX& m, // mass & aero
                                  ComplexMatrixX& k); // aero operator
     };

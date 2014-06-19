@@ -36,12 +36,12 @@ public:
      *   define the panel surface is sin (n_maxima * pi * x / L ). Otherwise,
      *   the function is  1 - cos(n_maxima * 2 * pi * x / L)
      */
-    virtual void init (const libMesh::Real tc, bool cos_profile,
+    virtual void init (const Real tc, bool cos_profile,
                        const unsigned int n_maxima,
                        const unsigned int panel_bc_id,
                        const unsigned int symmetry_bc_id,
                        const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                       UnstructuredMesh& mesh, ElemType t);
+                       libMesh::UnstructuredMesh& mesh, libMesh::ElemType t);
 
 protected:
     
@@ -53,11 +53,11 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    libMesh::Real _tc_ratio;
+    Real _tc_ratio;
     
-    libMesh::Real _x0, _x1;
+    Real _x0, _x1;
     
-    libMesh::Real _y0, _y1;
+    Real _y0, _y1;
     
     unsigned int _n_maxima;
     
@@ -87,12 +87,12 @@ public:
      *   define the panel surface is sin (n_maxima * pi * x / L ). Otherwise,
      *   the function is  1 - cos(n_maxima * 2 * pi * x / L)
      */
-    virtual void init (const libMesh::Real tc, bool cos_profile,
+    virtual void init (const Real tc, bool cos_profile,
                        const unsigned int n_maxima_x, const unsigned int n_maxima_y,
                        const unsigned int panel_bc_id,
                        const unsigned int symmetry_bc_id,
                        const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                       UnstructuredMesh& mesh, ElemType t);
+                       libMesh::UnstructuredMesh& mesh, libMesh::ElemType t);
     
 protected:
     
@@ -104,13 +104,13 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    libMesh::Real _tc_ratio;
+    Real _tc_ratio;
     
-    libMesh::Real _x0, _x1;
+    Real _x0, _x1;
     
-    libMesh::Real _y0, _y1;
+    Real _y0, _y1;
     
-    libMesh::Real _z0, _z1;
+    Real _z0, _z1;
 
     unsigned int _n_maxima_x, _n_maxima_y;
 
@@ -122,12 +122,12 @@ protected:
 
 
 inline void
-PanelMesh2D::init (const libMesh::Real tc, bool cos_profile,
+PanelMesh2D::init (const Real tc, bool cos_profile,
                    const unsigned int n_maxima,
                    const unsigned int panel_bc_id,
                    const unsigned int symmetry_bc_id,
                    const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                   UnstructuredMesh& mesh, ElemType t)
+                   libMesh::UnstructuredMesh& mesh, libMesh::ElemType t)
 {
     libmesh_assert(divs.size() == 2);
     libmesh_assert(divs[0]->n_divs() == 3);
@@ -157,7 +157,7 @@ PanelMesh2D::process_mesh( )
     // points lying on the y = _y0, and the mesh movement ends up altering that
 
     //march over all the elmeents and tag the sides that all lie on the panel suface
-    MeshBase::element_iterator e_it = _mesh->elements_begin();
+    libMesh::MeshBase::element_iterator e_it = _mesh->elements_begin();
     
     for ( ; e_it != _mesh->elements_end(); e_it++)
     {
@@ -166,7 +166,7 @@ PanelMesh2D::process_mesh( )
         
         for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
         {
-            AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
+            libMesh::AutoPtr<libMesh::Elem> side_elem ((*e_it)->side(i_side).release());
             std::vector<bool> side_on_panel(side_elem->n_nodes()),
             side_on_slip_wall(side_elem->n_nodes());
             std::fill(side_on_panel.begin(), side_on_panel.end(), false);
@@ -174,7 +174,7 @@ PanelMesh2D::process_mesh( )
             
             for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
             {
-                const Node& n = *(side_elem->get_node(i_node));
+                const libMesh::Node& n = *(side_elem->get_node(i_node));
                 if ((n(1)==_y0) && (n(0) >= _x0-1.0e-6) && (n(0) <= _x1+1.0e-6))
                     side_on_panel[i_node] = true;
                 
@@ -203,15 +203,15 @@ PanelMesh2D::process_mesh( )
     _mesh->boundary_info->sideset_name(_symmetry_bc_id) = "Symmetry";
     
     // now move the mesh points
-    MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
-    const MeshBase::node_iterator n_end = _mesh->nodes_end();
+    libMesh::MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
+    const libMesh::MeshBase::node_iterator n_end = _mesh->nodes_end();
     
-    const libMesh::Real pi = acos(-1.);
-    libMesh::Real x, y;
+    const Real pi = acos(-1.);
+    Real x, y;
     
     for (; n_it != n_end; n_it++)
     {
-        Node& n =  **n_it;
+        libMesh::Node& n =  **n_it;
         
         // this is for sine bump
         if ((n(0) >= _x0) && (n(0) <= _x1))
@@ -234,12 +234,12 @@ PanelMesh2D::process_mesh( )
 
 
 inline void
-PanelMesh3D::init (const libMesh::Real tc, bool cos_profile,
+PanelMesh3D::init (const Real tc, bool cos_profile,
                    const unsigned int n_maxima_x, const unsigned int n_maxima_y,
                    const unsigned int panel_bc_id,
                    const unsigned int symmetry_bc_id,
                    const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                   UnstructuredMesh& mesh, ElemType t)
+                   libMesh::UnstructuredMesh& mesh, libMesh::ElemType t)
 {
     libmesh_assert(divs.size() == 3);
     libmesh_assert(divs[0]->n_divs() == 3);
@@ -273,7 +273,7 @@ PanelMesh3D::process_mesh( )
     // points lying on the y = _y0, and the mesh movement ends up altering that
     
     //march over all the elmeents and tag the sides that all lie on the panel suface
-    MeshBase::element_iterator e_it = _mesh->elements_begin();
+    libMesh::MeshBase::element_iterator e_it = _mesh->elements_begin();
     
     for ( ; e_it != _mesh->elements_end(); e_it++)
     {
@@ -282,7 +282,7 @@ PanelMesh3D::process_mesh( )
         
         for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
         {
-            AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
+            libMesh::AutoPtr<libMesh::Elem> side_elem ((*e_it)->side(i_side).release());
             std::vector<bool> side_on_panel(side_elem->n_nodes()),
             side_on_slip_wall(side_elem->n_nodes());
             std::fill(side_on_panel.begin(), side_on_panel.end(), false);
@@ -290,7 +290,7 @@ PanelMesh3D::process_mesh( )
             
             for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
             {
-                const Node& n = *(side_elem->get_node(i_node));
+                const libMesh::Node& n = *(side_elem->get_node(i_node));
                 if ((n(2)==_z0) && //bottom face
                     (n(0) >= _x0-1.0e-6) && (n(0) <= _x1+1.0e-6) && // x-coord
                     (n(1) >= _y0-1.0e-6) && (n(1) <= _y1+1.0e-6))
@@ -324,15 +324,15 @@ PanelMesh3D::process_mesh( )
     
     
     // now move the mesh points
-    MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
-    const MeshBase::node_iterator n_end = _mesh->nodes_end();
+    libMesh::MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
+    const libMesh::MeshBase::node_iterator n_end = _mesh->nodes_end();
     
-    const libMesh::Real pi = acos(-1.);
-    libMesh::Real x, y, z;
+    const Real pi = acos(-1.);
+    Real x, y, z;
     
     for (; n_it != n_end; n_it++)
     {
-        Node& n =  **n_it;
+        libMesh::Node& n =  **n_it;
         
         // this is for sine bump
         if ((n(0) >= _x0) && (n(0) <= _x1))

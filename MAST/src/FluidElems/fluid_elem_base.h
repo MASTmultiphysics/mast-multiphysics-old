@@ -27,7 +27,7 @@
 #include "libmesh/parallel.h"
 
 
-using namespace libMesh;
+
 
 // Forward declerations
 class GetPot;
@@ -46,19 +46,19 @@ public:
     PrimitiveSolution();
     
     void zero();
-    void init(const unsigned int dim, const DenseRealVector& conservative_sol, const libMesh::Real cp_val, const libMesh::Real cv_val,
+    void init(const unsigned int dim, const DenseRealVector& conservative_sol, const Real cp_val, const Real cv_val,
               bool if_viscous);
     void print(std::ostream& out) const;
     
-    libMesh::Real c_pressure(const libMesh::Real p0, const libMesh::Real q0) const;
+    Real c_pressure(const Real p0, const Real q0) const;
     void get_uvec(DenseRealVector& u) const;
     
     DenseRealVector primitive_sol;
     unsigned int dimension;
-    libMesh::Real cp, cv;
-    libMesh::Real rho, u1, u2, u3, T, p, a, e_tot, k, entropy, mach;
+    Real cp, cv;
+    Real rho, u1, u2, u3, T, p, a, e_tot, k, entropy, mach;
     // viscous quantities
-    libMesh::Real Pr, k_thermal, mu, lambda;
+    Real Pr, k_thermal, mu, lambda;
 };
 
 
@@ -72,7 +72,7 @@ public:
     void init(const PrimitiveSolution& sol, const libMesh::DenseVector<ValType>& delta_sol);
     void print(std::ostream& out) const;
     
-    ValType c_pressure(const libMesh::Real q0) const;
+    ValType c_pressure(const Real q0) const;
     void get_duvec(libMesh::DenseVector<ValType>& du) const;
     
     libMesh::DenseVector<ValType> perturb_primitive_sol;
@@ -87,7 +87,7 @@ public:
 
 
 // The Navier-Stokes system class.
-// FEMSystem, TimeSolver and  NewtonSolver will handle most tasks,
+// libMesh::FEMSystem, TimeSolver and  libMesh::NewtonSolver will handle most tasks,
 // but we must specify element residuals
 class FluidElemBase
 {
@@ -127,14 +127,14 @@ protected:
     
     
     void calculate_dxidX (const std::vector<unsigned int>& vars,
-                          const unsigned int qp, FEMContext& c,
+                          const unsigned int qp, libMesh::FEMContext& c,
                           DenseRealMatrix& dxi_dX,
                           DenseRealMatrix& dX_dxi);
     
     
     void update_solution_at_quadrature_point
     ( const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c, const bool if_elem_domain,
+     libMesh::FEMContext& c, const bool if_elem_domain,
      const DenseRealVector& elem_solution, DenseRealVector& conservative_sol,
      PrimitiveSolution& primitive_sol, FEMOperatorMatrix& B_mat,
      std::vector<FEMOperatorMatrix>& dB_mat);
@@ -197,7 +197,7 @@ protected:
     
     void calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
     (const PrimitiveSolution& sol,
-     const libMesh::Real ui_ni, const libMesh::Point& nvec,
+     const Real ui_ni, const libMesh::Point& nvec,
      const DenseRealVector& dnvec, DenseRealMatrix& mat);
     
     
@@ -213,20 +213,20 @@ protected:
     
     
     bool calculate_barth_tau_matrix(const std::vector<unsigned int>& vars,
-                                    const unsigned int qp, FEMContext& c,
+                                    const unsigned int qp, libMesh::FEMContext& c,
                                     const PrimitiveSolution& sol,
                                     DenseRealMatrix& tau,
                                     std::vector<DenseRealMatrix >& tau_sens);
     
     bool calculate_aliabadi_tau_matrix(const std::vector<unsigned int>& vars,
-                                       const unsigned int qp, FEMContext& c,
+                                       const unsigned int qp, libMesh::FEMContext& c,
                                        const PrimitiveSolution& sol,
                                        DenseRealMatrix& tau,
                                        std::vector<DenseRealMatrix >& tau_sens);
     
     void calculate_hartmann_discontinuity_operator
     (const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c,  const PrimitiveSolution& sol,
+     libMesh::FEMContext& c,  const PrimitiveSolution& sol,
      const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseRealMatrix& Ai_Bi_advection,
@@ -235,7 +235,7 @@ protected:
     
     void calculate_aliabadi_discontinuity_operator
     (const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c,  const PrimitiveSolution& sol,
+     libMesh::FEMContext& c,  const PrimitiveSolution& sol,
      const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseRealMatrix& Ai_Bi_advection,
@@ -245,7 +245,7 @@ protected:
     
     void calculate_differential_operator_matrix
     (const std::vector<unsigned int>& vars, const unsigned int qp,
-     FEMContext& c, const DenseRealVector& elem_solution,
+     libMesh::FEMContext& c, const DenseRealVector& elem_solution,
      const PrimitiveSolution& sol, const FEMOperatorMatrix& B_mat,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const std::vector<DenseRealMatrix >& Ai_advection,
@@ -261,7 +261,7 @@ protected:
     _if_update_stabilization_per_quadrature_point,
     _include_pressure_switch;
     
-    libMesh::Real _dissipation_scaling;
+    Real _dissipation_scaling;
     
     GetPot& _infile;
     

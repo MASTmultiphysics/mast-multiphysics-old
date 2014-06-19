@@ -116,7 +116,7 @@ namespace MAST {
         /*!
          *   nodes for local element
          */
-        std::vector<Node*> _local_nodes;
+        std::vector<libMesh::Node*> _local_nodes;
         
         /*!
          *    Transformation matrix defines T_ij = V_i^t . Vn_j, where

@@ -33,9 +33,9 @@ _static_sol_system(NULL)
     // depending on the analysis type, forward to the appropriate function
     switch (_analysis_type) {
         case MAST::STATIC:
-            dynamic_cast<NonlinearImplicitSystem&>(sys).
+            dynamic_cast<libMesh::NonlinearImplicitSystem&>(sys).
             nonlinear_solver->residual_and_jacobian_object =
-            dynamic_cast<NonlinearImplicitSystem::ComputeResidualandJacobian*>(this);
+            dynamic_cast<libMesh::NonlinearImplicitSystem::ComputeResidualandJacobian*>(this);
             break;
             
         case MAST::MODAL:
@@ -79,7 +79,7 @@ MAST::StructuralSystemAssembly::add_side_load(libMesh::boundary_id_type bid,
     if (load.type() == MAST::DISPLACEMENT_DIRICHLET) {
         
         // get the Dirichlet boundary condition object
-        DirichletBoundary& dirichlet_b =
+        libMesh::DirichletBoundary& dirichlet_b =
         (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition&>(load)).dirichlet_boundary();
         
         // add an entry for each boundary of this dirichlet object.
@@ -150,7 +150,7 @@ MAST::StructuralSystemAssembly::get_property_card(const libMesh::Elem& elem) con
 
 
 void
-MAST::StructuralSystemAssembly::add_parameter(MAST::ConstantFunction<libMesh::Real>& f) {
+MAST::StructuralSystemAssembly::add_parameter(MAST::ConstantFunction<Real>& f) {
     Real* par = f.ptr();
     // make sure it does not already exist in the map
     libmesh_assert(!_parameter_map.count(par));
@@ -181,10 +181,10 @@ MAST::StructuralSystemAssembly::get_parameter(Real* par) const {
 
 
 void
-MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,
-                                                       libMesh::NumericVector<libMesh::Real>* R,
-                                                       SparseMatrix<libMesh::Real>*  J,
-                                                       NonlinearImplicitSystem& S) {
+MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVector<Real>& X,
+                                                       libMesh::NumericVector<Real>* R,
+                                                       libMesh::SparseMatrix<Real>*  J,
+                                                       libMesh::NonlinearImplicitSystem& S) {
     
     if (R) R->zero();
     if (J) J->zero();
@@ -209,9 +209,9 @@ MAST::StructuralSystemAssembly::residual_and_jacobian (const libMesh::NumericVec
 
 
 bool
-MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
+MAST::StructuralSystemAssembly::sensitivity_assemble (const libMesh::ParameterVector& params,
                                                       const unsigned int i,
-                                                      libMesh::NumericVector<libMesh::Real>& sensitivity_rhs) {
+                                                      libMesh::NumericVector<Real>& sensitivity_rhs) {
 
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
@@ -224,7 +224,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
             libmesh_assert(_system.system_type() == "NonlinearImplicit");
             _assemble_residual_and_jacobian(*_system.solution, &sensitivity_rhs,
                                             NULL,
-                                            dynamic_cast<NonlinearImplicitSystem&>(_system),
+                                            dynamic_cast<libMesh::NonlinearImplicitSystem&>(_system),
                                             f);
             break;
             
@@ -245,13 +245,13 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
 void
 MAST::StructuralSystemAssembly::assemble() {
     
-    SparseMatrix<libMesh::Real>&  matrix_A = *(dynamic_cast<EigenSystem&>(_system).matrix_A);
-    SparseMatrix<libMesh::Real>&  matrix_B = *(dynamic_cast<EigenSystem&>(_system).matrix_B);
+    libMesh::SparseMatrix<Real>&  matrix_A = *(dynamic_cast<libMesh::EigenSystem&>(_system).matrix_A);
+    libMesh::SparseMatrix<Real>&  matrix_B = *(dynamic_cast<libMesh::EigenSystem&>(_system).matrix_B);
     
     matrix_A.zero();
     matrix_B.zero();
 
-    libMesh::NumericVector<libMesh::Real> *sol = NULL;
+    libMesh::NumericVector<Real> *sol = NULL;
     
     // if a system is provided for getting the static solution, then get the vectors
     if (_static_sol_system)
@@ -287,10 +287,10 @@ MAST::StructuralSystemAssembly::assemble() {
 
 
 bool
-MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& params,
+MAST::StructuralSystemAssembly::sensitivity_assemble (const libMesh::ParameterVector& params,
                                                       const unsigned int i,
-                                                      SparseMatrix<libMesh::Real>* sensitivity_A,
-                                                      SparseMatrix<libMesh::Real>* sensitivity_B) {
+                                                      libMesh::SparseMatrix<Real>* sensitivity_A,
+                                                      libMesh::SparseMatrix<Real>* sensitivity_B) {
 
     
     const MAST::FieldFunctionBase* f = this->get_parameter(params[i]);
@@ -298,7 +298,7 @@ MAST::StructuralSystemAssembly::sensitivity_assemble (const ParameterVector& par
     sensitivity_A->zero();
     sensitivity_B->zero();
     
-    libMesh::NumericVector<libMesh::Real> *sol = NULL, *sol_sens = NULL;
+    libMesh::NumericVector<Real> *sol = NULL, *sol_sens = NULL;
     
     // if a system is provided for getting the static solution, then get the vectors
     if (_static_sol_system) {
@@ -360,29 +360,29 @@ void calculate_fd_jacobian(MAST::StructuralElementBase& e) {
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::NumericVector<libMesh::Real>& X,
-                                                                 libMesh::NumericVector<libMesh::Real>* R,
-                                                                 SparseMatrix<libMesh::Real>*  J,
-                                                                 NonlinearImplicitSystem& S,
+MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::NumericVector<Real>& X,
+                                                                 libMesh::NumericVector<Real>* R,
+                                                                 libMesh::SparseMatrix<Real>*  J,
+                                                                 libMesh::NonlinearImplicitSystem& S,
                                                                  const MAST::FieldFunctionBase* param) {
 
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     DenseRealVector vec, sol;
     DenseRealMatrix mat;
-    std::vector<dof_id_type> dof_indices;
-    const DofMap& dof_map = _system.get_dof_map();
+    std::vector<libMesh::dof_id_type> dof_indices;
+    const libMesh::DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution =
-    libMesh::NumericVector<libMesh::Real>::build(_system.comm());
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution =
+    libMesh::NumericVector<Real>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
-                             false, GHOSTED);
+                             false, libMesh::GHOSTED);
     X.localize(*localized_solution, _system.get_dof_map().get_send_list());
     
-    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    libMesh::MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
     for ( ; el != end_el; ++el) {
         
@@ -416,10 +416,10 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
             if (_analysis_type == MAST::DYNAMIC)
                 structural_elem->inertial_force(J!=NULL?true:false,
                                                 vec, mat);
-            structural_elem->side_external_force<libMesh::Real>(J!=NULL?true:false,
+            structural_elem->side_external_force<Real>(J!=NULL?true:false,
                                                                 vec, mat,
                                                                 _side_bc_map);
-            structural_elem->volume_external_force<libMesh::Real>(J!=NULL?true:false,
+            structural_elem->volume_external_force<Real>(J!=NULL?true:false,
                                                                   vec, mat,
                                                                   _vol_bc_map);
         }
@@ -432,10 +432,10 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
             if (_analysis_type == MAST::DYNAMIC)
                 structural_elem->inertial_force_sensitivity(J!=NULL?true:false,
                                                             vec, mat);
-            structural_elem->side_external_force_sensitivity<libMesh::Real>(J!=NULL?true:false,
+            structural_elem->side_external_force_sensitivity<Real>(J!=NULL?true:false,
                                                                             vec, mat,
                                                                             _side_bc_map);
-            structural_elem->volume_external_force_sensitivity<libMesh::Real>(J!=NULL?true:false,
+            structural_elem->volume_external_force_sensitivity<Real>(J!=NULL?true:false,
                                                                               vec, mat,
                                                                               _vol_bc_map);
             // scale vector by -1 to account for the fact that the sensitivity
@@ -460,9 +460,9 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
 
 
 void
-MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<libMesh::Real>& X,
-                                                                              libMesh::NumericVector<libMesh::Real>& F_real,
-                                                                              libMesh::NumericVector<libMesh::Real>& F_imag) {
+MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<Real>& X,
+                                                                              libMesh::NumericVector<Real>& F_real,
+                                                                              libMesh::NumericVector<Real>& F_imag) {
     F_real.zero();
     F_imag.zero();
     
@@ -470,19 +470,19 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
     // analysis quantities
     DenseRealVector vec, vec2, sol;
     DenseRealMatrix mat;
-    std::vector<dof_id_type> dof_indices;
-    const DofMap& dof_map = _system.get_dof_map();
+    std::vector<libMesh::dof_id_type> dof_indices;
+    const libMesh::DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution =
-    libMesh::NumericVector<libMesh::Real>::build(_system.comm());
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution =
+    libMesh::NumericVector<Real>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
-                             false, GHOSTED);
+                             false, libMesh::GHOSTED);
     X.localize(*localized_solution, _system.get_dof_map().get_send_list());
     
-    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    libMesh::MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
     std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*> local_side_bc_map;
     std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*> local_vol_bc_map;
@@ -530,9 +530,9 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
         //structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
         
         // now get the vector values
-        structural_elem->side_external_force<libMesh::Complex>(false, vec, mat,
+        structural_elem->side_external_force<Complex>(false, vec, mat,
                                                                local_side_bc_map);
-        structural_elem->volume_external_force<libMesh::Complex>(false, vec, mat,
+        structural_elem->volume_external_force<Complex>(false, vec, mat,
                                                                  local_vol_bc_map);
         
         // copy the real part of the force vector and add that to the global vector
@@ -560,46 +560,46 @@ MAST::StructuralSystemAssembly::assemble_small_disturbance_aerodynamic_force (co
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatrix<libMesh::Real>&  matrix_A,
-                                                                      SparseMatrix<libMesh::Real>&  matrix_B,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(libMesh::SparseMatrix<Real>&  matrix_A,
+                                                                      libMesh::SparseMatrix<Real>&  matrix_B,
                                                                       const MAST::FieldFunctionBase* param,
-                                                                      const libMesh::NumericVector<libMesh::Real>* static_sol,
-                                                                      const libMesh::NumericVector<libMesh::Real>* static_sol_sens) {
+                                                                      const libMesh::NumericVector<Real>* static_sol,
+                                                                      const libMesh::NumericVector<Real>* static_sol_sens) {
 
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     DenseRealVector vec, sol;
     DenseRealMatrix mat1, mat2;
-    std::vector<dof_id_type> dof_indices;
-    const DofMap& dof_map = _system.get_dof_map();
+    std::vector<libMesh::dof_id_type> dof_indices;
+    const libMesh::DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution, localized_solution_sens;
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
-        localized_solution.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
+        localized_solution.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
         localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
-                                 false, GHOSTED);
+                                 false, libMesh::GHOSTED);
         static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
         // do the same for sensitivity if the parameters were provided
         if (param) {
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
-            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
+            localized_solution_sens.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                      _system.get_dof_map().get_send_list(),
-                                     false, GHOSTED);
+                                     false, libMesh::GHOSTED);
             static_sol_sens->localize(*localized_solution_sens, _system.get_dof_map().get_send_list());
         }
     }
     
-    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    libMesh::MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
     for ( ; el != end_el; ++el) {
         
@@ -641,9 +641,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
             structural_elem->prestress_force(true, vec, mat1);
 
             // get the Jacobian due to external loads, including thermal stresses
-            structural_elem->side_external_force<libMesh::Real>(true, vec, mat1,
+            structural_elem->side_external_force<Real>(true, vec, mat1,
                                                                 _side_bc_map);
-            structural_elem->volume_external_force<libMesh::Real>(true, vec, mat1,
+            structural_elem->volume_external_force<Real>(true, vec, mat1,
                                                                   _vol_bc_map);
             
             mat1.scale(-1.);
@@ -665,9 +665,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
 
             structural_elem->internal_force_sensitivity(true, vec, mat1, false);
             structural_elem->prestress_force_sensitivity(true, vec, mat1);
-            structural_elem->side_external_force_sensitivity<libMesh::Real>(true, vec, mat1,
+            structural_elem->side_external_force_sensitivity<Real>(true, vec, mat1,
                                                                             _side_bc_map);
-            structural_elem->volume_external_force_sensitivity<libMesh::Real>(true, vec, mat1,
+            structural_elem->volume_external_force_sensitivity<Real>(true, vec, mat1,
                                                                               _vol_bc_map);
             
             mat1.scale(-1.);
@@ -696,46 +696,46 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(SparseMatr
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseMatrix<libMesh::Real>&  matrix_A,
-                                                                         SparseMatrix<libMesh::Real>&  matrix_B,
+MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(libMesh::SparseMatrix<Real>&  matrix_A,
+                                                                         libMesh::SparseMatrix<Real>&  matrix_B,
                                                                          const MAST::FieldFunctionBase* param,
-                                                                         const libMesh::NumericVector<libMesh::Real>* static_sol,
-                                                                         const libMesh::NumericVector<libMesh::Real>* static_sol_sens) {
+                                                                         const libMesh::NumericVector<Real>* static_sol,
+                                                                         const libMesh::NumericVector<Real>* static_sol_sens) {
 
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     DenseRealVector vec, sol;
     DenseRealMatrix mat1, mat2, mat3;
-    std::vector<dof_id_type> dof_indices;
-    const DofMap& dof_map = _system.get_dof_map();
+    std::vector<libMesh::dof_id_type> dof_indices;
+    const libMesh::DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
     const bool if_exchange_AB_matrices =
     _system.get_equation_systems().parameters.get<bool>("if_exchange_AB_matrices");
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution, localized_solution_sens;
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
-        localized_solution.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
+        localized_solution.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
         localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
-                                 false, GHOSTED);
+                                 false, libMesh::GHOSTED);
         static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
         // do the same for sensitivity if the parameters were provided
         if (param) {
             // make sure that the sensitivity was also provided
             libmesh_assert(static_sol_sens);
             
-            localized_solution_sens.reset(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
+            localized_solution_sens.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
             localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
                                           _system.get_dof_map().get_send_list(),
-                                          false, GHOSTED);
+                                          false, libMesh::GHOSTED);
             static_sol_sens->localize(*localized_solution_sens, _system.get_dof_map().get_send_list());
         }
     }
     
-    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    libMesh::MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
     for ( ; el != end_el; ++el) {
         
@@ -779,9 +779,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             structural_elem->internal_force(true, vec, mat2, true);
             mat2.add(1., mat1); // subtract to get the purely load dependent part
             
-            structural_elem->side_external_force<libMesh::Real>(true, vec, mat2,
+            structural_elem->side_external_force<Real>(true, vec, mat2,
                                                                 _side_bc_map);
-            structural_elem->volume_external_force<libMesh::Real>(true, vec, mat2,
+            structural_elem->volume_external_force<Real>(true, vec, mat2,
                                                                   _vol_bc_map);
             
             structural_elem->prestress_force(true, vec, mat2);
@@ -809,9 +809,9 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
             // if displacement is zero, mat1 = mat2
             structural_elem->internal_force_sensitivity(true, vec, mat2, true);
             mat2.add(1., mat1); // subtract to get the purely load dependent part
-            structural_elem->side_external_force_sensitivity<libMesh::Real>(true, vec, mat2,
+            structural_elem->side_external_force_sensitivity<Real>(true, vec, mat2,
                                                                             _side_bc_map);
-            structural_elem->volume_external_force_sensitivity<libMesh::Real>(true, vec, mat2,
+            structural_elem->volume_external_force_sensitivity<Real>(true, vec, mat2,
                                                                               _vol_bc_map);
             
             structural_elem->prestress_force_sensitivity(true, vec, mat2);
@@ -840,8 +840,8 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(SparseM
 
 
 void
-MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::NumericVector<libMesh::Real>& X,
-                                                          std::vector<libMesh::Real>& stress,
+MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::NumericVector<Real>& X,
+                                                          std::vector<Real>& stress,
                                                           const MAST::FieldFunctionBase* param) {
 
 
@@ -852,19 +852,19 @@ MAST::StructuralSystemAssembly::calculate_max_elem_stress(const libMesh::Numeric
     // analysis quantities
     DenseRealVector sol;
     DenseRealMatrix mat;
-    std::vector<dof_id_type> dof_indices;
-    const DofMap& dof_map = _system.get_dof_map();
+    std::vector<libMesh::dof_id_type> dof_indices;
+    const libMesh::DofMap& dof_map = _system.get_dof_map();
     std::auto_ptr<MAST::StructuralElementBase> structural_elem;
     
-    AutoPtr<libMesh::NumericVector<libMesh::Real> > localized_solution =
-    libMesh::NumericVector<libMesh::Real>::build(_system.comm());
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution =
+    libMesh::NumericVector<Real>::build(_system.comm());
     localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
                              _system.get_dof_map().get_send_list(),
-                             false, GHOSTED);
+                             false, libMesh::GHOSTED);
     X.localize(*localized_solution, _system.get_dof_map().get_send_list());
     
-    MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
+    libMesh::MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
     
     unsigned int counter = 0;
     
@@ -922,7 +922,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     for ( ; it != end; it++)
         if (it->second->type() == MAST::DISPLACEMENT_DIRICHLET) {
             // get the displacement dirichlet condition
-            DirichletBoundary& dirichlet_b =
+            libMesh::DirichletBoundary& dirichlet_b =
             (dynamic_cast<MAST::DisplacementDirichletBoundaryCondition*>(it->second))->dirichlet_boundary();
             
             constrained_vars_map[it->first] = dirichlet_b.variables;
@@ -932,21 +932,21 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
     // now collect the ids that correspond to the specified boundary conditions
     
     // Get a constant reference to the mesh object
-    const MeshBase& mesh = _system.get_mesh();
+    const libMesh::MeshBase& mesh = _system.get_mesh();
     
     // The dimension that we are running.
     const unsigned int dim = mesh.mesh_dimension();
     
     // Get a constant reference to the Finite Element type
     // for the first (and only) variable in the system.
-    FEType fe_type = _system.get_dof_map().variable_type(0);
+    libMesh::FEType fe_type = _system.get_dof_map().variable_type(0);
     
-    const DofMap& dof_map = _system.get_dof_map();
+    const libMesh::DofMap& dof_map = _system.get_dof_map();
     
-    std::vector<dof_id_type> dof_indices;
+    std::vector<libMesh::dof_id_type> dof_indices;
     
-    MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+    libMesh::MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
     
     for ( ; el != end_el; ++el) {
         const libMesh::Elem* elem = *el;
@@ -972,7 +972,7 @@ MAST::StructuralSystemAssembly::get_dirichlet_dofs(std::set<unsigned int>& dof_i
                             
                             // All boundary dofs are Dirichlet dofs in this case
                             std::vector<unsigned int> side_dofs;
-                            FEInterface::dofs_on_side(*el, dim, fe_type,
+                            libMesh::FEInterface::dofs_on_side(*el, dim, fe_type,
                                                       s, side_dofs);
                             
                             for(unsigned int ii=0; ii<side_dofs.size(); ii++)

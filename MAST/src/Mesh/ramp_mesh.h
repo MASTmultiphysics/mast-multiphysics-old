@@ -30,11 +30,11 @@ public:
      *   mesh for the provided information, and then uses the provided funciton
      *   move the mesh points.
      */
-    virtual void init (const libMesh::Real tc,
+    virtual void init (const Real tc,
                        const unsigned int panel_bc_id,
                        const unsigned int symmetry_bc_id,
                        const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                       UnstructuredMesh& mesh, ElemType t);
+                       libMesh::UnstructuredMesh& mesh, libMesh::ElemType t);
     
 protected:
     
@@ -46,11 +46,11 @@ protected:
     /*!
      *   t/c ratio of the panel
      */
-    libMesh::Real _tc_ratio;
+    Real _tc_ratio;
     
-    libMesh::Real _x0;
+    Real _x0;
     
-    libMesh::Real _y0, _y1;
+    Real _y0, _y1;
     
     unsigned int _panel_bc_id, _symmetry_bc_id;
     
@@ -60,11 +60,11 @@ protected:
 
 
 inline void
-RampMesh2D::init (const libMesh::Real tc_ratio,
+RampMesh2D::init (const Real tc_ratio,
                    const unsigned int panel_bc_id,
                    const unsigned int symmetry_bc_id,
                    const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                   UnstructuredMesh& mesh, ElemType t)
+                   libMesh::UnstructuredMesh& mesh, libMesh::ElemType t)
 {
     libmesh_assert(divs.size() == 2);
     libmesh_assert(divs[0]->n_divs() == 2);
@@ -91,7 +91,7 @@ RampMesh2D::process_mesh( )
     // points lying on the y = _y0, and the mesh movement ends up altering that
     
     //march over all the elmeents and tag the sides that all lie on the panel suface
-    MeshBase::element_iterator e_it = _mesh->elements_begin();
+    libMesh::MeshBase::element_iterator e_it = _mesh->elements_begin();
     
     for ( ; e_it != _mesh->elements_end(); e_it++)
     {
@@ -100,7 +100,7 @@ RampMesh2D::process_mesh( )
         
         for (unsigned int i_side=0; i_side<(*e_it)->n_sides(); i_side++)
         {
-            AutoPtr<Elem> side_elem ((*e_it)->side(i_side).release());
+            libMesh::AutoPtr<libMesh::Elem> side_elem ((*e_it)->side(i_side).release());
             std::vector<bool> side_on_panel(side_elem->n_nodes()),
             side_on_slip_wall(side_elem->n_nodes());
             std::fill(side_on_panel.begin(), side_on_panel.end(), false);
@@ -108,7 +108,7 @@ RampMesh2D::process_mesh( )
             
             for (unsigned int i_node=0; i_node<side_elem->n_nodes(); i_node++)
             {
-                const Node& n = *(side_elem->get_node(i_node));
+                const libMesh::Node& n = *(side_elem->get_node(i_node));
                 if ((n(1)==_y0) && (n(0) >= _x0-1.0e-6))
                     side_on_panel[i_node] = true;
                 
@@ -137,15 +137,15 @@ RampMesh2D::process_mesh( )
     _mesh->boundary_info->sideset_name(_symmetry_bc_id) = "Symmetry";
     
     // now move the mesh points
-    MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
-    const Mesh::node_iterator n_end = _mesh->nodes_end();
+    libMesh::MeshBase::node_iterator   n_it  = _mesh->nodes_begin();
+    const libMesh::Mesh::node_iterator n_end = _mesh->nodes_end();
     
-    const libMesh::Real pi = acos(-1.);
-    libMesh::Real x, y;
+    const Real pi = acos(-1.);
+    Real x, y;
     
     for (; n_it != n_end; n_it++)
     {
-        Node& n =  **n_it;
+        libMesh::Node& n =  **n_it;
         
         // this is for sine bump
         if (n(0) >= _x0)

@@ -99,43 +99,43 @@ namespace MAST {
         
         
         
-        virtual void init_dvar(std::vector<libMesh::Real>& x,
-                               std::vector<libMesh::Real>& xmin,
-                               std::vector<libMesh::Real>& xmax);
+        virtual void init_dvar(std::vector<Real>& x,
+                               std::vector<Real>& xmin,
+                               std::vector<Real>& xmax);
         
         
         
-        virtual void evaluate(const std::vector<libMesh::Real>& dvars,
+        virtual void evaluate(const std::vector<Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
-                              std::vector<libMesh::Real>& obj_grad,
-                              std::vector<libMesh::Real>& fvals,
+                              std::vector<Real>& obj_grad,
+                              std::vector<Real>& fvals,
                               std::vector<bool>& eval_grads,
-                              std::vector<libMesh::Real>& grads);
+                              std::vector<Real>& grads);
         
         virtual void output(unsigned int iter,
-                            const std::vector<libMesh::Real>& x,
-                            libMesh::Real obj,
-                            const std::vector<libMesh::Real>& fval) const;
+                            const std::vector<Real>& x,
+                            Real obj,
+                            const std::vector<Real>& fval) const;
 
     protected:
 
         class Compliance:
-        public System::QOI,
-        public System::QOIDerivative {
+        public libMesh::System::QOI,
+        public libMesh::System::QOIDerivative {
         public:
-            Compliance(NonlinearImplicitSystem& sys):
-            System::QOI(),
-            System::QOIDerivative(),
+            Compliance(libMesh::NonlinearImplicitSystem& sys):
+            libMesh::System::QOI(),
+            libMesh::System::QOIDerivative(),
             _system(sys)
             { }
             
-            virtual void qoi(const QoISet& qoi_indices);
+            virtual void qoi(const libMesh::QoISet& qoi_indices);
             
-            virtual void qoi_derivative (const QoISet& qoi_indices);
+            virtual void qoi_derivative (const libMesh::QoISet& qoi_indices);
             
         protected:
-            NonlinearImplicitSystem& _system;
+            libMesh::NonlinearImplicitSystem& _system;
         };
         
 
@@ -156,27 +156,27 @@ namespace MAST {
         
         MAST::TopologyOptimization::Compliance* _compliance;
         
-        UnstructuredMesh* _mesh;
+        libMesh::UnstructuredMesh* _mesh;
         
-        ConstantFunction<libMesh::Real>* _press;
+        ConstantFunction<Real>* _press;
         
-        ZeroFunction<libMesh::Real>* _zero_function;
+        libMesh::ZeroFunction<Real>* _zero_function;
         
         MAST::BoundaryCondition* _bc;
         
-        libMesh::Real _penalty, E0, V0;
+        Real _penalty, E0, V0;
 
-        std::vector<MAST::ConstantFunction<libMesh::Real>*> _E;
-        MAST::ConstantFunction<libMesh::Real> *_nu, *_rho, *_kappa, *_h, *_h_stiff;
+        std::vector<MAST::ConstantFunction<Real>*> _E;
+        MAST::ConstantFunction<Real> *_nu, *_rho, *_kappa, *_h, *_h_stiff;
 
-        ParameterVector _parameters;
+        libMesh::ParameterVector _parameters;
         
         std::vector<MAST::MaterialPropertyCardBase*> _materials;
         
         std::vector<MAST::ElementPropertyCardBase*> _elem_properties;
         
         // relative volume of each element
-        std::vector<libMesh::Real> _elem_vol;
+        std::vector<Real> _elem_vol;
     };
 }
 
@@ -184,9 +184,9 @@ namespace MAST {
 
 inline
 void
-MAST::TopologyOptimization::init_dvar(std::vector<libMesh::Real>& x,
-                                      std::vector<libMesh::Real>& xmin,
-                                      std::vector<libMesh::Real>& xmax) {
+MAST::TopologyOptimization::init_dvar(std::vector<Real>& x,
+                                      std::vector<Real>& xmin,
+                                      std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
     std::fill(x.begin(), x.end(), 0.3);           // start with a solid material
@@ -199,14 +199,13 @@ MAST::TopologyOptimization::init_dvar(std::vector<libMesh::Real>& x,
 
 inline
 void
-MAST::TopologyOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
+MAST::TopologyOptimization::evaluate(const std::vector<Real>& dvars,
                                      Real& obj,
                                      bool eval_obj_grad,
-                                     std::vector<libMesh::Real>& obj_grad,
-                                     std::vector<libMesh::Real>& fvals,
+                                     std::vector<Real>& obj_grad,
+                                     std::vector<Real>& fvals,
                                      std::vector<bool>& eval_grads,
-                                     std::vector<libMesh::Real>& grads) {
-// #ifndef LIBMESH_USE_COMPLEX_NUMBERS
+                                     std::vector<Real>& grads) {
     
     libmesh_assert_equal_to(dvars.size(), _mesh->n_elem());
         
@@ -220,7 +219,7 @@ MAST::TopologyOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
     
     // now solve the system
     std::cout << "New Eval" << std::endl;
-    QoISet qoi_set(*_system);
+    libMesh::QoISet qoi_set(*_system);
     qoi_set.add_index(0);
     _system->solution->zero();
     _system->solve();
@@ -229,7 +228,7 @@ MAST::TopologyOptimization::evaluate(const std::vector<libMesh::Real>& dvars,
     obj = _system->qoi[0]; // compliance
     
     if (eval_obj_grad) { // objective gradients
-        SensitivityData sens;
+        libMesh::SensitivityData sens;
         _system->set_adjoint_already_solved(false);
         _system->adjoint_qoi_parameter_sensitivity(qoi_set, _parameters, sens);
         // df0/dxi = df0/dEi * dEi/dxi
@@ -254,10 +253,10 @@ void
 MAST::TopologyOptimization::_init() {
 
 
-    _mesh = new SerialMesh(_libmesh_init.comm());
+    _mesh = new libMesh::SerialMesh(_libmesh_init.comm());
     _mesh->set_mesh_dimension(2);
     
-    MeshTools::Generation::build_square (*_mesh, 50, 20, 0., 1., 0., .1, QUAD4);
+    libMesh::MeshTools::Generation::build_square (*_mesh, 50, 20, 0., 1., 0., .1, libMesh::QUAD4);
     
     _mesh->prepare_for_use();
     
@@ -269,27 +268,28 @@ MAST::TopologyOptimization::_init() {
     _eq_systems->parameters.set<GetPot*>("input_file") = &_infile;
     
     // Declare the system
-    _system = &_eq_systems->add_system<NonlinearImplicitSystem> ("StructuralSystem");
-    _rho_system = &_eq_systems->add_system<System> ("RhoSystem");
-    _rho_system->add_variable("rho", FEType(CONSTANT, MONOMIAL));
+    _system = &_eq_systems->add_system<libMesh::NonlinearImplicitSystem> ("StructuralSystem");
+    _rho_system = &_eq_systems->add_system<libMesh::System> ("RhoSystem");
+    _rho_system->add_variable("rho", libMesh::FEType(libMesh::CONSTANT,
+                                                     libMesh::MONOMIAL));
 
     unsigned int o = _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
-    FEFamily fefamily = Utility::string_to_enum<FEFamily>(fe_family);
+    libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
-    _system->add_variable ( "ux", static_cast<Order>(o), fefamily);
-    _system->add_variable ( "uy", static_cast<Order>(o), fefamily);
-    _system->add_variable ( "uz", static_cast<Order>(o), fefamily);
-    _system->add_variable ( "tx", static_cast<Order>(o), fefamily);
-    _system->add_variable ( "ty", static_cast<Order>(o), fefamily);
-    _system->add_variable ( "tz", static_cast<Order>(o), fefamily);
+    _system->add_variable ( "ux", static_cast<libMesh::Order>(o), fefamily);
+    _system->add_variable ( "uy", static_cast<libMesh::Order>(o), fefamily);
+    _system->add_variable ( "uz", static_cast<libMesh::Order>(o), fefamily);
+    _system->add_variable ( "tx", static_cast<libMesh::Order>(o), fefamily);
+    _system->add_variable ( "ty", static_cast<libMesh::Order>(o), fefamily);
+    _system->add_variable ( "tz", static_cast<libMesh::Order>(o), fefamily);
     
     _structural_assembly = new MAST::StructuralSystemAssembly(*_system,
                                                               MAST::STATIC,
                                                               _infile);
     _compliance = new MAST::TopologyOptimization::Compliance(*_system);
     
-    _press = new MAST::ConstantFunction<libMesh::Real>("pressure",1.e5);
+    _press = new MAST::ConstantFunction<Real>("pressure",1.e5);
     _bc = new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE);
     _bc->set_function(*_press);
     _structural_assembly->add_side_load(2, *_bc);
@@ -302,10 +302,10 @@ MAST::TopologyOptimization::_init() {
     _system->qoi.resize(1);
 
     
-    // Pass the Dirichlet dof IDs to the CondensedEigenSystem
+    // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
     
     // apply the boundary conditions
-    _zero_function = new ZeroFunction<libMesh::Real>;
+    _zero_function = new libMesh::ZeroFunction<Real>;
     std::vector<unsigned int> vars(6);
     for (unsigned int i=0; i<6; i++)
         vars[i] = i;
@@ -313,7 +313,7 @@ MAST::TopologyOptimization::_init() {
     //dirichlet_boundary.insert(0); // bottom
     dirichlet_boundary.insert(1); // right
     dirichlet_boundary.insert(3); // left
-    _system->get_dof_map().add_dirichlet_boundary(DirichletBoundary(dirichlet_boundary, vars,
+    _system->get_dof_map().add_dirichlet_boundary(libMesh::DirichletBoundary(dirichlet_boundary, vars,
                                                                     _zero_function));
     _eq_systems->init ();
     
@@ -335,16 +335,16 @@ MAST::TopologyOptimization::_init() {
     _elem_vol.resize(n_elems);
     
     // now iterate over each element and create property cards for each element
-    MeshBase::const_element_iterator
+    libMesh::MeshBase::const_element_iterator
     eit  = _mesh->active_local_elements_begin(),
     eend = _mesh->active_local_elements_end();
 
-    libMesh::Real total_vol = 0.;
+    Real total_vol = 0.;
     
-    _nu = new MAST::ConstantFunction<libMesh::Real>("nu", _infile("poisson_ratio", 0.33)),
-    _rho = new MAST::ConstantFunction<libMesh::Real>("rho", _infile("material_density", 2700.)),
-    _kappa = new MAST::ConstantFunction<libMesh::Real>("kappa", _infile("shear_corr_factor", 5./6.)),
-    _h = new MAST::ConstantFunction<libMesh::Real>("h", _infile("thickness", 0.002)),
+    _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
+    _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
+    _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
+    _h = new MAST::ConstantFunction<Real>("h", _infile("thickness", 0.002)),
     *_nu = 0.33;
     *_rho = 2700.;
     *_kappa = 5./6.;
@@ -362,7 +362,7 @@ MAST::TopologyOptimization::_init() {
         _materials[counter] = mat;
         _elem_properties[counter] = prop2d;
         
-        _E[counter] = new MAST::ConstantFunction<libMesh::Real>("E", E0);
+        _E[counter] = new MAST::ConstantFunction<Real>("E", E0);
         
         prop2d->set_material(*mat);
         _structural_assembly->set_property_for_subdomain(0, *prop2d);
@@ -383,9 +383,9 @@ MAST::TopologyOptimization::_init() {
 
 inline void
 MAST::TopologyOptimization::output(unsigned int iter,
-                                   const std::vector<libMesh::Real>& x,
-                                   libMesh::Real obj,
-                                   const std::vector<libMesh::Real>& fval) const  {
+                                   const std::vector<Real>& x,
+                                   Real obj,
+                                   const std::vector<Real>& fval) const  {
     for (unsigned int i=0; i<x.size(); i++)
         _rho_system->solution->set(_mesh->elem(i)->dof_number(_rho_system->number(), 0, 0),
                                    x[i]);
@@ -394,19 +394,19 @@ MAST::TopologyOptimization::output(unsigned int iter,
     _rho_system->solution->close();
     _rho_system->update();
     
-    Nemesis_IO(*_mesh).write_equation_systems("out.exo", *_eq_systems);
+    libMesh::Nemesis_IO(*_mesh).write_equation_systems("out.exo", *_eq_systems);
     
     MAST::FunctionEvaluation::output(iter, x, obj, fval);
 }
 
 
 inline void
-MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
+MAST::TopologyOptimization::Compliance::qoi(const libMesh::QoISet& qoi_indices){
 
     if (qoi_indices.has_index(0)) {
         
-        std::auto_ptr<libMesh::NumericVector<libMesh::Real> >
-        vec(libMesh::NumericVector<libMesh::Real>::build(_system.comm()).release());
+        std::auto_ptr<libMesh::NumericVector<Real> >
+        vec(libMesh::NumericVector<Real>::build(_system.comm()).release());
         vec->init(*_system.solution);
         
         _system.matrix->vector_mult(*vec, *_system.solution);
@@ -417,7 +417,7 @@ MAST::TopologyOptimization::Compliance::qoi(const QoISet& qoi_indices){
 
 
 inline void
-MAST::TopologyOptimization::Compliance::qoi_derivative (const QoISet& qoi_indices) {
+MAST::TopologyOptimization::Compliance::qoi_derivative (const libMesh::QoISet& qoi_indices) {
     if (qoi_indices.has_index(0))
         _system.matrix->vector_mult(_system.get_adjoint_rhs(), *_system.solution);
     _system.get_adjoint_rhs().scale(-1.);

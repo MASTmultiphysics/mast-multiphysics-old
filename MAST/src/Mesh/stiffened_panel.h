@@ -25,7 +25,7 @@ namespace MAST {
         
         
         void init (const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                   UnstructuredMesh& mesh, ElemType t, bool beam_stiffeners);
+                   libMesh::UnstructuredMesh& mesh, libMesh::ElemType t, bool beam_stiffeners);
         
     protected:
         
@@ -35,10 +35,10 @@ namespace MAST {
             STIFFENER_Y
         };
         
-        void _combine_mesh(UnstructuredMesh& panel,
-                           UnstructuredMesh& stiffener,
+        void _combine_mesh(libMesh::UnstructuredMesh& panel,
+                           libMesh::UnstructuredMesh& stiffener,
                            MAST::StiffenedPanel::Component c,
-                           libMesh::Real stiff_offset,
+                           Real stiff_offset,
                            libMesh::subdomain_id_type sid);
 
     };
@@ -48,7 +48,7 @@ namespace MAST {
 inline
 void
 MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivisions*>& divs,
-                           UnstructuredMesh& mesh, ElemType t, bool beam_stiffeners) {
+                           libMesh::UnstructuredMesh& mesh, libMesh::ElemType t, bool beam_stiffeners) {
     
     libmesh_assert_equal_to(divs.size(), 3);
     
@@ -56,21 +56,21 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     
     std::vector<MeshInitializer::CoordinateDivisions*> panel_divs(2), stiff_divs(2);
     MeshInitializer init;
-    ElemType stiff_t = t;
+    libMesh::ElemType stiff_t = t;
     panel_divs[0] = divs[0];
     panel_divs[1] = divs[1];
     if (beam_stiffeners) {
         stiff_divs.resize(1);
         switch (t) {
-            case TRI3:
-            case QUAD4:
-                stiff_t = EDGE2;
+            case libMesh::TRI3:
+            case libMesh::QUAD4:
+                stiff_t = libMesh::EDGE2;
                 break;
                 
-            case TRI6:
-            case QUAD8:
-            case QUAD9:
-                stiff_t = EDGE3;
+            case libMesh::TRI6:
+            case libMesh::QUAD8:
+            case libMesh::QUAD9:
+                stiff_t = libMesh::EDGE3;
                 break;
                 
             default:
@@ -80,7 +80,7 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     
     // initialize the main mesh
     {
-        SerialMesh panel(mesh.comm());
+        libMesh::SerialMesh panel(mesh.comm());
         init.init(panel_divs, panel, t);
         // use subdomain id for panel as 0
         _combine_mesh(mesh, panel, MAST::StiffenedPanel::PANEL, 0., 0);
@@ -92,7 +92,7 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     
     // now iterate over the stiffeners and create them
     for (unsigned int i=0; i<n_x_stiff; i++) {
-        SerialMesh stiff(mesh.comm());
+        libMesh::SerialMesh stiff(mesh.comm());
         stiff_divs[0] = divs[0];
         if (!beam_stiffeners)
             stiff_divs[1] = divs[2];
@@ -107,7 +107,7 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
     }
     
     for (unsigned int i=0; i<n_y_stiff; i++) {
-        SerialMesh stiff(mesh.comm());
+        libMesh::SerialMesh stiff(mesh.comm());
         stiff_divs[0] = divs[1];
         if (!beam_stiffeners)
             stiff_divs[1] = divs[2];
@@ -128,28 +128,28 @@ MAST::StiffenedPanel::init(const std::vector<MeshInitializer::CoordinateDivision
 
 inline
 void
-MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
-                                    UnstructuredMesh& component,
+MAST::StiffenedPanel::_combine_mesh(libMesh::UnstructuredMesh& panel,
+                                    libMesh::UnstructuredMesh& component,
                                     MAST::StiffenedPanel::Component c,
-                                    libMesh::Real stiff_offset,
+                                    Real stiff_offset,
                                     libMesh::subdomain_id_type sid) {
-    BoundaryInfo &panel_binfo = *panel.boundary_info,
+    libMesh::BoundaryInfo &panel_binfo = *panel.boundary_info,
     &component_binfo = *component.boundary_info;
 
     panel.reserve_nodes(component.n_nodes());
     panel.reserve_elem(component.n_elem());
     
-    MeshBase::const_element_iterator
+    libMesh::MeshBase::const_element_iterator
     el_it = component.elements_begin(),
     el_end = component.elements_end();
     
-    std::map<Node*, Node*> old_to_new;
-    Node *old_node, *new_node;
+    std::map<libMesh::Node*, libMesh::Node*> old_to_new;
+    libMesh::Node *old_node, *new_node;
     
     for ( ; el_it != el_end; el_it++ ) {
         libMesh::Elem* old_elem = *el_it;
         
-        Elem *new_elem = panel.add_elem(Elem::build(old_elem->type()).release());
+        libMesh::Elem *new_elem = panel.add_elem(libMesh::Elem::build(old_elem->type()).release());
         new_elem->subdomain_id() = sid;
         
         // add boundary condition tags for the panel boundary
@@ -193,7 +193,7 @@ MAST::StiffenedPanel::_combine_mesh(UnstructuredMesh& panel,
                 // this will be done only when z-coordinate is zero
                 if ((c != MAST::StiffenedPanel::PANEL) &&
                     p(2) == 0.) {
-                    MeshBase::node_iterator
+                    libMesh::MeshBase::node_iterator
                     n_it = panel.nodes_begin(),
                     n_end = panel.nodes_end();
                     for ( ; n_it != n_end; n_it++)

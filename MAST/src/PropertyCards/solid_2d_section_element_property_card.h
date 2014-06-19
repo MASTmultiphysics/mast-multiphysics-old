@@ -31,7 +31,7 @@ namespace MAST {
         class SectionIntegratedExtensionStiffnessMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             SectionIntegratedExtensionStiffnessMatrix(MAST::FieldFunction<DenseRealMatrix > *mat,
-                                                      MAST::FieldFunction<libMesh::Real> *h);
+                                                      MAST::FieldFunction<Real> *h);
             
             SectionIntegratedExtensionStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix& f):
             MAST::FieldFunction<DenseRealMatrix >(f),
@@ -55,18 +55,18 @@ namespace MAST {
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionStiffnessMatrix(*this));
             }
 
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_material_stiffness;
-            MAST::FieldFunction<libMesh::Real> *_h;
+            MAST::FieldFunction<Real> *_h;
         };
         
         
@@ -74,8 +74,8 @@ namespace MAST {
         class SectionIntegratedExtensionBendingStiffnessMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             SectionIntegratedExtensionBendingStiffnessMatrix(MAST::FieldFunction<DenseRealMatrix > *mat,
-                                                             MAST::FieldFunction<libMesh::Real> *h,
-                                                             MAST::FieldFunction<libMesh::Real> *off);
+                                                             MAST::FieldFunction<Real> *h,
+                                                             MAST::FieldFunction<Real> *off);
             
             SectionIntegratedExtensionBendingStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix& f):
             MAST::FieldFunction<DenseRealMatrix >(f),
@@ -101,26 +101,26 @@ namespace MAST {
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedExtensionBendingStiffnessMatrix(*this));
             }
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_material_stiffness;
-            MAST::FieldFunction<libMesh::Real> *_h, *_off;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
         
         
         class SectionIntegratedBendingStiffnessMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             SectionIntegratedBendingStiffnessMatrix(MAST::FieldFunction<DenseRealMatrix > *mat,
-                                                    MAST::FieldFunction<libMesh::Real> *h,
-                                                    MAST::FieldFunction<libMesh::Real> *off);
+                                                    MAST::FieldFunction<Real> *h,
+                                                    MAST::FieldFunction<Real> *off);
             
             SectionIntegratedBendingStiffnessMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix& f):
             MAST::FieldFunction<DenseRealMatrix >(f),
@@ -147,18 +147,18 @@ namespace MAST {
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedBendingStiffnessMatrix(*this));
             }
 
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_material_stiffness;
-            MAST::FieldFunction<libMesh::Real> *_h, *_off;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
         
         
@@ -167,7 +167,7 @@ namespace MAST {
         class SectionIntegratedTransverseStiffnessMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
             SectionIntegratedTransverseStiffnessMatrix(MAST::FieldFunction<DenseRealMatrix > *mat,
-                                                       MAST::FieldFunction<libMesh::Real>* h):
+                                                       MAST::FieldFunction<Real>* h):
             MAST::FieldFunction<DenseRealMatrix >("SectionIntegratedTransverseStiffnessMatrix2D"),
             _material_stiffness(mat),
             _h(h) {
@@ -197,17 +197,17 @@ namespace MAST {
                 delete _h;
             }
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
-                libMesh::Real h;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const {
+                Real h;
                 (*_h)(p, t, h);
                 (*_material_stiffness)(p, t, m);
                 m.scale(h);
             }
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const {
                 DenseRealMatrix dm;
-                libMesh::Real h, dh;
+                Real h, dh;
                 (*_h)(p, t, h); _h->partial(f, p, t, dh);
                 (*_material_stiffness)(p, t, m); _material_stiffness->partial(f, p, t, dm);
                 
@@ -216,9 +216,9 @@ namespace MAST {
             }
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const {
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const {
                 DenseRealMatrix dm;
-                libMesh::Real h, dh;
+                Real h, dh;
                 (*_h)(p, t, h); _h->total(f, p, t, dh);
                 (*_material_stiffness)(p, t, m); _material_stiffness->total(f, p, t, dm);
                 
@@ -229,15 +229,15 @@ namespace MAST {
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_material_stiffness;
-            MAST::FieldFunction<libMesh::Real> *_h;
+            MAST::FieldFunction<Real> *_h;
         };
 
         
         class SectionIntegratedInertiaMatrix: public MAST::FieldFunction<DenseRealMatrix > {
         public:
-            SectionIntegratedInertiaMatrix(MAST::FieldFunction<libMesh::Real> *rho,
-                                           MAST::FieldFunction<libMesh::Real> *h,
-                                           MAST::FieldFunction<libMesh::Real> *off);
+            SectionIntegratedInertiaMatrix(MAST::FieldFunction<Real> *rho,
+                                           MAST::FieldFunction<Real> *h,
+                                           MAST::FieldFunction<Real> *off);
             
             SectionIntegratedInertiaMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix& f):
             MAST::FieldFunction<DenseRealMatrix >(f),
@@ -264,17 +264,17 @@ namespace MAST {
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedInertiaMatrix(*this));
             }
 
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
-            MAST::FieldFunction<libMesh::Real> *_rho, *_h, *_off;
+            MAST::FieldFunction<Real> *_rho, *_h, *_off;
         };
         
         
@@ -283,7 +283,7 @@ namespace MAST {
         public:
             SectionIntegratedThermalExpansionAMatrix(MAST::FieldFunction<DenseRealMatrix > *mat_stiff,
                                                      MAST::FieldFunction<DenseRealMatrix > *mat_expansion,
-                                                     MAST::FieldFunction<libMesh::Real> *h);
+                                                     MAST::FieldFunction<Real> *h);
             
             SectionIntegratedThermalExpansionAMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionAMatrix& f):
             MAST::FieldFunction<DenseRealMatrix >(f),
@@ -314,21 +314,21 @@ namespace MAST {
             }
             
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_material_stiffness;
             MAST::FieldFunction<DenseRealMatrix > *_material_expansion;
-            MAST::FieldFunction<libMesh::Real> *_h;
+            MAST::FieldFunction<Real> *_h;
         };
 
         
@@ -337,8 +337,8 @@ namespace MAST {
         public:
             SectionIntegratedThermalExpansionBMatrix(MAST::FieldFunction<DenseRealMatrix > *mat_stiff,
                                                     MAST::FieldFunction<DenseRealMatrix > *mat_expansion,
-                                                     MAST::FieldFunction<libMesh::Real> *h,
-                                                     MAST::FieldFunction<libMesh::Real> *off);
+                                                     MAST::FieldFunction<Real> *h,
+                                                     MAST::FieldFunction<Real> *off);
             
             SectionIntegratedThermalExpansionBMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedThermalExpansionBMatrix& f):
             MAST::FieldFunction<DenseRealMatrix >(f),
@@ -369,22 +369,22 @@ namespace MAST {
             }
             
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_material_stiffness;
             MAST::FieldFunction<DenseRealMatrix > *_material_expansion;
-            MAST::FieldFunction<libMesh::Real> *_h, *_off;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
 
         
@@ -394,7 +394,7 @@ namespace MAST {
         public:
             SectionIntegratedPrestressAMatrix(MAST::FieldFunction<DenseRealMatrix > *prestress,
                                               MAST::FieldFunction<DenseRealMatrix > *T,
-                                              MAST::FieldFunction<libMesh::Real> *h);
+                                              MAST::FieldFunction<Real> *h);
 
             SectionIntegratedPrestressAMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix& f):
             MAST::SectionIntegratedPrestressMatrixBase(f),
@@ -421,20 +421,20 @@ namespace MAST {
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressAMatrix(*this));
             }
 
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
 
             virtual void convert_to_vector(const DenseRealMatrix& m, DenseRealVector& v) const;
 
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_prestress, *_T;
-            MAST::FieldFunction<libMesh::Real> *_h;
+            MAST::FieldFunction<Real> *_h;
         };
 
         
@@ -443,8 +443,8 @@ namespace MAST {
         public:
             SectionIntegratedPrestressBMatrix(MAST::FieldFunction<DenseRealMatrix > *prestress,
                                               MAST::FieldFunction<DenseRealMatrix > *T,
-                                              MAST::FieldFunction<libMesh::Real> *h,
-                                              MAST::FieldFunction<libMesh::Real> *off);
+                                              MAST::FieldFunction<Real> *h,
+                                              MAST::FieldFunction<Real> *off);
 
             SectionIntegratedPrestressBMatrix(const MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix& f):
             MAST::SectionIntegratedPrestressMatrixBase(f),
@@ -474,20 +474,20 @@ namespace MAST {
                 (new MAST::Solid2DSectionElementPropertyCard::SectionIntegratedPrestressBMatrix(*this));
             }
 
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                  const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                  const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void convert_to_vector(const DenseRealMatrix& m, DenseRealVector& v) const;
             
         protected:
             
             MAST::FieldFunction<DenseRealMatrix > *_prestress, *_T;
-            MAST::FieldFunction<libMesh::Real> *_h, *_off;
+            MAST::FieldFunction<Real> *_h, *_off;
         };
 
         

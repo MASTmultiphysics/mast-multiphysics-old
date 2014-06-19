@@ -53,13 +53,13 @@ namespace MAST
 
             virtual ~SectionIntegratedStiffnessMatrix() { delete _material_stiffness;}
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                             const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                             const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                           const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                           const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
@@ -88,13 +88,13 @@ namespace MAST
 
             virtual ~SectionIntegratedInertiaMatrix() { delete _material_inertia;}
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                             const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                             const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                           const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                           const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
@@ -130,13 +130,13 @@ namespace MAST
                 delete _material_expansion;
             }
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                             const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                             const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                           const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                           const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
         protected:
             
@@ -167,13 +167,13 @@ namespace MAST
 
             virtual ~SectionIntegratedPrestressAMatrix() { delete _prestress;}
             
-            virtual void operator() (const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+            virtual void operator() (const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void partial (const MAST::FieldFunctionBase& f,
-                                             const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                             const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void total (const MAST::FieldFunctionBase& f,
-                                           const libMesh::Point& p, const libMesh::Real t, DenseRealMatrix& m) const;
+                                           const libMesh::Point& p, const Real t, DenseRealMatrix& m) const;
             
             virtual void convert_to_vector(const DenseRealMatrix& m, DenseRealVector& v) const;
             
