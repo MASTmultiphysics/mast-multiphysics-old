@@ -39,6 +39,8 @@ public:
     
     virtual void init_context(libMesh::DiffContext &context);
     
+    void localize_fluid_solution();
+
     virtual bool element_time_derivative (bool request_jacobian,
                                           libMesh::DiffContext &context);
     
@@ -65,6 +67,12 @@ public:
     
     std::vector<unsigned int> vars;
     
+    /*!
+     *   this defines the small disturbance surface motion on top of the
+     *   steady surface motion that the body might have seen.
+     */
+    MAST::SurfaceMotionBase* perturbed_surface_motion;
+
 protected:
     
     /*!
@@ -76,6 +84,11 @@ protected:
      *    Current and old norms of density in the flow-field
      */
     Real _rho_norm_old, _rho_norm_curr;
+    
+    
+    bool _if_localized_sol;
+    
+    libMesh::AutoPtr<libMesh::NumericVector<Real> > _local_fluid_solution;
 };
 
 
