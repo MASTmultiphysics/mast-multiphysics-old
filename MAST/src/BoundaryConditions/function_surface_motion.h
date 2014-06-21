@@ -133,15 +133,19 @@ MAST::SurfaceMotionFunction::surface_velocity(const Real t,
     
     // translation is obtained by direct interpolation of the u,v,w vars
     libMesh::Point v, dwdx, dwdy, dwdz;
-    const Real x = p(0) - 2., tc = 0.05, c = 2., h = tc*c/2., pi = acos(-1.);
+    const Real x = p(0) - 2., tc = 0.001, c = 2., h = tc*c/2., pi = acos(-1.),
+    omega=124.874;
+    
     if ( (x>=0.) && (x <= c)){
-        v(1)     = h*sin(pi*x/c);
-        dwdx(1)  = h*pi/c*cos(pi*x/c);
+        v(1)     = h*(1.-cos(pi*2.*x/c));
+        dwdx(1)  = h*2.*pi/c*sin(pi*2.*x/c)*sin(omega*t);
     }
     
     // now copy the values to u_trans
-    for (unsigned int i=0; i<3; i++)
-        u_trans(i) = 0.*v(i);
+    for (unsigned int i=0; i<3; i++) {
+        w_trans(i) = sin(omega*t)*v(i);
+        u_trans(i) = omega*cos(omega*t)*v(i);
+    }
     
     // now prepare the rotation vector
     DenseRealVector rot;

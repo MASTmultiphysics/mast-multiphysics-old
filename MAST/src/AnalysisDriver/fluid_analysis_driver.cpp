@@ -355,7 +355,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     FluidSystem* fluid_system = nullptr;
     FluidPostProcessSystem* fluid_post = nullptr;
     FrequencyDomainFluidPostProcessSystem* frequency_fluid_post = nullptr;
-    std::auto_ptr<MAST::RigidSurfaceMotion> surface_motion;
+    std::auto_ptr<MAST::SurfaceMotionBase> surface_motion;
 
     if (analysis == "nonlinear") {
         // Declare the system for fluid analysis
@@ -396,8 +396,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         
         fluid_system->attach_qoi(&aero_qoi);
         
-        //    std::auto_ptr<SurfaceMotionFunction> surface_motion (new SurfaceMotionFunction);
-        //    //system.surface_motion = surface_motion.get();
+        //surface_motion.reset(new MAST::SurfaceMotionFunction);
+        //fluid_system->surface_motion = surface_motion.get();
         
         //    // initialize the surface motion definition
         //    std::auto_ptr<RigidSurfaceMotion> surface_motion(new RigidSurfaceMotion);
@@ -437,24 +437,25 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         frequency_system->localize_fluid_solution();
         
         // initialize the surface motion definition
-        surface_motion.reset(new MAST::RigidSurfaceMotion);
+        MAST::RigidSurfaceMotion* rigid_surface_motion =
+        new MAST::RigidSurfaceMotion;
+        surface_motion.reset(rigid_surface_motion);
         frequency_system->perturbed_surface_motion = surface_motion.get();
-        
-        surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
-        surface_motion->pitch_phase = infile("pitch_phase",0.);
-        surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
-        
-        for (unsigned int i=0; i<3; i++)
-            surface_motion->pitch_axis(i) = infile("pitch_axis", 0., i);
+        rigid_surface_motion->pitch_amplitude = infile("pitch_ampl",0.);
+        rigid_surface_motion->pitch_phase = infile("pitch_phase",0.);
+        rigid_surface_motion->plunge_amplitude = infile("plunge_ampl",0.);
         
         for (unsigned int i=0; i<3; i++)
-            surface_motion->hinge_location(i) = infile("hinge", 0., i);
+            rigid_surface_motion->pitch_axis(i) = infile("pitch_axis", 0., i);
         
         for (unsigned int i=0; i<3; i++)
-            surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
+            rigid_surface_motion->hinge_location(i) = infile("hinge", 0., i);
+        
+        for (unsigned int i=0; i<3; i++)
+            rigid_surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
         
         Real frequency = infile("frequency",0.);
-        surface_motion->init(frequency, 0.);
+        rigid_surface_motion->init(frequency, 0.);
         equation_systems.parameters.set<bool>("if_reduced_freq") =
         infile("if_reduced_freq", false);
     }
@@ -508,6 +509,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     unsigned int t_step=0, amr_steps = max_adaptivesteps, a_step = 0;
     Real sol_norm = 1.0e10;
     if (!if_use_amr) amr_steps = 0;
+    
+    libMesh::ExodusII_IO exodus_writer(mesh);
     
     while (continue_iterations)
     {
@@ -664,15 +667,12 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             std::ostringstream file_name, b_file_name;
             
             // We write the file in the ExodusII format.
-            file_name << "out_"
-            << std::setw(3)
-            << std::setfill('0')
-            << std::right
-            << t_step
-            << ".exo";
-            
-            libMesh::ExodusII_IO(mesh).write_equation_systems(file_name.str(),
-                                                     equation_systems);
+            exodus_writer.write_timestep("out.exo",
+                                         equation_systems,
+                                         t_step,
+                                         system->time);
+//            libMesh::ExodusII_IO(mesh).write_equation_systems(file_name.str(),
+//                                                        equation_systems);
             
             
             // output of data along a line
