@@ -6,6 +6,9 @@
 //
 //
 
+#include <cmath>
+
+
 // MAST includes
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 
@@ -589,10 +592,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     DenseComplexMatrix mat_n2n2_complex;
     DenseRealVector  normal, normal_local, vec1, vec2_n1,
     vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
-    dnormal_steady_real, surface_steady_disp, surface_steady_vel, dnormal_steady;
+    dnormal_steady_real, surface_steady_disp, surface_steady_vel;
     DenseComplexVector flux, vec1_n2,
     surface_unsteady_vel, dnormal_unsteady, duvec, surface_unsteady_disp,
-    conservative_deltasol, complex_elem_sol;
+    conservative_deltasol, complex_elem_sol, dnormal_steady;
     
     conservative_sol.resize(dim+2);
     normal.resize(spatial_dim); normal_local.resize(dim); vec1.resize(n_dofs);
@@ -756,8 +759,10 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                                                      face_normals[qp],
                                                      surface_steady_disp,
                                                      surface_steady_vel,
-                                                     dnormal_steady);
+                                                     dnormal_steady_real);
                     
+                    for (unsigned int i=0; i<spatial_dim; i++)
+                        dnormal_steady(i) = Complex(dnormal_steady_real(i), 0.);
                     // now initialize the surface velocity
                     // note that the perturbed local normal is used here
                     // since it resembles the normal of the surface that
@@ -809,9 +814,6 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
                 if ( request_jacobian && c.get_elem_solution_derivative() )
                 {
-                    for (unsigned int i=0; i<dim; i++)
-                        dnormal_steady_real(i) = std::real(dnormal_steady(i));
-
                     this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
                     (p_sol, std::real(ui_ni_steady), face_normals[qp],
                      dnormal_steady_real, A_mat);
