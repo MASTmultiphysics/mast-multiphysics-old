@@ -32,8 +32,8 @@ file (GLOB gcmma_source_files ../src/Optimization/gcmma/*.f)
 add_library (gcmma ${gcmma_source_files})
 
 
-file (GLOB_RECURSE mast_source_files ../src/*.cpp)
-file (GLOB_RECURSE mast_header_files ../src/*.h)
+file (GLOB_RECURSE mast_source_files ../src/*.cpp ../examples/*.cpp)
+file (GLOB_RECURSE mast_header_files ../src/*.h   ../examples/*.h)
 
 
 
@@ -41,6 +41,7 @@ file (GLOB_RECURSE mast_header_files ../src/*.h)
 
 
 include_directories (../src 
+                     ../examples
 		    ${vtk_include_dir}
 		    ${tbb_include_dir}
 		    ${boost_include_dir})
