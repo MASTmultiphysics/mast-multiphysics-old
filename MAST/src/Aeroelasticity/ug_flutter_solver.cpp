@@ -13,12 +13,14 @@
 #include "Aeroelasticity/ug_flutter_solver.h"
 
 
+
 void
 MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
                           const Complex num,
                           const Complex den,
                           const ComplexMatrixX& Bmat,
-                          const ComplexVectorX& eig_vec)
+                          const ComplexVectorX& evec_right,
+                          const ComplexVectorX& evec_left)
 {
     k_ref = k;
     
@@ -43,11 +45,12 @@ MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
     
     // calculate the modal participation vector
     const unsigned int nvals = (int)Bmat.rows();
-    mode = eig_vec;
-    ComplexVectorX k_q = Bmat * mode;
+    eig_vec_right = evec_right;
+    eig_vec_left  = evec_left;
+    ComplexVectorX k_q = Bmat * evec_right;
     modal_participation.resize(nvals, 1);
     for (unsigned int i=0; i<nvals; i++)
-        modal_participation(i) =  std::abs(std::conj(mode(i)) * k_q(i));
+        modal_participation(i) =  std::abs(std::conj(evec_right(i)) * k_q(i));
     modal_participation *= (1./modal_participation.sum());
 }
 
@@ -60,9 +63,9 @@ MAST::UGFlutterSolver::~UGFlutterSolver()
 
 
 
-MAST::FlutterRootBase*
+std::auto_ptr<MAST::FlutterRootBase>
 MAST::UGFlutterSolver::build_flutter_root() {
-    return new MAST::UGFlutterRoot;
+    return std::auto_ptr<MAST::FlutterRootBase>(new MAST::UGFlutterRoot);
 }
 
 

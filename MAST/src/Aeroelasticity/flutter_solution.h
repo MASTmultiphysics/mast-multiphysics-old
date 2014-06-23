@@ -43,7 +43,10 @@ namespace MAST {
         
         Complex root;
         
-        ComplexVectorX  mode;
+        /*!
+         *    right and left eigenvevtors
+         */
+        ComplexVectorX  eig_vec_right, eig_vec_left;
         
         RealVectorX modal_participation;
         
@@ -59,9 +62,11 @@ namespace MAST {
         virtual ~FrequencyDomainFlutterRoot() {}
 
         virtual void init(const Real ref_val, const Real b_ref,
-                          const Complex num, const Complex den,
+                          const Complex num,
+                          const Complex den,
                           const ComplexMatrixX& Bmat,
-                          const ComplexVectorX& eig_vec) = 0;
+                          const ComplexVectorX& evec_right,
+                          const ComplexVectorX& evec_left) = 0;
     };
 
     
@@ -76,9 +81,11 @@ namespace MAST {
         virtual ~TimeDomainFlutterRoot() {}
         
         virtual void init(const Real ref_val, const Real b_ref,
-                          const Complex num, const Complex den,
+                          const Complex num,
+                          const Complex den,
                           const RealMatrixX& Bmat,
-                          const ComplexVectorX& eig_vec);
+                          const ComplexVectorX& evec_right,
+                          const ComplexVectorX& evec_left);
     };
     
     

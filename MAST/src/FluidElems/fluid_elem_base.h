@@ -225,8 +225,10 @@ protected:
                                        std::vector<DenseRealMatrix >& tau_sens);
     
     void calculate_hartmann_discontinuity_operator
-    (const std::vector<unsigned int>& vars, const unsigned int qp,
-     libMesh::FEMContext& c,  const PrimitiveSolution& sol,
+    (const std::vector<unsigned int>& vars,
+     const unsigned int qp,
+     libMesh::FEMContext& c,
+     const PrimitiveSolution& sol,
      const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseRealMatrix& Ai_Bi_advection,
@@ -234,13 +236,27 @@ protected:
 
     
     void calculate_aliabadi_discontinuity_operator
-    (const std::vector<unsigned int>& vars, const unsigned int qp,
-     libMesh::FEMContext& c,  const PrimitiveSolution& sol,
+    (const std::vector<unsigned int>& vars,
+     const unsigned int qp,
+     libMesh::FEMContext& c,
+     const PrimitiveSolution& sol,
      const DenseRealVector& elem_solution,
      const std::vector<FEMOperatorMatrix>& dB_mat,
      const DenseRealMatrix& Ai_Bi_advection,
      libMesh::DenseVector<Real>& discontinuity_val);
 
+
+    template <typename ValType>
+    void calculate_small_disturbance_aliabadi_discontinuity_operator
+    (const std::vector<unsigned int>& vars,
+     const unsigned int qp,
+     libMesh::FEMContext& c,
+     const PrimitiveSolution& sol,
+     const SmallPerturbationPrimitiveSolution<ValType>& dsol,
+     const DenseRealVector& elem_solution,
+     const std::vector<FEMOperatorMatrix>& dB_mat,
+     const DenseRealMatrix& Ai_Bi_advection,
+     libMesh::DenseVector<Real>& discontinuity_val);
     
     
     void calculate_differential_operator_matrix

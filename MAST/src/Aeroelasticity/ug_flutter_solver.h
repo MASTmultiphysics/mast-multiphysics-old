@@ -26,7 +26,8 @@ namespace MAST {
         virtual void init(const Real ref_val, const Real b_ref,
                           const Complex num, const Complex den,
                           const ComplexMatrixX& Bmat,
-                          const ComplexVectorX& eig_vec);
+                          const ComplexVectorX& evec_right,
+                          const ComplexVectorX& evec_left);
     };
 
     
@@ -48,7 +49,7 @@ namespace MAST {
         /*!
          *    creates a new flutter root and returns pointer to it.
          */
-        virtual MAST::FlutterRootBase* build_flutter_root();
+        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root();
 
     protected:
         

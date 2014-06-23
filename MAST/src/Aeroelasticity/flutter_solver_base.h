@@ -20,6 +20,9 @@
 #include "Flight/flight_condition.h"
 #include "Aeroelasticity/coupled_aero_structural_model.h"
 
+// libMesh includes
+#include "libmesh/parameter_vector.h"
+
 
 namespace MAST {
         
@@ -103,6 +106,14 @@ namespace MAST {
         virtual std::pair<bool, const MAST::FlutterRootBase*> find_critical_root();
 
         /*!
+         *   Calculate the sensitivity of the flutter root with respect to the
+         *   \par i^th parameter in params
+         */
+        virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
+                                           const libMesh::ParameterVector& params,
+                                           const unsigned int i);
+        
+        /*!
          *   Prints the sorted roots to the \par output
          */
         void print_sorted_roots(std::ostream* output = NULL);
@@ -125,7 +136,7 @@ namespace MAST {
         /*!
          *    creates a new flutter root and returns pointer to it.
          */
-        virtual MAST::FlutterRootBase* build_flutter_root() = 0;
+        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root() = 0;
         
     protected:
         

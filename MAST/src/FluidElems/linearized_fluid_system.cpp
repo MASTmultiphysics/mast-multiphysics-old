@@ -309,14 +309,13 @@ bool LinearizedFluidSystem::element_time_derivative (bool request_jacobian,
                                                             Ai_Bi_advection,
                                                             diff_val);
             
-            libmesh_error(); // revisit
-            /*calculate_small_disturbance_aliabadi_discontinuity_operator(vars, qp, c,
+            calculate_small_disturbance_aliabadi_discontinuity_operator(vars, qp, c,
                                                                         primitive_sol,
                                                                         delta_p_sol,
                                                                         total_sol,
                                                                         dB_mat,
                                                                         Ai_Bi_advection,
-                                                                        diff_val2);*/
+                                                                        diff_val2);
             diff_val += diff_val2;
         }
         
@@ -345,7 +344,7 @@ bool LinearizedFluidSystem::element_time_derivative (bool request_jacobian,
                 
                 A_sens.vector_mult(flux, c.get_elem_solution());
                 LS_mat.vector_mult_transpose(vec3_n2 , flux);
-                Fvec.add(JxW[qp], vec3_n2);// contribution from sensitivity of Ai Jacobians
+                Fvec.add(-JxW[qp], vec3_n2);// contribution from sensitivity of Ai Jacobians
             }
             
             // discontinuity capturing operator
@@ -354,7 +353,6 @@ bool LinearizedFluidSystem::element_time_derivative (bool request_jacobian,
             Fvec.add(-JxW[qp]*diff_val(i_dim), vec3_n2);
         }
         
-
         // Least square contribution from divergence of advection flux
         Ai_Bi_advection.vector_mult(flux, c.get_elem_solution()); // d F^adv_i / dxi
         LS_mat.vector_mult_transpose(vec3_n2, flux); // LS^T tau F^adv_i
@@ -868,7 +866,7 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                     flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
                 
                 B_mat.vector_mult_transpose(vec1_n2, flux);
-                Fvec.add(JxW[qp], vec1_n2);
+                Fvec.add(-JxW[qp], vec1_n2);
 
                 if ( request_jacobian )
                 {
@@ -971,145 +969,6 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
             // -- f_diff_i ni  = f_diff                         (evaluation of diffusion flux based on domain solution)
         {
             libmesh_error(); // to be implemented
-            for (unsigned int qp=0; qp<qpoint.size(); qp++)
-            {
-                // first update the variables at the current quadrature point
-                this->update_solution_at_quadrature_point(vars, qp, c,
-                                                          false,
-                                                          ref_sol,
-                                                          conservative_sol,
-                                                          p_sol,
-                                                          B_mat,
-                                                          dB_mat);
-                
-                this->calculate_advection_left_eigenvector_and_inverse_for_normal
-                (p_sol, face_normals[qp], eig_val,
-                 l_eig_vec, l_eig_vec_inv_tr);
-                
-                // for all eigenalues that are less than 0, the characteristics are coming into the domain, hence,
-                // evaluate them using the given solution.
-                mat_n1n1 = l_eig_vec_inv_tr;
-                for (unsigned int j=0; j<n1; j++)
-                    if (eig_val(j, j) < 0)
-                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
-                    else
-                        mat_n1n1.scale_column(j, 0.0);
-                
-                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
-                
-                // instead of using the infinity vars, the constrained variable is used
-                // and the others are used from the local solution
-                // use constrained value at exhaust to create the U{-} solution vector
-                Real rho_constrained = 0.7519;
-                U_vec_interpolated = conservative_sol;
-                U_vec_interpolated.scale(rho_constrained/conservative_sol(0));  // value is not constrained to density at exhaust
-                
-                // use the constrained vector to calculate the flux value
-                mat_n1n1.vector_mult(flux, U_vec_interpolated);  // f_{-} = A_{-} B U{-}
-                
-                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{-}   (this is flux coming into the solution domain)
-                Fvec.add(-JxW[qp], vec1_n2);
-                
-                // now calculate the flux for eigenvalues greater than 0,
-                // the characteristics go out of the domain, so that
-                // the flux is evaluated using the local solution
-                mat_n1n1 = l_eig_vec_inv_tr;
-                for (unsigned int j=0; j<n1; j++)
-                    if (eig_val(j, j) > 0)
-                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
-                    else
-                        mat_n1n1.scale_column(j, 0.0);
-                
-                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                mat_n1n1.vector_mult(flux, U_vec_interpolated); // f_{+} = A_{+} B U{+}
-                
-                B_mat.vector_mult_transpose(vec1_n2, flux); // B^T f_{+}   (this is flux going out of the solution domain)
-                Fvec.add(-JxW[qp], vec1_n2);
-                
-                
-                if ( request_jacobian )
-                {
-                    // terms with negative eigenvalues will contribute to the Jacobian, but only for
-                    // the unconstrained variables
-                    mat_n1n1 = l_eig_vec_inv_tr;
-                    for (unsigned int j=0; j<n1; j++)
-                        if (eig_val(j, j) < 0)
-                            mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{-}
-                        else
-                            mat_n1n1.scale_column(j, 0.0);
-                    mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{-} = L^-T [omaga]_{-} L^T
-                    
-                    // now project this matrix to the constraint at the exhause
-                    // df{-}/dU_c = A{-} dU{-}/dU_c
-                    // U{-} = U{-} (U_p, U_p^constrained)
-                    // dU{-}/dU_c = dU{-}/dU_p dU_p/dU_c + dU{-}/dU_p^constrained dU_p^constrained/dU_c
-                    // the last term is zero because U_p^constrained is not a function of the interior conservative variables
-                    // the first term requires the jacobian of conservative and primitive variables
-                    this->calculate_conservative_variable_jacobian
-                    (p_sol, dcons_dprim, dprim_dcons);
-                    
-                    // the term dU{-}/dU_p is calculated by scaling the value from interior solution
-                    mat3_n1n1 = dcons_dprim;
-                    mat3_n1n1.scale(rho_constrained/conservative_sol(0));
-                    // zero the first column since the U{-} is not a function of interior density value
-                    for (unsigned int i=0; i<n1; i++)
-                        mat3_n1n1(i,0) = 0.;
-                    
-                    // now multiply the matrices and get the
-                    mat3_n1n1.right_multiply(dprim_dcons);
-                    mat_n1n1.right_multiply(mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
-                    
-                    B_mat.left_multiply(mat1_n1n2, mat_n1n1);
-                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2); // B^T A_{-} B   (this is flux coming into the solution domain)
-                    
-                    Kmat.add(-JxW[qp], mat2_n2n2);
-                    
-                    
-                    // now calculate the Jacobian for eigenvalues greater than 0,
-                    // the characteristics go out of the domain, so that
-                    // the flux is evaluated using the local solution
-                    mat_n1n1 = l_eig_vec_inv_tr;
-                    for (unsigned int j=0; j<n1; j++)
-                        if (eig_val(j, j) > 0)
-                            mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
-                        else
-                            mat_n1n1.scale_column(j, 0.0);
-                    mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
-                    
-                    // now do the same operation on the outoging characteristics
-                    // the term dU{-}/dU_p is calculated by scaling the value from interior solution
-                    mat3_n1n1 = dcons_dprim;
-                    mat3_n1n1.scale(rho_constrained/conservative_sol(0));
-                    // zero the first column since the U{-} is not a function of interior density value
-                    for (unsigned int i=0; i<n1; i++)
-                        mat3_n1n1(i,0) = 0.;
-                    
-                    // now multiply the matrices and get the
-                    mat3_n1n1.right_multiply(dprim_dcons);
-                    mat_n1n1.right_multiply(mat3_n1n1); // this is the jacobian matrix projected to the constraint of the exhaust values
-                    
-                    B_mat.left_multiply(mat1_n1n2, mat_n1n1);
-                    B_mat.right_multiply_transpose(mat2_n2n2, mat1_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
-                    
-                    Kmat.add(-JxW[qp], mat2_n2n2);
-                    
-                    if (_if_viscous)
-                    {
-                        // contribution from diffusion flux
-                        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                            for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
-                            {
-                                this->calculate_diffusion_flux_jacobian
-                                (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
-                                dB_mat[deriv_dim].left_multiply
-                                (mat1_n1n2, mat_n1n1); // Kij dB/dx_j
-                                B_mat.right_multiply_transpose
-                                (mat2_n2n2, mat1_n1n2); // B^T Kij dB/dx_j
-                                Kmat.add(JxW[qp], mat2_n2n2);
-                            }
-                    }
-                }
-            }
         }
             break;
             

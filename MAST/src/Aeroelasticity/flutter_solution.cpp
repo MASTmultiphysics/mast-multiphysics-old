@@ -20,7 +20,8 @@ MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
                                   const Complex num,
                                   const Complex den,
                                   const RealMatrixX& Bmat,
-                                  const ComplexVectorX& eig_vec)
+                                  const ComplexVectorX& evec_right,
+                                  const ComplexVectorX& evec_left)
 {
     V = ref_val;
     
@@ -45,11 +46,12 @@ MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
     
     // calculate the modal participation vector
     const unsigned int nvals = (int)Bmat.rows();
-    mode = eig_vec;
-    ComplexVectorX k_q = Bmat * mode;
+    eig_vec_right = evec_right;
+    eig_vec_left  = evec_left;
+    ComplexVectorX k_q = Bmat * evec_right;
     modal_participation.resize(nvals, 1);
     for (unsigned int i=0; i<nvals; i++)
-        modal_participation(i) =  std::abs(std::conj(mode(i)) * k_q(i));
+        modal_participation(i) =  std::abs(std::conj(evec_right(i)) * k_q(i));
     modal_participation *= (1./modal_participation.sum());
 }
 
@@ -93,15 +95,20 @@ MAST::FrequencyDomainFlutterSolution::init (const Real ref_val, const Real bref,
     
     _ref_val = ref_val;
     // iterate over the roots and initialize the vector
-    const ComplexMatrixX &B = eig_sol.B(), &VR = eig_sol.right_eigenvectors();
+    const ComplexMatrixX &B = eig_sol.B(),
+    &VR = eig_sol.right_eigenvectors(),
+    &VL = eig_sol.left_eigenvectors();
     const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
     unsigned int nvals = (int)B.rows();
 
     _roots.resize(nvals);
     for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] =  _solver.build_flutter_root();
+        _roots[i] =  _solver.build_flutter_root().release();
         dynamic_cast<MAST::FrequencyDomainFlutterRoot*>
-        (_roots[i])->init(ref_val, bref, num(i), den(i), B, VR.col(i));
+        (_roots[i])->init(ref_val, bref,
+                          num(i), den(i),
+                          B,
+                          VR.col(i), VL.col(i));
     }
 }
 
@@ -118,15 +125,19 @@ MAST::TimeDomainFlutterSolution::init (const Real ref_val, const Real bref,
     _ref_val = ref_val;
     // iterate over the roots and initialize the vector
     const RealMatrixX &B = eig_sol.B();
-    const ComplexMatrixX &VR = eig_sol.right_eigenvectors();
+    const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
+    &VL = eig_sol.left_eigenvectors();
     const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
     unsigned int nvals = (int)B.rows();
     
     _roots.resize(nvals);
     for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] =  _solver.build_flutter_root();
+        _roots[i] =  _solver.build_flutter_root().release();
         dynamic_cast<MAST::TimeDomainFlutterRoot*>
-        (_roots[i])->init(ref_val, bref, num(i), den(i), B, VR.col(i));
+        (_roots[i])->init(ref_val, bref,
+                          num(i), den(i),
+                          B,
+                          VR.col(i), VL.col(i));
     }
 }
 
@@ -202,9 +213,9 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
         for (unsigned int j=0; j<nvals; j++)
         {
             mode_output
-            << std::setw(13) << std::real(root.mode(j))
+            << std::setw(13) << std::real(root.eig_vec_right(j))
             << std::setw(4) << " "
-            << std::setw(13) << std::imag(root.mode(j));
+            << std::setw(13) << std::imag(root.eig_vec_right(j));
         }
         mode_output << std::endl;
     }

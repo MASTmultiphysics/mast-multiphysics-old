@@ -2325,6 +2325,99 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
 
 
 
+template <typename ValType>
+void
+FluidElemBase::calculate_small_disturbance_aliabadi_discontinuity_operator
+(const std::vector<unsigned int>& vars, const unsigned int qp,
+ libMesh::FEMContext& c,  const PrimitiveSolution& sol,
+ const SmallPerturbationPrimitiveSolution<ValType>& dsol,
+ const DenseRealVector& elem_solution,
+ const std::vector<FEMOperatorMatrix>& dB_mat,
+ const DenseRealMatrix& Ai_Bi_advection,
+ libMesh::DenseVector<Real>& discontinuity_val)
+{
+    discontinuity_val.zero();
+    const unsigned int n1 = 2 + dim;
+    
+    std::vector<DenseRealVector > diff_vec(3);
+    DenseRealMatrix A_inv_entropy, A_entropy, dxi_dX, dX_dxi,
+    tmpmat1_n1n1;
+    DenseRealVector vec1, vec2;
+    vec1.resize(n1); vec2.resize(n1);
+    dxi_dX.resize(dim, dim); dX_dxi.resize(dim, dim);
+    A_inv_entropy.resize(dim+2, dim+2); A_entropy.resize(dim+2, dim+2);
+    tmpmat1_n1n1.resize(dim+2, dim+2);
+    for (unsigned int i=0; i<dim; i++) diff_vec[i].resize(n1);
+    
+    Real dval;
+    
+    this->calculate_dxidX (vars, qp, c, dxi_dX, dX_dxi);
+    this->calculate_entropy_variable_jacobian ( sol, A_entropy, A_inv_entropy );
+    
+    
+    for (unsigned int i=0; i<dim; i++)
+        dB_mat[i].vector_mult(diff_vec[i], elem_solution); // dU/dxi
+    Ai_Bi_advection.vector_mult(vec1, elem_solution); // Ai dU/dxi
+    
+    // TODO: divergence of diffusive flux
+    
+    // add the velocity and calculate the numerator of the discontinuity
+    // capturing term coefficient
+    //vec2 += c.elem_solution; // add velocity TODO: how to get the
+    A_inv_entropy.vector_mult(vec2, vec1);
+    dval = vec1.dot(vec2);  // this is the numerator term
+    
+    // now evaluate the dissipation factor for the discontinuity capturing term
+    // this is the denominator term
+    
+    // add a small number to avoid division of zero by zero
+    Real val1 = 1.0e-6;
+    for (unsigned int i=0; i<dim; i++) {
+        vec1.zero();
+        
+        for (unsigned int j=0; j<dim; j++)
+            vec1.add(dxi_dX(i, j), diff_vec[j]);
+        
+        // calculate the value of denominator
+        A_inv_entropy.vector_mult(vec2, vec1);
+        val1 += vec1.dot(vec2);
+    }
+    
+    dval = std::min(1., sqrt(dval/val1));
+    
+    if (_include_pressure_switch) {
+        // also add a pressure switch q
+        const unsigned int fe_order = c.get_system().variable(0).type().order;
+        DenseRealMatrix dpdc, dcdp;
+        DenseRealVector dpress_dp, dp;
+        dpdc.resize(n1, n1); dcdp.resize(n1, n1); dpress_dp.resize(n1);
+        dp.resize(dim);
+        Real p_sensor = 0., hk = 0.;
+        calculate_conservative_variable_jacobian(sol, dcdp, dpdc);
+        dpress_dp(0) = (sol.cp - sol.cv)*sol.T; // R T
+        dpress_dp(n1-1) = (sol.cp - sol.cv)*sol.rho; // R rho
+        for (unsigned int i=0; i<dim; i++) {
+            dB_mat[i].vector_mult(vec1, elem_solution);
+            dpdc.vector_mult(vec2, vec1);
+            dp(i) = vec2.dot(dpress_dp);
+            for (unsigned int j=0; j<dim; j++)
+                hk = fmax(hk, fabs(dX_dxi(i, j)));
+        }
+        p_sensor = std::min(1.,
+                            dp.l2_norm() * hk /
+                            (sol.p + abs(dsol.dp)) /
+                            (fe_order + 1.));
+        dval *= (p_sensor * _dissipation_scaling);
+    }
+    
+    
+    // set value in all three dimensions to be the same
+    for (unsigned int i=0; i<dim; i++)
+        discontinuity_val(i) = dval;
+}
+
+
+
 void FluidElemBase::calculate_differential_operator_matrix
 (const std::vector<unsigned int>& vars, const unsigned int qp, libMesh::FEMContext& c,
  const DenseRealVector& elem_solution, const PrimitiveSolution& sol,
@@ -2410,6 +2503,28 @@ void FluidElemBase::calculate_differential_operator_matrix
 
 
 
+// template instantiations
 template class SmallPerturbationPrimitiveSolution<Complex>;
 template class SmallPerturbationPrimitiveSolution<Real>;
+template void
+FluidElemBase::calculate_small_disturbance_aliabadi_discontinuity_operator<Real>
+(const std::vector<unsigned int>& vars, const unsigned int qp,
+ libMesh::FEMContext& c,  const PrimitiveSolution& sol,
+ const SmallPerturbationPrimitiveSolution<Real>& dsol,
+ const DenseRealVector& elem_solution,
+ const std::vector<FEMOperatorMatrix>& dB_mat,
+ const DenseRealMatrix& Ai_Bi_advection,
+ libMesh::DenseVector<Real>& discontinuity_val);
+
+template void
+FluidElemBase::calculate_small_disturbance_aliabadi_discontinuity_operator<Complex>
+(const std::vector<unsigned int>& vars, const unsigned int qp,
+ libMesh::FEMContext& c,  const PrimitiveSolution& sol,
+ const SmallPerturbationPrimitiveSolution<Complex>& dsol,
+ const DenseRealVector& elem_solution,
+ const std::vector<FEMOperatorMatrix>& dB_mat,
+ const DenseRealMatrix& Ai_Bi_advection,
+ libMesh::DenseVector<Real>& discontinuity_val);
+
+
 
