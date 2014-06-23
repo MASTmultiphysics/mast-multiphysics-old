@@ -11,6 +11,7 @@
 
 // MAST includes
 #include "FluidElems/fluid_system.h"
+#include "FluidElems/linearized_fluid_system.h"
 #include "FluidElems/shock_tube_fluid_elem.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Solvers/residual_based_adaptive_time_solver.h"
@@ -350,14 +351,15 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     flight_cond.init();
     
     
-    libMesh::FEMSystem* system = nullptr;
-    FrequencyDomainLinearizedFluidSystem * frequency_system = nullptr;
-    FluidSystem* fluid_system = nullptr;
-    FluidPostProcessSystem* fluid_post = nullptr;
-    FrequencyDomainFluidPostProcessSystem* frequency_fluid_post = nullptr;
+    libMesh::FEMSystem* system = NULL;
+    FluidSystem* fluid_system = NULL;
+    LinearizedFluidSystem* linearized_fluid_system = NULL;
+    FrequencyDomainLinearizedFluidSystem * frequency_system = NULL;
+    FluidPostProcessSystem* fluid_post = NULL;
+    FrequencyDomainFluidPostProcessSystem* frequency_fluid_post = NULL;
     std::auto_ptr<MAST::SurfaceMotionBase> surface_motion;
 
-    if (analysis == "nonlinear") {
+    if (analysis == "nonlinear" || analysis == "linearized") {
         // Declare the system for fluid analysis
         fluid_system =
         &(equation_systems.add_system<FluidSystem> ("FluidSystem"));
@@ -369,28 +371,28 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         fluid_post =
         &(equation_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem"));
         fluid_post->flight_condition = &flight_cond;
-        
-        ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(*fluid_system);
-        libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(*fluid_system);
-        
-        timesolver->quiet              = infile("timesolver_solver_quiet", true);
-        timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
-        timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
-        timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
-        timesolver->max_growth         = infile("timesolver_maxgrowth", 4.0);
-        timesolver->min_growth         = infile("timesolver_mingrowth", 0.25);
-        timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
-        
-        core_time_solver->theta        = infile("timesolver_theta", 1.0);
-        
-        timesolver->core_time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(core_time_solver);
-        timesolver->diff_solver().reset(new libMesh::NewtonSolver(*fluid_system));
-        fluid_system->time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
-        
+
+        // scope the solver since it is used again in the Linearized system
+        {
+            ResidualBaseAdaptiveTimeSolver *timesolver = new ResidualBaseAdaptiveTimeSolver(*fluid_system);
+            libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(*fluid_system);
+            
+            timesolver->quiet              = infile("timesolver_solver_quiet", true);
+            timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
+            timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
+            timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
+            timesolver->max_growth         = infile("timesolver_maxgrowth", 4.0);
+            timesolver->min_growth         = infile("timesolver_mingrowth", 0.25);
+            timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
+            
+            core_time_solver->theta        = infile("timesolver_theta", 1.0);
+            
+            timesolver->core_time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(core_time_solver);
+            timesolver->diff_solver().reset(new libMesh::NewtonSolver(*fluid_system));
+            fluid_system->time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
+        }
         fluid_system->dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
-        
-        equation_systems.init ();
-        
+                
         AerodynamicQoI aero_qoi(infile);
         aero_qoi.flight_condition = &flight_cond;
         
@@ -410,6 +412,47 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         //    surface_motion->pitch_axis(2) = 1.;
         //    surface_motion->hinge_location(0) = 0.;
         //    surface_motion->init(0., pi/2);
+        
+        // add the linearized system if needed
+        if (analysis == "linearized") {
+            // Declare the system for fluid analysis
+            linearized_fluid_system =
+            &(equation_systems.add_system<LinearizedFluidSystem> ("LinearizedFluidSystem"));
+            system = linearized_fluid_system;
+            
+            linearized_fluid_system->flight_condition = &flight_cond;
+            
+            ResidualBaseAdaptiveTimeSolver *timesolver =
+            new ResidualBaseAdaptiveTimeSolver(*linearized_fluid_system);
+            libMesh::Euler2Solver *core_time_solver =
+            new libMesh::Euler2Solver(*linearized_fluid_system);
+            
+            timesolver->quiet              = infile("timesolver_solver_quiet", true);
+            timesolver->growth_exponent    = infile("timesolver_growth_exponent", 1.2);
+            timesolver->n_iters_per_update = infile("timesolver_update_n_iters", 10);
+            timesolver->min_deltat         = infile("timesolver_min_deltat", 1.0e-3);
+            timesolver->max_growth         = infile("timesolver_maxgrowth", 4.0);
+            timesolver->min_growth         = infile("timesolver_mingrowth", 0.25);
+            timesolver->max_deltat         = infile("timesolver_max_deltat", 5.0e2);
+            
+            core_time_solver->theta        = infile("timesolver_theta", 1.0);
+            
+            timesolver->core_time_solver =
+            libMesh::AutoPtr<libMesh::UnsteadySolver>(core_time_solver);
+            timesolver->diff_solver().reset(new libMesh::NewtonSolver(*linearized_fluid_system));
+            linearized_fluid_system->time_solver =
+            libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
+            
+            linearized_fluid_system->dc_recalculate_tolerance =
+            infile("dc_recalculate_tolerance", 10.e-8);
+            
+            // now initilaize the nonlinear solution
+            equation_systems.init ();
+            linearized_fluid_system->localize_fluid_solution();
+        }
+        else
+            equation_systems.init ();
+        
     }
     else if (analysis == "frequency_domain") {
         
@@ -522,6 +565,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         if (analysis == "nonlinear")
             // before the first iteration the dc vector needs to be localized
             fluid_system->evaluate_recalculate_dc_flag();
+        else if (analysis == "linearized")
+            linearized_fluid_system->evaluate_recalculate_dc_flag();
         
         // Do one last solve before the time step increment
         system->solve();
@@ -532,7 +577,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         //system.time_solver->advance_timestep();
         if (analysis == "nonlinear")
             sol_norm = dynamic_cast<ResidualBaseAdaptiveTimeSolver*>(fluid_system->time_solver.get())->_x_dot_norm_old;
-        
+        else if (analysis == "linearized")
+            sol_norm = dynamic_cast<ResidualBaseAdaptiveTimeSolver*>(linearized_fluid_system->time_solver.get())->_x_dot_norm_old;
         
         // Adaptively solve the timestep
         if (if_use_amr && (amr_steps > 0) && (sol_norm < amr_threshold))
@@ -639,6 +685,8 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             // tell the solver to recalculte the dc coeffs post refinement
             if (analysis == "nonlinaer")
                 fluid_system->if_use_stored_dc_coeff = false;
+            else if (analysis == "linearized")
+                linearized_fluid_system->if_use_stored_dc_coeff = false;
         }
         
         // check for termination criteria
@@ -656,6 +704,9 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         {
             if (analysis == "nonlinear")
                 fluid_post->postprocess();
+            else if (analysis == "linearized") {
+                // do nothing
+            }
             else if (analysis == "frequency_domain")
                 frequency_fluid_post->postprocess();
             else

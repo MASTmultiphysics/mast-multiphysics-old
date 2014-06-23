@@ -29,6 +29,7 @@ public:
                 const unsigned int number_in)
     : libMesh::FEMSystem(es, name_in, number_in),
     FluidElemBase(*es.parameters.get<GetPot*>("input_file")),
+    perturbed_surface_motion(NULL),
     _rho_norm_old(1.),
     _rho_norm_curr(1.),
     dc_recalculate_tolerance(1.0e-8),

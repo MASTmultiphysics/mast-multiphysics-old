@@ -805,12 +805,13 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                 delta_p_sol.get_duvec(duvec);
 
                 // calculate the surface velocity perturbations
-                perturbed_surface_motion->surface_velocity(this->time,
-                                                           qpoint[qp],
-                                                           face_normals[qp],
-                                                           surface_unsteady_disp,
-                                                           surface_unsteady_vel,
-                                                           dnormal_unsteady);
+                if (perturbed_surface_motion)
+                    perturbed_surface_motion->surface_velocity(this->time,
+                                                               qpoint[qp],
+                                                               face_normals[qp],
+                                                               surface_unsteady_disp,
+                                                               surface_unsteady_vel,
+                                                               dnormal_unsteady);
 
                 if (surface_motion) // get the surface motion data
                 {
@@ -843,9 +844,11 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                 }
                 
                 // now add the contribution from unsteady normal perturbation
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
                     dui_ni_unsteady += // delta_wi_dot * ni
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
+                    dui_ni_unsteady -= uvec(i_dim) * face_normals[qp](i_dim);
+                }
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
                 
                 /*// add the contribution from divergence of ui_ni
