@@ -181,34 +181,6 @@ MAST::FlutterSolverBase::find_critical_root()
 
 
 
-Real
-MAST::FlutterSolverBase::calculate_sensitivity(const MAST::FlutterRootBase& root,
-                                               const libMesh::ParameterVector& params,
-                                               const unsigned int i) {
-//    // make sure that the aero_structural_model is a valid pointer
-//    libmesh_assert(aero_structural_model);
-//    
-//    // get the sensitivity of the matrices
-//    ComplexMatrixX mat_A, mat_B, mat_A_sens, mat_B_sens;
-//    _initialize_matrices(mat_A, mat_B);
-//    _initialize_sensitivity_matrices(params, i, mat_A_sens, mat_B_sens);
-//
-//    const unsigned int nvals = (int)mat_B.rows();
-//    
-//    // now calculate the quotient for sensitivity
-//    mat_A_sens *= root.root;
-//    mat_A_sens -= mat_B_sens;
-//    ComplexVectorX v = mat_A_sens*root.eig_vec_right;
-//    
-//    Complex sens = - root.eig_vec_left.dot(v);
-//    
-//    sens /= root.eig_vec_left.dot*(root.root*mat_A-mat_B)*root.eig_vec_right
-//    
-//    return sens;
-}
-
-
-
 
 
 std::pair<bool, MAST::FlutterSolutionBase*>

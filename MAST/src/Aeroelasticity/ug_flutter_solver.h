@@ -67,6 +67,16 @@ namespace MAST {
         virtual MAST::FlutterSolutionBase*
         analyze(const Real ref_val,
                 const MAST::FlutterSolutionBase* prev_sol=NULL);
+
+        
+        /*!
+         *   Calculate the sensitivity of the flutter root with respect to the
+         *   \par i^th parameter in params
+         */
+        virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
+                                           const libMesh::ParameterVector& params,
+                                           const unsigned int i);
+
         
         /*!
          *    initializes the matrices for the specified k_ref. UG does not account
@@ -75,6 +85,25 @@ namespace MAST {
         void initialize_matrices(Real k_ref,
                                  ComplexMatrixX& m, // mass & aero
                                  ComplexMatrixX& k); // aero operator
+
+        /*!
+         *    initializes the matrices for the specified k_ref. UG does not account
+         *    for structural damping.
+         */
+        void initialize_matrix_sensitivity_for_param(libMesh::ParameterVector& params,
+                                                     unsigned int p,
+                                                     Real k_ref,
+                                                     ComplexMatrixX& m, // mass & aero
+                                                     ComplexMatrixX& k); // aero operator
+        
+        /*!
+         *    initializes the matrices for the specified k_ref. UG does not account
+         *    for structural damping.
+         */
+        void initialize_matrix_sensitivity_for_reduced_freq(Real k_ref,
+                                                            ComplexMatrixX& m, // mass & aero
+                                                            ComplexMatrixX& k); // aero operator
+
     };
 }
 

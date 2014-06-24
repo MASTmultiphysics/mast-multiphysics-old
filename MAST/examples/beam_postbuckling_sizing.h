@@ -23,6 +23,7 @@
 #include "BoundaryConditions/displacement_boundary_condition.h"
 #include "Mesh/mesh_initializer.h"
 #include "PropertyCards/isotropic_material_property_card.h"
+#include "FluidElems/frequency_domain_linearized_fluid_system.h"
 
 
 // libmesh includes
@@ -44,6 +45,7 @@
 #include "libmesh/sensitivity_data.h"
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/nonlinear_implicit_system.h"
+#include "libmesh/mesh_function.h"
 
 
 namespace MAST {
@@ -209,6 +211,7 @@ namespace MAST {
         MAST::FunctionEvaluation(output),
         _libmesh_init(init),
         _infile(input),
+        _fluid_input(GetPot("system_input.in")),
         _n_eig(0),
         _weight(NULL),
         _eq_systems(NULL),
@@ -263,6 +266,10 @@ namespace MAST {
             delete _temperature;
             delete _ref_temperature;
             delete _temperature_bc;
+            
+            for (unsigned int i=0; i<_n_vars; i++) {
+                delete _disp_function_sens[i];
+            }
         }
         
         
@@ -273,6 +280,14 @@ namespace MAST {
         
         
         
+        virtual void evaluate_func(const std::vector<Real>& dvars,
+                                   Real& obj,
+                                   bool eval_obj_grad,
+                                   std::vector<Real>& obj_grad,
+                                   std::vector<Real>& fvals,
+                                   std::vector<bool>& eval_grads,
+                                   std::vector<Real>& grads);
+
         virtual void evaluate(const std::vector<Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
@@ -294,7 +309,7 @@ namespace MAST {
         
         libMesh::LibMeshInit& _libmesh_init;
         
-        GetPot& _infile;
+        GetPot& _infile, _fluid_input;
         
         unsigned int _n_eig;
         
@@ -305,6 +320,8 @@ namespace MAST {
         libMesh::NonlinearImplicitSystem *_static_system;
         
         libMesh::CondensedEigenSystem *_eigen_system;
+        
+        
         
         MAST::StructuralSystemAssembly* _static_structural_assembly,
         *_eigen_structural_assembly;
@@ -337,6 +354,10 @@ namespace MAST {
         std::vector<MAST::MaterialPropertyCardBase*> _materials;
         
         std::vector<MAST::ElementPropertyCardBase*> _elem_properties;
+        
+        std::auto_ptr<libMesh::MeshFunction> _disp_function;
+
+        std::vector<libMesh::MeshFunction*> _disp_function_sens;
     };
 }
 
@@ -349,11 +370,11 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                     std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 0.008);
+    std::fill(x.begin(), x.end(), 0.08);
     for (unsigned int i=1; i<x.size(); i+=2)
         x[i] = .09;
     xmin.resize(_n_vars);
-    std::fill(xmin.begin(), xmin.end(), 2.0e-3);
+    std::fill(xmin.begin(), xmin.end(), 6.0e-3);
     xmax.resize(_n_vars);
     std::fill(xmax.begin(), xmax.end(), 0.2);
 }
@@ -368,6 +389,39 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                                    std::vector<Real>& fvals,
                                    std::vector<bool>& eval_grads,
                                    std::vector<Real>& grads) {
+    std::vector<Real> dv0 = dvars;
+    
+    std::vector<bool> eval_grads_false = eval_grads;
+    std::fill(eval_grads_false.begin(), eval_grads_false.end(), false);
+    
+    
+    evaluate_func(dv0, obj, false, obj_grad, fvals, eval_grads_false, grads);
+    
+    Real delta = 1.0e-4, dobj = 0.;
+    if (eval_obj_grad) {
+        std::vector<Real> dfvals = fvals;
+        std::fill(dfvals.begin(), dfvals.end(), 0.);
+        dv0[0] += delta;
+        
+        evaluate_func(dv0, dobj, false, obj_grad, dfvals, eval_grads_false, grads);
+        obj_grad[0] = (dobj-obj)/delta;
+        
+        for (unsigned int i=0; i<_n_ineq; i++)
+            grads[i] = (dfvals[i]-fvals[i])/delta;
+    }
+    
+}
+
+
+inline
+void
+MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
+                                        Real& obj,
+                                        bool eval_obj_grad,
+                                        std::vector<Real>& obj_grad,
+                                        std::vector<Real>& fvals,
+                                        std::vector<bool>& eval_grads,
+                                        std::vector<Real>& grads) {
     
     
     libmesh_assert_equal_to(dvars.size(), _n_vars);
@@ -376,16 +430,16 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     for (unsigned int i=0; i<_n_vars; i++)
         *_parameters[i] = dvars[i];
     
-    libMesh::Point p; // dummy point object
+    libMesh::Point pt; // dummy point object
     
     // calculate weight
-    (*_weight)(p, 0., obj);
+    (*_weight)(pt, 0., obj);
     
     // calculate sensitivity of weight if requested
     if (eval_obj_grad) {
         std::fill(obj_grad.begin(), obj_grad.end(), 0.);
         for (unsigned int i=0; i<_n_vars; i++)
-            _weight->total(*_parameter_functions[i], p, 0., obj_grad[i]);
+            _weight->total(*_parameter_functions[i], pt, 0., obj_grad[i]);
     }
     
     // now solve the system
@@ -396,10 +450,9 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
     // increase the load over several load steps
     const unsigned int n_load_steps = 100;
-    libMesh::Point point;
     Real temp_val, ref_temp;
-    (*_temperature)(point, 0., temp_val);
-    (*_ref_temperature)(point, 0., ref_temp);
+    (*_temperature)(pt, 0., temp_val);
+    (*_ref_temperature)(pt, 0., ref_temp);
     for (unsigned int i=0; i<n_load_steps; i++) {
         std::cout << "Solving load step: " << i << std::endl;
         (*_temperature) = ref_temp + (temp_val-ref_temp)*i/(n_load_steps-1);
@@ -446,6 +499,14 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     else
         libmesh_error(); // should not get here.
     
+    
+    // now get the displacement constraint
+    pt(0) = 3.0;
+    DenseRealVector disp;
+    (*_disp_function)(pt, 0., disp);
+    fvals[_n_ineq-1] = disp(0)-0.01;
+    std::cout << "disp: " << disp(0) << std::endl;
+
     std::vector<Real> grad_vals;
     
     if (eval_grads[0]) {
@@ -463,21 +524,27 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             for (unsigned int j=0; j<_n_vars; j++)
                 for (unsigned int i=0; i<n_required; i++) {
                     val = _eigen_system->get_eigenpair(i);
-                    grads[j*_n_eig+i]  = grad_vals[j*_eigen_system->get_n_converged()+i];
-                    grads[j*_n_eig+i] /= -1. * -pow(val.first, 2); // sens = - d eig / dp
+                    grads[j*_n_ineq+i]  = grad_vals[j*_eigen_system->get_n_converged()+i];
+                    grads[j*_n_ineq+i] /= -1. * -pow(val.first, 2); // sens = - d eig / dp
                 }
         else
             libmesh_error(); // should not get here
+        
+        // get the displacement gradient
+        pt(0) = 3.0;
+        for (unsigned int j=0; j<_n_vars; j++) {
+            disp.zero();
+            (*_disp_function_sens[j])(pt, 0., disp);
+            grads[(j+1)*_n_ineq-1] = disp(0);
+            std::cout << "sens: " << disp(0) << std::endl;
+        }
     }
-    
-    
 }
 
 
 inline
 void
 MAST::SizingOptimization::_init() {
-    
     
     _mesh = new libMesh::SerialMesh(_libmesh_init.comm());
     
@@ -518,7 +585,8 @@ MAST::SizingOptimization::_init() {
     _n_vars = 1;
     
     _n_eq = 0;
-    _n_ineq = _n_eig;
+    _n_ineq = (_n_eig +   // eigenvalue constraints
+               1);        // +1 for the displacement
     _max_iters = 10000;
     
     // now initialize the mesh
@@ -703,6 +771,25 @@ MAST::SizingOptimization::_init() {
     
     // create the function to calculate weight
     _weight = new MAST::Weight(*_mesh, *_static_structural_assembly);
+    
+    // create the mesh function to calculate the displacement
+    std::vector<unsigned int> vars(1);
+    vars[0] = _static_system->variable_number("suy");
+    _disp_function.reset(new libMesh::MeshFunction(_static_system->get_equation_systems(),
+                                                   *_static_system->solution,
+                                                   _static_system->get_dof_map(),
+                                                   vars));
+    _disp_function->init();
+    
+    _disp_function_sens.resize(_n_vars);
+    for (unsigned int i=0; i<_n_vars; i++) {
+        _static_system->add_sensitivity_solution(i);
+        _disp_function_sens[i] = new libMesh::MeshFunction(_static_system->get_equation_systems(),
+                                                           _static_system->get_sensitivity_solution(i),
+                                                           _static_system->get_dof_map(),
+                                                           vars);
+        _disp_function_sens[i]->init();
+    }
     
 }
 

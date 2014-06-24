@@ -111,7 +111,7 @@ namespace MAST {
          */
         virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
                                            const libMesh::ParameterVector& params,
-                                           const unsigned int i);
+                                           const unsigned int i) = 0;
         
         /*!
          *   Prints the sorted roots to the \par output
