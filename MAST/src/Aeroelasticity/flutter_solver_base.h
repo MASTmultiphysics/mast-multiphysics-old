@@ -63,6 +63,8 @@ namespace MAST {
         virtual ~FlutterSolverBase();
         
         
+        virtual void clear_solutions();
+        
         /*!
          *    finds the number of critical points already identified in the
          *    procedure.

@@ -24,6 +24,11 @@
 #include "Mesh/mesh_initializer.h"
 #include "PropertyCards/isotropic_material_property_card.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
+#include "Flight/flight_condition.h"
+#include "FluidElems/fluid_system.h"
+#include "FluidElems/frequency_domain_linearized_fluid_system.h"
+#include "Aeroelasticity/ug_flutter_solver.h"
+#include "Aeroelasticity/coupled_fluid_structure_system.h"
 
 
 // libmesh includes
@@ -46,6 +51,8 @@
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/nonlinear_implicit_system.h"
 #include "libmesh/mesh_function.h"
+#include "libmesh/steady_solver.h"
+#include "libmesh/newton_solver.h"
 
 
 namespace MAST {
@@ -234,7 +241,11 @@ namespace MAST {
             
             delete _eq_systems;
             
+            delete _fluid_eq_systems;
+            
             delete _mesh;
+            
+            delete _fluid_mesh;
             
             for (unsigned int i=0; i<_bc.size(); i++)
                 delete _bc[i];
@@ -315,18 +326,20 @@ namespace MAST {
         
         MAST::Weight* _weight;
         
-        libMesh::EquationSystems* _eq_systems;
+        libMesh::EquationSystems* _eq_systems, *_fluid_eq_systems;
         
         libMesh::NonlinearImplicitSystem *_static_system;
         
         libMesh::CondensedEigenSystem *_eigen_system;
         
+        FluidSystem *_fluid_system_nonlin;
         
+        FrequencyDomainLinearizedFluidSystem *_fluid_system_freq;
         
-        MAST::StructuralSystemAssembly* _static_structural_assembly,
+        MAST::StructuralSystemAssembly *_static_structural_assembly,
         *_eigen_structural_assembly;
         
-        libMesh::UnstructuredMesh* _mesh;
+        libMesh::UnstructuredMesh* _mesh, *_fluid_mesh;
         
         ConstantFunction<Real>* _press;
         
@@ -358,6 +371,16 @@ namespace MAST {
         std::auto_ptr<libMesh::MeshFunction> _disp_function;
 
         std::vector<libMesh::MeshFunction*> _disp_function_sens;
+        
+        std::auto_ptr<FlightCondition> _flight_cond;
+        
+        std::auto_ptr<FEMStructuralModel> _structural_model;
+        
+        std::auto_ptr<CFDAerodynamicModel> _aero_model;
+        
+        std::auto_ptr<CoupledFluidStructureSystem> _coupled_system;
+        
+        std::auto_ptr<MAST::UGFlutterSolver> _flutter_solver;
     };
 }
 
@@ -469,13 +492,19 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     std::pair<Real, Real> val;
     Complex eigval;
     std::fill(fvals.begin(), fvals.end(), 0.);
+    
+    _structural_model->eigen_vals.resize(_n_eig);
+
     if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
-        // the total number of constraints is _n_eig, but only n_required are usable
+        // the total number of eigenvalues is _n_eig, but only n_required are usable
         for (unsigned int i=0; i<n_required; i++) {
             val = _eigen_system->get_eigenpair(i);
             eigval = std::complex<Real>(val.first, val.second);
             eigval = 1./eigval;
-            fvals[i] = 1.-eigval.real(); // g <= 0.
+            //fvals[i] = 1.-eigval.real(); // g <= 0.
+            
+            // copy modal data into the structural model for flutter analysis
+            _structural_model->eigen_vals(i) = eigval.real();
             
             //            {
             //                std::ostringstream file_name;
@@ -504,9 +533,28 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     pt(0) = 3.0;
     DenseRealVector disp;
     (*_disp_function)(pt, 0., disp);
-    fvals[_n_ineq-1] = disp(0)-0.01;
-    std::cout << "disp: " << disp(0) << std::endl;
+    // reference displacement value
+    Real ref_disp = 0.01;
+    // w < w0 => w/w0 < 1. => w/w0 - 1. < 0
+    fvals[0] = disp(0)/ref_disp-1.;
 
+    // flutter solution
+    _flutter_solver->clear_solutions();
+    _flutter_solver->scan_for_roots();
+    if (!_libmesh_init.comm().rank())
+        _flutter_solver->print_crossover_points();
+    std::pair<bool, const MAST::FlutterRootBase*> root =
+    _flutter_solver->find_critical_root();
+    libmesh_assert(root.first);
+    if (!_libmesh_init.comm().rank())
+        _flutter_solver->print_sorted_roots();
+
+    // flutter constraint
+    Real ref_V = 1000.;
+    // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
+    //
+    fvals[1] = 1. - root.second->V/ref_V;;
+    
     std::vector<Real> grad_vals;
     
     if (eval_grads[0]) {
@@ -536,7 +584,6 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
             disp.zero();
             (*_disp_function_sens[j])(pt, 0., disp);
             grads[(j+1)*_n_ineq-1] = disp(0);
-            std::cout << "sens: " << disp(0) << std::endl;
         }
     }
 }
@@ -585,8 +632,8 @@ MAST::SizingOptimization::_init() {
     _n_vars = 1;
     
     _n_eq = 0;
-    _n_ineq = (_n_eig +   // eigenvalue constraints
-               1);        // +1 for the displacement
+    _n_ineq = (1 +   // +1 for the displacement
+               1);   // +1 for flutter constraint
     _max_iters = 10000;
     
     // now initialize the mesh
@@ -691,11 +738,178 @@ MAST::SizingOptimization::_init() {
     _eigen_system->eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
     _eigen_structural_assembly->set_static_solution_system(_static_system);
     
-    _eq_systems->init ();
     
+    // initialize the fluid data structures
+    
+    // first the flight condition
+    _flight_cond.reset(new FlightCondition);
+    for (unsigned int i=0; i<3; i++)
+    {
+        _flight_cond->body_roll_axis(i)     = _fluid_input(    "body_roll_axis", 0., i);
+        _flight_cond->body_pitch_axis(i)    = _fluid_input(   "body_pitch_axis", 0., i);
+        _flight_cond->body_yaw_axis(i)      = _fluid_input(     "body_yaw_axis", 0., i);
+        _flight_cond->body_euler_angles(i)  = _fluid_input( "body_euler_angles", 0., i);
+        _flight_cond->body_angular_rates(i) = _fluid_input("body_angular_rates", 0., i);
+    }
+    _flight_cond->ref_chord       = _fluid_input("ref_c",   1.);
+    _flight_cond->altitude        = _fluid_input( "alt",    0.);
+    _flight_cond->mach            = _fluid_input("mach",    .5);
+    _flight_cond->gas_property.cp = _fluid_input(  "cp", 1003.);
+    _flight_cond->gas_property.cv = _fluid_input(  "cv",  716.);
+    _flight_cond->gas_property.T  = _fluid_input("temp",  300.);
+    _flight_cond->gas_property.rho= _fluid_input( "rho",  1.05);
+    
+    _flight_cond->init();
+
+    // next the fluid mesh
+    _fluid_mesh = new libMesh::SerialMesh(_libmesh_init.comm());
+
+    const unsigned int fluid_dim     = _fluid_input("dimension",0),
+    fluid_nx_divs = _fluid_input("nx_divs",0),
+    fluid_ny_divs = _fluid_input("ny_divs",0),
+    fluid_nz_divs = _fluid_input("nz_divs",0);
+    libMesh::ElemType fluid_elem_type =
+    libMesh::Utility::string_to_enum<libMesh::ElemType>(_fluid_input("elem_type", "QUAD4"));
+    
+    x_div_loc.resize(fluid_nx_divs+1), x_relative_dx.resize(fluid_nx_divs+1),
+    y_div_loc.resize(fluid_ny_divs+1), y_relative_dx.resize(fluid_ny_divs+1),
+    z_div_loc.resize(fluid_nz_divs+1), z_relative_dx.resize(fluid_nz_divs+1);
+    x_divs.resize(fluid_nx_divs), y_divs.resize(fluid_ny_divs), z_divs.resize(fluid_nz_divs);
+    std::auto_ptr<MeshInitializer::CoordinateDivisions>
+    fluid_x_coord_divs (new MeshInitializer::CoordinateDivisions),
+    fluid_y_coord_divs (new MeshInitializer::CoordinateDivisions),
+    fluid_z_coord_divs (new MeshInitializer::CoordinateDivisions);
+    std::vector<MeshInitializer::CoordinateDivisions*> fluid_divs(dim);
+    
+    // now read in the values: x-coord
+    if (fluid_nx_divs > 0)
+    {
+        for (unsigned int i_div=0; i_div<fluid_nx_divs+1; i_div++)
+        {
+            x_div_loc[i_div]     = _infile("x_div_loc", 0., i_div);
+            x_relative_dx[i_div] = _infile( "x_rel_dx", 0., i_div);
+            if (i_div < fluid_nx_divs) //  this is only till nx_divs
+                x_divs[i_div] = _infile( "x_div_nelem", 0, i_div);
+        }
+        divs[0] = x_coord_divs.get();
+        x_coord_divs->init(fluid_nx_divs, x_div_loc, x_relative_dx, x_divs);
+    }
+    
+    
+    if (fluid_ny_divs > 0)
+    {
+        for (unsigned int i_div=0; i_div<fluid_ny_divs+1; i_div++)
+        {
+            y_div_loc[i_div]     = _infile("y_div_loc", 0., i_div);
+            y_relative_dx[i_div] = _infile( "y_rel_dx", 0., i_div);
+            if (i_div < fluid_ny_divs) //  this is only till ny_divs
+                y_divs[i_div] = _infile( "y_div_nelem", 0, i_div);
+        }
+        divs[1] = y_coord_divs.get();
+        y_coord_divs->init(fluid_ny_divs, y_div_loc, y_relative_dx, y_divs);
+    }
+
+
+    const bool if_cos_bump = _fluid_input("if_cos_bump", false);
+    const unsigned int n_max_bumps_x = _fluid_input("n_max_bumps_x", 1),
+    n_max_bumps_y = _fluid_input("n_max_bumps_x", 1),
+    panel_bc_id = _fluid_input("panel_bc_id", 10),
+    symmetry_bc_id = _fluid_input("symmetry_bc_id", 11);
+    const Real t_by_c =  _fluid_input("t_by_c", 0.0);
+    
+    PanelMesh2D().init(t_by_c, if_cos_bump, n_max_bumps_x,
+                       panel_bc_id, symmetry_bc_id,
+                       divs, *_fluid_mesh, fluid_elem_type);
+
+    // Print information about the mesh to the screen.
+    _fluid_mesh->print_info();
+    
+    // Create an equation systems object.
+    _fluid_eq_systems = new libMesh::EquationSystems(*_fluid_mesh);
+    _eq_systems->parameters.set<GetPot*>("input_file") = &_fluid_input;
+    
+    // Declare the system
+    _fluid_system_nonlin =
+    &(_fluid_eq_systems->add_system<FluidSystem>("FluidSystem"));
+    _fluid_system_freq =
+    &(_fluid_eq_systems->add_system<FrequencyDomainLinearizedFluidSystem>
+    ("FrequencyDomainLinearizedFluidSystem"));
+    
+    _fluid_system_nonlin->flight_condition = _flight_cond.get();
+    _fluid_system_freq->flight_condition = _flight_cond.get();
+    
+    _fluid_system_nonlin->attach_init_function(init_euler_variables);
+    
+    _fluid_system_freq->time_solver =
+    libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(*_fluid_system_freq));
+    _fluid_system_freq->time_solver->quiet = false;
+
+    // now initilaize the nonlinear solution
+    _fluid_system_freq->extra_quadrature_order =
+    _fluid_input("extra_quadrature_order", 0);
+    _fluid_eq_systems->parameters.set<bool>("if_reduced_freq") =
+    _fluid_input("if_reduced_freq", false);
+    
+    libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
+    (*(_fluid_system_freq->time_solver->diff_solver()));
+    solver.quiet = _fluid_input("solver_quiet", true);
+    solver.verbose = !solver.quiet;
+    solver.brent_line_search = false;
+    solver.max_nonlinear_iterations =
+    _fluid_input("max_nonlinear_iterations", 15);
+    solver.relative_step_tolerance =
+    _fluid_input("relative_step_tolerance", 1.e-3);
+    solver.relative_residual_tolerance =
+    _fluid_input("relative_residual_tolerance", 0.0);
+    solver.absolute_residual_tolerance =
+    _fluid_input("absolute_residual_tolerance", 0.0);
+    solver.continue_after_backtrack_failure =
+    _fluid_input("continue_after_backtrack_failure", false);
+    solver.continue_after_max_iterations =
+    _fluid_input("continue_after_max_iterations", false);
+    solver.require_residual_reduction =
+    _fluid_input("require_residual_reduction", true);
+    
+    // And the linear solver options
+    solver.max_linear_iterations =
+    _fluid_input("max_linear_iterations", 50000);
+    solver.initial_linear_tolerance =
+    _fluid_input("initial_linear_tolerance", 1.e-3);
+
+    
+    
+    
+    _eq_systems->init ();
+    _fluid_eq_systems->init();
+    
+    // the frequency domain
+    _fluid_system_freq->localize_fluid_solution();
+
     
     // Print information about the system to the screen.
     _eq_systems->print_info();
+    _fluid_eq_systems->print_info();
+    
+    
+    // now initialize the flutter solver data structures
+    _structural_model.reset(new FEMStructuralModel(*_eigen_structural_assembly));
+    _aero_model.reset(new CFDAerodynamicModel(*_fluid_system_nonlin,
+                                              *_fluid_system_freq));
+    _coupled_system.reset(new CoupledFluidStructureSystem
+                          (*_aero_model, *_structural_model));
+
+    
+    // create the solvers
+    _flutter_solver.reset(new MAST::UGFlutterSolver);
+    std::string nm = "flutter_output.txt";
+    if (!_libmesh_init.comm().rank())
+        _flutter_solver->set_output_file(nm);
+    _flutter_solver->aero_structural_model   = _coupled_system.get();
+    _flutter_solver->flight_condition        = _flight_cond.get();
+    _flutter_solver->ref_val_range.first     = _fluid_input("ug_lower_k", 0.0);
+    _flutter_solver->ref_val_range.second    = _fluid_input("ug_upper_k", 0.35);
+    _flutter_solver->n_ref_val_divs          = _fluid_input("ug_k_divs", 10);
+
     
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
     std::set<unsigned int> dirichlet_dof_ids;
@@ -790,6 +1004,7 @@ MAST::SizingOptimization::_init() {
                                                            vars);
         _disp_function_sens[i]->init();
     }
+    
     
 }
 

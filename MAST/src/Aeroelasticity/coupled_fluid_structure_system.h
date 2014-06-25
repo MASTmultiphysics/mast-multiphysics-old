@@ -58,11 +58,6 @@ protected:
 };
 
 
-void assemble_force_vec(libMesh::System& sys,
-                        MAST::SmallDisturbanceSurfacePressure& press,
-                        MAST::SurfaceMotionBase& motion,
-                        libMesh::NumericVector<Real>& fvec)
-{ }
 
 //#include "libmesh/mesh_function.h"
 #include "libmesh/exodusII_io.h"
@@ -119,15 +114,15 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
 //            << std::setw(15) << std::endl;
 //        }
 
-        std::ostringstream file_name;
-        file_name << "out_"
-        << std::setw(3)
-        << std::setfill('0')
-        << std::right
-        << j_basis
-        << ".exo";
-        libMesh::ExodusII_IO(aero.linearized_fluid_system.get_mesh()).write_equation_systems
-        (file_name.str(), aero.linearized_fluid_system.get_equation_systems());
+//        std::ostringstream file_name;
+//        file_name << "out_"
+//        << std::setw(3)
+//        << std::setfill('0')
+//        << std::right
+//        << j_basis
+//        << ".exo";
+//        libMesh::ExodusII_IO(aero.linearized_fluid_system.get_mesh()).write_equation_systems
+//        (file_name.str(), aero.linearized_fluid_system.get_equation_systems());
 
         //libmesh_error();
         

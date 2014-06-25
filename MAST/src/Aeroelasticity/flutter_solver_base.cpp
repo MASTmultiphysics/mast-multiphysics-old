@@ -16,7 +16,15 @@
 
 
 MAST::FlutterSolverBase::~FlutterSolverBase() {
-    
+    this->clear_solutions();
+}
+
+
+
+
+void
+MAST::FlutterSolverBase::clear_solutions() {
+
     std::map<Real, MAST::FlutterSolutionBase*>::iterator it =
     _flutter_solutions.begin();
     
@@ -29,7 +37,6 @@ MAST::FlutterSolverBase::~FlutterSolverBase() {
     for ( ; cross_it != _flutter_crossovers.end(); cross_it++)
         delete cross_it->second;
 }
-
 
 
 unsigned int
