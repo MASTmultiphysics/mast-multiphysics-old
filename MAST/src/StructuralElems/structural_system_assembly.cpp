@@ -115,6 +115,25 @@ MAST::StructuralSystemAssembly::add_volume_load(libMesh::subdomain_id_type bid,
 
 
 void
+MAST::StructuralSystemAssembly::clear_volume_load(libMesh::subdomain_id_type bid,
+                                                  MAST::BoundaryCondition& load) {
+    std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
+    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it =
+    _vol_bc_map.equal_range(bid);
+    
+    for ( ; it.first != it.second; it.first++)
+        if (it.first->second == &load) {
+            _vol_bc_map.erase(it.first);
+            return;
+        }
+    
+    // should not get here
+    libmesh_assert(false);
+}
+
+
+
+void
 MAST::StructuralSystemAssembly::set_property_for_subdomain(const libMesh::subdomain_id_type sid,
                                                            const MAST::ElementPropertyCardBase& prop) {
     std::map<libMesh::subdomain_id_type, const MAST::ElementPropertyCardBase*>::const_iterator

@@ -148,11 +148,12 @@ FEMStructuralModel::assemble_force_vec(MAST::SmallDisturbanceSurfacePressure& pr
     MAST::SmallDisturbanceMotion load;
     load.set_deformation(displ);
     load.set_pressure(press);
-    assembly.clear_loads();
+    
     assembly.add_volume_load(0, load);
     assembly.assemble_small_disturbance_aerodynamic_force(*structural_system.solution,
                                                           f_vec_real,
                                                           f_vec_imag);
+    assembly.clear_volume_load(0, load);
 }
 
 

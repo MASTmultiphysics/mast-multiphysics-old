@@ -92,6 +92,12 @@ namespace MAST
         void clear_loads();
         
         /*!
+         *   clear the specified volume load from the applied loads
+         */
+        void clear_volume_load(libMesh::subdomain_id_type bid, MAST::BoundaryCondition& load);
+        
+        
+        /*!
          *    sets a pointer to the static solution system that provides
          *    deformation and its sensitivity for modal and buckling solution
          */
