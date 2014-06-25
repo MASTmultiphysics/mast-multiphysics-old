@@ -53,6 +53,8 @@
 #include "libmesh/mesh_function.h"
 #include "libmesh/steady_solver.h"
 #include "libmesh/newton_solver.h"
+#include "libmesh/euler2_solver.h"
+
 
 
 namespace MAST {
@@ -506,6 +508,17 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
             // copy modal data into the structural model for flutter analysis
             _structural_model->eigen_vals(i) = eigval.real();
             
+            // get the mode
+            std::ostringstream vec_nm;
+            vec_nm << "mode_" << i;
+            libMesh::NumericVector<Real>& vec = _eigen_system->get_vector(vec_nm.str());
+            vec = *(_eigen_system->solution);
+            vec.scale(sqrt(eigval.real()));
+            vec.close();
+                        
+            // rescale so that the inner product with the mass matrix is identity
+            
+            
             //            {
             //                std::ostringstream file_name;
             //
@@ -662,12 +675,12 @@ MAST::SizingOptimization::_init() {
     var_id["ty"] = _static_system->add_variable ( "sty", static_cast<libMesh::Order>(o), fefamily);
     var_id["tz"] = _static_system->add_variable ( "stz", static_cast<libMesh::Order>(o), fefamily);
     
-    _eigen_system->add_variable ( "eux", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "euy", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "euz", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "etx", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "ety", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "etz", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "ux", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "uy", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "uz", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "tx", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "ty", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "tz", static_cast<libMesh::Order>(o), fefamily);
     
     _static_structural_assembly = new MAST::StructuralSystemAssembly(*_static_system,
                                                                      MAST::STATIC,
@@ -768,6 +781,7 @@ MAST::SizingOptimization::_init() {
     fluid_nx_divs = _fluid_input("nx_divs",0),
     fluid_ny_divs = _fluid_input("ny_divs",0),
     fluid_nz_divs = _fluid_input("nz_divs",0);
+    divs.resize(fluid_dim);
     libMesh::ElemType fluid_elem_type =
     libMesh::Utility::string_to_enum<libMesh::ElemType>(_fluid_input("elem_type", "QUAD4"));
     
@@ -786,10 +800,10 @@ MAST::SizingOptimization::_init() {
     {
         for (unsigned int i_div=0; i_div<fluid_nx_divs+1; i_div++)
         {
-            x_div_loc[i_div]     = _infile("x_div_loc", 0., i_div);
-            x_relative_dx[i_div] = _infile( "x_rel_dx", 0., i_div);
+            x_div_loc[i_div]     = _fluid_input("x_div_loc", 0., i_div);
+            x_relative_dx[i_div] = _fluid_input( "x_rel_dx", 0., i_div);
             if (i_div < fluid_nx_divs) //  this is only till nx_divs
-                x_divs[i_div] = _infile( "x_div_nelem", 0, i_div);
+                x_divs[i_div] = _fluid_input( "x_div_nelem", 0, i_div);
         }
         divs[0] = x_coord_divs.get();
         x_coord_divs->init(fluid_nx_divs, x_div_loc, x_relative_dx, x_divs);
@@ -800,10 +814,10 @@ MAST::SizingOptimization::_init() {
     {
         for (unsigned int i_div=0; i_div<fluid_ny_divs+1; i_div++)
         {
-            y_div_loc[i_div]     = _infile("y_div_loc", 0., i_div);
-            y_relative_dx[i_div] = _infile( "y_rel_dx", 0., i_div);
+            y_div_loc[i_div]     = _fluid_input("y_div_loc", 0., i_div);
+            y_relative_dx[i_div] = _fluid_input( "y_rel_dx", 0., i_div);
             if (i_div < fluid_ny_divs) //  this is only till ny_divs
-                y_divs[i_div] = _infile( "y_div_nelem", 0, i_div);
+                y_divs[i_div] = _fluid_input( "y_div_nelem", 0, i_div);
         }
         divs[1] = y_coord_divs.get();
         y_coord_divs->init(fluid_ny_divs, y_div_loc, y_relative_dx, y_divs);
@@ -826,7 +840,7 @@ MAST::SizingOptimization::_init() {
     
     // Create an equation systems object.
     _fluid_eq_systems = new libMesh::EquationSystems(*_fluid_mesh);
-    _eq_systems->parameters.set<GetPot*>("input_file") = &_fluid_input;
+    _fluid_eq_systems->parameters.set<GetPot*>("input_file") = &_fluid_input;
     
     // Declare the system
     _fluid_system_nonlin =
@@ -840,6 +854,8 @@ MAST::SizingOptimization::_init() {
     
     _fluid_system_nonlin->attach_init_function(init_euler_variables);
     
+    _fluid_system_nonlin->time_solver =
+    libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::Euler2Solver(*_fluid_system_nonlin));
     _fluid_system_freq->time_solver =
     libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(*_fluid_system_freq));
     _fluid_system_freq->time_solver->quiet = false;
@@ -850,6 +866,10 @@ MAST::SizingOptimization::_init() {
     _fluid_eq_systems->parameters.set<bool>("if_reduced_freq") =
     _fluid_input("if_reduced_freq", false);
     
+    _eq_systems->init ();
+    _fluid_eq_systems->init();
+    
+
     libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
     (*(_fluid_system_freq->time_solver->diff_solver()));
     solver.quiet = _fluid_input("solver_quiet", true);
@@ -878,9 +898,6 @@ MAST::SizingOptimization::_init() {
 
     
     
-    
-    _eq_systems->init ();
-    _fluid_eq_systems->init();
     
     // the frequency domain
     _fluid_system_freq->localize_fluid_solution();
@@ -1005,7 +1022,14 @@ MAST::SizingOptimization::_init() {
         _disp_function_sens[i]->init();
     }
     
-    
+    // now add the vectors for structural modes, and init the fem structural model
+    for (unsigned int i=0; i<_n_eig; i++) {
+        std::ostringstream vec_nm;
+        vec_nm << "mode_" << i ;
+        _eigen_system->add_vector(vec_nm.str());
+    }
+    _structural_model->eigen_vals.resize(_n_eig);
+    _structural_model->init();
 }
 
 

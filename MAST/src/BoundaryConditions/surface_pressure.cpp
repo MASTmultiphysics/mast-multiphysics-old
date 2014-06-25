@@ -137,15 +137,15 @@ MAST::SmallDisturbanceSurfacePressure::surface_pressure(const Real t,
 // template explicit instantiations
 template
 void MAST::SmallDisturbanceSurfacePressure::surface_pressure<Real>(const Real t,
-                                                                            const libMesh::Point& p,
-                                                                            Real& cp,
-                                                                            Real& dcp);
+                                                                   const libMesh::Point& p,
+                                                                   Real& cp,
+                                                                   Real& dcp);
 
 template
 void MAST::SmallDisturbanceSurfacePressure::surface_pressure<Complex>(const Real t,
-                                                                               const libMesh::Point& p,
-                                                                               Real& cp,
-                                                                               Complex& dcp);
+                                                                      const libMesh::Point& p,
+                                                                      Real& cp,
+                                                                      Complex& dcp);
 
 
 
