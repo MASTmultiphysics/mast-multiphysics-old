@@ -36,6 +36,9 @@ MAST::FlutterSolverBase::clear_solutions() {
     
     for ( ; cross_it != _flutter_crossovers.end(); cross_it++)
         delete cross_it->second;
+    
+    _flutter_solutions.clear();
+    _flutter_crossovers.clear();
 }
 
 

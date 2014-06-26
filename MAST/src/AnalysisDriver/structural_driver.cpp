@@ -230,19 +230,19 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = static_system.add_variable ( "sux", static_cast<libMesh::Order>(o), fefamily);
-    var_id["uy"] = static_system.add_variable ( "suy", static_cast<libMesh::Order>(o), fefamily);
-    var_id["uz"] = static_system.add_variable ( "suz", static_cast<libMesh::Order>(o), fefamily);
-    var_id["tx"] = static_system.add_variable ( "stx", static_cast<libMesh::Order>(o), fefamily);
-    var_id["ty"] = static_system.add_variable ( "sty", static_cast<libMesh::Order>(o), fefamily);
-    var_id["tz"] = static_system.add_variable ( "stz", static_cast<libMesh::Order>(o), fefamily);
+    var_id["ux"] = static_system.add_variable ( "ux", static_cast<libMesh::Order>(o), fefamily);
+    var_id["uy"] = static_system.add_variable ( "uy", static_cast<libMesh::Order>(o), fefamily);
+    var_id["uz"] = static_system.add_variable ( "uz", static_cast<libMesh::Order>(o), fefamily);
+    var_id["tx"] = static_system.add_variable ( "tx", static_cast<libMesh::Order>(o), fefamily);
+    var_id["ty"] = static_system.add_variable ( "ty", static_cast<libMesh::Order>(o), fefamily);
+    var_id["tz"] = static_system.add_variable ( "tz", static_cast<libMesh::Order>(o), fefamily);
 
-    eigen_system.add_variable ( "eux", static_cast<libMesh::Order>(o), fefamily);
-    eigen_system.add_variable ( "euy", static_cast<libMesh::Order>(o), fefamily);
-    eigen_system.add_variable ( "euz", static_cast<libMesh::Order>(o), fefamily);
-    eigen_system.add_variable ( "etx", static_cast<libMesh::Order>(o), fefamily);
-    eigen_system.add_variable ( "ety", static_cast<libMesh::Order>(o), fefamily);
-    eigen_system.add_variable ( "etz", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "ux", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "uy", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "uz", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "tx", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "ty", static_cast<libMesh::Order>(o), fefamily);
+    eigen_system.add_variable ( "tz", static_cast<libMesh::Order>(o), fefamily);
 
     MAST::StructuralSystemAssembly
     static_structural_assembly(static_system,
@@ -474,8 +474,6 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
     static_system.attach_sensitivity_assemble_object(static_structural_assembly);
     static_structural_assembly.add_parameter(hy);
     static_system.sensitivity_solve(params);
-    static_system.solution->print();
-    static_system.get_sensitivity_solution().print();
     //return 0;
     
     eigen_structural_assembly.set_static_solution_system(&static_system);

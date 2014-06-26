@@ -360,6 +360,10 @@ namespace MAST {
         
         MAST::Temperature *_temperature_bc;
         
+        std::auto_ptr<MAST::ConstantFunction<Real> > _pressure;
+
+        std::auto_ptr<MAST::BoundaryCondition> _pressure_bc;
+        
         libMesh::ParameterVector _parameters;
         
         std::vector<MAST::ConstantFunction<Real>*> _parameter_functions;
@@ -475,12 +479,14 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
         _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
     // increase the load over several load steps
     const unsigned int n_load_steps = 100;
-    Real temp_val, ref_temp;
+    Real temp_val, ref_temp, p_val;
     (*_temperature)(pt, 0., temp_val);
     (*_ref_temperature)(pt, 0., ref_temp);
+    (*_pressure)(pt, 0., p_val);
     for (unsigned int i=0; i<n_load_steps; i++) {
         std::cout << "Solving load step: " << i << std::endl;
         (*_temperature) = ref_temp + (temp_val-ref_temp)*i/(n_load_steps-1);
+        (*_pressure)    = p_val*i/(n_load_steps-1);
         _static_system->solve();
     }
     // eigen analysis is performed with von-Karman strain
@@ -698,13 +704,20 @@ MAST::SizingOptimization::_init() {
     
     
     // temperature load
-    _temperature = new MAST::ConstantFunction<Real>("temp", _infile("panel_temperature", 353.15)); // K
+    _temperature = new MAST::ConstantFunction<Real>("temp", _infile("panel_temperature", 303.15)); // K
     _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", _infile("panel_ref_temperature", 303.15)); // K
     _temperature_bc = new MAST::Temperature;
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
     _static_structural_assembly->add_volume_load(0, *_temperature_bc);
     _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
+    
+    // pressure boundary condition
+    _pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
+    _pressure_bc.reset(new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE));
+    _pressure_bc->set_function(*_pressure);
+    _static_structural_assembly->add_volume_load(0, *_pressure_bc);
+    _eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
     
     
     // apply the boundary conditions

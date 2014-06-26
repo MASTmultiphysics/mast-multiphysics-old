@@ -95,34 +95,34 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
         aero.linearized_fluid_system.perturbed_surface_motion = surface_motion.get();
         aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
         
-//        std::vector<unsigned int> vars(2), dval(1);
-//        vars[0] = aero.linearized_fluid_system.variable_number("drho_re");
-//        vars[1] = aero.linearized_fluid_system.variable_number("drho_im");
-//        libMesh::MeshFunction function( aero.linearized_fluid_system.get_equation_systems(),
-//                              *aero.linearized_fluid_system.solution,
-//                              aero.linearized_fluid_system.get_dof_map(), vars);
-//        function.init();
-//        DenseRealVector sol; sol.resize(2);
-//        libMesh::Point pt;
-//        for (unsigned int i=0; i<300; i++) {
-//            pt(0) = 0 + (6)*(1.*i)/299.;
-//            function(pt, 0., sol);
-//            std::cout
-//            << std::setw(15) << pt(0)
-//            << std::setw(15) << sol(0)
-//            << std::setw(15) << sol(1)
-//            << std::setw(15) << std::endl;
-//        }
+        std::vector<unsigned int> vars(2), dval(1);
+        vars[0] = aero.linearized_fluid_system.variable_number("drho_re");
+        vars[1] = aero.linearized_fluid_system.variable_number("drho_im");
+        libMesh::MeshFunction function( aero.linearized_fluid_system.get_equation_systems(),
+                              *aero.linearized_fluid_system.solution,
+                              aero.linearized_fluid_system.get_dof_map(), vars);
+        function.init();
+        DenseRealVector sol; sol.resize(2);
+        libMesh::Point pt;
+        for (unsigned int i=0; i<300; i++) {
+            pt(0) = 0 + (6)*(1.*i)/299.;
+            function(pt, 0., sol);
+            std::cout
+            << std::setw(15) << pt(0)
+            << std::setw(15) << sol(0)
+            << std::setw(15) << sol(1)
+            << std::setw(15) << std::endl;
+        }
 
-//        std::ostringstream file_name;
-//        file_name << "out_"
-//        << std::setw(3)
-//        << std::setfill('0')
-//        << std::right
-//        << j_basis
-//        << ".exo";
-//        libMesh::ExodusII_IO(aero.linearized_fluid_system.get_mesh()).write_equation_systems
-//        (file_name.str(), aero.linearized_fluid_system.get_equation_systems());
+        std::ostringstream file_name;
+        file_name << "out_"
+        << std::setw(3)
+        << std::setfill('0')
+        << std::right
+        << j_basis
+        << ".exo";
+        libMesh::ExodusII_IO(aero.linearized_fluid_system.get_mesh()).write_equation_systems
+        (file_name.str(), aero.linearized_fluid_system.get_equation_systems());
 
         //libmesh_error();
         
