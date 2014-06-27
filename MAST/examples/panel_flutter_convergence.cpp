@@ -6,10 +6,6 @@
 //  Copyright (c) 2014 Manav Bhatia. All rights reserved.
 //
 
-#ifndef __MAST_sizing_optimization_h__
-#define __MAST_sizing_optimization_h__
-
-
 
 // MAST includes
 #include "Optimization/optimization_interface.h"
@@ -487,6 +483,3 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
     
 }
 
-
-
-#endif // _MAST_sizing_optimization_h__
