@@ -23,6 +23,8 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
                     int argc, char* const argv[]);
 int optimization_driver (libMesh::LibMeshInit& init, GetPot& infile,
                        int argc, char* const argv[]);
+int flutter_convergence_driver (libMesh::LibMeshInit& init, GetPot& infile,
+                                int argc, char* const argv[]);
 
 
 
@@ -47,6 +49,8 @@ int main (int argc, char* const argv[])
         rval = optimization_driver(init, infile, argc, argv);
     else if (type == "flutter")
         rval = flutter_driver(init, infile, argc, argv);
+    else if (type == "flutter_convergence")
+        rval = flutter_convergence_driver(init, infile, argc, argv);
     else {
         libMesh::out
         << "Invalid analysis type: "

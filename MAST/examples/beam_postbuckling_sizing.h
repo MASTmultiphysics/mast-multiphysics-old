@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Manav Bhatia. All rights reserved.
 //
 
-#ifndef __MAST_sizing_optimization_h__
-#define __MAST_sizing_optimization_h__
+#ifndef __MAST_beam_postbuckling_sizing_optimization_h__
+#define __MAST_beam_postbuckling_sizing_optimization_h__
 
 
 
@@ -806,7 +806,7 @@ MAST::SizingOptimization::_init() {
     fluid_x_coord_divs (new MeshInitializer::CoordinateDivisions),
     fluid_y_coord_divs (new MeshInitializer::CoordinateDivisions),
     fluid_z_coord_divs (new MeshInitializer::CoordinateDivisions);
-    std::vector<MeshInitializer::CoordinateDivisions*> fluid_divs(dim);
+    std::vector<MeshInitializer::CoordinateDivisions*> fluid_divs(fluid_dim);
     
     // now read in the values: x-coord
     if (fluid_nx_divs > 0)
@@ -1091,4 +1091,4 @@ MAST::SizingOptimization::output(unsigned int iter,
 }
 
 
-#endif // __MAST_sizing_optimization_h__
+#endif // __MAST_beam_postbuckling_sizing_optimization_h__

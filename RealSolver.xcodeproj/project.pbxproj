@@ -38,6 +38,7 @@
 		EB8F5C22187C572E002976E5 /* ksmaxim07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C1B187C572E002976E5 /* ksmaxim07.f */; };
 		EB8F5C24187C572E002976E5 /* ksmaxsu07.f in Sources */ = {isa = PBXBuildFile; fileRef = EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */; };
 		EB9BA3AB18F5C6E800400D0A /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB9BA3AA18F5C6E800400D0A /* libgcmma.a */; };
+		EBA06A1B195CE146002AE75F /* panel_flutter_convergence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBA06A1A195CDE8C002AE75F /* panel_flutter_convergence.cpp */; };
 		EBB0998517F0872B00272355 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBB0998317F0872B00272355 /* main.cpp */; };
 		EBD70405186DD6E70050676A /* structural_element_2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD70404186DD6E70050676A /* structural_element_2D.cpp */; };
 		EBD704071871C9DE0050676A /* optimization_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBD704061871C9DE0050676A /* optimization_driver.cpp */; };
@@ -150,6 +151,7 @@
 		EB8F5C1D187C572E002976E5 /* ksmaxsu07.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = ksmaxsu07.f; sourceTree = "<group>"; };
 		EB8F5C27187C9381002976E5 /* temperature.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
 		EB9BA3AA18F5C6E800400D0A /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = MAST/build/dbg/libgcmma.a; sourceTree = "<group>"; };
+		EBA06A1A195CDE8C002AE75F /* panel_flutter_convergence.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = panel_flutter_convergence.cpp; sourceTree = "<group>"; };
 		EBB0998317F0872B00272355 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		EBD70404186DD6E70050676A /* structural_element_2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_element_2D.cpp; sourceTree = "<group>"; };
 		EBD704061871C9DE0050676A /* optimization_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = optimization_driver.cpp; sourceTree = "<group>"; };
@@ -401,6 +403,7 @@
 		EB8033F2194F5F3A00469EBD /* examples */ = {
 			isa = PBXGroup;
 			children = (
+				EBA06A1A195CDE8C002AE75F /* panel_flutter_convergence.cpp */,
 				EB8033F3194F5F6400469EBD /* beam_postbuckling_sizing.h */,
 			);
 			name = examples;
@@ -546,6 +549,7 @@
 				EB81735D183A5EB600E03740 /* structural_element_1D.cpp in Sources */,
 				EBD7964918492E3C007FA3A7 /* boundary_condition.cpp in Sources */,
 				EBD79634184903E2007FA3A7 /* rigid_surface_motion.cpp in Sources */,
+				EBA06A1B195CE146002AE75F /* panel_flutter_convergence.cpp in Sources */,
 				EB8033F81953277F00469EBD /* linearized_fluid_system.cpp in Sources */,
 				EBD704071871C9DE0050676A /* optimization_driver.cpp in Sources */,
 				6989BC9E180360AB007C6D9A /* potential_flow_elem_base.cpp in Sources */,
