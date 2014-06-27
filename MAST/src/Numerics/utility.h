@@ -46,6 +46,37 @@ namespace MAST {
     }
 
     
+    
+    template <typename ValType>
+    void transform_to_elem_matrix(libMesh::DenseMatrix<ValType>& m,
+                                  const DenseRealMatrix& m_real);
+    
+    
+    template <>
+    inline void transform_to_elem_matrix(DenseRealMatrix& m,
+                                         const DenseRealMatrix& m_real) {
+        // make sure that the real vector is twice the size of the dense vector
+        const unsigned int mm = m.m(), nn = m.n();
+        libmesh_assert_equal_to(m_real.m(), mm);
+        libmesh_assert_equal_to(m_real.n(), nn);
+        m = m_real;
+    }
+    
+    
+    template <>
+    inline void transform_to_elem_matrix(DenseComplexMatrix& m,
+                                         const DenseRealMatrix& m_real) {
+        // make sure that the real vector is twice the size of the dense vector
+        const unsigned int mm = m.m(), nn = m.n();
+        libmesh_assert_equal_to(m_real.m(), 2*mm);
+        libmesh_assert_equal_to(m_real.n(), 2*nn);
+
+        for (unsigned int i=0; i<mm; i++)
+            for (unsigned int j=0; j<nn; j++)
+                m(i,j) = Complex(m_real(i,j), -m_real(i,j+nn));
+    }
+
+    
     /*!
      *    All calculations in MAST are done using Real numbers. The complex
      *    variables are divided into two unknowns, one each for the real and

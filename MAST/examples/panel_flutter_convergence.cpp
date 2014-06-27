@@ -120,7 +120,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     
     std::string fe_family = str_infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
-    libMesh::Order order = static_cast<libMesh::Order>(p_order);
+    libMesh::Order order = static_cast<libMesh::Order>(p_order+1);
     
     std::map<std::string, unsigned int> var_id;
     var_id["ux"] = eigen_system.add_variable ( "ux", order, fefamily);
@@ -262,6 +262,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     // Create an equation systems object.
     libMesh::EquationSystems fluid_eq_systems(fluid_mesh);
     fluid_eq_systems.parameters.set<GetPot*>("input_file") = &fluid_infile;
+    fluid_eq_systems.parameters.set<unsigned int>("p_order") = p_order;
     
     // Declare the system
     FluidSystem& fluid_system_nonlin =
@@ -492,7 +493,7 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
     << std::setw(5) << "O"
     << std::setw(5) << "Msh"
     << std::setw(15) << "NDofs"
-    << std::setw(15) << "g"
+    << std::setw(35) << "g"
     << std::setw(35) << "omega"
     << std::setw(35) << "V"
     << std::setw(35) << "time" << std::endl;
@@ -530,7 +531,7 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
             << std::setw(5) << p_order
             << std::setw(5) << i
             << std::setw(15) << n_dofs
-            << std::setw(15) << flutter_g
+            << std::setw(35) << std::setprecision(15) << flutter_g
             << std::setw(35) << std::setprecision(15) << flutter_omega
             << std::setw(35) << std::setprecision(15) << flutter_V
             << std::setw(35) << std::setprecision(15) << duration << std::endl;

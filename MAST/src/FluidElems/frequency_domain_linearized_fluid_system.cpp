@@ -473,11 +473,18 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     } // end of the quadrature point qp-loop
     
 //    std::cout << "inside element time derivative " << std::endl;
-//    c.elem->print_info();
-//    std::cout << "sol: " << std::endl; c.elem_solution.print(std::cout);
-//    std::cout << "res: " << std::endl; Fvec.print(std::cout);
-//    if (request_jacobian && c.elem_solution_derivative)
-//        Kmat.print(std::cout);
+//    c.get_elem().print_info();
+//    std::cout << "sol: " << std::endl; c.get_elem_solution().print(std::cout);
+//    std::cout << "res: " << std::endl; {
+//        DenseComplexVector vv; vv.resize(Fvec.size()/2);
+//        MAST::transform_to_elem_vector(vv, Fvec);
+//        vv.print(std::cout);
+//    }
+//    if (request_jacobian && c.elem_solution_derivative) {
+//        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
+//        MAST::transform_to_elem_matrix(mm, Kmat);
+//        mm.print(std::cout);
+//    }
     
     return request_jacobian;
 }
@@ -939,11 +946,19 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
     
 //    std::cout << "inside side constraint " << std::endl;
-//    std::cout << "elem solution" << std::endl; c.elem_solution.print(std::cout);
+//    std::cout << "elem solution" << std::endl; c.get_elem_solution().print(std::cout);
 //    std::cout << mechanical_bc_type << std::endl;
-//    std::cout << "bc vec: " << std::endl; Fvec.print(std::cout);
-//    if (request_jacobian && c.elem_solution_derivative)
-//        Kmat.print(std::cout);
+//    std::cout << "bc vec: " << std::endl;
+//    {
+//        DenseComplexVector vv; vv.resize(Fvec.size()/2);
+//        MAST::transform_to_elem_vector(vv, Fvec);
+//        vv.print(std::cout);
+//    }
+//    if (request_jacobian && c.elem_solution_derivative) {
+//        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
+//        MAST::transform_to_elem_matrix(mm, Kmat);
+//        mm.print(std::cout);
+//    }
     
     return request_jacobian;
 }

@@ -42,7 +42,6 @@ int main (int argc, char* const argv[])
         rval = fluid_driver(init, infile, argc, argv);
     else if (type == "compressible_potential_fluid")
         rval = potential_fluid_driver(init, infile, argc, argv);
-
     else if (type == "structures")
         rval = structural_driver(init, infile, argc, argv);
     else if (type == "optimization")
