@@ -42,6 +42,8 @@ public:
      */
     virtual bool get_aero_operator_matrix(Real k_ref, ComplexMatrixX& a);
 
+    std::string nm;
+    
 protected:
 
     
@@ -55,6 +57,7 @@ protected:
      *   this provides the surface motion description
      */
     std::auto_ptr<MAST::FlexibleSurfaceMotion> surface_motion;
+    
 };
 
 
@@ -115,7 +118,9 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_ref,
         }
 
         std::ostringstream file_name;
-        file_name << "out_"
+        file_name
+        << nm << "_"
+        << "out_"
         << std::setw(3)
         << std::setfill('0')
         << std::right

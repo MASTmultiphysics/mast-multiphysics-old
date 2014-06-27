@@ -6,6 +6,9 @@
 //  Copyright (c) 2014 Manav Bhatia. All rights reserved.
 //
 
+// C++ includes
+#include <ctime>
+
 
 // MAST includes
 #include "Optimization/optimization_interface.h"
@@ -64,6 +67,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
                        const unsigned int p_order,
                        const unsigned int n_panel_divs,
                        const unsigned int n_farfield_divs,
+                       const std::string& nm,
                        unsigned int& n_dofs,
                        Real& flutter_V,
                        Real& flutter_g,
@@ -111,41 +115,24 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     str_eq_systems.parameters.set<GetPot*>("input_file") = &str_infile;
     
     // Declare the system
-    libMesh::NonlinearImplicitSystem& static_system =
-    str_eq_systems.add_system<libMesh::NonlinearImplicitSystem> ("StaticStructuralSystem");
     libMesh::CondensedEigenSystem& eigen_system =
     str_eq_systems.add_system<libMesh::CondensedEigenSystem> ("EigenStructuralSystem");
     
-    unsigned int o = str_infile("fe_order", 1);
     std::string fe_family = str_infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     libMesh::Order order = static_cast<libMesh::Order>(p_order);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = static_system.add_variable ( "ux", order, fefamily);
-    var_id["uy"] = static_system.add_variable ( "uy", order, fefamily);
-    var_id["uz"] = static_system.add_variable ( "uz", order, fefamily);
-    var_id["tx"] = static_system.add_variable ( "tx", order, fefamily);
-    var_id["ty"] = static_system.add_variable ( "ty", order, fefamily);
-    var_id["tz"] = static_system.add_variable ( "tz", order, fefamily);
-    
-    eigen_system.add_variable ( "ux", order, fefamily);
-    eigen_system.add_variable ( "uy", order, fefamily);
-    eigen_system.add_variable ( "uz", order, fefamily);
-    eigen_system.add_variable ( "tx", order, fefamily);
-    eigen_system.add_variable ( "ty", order, fefamily);
-    eigen_system.add_variable ( "tz", order, fefamily);
-    
-    MAST::StructuralSystemAssembly static_structural_assembly(static_system,
-                                                              MAST::STATIC,
-                                                              str_infile);
+    var_id["ux"] = eigen_system.add_variable ( "ux", order, fefamily);
+    var_id["uy"] = eigen_system.add_variable ( "uy", order, fefamily);
+    var_id["uz"] = eigen_system.add_variable ( "uz", order, fefamily);
+    var_id["tx"] = eigen_system.add_variable ( "tx", order, fefamily);
+    var_id["ty"] = eigen_system.add_variable ( "ty", order, fefamily);
+    var_id["tz"] = eigen_system.add_variable ( "tz", order, fefamily);
     
     MAST::StructuralSystemAssembly eigen_structural_assembly(eigen_system,
                                                              MAST::MODAL,
                                                              str_infile);
-    
-    static_system.attach_assemble_object(static_structural_assembly);
-    static_system.attach_sensitivity_assemble_object(static_structural_assembly);
     
     eigen_system.attach_assemble_object(eigen_structural_assembly);
     eigen_system.attach_eigenproblem_sensitivity_assemble_object(eigen_structural_assembly);
@@ -186,7 +173,6 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
          it != boundary_constraint_map.end(); it++) {
         bc[counter] = new MAST::DisplacementDirichletBoundaryCondition;
         bc[counter]->init(it->first, it->second);
-        static_structural_assembly.add_side_load(it->first, *bc[counter]);
         eigen_structural_assembly.add_side_load(it->first, *bc[counter]);
         counter++;
     }
@@ -349,13 +335,13 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
                                    fluid_system_freq);
     CoupledFluidStructureSystem coupled_system(aero_model,
                                                structural_model);
-    
+    coupled_system.nm = nm;
     
     // create the solvers
     MAST::UGFlutterSolver flutter_solver;
-    std::string nm = "flutter_output.txt";
+    std::string flutter_output_nm = nm + "_flutter_output.txt";
     if (!init.comm().rank())
-        flutter_solver.set_output_file(nm);
+        flutter_solver.set_output_file(flutter_output_nm);
     flutter_solver.aero_structural_model   = &coupled_system;
     flutter_solver.flight_condition        = &flight_cond;
     flutter_solver.ref_val_range.first     = fluid_infile("ug_lower_k", 0.0);
@@ -406,7 +392,6 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     
     p.set_material(mat);
 
-    static_structural_assembly.set_property_for_subdomain(0, p);
     eigen_structural_assembly.set_property_for_subdomain(0, p);
     
     // now add the vectors for structural modes, and init the fem structural model
@@ -422,9 +407,6 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     libMesh::Point pt; // dummy point object
     
     // now solve the system
-    static_system.solution->zero();
-    // static analysis is performed without von-Karman strain
-    static_system.solve();
     eigen_system.solve();
     
     // the number of converged eigenpairs could be different from the number asked
@@ -439,12 +421,17 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
         // the total number of eigenvalues is n_eig, but only n_required are usable
         for (unsigned int i=0; i<n_required; i++) {
             val = eigen_system.get_eigenpair(i);
-            eigval = std::complex<Real>(val.first, val.second);
+            eigval = Complex(val.first, val.second);
             eigval = 1./eigval;
+            
+            std::cout
+            //<< std::setw(35) << std::fixed << std::setprecision(15)
+            << eigval.real()
+            << std::endl;
             
             // copy modal data into the structural model for flutter analysis
             structural_model.eigen_vals(i) = eigval.real();
-            
+
             // get the mode
             std::ostringstream vec_nm;
             vec_nm << "mode_" << i;
@@ -452,6 +439,12 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
             vec = *(eigen_system.solution);
             vec.scale(sqrt(eigval.real()));
             vec.close();
+            
+            // output the mode to a file
+            std::ostringstream oss;
+            oss << nm <<  "_mode_" <<  i << ".exo";
+            libMesh::ExodusII_IO(beam_mesh).write_equation_systems(oss.str(),
+                                                                   str_eq_systems);
         }
     else
         libmesh_error(); // should not get here.
@@ -471,7 +464,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
         delete bc[i];
     
     // get the values of n_dofs and flutter solution for return
-    n_dofs = fluid_system_nonlin.n_dofs();
+    n_dofs = fluid_system_freq.n_dofs();
     flutter_V = root.second->V;
     flutter_g = root.second->g;
     flutter_omega = root.second->omega;
@@ -481,5 +474,73 @@ int
 flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
                            int argc, char* const argv[]) {
     
+    
+    GetPot fluid_infile("system_input.in");
+    unsigned int
+    n_panel_divs = 12,
+    n_farfield_divs = 16,
+    n_panel_divs_increment = 6,
+    n_farfield_divs_increment = 8,
+    n_increments = 5,
+    n_dofs;
+    Real flutter_V, flutter_g, flutter_omega;
+    
+    std::ofstream output;
+    output.open("convergence_output.txt", std::ofstream::out);
+
+    output
+    << std::setw(5) << "O"
+    << std::setw(5) << "Msh"
+    << std::setw(15) << "NDofs"
+    << std::setw(15) << "g"
+    << std::setw(35) << "omega"
+    << std::setw(35) << "V"
+    << std::setw(35) << "time" << std::endl;
+    
+    
+    for (unsigned int p_order=1; p_order<5; p_order++) {
+        for (unsigned int i=0; i<n_increments; i++) {
+            std::cout
+            << "**************************************************************************" << std::endl
+            << "             Analysis for p = " << p_order << "  mesh = " << i << std::endl
+            << "**************************************************************************" << std::endl;
+            
+            std::clock_t start;
+            Real duration;
+            
+            start = std::clock();
+            
+            std::ostringstream oss;
+            oss << "p_" << p_order << "_m_" << i << "_";
+            panel_flutter_analysis(init,
+                                   str_infile,
+                                   fluid_infile,
+                                   p_order,
+                                   n_panel_divs+n_panel_divs_increment*i,
+                                   n_farfield_divs+n_farfield_divs_increment*i,
+                                   oss.str(),
+                                   n_dofs,
+                                   flutter_V,
+                                   flutter_g,
+                                   flutter_omega);
+
+            duration = ( std::clock() - start ) / (Real) CLOCKS_PER_SEC;
+            
+            output
+            << std::setw(5) << p_order
+            << std::setw(5) << i
+            << std::setw(15) << n_dofs
+            << std::setw(15) << flutter_g
+            << std::setw(35) << std::setprecision(15) << flutter_omega
+            << std::setw(35) << std::setprecision(15) << flutter_V
+            << std::setw(35) << std::setprecision(15) << duration << std::endl;
+
+            std::cout << std::endl << std::endl;;
+        }
+        
+        output << std::endl << std::endl;
+    }
+    
+    return 0;
 }
 
