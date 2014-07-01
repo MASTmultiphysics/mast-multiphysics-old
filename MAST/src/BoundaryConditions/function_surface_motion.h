@@ -115,7 +115,38 @@ MAST::SurfaceMotionFunction::surface_velocity(const Real t,
                                               DenseComplexVector& u_trans,
                                               DenseComplexVector& dn_rot)
 {
-    libmesh_assert(false); // to be implemented
+    u_trans.zero();
+    dn_rot.zero();
+    
+    // translation is obtained by direct interpolation of the u,v,w vars
+    libMesh::Point v, dwdx, dwdy, dwdz;
+    const Real x = p(0) - 2., tc = 0.001, c = 2., h = tc*c/2., pi = acos(-1.),
+    omega=124.874;
+
+    const Complex iota(0., 1.);
+
+    if ( (x>=0.) && (x <= c)){
+        v(1)     = h*(1.-cos(pi*2.*x/c));
+        dwdx(1)  = h*2.*pi/c*sin(pi*2.*x/c);
+    }
+    
+    // now copy the values to u_trans
+    for (unsigned int i=0; i<3; i++) {
+        w_trans(i) = v(i);
+        u_trans(i) = iota*omega*v(i);
+    }
+    
+    // now prepare the rotation vector
+    DenseRealVector rot;
+    rot.resize(3);
+    rot(0) = dwdy(2) - dwdz(1); // dwz/dy - dwy/dz
+    rot(1) = dwdz(0) - dwdx(2); // dwx/dz - dwz/dx
+    rot(2) = dwdx(1) - dwdy(0); // dwy/dx - dwx/dy
+    
+    // now do the cross-products
+    dn_rot(0) =    rot(1) * n(2) - rot(2) * n(1);
+    dn_rot(1) =  -(rot(0) * n(2) - rot(2) * n(0));
+    dn_rot(2) =    rot(0) * n(1) - rot(1) * n(0);
 }
 
 
