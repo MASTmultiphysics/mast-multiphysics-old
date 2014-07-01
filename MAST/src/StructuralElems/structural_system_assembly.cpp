@@ -117,8 +117,8 @@ MAST::StructuralSystemAssembly::add_volume_load(libMesh::subdomain_id_type bid,
 void
 MAST::StructuralSystemAssembly::clear_volume_load(libMesh::subdomain_id_type bid,
                                                   MAST::BoundaryCondition& load) {
-    std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator,
-    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::const_iterator> it =
+    std::pair<std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::iterator,
+    std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>::iterator> it =
     _vol_bc_map.equal_range(bid);
     
     for ( ; it.first != it.second; it.first++)

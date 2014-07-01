@@ -701,8 +701,11 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
         
         // check if the user has provided a stop file
         {
-            GetPot stop_file("stopfile.in");
-            continue_iterations = !(stop_file("if_stop", false));
+            std::ifstream stopfile_stream("stopfile.in");
+            if (stopfile_stream.good()) {
+                GetPot stop_file("stopfile.in");
+                continue_iterations = !(stop_file("if_stop", false));
+            }
         }
         
         // Write out this timestep if we're requested to
