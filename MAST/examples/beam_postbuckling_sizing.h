@@ -29,6 +29,7 @@
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Aeroelasticity/ug_flutter_solver.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
+#include "BoundaryConditions/flexible_surface_motion.h"
 
 
 // libmesh includes
@@ -54,6 +55,7 @@
 #include "libmesh/steady_solver.h"
 #include "libmesh/newton_solver.h"
 #include "libmesh/euler2_solver.h"
+#include "libmesh/system_norm.h"
 
 
 
@@ -387,6 +389,8 @@ namespace MAST {
         std::auto_ptr<CoupledFluidStructureSystem> _coupled_system;
         
         std::auto_ptr<MAST::UGFlutterSolver> _flutter_solver;
+        
+        std::auto_ptr<MAST::SurfaceMotionBase> _surface_motion;
     };
 }
 
@@ -473,8 +477,12 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     
     // now solve the system
     libMesh::out << "New Eval" << std::endl;
+    
+    // first zero the solution and init the Euler variables to undisturbed solution
     _static_system->solution->zero();
-    // static analysis is performed without von-Karman strain
+    init_euler_variables(*_fluid_eq_systems, "FluidSystem");
+    
+    // static analysis is performed with von-Karman strain
     for (unsigned int p=0; p<_elem_properties.size(); p++)
         _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
     // increase the load over several load steps
@@ -483,12 +491,27 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     (*_temperature)(pt, 0., temp_val);
     (*_ref_temperature)(pt, 0., ref_temp);
     (*_pressure)(pt, 0., p_val);
+    bool continue_fsi_iterations = true;
+
     for (unsigned int i=0; i<n_load_steps; i++) {
         std::cout << "Solving load step: " << i << std::endl;
+
+        // use this displacement to converge the fluid solver
+        continue_fsi_iterations = true;
+        while (continue_fsi_iterations) {
+            _fluid_system_nonlin->time = 0.;
+            _fluid_system_nonlin->solve();
+            if (_fluid_system_nonlin->time_solver->du(libMesh::SystemNorm()) <= 1.0e-6)
+                continue_fsi_iterations = false;
+        }
+        
+        // increment the temperature to the next load step
         (*_temperature) = ref_temp + (temp_val-ref_temp)*i/(n_load_steps-1);
-        (*_pressure)    = p_val*i/(n_load_steps-1);
+        
+        // now solve for this load step
         _static_system->solve();
     }
+    
     // eigen analysis is performed with von-Karman strain
     for (unsigned int p=0; p<_elem_properties.size(); p++)
         _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
@@ -878,6 +901,9 @@ MAST::SizingOptimization::_init() {
     _fluid_input("extra_quadrature_order", 0);
     _fluid_eq_systems->parameters.set<bool>("if_reduced_freq") =
     _fluid_input("if_reduced_freq", false);
+    
+    _surface_motion.reset(new MAST::FlexibleSurfaceMotion(*_static_system));
+    _fluid_system_nonlin->surface_motion = _surface_motion.get();
     
     _eq_systems->init ();
     _fluid_eq_systems->init();
