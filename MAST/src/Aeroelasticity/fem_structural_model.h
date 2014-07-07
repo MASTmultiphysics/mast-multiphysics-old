@@ -66,6 +66,47 @@ public:
         return true;
     }
     
+    
+    /*!
+     *    updates the matrix to the sensitivity of mass matrix for
+     *    the structural model.
+     *    Returns false if the matrix does not exist for this model
+     */
+    virtual bool get_mass_matrix_sensitivity(const libMesh::ParameterVector& params,
+                                             unsigned int p,
+                                             RealMatrixX& m) {
+        libMesh::SparseMatrix<Real>& mat =
+        *(dynamic_cast<libMesh::ImplicitSystem&>(structural_system).matrix);
+        
+        const MAST::FieldFunctionBase* f = assembly.get_parameter(params[p]);
+        
+        // calculate the mass matrix
+        assembly.assemble_mass(mat,
+                               f,
+                               structural_system.solution.get(),
+                               &(structural_system.get_sensitivity_solution(p)));
+
+        std::auto_ptr<libMesh::NumericVector<Real> >
+        vec(structural_system.solution->zero_clone().release());
+        
+        // now calculate the projection
+        RealVectorX projected_force;
+        m.setZero(basis_matrix->n(), basis_matrix->n());
+        
+        for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
+        {
+            projected_force.setZero(basis_matrix->n());
+            
+            mat.vector_mult(*vec, basis_matrix->basis(j_basis));
+            // Phi^T A_FS X_F
+            basis_matrix->vector_mult_transpose(projected_force, *vec);
+            
+            m.col(j_basis) = projected_force;
+        }
+        
+        return true;
+    }
+
     /*!
      *    updates the matrix to the stiffness matrix for this structural model
      *    Returns false if the matrix does not exist for this model
@@ -81,11 +122,79 @@ public:
     }
     
     /*!
+     *    updates the matrix to the sensitivity of stiffness matrix for
+     *    the structural model.
+     *    Returns false if the matrix does not exist for this model
+     */
+    virtual bool get_stiffness_matrix_sensitivity(const libMesh::ParameterVector& params,
+                                                  unsigned int p,
+                                                  RealMatrixX& m) {
+        // create vectors for use here
+        RealVectorX projected_force;
+        std::auto_ptr<libMesh::NumericVector<Real> >
+        vec(structural_system.solution->zero_clone().release());
+        
+        m.setZero(basis_matrix->n(), basis_matrix->n());
+
+        libMesh::SparseMatrix<Real>& mat =
+        *(dynamic_cast<libMesh::ImplicitSystem&>(structural_system).matrix);
+        
+        const MAST::FieldFunctionBase* f = assembly.get_parameter(params[p]);
+        libMesh::NumericVector<Real> *sol = structural_system.solution.get(),
+        *sol_sens = &(structural_system.get_sensitivity_solution(p));
+        
+        // calculate the mass matrix
+        mat.zero();
+        assembly.assemble_jacobian(mat, f, sol, sol_sens);
+        
+        // now calculate the projection
+        for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
+        {
+            projected_force.setZero(basis_matrix->n());
+            
+            mat.vector_mult(*vec, basis_matrix->basis(j_basis));
+            // Phi^T A_FS X_F
+            basis_matrix->vector_mult_transpose(projected_force, *vec);
+            
+            m.col(j_basis) = projected_force;
+        }
+        
+        // do the same for the nonlinear term
+        // calculate the mass matrix
+        mat.zero();
+        assembly.assemble_jacobian_dot_state_sensitivity(mat, sol, sol_sens);
+        
+        // now calculate the projection
+        for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
+        {
+            projected_force.setZero(basis_matrix->n());
+            
+            mat.vector_mult(*vec, basis_matrix->basis(j_basis));
+            // Phi^T A_FS X_F
+            basis_matrix->vector_mult_transpose(projected_force, *vec);
+            
+            m.col(j_basis) = projected_force;
+        }
+        
+        return true;
+    }
+
+
+    /*!
      *    updates the matrix to the damping matrix for this structural model
      *    Returns false if the matrix does not exist for this model
      */
     virtual bool get_damping_matrix(RealMatrixX& c)
     { libmesh_assert(false); }
+    
+    /*!
+     *    updates the matrix to the sensitivity of damping matrix for
+     *    the structural model.
+     *    Returns false if the matrix does not exist for this model
+     */
+    virtual bool get_damping_matrix_sensitivity(const libMesh::ParameterVector& params,
+                                                unsigned int p,
+                                                RealMatrixX& m);
     
     /*!
      *     returns the basis matrix for this structural model

@@ -199,9 +199,24 @@ namespace MAST
                                             libMesh::NumericVector<Real>* R,
                                             libMesh::SparseMatrix<Real>*  J,
                                             libMesh::NonlinearImplicitSystem& S);
+
+        virtual void assemble_mass(libMesh::SparseMatrix<Real>&  matrix,
+                                   const MAST::FieldFunctionBase* params,
+                                   const libMesh::NumericVector<Real>* static_sol,
+                                   const libMesh::NumericVector<Real>* static_sol_sens);
+        
+        virtual void assemble_jacobian(libMesh::SparseMatrix<Real>&  matrix,
+                                       const MAST::FieldFunctionBase* params,
+                                       const libMesh::NumericVector<Real>* static_sol,
+                                       const libMesh::NumericVector<Real>* static_sol_sens);
+        
+        virtual void assemble_jacobian_dot_state_sensitivity(libMesh::SparseMatrix<Real>&  matrix,
+                                                             const libMesh::NumericVector<Real>* static_sol,
+                                                             const libMesh::NumericVector<Real>* static_sol_sens);
+
         
         /*!
-         *    function to assemble the external forces of type specified in the 
+         *    function to assemble the external forces of type specified in the
          *    set
          */
         virtual void assemble_small_disturbance_aerodynamic_force (const libMesh::NumericVector<Real>& X,

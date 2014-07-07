@@ -125,6 +125,12 @@ namespace MAST {
                                                 bool if_ignore_ho_jac);
         
         /*!
+         *   calculates d[J]/d{x} . d{x}/dp
+         */
+        virtual bool
+        internal_force_jac_dot_state_sensitivity (DenseRealMatrix& jac);
+
+        /*!
          *    Calculates the internal force vector and Jacobian due to
          *    strain energy coming from a prestress
          */

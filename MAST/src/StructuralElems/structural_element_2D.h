@@ -111,7 +111,14 @@ namespace MAST {
                                                 DenseRealVector& f,
                                                 DenseRealMatrix& jac,
                                                 bool if_ignore_ho_jac);
-        
+        /*!
+         *   calculates d[J]/d{x} . d{x}/dp
+         */
+        virtual bool
+        internal_force_jac_dot_state_sensitivity (DenseRealMatrix& jac) {
+            libmesh_assert(false); // to be implemented for 2D elements
+        }
+
         /*!
          *    Calculates the internal force vector and Jacobian due to
          *    strain energy coming from a prestress

@@ -332,30 +332,30 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::Pa
                                                                unsigned int p,
                                                                Real k_ref,
                                                                ComplexMatrixX& m, // mass & aero
-                                                               ComplexMatrixX& k) { // aero operator
+                                                               ComplexMatrixX& k) { // stiffness
     bool has_matrix = false;
     RealMatrixX mat_r;
     
     // stiffness matrix forms the rhs of the eigenvalue problem
-//    has_matrix =
-//    aero_structural_model->get_structural_stiffness_matrix_sensitivity(params,
-//                                                                       p,
-//                                                                       mat_r);
+    has_matrix =
+    aero_structural_model->get_structural_stiffness_matrix_sensitivity(params,
+                                                                       p,
+                                                                       mat_r);
     k = mat_r.cast<Complex>();
     libmesh_assert(has_matrix);
     
     // combination of mass and aero matrix forms lhs of the eigenvalue problem
-//    has_matrix =
-//    aero_structural_model->get_structural_mass_matrix_sensitivity(params,
-//                                                                  p,
-//                                                                  mat_r);
+    has_matrix =
+    aero_structural_model->get_structural_mass_matrix_sensitivity(params,
+                                                                  p,
+                                                                  mat_r);
     libmesh_assert(has_matrix);
     
     
-//    has_matrix =
-//    aero_structural_model->get_aero_operator_matrix_sensitivity(params,
-//                                                                p
-//                                                                k_ref, m);
+    has_matrix =
+    aero_structural_model->get_aero_operator_matrix_sensitivity(params,
+                                                                p,
+                                                                k_ref, m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
@@ -368,7 +368,7 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::Pa
 void
 MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_ref,
                                                                       ComplexMatrixX& m, // mass & aero
-                                                                      ComplexMatrixX& k) { // aero operator
+                                                                      ComplexMatrixX& k) { // stiffness
     bool has_matrix = false;
     RealMatrixX mat_r;
 
@@ -378,9 +378,9 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_ref
     libmesh_assert(has_matrix);
     
     
-//    has_matrix =
-//    aero_structural_model->get_aero_operator_matrix_sensitivity_for_reduced_freq(k_ref, m);
-//    libmesh_assert(has_matrix);
+    has_matrix =
+    aero_structural_model->get_aero_operator_matrix_sensitivity_for_reduced_freq(k_ref, m);
+    libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
     mat_r *= 2.*k_ref*pow(1./flight_condition->ref_chord, 2);

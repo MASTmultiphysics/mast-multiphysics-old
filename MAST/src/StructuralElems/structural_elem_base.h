@@ -175,6 +175,14 @@ namespace MAST {
                                      bool if_ignore_ho_jac) = 0;
         
         /*!
+         *   calculates d[J]/d{x} . d{x}/dp
+         */
+        virtual bool
+        internal_force_jac_dot_state_sensitivity (DenseRealMatrix& jac) = 0;
+        
+        
+
+        /*!
          *   damping force contribution to system residual
          */
         virtual bool damping_force (bool request_jacobian,
