@@ -1,10 +1,21 @@
-//
-//  ug_flutter_solver.h
-//  MAST
-//
-//  Created by Manav Bhatia on 7/27/13.
-//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
-//
+/*
+ * MAST: Multidisciplinary-design Adaptation and Sensitivity Toolkit
+ * Copyright (C) 2013-2014  Manav Bhatia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef __MAST_ug_flutter_solver_h__
 #define __MAST_ug_flutter_solver_h__
@@ -90,7 +101,7 @@ namespace MAST {
          *    initializes the matrices for the specified k_ref. UG does not account
          *    for structural damping.
          */
-        void initialize_matrix_sensitivity_for_param(libMesh::ParameterVector& params,
+        void initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
                                                      unsigned int p,
                                                      Real k_ref,
                                                      ComplexMatrixX& m, // mass & aero

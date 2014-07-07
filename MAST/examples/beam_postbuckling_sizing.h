@@ -1,10 +1,21 @@
-//
-//  beam_postbuckling_sizing.cpp
-//  RealSolver
-//
-//  Created by Manav Bhatia on 6/16/14.
-//  Copyright (c) 2014 Manav Bhatia. All rights reserved.
-//
+/*
+ * MAST: Multidisciplinary-design Adaptation and Sensitivity Toolkit
+ * Copyright (C) 2013-2014  Manav Bhatia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef __MAST_beam_postbuckling_sizing_optimization_h__
 #define __MAST_beam_postbuckling_sizing_optimization_h__
@@ -60,6 +71,105 @@
 
 
 namespace MAST {
+    
+    class MultilinearInterpolation: public MAST::FieldFunction<Real> {
+    public:
+        MultilinearInterpolation(const std::string& nm,
+                                 std::map<Real, MAST::FieldFunction<Real>*>& values):
+        MAST::FieldFunction<Real>(nm),
+        _values(values) {
+            
+            // make sure that the size of the provided values is finite
+            libmesh_assert(values.size() > 0);
+            
+            std::map<Real, MAST::FieldFunction<Real>*>::iterator
+            it = values.begin(), end = values.end();
+
+            // tell the function that it is dependent on the provided functions
+            for ( ; it != end; it++)
+                _functions.insert(it->second->master());
+        }
+        
+        MultilinearInterpolation(const MAST::MultilinearInterpolation& o):
+        MAST::FieldFunction<Real>(o),
+        _values(o._values) {
+            std::map<Real, MAST::FieldFunction<Real>*>::iterator
+            it = _values.begin(), end = _values.end();
+            
+            // tell the function that it is dependent on the provided functions
+            for ( ; it != end; it++)
+                _functions.insert(it->second->master());
+        }
+        
+        virtual std::auto_ptr<MAST::FieldFunction<Real> >
+        clone() const {
+            return std::auto_ptr<MAST::FieldFunction<Real> >
+            (new MAST::MultilinearInterpolation(*this));
+        }
+        
+        virtual ~MultilinearInterpolation() {
+            
+        }
+        
+    protected:
+        
+        std::map<Real, MAST::FieldFunction<Real>*> _values;
+        
+    public:
+        
+        virtual void operator() (const libMesh::Point& p, Real t, Real& v) const {
+            
+            //
+            // the following is used for calculation of the return value
+            //   f(x) is defined for x for each x0 < x < x1
+            //   if   x <= x0,      f(x) = f(x0)
+            //   if   x0 < x < x1,  f(x) is interpolated
+            //   if   x >= x1,      f(x) = f(x1)
+            //
+            
+            std::map<Real, MAST::FieldFunction<Real>*>::const_iterator
+            it1, it2;
+            std::map<Real, MAST::FieldFunction<Real>*>::const_reverse_iterator
+            rit = _values.rbegin();
+            it1  = _values.begin();
+            
+            // check the lower bound
+            if (p(0) <=  it1->first) {
+                (*it1->second)(p, t, v);
+            }
+            // check the upper bound
+            else if (p(0) >=  rit->first) {
+                (*rit->second)(p, t, v);
+            }
+            else {
+                // if it gets here, the ordinate is in between the provided range
+                it2 = _values.lower_bound(p(0));
+                // this cannot be the first element of the map
+                libmesh_assert(it2 != _values.begin());
+                // it2 provides the upper bound. The lower bound is provided by the
+                // preceding iterator
+                it1 = it2--;
+                Real f0 = 0., f1 = 0.;
+                (*it1->second)(p, t, f0);
+                (*it2->second)(p, t, f1);
+                // now interpolate
+                v =  (f0 +
+                      (p(0) - it1->first)/(it2->first - it1->first) *
+                      (f1-f0));
+            }
+        }
+        
+        virtual void partial(const MAST::FieldFunctionBase& f,
+                             const libMesh::Point& p, Real t, Real& v) const {
+            libmesh_error();
+        }
+        
+        virtual void total(const MAST::FieldFunctionBase& f,
+                           const libMesh::Point& p, Real t, Real& v) const {
+            libmesh_error(); // to be implemented
+        }
+    };
+    
     
     class BeamOffset: public MAST::FieldFunction<Real> {
     public:
@@ -149,8 +259,11 @@ namespace MAST {
             eit  = _mesh.active_local_elements_begin(),
             eend = _mesh.active_local_elements_end();
             
-            Real h, rho;
+            Real h, rho, x0, x1, dx;
             v = 0.;
+            
+            libMesh::Point elem_p;
+            const unsigned int n_sec = 3; // number of quadrature divs
             
             for ( ; eit != eend; eit++ ) {
                 const libMesh::Elem* e = *eit;
@@ -165,10 +278,19 @@ namespace MAST {
                 const MAST::FieldFunction<Real> &rhof =
                 mat.get<MAST::FieldFunction<Real> >("rho");
 
-                (*stiff_area)(p, 0., h);
-                rhof(p, 0., rho);
+                // for each element iterate over the length and calculate the
+                // weight from the section area and section density
+                // use three point trapezoidal rule to calculate the integral
+                x0 = e->point(0)(0);
+                x1 = e->point(1)(0);
+                dx = (x1-x0)/n_sec;
+                for (unsigned int i=0; i<=3; i++) {
+                    elem_p(0) = x0 + dx*i;
+                    (*stiff_area)(elem_p, 0., h);
+                    rhof(elem_p, 0., rho);
+                    v += h * rho * dx;
+                }
                 
-                v += e->volume() * h * rho;
             }
         }
         
@@ -180,6 +302,7 @@ namespace MAST {
         virtual void total(const MAST::FieldFunctionBase& f,
                            const libMesh::Point& p, Real t, Real& v) const {
             
+            libmesh_error(); // to be implemented
             v = 0.;
             
             libMesh::MeshBase::const_element_iterator
@@ -254,33 +377,20 @@ namespace MAST {
             for (unsigned int i=0; i<_bc.size(); i++)
                 delete _bc[i];
             
-            delete _zero_function;
-            
             delete _weight;
             
-            for (unsigned int i=0; i<_elem_properties.size(); i++)
-                delete _elem_properties[i];
+            // delete the density station values
+            std::map<Real, MAST::FieldFunction<Real>*>::iterator it, end;
+            it  = _rho_station_vals.begin();
+            end = _rho_station_vals.end();
+            for (; it != end; it++)
+                delete it->second;
             
-            for (unsigned int i=0; i<_materials.size(); i++)
-                delete _materials[i];
-            
-            delete _E;
-            delete _nu;
-            delete _alpha;
-            delete _rho;
-            delete _kappa;
-            
-            for (unsigned int i=0; i<_h_y.size(); i++) {
-                delete _h_y[i];
-                delete _h_z[i];
-                delete _offset_h_y[i];
-                delete _offset_h_z[i];
-            }
-
-            delete _prestress;
-            delete _temperature;
-            delete _ref_temperature;
-            delete _temperature_bc;
+            // delete the h_y station values
+            it  = _h_y_station_vals.begin();
+            end = _h_y_station_vals.end();
+            for (; it != end; it++)
+                delete it->second;
             
             for (unsigned int i=0; i<_n_vars; i++) {
                 delete _disp_function_sens[i];
@@ -345,26 +455,41 @@ namespace MAST {
         
         libMesh::UnstructuredMesh* _mesh, *_fluid_mesh;
         
-        ConstantFunction<Real>* _press;
+        std::auto_ptr<ConstantFunction<Real> > _press;
         
-        libMesh::ZeroFunction<Real>* _zero_function;
+        std::auto_ptr<libMesh::ZeroFunction<Real> > _zero_function;
         
-        MAST::ConstantFunction<Real> *_E, *_nu,  *_alpha, *_rho, *_kappa;
+        std::auto_ptr<MAST::ConstantFunction<Real> > _E, _nu, _alpha, _kappa;
         
-        std::vector<MAST::ConstantFunction<Real>*> _h_y, _h_z,
-        _offset_h_z;
+        /*!
+         *    map of density functions at discrete stations
+         */
+        std::map<Real, MAST::FieldFunction<Real>*> _rho_station_vals;
         
-        std::vector<MAST::BeamOffset*> _offset_h_y;
+        /*!
+         *    multilinear density function
+         */
+        std::auto_ptr<MAST::MultilinearInterpolation> _rho;
         
-        MAST::ConstantFunction<DenseRealMatrix > *_prestress;
+        /*!
+         *    map of thickness functions at discrete stations
+         */
+        std::map<Real, MAST::FieldFunction<Real>*> _h_y_station_vals;
         
-        MAST::ConstantFunction<Real> *_temperature, *_ref_temperature;
-        
-        MAST::Temperature *_temperature_bc;
-        
-        std::auto_ptr<MAST::ConstantFunction<Real> > _pressure;
+        /*!
+         *    multilinear thickness function
+         */
+        std::auto_ptr<MAST::MultilinearInterpolation> _h_y;
 
-        std::auto_ptr<MAST::BoundaryCondition> _pressure_bc;
+        std::auto_ptr<MAST::ConstantFunction<Real> >  _h_z, _offset_h_z;
+        
+        std::auto_ptr<MAST::BeamOffset> _offset_h_y;
+        
+        std::auto_ptr<MAST::ConstantFunction<DenseRealMatrix> > _prestress;
+        
+        std::auto_ptr<MAST::ConstantFunction<Real> >_temperature, _ref_temperature;
+        
+        std::auto_ptr<MAST::Temperature> _temperature_bc;
         
         libMesh::ParameterVector _parameters;
         
@@ -372,9 +497,9 @@ namespace MAST {
         
         std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
         
-        std::vector<MAST::MaterialPropertyCardBase*> _materials;
+        std::auto_ptr<MAST::MaterialPropertyCardBase> _materials;
         
-        std::vector<MAST::ElementPropertyCardBase*> _elem_properties;
+        std::auto_ptr<MAST::ElementPropertyCardBase> _elem_properties;
         
         std::auto_ptr<libMesh::MeshFunction> _disp_function;
 
@@ -390,7 +515,14 @@ namespace MAST {
         
         std::auto_ptr<MAST::UGFlutterSolver> _flutter_solver;
         
-        std::auto_ptr<MAST::SurfaceMotionBase> _surface_motion;
+        std::auto_ptr<MAST::FlexibleSurfaceMotion> _surface_motion;
+        
+        std::auto_ptr<MAST::ConstantFunction<Real> > _pressure;
+        
+        std::auto_ptr<CFDPressure> _cfd_pressure;
+
+        std::auto_ptr<MAST::BoundaryCondition> _pressure_bc;
+        
     };
 }
 
@@ -403,13 +535,20 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                     std::vector<Real>& xmax) {
     // one DV for each element
     x.resize   (_n_vars);
-    std::fill(x.begin(), x.end(), 0.08);
-    for (unsigned int i=1; i<x.size(); i+=2)
-        x[i] = .09;
     xmin.resize(_n_vars);
-    std::fill(xmin.begin(), xmin.end(), 6.0e-3);
     xmax.resize(_n_vars);
-    std::fill(xmax.begin(), xmax.end(), 0.2);
+    
+    for (unsigned int i=0; i<_n_vars/2; i++) {
+        // first half is the thickness values
+        x[i]    = 0.015;
+        xmin[i] = 0.006;
+        xmax[i] = 0.2;
+        
+        // next half is the density values
+        x[i+_n_vars/2]    =  2700.;
+        xmin[i+_n_vars/2] =   100.;
+        xmax[i+_n_vars/2] = 10000.;
+    }
 }
 
 
@@ -480,41 +619,91 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     
     // first zero the solution and init the Euler variables to undisturbed solution
     _static_system->solution->zero();
+    _fluid_system_nonlin->time = 0.;
     init_euler_variables(*_fluid_eq_systems, "FluidSystem");
     
-    // static analysis is performed with von-Karman strain
-    for (unsigned int p=0; p<_elem_properties.size(); p++)
-        _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
     // increase the load over several load steps
     const unsigned int n_load_steps = 100;
-    Real temp_val, ref_temp, p_val;
+    Real temp_val, ref_temp;
     (*_temperature)(pt, 0., temp_val);
     (*_ref_temperature)(pt, 0., ref_temp);
-    (*_pressure)(pt, 0., p_val);
+
     bool continue_fsi_iterations = true;
 
     for (unsigned int i=0; i<n_load_steps; i++) {
-        std::cout << "Solving load step: " << i << std::endl;
+        
+        std::cout
+        << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl
+        << "Solving load step: " << i << std::endl
+        << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
         // use this displacement to converge the fluid solver
         continue_fsi_iterations = true;
+        
         while (continue_fsi_iterations) {
+            // initialize the fluid solution
             _fluid_system_nonlin->time = 0.;
+
+            _fluid_system_nonlin->print_residual_norms = true;
+            _fluid_system_nonlin->print_residuals = false;
+            _fluid_system_nonlin->print_jacobian_norms = false;
+            _fluid_system_nonlin->print_jacobians = false;
+            
+            libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
+            (*(_fluid_system_nonlin->time_solver->diff_solver().get()));
+            solver.quiet = false;
+            solver.verbose = !solver.quiet;
+            solver.brent_line_search = false;
+            solver.max_nonlinear_iterations = 1;
+            solver.relative_step_tolerance = 1.0e-6;
+            solver.relative_residual_tolerance = 1.0e-6;
+            solver.absolute_residual_tolerance = 1.0e-6;
+            solver.continue_after_backtrack_failure = true;
+            solver.continue_after_max_iterations = true;
+            solver.require_residual_reduction = false;
+            
+            // And the linear solver options
+            solver.max_linear_iterations = 1000;
+            solver.initial_linear_tolerance = 1.0e-8;
+
+
+            // init with zero frequency, since we are working with steady solver
+            _surface_motion->init(0., 0., *(_static_system->solution));
+
+            // check if the DC operator needs to be reevaluated
+            _fluid_system_nonlin->evaluate_recalculate_dc_flag();
+            
+            // now solve the fluid system
             _fluid_system_nonlin->solve();
-            if (_fluid_system_nonlin->time_solver->du(libMesh::SystemNorm()) <= 1.0e-6)
+            Real du = _fluid_system_nonlin->time_solver->du(libMesh::SystemNorm());
+            std::cout << "du = " << du << std::endl;
+            if (du <= 1.0e-0 ||  // this is a very relaxed set of requirements input
+                (_fluid_system_nonlin->time > _fluid_system_nonlin->deltat * 25)) // max 100 iterations
                 continue_fsi_iterations = false;
+            _fluid_system_nonlin->time_solver->advance_timestep();
         }
         
         // increment the temperature to the next load step
         (*_temperature) = ref_temp + (temp_val-ref_temp)*i/(n_load_steps-1);
         
+        // initialize the pressure boundary condition
+        _cfd_pressure->init(*(_fluid_system_nonlin->solution));
+        
         // now solve for this load step
         _static_system->solve();
+        
+        // write both the fluid and structural systems
+        {
+            std::set<std::string> names; names.insert("FluidSystem");
+            libMesh::ExodusII_IO(*_fluid_mesh).write_equation_systems("fluid.exo", *_fluid_eq_systems, &names);
+        }
+        {
+            std::set<std::string> names; names.insert("StaticStructuralSystem");
+            libMesh::ExodusII_IO(*_mesh).write_equation_systems("str.exo", *_eq_systems, &names);
+        }
     }
     
     // eigen analysis is performed with von-Karman strain
-    for (unsigned int p=0; p<_elem_properties.size(); p++)
-        _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
     _eigen_system->solve();
     
     // the number of converged eigenpairs could be different from the number asked
@@ -536,6 +725,8 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
             
             // copy modal data into the structural model for flutter analysis
             _structural_model->eigen_vals(i) = eigval.real();
+            
+            std::cout << eigval.real() << std::endl;
             
             // get the mode
             std::ostringstream vec_nm;
@@ -572,7 +763,7 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     
     
     // now get the displacement constraint
-    pt(0) = 3.0;
+    pt(0) = 0.25;
     DenseRealVector disp;
     (*_disp_function)(pt, 0., disp);
     // reference displacement value
@@ -587,27 +778,27 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
         _flutter_solver->print_crossover_points();
     std::pair<bool, const MAST::FlutterRootBase*> root =
     _flutter_solver->find_critical_root();
-    libmesh_assert(root.first);
-    if (!_libmesh_init.comm().rank())
-        _flutter_solver->print_sorted_roots();
-
-    // flutter constraint
-    Real ref_V = 1000.;
-    // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
-    //
-    fvals[1] = 1. - root.second->V/ref_V;;
+    if (root.first) {
+        if (!_libmesh_init.comm().rank())
+            _flutter_solver->print_sorted_roots();
+        
+        // flutter constraint
+        Real ref_V = 1000.;
+        // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
+        //
+        fvals[1] = 1. - root.second->V/ref_V;;
+    }
+    else
+        // no root was identified. So, set a feasible constraint value
+        fvals[1] = -1;
     
     std::vector<Real> grad_vals;
     
     if (eval_grads[0]) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
         // static analysis is performed without von-Karman strain
-        for (unsigned int p=0; p<_elem_properties.size(); p++)
-            _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
         _static_system->sensitivity_solve(_parameters);
         // eigen analysis is performed with von-Karman strain
-        for (unsigned int p=0; p<_elem_properties.size(); p++)
-            _elem_properties[p]->set_strain(MAST::VON_KARMAN_STRAIN);
         _eigen_system->sensitivity_solve(_parameters, grad_vals);
         // now correct this for the fact that the matrices were exchanged
         if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
@@ -638,10 +829,11 @@ MAST::SizingOptimization::_init() {
     _mesh = new libMesh::SerialMesh(_libmesh_init.comm());
     
     const unsigned int
-    dim     = _infile("dimension",0),
-    nx_divs = _infile("nx_divs",0),
-    ny_divs = _infile("ny_divs",0),
-    nz_divs = _infile("nz_divs",0);
+    n_stations    = 2,//_infile("n_stations", 0),
+    dim           = _infile("dimension",0),
+    nx_divs       = _infile("nx_divs",0),
+    ny_divs       = _infile("ny_divs",0),
+    nz_divs       = _infile("nz_divs",0);
     libMesh::ElemType elem_type =
     libMesh::Utility::string_to_enum<libMesh::ElemType>(_infile("elem_type", "QUAD4"));
     
@@ -671,7 +863,7 @@ MAST::SizingOptimization::_init() {
     
     // design data
     _n_eig = 6;
-    _n_vars = 1;
+    _n_vars = n_stations*2;
     
     _n_eq = 0;
     _n_ineq = (1 +   // +1 for the displacement
@@ -697,19 +889,20 @@ MAST::SizingOptimization::_init() {
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
     std::map<std::string, unsigned int> var_id;
-    var_id["ux"] = _static_system->add_variable ( "sux", static_cast<libMesh::Order>(o), fefamily);
-    var_id["uy"] = _static_system->add_variable ( "suy", static_cast<libMesh::Order>(o), fefamily);
-    var_id["uz"] = _static_system->add_variable ( "suz", static_cast<libMesh::Order>(o), fefamily);
-    var_id["tx"] = _static_system->add_variable ( "stx", static_cast<libMesh::Order>(o), fefamily);
-    var_id["ty"] = _static_system->add_variable ( "sty", static_cast<libMesh::Order>(o), fefamily);
-    var_id["tz"] = _static_system->add_variable ( "stz", static_cast<libMesh::Order>(o), fefamily);
+    libMesh::Order order = static_cast<libMesh::Order>(o);
+    var_id["ux"] = _static_system->add_variable ( "ux", order, fefamily);
+    var_id["uy"] = _static_system->add_variable ( "uy", order, fefamily);
+    var_id["uz"] = _static_system->add_variable ( "uz", order, fefamily);
+    var_id["tx"] = _static_system->add_variable ( "tx", order, fefamily);
+    var_id["ty"] = _static_system->add_variable ( "ty", order, fefamily);
+    var_id["tz"] = _static_system->add_variable ( "tz", order, fefamily);
     
-    _eigen_system->add_variable ( "ux", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "uy", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "uz", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "tx", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "ty", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "tz", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "ux", order, fefamily);
+    _eigen_system->add_variable ( "uy", order, fefamily);
+    _eigen_system->add_variable ( "uz", order, fefamily);
+    _eigen_system->add_variable ( "tx", order, fefamily);
+    _eigen_system->add_variable ( "ty", order, fefamily);
+    _eigen_system->add_variable ( "tz", order, fefamily);
     
     _static_structural_assembly = new MAST::StructuralSystemAssembly(*_static_system,
                                                                      MAST::STATIC,
@@ -727,24 +920,25 @@ MAST::SizingOptimization::_init() {
     
     
     // temperature load
-    _temperature = new MAST::ConstantFunction<Real>("temp", _infile("panel_temperature", 303.15)); // K
-    _ref_temperature = new MAST::ConstantFunction<Real>("ref_temp", _infile("panel_ref_temperature", 303.15)); // K
-    _temperature_bc = new MAST::Temperature;
+    _temperature.reset(new MAST::ConstantFunction<Real>
+                       ("temp", _infile("panel_temperature", 353.15))); // K
+    _ref_temperature.reset(new MAST::ConstantFunction<Real>
+                           ("ref_temp", _infile("panel_ref_temperature", 303.15))); // K
+    _temperature_bc.reset(new MAST::Temperature);
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
     _static_structural_assembly->add_volume_load(0, *_temperature_bc);
     _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     // pressure boundary condition
-    _pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
+    //_pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
     _pressure_bc.reset(new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE));
-    _pressure_bc->set_function(*_pressure);
     _static_structural_assembly->add_volume_load(0, *_pressure_bc);
     _eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
     
     
     // apply the boundary conditions
-    _zero_function = new libMesh::ZeroFunction<Real>;
+    _zero_function.reset(new libMesh::ZeroFunction<Real>);
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
     std::set<libMesh::boundary_id_type> dirichlet_boundary;
     // read and initialize the boundary conditions
@@ -901,13 +1095,13 @@ MAST::SizingOptimization::_init() {
     _fluid_input("extra_quadrature_order", 0);
     _fluid_eq_systems->parameters.set<bool>("if_reduced_freq") =
     _fluid_input("if_reduced_freq", false);
-    
-    _surface_motion.reset(new MAST::FlexibleSurfaceMotion(*_static_system));
-    _fluid_system_nonlin->surface_motion = _surface_motion.get();
+    _fluid_system_nonlin->deltat = _fluid_input("deltat", 1.0e-2);
     
     _eq_systems->init ();
     _fluid_eq_systems->init();
     
+    _surface_motion.reset(new MAST::FlexibleSurfaceMotion(*_static_system));
+    _fluid_system_nonlin->surface_motion = _surface_motion.get();
 
     libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
     (*(_fluid_system_freq->time_solver->diff_solver()));
@@ -980,23 +1174,54 @@ MAST::SizingOptimization::_init() {
     
     
     // element and material properties
-    _materials.resize(1);
     _parameters.resize(_n_vars);
     _parameter_functions.resize(_n_vars);
     
     DenseRealMatrix prestress; prestress.resize(3,3);
     prestress(0,0) = -1.31345e6;
     
-    _E = new MAST::ConstantFunction<Real>("E", _infile("youngs_modulus", 72.e9)),
-    _nu = new MAST::ConstantFunction<Real>("nu", _infile("poisson_ratio", 0.33)),
-    _rho = new MAST::ConstantFunction<Real>("rho", _infile("material_density", 2700.)),
-    _kappa = new MAST::ConstantFunction<Real>("kappa", _infile("shear_corr_factor", 5./6.)),
-    _alpha = new MAST::ConstantFunction<Real>("alpha", _infile("expansion_coefficient", 2.31e-5)),
+    _E.reset(new MAST::ConstantFunction<Real>
+             ("E", _infile("youngs_modulus", 72.e9))),
+    _nu.reset(new MAST::ConstantFunction<Real>
+              ("nu", _infile("poisson_ratio", 0.33))),
+    _kappa.reset(new MAST::ConstantFunction<Real>
+                 ("kappa", _infile("shear_corr_factor", 5./6.))),
+    _alpha.reset(new MAST::ConstantFunction<Real>
+                 ("alpha", _infile("expansion_coefficient", 2.31e-5))),
+    _prestress.reset(new MAST::ConstantFunction<DenseRealMatrix >
+                     ("prestress", prestress));
+    _materials.reset(new MAST::IsotropicMaterialPropertyCard(0));
     
-    _prestress = new MAST::ConstantFunction<DenseRealMatrix >("prestress", prestress);
-    _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
+    const Real
+    x0 = _infile("x_div_loc", 0., 0),  // panel LE
+    x1 = _infile("x_div_loc", 0., 1);  // panel TE
+    Real dx = (x1-x0)/(n_stations-1);
     
-    MAST::MaterialPropertyCardBase& mat = *_materials[0];
+    // create the density variables
+    for (unsigned int i=0; i<n_stations; i++) {
+        std::ostringstream oss;
+        oss << "rho_" << i;
+        
+        MAST::ConstantFunction<Real>* rho
+        = new MAST::ConstantFunction<Real>(oss.str(), _infile("rho", 2700.));
+        
+        // add this to the density map
+        _rho_station_vals.insert(std::pair<Real, MAST::FieldFunction<Real>*>
+                                 (x0+i*dx, rho));
+        
+        // add the function to the parameter map
+        _parameters[i+n_stations]          = rho->ptr();
+        _parameter_functions[i+n_stations] = rho;
+        
+        // tell the assembly system about the sensitvity parameter
+        _static_structural_assembly->add_parameter(*rho);
+        _eigen_structural_assembly->add_parameter(*rho);
+    }
+    
+    // now create the density and give it to the property card
+    _rho.reset(new MAST::MultilinearInterpolation("rho", _rho_station_vals));
+
+    MAST::MaterialPropertyCardBase& mat = *_materials;
     // add the properties to the cards
     mat.add(*_E);
     mat.add(*_nu);
@@ -1004,47 +1229,55 @@ MAST::SizingOptimization::_init() {
     mat.add(*_rho);
     mat.add(*_kappa);
     
-    _elem_properties.resize(1);
-    // stiffener modeled as beam
-    _h_y.resize(_n_vars);
-    _h_z.resize(_n_vars);
-    _offset_h_y.resize(_n_vars);
-    _offset_h_z.resize(_n_vars);
+    // create the thickness variables
+    for (unsigned int i=0; i<n_stations; i++) {
+        std::ostringstream oss;
+        oss << "h_y_" << i;
+        
+        MAST::ConstantFunction<Real>* h_y
+        = new MAST::ConstantFunction<Real>(oss.str(), _infile("thickness", 0.002));
+        
+        // add this to the density map
+        _h_y_station_vals.insert(std::pair<Real, MAST::FieldFunction<Real>*>
+                                 (x0+i*dx, h_y));
+        
+        // add the function to the parameter set
+        _parameters[i]          = h_y->ptr();
+        _parameter_functions[i] = h_y;
+        
+        // tell the assembly system about the sensitvity parameter
+        _static_structural_assembly->add_parameter(*h_y);
+        _eigen_structural_assembly->add_parameter(*h_y);
+    }
     
-    _elem_properties[0] = new MAST::Solid2DSectionElementPropertyCard(1); // panel
+    // now create the density and give it to the property card
+    _h_y.reset(new MAST::MultilinearInterpolation("hy", _h_y_station_vals));
     
     // create values for each stiffener
-    for (unsigned int i=0; i<_n_vars; i++) {
-        MAST::Solid1DSectionElementPropertyCard *p = new MAST::Solid1DSectionElementPropertyCard(2);
-        _h_y[i] = new MAST::ConstantFunction<Real>("hy", _infile("thickness", 0.002));
-        _h_z[i] = new MAST::ConstantFunction<Real>("hz", _infile("width", 0.002)),
-        _offset_h_y[i] = new MAST::BeamOffset("hy_offset", _h_y[i]->clone().release()),
-        _offset_h_z[i] = new MAST::ConstantFunction<Real>("hz_offset", 0.);
-        p->add(*_h_y[i]); // thickness
-        p->add(*_h_z[i]); // width
-        p->add(*_offset_h_y[i]); // thickness offset
-        p->add(*_offset_h_z[i]); // width offset
-        p->y_vector()(1) = 1.; // x-vector along x, y along y
-        
-        p->set_material(mat);
-        _elem_properties[i] = p;
-        
-        _parameters[i] = _h_y[i]->ptr(); // set thickness as a modifiable parameter
-        
-        _static_structural_assembly->add_parameter(*_h_y[i]);
-        _eigen_structural_assembly->add_parameter(*_h_y[i]);
-        _parameter_functions[i] = _h_y[i];
-        
-        _static_structural_assembly->set_property_for_subdomain(0, *_elem_properties[i]);
-        _eigen_structural_assembly->set_property_for_subdomain(0, *_elem_properties[i]);
-    }
+    _h_z.reset(new MAST::ConstantFunction<Real>("hz", _infile("width", 0.002))),
+    _offset_h_y.reset(new MAST::BeamOffset("hy_offset", _h_y->clone().release())),
+    _offset_h_z.reset(new MAST::ConstantFunction<Real>("hz_offset", 0.));
+
+    MAST::Solid1DSectionElementPropertyCard *p = new MAST::Solid1DSectionElementPropertyCard(2);
+    p->add(*_h_y); // thickness
+    p->add(*_h_z); // width
+    p->add(*_offset_h_y); // thickness offset
+    p->add(*_offset_h_z); // width offset
+    p->y_vector()(1) = 1.; // x-vector along x, y along y
+    
+    p->set_material(mat);
+    p->set_strain(MAST::VON_KARMAN_STRAIN);
+    _elem_properties.reset(p);
+    
+    _static_structural_assembly->set_property_for_subdomain(0, *_elem_properties);
+    _eigen_structural_assembly->set_property_for_subdomain(0, *_elem_properties);
     
     // create the function to calculate weight
     _weight = new MAST::Weight(*_mesh, *_static_structural_assembly);
     
     // create the mesh function to calculate the displacement
     std::vector<unsigned int> vars(1);
-    vars[0] = _static_system->variable_number("suy");
+    vars[0] = _static_system->variable_number("uy");
     _disp_function.reset(new libMesh::MeshFunction(_static_system->get_equation_systems(),
                                                    *_static_system->solution,
                                                    _static_system->get_dof_map(),
@@ -1069,6 +1302,12 @@ MAST::SizingOptimization::_init() {
     }
     _structural_model->eigen_vals.resize(_n_eig);
     _structural_model->init();
+    
+    // initialize the pressure boundary condition
+    _cfd_pressure.reset(new CFDPressure("cfd_pressure",
+                                        *_fluid_system_nonlin));
+    
+    _pressure_bc->set_function(*_cfd_pressure);
 }
 
 

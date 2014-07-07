@@ -1,10 +1,21 @@
-//
-//  structural_elememt_base.cpp
-//  MAST
-//
-//  Created by Manav Bhatia on 10/16/13.
-//
-//
+/*
+ * MAST: Multidisciplinary-design Adaptation and Sensitivity Toolkit
+ * Copyright (C) 2013-2014  Manav Bhatia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #include <iomanip>
 // libMesh includes
@@ -533,7 +544,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         
         Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], vec_n2);
+        local_f.add(JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add
@@ -577,7 +588,7 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
     libMesh::Point normal;
     // direction of pressure assumed to be normal (along local z-axis)
     // to the element face for 2D and along local y-axis for 1D element.
-    normal(_elem.dim()) = 1.;
+    normal(_elem.dim()) = -1.;
     
     Real press;
     
@@ -607,8 +618,10 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         
         Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], vec_n2);
+        local_f.add(JxW[qp], vec_n2);
     }
+    
+    local_f.print(std::cout);
     
     // now transform to the global system and add
     transform_to_global_system(local_f, vec_n2);
@@ -696,7 +709,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         
         Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], vec_n2);
+        local_f.add(JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add
@@ -743,7 +756,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     libMesh::Point normal;
     // direction of pressure assumed to be normal (along local z-axis)
     // to the element face for 2D and along local y-axis for 1D element.
-    normal(_elem.dim()) = 1.;
+    normal(_elem.dim()) = -1.;
     
     Real press;
     ValType dpress;
@@ -787,7 +800,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         
         Bmat.vector_mult_transpose(vec_n2, force);
         
-        local_f.add(-JxW[qp], vec_n2);
+        local_f.add(JxW[qp], vec_n2);
     }
     
     // now transform to the global system and add

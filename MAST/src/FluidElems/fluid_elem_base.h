@@ -1,10 +1,21 @@
-//
-//  euler_elem_base.h
-//  MAST
-//
-//  Created by Manav Bhatia on 3/6/13.
-//
-//
+/*
+ * MAST: Multidisciplinary-design Adaptation and Sensitivity Toolkit
+ * Copyright (C) 2013-2014  Manav Bhatia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef __MAST__euler_elem_base__
 #define __MAST__euler_elem_base__
@@ -46,17 +57,27 @@ public:
     PrimitiveSolution();
     
     void zero();
-    void init(const unsigned int dim, const DenseRealVector& conservative_sol, const Real cp_val, const Real cv_val,
+    
+    void init(const unsigned int dim,
+              const DenseRealVector& conservative_sol,
+              const Real cp_val,
+              const Real cv_val,
               bool if_viscous);
+    
     void print(std::ostream& out) const;
     
     Real c_pressure(const Real p0, const Real q0) const;
+    
     void get_uvec(DenseRealVector& u) const;
     
     DenseRealVector primitive_sol;
+    
     unsigned int dimension;
+    
     Real cp, cv;
+    
     Real rho, u1, u2, u3, T, p, a, e_tot, k, entropy, mach;
+    
     // viscous quantities
     Real Pr, k_thermal, mu, lambda;
 };
@@ -122,6 +143,10 @@ public:
     FlightCondition* flight_condition;
 
     unsigned int dim;
+    
+    bool if_viscous() const {
+        return _if_viscous;
+    }
 
 protected:
     

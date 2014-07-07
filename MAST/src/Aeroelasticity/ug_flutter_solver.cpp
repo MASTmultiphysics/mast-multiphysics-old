@@ -1,10 +1,21 @@
-//
-//  ug_flutter_solver.cpp
-//  MAST
-//
-//  Created by Manav Bhatia on 9/16/13.
-//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
-//
+/*
+ * MAST: Multidisciplinary-design Adaptation and Sensitivity Toolkit
+ * Copyright (C) 2013-2014  Manav Bhatia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 // C++ includes
 #include <iomanip>
@@ -247,11 +258,9 @@ MAST::UGFlutterSolver::calculate_sensitivity(const MAST::FlutterRootBase& root,
     
     // get the sensitivity of the matrices
     ComplexMatrixX mat_A, mat_B, mat_A_sens, mat_B_sens;
-//    initialize_matrices(root.k_ref, mat_A, mat_B);
-//    initialize_matrix_sensitivity_for_param(root.k_ref, params, i,
-//                                            mat_A_sens, mat_B_sens);
-    
-    const unsigned int nvals = (int)mat_B.rows();
+    initialize_matrices(root.k_ref, mat_A, mat_B);
+    initialize_matrix_sensitivity_for_param(params, i, root.k_ref,
+                                            mat_A_sens, mat_B_sens);
     
     // now calculate the quotient for sensitivity
     mat_A_sens *= eig;
@@ -269,8 +278,8 @@ MAST::UGFlutterSolver::calculate_sensitivity(const MAST::FlutterRootBase& root,
     sens.imag()/eig.real() - eig.imag()/pow(eig.real(),2) * sens.real();
     
     // calculate the sensitivity wrt k_ref
-//    initialize_matrix_sensitivity_for_reduced_freq(root.k_ref,
-//                                                   mat_A_sens, mat_B_sens);
+    initialize_matrix_sensitivity_for_reduced_freq(root.k_ref,
+                                                   mat_A_sens, mat_B_sens);
     
     // now calculate the quotient for sensitivity
     mat_A_sens *= eig;
@@ -281,8 +290,8 @@ MAST::UGFlutterSolver::calculate_sensitivity(const MAST::FlutterRootBase& root,
     k_sens = - root.eig_vec_left.dot(v) / den;
     
     // use this to calculate the partial derivative of g wrt k_red
-    par_g_par_alpha =
-    sens.imag()/eig.real() - eig.imag()/pow(eig.real(),2) * sens.real();
+    par_g_par_kref =
+    k_sens.imag()/eig.real() - eig.imag()/pow(eig.real(),2) * k_sens.real();
     
     
     
@@ -319,7 +328,7 @@ void MAST::UGFlutterSolver::initialize_matrices(Real k_ref,
 
 
 void
-MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(libMesh::ParameterVector& params,
+MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
                                                                unsigned int p,
                                                                Real k_ref,
                                                                ComplexMatrixX& m, // mass & aero
