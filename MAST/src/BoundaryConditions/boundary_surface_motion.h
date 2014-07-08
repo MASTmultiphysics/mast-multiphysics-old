@@ -80,7 +80,20 @@ namespace MAST {
                                       DenseComplexVector& w_trans,
                                       DenseComplexVector& u_trans,
                                       DenseComplexVector& dn_rot) = 0;
-        
+
+        /*!
+         *   calculation of sensitivity of surface velocity components wrt the 
+         *   frequency. \p u_trans is
+         *   the pure translation velocity component, while \p dn_rot defines the
+         *   surface normal perturbation
+         */
+        virtual void surface_velocity_k_sens(const Real t,
+                                             const libMesh::Point& p,
+                                             const libMesh::Point& n,
+                                             DenseComplexVector& w_trans,
+                                             DenseComplexVector& u_trans,
+                                             DenseComplexVector& dn_rot) = 0;
+
         /*!
          *   calculation of surface velocity in time domain. \p u_trans is
          *   the pure translation velocity component, while \p dn_rot defines the

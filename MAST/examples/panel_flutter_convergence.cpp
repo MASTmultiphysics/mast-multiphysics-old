@@ -480,6 +480,15 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     flutter_V = root.second->V;
     flutter_g = root.second->g;
     flutter_omega = root.second->omega;
+    
+    libMesh::ParameterVector params;
+    params.resize(1); params[0] = h_y.ptr();
+    eigen_structural_assembly.add_parameter(h_y);
+    
+    // now do sensitivity analysis of the flutter solution
+    flutter_solver.calculate_sensitivity(*(root.second),
+                                         params,
+                                         0);
 }
 
 int

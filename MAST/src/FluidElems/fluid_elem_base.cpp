@@ -2328,6 +2328,8 @@ void FluidElemBase::calculate_aliabadi_discontinuity_operator
         dval *= (p_sensor * _dissipation_scaling);
     }
     
+    dval *= _dissipation_scaling;
+    
     // set value in all three dimensions to be the same
     for (unsigned int i=0; i<dim; i++)
         discontinuity_val(i) = dval;
@@ -2420,7 +2422,8 @@ FluidElemBase::calculate_small_disturbance_aliabadi_discontinuity_operator
                             (fe_order + 1.));
         dval *= (p_sensor * _dissipation_scaling);
     }
-    
+
+    dval *= _dissipation_scaling;
     
     // set value in all three dimensions to be the same
     for (unsigned int i=0; i<dim; i++)

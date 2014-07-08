@@ -1691,16 +1691,16 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
                 delta_p_sol.get_duvec(duvec);
                 
                 // calculate the surface velocity perturbations
-                perturbed_surface_motion->surface_velocity(this->time,
-                                                           qpoint[qp],
-                                                           face_normals[qp],
-                                                           surface_unsteady_disp,
-                                                           surface_unsteady_vel,
-                                                           dnormal_unsteady);
+                perturbed_surface_motion->surface_velocity_k_sens(this->time,
+                                                                  qpoint[qp],
+                                                                  face_normals[qp],
+                                                                  surface_unsteady_disp,
+                                                                  surface_unsteady_vel,
+                                                                  dnormal_unsteady);
                 
                 // scale just the unsteady velocity term by 1/stiffness_scaling
                 // since this is the only frequency related term
-                surface_unsteady_vel *= (1./stiffness_scaling/perturbed_surface_motion->frequency);
+                surface_unsteady_vel *= (1./stiffness_scaling);
                 
                 // now check if the surface deformation is defined and
                 // needs to be applied through transpiration boundary

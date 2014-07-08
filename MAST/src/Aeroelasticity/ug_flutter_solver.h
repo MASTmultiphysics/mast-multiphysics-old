@@ -62,6 +62,14 @@ namespace MAST {
          */
         virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root();
 
+        /*!
+         *   Calculate the sensitivity of the flutter root with respect to the
+         *   \par i^th parameter in params
+         */
+        virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
+                                           const libMesh::ParameterVector& params,
+                                           const unsigned int i);
+        
     protected:
         
         /*!
@@ -80,14 +88,6 @@ namespace MAST {
                 const MAST::FlutterSolutionBase* prev_sol=NULL);
 
         
-        /*!
-         *   Calculate the sensitivity of the flutter root with respect to the
-         *   \par i^th parameter in params
-         */
-        virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
-                                           const libMesh::ParameterVector& params,
-                                           const unsigned int i);
-
         
         /*!
          *    initializes the matrices for the specified k_ref. UG does not account
