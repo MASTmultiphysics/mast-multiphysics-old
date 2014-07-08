@@ -60,11 +60,13 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix_sensitivity(const libMesh::ParameterVector& params,
-                                                      unsigned int p,
-                                                      Real k_ref, ComplexMatrixX& a) {
+    virtual bool
+    get_aero_operator_matrix_sensitivity(const libMesh::ParameterVector& params,
+                                         unsigned int p,
+                                         Real k_ref, ComplexMatrixX& a) {
         // get the structural basis
-        BasisMatrix<Real>& structural_basis = structure.get_basis_matrix();
+        BasisMatrix<Real>& structural_basis =
+        dynamic_cast<FEMStructuralModel&>(structural_model).get_basis_matrix();
         
         a.setZero(structural_basis.n(), structural_basis.n());
         
@@ -80,8 +82,9 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_ref,
-                                                                       ComplexMatrixX& a);
+    virtual bool
+    get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_ref,
+                                                          ComplexMatrixX& a);
     
 
     std::string nm;
@@ -233,7 +236,18 @@ get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_ref,
         projected_force.setZero(structural_basis.n());
         surface_motion->init(k_ref, 0., structural_basis.basis(j_basis));
         aero.linearized_fluid_system.perturbed_surface_motion = surface_motion.get();
+        
+        // first solve the basic solution
         aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
+        std::auto_ptr<libMesh::NumericVector<Real> >
+        base_sol(aero.linearized_fluid_system.solution->clone().release());
+        aero.linearized_fluid_system.base_solution = base_sol.get();
+        
+        // now solve the sensitivity problem
+        aero.linearized_fluid_system.solution->zero();
+        aero.linearized_fluid_system.if_k_red_sensitivity = true;
+        aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
+        aero.linearized_fluid_system.if_k_red_sensitivity = false;
         
         std::vector<unsigned int> vars(2), dval(1);
         vars[0] = aero.linearized_fluid_system.variable_number("drho_re");

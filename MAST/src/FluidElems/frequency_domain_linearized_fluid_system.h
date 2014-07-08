@@ -45,6 +45,7 @@ public:
     libMesh::FEMSystem(es, name_in, number_in),
     FluidElemBase(*es.parameters.get<GetPot*>("input_file")),
     perturbed_surface_motion(NULL),
+    if_k_red_sensitivity(false),
     _if_localized_sol(false)
     { }
     
@@ -58,10 +59,16 @@ public:
     
     virtual bool element_time_derivative (bool request_jacobian,
                                           libMesh::DiffContext &context);
-    
+
+    virtual bool element_time_derivative_k_sens (bool request_jacobian,
+                                                 libMesh::DiffContext &context);
+
     virtual bool side_time_derivative (bool request_jacobian,
                                        libMesh::DiffContext &context);
-    
+
+    virtual bool side_time_derivative_k_sens (bool request_jacobian,
+                                              libMesh::DiffContext &context);
+
     std::vector<unsigned int> vars;
 
     /*!
@@ -69,6 +76,17 @@ public:
      *   steady surface motion that the body might have seen.
      */
     MAST::SurfaceMotionBase* perturbed_surface_motion;
+    
+    /*!
+     *   flag to tell the system if the quantity being solved for is sensitivity
+     *    wrt reduced_frequency.
+     */
+    bool if_k_red_sensitivity;
+
+    /*!
+     *   this is the base solution about which sensitivity is to be calculated
+     */
+    libMesh::NumericVector<Real>* base_solution;
     
 protected:
     

@@ -194,7 +194,9 @@ public:
      */
     virtual bool get_damping_matrix_sensitivity(const libMesh::ParameterVector& params,
                                                 unsigned int p,
-                                                RealMatrixX& m);
+                                                RealMatrixX& m) {
+        libmesh_error(); // to be implemented
+    }
     
     /*!
      *     returns the basis matrix for this structural model
