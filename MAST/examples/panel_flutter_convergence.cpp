@@ -466,16 +466,23 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     if (!init.comm().rank())
         flutter_solver.print_crossover_points();
     std::pair<bool, const MAST::FlutterRootBase*> root =
-    flutter_solver.find_critical_root();
-    libmesh_assert(root.first);
+    flutter_solver.find_critical_root(1.e-8,10);
+    
     if (!init.comm().rank())
         flutter_solver.print_sorted_roots();
     
-    // get the values of n_dofs and flutter solution for return
     n_dofs = fluid_system_freq.n_dofs();
-    flutter_V = root.second->V;
-    flutter_g = root.second->g;
-    flutter_omega = root.second->omega;
+    // get the values of n_dofs and flutter solution for return
+    if (root.first) {
+        flutter_V = root.second->V;
+        flutter_g = root.second->g;
+        flutter_omega = root.second->omega;
+    }
+    else {
+        flutter_V     = -1.;
+        flutter_g     = -1.;
+        flutter_omega = -1.;
+    }
     
     // delete the bc
     for (unsigned int i=0; i<bc.size(); i++)

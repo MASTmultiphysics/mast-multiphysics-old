@@ -108,7 +108,9 @@ namespace MAST {
          *   are sorted with increasing velocity, and this method will attempt to
          *   identify the next critical root in the order.
          */
-        virtual std::pair<bool, const MAST::FlutterRootBase*> find_next_root();
+        virtual std::pair<bool, const MAST::FlutterRootBase*>
+        find_next_root(const Real g_tol,
+                       const unsigned int n_bisection_iters);
         
         
         /*!
@@ -116,7 +118,9 @@ namespace MAST {
          *   lowest velocity crossover has been calculated. If not, then it
          *   attempts to find that root using an iterative approach
          */
-        virtual std::pair<bool, const MAST::FlutterRootBase*> find_critical_root();
+        virtual std::pair<bool, const MAST::FlutterRootBase*>
+        find_critical_root(const Real g_tol,
+                           const unsigned int n_bisection_iters);
 
         /*!
          *   Calculate the sensitivity of the flutter root with respect to the

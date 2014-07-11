@@ -191,7 +191,7 @@ int flutter_driver (libMesh::LibMeshInit& init, GetPot& infile,
     flutter_solver.scan_for_roots();
     if (!init.comm().rank())
         flutter_solver.print_crossover_points();
-    flutter_solver.find_critical_root();
+    flutter_solver.find_critical_root(1.0e-3, 5);
     if (!init.comm().rank())
         flutter_solver.print_sorted_roots();
     

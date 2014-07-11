@@ -50,6 +50,27 @@ namespace MAST {
         root_sens(0.)
         {}
         
+        /*!
+         *   copy constructor
+         */
+        FlutterRootBase(const FlutterRootBase& f):
+        if_nonphysical_root(f.if_nonphysical_root),
+        has_sensitivity_data(f.has_sensitivity_data),
+        V(f.V),
+        g(f.g),
+        omega(f.omega),
+        k_red(f.k_red),
+        V_sens(f.V_sens),
+        k_red_sens(f.k_red_sens),
+        root(f.root),
+        root_sens(f.root_sens),
+        eig_vec_right(f.eig_vec_right),
+        eig_vec_left(f.eig_vec_left),
+        modal_participation(f.modal_participation)
+        {}
+        
+        
+        
         virtual ~FlutterRootBase() {}
         
         bool if_nonphysical_root;

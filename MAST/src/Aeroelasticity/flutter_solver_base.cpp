@@ -124,7 +124,8 @@ void MAST::FlutterSolverBase::scan_for_roots()
 
 
 std::pair<bool, const MAST::FlutterRootBase*>
-MAST::FlutterSolverBase::find_next_root()
+MAST::FlutterSolverBase::find_next_root(const Real g_tol,
+                                        const unsigned int n_bisection_iters)
 {
     // iterate over the cross-over points and calculate the next that has
     // not been evaluated
@@ -138,7 +139,7 @@ MAST::FlutterSolverBase::find_next_root()
             const unsigned int root_num = cross->root_num;
             std::pair<bool, MAST::FlutterSolutionBase*> bisection_sol =
             bisection_search(cross->crossover_solutions,
-                             root_num, 1.0e-5, 10);
+                             root_num, g_tol, n_bisection_iters);
             cross->root = &(bisection_sol.second->get_root(root_num));
             
             // now, remove this entry from the _flutter_crossover points and
@@ -160,7 +161,8 @@ MAST::FlutterSolverBase::find_next_root()
 
 
 std::pair<bool, const MAST::FlutterRootBase*>
-MAST::FlutterSolverBase::find_critical_root()
+MAST::FlutterSolverBase::find_critical_root(const Real g_tol,
+                                            const unsigned int n_bisection_iters)
 {
     // iterate over the cross-over points and calculate the next that has
     // not been evaluated
@@ -181,7 +183,7 @@ MAST::FlutterSolverBase::find_critical_root()
             const unsigned int root_num = cross->root_num;
             std::pair<bool, MAST::FlutterSolutionBase*> bisection_sol =
             bisection_search(cross->crossover_solutions,
-                             root_num, 1.0e-9, 30);
+                             root_num, g_tol, n_bisection_iters);
             cross->root = &(bisection_sol.second->get_root(root_num));
             
             // now, remove this entry from the _flutter_crossover points and

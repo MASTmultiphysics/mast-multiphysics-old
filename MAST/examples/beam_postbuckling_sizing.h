@@ -166,7 +166,45 @@ namespace MAST {
         
         virtual void total(const MAST::FieldFunctionBase& f,
                            const libMesh::Point& p, Real t, Real& v) const {
-            libmesh_error(); // to be implemented
+            
+            //
+            // the following is used for calculation of the return value
+            //   f(x) is defined for x for each x0 < x < x1
+            //   if   x <= x0,      f(x) = f(x0)
+            //   if   x0 < x < x1,  f(x) is interpolated
+            //   if   x >= x1,      f(x) = f(x1)
+            //
+            
+            std::map<Real, MAST::FieldFunction<Real>*>::const_iterator
+            it1, it2;
+            std::map<Real, MAST::FieldFunction<Real>*>::const_reverse_iterator
+            rit = _values.rbegin();
+            it1  = _values.begin();
+            
+            // check the lower bound
+            if (p(0) <=  it1->first) {
+                (*it1->second)(p, t, v);
+            }
+            // check the upper bound
+            else if (p(0) >=  rit->first) {
+                (*rit->second)(p, t, v);
+            }
+            else {
+                // if it gets here, the ordinate is in between the provided range
+                it2 = _values.lower_bound(p(0));
+                // this cannot be the first element of the map
+                libmesh_assert(it2 != _values.begin());
+                // it2 provides the upper bound. The lower bound is provided by the
+                // preceding iterator
+                it1 = it2--;
+                Real f0 = 0., f1 = 0.;
+                it1->second->total(f, p, t, f0);
+                it2->second->total(f, p, t, f1);
+                // now interpolate
+                v =  (f0 +
+                      (p(0) - it1->first)/(it2->first - it1->first) *
+                      (f1-f0));
+            }
         }
     };
     
@@ -204,7 +242,7 @@ namespace MAST {
         
         virtual void operator() (const libMesh::Point& p, Real t, Real& v) const {
             (*_dim)(p, t, v);
-            v *= 0.5;
+            v *= 0.5*0;
         }
         
         virtual void partial(const MAST::FieldFunctionBase& f,
@@ -215,7 +253,7 @@ namespace MAST {
         virtual void total(const MAST::FieldFunctionBase& f,
                            const libMesh::Point& p, Real t, Real& v) const {
             _dim->total(f, p, t, v);
-            v *= 0.5;
+            v *= 0.5*0;
         }
         
     };
@@ -284,7 +322,7 @@ namespace MAST {
                 x0 = e->point(0)(0);
                 x1 = e->point(1)(0);
                 dx = (x1-x0)/n_sec;
-                for (unsigned int i=0; i<=3; i++) {
+                for (unsigned int i=0; i<n_sec; i++) {
                     elem_p(0) = x0 + dx*i;
                     (*stiff_area)(elem_p, 0., h);
                     rhof(elem_p, 0., rho);
@@ -301,34 +339,44 @@ namespace MAST {
         
         virtual void total(const MAST::FieldFunctionBase& f,
                            const libMesh::Point& p, Real t, Real& v) const {
-            
-            libmesh_error(); // to be implemented
-            v = 0.;
-            
             libMesh::MeshBase::const_element_iterator
             eit  = _mesh.active_local_elements_begin(),
             eend = _mesh.active_local_elements_end();
             
-            Real h, rho;
+            Real h, rho, dh, drho, x0, x1, dx;
             v = 0.;
+            
+            libMesh::Point elem_p;
+            const unsigned int n_sec = 3; // number of quadrature divs
             
             for ( ; eit != eend; eit++ ) {
                 const libMesh::Elem* e = *eit;
                 const MAST::ElementPropertyCardBase& prop =
                 _assembly.get_property_card(*e);
-                const MAST::MaterialPropertyCardBase& mat =
-                prop.get_material();
-                const MAST::FieldFunction<Real> &rhof =
-                mat.get<MAST::FieldFunction<Real> >("rho");
                 const MAST::Solid1DSectionElementPropertyCard& prop1d =
                 dynamic_cast<const MAST::Solid1DSectionElementPropertyCard&>(prop);
                 std::auto_ptr<MAST::FieldFunction<Real> >
                 stiff_area (prop1d.section_property<MAST::FieldFunction<Real> >("A").release());
+                const MAST::MaterialPropertyCardBase& mat =
+                prop.get_material();
+                const MAST::FieldFunction<Real> &rhof =
+                mat.get<MAST::FieldFunction<Real> >("rho");
                 
-                stiff_area->total(f, p, 0., h);
-                rhof(p, 0., rho);
+                // for each element iterate over the length and calculate the
+                // weight from the section area and section density
+                // use three point trapezoidal rule to calculate the integral
+                x0 = e->point(0)(0);
+                x1 = e->point(1)(0);
+                dx = (x1-x0)/n_sec;
+                for (unsigned int i=0; i<n_sec; i++) {
+                    elem_p(0) = x0 + dx*i;
+                    (*stiff_area)(elem_p, 0., h);
+                    stiff_area->total(f, elem_p, 0., dh);
+                    rhof(elem_p, 0., rho);
+                    rhof.total(f, elem_p, 0., drho);
+                    v += (dh * rho + h * drho) * dx;
+                }
                 
-                v += e->volume() * h * rho;
             }
         }
     };
@@ -405,14 +453,6 @@ namespace MAST {
         
         
         
-        virtual void evaluate_func(const std::vector<Real>& dvars,
-                                   Real& obj,
-                                   bool eval_obj_grad,
-                                   std::vector<Real>& obj_grad,
-                                   std::vector<Real>& fvals,
-                                   std::vector<bool>& eval_grads,
-                                   std::vector<Real>& grads);
-
         virtual void evaluate(const std::vector<Real>& dvars,
                               Real& obj,
                               bool eval_obj_grad,
@@ -552,6 +592,7 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
 }
 
 
+
 inline
 void
 MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
@@ -561,39 +602,6 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                                    std::vector<Real>& fvals,
                                    std::vector<bool>& eval_grads,
                                    std::vector<Real>& grads) {
-    std::vector<Real> dv0 = dvars;
-    
-    std::vector<bool> eval_grads_false = eval_grads;
-    std::fill(eval_grads_false.begin(), eval_grads_false.end(), false);
-    
-    
-    evaluate_func(dv0, obj, false, obj_grad, fvals, eval_grads_false, grads);
-    
-    Real delta = 1.0e-4, dobj = 0.;
-    if (eval_obj_grad) {
-        std::vector<Real> dfvals = fvals;
-        std::fill(dfvals.begin(), dfvals.end(), 0.);
-        dv0[0] += delta;
-        
-        evaluate_func(dv0, dobj, false, obj_grad, dfvals, eval_grads_false, grads);
-        obj_grad[0] = (dobj-obj)/delta;
-        
-        for (unsigned int i=0; i<_n_ineq; i++)
-            grads[i] = (dfvals[i]-fvals[i])/delta;
-    }
-    
-}
-
-
-inline
-void
-MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
-                                        Real& obj,
-                                        bool eval_obj_grad,
-                                        std::vector<Real>& obj_grad,
-                                        std::vector<Real>& fvals,
-                                        std::vector<bool>& eval_grads,
-                                        std::vector<Real>& grads) {
     
     
     libmesh_assert_equal_to(dvars.size(), _n_vars);
@@ -602,20 +610,20 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     for (unsigned int i=0; i<_n_vars; i++)
         *_parameters[i] = dvars[i];
     
+    // zero out the gradient vector
+    std::fill(obj_grad.begin(), obj_grad.end(), 0.);
+    std::fill(grads.begin(), grads.end(), 0.);
+    
     libMesh::Point pt; // dummy point object
     
-    // calculate weight
-    (*_weight)(pt, 0., obj);
-    
-    // calculate sensitivity of weight if requested
-    if (eval_obj_grad) {
-        std::fill(obj_grad.begin(), obj_grad.end(), 0.);
-        for (unsigned int i=0; i<_n_vars; i++)
-            _weight->total(*_parameter_functions[i], pt, 0., obj_grad[i]);
-    }
-    
-    // now solve the system
     libMesh::out << "New Eval" << std::endl;
+
+    // the optimization problem is defined as
+    // max Vf subject to constraint on weight
+    Real wt = 0., vf = 0., disp = 0., disp_0 = 0.01, wt_0 = 54.;
+    
+    // calculate weight
+    (*_weight)(pt, 0., wt);
     
     // first zero the solution and init the Euler variables to undisturbed solution
     _static_system->solution->zero();
@@ -761,29 +769,23 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     
     // now get the displacement constraint
     pt(0) = 3.;
-    DenseRealVector disp;
-    (*_disp_function)(pt, 0., disp);
+    DenseRealVector disp_vec;
+    (*_disp_function)(pt, 0., disp_vec);
     // reference displacement value
-    Real ref_disp = 0.01;
     // w < w0 => w/w0 < 1. => w/w0 - 1. < 0
-    fvals[0] = disp(0)/ref_disp-1.;
-
+    disp = disp_vec(0);
+    
     // flutter solution
     _flutter_solver->clear_solutions();
     _flutter_solver->scan_for_roots();
     if (!_libmesh_init.comm().rank())
         _flutter_solver->print_crossover_points();
     std::pair<bool, const MAST::FlutterRootBase*> root =
-    _flutter_solver->find_critical_root();
+    _flutter_solver->find_critical_root(1.e-3, 5);
     if (root.first) {
         if (!_libmesh_init.comm().rank())
             _flutter_solver->print_sorted_roots();
-        
-        // flutter constraint
-        Real ref_V = 1000.;
-        // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
-        //
-        fvals[1] = 1. - root.second->V/ref_V;;
+        vf = root.second->V;
     }
     else
         // no root was identified. So, set a feasible constraint value
@@ -791,9 +793,18 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     
     std::vector<Real> grad_vals;
     
-    if (eval_grads[0]) {
+    // set the function and objective values
+    // flutter objective
+    // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
+    //
+    obj = -vf;
+    // w < w0 => w/w0 < 1. => w/w0 - 1. < 0
+    fvals[0] = disp/disp_0-1.;
+    fvals[1] =     wt/wt_0-1.;
+    
+    if (eval_obj_grad) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
-        // static analysis is performed without von-Karman strain
+        /*// static analysis is performed without von-Karman strain
         _static_system->sensitivity_solve(_parameters);
         // eigen analysis is performed with von-Karman strain
         _eigen_system->sensitivity_solve(_parameters, grad_vals);
@@ -811,9 +822,29 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
         // get the displacement gradient
         pt(0) = 3.0;
         for (unsigned int j=0; j<_n_vars; j++) {
-            disp.zero();
-            (*_disp_function_sens[j])(pt, 0., disp);
-            grads[(j+1)*_n_ineq-1] = disp(0);
+            disp_vec.zero();
+            (*_disp_function_sens[j])(pt, 0., disp_vec);
+            grads[(j+1)*_n_ineq-1] = disp_vec(0);
+        }
+         */
+        // ask flutter solver for the sensitivity
+        
+        // set gradient of weight
+        for (unsigned int i=0; i<_n_vars; i++)
+            _weight->total(*_parameter_functions[i], pt, 0., grads[i*_n_ineq+1]);
+        
+        // now get the flutter sensitivity
+        // if the flutter was not found, then the sensitivity is zero.
+        if (root.first) {
+            // create a copy of the root and use it to calculate the
+            // sensitivity of the flutter velocity
+            MAST::FlutterRootBase root_sens(*root.second);
+            for (unsigned int i=0; i<_n_vars; i++) {
+                _flutter_solver->calculate_sensitivity(root_sens,
+                                                       _parameters,
+                                                       i);
+                obj_grad[i] = -root_sens.V_sens;
+            }
         }
     }
 }
@@ -864,7 +895,7 @@ MAST::SizingOptimization::_init() {
     
     _n_eq = 0;
     _n_ineq = (1 +   // +1 for the displacement
-               1);   // +1 for flutter constraint
+               1);   // +1 for weight constraint
     _max_iters = 10000;
     
     // now initialize the mesh
@@ -976,7 +1007,7 @@ MAST::SizingOptimization::_init() {
     
     _eigen_system->set_eigenproblem_type(libMesh::GHEP);
     _eigen_system->eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
-    _eigen_structural_assembly->set_static_solution_system(_static_system);
+    //_eigen_structural_assembly->set_static_solution_system(_static_system);
     
     
     // initialize the fluid data structures
