@@ -540,9 +540,9 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     
     for (unsigned int i=0; i<_n_vars/2; i++) {
         // first half is the thickness values
-        x[i]    = 0.015;
+        x[i]    =  0.01;
         xmin[i] = 0.006;
-        xmax[i] = 0.2;
+        xmax[i] =   0.2;
         
         // next half is the density values
         x[i+_n_vars/2]    =  2700.;
@@ -623,7 +623,7 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
     init_euler_variables(*_fluid_eq_systems, "FluidSystem");
     
     // increase the load over several load steps
-    const unsigned int n_load_steps = 100;
+    const unsigned int n_load_steps = 000;
     Real temp_val, ref_temp;
     (*_temperature)(pt, 0., temp_val);
     (*_ref_temperature)(pt, 0., ref_temp);
@@ -732,38 +732,35 @@ MAST::SizingOptimization::evaluate_func(const std::vector<Real>& dvars,
             std::ostringstream vec_nm;
             vec_nm << "mode_" << i;
             libMesh::NumericVector<Real>& vec = _eigen_system->get_vector(vec_nm.str());
+            _eigen_system->solution->scale(sqrt(eigval.real()));
             vec = *(_eigen_system->solution);
-            vec.scale(sqrt(eigval.real()));
             vec.close();
                         
             // rescale so that the inner product with the mass matrix is identity
             
             
-            //            {
-            //                std::ostringstream file_name;
-            //
-            //                // We write the file in the ExodusII format.
-            //                file_name << "out_"
-            //                << std::setw(3)
-            //                << std::setfill('0')
-            //                << std::right
-            //                << i
-            //                << ".exo";
-            //
-            //                // now write the eigenvlaues
-            //                _system->get_eigenpair(i);
-            //
-            //                // We write the file in the ExodusII format.
-            //                libMesh::Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
-            //                                                          *_eq_systems);
-            //            }
+            {
+                std::ostringstream file_name;
+                
+                // We write the file in the ExodusII format.
+                file_name << "out_"
+                << std::setw(3)
+                << std::setfill('0')
+                << std::right
+                << i
+                << ".exo";
+                
+                // We write the file in the ExodusII format.
+                libMesh::Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
+                                                                   *_eq_systems);
+            }
         }
     else
         libmesh_error(); // should not get here.
     
     
     // now get the displacement constraint
-    pt(0) = 0.25;
+    pt(0) = 3.;
     DenseRealVector disp;
     (*_disp_function)(pt, 0., disp);
     // reference displacement value
@@ -927,14 +924,14 @@ MAST::SizingOptimization::_init() {
     _temperature_bc.reset(new MAST::Temperature);
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
-    _static_structural_assembly->add_volume_load(0, *_temperature_bc);
-    _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_static_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     // pressure boundary condition
     //_pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
     _pressure_bc.reset(new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE));
-    _static_structural_assembly->add_volume_load(0, *_pressure_bc);
-    _eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
+    //_static_structural_assembly->add_volume_load(0, *_pressure_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
     
     
     // apply the boundary conditions
@@ -1178,7 +1175,7 @@ MAST::SizingOptimization::_init() {
     _parameter_functions.resize(_n_vars);
     
     DenseRealMatrix prestress; prestress.resize(3,3);
-    prestress(0,0) = -1.31345e6;
+    //prestress(0,0) = -1.31345e6;
     
     _E.reset(new MAST::ConstantFunction<Real>
              ("E", _infile("youngs_modulus", 72.e9))),

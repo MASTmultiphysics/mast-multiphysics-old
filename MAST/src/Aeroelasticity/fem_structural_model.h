@@ -76,15 +76,23 @@ public:
                                              unsigned int p,
                                              RealMatrixX& m) {
         libMesh::SparseMatrix<Real>& mat =
-        *(dynamic_cast<libMesh::ImplicitSystem&>(structural_system).matrix);
+        *(dynamic_cast<libMesh::EigenSystem&>(structural_system).matrix_A);
         
         const MAST::FieldFunctionBase* f = assembly.get_parameter(params[p]);
         
+        // check to see if the eigen sytsem has a static deformation
+        libMesh::NumericVector<Real> *sol=NULL, *sol_sens=NULL;
+        libMesh::System* static_sys = assembly.static_solution_system();
+
+        if (static_sys) {
+            sol = static_sys->solution.get(),
+            // the sensitivity of static system should have been solved by now.
+            sol_sens = &(static_sys->get_sensitivity_solution(p));
+            
+        }
+
         // calculate the mass matrix
-        assembly.assemble_mass(mat,
-                               f,
-                               structural_system.solution.get(),
-                               &(structural_system.get_sensitivity_solution(p)));
+        assembly.assemble_mass(mat, f, sol, sol_sens);
 
         std::auto_ptr<libMesh::NumericVector<Real> >
         vec(structural_system.solution->zero_clone().release());
@@ -134,18 +142,27 @@ public:
         std::auto_ptr<libMesh::NumericVector<Real> >
         vec(structural_system.solution->zero_clone().release());
         
-        m.setZero(basis_matrix->n(), basis_matrix->n());
-
         libMesh::SparseMatrix<Real>& mat =
-        *(dynamic_cast<libMesh::ImplicitSystem&>(structural_system).matrix);
+        *(dynamic_cast<libMesh::EigenSystem&>(structural_system).matrix_A);
         
         const MAST::FieldFunctionBase* f = assembly.get_parameter(params[p]);
-        libMesh::NumericVector<Real> *sol = structural_system.solution.get(),
-        *sol_sens = &(structural_system.get_sensitivity_solution(p));
         
-        // calculate the mass matrix
+        // check to see if the eigen sytsem has a static deformation
+        libMesh::NumericVector<Real> *sol=NULL, *sol_sens=NULL;
+        libMesh::System* static_sys = assembly.static_solution_system();
+        
+        if (static_sys) {
+            sol = static_sys->solution.get(),
+            // the sensitivity of static system should have been solved by now.
+            sol_sens = &(static_sys->get_sensitivity_solution(p));
+            
+        }
+        
+        // calculate the stiffness matrix sensitivity
         mat.zero();
         assembly.assemble_jacobian(mat, f, sol, sol_sens);
+        
+        m.setZero(basis_matrix->n(), basis_matrix->n());
         
         // now calculate the projection
         for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
@@ -160,20 +177,23 @@ public:
         }
         
         // do the same for the nonlinear term
-        // calculate the mass matrix
+        // calculate the stiffness matrix sensitivity times static state
+        // sensitivity
         mat.zero();
-        assembly.assemble_jacobian_dot_state_sensitivity(mat, sol, sol_sens);
-        
-        // now calculate the projection
-        for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
-        {
-            projected_force.setZero(basis_matrix->n());
+        if (assembly.static_solution_system()) {
+            assembly.assemble_jacobian_dot_state_sensitivity(mat, sol, sol_sens);
             
-            mat.vector_mult(*vec, basis_matrix->basis(j_basis));
-            // Phi^T A_FS X_F
-            basis_matrix->vector_mult_transpose(projected_force, *vec);
-            
-            m.col(j_basis) = projected_force;
+            // now calculate the projection
+            for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
+            {
+                projected_force.setZero(basis_matrix->n());
+                
+                mat.vector_mult(*vec, basis_matrix->basis(j_basis));
+                // Phi^T A_FS X_F
+                basis_matrix->vector_mult_transpose(projected_force, *vec);
+                
+                m.col(j_basis) += projected_force;
+            }
         }
         
         return true;

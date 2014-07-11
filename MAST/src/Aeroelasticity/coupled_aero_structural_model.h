@@ -104,11 +104,11 @@ public:
     
     /*!
      *    updates the aerodynamic matrix operator in \par a for the
-     *    reduced frequency \par k_ref. This method projects the aero
+     *    reduced frequency \par k_red. This method projects the aero
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix(Real k_ref, ComplexMatrixX& a)
+    virtual bool get_aero_operator_matrix(Real k_red, ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class
         libmesh_assert(false);
@@ -116,13 +116,13 @@ public:
 
     /*!
      *    updates the aerodynamic matrix operator sensitivity in \par a for the
-     *    reduced frequency \par k_ref. This method projects the aero
+     *    reduced frequency \par k_red. This method projects the aero
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
     virtual bool get_aero_operator_matrix_sensitivity(const libMesh::ParameterVector& params,
                                                       unsigned int p,
-                                                      Real k_ref, ComplexMatrixX& a)
+                                                      Real k_red, ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class
         libmesh_assert(false);
@@ -131,11 +131,11 @@ public:
     /*!
      *    updates the aerodynamic matrix operator sensitivity wrt reduced
      *    frequency in \par a for the
-     *    reduced frequency \par k_ref. This method projects the aero
+     *    reduced frequency \par k_red. This method projects the aero
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_ref,
+    virtual bool get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
                                                                        ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class

@@ -33,7 +33,7 @@ MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
                           const ComplexVectorX& evec_right,
                           const ComplexVectorX& evec_left)
 {
-    k_ref = k;
+    k_red = k;
     
     if (std::abs(den) > 0.)
     {
@@ -42,7 +42,7 @@ MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
         {
             V     = sqrt(1./std::real(root));
             g     = std::imag(root)/std::real(root);
-            omega = k_ref*V/b_ref;
+            omega = k_red*V/b_ref;
             if_nonphysical_root = false;
         }
         else
@@ -151,7 +151,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
     }
     
     // now look for oscillatory roots crossover points in decreasing
-    // order of k_ref
+    // order of k_red
     for (unsigned int i=0; i<nvals; i++) {
         std::map<Real, MAST::FlutterSolutionBase*>::const_reverse_iterator
         sol_rit    = _flutter_solutions.rbegin(), // first of the pair
@@ -162,7 +162,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
         
         sol_ritp1++; // increment for the next pair of results
         while (sol_ritp1 != sol_rend) {
-            // do not use k_ref = 0, or if the root is invalid
+            // do not use k_red = 0, or if the root is invalid
             if (sol_rit->second->get_root(i).if_nonphysical_root ||
                 sol_ritp1->second->get_root(i).if_nonphysical_root ||
                 fabs(sol_rit->second->ref_val()) < tol ||
@@ -209,27 +209,27 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
 
 
 MAST::FlutterSolutionBase*
-MAST::UGFlutterSolver::analyze(const Real k_ref,
+MAST::UGFlutterSolver::analyze(const Real k_red,
                                const MAST::FlutterSolutionBase* prev_sol) {
     ComplexMatrixX m, k;
     
     libMesh::out
     << " ====================================================" << std::endl
     << "UG Solution for k_red = "
-    << std::setw(10) << k_ref << std::endl;
+    << std::setw(10) << k_red << std::endl;
     
-    initialize_matrices(k_ref, m, k);
+    initialize_matrices(k_red, m, k);
     LAPACK_ZGGEV ges;
     ges.compute(m, k);
     ges.scale_eigenvectors_to_identity_innerproduct();
-    
+
     // now insert the root
     std::pair<Real, MAST::FlutterSolutionBase*>
-    val(k_ref, new MAST::FrequencyDomainFlutterSolution(*this));
+    val(k_red, new MAST::FrequencyDomainFlutterSolution(*this));
     bool success = _flutter_solutions.insert(val).second;
     libmesh_assert (success); // make sure that it was successfully added
     dynamic_cast<MAST::FrequencyDomainFlutterSolution*>(val.second)->init
-    (k_ref, flight_condition->ref_chord, ges);
+    (k_red, flight_condition->ref_chord, ges);
     val.second->print(_output, _mode_output);
     
     if (prev_sol)
@@ -246,62 +246,85 @@ MAST::UGFlutterSolver::analyze(const Real k_ref,
 
 
 
-Real
-MAST::UGFlutterSolver::calculate_sensitivity(const MAST::FlutterRootBase& root,
+void
+MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
                                              const libMesh::ParameterVector& params,
                                              const unsigned int i) {
     // make sure that the aero_structural_model is a valid pointer
     libmesh_assert(aero_structural_model);
     
     Complex eig = root.root, sens = 0., k_sens = 0., den = 0.;
-    Real par_g_par_alpha = 0., par_g_par_kref = 0.;
+    Real par_g_par_alpha = 0., par_g_par_kref = 0., par_k_par_alpha = 0.,
+    V_sens=0.;
     
     // get the sensitivity of the matrices
     ComplexMatrixX mat_A, mat_B, mat_A_sens, mat_B_sens;
-    initialize_matrices(root.k_ref, mat_A, mat_B);
-    initialize_matrix_sensitivity_for_param(params, i, root.k_ref,
+    ComplexVectorX v;
+
+    // initialize the baseline matrices
+    initialize_matrices(root.k_red, mat_A, mat_B);
+
+    // calculate the eigenproblem sensitivity
+    initialize_matrix_sensitivity_for_param(params, i, root.k_red,
                                             mat_A_sens, mat_B_sens);
+
+    // the eigenproblem is     A x - lambda B x = 0
+    // therefore, the denominator is obtained from the inner product of
+    // x^T B x
+    // sensitivity is
+    //   -dlambda/dp x^T B x = - x^T (dA/dp - lambda dB/dp)
+    // or
+    //   dlambda/dp = [x^T (dA/dp - lambda dB/dp)]/(x^T B x)
     
     // now calculate the quotient for sensitivity
-    mat_A_sens *= eig;
-    mat_A_sens -= mat_B_sens;
-    
-    // calculate numerator
-    ComplexVectorX v = mat_A_sens*root.eig_vec_right;
-    sens = - root.eig_vec_left.dot(v);
-    
-    den = root.eig_vec_left.dot(mat_A*root.eig_vec_right);
-    sens /= den;
+    // numerator =  ( dA/dp - lambda dB/dp)
+    mat_B_sens *= -eig;
+    mat_B_sens += mat_A_sens;
+    v = mat_B_sens*root.eig_vec_right;
+    den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
+    sens = root.eig_vec_left.dot(v)/den;
     
     // now add the correction from sensitivity of g(k) = 0
     par_g_par_alpha =
     sens.imag()/eig.real() - eig.imag()/pow(eig.real(),2) * sens.real();
+
     
-    // calculate the sensitivity wrt k_ref
-    initialize_matrix_sensitivity_for_reduced_freq(root.k_ref,
+    // next we need the sensitivity of k_red before we can calculate
+    // the sensitivity of flutter eigenvalue
+    initialize_matrix_sensitivity_for_reduced_freq(root.k_red,
                                                    mat_A_sens, mat_B_sens);
     
-    // now calculate the quotient for sensitivity
-    mat_A_sens *= eig;
-    mat_A_sens -= mat_B_sens;
-    
+    // now calculate the quotient for sensitivity wrt k_red
     // calculate numerator
-    v = mat_A_sens*root.eig_vec_right;
-    k_sens = - root.eig_vec_left.dot(v) / den;
+    mat_B_sens *= -eig;
+    mat_B_sens += mat_A_sens;
+    v = mat_B_sens*root.eig_vec_right;
+    k_sens = root.eig_vec_left.dot(v) / den;
     
     // use this to calculate the partial derivative of g wrt k_red
     par_g_par_kref =
     k_sens.imag()/eig.real() - eig.imag()/pow(eig.real(),2) * k_sens.real();
     
+    // use this to calculate the sensitivity of k_red wrt alpha
+    par_k_par_alpha = -par_g_par_alpha / par_g_par_kref;
+
+    // finally add the correction to the flutter sensitivity
+    sens += k_sens * par_k_par_alpha;
+
+    // finally, the flutter speed sensitivity
+    V_sens = -.5*sens.real()/pow(eig.real(), 1.5);
     
-    
-    return sens.real();
+    // set value in the return root
+    root.has_sensitivity_data = true;
+    root.root_sens  = sens;
+    root.k_red_sens = k_sens;
+    root.V_sens     = V_sens;
 }
 
 
 
 
-void MAST::UGFlutterSolver::initialize_matrices(Real k_ref,
+void MAST::UGFlutterSolver::initialize_matrices(Real k_red,
                                                 ComplexMatrixX& m, // mass & aero
                                                 ComplexMatrixX& k) // stiffness
 {
@@ -318,11 +341,11 @@ void MAST::UGFlutterSolver::initialize_matrices(Real k_ref,
     libmesh_assert(has_matrix);
     
     
-    has_matrix = aero_structural_model->get_aero_operator_matrix(k_ref, m);
+    has_matrix = aero_structural_model->get_aero_operator_matrix(k_red, m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
-    mat_r *= pow(k_ref/flight_condition->ref_chord, 2);
+    mat_r *= pow(k_red/flight_condition->ref_chord, 2);
     m += mat_r.cast<Complex>();
 }
 
@@ -330,7 +353,7 @@ void MAST::UGFlutterSolver::initialize_matrices(Real k_ref,
 void
 MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
                                                                unsigned int p,
-                                                               Real k_ref,
+                                                               Real k_red,
                                                                ComplexMatrixX& m, // mass & aero
                                                                ComplexMatrixX& k) { // stiffness
     bool has_matrix = false;
@@ -355,18 +378,18 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::Pa
     has_matrix =
     aero_structural_model->get_aero_operator_matrix_sensitivity(params,
                                                                 p,
-                                                                k_ref, m);
+                                                                k_red, m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
-    mat_r *= pow(k_ref/flight_condition->ref_chord, 2);
+    mat_r *= pow(k_red/flight_condition->ref_chord, 2);
     m += mat_r.cast<Complex>();
 }
 
 
 
 void
-MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_ref,
+MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_red,
                                                                       ComplexMatrixX& m, // mass & aero
                                                                       ComplexMatrixX& k) { // stiffness
     bool has_matrix = false;
@@ -379,13 +402,13 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_ref
     
     
     has_matrix =
-    aero_structural_model->get_aero_operator_matrix_sensitivity_for_reduced_freq(k_ref, m);
+    aero_structural_model->get_aero_operator_matrix_sensitivity_for_reduced_freq(k_red, m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
-    mat_r *= 2.*k_ref*pow(1./flight_condition->ref_chord, 2);
+    mat_r *= 2.*k_red*pow(1./flight_condition->ref_chord, 2);
     m += mat_r.cast<Complex>();
     
-    k.resize(m.rows(), m.cols());
+    k.setZero(m.rows(), m.cols());
 }
 

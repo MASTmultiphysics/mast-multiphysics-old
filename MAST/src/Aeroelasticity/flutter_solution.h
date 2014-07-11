@@ -39,20 +39,26 @@ namespace MAST {
     public:
         FlutterRootBase():
         if_nonphysical_root(false),
+        has_sensitivity_data(false),
         V(0.),
         g(0.),
         omega(0.),
-        k_ref(0.),
-        root(0.)
+        k_red(0.),
+        V_sens(0.),
+        k_red_sens(0.),
+        root(0.),
+        root_sens(0.)
         {}
         
         virtual ~FlutterRootBase() {}
         
         bool if_nonphysical_root;
         
-        Real V, g, omega, k_ref;
+        bool has_sensitivity_data;
         
-        Complex root;
+        Real V, g, omega, k_red, V_sens;
+        
+        Complex root, root_sens, k_red_sens;
         
         /*!
          *    right and left eigenvevtors
@@ -160,7 +166,7 @@ namespace MAST {
                 
         /*!
          *    Reference value of the sweeping parameter for which this solution 
-         *    was obtained. For UG solver, this is k_ref, and for time domain
+         *    was obtained. For UG solver, this is k_red, and for time domain
          *    solver this could be velocity. PK solver will need additional 
          *    reference values, provided in the inherited class.
          */

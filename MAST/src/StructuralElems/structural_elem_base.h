@@ -390,6 +390,32 @@ namespace MAST {
 
         
         /*!
+         *    Calculates the sensitivity of force vector and Jacobian due to small
+         *     is applicable for perturbation surface pressure.
+         */
+        template <typename ValType>
+        bool
+        small_disturbance_surface_pressure_force_sensitivity(bool request_jacobian,
+                                                             DenseRealVector& f,
+                                                             DenseRealMatrix& jac,
+                                                             const unsigned int side,
+                                                             MAST::BoundaryCondition& p);
+        
+        
+        /*!
+         *    Calculates the sensitivity of force vector and Jacobian due
+         *    to surface pressure applied on the entire element domain. This
+         *    is applicable for only 1D and 2D elements.
+         */
+        template <typename ValType>
+        bool
+        small_disturbance_surface_pressure_force_sensitivity(bool request_jacobian,
+                                                             DenseRealVector& f,
+                                                             DenseRealMatrix& jac,
+                                                             MAST::BoundaryCondition& p);
+        
+        
+        /*!
          *    Calculates the force vector and Jacobian due to surface pressure.
          */
         virtual bool surface_pressure_force_sensitivity(bool request_jacobian,

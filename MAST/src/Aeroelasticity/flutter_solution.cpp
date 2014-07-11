@@ -43,7 +43,7 @@ MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
         {
             V     = sqrt(1./std::real(root));
             g     = std::imag(root)/std::real(root);
-            omega = k_ref*V/b_ref;
+            omega = k_red*V/b_ref;
             if_nonphysical_root = false;
         }
         else
@@ -243,12 +243,12 @@ MAST::FlutterRootCrossoverBase::print(std::ostream &output) const
     
     output
     << " Lower Root: " << std::endl
-    << "    k : " << std::setw(15) << lower.k_ref << std::endl
+    << "    k : " << std::setw(15) << lower.k_red << std::endl
     << "    g : " << std::setw(15) << lower.g << std::endl
     << "    V : " << std::setw(15) << lower.V << std::endl
     << "omega : " << std::setw(15) << lower.omega << std::endl
     << " Upper Root: " << std::endl
-    << "    k : " << std::setw(15) << upper.k_ref << std::endl
+    << "    k : " << std::setw(15) << upper.k_red << std::endl
     << "    g : " << std::setw(15) << upper.g << std::endl
     << "    V : " << std::setw(15) << upper.V << std::endl
     << "omega : " << std::setw(15) << upper.omega << std::endl;
@@ -256,7 +256,7 @@ MAST::FlutterRootCrossoverBase::print(std::ostream &output) const
     if (root)
         output
         << "Critical Root: " << std::endl
-        << "    k : " << std::setw(15) << root->k_ref << std::endl
+        << "    k : " << std::setw(15) << root->k_red << std::endl
         << "    g : " << std::setw(15) << root->g << std::endl
         << "    V : " << std::setw(15) << root->V << std::endl
         << "omega : " << std::setw(15) << root->omega << std::endl;

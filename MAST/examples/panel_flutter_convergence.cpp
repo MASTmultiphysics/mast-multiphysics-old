@@ -105,7 +105,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     x_div_loc[1] = 4.;  // panel TE
     
     x_relative_dx[0] = 1.;
-    x_relative_dx[1] = 2.;
+    x_relative_dx[1] = 1.;
     
     x_divs[0] = n_panel_divs;
     
@@ -131,7 +131,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     
     std::string fe_family = str_infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
-    libMesh::Order order = static_cast<libMesh::Order>(p_order+1);
+    libMesh::Order order = static_cast<libMesh::Order>(p_order);
     
     std::map<std::string, unsigned int> var_id;
     var_id["ux"] = eigen_system.add_variable ( "ux", order, fefamily);
@@ -448,8 +448,8 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
             std::ostringstream vec_nm;
             vec_nm << "mode_" << i;
             libMesh::NumericVector<Real>& vec = eigen_system.get_vector(vec_nm.str());
+            eigen_system.solution->scale(sqrt(eigval.real()));
             vec = *(eigen_system.solution);
-            vec.scale(sqrt(eigval.real()));
             vec.close();
             
             // output the mode to a file
@@ -471,24 +471,15 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     if (!init.comm().rank())
         flutter_solver.print_sorted_roots();
     
-    // delete the bc
-    for (unsigned int i=0; i<bc.size(); i++)
-        delete bc[i];
-    
     // get the values of n_dofs and flutter solution for return
     n_dofs = fluid_system_freq.n_dofs();
     flutter_V = root.second->V;
     flutter_g = root.second->g;
     flutter_omega = root.second->omega;
     
-    libMesh::ParameterVector params;
-    params.resize(1); params[0] = h_y.ptr();
-    eigen_structural_assembly.add_parameter(h_y);
-    
-    // now do sensitivity analysis of the flutter solution
-    flutter_solver.calculate_sensitivity(*(root.second),
-                                         params,
-                                         0);
+    // delete the bc
+    for (unsigned int i=0; i<bc.size(); i++)
+        delete bc[i];
 }
 
 int
@@ -498,10 +489,8 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
     
     GetPot fluid_infile("system_input.in");
     unsigned int
-    n_panel_divs = 12,
-    n_farfield_divs = 16,
-    n_panel_divs_increment = 6,
-    n_farfield_divs_increment = 8,
+    n_panel_divs = 3,
+    n_farfield_divs = 4,
     n_increments = 5,
     n_dofs;
     Real flutter_V, flutter_g, flutter_omega;
@@ -537,8 +526,8 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
                                    str_infile,
                                    fluid_infile,
                                    p_order,
-                                   n_panel_divs+n_panel_divs_increment*i,
-                                   n_farfield_divs+n_farfield_divs_increment*i,
+                                   n_panel_divs*pow(2,i),
+                                   n_farfield_divs*pow(2,i),
                                    oss.str(),
                                    n_dofs,
                                    flutter_V,

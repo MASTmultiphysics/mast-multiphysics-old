@@ -369,6 +369,15 @@ MAST::StructuralElementBase::side_external_force_sensitivity(bool request_jacobi
                                                                             *it.first->second));
                         break;
                         
+                    case MAST::SMALL_DISTURBANCE_MOTION:
+                        calculate_jac =
+                        (calculate_jac ||
+                         small_disturbance_surface_pressure_force_sensitivity<ValType>(request_jacobian,
+                                                                                       f, jac,
+                                                                                       n,
+                                                                                       *it.first->second));
+                        break;
+
                     case MAST::DISPLACEMENT_DIRICHLET:
                         // nothing to be done here
                         break;
@@ -621,8 +630,6 @@ MAST::StructuralElementBase::surface_pressure_force(bool request_jacobian,
         local_f.add(JxW[qp], vec_n2);
     }
     
-    local_f.print(std::cout);
-    
     // now transform to the global system and add
     transform_to_global_system(local_f, vec_n2);
     f.add(1., vec_n2);
@@ -729,10 +736,35 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
 
 template <typename ValType>
 bool
-MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool request_jacobian,
-                                                                      DenseRealVector &f,
-                                                                      DenseRealMatrix &jac,
-                                                                      MAST::BoundaryCondition &p) {
+MAST::StructuralElementBase::
+small_disturbance_surface_pressure_force_sensitivity(bool request_jacobian,
+                                                     DenseRealVector &f,
+                                                     DenseRealMatrix &jac,
+                                                     const unsigned int side,
+                                                     MAST::BoundaryCondition &p) {
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
+
+    return false; // to be implemented
+    
+    MAST::SmallDisturbanceMotion& sd_motion = dynamic_cast<MAST::SmallDisturbanceMotion&>(p);
+    MAST::SurfaceMotionBase& surf_motion = sd_motion.get_deformation();
+    MAST::SmallDisturbanceSurfacePressure& surf_press = sd_motion.get_pressure();
+    
+    
+    return (request_jacobian && follower_forces);
+}
+
+
+
+
+template <typename ValType>
+bool
+MAST::StructuralElementBase::
+small_disturbance_surface_pressure_force(bool request_jacobian,
+                                         DenseRealVector &f,
+                                         DenseRealMatrix &jac,
+                                         MAST::BoundaryCondition &p) {
     libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements.
     libmesh_assert(!follower_forces); // not implemented yet for follower forces
     libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
@@ -808,6 +840,42 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
     MAST::add_to_assembled_vector(f, vec_n2);
     
 
+    return (request_jacobian && follower_forces);
+}
+
+
+
+
+
+template <typename ValType>
+bool
+MAST::StructuralElementBase::
+small_disturbance_surface_pressure_force_sensitivity(bool request_jacobian,
+                                                     DenseRealVector &f,
+                                                     DenseRealMatrix &jac,
+                                                     MAST::BoundaryCondition &p) {
+    libmesh_assert(_elem.dim() < 3); // only applicable for lower dimensional elements.
+    libmesh_assert(!follower_forces); // not implemented yet for follower forces
+    libmesh_assert_equal_to(p.type(), MAST::SMALL_DISTURBANCE_MOTION);
+    
+    return false; // to be implemented
+    
+    MAST::SmallDisturbanceMotion& sd_motion = dynamic_cast<MAST::SmallDisturbanceMotion&>(p);
+    MAST::SurfaceMotionBase& surf_motion = sd_motion.get_deformation();
+    MAST::SmallDisturbanceSurfacePressure& surf_press = sd_motion.get_pressure();
+    
+    FEMOperatorMatrix Bmat;
+    
+    // get the function from this boundary condition
+    const std::vector<Real> &JxW = _fe->get_JxW();
+    
+    // Physical location of the quadrature points
+    const std::vector<libMesh::Point>& qpoint = _fe->get_xyz();
+    const std::vector<std::vector<Real> >& phi = _fe->get_phi();
+    const unsigned int n_phi = (unsigned int)phi.size();
+    const unsigned int n1=3, n2=6*n_phi;
+    
+    
     return (request_jacobian && follower_forces);
 }
 

@@ -129,13 +129,15 @@ namespace MAST
         /*!
          *   adds the specified side loads for the boudnary with tag \p b_id
          */
-        void add_side_load(libMesh::boundary_id_type bid, MAST::BoundaryCondition& load);
+        void add_side_load(libMesh::boundary_id_type bid,
+                           MAST::BoundaryCondition& load);
 
         
         /*!
          *    returns a reference to the side boundary conditions
          */
-        const std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>& side_loads() const{
+        const std::multimap<libMesh::boundary_id_type, MAST::BoundaryCondition*>&
+        side_loads() const{
             return _side_bc_map;
         }
         
@@ -144,13 +146,15 @@ namespace MAST
          *   adds the specified volume loads for the elements with
          *   subdomain tag \p s_id
          */
-        void add_volume_load(libMesh::subdomain_id_type bid, MAST::BoundaryCondition& load);
+        void add_volume_load(libMesh::subdomain_id_type bid,
+                             MAST::BoundaryCondition& load);
 
 
         /*!
          *    returns a reference to the bolume boundary conditions
          */
-        const std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>& volume_loads() const{
+        const std::multimap<libMesh::subdomain_id_type, MAST::BoundaryCondition*>&
+        volume_loads() const{
             return _vol_bc_map;
         }
 

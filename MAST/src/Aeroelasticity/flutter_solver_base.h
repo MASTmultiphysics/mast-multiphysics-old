@@ -122,7 +122,7 @@ namespace MAST {
          *   Calculate the sensitivity of the flutter root with respect to the
          *   \par i^th parameter in params
          */
-        virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
+        virtual void calculate_sensitivity(MAST::FlutterRootBase& root,
                                            const libMesh::ParameterVector& params,
                                            const unsigned int i) = 0;
         
@@ -140,7 +140,7 @@ namespace MAST {
         
         /*!
          *   Scans for flutter roots in the range specified, and identified the
-         *   divergence (if k_ref = 0. is specified) and flutter crossover points.
+         *   divergence (if k_red = 0. is specified) and flutter crossover points.
          *   The roots are organized in terms of increasing velocity.
          */
         virtual void scan_for_roots();

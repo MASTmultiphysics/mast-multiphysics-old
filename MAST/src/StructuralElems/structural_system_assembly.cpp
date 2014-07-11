@@ -1041,12 +1041,13 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(libMesh::S
 
 
 void
-MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(libMesh::SparseMatrix<Real>&  matrix_A,
-                                                                         libMesh::SparseMatrix<Real>&  matrix_B,
-                                                                         const MAST::FieldFunctionBase* param,
-                                                                         const libMesh::NumericVector<Real>* static_sol,
-                                                                         const libMesh::NumericVector<Real>* static_sol_sens) {
-
+MAST::StructuralSystemAssembly::
+_assemble_matrices_for_buckling_analysis(libMesh::SparseMatrix<Real>&  matrix_A,
+                                         libMesh::SparseMatrix<Real>&  matrix_B,
+                                         const MAST::FieldFunctionBase* param,
+                                         const libMesh::NumericVector<Real>* static_sol,
+                                         const libMesh::NumericVector<Real>* static_sol_sens) {
+    
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -1062,9 +1063,11 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_buckling_analysis(libMesh
     libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution, localized_solution_sens;
     if (static_sol) { // static deformation is provided
         localized_solution.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
-        localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
+        localized_solution->init(_system.n_dofs(),
+                                 _system.n_local_dofs(),
                                  _system.get_dof_map().get_send_list(),
-                                 false, libMesh::GHOSTED);
+                                 false,
+                                 libMesh::GHOSTED);
         static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
         // do the same for sensitivity if the parameters were provided
         if (param) {

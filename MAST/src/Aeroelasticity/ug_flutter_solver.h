@@ -66,7 +66,7 @@ namespace MAST {
          *   Calculate the sensitivity of the flutter root with respect to the
          *   \par i^th parameter in params
          */
-        virtual Real calculate_sensitivity(const MAST::FlutterRootBase& root,
+        virtual void calculate_sensitivity(MAST::FlutterRootBase& root,
                                            const libMesh::ParameterVector& params,
                                            const unsigned int i);
         
@@ -90,28 +90,28 @@ namespace MAST {
         
         
         /*!
-         *    initializes the matrices for the specified k_ref. UG does not account
+         *    initializes the matrices for the specified k_red. UG does not account
          *    for structural damping.
          */
-        void initialize_matrices(Real k_ref,
+        void initialize_matrices(Real k_red,
                                  ComplexMatrixX& m, // mass & aero
                                  ComplexMatrixX& k); // aero operator
 
         /*!
-         *    initializes the matrices for the specified k_ref. UG does not account
+         *    initializes the matrices for the specified k_red. UG does not account
          *    for structural damping.
          */
         void initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
                                                      unsigned int p,
-                                                     Real k_ref,
+                                                     Real k_red,
                                                      ComplexMatrixX& m, // mass & aero
                                                      ComplexMatrixX& k); // aero operator
         
         /*!
-         *    initializes the matrices for the specified k_ref. UG does not account
+         *    initializes the matrices for the specified k_red. UG does not account
          *    for structural damping.
          */
-        void initialize_matrix_sensitivity_for_reduced_freq(Real k_ref,
+        void initialize_matrix_sensitivity_for_reduced_freq(Real k_red,
                                                             ComplexMatrixX& m, // mass & aero
                                                             ComplexMatrixX& k); // aero operator
 

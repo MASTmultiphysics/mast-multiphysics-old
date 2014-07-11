@@ -100,20 +100,20 @@ void MAST::FlutterSolverBase::scan_for_roots()
     // if the initial scanning has not been done, then do it now
     if (!_flutter_solutions.size()) {
         // march from the upper limit to the lower to find the roots
-        Real current_k_ref = ref_val_range.second,
-        delta_k_ref = (ref_val_range.second-ref_val_range.first)/n_ref_val_divs;
+        Real current_k_red = ref_val_range.second,
+        delta_k_red = (ref_val_range.second-ref_val_range.first)/n_ref_val_divs;
         
         std::vector<Real> k_vals(n_ref_val_divs+1);
         for (unsigned int i=0; i<n_ref_val_divs+1; i++) {
-            k_vals[i] = current_k_ref;
-            current_k_ref -= delta_k_ref;
+            k_vals[i] = current_k_red;
+            current_k_red -= delta_k_red;
         }
         k_vals[n_ref_val_divs] = ref_val_range.first; // to get around finite-precision arithmetic
         
         MAST::FlutterSolutionBase* prev_sol = NULL;
         for (unsigned int i=0; i<n_ref_val_divs+1; i++) {
-            current_k_ref = k_vals[i];
-            prev_sol = analyze(current_k_ref, prev_sol);
+            current_k_red = k_vals[i];
+            prev_sol = analyze(current_k_red, prev_sol);
         }
         
         _identify_crossover_points();
@@ -291,7 +291,7 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
             sol_it->second->get_root(i);
             
             *output
-            << std::setw(15) << root.k_ref
+            << std::setw(15) << root.k_red
             << std::setw(15) << std::real(root.root)
             << std::setw(15) << std::imag(root.root)
             << std::setw(15) << root.g;
@@ -323,7 +323,7 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
         << "V      = " << std::setw(35) << std::setprecision(15) << root.V << std::endl
         << "omega  = " << std::setw(35) << std::setprecision(15) << root.omega << std::endl
         << std::setprecision(prec) // set the precision to the default value
-        << "k_ref  = " << std::setw(15) << root.k_ref << std::endl
+        << "k_red  = " << std::setw(15) << root.k_red << std::endl
         << "Modal Participation : " << std::endl ;
         for (unsigned int j=0; j<nvals; j++)
             *output

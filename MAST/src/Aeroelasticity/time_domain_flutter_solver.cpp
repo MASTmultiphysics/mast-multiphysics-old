@@ -103,7 +103,7 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
     }
     
     // now look for oscillatory roots crossover points in decreasing
-    // order of k_ref
+    // order of k_red
     for (unsigned int i=0; i<nvals; i++) {
         std::map<Real, MAST::FlutterSolutionBase*>::const_reverse_iterator
         sol_rit    = _flutter_solutions.rbegin(), // first of the pair
@@ -114,7 +114,7 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
         
         sol_ritp1++; // increment for the next pair of results
         while (sol_ritp1 != sol_rend) {
-            // do not use k_ref = 0, or if the root is invalid
+            // do not use k_red = 0, or if the root is invalid
             if (sol_rit->second->get_root(i).if_nonphysical_root ||
                 sol_ritp1->second->get_root(i).if_nonphysical_root ||
                 fabs(sol_rit->second->ref_val()) < tol ||

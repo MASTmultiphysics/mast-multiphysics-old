@@ -537,7 +537,6 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         std::ostringstream vec_name;
         vec_name << "mode_" << i;
         libMesh::NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
-        vec = *eigen_system.solution;
         std::complex<Real> eigval;
         std::streamsize prec = std::cout.precision();
         if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
@@ -545,7 +544,8 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
             file << "eig_"  << i << " = "
             << std::setw(35) << std::setprecision(15) << 1./val.first
             << std::setprecision(prec) << std::endl;
-            vec.scale(1./sqrt(val.first));
+            eigen_system.solution->scale(1./sqrt(val.first));
+            vec = *eigen_system.solution;
             vec.close();
             
             // now write the eigenvalues
