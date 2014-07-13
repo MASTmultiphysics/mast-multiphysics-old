@@ -323,7 +323,7 @@ namespace MAST {
                 x1 = e->point(1)(0);
                 dx = (x1-x0)/n_sec;
                 for (unsigned int i=0; i<n_sec; i++) {
-                    elem_p(0) = x0 + dx*i;
+                    elem_p(0) = x0 + dx*(i+0.5);
                     (*stiff_area)(elem_p, 0., h);
                     rhof(elem_p, 0., rho);
                     v += h * rho * dx;
@@ -369,7 +369,7 @@ namespace MAST {
                 x1 = e->point(1)(0);
                 dx = (x1-x0)/n_sec;
                 for (unsigned int i=0; i<n_sec; i++) {
-                    elem_p(0) = x0 + dx*i;
+                    elem_p(0) = x0 + dx*(i+0.5);
                     (*stiff_area)(elem_p, 0., h);
                     stiff_area->total(f, elem_p, 0., dh);
                     rhof(elem_p, 0., rho);
@@ -563,6 +563,8 @@ namespace MAST {
 
         std::auto_ptr<MAST::BoundaryCondition> _pressure_bc;
         
+        std::vector<Real> _dv_scaling, _dv_low, _dv_init;
+        
     };
 }
 
@@ -574,21 +576,10 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
                                     std::vector<Real>& xmin,
                                     std::vector<Real>& xmax) {
     // one DV for each element
-    x.resize   (_n_vars);
-    xmin.resize(_n_vars);
+    x       = _dv_init;
+    xmin    = _dv_low;
     xmax.resize(_n_vars);
-    
-    for (unsigned int i=0; i<_n_vars/2; i++) {
-        // first half is the thickness values
-        x[i]    =  0.01;
-        xmin[i] = 0.006;
-        xmax[i] =   0.2;
-        
-        // next half is the density values
-        x[i+_n_vars/2]    =  2700.;
-        xmin[i+_n_vars/2] =   100.;
-        xmax[i+_n_vars/2] = 10000.;
-    }
+    std::fill(xmax.begin(), xmax.end(), 1.);
 }
 
 
@@ -608,11 +599,12 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     
     // set the parameter values equal to the DV value
     for (unsigned int i=0; i<_n_vars; i++)
-        *_parameters[i] = dvars[i];
+        *_parameters[i] = dvars[i]*_dv_scaling[i];
     
-    // zero out the gradient vector
-    std::fill(obj_grad.begin(), obj_grad.end(), 0.);
-    std::fill(grads.begin(), grads.end(), 0.);
+    // DO NOT zero out the gradient vector, since GCMMA needs it for the
+    // subproblem solution
+    //std::fill(obj_grad.begin(), obj_grad.end(), 0.);
+    //std::fill(grads.begin(), grads.end(), 0.);
     
     libMesh::Point pt; // dummy point object
     
@@ -620,7 +612,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
     // the optimization problem is defined as
     // max Vf subject to constraint on weight
-    Real wt = 0., vf = 0., disp = 0., disp_0 = 0.01, wt_0 = 54.;
+    Real wt = 0., vf = 0., disp = 0., disp_0 = 0.01, wt_0 = 54., vf_0=107.;
     
     // calculate weight
     (*_weight)(pt, 0., wt);
@@ -789,7 +781,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     }
     else
         // no root was identified. So, set a feasible constraint value
-        fvals[1] = -1;
+        vf = 1.0e6;
     
     std::vector<Real> grad_vals;
     
@@ -797,12 +789,21 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     // flutter objective
     // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
     //
-    obj = -vf;
-    // w < w0 => w/w0 < 1. => w/w0 - 1. < 0
-    fvals[0] = disp/disp_0-1.;
-    fvals[1] =     wt/wt_0-1.;
+    obj = wt;
+    fvals[0] = -wt;// disp/disp_0-1.;
+    fvals[1] =   1.-vf/vf_0;
+    Real w_sens = 0.;
     
-    if (eval_obj_grad) {
+    // evaluate sensitivity if any of the function sensitivity is required
+    bool if_sens = (false || eval_obj_grad);
+    std::cout << eval_obj_grad << "  ";
+    for (unsigned int i=0; i<eval_grads.size(); i++) {
+        std::cout << eval_grads[i] << "  ";
+        if_sens = (if_sens || eval_grads[i]);
+    }
+    std::cout << std::endl;
+    
+    if (if_sens) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
         /*// static analysis is performed without von-Karman strain
         _static_system->sensitivity_solve(_parameters);
@@ -830,8 +831,11 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         // ask flutter solver for the sensitivity
         
         // set gradient of weight
-        for (unsigned int i=0; i<_n_vars; i++)
-            _weight->total(*_parameter_functions[i], pt, 0., grads[i*_n_ineq+1]);
+        for (unsigned int i=0; i<_n_vars; i++) {
+            _weight->total(*_parameter_functions[i], pt, 0., w_sens);
+            obj_grad[i] = w_sens*_dv_scaling[i];
+            grads[i*_n_ineq] = -w_sens*_dv_scaling[i];
+        }
         
         // now get the flutter sensitivity
         // if the flutter was not found, then the sensitivity is zero.
@@ -843,7 +847,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                 _flutter_solver->calculate_sensitivity(root_sens,
                                                        _parameters,
                                                        i);
-                obj_grad[i] = -root_sens.V_sens;
+                grads[i*_n_ineq+1] = -root_sens.V_sens/vf_0*_dv_scaling[i];
             }
         }
     }
@@ -857,7 +861,7 @@ MAST::SizingOptimization::_init() {
     _mesh = new libMesh::SerialMesh(_libmesh_init.comm());
     
     const unsigned int
-    n_stations    = 2,//_infile("n_stations", 0),
+    n_stations    = _infile("n_stations", 0),
     dim           = _infile("dimension",0),
     nx_divs       = _infile("nx_divs",0),
     ny_divs       = _infile("ny_divs",0),
@@ -895,8 +899,35 @@ MAST::SizingOptimization::_init() {
     
     _n_eq = 0;
     _n_ineq = (1 +   // +1 for the displacement
-               1);   // +1 for weight constraint
+               1);   // +1 for flutter speed
     _max_iters = 10000;
+    
+    // initialize the dv vector data
+    Real
+    th_l  = _infile("thickness_lower", 0.001),
+    th_u  = _infile("thickness_upper", 0.2),
+    th    = _infile("thickness", 0.01),
+    rho_l = _infile("material_density_lower", 2500.),
+    rho_u = _infile("material_density_upper", 10000.),
+    rho   = _infile("material_density", 2700.);
+    
+    _dv_init.resize(_n_vars);
+    _dv_scaling.resize(_n_vars);
+    _dv_low.resize(_n_vars);
+    
+    for (unsigned int i=0; i<_n_vars/2; i++) {
+        // first half is the thickness values
+        _dv_init[i]    =   th/th_u;
+        _dv_low[i]     = th_l/th_u;
+        _dv_scaling[i] =      th_u;
+        
+        // next half is the density values
+        _dv_init[i+_n_vars/2]    =  rho/rho_u;
+        _dv_low[i+_n_vars/2]     =  rho_l/rho_u;
+        _dv_scaling[i+_n_vars/2] =  rho_u;
+    }
+
+    
     
     // now initialize the mesh
     MeshInitializer().init(divs, *_mesh, elem_type);

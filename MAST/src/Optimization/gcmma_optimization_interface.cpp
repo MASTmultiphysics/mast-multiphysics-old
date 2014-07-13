@@ -183,18 +183,6 @@ MAST::GCMMAOptimizationInterface::optimize() {
     
     int INNMAX=15, ITER=0, ITE=0, INNER=0, ICONSE=0;
     /*C
-     C  The USER should now calculate function values at XVAL.
-     C  The result should be put in F0VAL and FVAL.
-     C*/
-    std::fill(eval_grads.begin(), eval_grads.end(), false);
-    _feval->evaluate(XVAL,
-                     F0VAL, false, DF0DX,
-                     FVAL, eval_grads, DFDX);
-    /*C
-     C  The USER may now write the current (starting) solution.
-     C*/
-    _feval->output(ITER, XVAL, F0VAL, FVAL);
-    /*C
      C  The outer iterative process starts.
      C*/
     bool terminate = false, inner_terminate=false;
@@ -210,6 +198,9 @@ MAST::GCMMAOptimizationInterface::optimize() {
         _feval->evaluate(XVAL,
                          F0VAL, true, DF0DX,
                          FVAL, eval_grads, DFDX);
+        if (ITER == 1)
+            // output the very first iteration
+            _feval->output(0, XVAL, F0VAL, FVAL);
         
         /*C
          C  RAA0,RAA,XLOW,XUPP,ALFA and BETA are calculated.
@@ -244,23 +235,25 @@ MAST::GCMMAOptimizationInterface::optimize() {
                              F0NEW, false, DF0DX,
                              FNEW, eval_grads, DFDX);
             
-            if (INNER >= INNMAX) inner_terminate = true;
-            /*C
-             C  It is checked if the approximations were conservative.
-             C*/
-            if (!inner_terminate) {
+            if (INNER >= INNMAX)
+                inner_terminate = true;
+            else {
+                /*C
+                 C  It is checked if the approximations were conservative.
+                 C*/
                 conser_( &M, &ICONSE, &GEPS, &F0NEW, &F0APP, &FNEW[0], &FAPP[0]);
-                if (ICONSE == 1) inner_terminate = true;
-            }
-            /*C
-             C  The approximations were not conservative, so RAA0 and RAA
-             C  are updated and one more inner iteration is started.
-             C*/
-            if (!inner_terminate) {
-                INNER=INNER+1;
-                raaupd_( &M, &N, &GEPS, &XMMA[0], &XVAL[0],
-                        &XMIN[0], &XMAX[0], &XLOW[0], &XUPP[0],
-                        &F0NEW, &FNEW[0], &F0APP, &FAPP[0], &RAA0, &RAA[0]);
+                if (ICONSE == 1)
+                    inner_terminate = true;
+                else {
+                    /*C
+                     C  The approximations were not conservative, so RAA0 and RAA
+                     C  are updated and one more inner iteration is started.
+                     C*/
+                    INNER=INNER+1;
+                    raaupd_( &M, &N, &GEPS, &XMMA[0], &XVAL[0],
+                            &XMIN[0], &XMAX[0], &XLOW[0], &XUPP[0],
+                            &F0NEW, &FNEW[0], &F0APP, &FAPP[0], &RAA0, &RAA[0]);
+                }
             }
             //GOTO 40
         } //60   CONTINUE

@@ -417,8 +417,8 @@
 		EB8173481832789200E03740 /* Optimization */ = {
 			isa = PBXGroup;
 			children = (
-				EB8F5C18187C572E002976E5 /* gcmma */,
 				EB81734A18327CCA00E03740 /* dot_optimization_interface.h */,
+				EB8F5C18187C572E002976E5 /* gcmma */,
 				EB81734F1832A71600E03740 /* gcmma_optimization_interface.cpp */,
 				EB81734B18327CDF00E03740 /* gcmma_optimization_interface.h */,
 				EB817349183278A600E03740 /* optimization_interface.h */,
