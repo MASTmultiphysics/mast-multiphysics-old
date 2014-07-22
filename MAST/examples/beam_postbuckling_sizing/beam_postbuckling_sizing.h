@@ -830,8 +830,8 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
     //
     obj = wt;
-    fvals[0] = disp/disp_0-1.;
-    fvals[1] =     1.-vf/vf_0;
+    fvals[0] = disp/_disp_0-1.;
+    fvals[1] =     1.-vf/_vf_0;
     Real w_sens = 0.;
     
     // evaluate sensitivity if any of the function sensitivity is required
@@ -918,7 +918,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         for (unsigned int j=0; j<_n_vars; j++) {
             disp_vec.zero();
             (*_disp_function_sens[j])(pt, 0., disp_vec);
-            grads[j*_n_ineq] = disp_vec(0)/disp_0*_dv_scaling[j];
+            grads[j*_n_ineq] = disp_vec(0)/_disp_0*_dv_scaling[j];
         }
          
         // ask flutter solver for the sensitivity
