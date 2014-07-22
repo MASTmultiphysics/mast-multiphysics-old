@@ -39,7 +39,7 @@ int flutter_convergence_driver (libMesh::LibMeshInit& init, GetPot& infile,
 
 
 
-int main (int argc, char* const argv[])
+int main1 (int argc, char* const argv[])
 {
     libMesh::LibMeshInit init(argc, argv);
     

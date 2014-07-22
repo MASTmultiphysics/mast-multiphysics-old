@@ -428,6 +428,8 @@ namespace MAST {
         _libmesh_init(init),
         _infile(input),
         _fluid_input(GetPot("system_input.in")),
+        _disp_0(0.),
+        _vf_0(0.),
         _n_eig(0),
         _weight(NULL),
         _eq_systems(NULL),
@@ -511,6 +513,8 @@ namespace MAST {
         GetPot& _infile, _fluid_input;
         
         unsigned int _n_eig;
+        
+        Real _disp_0, _vf_0;
         
         MAST::Weight* _weight;
         
@@ -650,8 +654,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
     // the optimization problem is defined as
     // max Vf subject to constraint on weight
-    Real wt = 0., vf = 0., disp = 0., disp_0 = 0.01, wt_0 = 54., vf_0=107.;
-    
+    Real wt = 0., vf = 0., disp = 0.;
     // calculate weight
     (*_weight)(pt, 0., wt);
     
@@ -936,7 +939,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                 _flutter_solver->calculate_sensitivity(root_sens,
                                                        _parameters,
                                                        i);
-                grads[i*_n_ineq+1] = -root_sens.V_sens/vf_0*_dv_scaling[i];
+                grads[i*_n_ineq+1] = -root_sens.V_sens/_vf_0*_dv_scaling[i];
             }
         }
     }
@@ -999,6 +1002,9 @@ MAST::SizingOptimization::_init() {
     rho_l = _infile("material_density_lower", 2500.),
     rho_u = _infile("material_density_upper", 10000.),
     rho   = _infile("material_density", 2700.);
+    
+    _disp_0 = _infile( "displacement_0", 0.);
+    _vf_0   = _infile("flutter_speed_0", 0.);
     
     _dv_init.resize(_n_vars);
     _dv_scaling.resize(_n_vars);
