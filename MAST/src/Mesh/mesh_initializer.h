@@ -25,10 +25,14 @@
 #include <vector>
 #include <map>
 
+// MAST includes
+#include "Base/MAST_data_types.h"
+
 // libMesh includes
 #include "libmesh/libmesh_config.h"
 #include "libmesh/unstructured_mesh.h"
 #include "libmesh/mesh_generation.h"
+#include "libmesh/node.h"
 
 /*!
  *   This class distributes mesh points over a mesh. Input requires definition

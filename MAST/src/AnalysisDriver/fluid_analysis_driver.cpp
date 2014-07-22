@@ -403,7 +403,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             fluid_system->time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
         }
         fluid_system->dc_recalculate_tolerance = infile("dc_recalculate_tolerance", 10.e-8);
-                
+        
         AerodynamicQoI aero_qoi(infile);
         aero_qoi.flight_condition = &flight_cond;
         
@@ -694,7 +694,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             a_step++;
             
             // tell the solver to recalculte the dc coeffs post refinement
-            if (analysis == "nonlinaer")
+            if (analysis == "nonlinear")
                 fluid_system->if_use_stored_dc_coeff = false;
             else if (analysis == "linearized")
                 linearized_fluid_system->if_use_stored_dc_coeff = false;
