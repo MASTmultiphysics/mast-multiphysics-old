@@ -24,67 +24,6 @@
 void
 MAST::GCMMAOptimizationInterface::optimize() {
     
-    /*    C********+*********+*********+*********+*********+*********+*********+
-     C
-     C    MAIN PROGRAM for using the globally convergent version of MMA
-     C    to solve a problem defined by the user's subroutines
-     C    INITI, FUNC1 and FUNC2.
-     C
-     C       Version "August 2007".
-     C    !-----------------------------------------!
-     C    !  The author of this program is          !
-     C    !  Krister Svanberg <krille@math.kth.se>  !
-     C    !-----------------------------------------!
-     C
-     C    The problem is assumed to be on the following form:
-     C
-     C      minimize  f_0(x) + z + 0.05*z^2 + sum{c_i*y_i + 0.5*(y_i)^2}
-     C
-     C    subject to  f_i(x) - a_i*z - y_i <= fmax_i ,   i=1,..,M
-     C                       xmin_j <= x_j <= xmax_j ,   j=1,..,N
-     C                                 y_i >= 0 ,        i=1,..,M
-     C                                   z >= 0 .
-     C
-     C    where both N and M are strictly positive integers (not zero).
-     C    If the user wants to solve an unconstrained problem,
-     C    i.e. a problem with M=0, then  a "dummy constraint" should
-     C    be introduced so that M=1. An example of such a constraint is
-     C    sum{x_j} <= S, where the constant S = 1 + sum{xmax_j}.
-     C
-     C    The functions f_0(x) and f_i(x) should be defined by the
-     C    user's subroutines
-     C    FUNC1, which defines only function values, and
-     C    FUNC2, which defines both function values and derivatives.
-     C    The problem sizes M and N, the tolerance parameter GEPS,
-     C    the constants c_i, a_i, fmax_i, xmin_j, xmax_j,
-     C    and the starting values on the variables x_j,
-     C    should all be given in the user's subroutine INITI.
-     C    Output is specified by the users subroutine OUTXOF.
-     C
-     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-     C
-     DIMENSION XVAL(100),XOLD1(100),XOLD2(100),XMMA(100),
-     1          XMIN(100), XMAX(100), XLOW(100),XUPP(100),
-     2          ALFA(100), BETA(100),DF0DX(100),
-     3          A(60),B(60),C(60),Y(60),RAA(60),ULAM(60),
-     4          FVAL(60),FAPP(60),FNEW(60),FMAX(60),
-     5          DFDX(6000),P(6000),Q(6000),P0(100),Q0(100),
-     6          UU(60),GRADF(60),DSRCH(60),HESSF(1830)
-     INTEGER IYFREE(60)
-     C
-     C********+*********+*********+*********+*********+*********+*********+
-     C  The sizes of the above arrays must be at least as follows:
-     C
-     C    XVAL(N),XOLD1(N),XOLD2(N),XMMA(N),
-     C    XMIN(N), XMAX(N), XLOW(N),XUPP(N),
-     C    ALFA(N), BETA(N),DF0DX(N),
-     C    A(M),B(M),C(M),Y(M),RAA(M),ULAM(M),
-     C    FVAL(M),FAPP(M),FNEW(M),FMAX(M),
-     C    DFDX(M*N),P(M*N),Q(M*N),P0(N),Q0(N),
-     C    UU(M),GRADF(M),DSRCH(M),HESSF(M*(M+1)/2),
-     C    IYFREE(M)
-     C*/
-    
     int N = _feval->n_vars(), M = _feval->n_eq() + _feval->n_ineq(),
     n_rel_change_iters = _feval->n_iters_relative_change();
     

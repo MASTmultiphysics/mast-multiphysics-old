@@ -855,11 +855,9 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                 }
                 
                 // now add the contribution from unsteady normal perturbation
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
+                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     dui_ni_unsteady += // delta_wi_dot * ni
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
-                    dui_ni_unsteady -= uvec(i_dim) * face_normals[qp](i_dim);
-                }
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
                 
                 /*// add the contribution from divergence of ui_ni

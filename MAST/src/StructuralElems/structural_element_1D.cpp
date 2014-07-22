@@ -507,7 +507,7 @@ MAST::StructuralElement1D::internal_force_jac_dot_state_sensitivity (DenseRealMa
                                                                         vk_dwdxi_mat_sens);
                 // sensitivity of von Karman strain
                 vec2_n1.zero();
-                vec2_n1(1) = (vk_dvdxi_mat(0,0)*vk_dvdxi_mat_sens(0,0) +
+                vec2_n1(0) = (vk_dvdxi_mat(0,0)*vk_dvdxi_mat_sens(0,0) +
                               vk_dwdxi_mat(0,0)*vk_dwdxi_mat_sens(0,0));
                 material_A_mat.vector_mult(vec1_n1, vec2_n1);
                 stress(0,0) += vec1_n1(0);
