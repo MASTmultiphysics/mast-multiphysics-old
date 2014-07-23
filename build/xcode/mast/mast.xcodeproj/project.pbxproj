@@ -125,6 +125,12 @@
 		EB28721719802F0000264599 /* timoshenko_bending_operator.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28719F19802F0000264599 /* timoshenko_bending_operator.h */; };
 		EB28721819802F0000264599 /* thermal_elem_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB2871A119802F0000264599 /* thermal_elem_base.cpp */; };
 		EB28721919802F0000264599 /* thermal_elem_base.h in Headers */ = {isa = PBXBuildFile; fileRef = EB2871A219802F0000264599 /* thermal_elem_base.h */; };
+		EB287220198034D500264599 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28721E198034D500264599 /* libmpi_cxx.1.dylib */; };
+		EB287221198034D500264599 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28721F198034D500264599 /* libmpi.1.dylib */; };
+		EB287223198034E400264599 /* libgcmma.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EB287222198034E400264599 /* libgcmma.a */; };
+		EB287225198034F800264599 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB287224198034F800264599 /* libmesh_dbg.0.dylib */; };
+		EB2872271980351300264599 /* libgfortran.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2872261980351300264599 /* libgfortran.3.dylib */; };
+		EB2872291980352500264599 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2872281980352500264599 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -247,7 +253,12 @@
 		EB28719F19802F0000264599 /* timoshenko_bending_operator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timoshenko_bending_operator.h; sourceTree = "<group>"; };
 		EB2871A119802F0000264599 /* thermal_elem_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = thermal_elem_base.cpp; sourceTree = "<group>"; };
 		EB2871A219802F0000264599 /* thermal_elem_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thermal_elem_base.h; sourceTree = "<group>"; };
-		EB2871A319802F0000264599 /* main.do_not_compile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.do_not_compile; sourceTree = "<group>"; };
+		EB28721E198034D500264599 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi_cxx.1.dylib"; sourceTree = "<group>"; };
+		EB28721F198034D500264599 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi.1.dylib"; sourceTree = "<group>"; };
+		EB287222198034E400264599 /* libgcmma.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcmma.a; path = ../../dbg/libgcmma.a; sourceTree = "<group>"; };
+		EB287224198034F800264599 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../../../../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
+		EB2872261980351300264599 /* libgfortran.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgfortran.3.dylib; path = ../../../../../../../../opt/local/lib/libgcc/libgfortran.3.dylib; sourceTree = "<group>"; };
+		EB2872281980352500264599 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -255,6 +266,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB2872291980352500264599 /* Accelerate.framework in Frameworks */,
+				EB287225198034F800264599 /* libmesh_dbg.0.dylib in Frameworks */,
+				EB287223198034E400264599 /* libgcmma.a in Frameworks */,
+				EB2872271980351300264599 /* libgfortran.3.dylib in Frameworks */,
+				EB287220198034D500264599 /* libmpi_cxx.1.dylib in Frameworks */,
+				EB287221198034D500264599 /* libmpi.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,6 +281,12 @@
 		EB2870F819802EB200264599 = {
 			isa = PBXGroup;
 			children = (
+				EB2872281980352500264599 /* Accelerate.framework */,
+				EB2872261980351300264599 /* libgfortran.3.dylib */,
+				EB287224198034F800264599 /* libmesh_dbg.0.dylib */,
+				EB287222198034E400264599 /* libgcmma.a */,
+				EB28721E198034D500264599 /* libmpi_cxx.1.dylib */,
+				EB28721F198034D500264599 /* libmpi.1.dylib */,
 				EB28711D19802F0000264599 /* src */,
 				EB28710219802EB200264599 /* Products */,
 			);
@@ -294,7 +317,6 @@
 				EB28718919802F0000264599 /* Solvers */,
 				EB28718D19802F0000264599 /* StructuralElems */,
 				EB2871A019802F0000264599 /* ThermalElems */,
-				EB2871A319802F0000264599 /* main.do_not_compile */,
 			);
 			name = src;
 			path = ../../../src;
@@ -798,10 +820,13 @@
 					/opt/local/lib,
 					/opt/local/lib/gcc48,
 					"/opt/local/lib/openmpi-mp",
+					/Users/bhatiam/Documents/Projects/MAST/build/dbg,
+					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+					/opt/local/lib/libgcc,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../../../../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
 			};
 			name = Debug;
 		};
@@ -824,10 +849,13 @@
 					/opt/local/lib,
 					/opt/local/lib/gcc48,
 					"/opt/local/lib/openmpi-mp",
+					/Users/bhatiam/Documents/Projects/MAST/build/dbg,
+					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+					/opt/local/lib/libgcc,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../../../../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
 			};
 			name = Release;
 		};
@@ -850,6 +878,7 @@
 				EB28710719802EB200264599 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

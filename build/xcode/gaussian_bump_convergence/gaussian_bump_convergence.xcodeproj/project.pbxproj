@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		EB28721D19802F4600264599 /* gaussian_bump_convergence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28721B19802F4600264599 /* gaussian_bump_convergence.cpp */; };
+		EB28722B1980353700264599 /* libmast.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28722A1980353700264599 /* libmast.dylib */; };
+		EB28722E198036CE00264599 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28722C198036CE00264599 /* libmpi_cxx.1.dylib */; };
+		EB28722F198036CE00264599 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28722D198036CE00264599 /* libmpi.1.dylib */; };
+		EB287233198036FC00264599 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB287232198036FC00264599 /* libmesh_dbg.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +30,11 @@
 		EB28711119802ED700264599 /* gaussian_bump_convergence */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gaussian_bump_convergence; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB28721B19802F4600264599 /* gaussian_bump_convergence.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gaussian_bump_convergence.cpp; sourceTree = "<group>"; };
 		EB28721C19802F4600264599 /* system_input.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = system_input.in; sourceTree = "<group>"; };
+		EB28722A1980353700264599 /* libmast.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmast.dylib; path = "../../../../../../Library/Developer/Xcode/DerivedData/MAST-cuxhtrzwvvlxltffqqlqhntejrjk/Build/Products/Debug/libmast.dylib"; sourceTree = "<group>"; };
+		EB28722C198036CE00264599 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi_cxx.1.dylib"; sourceTree = "<group>"; };
+		EB28722D198036CE00264599 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi.1.dylib"; sourceTree = "<group>"; };
+		EB287230198036E400264599 /* libmesh_dbg.la */ = {isa = PBXFileReference; lastKnownFileType = text; name = libmesh_dbg.la; path = ../../../../libmesh/real/lib/libmesh_dbg.la; sourceTree = "<group>"; };
+		EB287232198036FC00264599 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../../../../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,6 +42,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB28722B1980353700264599 /* libmast.dylib in Frameworks */,
+				EB287233198036FC00264599 /* libmesh_dbg.0.dylib in Frameworks */,
+				EB28722E198036CE00264599 /* libmpi_cxx.1.dylib in Frameworks */,
+				EB28722F198036CE00264599 /* libmpi.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,6 +55,11 @@
 		EB28710819802ED700264599 = {
 			isa = PBXGroup;
 			children = (
+				EB287232198036FC00264599 /* libmesh_dbg.0.dylib */,
+				EB287230198036E400264599 /* libmesh_dbg.la */,
+				EB28722C198036CE00264599 /* libmpi_cxx.1.dylib */,
+				EB28722D198036CE00264599 /* libmpi.1.dylib */,
+				EB28722A1980353700264599 /* libmast.dylib */,
 				EB28721A19802F4600264599 /* gaussian_bump_convergence */,
 				EB28711219802ED700264599 /* Products */,
 			);
@@ -196,14 +214,42 @@
 		EB28711B19802ED700264599 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/opt/local/include/,
+					"/opt/local/include/openmpi-mp",
+					"/opt/local/include/vtk-5.10",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-cuxhtrzwvvlxltffqqlqhntejrjk/Build/Products/Debug",
+					"/opt/local/lib/openmpi-mp",
+					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../../../../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
 			};
 			name = Debug;
 		};
 		EB28711C19802ED700264599 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/opt/local/include/,
+					"/opt/local/include/openmpi-mp",
+					"/opt/local/include/vtk-5.10",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-cuxhtrzwvvlxltffqqlqhntejrjk/Build/Products/Debug",
+					"/opt/local/lib/openmpi-mp",
+					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../../../../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
 			};
 			name = Release;
 		};
@@ -226,6 +272,7 @@
 				EB28711C19802ED700264599 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

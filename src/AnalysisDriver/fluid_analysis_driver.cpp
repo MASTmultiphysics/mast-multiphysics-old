@@ -165,6 +165,7 @@ int main_fem_operator (int argc, char* const argv[])
     tmp.right_multiply(bmat1);
     libMesh::out << "Matrix:      " << std::endl;  tmp.print();
     
+    return 0;
 }
 
 #include <unistd.h>
