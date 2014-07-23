@@ -635,7 +635,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
     for (unsigned int i=0; i<n_load_steps; i++) {
         
-        std::cout
+        libMesh::out
         << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl
         << "Solving load step: " << i << std::endl
         << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
@@ -679,7 +679,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             // now solve the fluid system
             _fluid_system_nonlin->solve();
             Real du = _fluid_system_nonlin->time_solver->du(libMesh::SystemNorm());
-            std::cout << "du = " << du << std::endl;
+            libMesh::out << "du = " << du << std::endl;
             if (du <= 1.0e-0 ||  // this is a very relaxed set of requirements input
                 (_fluid_system_nonlin->time > _fluid_system_nonlin->deltat * 25)) // max 100 iterations
                 continue_fsi_iterations = false;
@@ -729,7 +729,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             // copy modal data into the structural model for flutter analysis
             _structural_model->eigen_vals(i) = eigval.real();
             
-            std::cout << eigval.real() << std::endl;
+            libMesh::out << eigval.real() << std::endl;
             
             // get the mode
             std::ostringstream vec_nm;
@@ -799,12 +799,12 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     
     // evaluate sensitivity if any of the function sensitivity is required
     bool if_sens = (false || eval_obj_grad);
-    std::cout << eval_obj_grad << "  ";
+    libMesh::out << eval_obj_grad << "  ";
     for (unsigned int i=0; i<eval_grads.size(); i++) {
-        std::cout << eval_grads[i] << "  ";
+        libMesh::out << eval_grads[i] << "  ";
         if_sens = (if_sens || eval_grads[i]);
     }
-    std::cout << std::endl;
+    libMesh::out << std::endl;
     
     if (if_sens) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i

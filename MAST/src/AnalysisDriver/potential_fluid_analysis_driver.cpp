@@ -339,7 +339,7 @@ int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     while (continue_iterations)
     {
         // A pretty update message
-        std::cout << "\n\nSolving time step " << t_step << ", time = "
+        libMesh::out << "\n\nSolving time step " << t_step << ", time = "
         << system.time << std::endl;
         
         // Adaptively solve the timestep
@@ -389,12 +389,12 @@ int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             
             // Print out status at each adaptive step.
             Real global_error = error.l2_norm();
-            std::cout << "Adaptive step " << a_step << ": " << std::endl;
+            libMesh::out << "Adaptive step " << a_step << ": " << std::endl;
             if (global_tolerance != 0.)
-                std::cout << "Global_error = " << global_error
+                libMesh::out << "Global_error = " << global_error
                 << std::endl;
             if (global_tolerance != 0.)
-                std::cout << "Worst element error = " << error.maximum()
+                libMesh::out << "Worst element error = " << error.maximum()
                 << ", mean = " << error.mean() << std::endl;
             
             if (strategy == "error_fraction")
@@ -431,7 +431,7 @@ int potential_fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             // reduce the time step size by a factor
             system.deltat *= amr_time_shrink_factor;
             
-            std::cout << "Refined mesh to "
+            libMesh::out << "Refined mesh to "
             << mesh.n_active_elem()
             << " active elements and "
             << equation_systems.n_active_dofs()

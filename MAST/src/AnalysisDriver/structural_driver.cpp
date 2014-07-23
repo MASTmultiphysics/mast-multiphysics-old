@@ -538,7 +538,7 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
         vec_name << "mode_" << i;
         libMesh::NumericVector<Real>& vec = eigen_system.add_vector(vec_name.str());
         std::complex<Real> eigval;
-        std::streamsize prec = std::cout.precision();
+        std::streamsize prec = libMesh::out.precision();
         if (equation_systems.parameters.get<bool>("if_exchange_AB_matrices"))
         {
             file << "eig_"  << i << " = "
@@ -551,14 +551,14 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
             // now write the eigenvalues
             eigval = std::complex<Real>(val.first, val.second);
             eigval = 1./eigval;
-            std::cout << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
+            libMesh::out << std::setw(35) << std::fixed << std::setprecision(15) << eigval.real();
             
             if (sens.size() > 0) {
                 sens[i] *= -1./pow(val.first,2);
-                std::cout << std::setw(35) << std::fixed << std::setprecision(15) << sens[i];
+                libMesh::out << std::setw(35) << std::fixed << std::setprecision(15) << sens[i];
             }
             
-            std::cout << std::endl;
+            libMesh::out << std::endl;
 
         }
         else {
@@ -566,15 +566,15 @@ int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
             << std::setw(35) << std::setprecision(15) << val.first
             << std::setprecision(prec) << std::endl;
             
-            std::cout << std::setw(5) << i
+            libMesh::out << std::setw(5) << i
             << std::setw(10) << val.first
             << " + i  "
             << std::setw(10) << val.second;
             
-            std::cout<< std::endl;
+            libMesh::out<< std::endl;
         }
     }
-    std::cout<< std::endl;
+    libMesh::out<< std::endl;
     file.close();
     
     // now write the data to an output file

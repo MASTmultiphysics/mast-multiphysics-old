@@ -94,8 +94,7 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     const unsigned int
     fluid_dim     = fluid_infile("dimension",0),
     fluid_nx_divs = fluid_infile("nx_divs",0),
-    fluid_ny_divs = fluid_infile("ny_divs",0),
-    fluid_nz_divs = fluid_infile("nz_divs",0);
+    fluid_ny_divs = fluid_infile("ny_divs",0);
     divs.resize(fluid_dim);
     libMesh::ElemType fluid_elem_type =
     libMesh::Utility::string_to_enum<libMesh::ElemType>(fluid_infile("elem_type", "QUAD4"));
@@ -153,6 +152,11 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     // Declare the system
     FluidSystem& fluid_system =
     fluid_eq_systems.add_system<FluidSystem>("FluidSystem");
+    
+    fluid_system.extra_quadrature_order =
+    fluid_infile("extra_quadrature_order", 0);
+    fluid_system.deltat =
+    fluid_infile("deltat", 1.0e-3);
     
     FluidPostProcessSystem& fluid_post =
     fluid_eq_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
@@ -240,9 +244,6 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
         
         fluid_system.solve();
         
-        fluid_system.assemble_qoi(); // calculate the quantities of interest
-        fluid_system.postprocess(); // set the qois to the post-process variables
-        fluid_post.postprocess();
         sol_norm = timesolver->_x_dot_norm_old;
         
         if ((t_step >= n_timesteps) ||
@@ -251,13 +252,16 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
             libMesh::out << "\n === Terminating pseudo-time iterations ===" << std::endl;
             continue_iterations = false;
         }
-        libMesh::ExodusII_IO(fluid_mesh).write_equation_systems("gaussian_bump.exo",
-                                                                fluid_eq_systems);
-
     }
-    
+
+    fluid_system.assemble_qoi(); // calculate the quantities of interest
+    fluid_system.postprocess(); // set the qois to the post-process variables
+    fluid_post.postprocess();
+
     // write the final solution to an output file
-    libMesh::ExodusII_IO(fluid_mesh).write_equation_systems("gaussian_bump.exo",
+    std::ostringstream oss;
+    oss << nm << "_out.exo";
+    libMesh::ExodusII_IO(fluid_mesh).write_equation_systems(oss.str(),
                                                             fluid_eq_systems);
     
     // set the return values
@@ -293,7 +297,7 @@ main(int argc, char* const argv[]) {
         << std::setw(35) << "time" << std::endl;
 
         for (unsigned int i=0; i<n_increments; i++) {
-            std::cout
+            libMesh::out
             << "**************************************************************************" << std::endl
             << "             Analysis for p = " << p_order << "  mesh = " << i << std::endl
             << "**************************************************************************" << std::endl;
@@ -323,7 +327,7 @@ main(int argc, char* const argv[]) {
             << std::setw(35) << std::setprecision(15) << entropy_error
             << std::setw(35) << std::setprecision(15) << duration << std::endl;
             
-            std::cout << std::endl << std::endl;;
+            libMesh::out << std::endl << std::endl;;
         }
         
         output << std::endl << std::endl;

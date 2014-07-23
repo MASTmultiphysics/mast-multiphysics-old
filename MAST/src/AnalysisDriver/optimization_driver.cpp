@@ -37,7 +37,7 @@
 #include "AnalysisDriver/topology_optimization.h"
 //#include "AnalysisDriver/sizing_optimization.h"
 #include "Optimization/gcmma_optimization_interface.h"
-#include "beam_postbuckling_sizing.h"
+//#include "beam_postbuckling_sizing.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -81,10 +81,10 @@ int optimization_driver (libMesh::LibMeshInit& init, GetPot& infile,
     // MAST::TopologyOptimization func_eval(init, infile, output);
     
     // create and attach sizing optimization object
-    MAST::SizingOptimization func_eval(init, infile, output);
+    //MAST::SizingOptimization func_eval(init, infile, output);
 
     // attach and optimize
-    gcmma.attach_function_evaluation_object(func_eval);
+    //gcmma.attach_function_evaluation_object(func_eval);
     gcmma.optimize();
     
     output.close();

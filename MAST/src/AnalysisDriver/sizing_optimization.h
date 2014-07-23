@@ -1129,22 +1129,22 @@ MAST::SizingOptimization::_init() {
      this->evaluate(x, obj, true, obj_grad, f, eval_f_grad, f_grad);
      
      for (unsigned int k=0; k<x.size(); k++)
-     std::cout << x[k] << "  ";
-     std::cout << std::endl;
-     std::cout << obj << std::endl;
+     libMesh::out << x[k] << "  ";
+     libMesh::out << std::endl;
+     libMesh::out << obj << std::endl;
      
      for (unsigned int k=0; k<f.size(); k++)
-     std::cout << f[k] << "  ";
-     std::cout << std::endl;
+     libMesh::out << f[k] << "  ";
+     libMesh::out << std::endl;
      
      for (unsigned int k=0; k<f_grad.size(); k++)
-     std::cout << f_grad[k] << "  ";
-     std::cout << std::endl;
+     libMesh::out << f_grad[k] << "  ";
+     libMesh::out << std::endl;
      
      
      for (unsigned int k=0; k<obj_grad.size(); k++)
-     std::cout << obj_grad[k] << "  ";
-     std::cout << std::endl;
+     libMesh::out << obj_grad[k] << "  ";
+     libMesh::out << std::endl;
      
      // calculate perturbed solution
      for (unsigned int i=0; i<_n_vars; i++) {
@@ -1153,13 +1153,13 @@ MAST::SizingOptimization::_init() {
      std::fill(eval_f_grad.begin(), eval_f_grad.end(), false);
      this->evaluate(x, obj, false, obj_grad, f, eval_f_grad, f_grad);
      for (unsigned int k=0; k<x.size(); k++)
-     std::cout << x[k] << "  ";
-     std::cout << std::endl;
-     std::cout << obj << std::endl;
+     libMesh::out << x[k] << "  ";
+     libMesh::out << std::endl;
+     libMesh::out << obj << std::endl;
      
      for (unsigned int k=0; k<f.size(); k++)
-     std::cout << f[k] << "  ";
-     std::cout << std::endl;
+     libMesh::out << f[k] << "  ";
+     libMesh::out << std::endl;
      }
      */
     

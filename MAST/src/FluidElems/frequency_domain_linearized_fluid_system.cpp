@@ -486,18 +486,18 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         }
     } // end of the quadrature point qp-loop
     
-//    std::cout << "inside element time derivative " << std::endl;
+//    libMesh::out << "inside element time derivative " << std::endl;
 //    c.get_elem().print_info();
-//    std::cout << "sol: " << std::endl; c.get_elem_solution().print(std::cout);
-//    std::cout << "res: " << std::endl; {
+//    libMesh::out << "sol: " << std::endl; c.get_elem_solution().print(libMesh::out);
+//    libMesh::out << "res: " << std::endl; {
 //        DenseComplexVector vv; vv.resize(Fvec.size()/2);
 //        MAST::transform_to_elem_vector(vv, Fvec);
-//        vv.print(std::cout);
+//        vv.print(libMesh::out);
 //    }
 //    if (request_jacobian && c.elem_solution_derivative) {
 //        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
 //        MAST::transform_to_elem_matrix(mm, Kmat);
-//        mm.print(std::cout);
+//        mm.print(libMesh::out);
 //    }
     
     return request_jacobian;
@@ -962,19 +962,19 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     }
 
     
-//    std::cout << "inside side constraint " << std::endl;
-//    std::cout << "elem solution" << std::endl; c.get_elem_solution().print(std::cout);
-//    std::cout << mechanical_bc_type << std::endl;
-//    std::cout << "bc vec: " << std::endl;
+//    libMesh::out << "inside side constraint " << std::endl;
+//    libMesh::out << "elem solution" << std::endl; c.get_elem_solution().print(libMesh::out);
+//    libMesh::out << mechanical_bc_type << std::endl;
+//    libMesh::out << "bc vec: " << std::endl;
 //    {
 //        DenseComplexVector vv; vv.resize(Fvec.size()/2);
 //        MAST::transform_to_elem_vector(vv, Fvec);
-//        vv.print(std::cout);
+//        vv.print(libMesh::out);
 //    }
 //    if (request_jacobian && c.elem_solution_derivative) {
 //        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
 //        MAST::transform_to_elem_matrix(mm, Kmat);
-//        mm.print(std::cout);
+//        mm.print(libMesh::out);
 //    }
     
     return request_jacobian;
@@ -1268,18 +1268,18 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_k_sens
     } // end of the quadrature point qp-loop
 
     
-//    std::cout << "inside element time derivative sens " << std::endl;
+//    libMesh::out << "inside element time derivative sens " << std::endl;
 //    c.get_elem().print_info();
-//    std::cout << "sol: " << std::endl; c.get_elem_solution().print(std::cout);
-//    std::cout << "res: " << std::endl; {
+//    libMesh::out << "sol: " << std::endl; c.get_elem_solution().print(libMesh::out);
+//    libMesh::out << "res: " << std::endl; {
 //        DenseComplexVector vv; vv.resize(Fvec.size()/2);
 //        MAST::transform_to_elem_vector(vv, Fvec);
-//        vv.print(std::cout);
+//        vv.print(libMesh::out);
 //    }
 //    if (request_jacobian && c.elem_solution_derivative) {
 //        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
 //        MAST::transform_to_elem_matrix(mm, Kmat);
-//        mm.print(std::cout);
+//        mm.print(libMesh::out);
 //    }
     
     return request_jacobian;
@@ -1708,19 +1708,19 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
     }
     
     
-//    std::cout << "inside side constraint sens" << std::endl;
-//    std::cout << "elem solution" << std::endl; c.get_elem_solution().print(std::cout);
-//    std::cout << mechanical_bc_type << std::endl;
-//    std::cout << "bc vec: " << std::endl;
+//    libMesh::out << "inside side constraint sens" << std::endl;
+//    libMesh::out << "elem solution" << std::endl; c.get_elem_solution().print(libMesh::out);
+//    libMesh::out << mechanical_bc_type << std::endl;
+//    libMesh::out << "bc vec: " << std::endl;
 //    {
 //        DenseComplexVector vv; vv.resize(Fvec.size()/2);
 //        MAST::transform_to_elem_vector(vv, Fvec);
-//        vv.print(std::cout);
+//        vv.print(libMesh::out);
 //    }
 //    if (request_jacobian && c.elem_solution_derivative) {
 //        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
 //        MAST::transform_to_elem_matrix(mm, Kmat);
-//        mm.print(std::cout);
+//        mm.print(libMesh::out);
 //    }
     
     return request_jacobian;

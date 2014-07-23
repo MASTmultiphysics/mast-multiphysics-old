@@ -436,7 +436,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
             eigval = Complex(val.first, val.second);
             eigval = 1./eigval;
             
-            std::cout
+            libMesh::out
             //<< std::setw(35) << std::fixed << std::setprecision(15)
             << eigval.real()
             << std::endl;
@@ -517,7 +517,7 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
     
     for (unsigned int p_order=1; p_order<5; p_order++) {
         for (unsigned int i=0; i<n_increments; i++) {
-            std::cout
+            libMesh::out
             << "**************************************************************************" << std::endl
             << "             Analysis for p = " << p_order << "  mesh = " << i << std::endl
             << "**************************************************************************" << std::endl;
@@ -552,7 +552,7 @@ flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
             << std::setw(35) << std::setprecision(15) << flutter_V
             << std::setw(35) << std::setprecision(15) << duration << std::endl;
 
-            std::cout << std::endl << std::endl;;
+            libMesh::out << std::endl << std::endl;;
         }
         
         output << std::endl << std::endl;

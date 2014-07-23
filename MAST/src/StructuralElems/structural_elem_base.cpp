@@ -698,7 +698,7 @@ MAST::StructuralElementBase::small_disturbance_surface_pressure_force(bool reque
         
         //            press = 0.;
         //            dpress = Complex(2./4.*std::real(dn_rot(0)),  2./4./.1*std::imag(utrans(1)));
-        //            std::cout << q_point[qp](0)
+        //            libMesh::out << q_point[qp](0)
         //            << "  " << std::real(utrans(1))
         //            << "  " << std::imag(utrans(1))
         //            << "  " << std::real(dn_rot(0))
@@ -814,7 +814,7 @@ small_disturbance_surface_pressure_force(bool request_jacobian,
         surf_press.surface_pressure<ValType>(_system.time, pt, press, dpress);
         surf_motion.surface_velocity(_system.time, pt, normal,
                                      wtrans, utrans, dn_rot);
-//        std::cout << std::setw(15) << pt(0)
+//        libMesh::out << std::setw(15) << pt(0)
 //        << std::setw(15) << std::real(press)
 //        << std::setw(15) << std::imag(press)
 //        << std::setw(15) << std::real(dpress)

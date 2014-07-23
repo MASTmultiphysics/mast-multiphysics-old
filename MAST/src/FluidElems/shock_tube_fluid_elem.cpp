@@ -239,12 +239,12 @@ MAST::ShockTubeFluidElem::element_time_derivative(bool request_jacobian,
         }
     } // end of the quadrature point qp-loop
     
-    //    std::cout << "inside element time derivative " << std::endl;
+    //    libMesh::out << "inside element time derivative " << std::endl;
     //    c.elem->print_info();
-    //    std::cout << "sol: " << std::endl; c.elem_solution.print(std::cout);
-    //    std::cout << "res: " << std::endl; Fvec.print(std::cout);
+    //    libMesh::out << "sol: " << std::endl; c.elem_solution.print(libMesh::out);
+    //    libMesh::out << "res: " << std::endl; Fvec.print(libMesh::out);
     //    if (request_jacobian && c.elem_solution_derivative)
-    //        Kmat.print(std::cout);
+    //        Kmat.print(libMesh::out);
     
     return request_jacobian;
 }

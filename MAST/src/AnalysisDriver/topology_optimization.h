@@ -229,7 +229,7 @@ MAST::TopologyOptimization::evaluate(const std::vector<Real>& dvars,
     
     
     // now solve the system
-    std::cout << "New Eval" << std::endl;
+    libMesh::out << "New Eval" << std::endl;
     libMesh::QoISet qoi_set(*_system);
     qoi_set.add_index(0);
     _system->solution->zero();

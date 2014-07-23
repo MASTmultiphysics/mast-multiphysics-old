@@ -76,9 +76,9 @@ int main_fem_operator (int argc, char* const argv[])
     for (unsigned int i=0; i<vec1.size(); i++)
         vec1(i) = i+100;
     
-    shp.print(std::cout);
-    vec1.print(std::cout);
-    mat1.print(std::cout);
+    shp.print(libMesh::out);
+    vec1.print(libMesh::out);
+    mat1.print(libMesh::out);
     
     FEMOperatorMatrix b1, b2;
     b1.reinit(3, shp); b2.reinit(3, shp);
@@ -92,18 +92,18 @@ int main_fem_operator (int argc, char* const argv[])
     
     vec2.resize(3);
     b1.vector_mult(vec2, vec1);
-    std::cout << "FEMOperator: " << std::endl; vec2.print(std::cout);
+    libMesh::out << "FEMOperator: " << std::endl; vec2.print(libMesh::out);
     bmat1.vector_mult(vec2, vec1);
-    std::cout << "Matrix:      " << std::endl; vec2.print(std::cout);
+    libMesh::out << "Matrix:      " << std::endl; vec2.print(libMesh::out);
     
     vec1.resize(3);
     for (unsigned int i=0; i<vec1.size(); i++)
         vec1(i) = 100+i;
     vec2.resize(12);
     b1.vector_mult_transpose(vec2, vec1);
-    std::cout << "FEMOperator: " << std::endl; vec2.print(std::cout);
+    libMesh::out << "FEMOperator: " << std::endl; vec2.print(libMesh::out);
     bmat1.vector_mult_transpose(vec2, vec1);
-    std::cout << "Matrix:      " << std::endl; vec2.print(std::cout);
+    libMesh::out << "Matrix:      " << std::endl; vec2.print(libMesh::out);
     
     
     mat1.resize(5,3);
@@ -111,12 +111,12 @@ int main_fem_operator (int argc, char* const argv[])
     for (unsigned int i=0; i<5; i++)
         for (unsigned int j=0; j<3; j++)
             mat1(i,j) = (i+1)*(j+1);
-    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    libMesh::out << "multiply matrix" << std::endl;  mat1.print();
     b1.left_multiply(mat2, mat1);
-    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    libMesh::out << "FEMOperator: " << std::endl;  mat2.print();
     tmp = bmat1;
     tmp.left_multiply(mat1);
-    std::cout << "Matrix:      " << std::endl;  tmp.print();
+    libMesh::out << "Matrix:      " << std::endl;  tmp.print();
     
     
     mat1.resize(5,12);
@@ -124,12 +124,12 @@ int main_fem_operator (int argc, char* const argv[])
     for (unsigned int i=0; i<5; i++)
         for (unsigned int j=0; j<12; j++)
             mat1(i,j) = (i+1)*(j+1);
-    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    libMesh::out << "multiply matrix" << std::endl;  mat1.print();
     b1.left_multiply_transpose(mat2, mat1);
-    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    libMesh::out << "FEMOperator: " << std::endl;  mat2.print();
     bmat1.get_transpose(tmp);
     tmp.left_multiply(mat1);
-    std::cout << "Matrix:      " << std::endl;  tmp.print();
+    libMesh::out << "Matrix:      " << std::endl;  tmp.print();
     
     
     mat1.resize(12,5);
@@ -137,12 +137,12 @@ int main_fem_operator (int argc, char* const argv[])
     for (unsigned int i=0; i<12; i++)
         for (unsigned int j=0; j<5; j++)
             mat1(i,j) = (i+1)*(j+1);
-    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    libMesh::out << "multiply matrix" << std::endl;  mat1.print();
     b1.right_multiply(mat2, mat1);
-    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    libMesh::out << "FEMOperator: " << std::endl;  mat2.print();
     tmp = bmat1;
     tmp.right_multiply(mat1);
-    std::cout << "Matrix:      " << std::endl;  tmp.print();
+    libMesh::out << "Matrix:      " << std::endl;  tmp.print();
     
     
     mat1.resize(3, 5);
@@ -150,20 +150,20 @@ int main_fem_operator (int argc, char* const argv[])
     for (unsigned int i=0; i<3; i++)
         for (unsigned int j=0; j<5; j++)
             mat1(i,j) = (i+1)*(j+1);
-    std::cout << "multiply matrix" << std::endl;  mat1.print();
+    libMesh::out << "multiply matrix" << std::endl;  mat1.print();
     b1.right_multiply_transpose(mat2, mat1);
-    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    libMesh::out << "FEMOperator: " << std::endl;  mat2.print();
     bmat1.get_transpose(tmp);
     tmp.right_multiply(mat1);
-    std::cout << "Matrix:      " << std::endl;  tmp.print();
+    libMesh::out << "Matrix:      " << std::endl;  tmp.print();
     
     
     mat2.resize(12, 12);
     b1.right_multiply_transpose(mat2, b1);
-    std::cout << "FEMOperator: " << std::endl;  mat2.print();
+    libMesh::out << "FEMOperator: " << std::endl;  mat2.print();
     bmat1.get_transpose(tmp);
     tmp.right_multiply(bmat1);
-    std::cout << "Matrix:      " << std::endl;  tmp.print();
+    libMesh::out << "Matrix:      " << std::endl;  tmp.print();
     
 }
 
@@ -569,7 +569,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
     while (continue_iterations)
     {
         // A pretty update message
-        std::cout << "\n\nSolving time step " << t_step << ", time = "
+        libMesh::out << "\n\nSolving time step " << t_step << ", time = "
         << system->time << std::endl;
         
         
@@ -635,12 +635,12 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             
             // Print out status at each adaptive step.
             Real global_error = error.l2_norm();
-            std::cout << "Adaptive step " << a_step << ": " << std::endl;
+            libMesh::out << "Adaptive step " << a_step << ": " << std::endl;
             if (global_tolerance != 0.)
-                std::cout << "Global_error = " << global_error
+                libMesh::out << "Global_error = " << global_error
                 << std::endl;
             if (global_tolerance != 0.)
-                std::cout << "Worst element error = " << error.maximum()
+                libMesh::out << "Worst element error = " << error.maximum()
                 << ", mean = " << error.mean() << std::endl;
             
             if (strategy == "error_fraction")
@@ -683,7 +683,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             // reduce the time step size by a factor
             system->deltat *= amr_time_shrink_factor;
             
-            std::cout << "Refined mesh to "
+            libMesh::out << "Refined mesh to "
             << mesh.n_active_elem()
             << " active elements and "
             << equation_systems.n_active_dofs()

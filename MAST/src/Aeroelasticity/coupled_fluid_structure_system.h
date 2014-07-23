@@ -155,7 +155,7 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_red,
         for (unsigned int i=0; i<300; i++) {
             pt(0) = 0 + (6)*(1.*i)/299.;
             function(pt, 0., sol);
-            std::cout
+            libMesh::out
             << std::setw(15) << pt(0)
             << std::setw(15) << sol(0)
             << std::setw(15) << sol(1)
@@ -261,7 +261,7 @@ get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
         for (unsigned int i=0; i<300; i++) {
             pt(0) = 0 + (6)*(1.*i)/299.;
             function(pt, 0., sol);
-            std::cout
+            libMesh::out
             << std::setw(15) << pt(0)
             << std::setw(15) << sol(0)
             << std::setw(15) << sol(1)

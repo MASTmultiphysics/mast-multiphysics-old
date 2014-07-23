@@ -444,12 +444,12 @@ bool FluidSystem::element_time_derivative (bool request_jacobian,
         }
     } // end of the quadrature point qp-loop
     
-    //    std::cout << "inside element time derivative " << std::endl;
+    //    libMesh::out << "inside element time derivative " << std::endl;
     //    c.elem->print_info();
-    //    std::cout << "sol: " << std::endl; c.elem_solution.print(std::cout);
-    //    std::cout << "res: " << std::endl; Fvec.print(std::cout);
+    //    libMesh::out << "sol: " << std::endl; c.elem_solution.print(libMesh::out);
+    //    libMesh::out << "res: " << std::endl; Fvec.print(libMesh::out);
     //    if (request_jacobian && c.elem_solution_derivative)
-    //        Kmat.print(std::cout);
+    //        Kmat.print(libMesh::out);
     
     return request_jacobian;
 }
@@ -1099,12 +1099,12 @@ bool FluidSystem::side_time_derivative (bool request_jacobian,
     }
     
     
-    //    std::cout << "inside side constraint " << std::endl;
-    //    std::cout << "elem solution" << std::endl; c.elem_solution.print(std::cout);
-    //    std::cout << if_inf_bc << "  " << if_wall_bc << std::endl;
-    //    std::cout << "bc vec: " << std::endl; Fvec.print(std::cout);
+    //    libMesh::out << "inside side constraint " << std::endl;
+    //    libMesh::out << "elem solution" << std::endl; c.elem_solution.print(libMesh::out);
+    //    libMesh::out << if_inf_bc << "  " << if_wall_bc << std::endl;
+    //    libMesh::out << "bc vec: " << std::endl; Fvec.print(libMesh::out);
     //    if (request_jacobian && c.elem_solution_derivative)
-    //        Kmat.print(std::cout);
+    //        Kmat.print(libMesh::out);
     
     return request_jacobian;
 }
@@ -1223,12 +1223,12 @@ bool FluidSystem::mass_residual (bool request_jacobian,
         }
     } // end of the quadrature point qp-loop
     
-    //    std::cout << "inside mass residual " << std::endl;
-    //    std::cout << "elem velocity" << std::endl; c.elem_solution.print(std::cout);
-    //    std::cout << "elem solution" << std::endl; c.elem_fixed_solution.print(std::cout);
-    //    std::cout << "mass vec: " << std::endl; Fvec.print(std::cout);
+    //    libMesh::out << "inside mass residual " << std::endl;
+    //    libMesh::out << "elem velocity" << std::endl; c.elem_solution.print(libMesh::out);
+    //    libMesh::out << "elem solution" << std::endl; c.elem_fixed_solution.print(libMesh::out);
+    //    libMesh::out << "mass vec: " << std::endl; Fvec.print(libMesh::out);
     //    if (request_jacobian && c.elem_solution_derivative)
-    //        Kmat.print(std::cout);
+    //        Kmat.print(libMesh::out);
     
     return request_jacobian;
 }

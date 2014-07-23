@@ -383,7 +383,7 @@ void calculate_fd_jacobian(MAST::StructuralElementBase& e) {
         for (unsigned int j=0; j<sol.size(); j++)
             jac(j,i) = (df(j)-f(j))/dval;
     }
-    std::cout << "numerical jacobian" << std::endl;
+    libMesh::out << "numerical jacobian" << std::endl;
     jac.print();
     e.local_solution = sol;
 }

@@ -141,7 +141,7 @@ PrimitiveSolution::print(std::ostream& out) const
 {
     out << "Primitive Solution:" << std::endl;
     primitive_sol.print(out);
-    std::cout
+    libMesh::out
     << std::setw(15) <<  " rho: " << rho << std::endl
     << std::setw(15) <<  " u1: " << u1 << std::endl
     << std::setw(15) <<  " u2: " << u2 << std::endl
@@ -232,7 +232,7 @@ SmallPerturbationPrimitiveSolution<ValType>::print(std::ostream& out) const
 {
     out << "Small Perturbation Primitive Solution:" << std::endl;
     perturb_primitive_sol.print(out);
-    std::cout
+    libMesh::out
     << std::setw(15) <<  " drho: " << drho << std::endl
     << std::setw(15) <<  " du1: " << du1 << std::endl
     << std::setw(15) <<  " du2: " << du2 << std::endl
