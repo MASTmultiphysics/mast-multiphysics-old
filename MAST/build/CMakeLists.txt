@@ -28,15 +28,6 @@ set (blas_lib_dir      "blas-lib-dir" CACHE STRING "Directory containing BLAS li
 set (CMAKE_Fortran_COMPILER "fortran-compiler" CACHE STRING "Fortran compiler")
 
 
-file (GLOB gcmma_source_files ../src/Optimization/gcmma/*.f)
-add_library (gcmma ${gcmma_source_files})
-
-
-file (GLOB_RECURSE mast_source_files ../src/*.cpp ../examples/*.cpp)
-file (GLOB_RECURSE mast_header_files ../src/*.h   ../examples/*.h)
-
-
-
 #set (EXTRA_LIBS ${EXTRA_LIBS} MathFunctions)
 
 
@@ -48,11 +39,6 @@ include_directories (../src
 
 include_directories (SYSTEM ${mpi_include_dir})
 
-add_executable (mast ${mast_source_files} ${mast_header_files})
-
-set_property (TARGET mast APPEND 
-	     PROPERTY INCLUDE_DIRECTORIES 
-	     ${libmesh_dir}/include) 
 
 find_library (mesh_dbg mesh_dbg ${libmesh_dir}/lib)
 find_library (mesh_opt mesh_opt ${libmesh_dir}/lib)
@@ -77,6 +63,31 @@ find_library (blas_lib      ${f}     ${blas_lib_dir})
 endforeach (f)
 
 
+#
+#  add files for GCMMA library and add it to cmake's build list
+#
+file (GLOB gcmma_source_files ../src/Optimization/gcmma/*.f)
+add_library (gcmma ${gcmma_source_files})
+
+
+#
+#  add files for MAST library and add it to cmake's build list
+#
+file (GLOB_RECURSE mast_source_files ../src/*.cpp ../src/*.h)
+add_library (mast ${mast_source_files})
+
+
+#
+#  add files for executables in the examples and add it to cmake's build list
+#
+file (GLOB_RECURSE gaussian_bump_convergence_source_files 
+	../examples/gaussian_bump_convergence/*.cpp 
+	../examples/gaussian_bump_convergence/*.h)
+add_executable (gaussian_bump_convergence ${gaussian_bump_convergence_source_files})
+
+#
+#  tell cmake to link mast library against these libraries
+#
 target_link_libraries (mast  
 		      debug ${mesh_dbg}
 		      optimized ${mesh_opt}
@@ -87,3 +98,26 @@ target_link_libraries (mast
 		      ${tbb_lib}
 		      ${mpicxx_lib}
 		      ${mpi_lib})
+
+#
+#   add the include paths for mast
+#
+set_property (TARGET mast APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
+#
+#  tell cmake to link gaussian_bump_convergence example with mast library
+#
+target_link_libraries (gaussian_bump_convergence
+			mast)
+
+
+#
+#   add the include paths for the example
+#
+set_property (TARGET gaussian_bump_convergence APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
+
