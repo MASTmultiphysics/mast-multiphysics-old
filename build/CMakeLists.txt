@@ -85,6 +85,15 @@ file (GLOB_RECURSE gaussian_bump_convergence_source_files
 	../examples/gaussian_bump_convergence/*.h)
 add_executable (gaussian_bump_convergence ${gaussian_bump_convergence_source_files})
 
+
+#
+#  add files for executables in the examples and add it to cmake's build list
+#
+file (GLOB_RECURSE beam_flutter_sizing_source_files 
+	../examples/beam_flutter_sizing/*.cpp 
+	../examples/beam_flutter_sizing/*.h)
+add_executable (beam_flutter_sizing ${beam_flutter_sizing_source_files})
+
 #
 #  tell cmake to link mast library against these libraries
 #
@@ -121,3 +130,16 @@ set_property (TARGET gaussian_bump_convergence APPEND
 	     ${libmesh_dir}/include) 
 
 
+#
+#  tell cmake to link gaussian_bump_convergence example with mast library
+#
+target_link_libraries (beam_flutter_sizing
+			mast)
+
+
+#
+#   add the include paths for the example
+#
+set_property (TARGET beam_flutter_sizing APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
