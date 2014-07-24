@@ -138,6 +138,15 @@ public:
                                   DenseComplexVector& dn_rot)
     { libmesh_error();}
     
+    virtual void surface_velocity_k_sens(const Real t,
+                                         const libMesh::Point& p,
+                                         const libMesh::Point& n,
+                                         DenseComplexVector& w_trans,
+                                         DenseComplexVector& u_trans,
+                                         DenseComplexVector& dn_rot) {
+        libmesh_error();
+    }
+
     /*!
      *   calculation of surface velocity in time domain. \p u_trans is
      *   the pure translation velocity component, while \p dn_rot defines the
@@ -165,16 +174,22 @@ GaussianBumpSurfaceNormalCorrection2D::surface_velocity(const Real t,
                                                         DenseRealVector& u_trans,
                                                         DenseRealVector& dn_rot)
 {
+    w_trans.zero();
+    u_trans.zero();
+    dn_rot.zero();
+    
     // for the point p, add the correction of surface normal n to dn_rot
-    Real x = p(0),
-    f = -25. * pow((x-_x0)-(_x1-_x0)*0.5, 2.0),
-    dfdx = -50.*((x-_x0)-(_x1-_x0)*0.5),
-    dydx = _h*exp(f)*dfdx;
-
-    dn_rot(0) = dydx; dn_rot(1) = -1.;
-    dn_rot.scale(1./dn_rot.l2_norm());  // expected surface normal
-    dn_rot(0) -= n(0);                  // error in surface normal
-    dn_rot(1) -= n(1);
+    if (p(1) <= _h) {
+        Real x = p(0),
+        f = -25. * pow((x-_x0)-(_x1-_x0)*0.5, 2.0),
+        dfdx = -50.*((x-_x0)-(_x1-_x0)*0.5),
+        dydx = _h*exp(f)*dfdx;
+        
+        dn_rot(0) = dydx; dn_rot(1) = -1.;
+        dn_rot.scale(1./dn_rot.l2_norm());  // expected surface normal
+        dn_rot(0) -= n(0);                  // error in surface normal
+        dn_rot(1) -= n(1);
+    }
 }
 
 

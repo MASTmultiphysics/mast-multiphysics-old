@@ -23,13 +23,6 @@
 		EB2871B119802F0000264599 /* time_domain_flutter_solver.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28712C19802F0000264599 /* time_domain_flutter_solver.h */; };
 		EB2871B219802F0000264599 /* ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28712D19802F0000264599 /* ug_flutter_solver.cpp */; };
 		EB2871B319802F0000264599 /* ug_flutter_solver.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28712E19802F0000264599 /* ug_flutter_solver.h */; };
-		EB2871B419802F0000264599 /* fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28713019802F0000264599 /* fluid_analysis_driver.cpp */; };
-		EB2871B519802F0000264599 /* flutter_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28713119802F0000264599 /* flutter_driver.cpp */; };
-		EB2871B619802F0000264599 /* optimization_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28713219802F0000264599 /* optimization_driver.cpp */; };
-		EB2871B719802F0000264599 /* potential_fluid_analysis_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28713319802F0000264599 /* potential_fluid_analysis_driver.cpp */; };
-		EB2871B819802F0000264599 /* sizing_optimization.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28713419802F0000264599 /* sizing_optimization.h */; };
-		EB2871B919802F0000264599 /* structural_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28713519802F0000264599 /* structural_driver.cpp */; };
-		EB2871BA19802F0000264599 /* topology_optimization.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28713619802F0000264599 /* topology_optimization.h */; };
 		EB2871BB19802F0000264599 /* MAST_data_types.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28713819802F0000264599 /* MAST_data_types.h */; };
 		EB2871BC19802F0000264599 /* boundary_condition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28713A19802F0000264599 /* boundary_condition.cpp */; };
 		EB2871BD19802F0000264599 /* boundary_condition.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28713B19802F0000264599 /* boundary_condition.h */; };
@@ -151,13 +144,6 @@
 		EB28712C19802F0000264599 /* time_domain_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = time_domain_flutter_solver.h; sourceTree = "<group>"; };
 		EB28712D19802F0000264599 /* ug_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ug_flutter_solver.cpp; sourceTree = "<group>"; };
 		EB28712E19802F0000264599 /* ug_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ug_flutter_solver.h; sourceTree = "<group>"; };
-		EB28713019802F0000264599 /* fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fluid_analysis_driver.cpp; sourceTree = "<group>"; };
-		EB28713119802F0000264599 /* flutter_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flutter_driver.cpp; sourceTree = "<group>"; };
-		EB28713219802F0000264599 /* optimization_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = optimization_driver.cpp; sourceTree = "<group>"; };
-		EB28713319802F0000264599 /* potential_fluid_analysis_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = potential_fluid_analysis_driver.cpp; sourceTree = "<group>"; };
-		EB28713419802F0000264599 /* sizing_optimization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sizing_optimization.h; sourceTree = "<group>"; };
-		EB28713519802F0000264599 /* structural_driver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = structural_driver.cpp; sourceTree = "<group>"; };
-		EB28713619802F0000264599 /* topology_optimization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = topology_optimization.h; sourceTree = "<group>"; };
 		EB28713819802F0000264599 /* MAST_data_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAST_data_types.h; sourceTree = "<group>"; };
 		EB28713A19802F0000264599 /* boundary_condition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = boundary_condition.cpp; sourceTree = "<group>"; };
 		EB28713B19802F0000264599 /* boundary_condition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundary_condition.h; sourceTree = "<group>"; };
@@ -304,7 +290,6 @@
 			isa = PBXGroup;
 			children = (
 				EB28711E19802F0000264599 /* Aeroelasticity */,
-				EB28712F19802F0000264599 /* AnalysisDriver */,
 				EB28713719802F0000264599 /* Base */,
 				EB28713919802F0000264599 /* BoundaryConditions */,
 				EB28714619802F0000264599 /* Flight */,
@@ -343,20 +328,6 @@
 				EB28712E19802F0000264599 /* ug_flutter_solver.h */,
 			);
 			path = Aeroelasticity;
-			sourceTree = "<group>";
-		};
-		EB28712F19802F0000264599 /* AnalysisDriver */ = {
-			isa = PBXGroup;
-			children = (
-				EB28713019802F0000264599 /* fluid_analysis_driver.cpp */,
-				EB28713119802F0000264599 /* flutter_driver.cpp */,
-				EB28713219802F0000264599 /* optimization_driver.cpp */,
-				EB28713319802F0000264599 /* potential_fluid_analysis_driver.cpp */,
-				EB28713419802F0000264599 /* sizing_optimization.h */,
-				EB28713519802F0000264599 /* structural_driver.cpp */,
-				EB28713619802F0000264599 /* topology_optimization.h */,
-			);
-			path = AnalysisDriver;
 			sourceTree = "<group>";
 		};
 		EB28713719802F0000264599 /* Base */ = {
@@ -565,7 +536,6 @@
 				EB2871D719802F0000264599 /* gaussian_bump_mesh.h in Headers */,
 				EB2871F619802F0000264599 /* gas_property.h in Headers */,
 				EB2871C319802F0000264599 /* rigid_surface_motion.h in Headers */,
-				EB2871B819802F0000264599 /* sizing_optimization.h in Headers */,
 				EB28721019802F0000264599 /* structural_element_1D.h in Headers */,
 				EB2871FE19802F0000264599 /* property_card_base.h in Headers */,
 				EB2871BD19802F0000264599 /* boundary_condition.h in Headers */,
@@ -611,7 +581,6 @@
 				EB2871C419802F0000264599 /* small_disturbance_motion.h in Headers */,
 				EB2871AC19802F0000264599 /* flutter_solver_base.h in Headers */,
 				EB28720A19802F0000264599 /* bernoulli_bending_operator.h in Headers */,
-				EB2871BA19802F0000264599 /* topology_optimization.h in Headers */,
 				EB2871E619802F0000264599 /* dot_optimization_interface.h in Headers */,
 				EB2871D819802F0000264599 /* mesh_initializer.h in Headers */,
 				EB2871A819802F0000264599 /* fem_structural_model.h in Headers */,
@@ -684,7 +653,6 @@
 				EB28720419802F0000264599 /* residual_based_adaptive_time_solver.cpp in Sources */,
 				EB2871CD19802F0000264599 /* fluid_newton_solver.cpp in Sources */,
 				EB28721319802F0000264599 /* structural_element_3D.cpp in Sources */,
-				EB2871B519802F0000264599 /* flutter_driver.cpp in Sources */,
 				EB2871EA19802F0000264599 /* gcmma_optimization_interface.cpp in Sources */,
 				EB2871E319802F0000264599 /* function_base.cpp in Sources */,
 				EB2871ED19802F0000264599 /* potential_flow_elem_base.cpp in Sources */,
@@ -696,8 +664,6 @@
 				EB2871C919802F0000264599 /* aerodynamic_qoi.cpp in Sources */,
 				EB2871BC19802F0000264599 /* boundary_condition.cpp in Sources */,
 				EB2871B019802F0000264599 /* time_domain_flutter_solver.cpp in Sources */,
-				EB2871B919802F0000264599 /* structural_driver.cpp in Sources */,
-				EB2871B619802F0000264599 /* optimization_driver.cpp in Sources */,
 				EB2871F319802F0000264599 /* element_property_card_3D.cpp in Sources */,
 				EB2871D519802F0000264599 /* shock_tube_fluid_elem.cpp in Sources */,
 				EB2871B219802F0000264599 /* ug_flutter_solver.cpp in Sources */,
@@ -710,7 +676,6 @@
 				EB28720D19802F0000264599 /* structural_elem_base.cpp in Sources */,
 				EB2871FA19802F0000264599 /* multilayer_1d_section_element_property_card.cpp in Sources */,
 				EB28720819802F0000264599 /* bending_structural_elem.cpp in Sources */,
-				EB2871B719802F0000264599 /* potential_fluid_analysis_driver.cpp in Sources */,
 				EB2871AB19802F0000264599 /* flutter_solver_base.cpp in Sources */,
 				EB28721519802F0000264599 /* structural_system_assembly.cpp in Sources */,
 				EB28720619802F0000264599 /* bending_operator.cpp in Sources */,
@@ -718,7 +683,6 @@
 				EB28720119802F0000264599 /* solid_2d_section_element_property_card.cpp in Sources */,
 				EB2871C519802F0000264599 /* surface_pressure.cpp in Sources */,
 				EB2871AD19802F0000264599 /* pk_flutter_solver.cpp in Sources */,
-				EB2871B419802F0000264599 /* fluid_analysis_driver.cpp in Sources */,
 				EB2871A919802F0000264599 /* flutter_solution.cpp in Sources */,
 				EB28721819802F0000264599 /* thermal_elem_base.cpp in Sources */,
 				EB28721119802F0000264599 /* structural_element_2D.cpp in Sources */,

@@ -47,6 +47,64 @@
 
 
 
+template <typename SysType>
+void
+init_system(SysType& fluid_system,
+            GetPot& fluid_infile,
+            FlightCondition& flight_cond) {
+    
+    fluid_system.extra_quadrature_order =
+    fluid_infile("extra_quadrature_order", 0);
+    fluid_system.deltat =
+    fluid_infile("deltat", 1.0e-3);
+    
+    fluid_system.flight_condition = &flight_cond;
+    
+    ResidualBaseAdaptiveTimeSolver* timesolver =
+    new ResidualBaseAdaptiveTimeSolver(fluid_system);
+    libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(fluid_system);
+    
+    timesolver->quiet              = fluid_infile("timesolver_solver_quiet", true);
+    timesolver->growth_exponent    = fluid_infile("timesolver_growth_exponent", 1.2);
+    timesolver->n_iters_per_update = fluid_infile("timesolver_update_n_iters", 10);
+    timesolver->min_deltat         = fluid_infile("timesolver_min_deltat", 1.0e-3);
+    timesolver->max_growth         = fluid_infile("timesolver_maxgrowth", 4.0);
+    timesolver->min_growth         = fluid_infile("timesolver_mingrowth", 0.25);
+    timesolver->max_deltat         = fluid_infile("timesolver_max_deltat", 5.0e2);
+    
+    core_time_solver->theta        = fluid_infile("timesolver_theta", 1.0);
+    
+    timesolver->core_time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(core_time_solver);
+    timesolver->diff_solver().reset(new libMesh::NewtonSolver(fluid_system));
+    fluid_system.time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
+    
+    libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
+    (*timesolver->diff_solver());
+    solver.quiet = fluid_infile("solver_quiet", true);
+    solver.verbose = !solver.quiet;
+    solver.brent_line_search = false;
+    solver.max_nonlinear_iterations =
+    fluid_infile("max_nonlinear_iterations", 15);
+    solver.relative_step_tolerance =
+    fluid_infile("relative_step_tolerance", 1.e-3);
+    solver.relative_residual_tolerance =
+    fluid_infile("relative_residual_tolerance", 0.0);
+    solver.absolute_residual_tolerance =
+    fluid_infile("absolute_residual_tolerance", 0.0);
+    solver.continue_after_backtrack_failure =
+    fluid_infile("continue_after_backtrack_failure", false);
+    solver.continue_after_max_iterations =
+    fluid_infile("continue_after_max_iterations", false);
+    solver.require_residual_reduction =
+    fluid_infile("require_residual_reduction", true);
+    
+    // And the linear solver options
+    solver.max_linear_iterations =
+    fluid_infile("max_linear_iterations", 50000);
+    solver.initial_linear_tolerance =
+    fluid_infile("initial_linear_tolerance", 1.e-3);
+}
+
 
 
 void
@@ -56,6 +114,7 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
                        const unsigned int n_panel_divs,
                        const unsigned int n_farfield_divs,
                        const std::string& nm,
+                       const bool if_linearized_solver,
                        unsigned int& n_dofs,
                        Real& entropy_error) {
     
@@ -132,7 +191,7 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     const Real t_by_c =  fluid_infile("t_by_c", 0.0);
 
     // create the mesh
-    GaussianBumpMesh2D().init(t_by_c,
+    GaussianBumpMesh2D().init(t_by_c*0,
                               divs,
                               fluid_mesh,
                               fluid_elem_type);
@@ -152,79 +211,39 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     // Declare the system
     FluidSystem& fluid_system =
     fluid_eq_systems.add_system<FluidSystem>("FluidSystem");
-    
-    fluid_system.extra_quadrature_order =
-    fluid_infile("extra_quadrature_order", 0);
-    fluid_system.deltat =
-    fluid_infile("deltat", 1.0e-3);
+    LinearizedFluidSystem& fluid_system_lin =
+    fluid_eq_systems.add_system<LinearizedFluidSystem>("LinearizedFluidSystem");
     
     FluidPostProcessSystem& fluid_post =
     fluid_eq_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
     fluid_post.flight_condition = &flight_cond;
 
-    
-    fluid_system.attach_init_function (init_euler_variables);
-
-    fluid_system.attach_qoi(&aero_qoi);
-
-    fluid_system.flight_condition = &flight_cond;
-    
-    fluid_system.attach_init_function(init_euler_variables);
-
-    ResidualBaseAdaptiveTimeSolver* timesolver =
-    new ResidualBaseAdaptiveTimeSolver(fluid_system);
-    libMesh::Euler2Solver *core_time_solver = new libMesh::Euler2Solver(fluid_system);
-    
-    timesolver->quiet              = fluid_infile("timesolver_solver_quiet", true);
-    timesolver->growth_exponent    = fluid_infile("timesolver_growth_exponent", 1.2);
-    timesolver->n_iters_per_update = fluid_infile("timesolver_update_n_iters", 10);
-    timesolver->min_deltat         = fluid_infile("timesolver_min_deltat", 1.0e-3);
-    timesolver->max_growth         = fluid_infile("timesolver_maxgrowth", 4.0);
-    timesolver->min_growth         = fluid_infile("timesolver_mingrowth", 0.25);
-    timesolver->max_deltat         = fluid_infile("timesolver_max_deltat", 5.0e2);
-    
-    core_time_solver->theta        = fluid_infile("timesolver_theta", 1.0);
-    
-    timesolver->core_time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(core_time_solver);
-    timesolver->diff_solver().reset(new libMesh::NewtonSolver(fluid_system));
-    fluid_system.time_solver = libMesh::AutoPtr<libMesh::UnsteadySolver>(timesolver);
-    
     // now initilaize the nonlinear solution
     fluid_eq_systems.parameters.set<bool>("if_reduced_freq") =
     fluid_infile("if_reduced_freq", false);
     
+    fluid_system.attach_qoi(&aero_qoi);
+    fluid_system.attach_init_function (init_euler_variables);
+    
+    
+    std::auto_ptr<GaussianBumpSurfaceNormalCorrection2D> surface_correction
+    (new GaussianBumpSurfaceNormalCorrection2D(x_div_loc[0],
+                                               x_div_loc[3],
+                                               t_by_c));
+    
+    fluid_system.surface_motion = surface_correction.get();
+    fluid_system_lin.perturbed_surface_motion = surface_correction.get();
+    
+
+    // initialize the linearized and nonlinear systems
+    init_system(fluid_system, fluid_infile, flight_cond);
+    init_system(fluid_system_lin, fluid_infile, flight_cond);
+
+    // initialize the equation systems
     fluid_eq_systems.init();
     
-    
-    libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
-    (*timesolver->diff_solver());
-    solver.quiet = fluid_infile("solver_quiet", true);
-    solver.verbose = !solver.quiet;
-    solver.brent_line_search = false;
-    solver.max_nonlinear_iterations =
-    fluid_infile("max_nonlinear_iterations", 15);
-    solver.relative_step_tolerance =
-    fluid_infile("relative_step_tolerance", 1.e-3);
-    solver.relative_residual_tolerance =
-    fluid_infile("relative_residual_tolerance", 0.0);
-    solver.absolute_residual_tolerance =
-    fluid_infile("absolute_residual_tolerance", 0.0);
-    solver.continue_after_backtrack_failure =
-    fluid_infile("continue_after_backtrack_failure", false);
-    solver.continue_after_max_iterations =
-    fluid_infile("continue_after_max_iterations", false);
-    solver.require_residual_reduction =
-    fluid_infile("require_residual_reduction", true);
-    
-    // And the linear solver options
-    solver.max_linear_iterations =
-    fluid_infile("max_linear_iterations", 50000);
-    solver.initial_linear_tolerance =
-    fluid_infile("initial_linear_tolerance", 1.e-3);
-    
-    
-    // the frequency domain
-    //fluid_system_freq.localize_fluid_solution();
+    // localize the base fluid solution for linearized system
+    fluid_system_lin.localize_fluid_solution();
     
     // Print information about the system to the screen.
     fluid_eq_systems.print_info();
@@ -237,14 +256,21 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     n_timesteps                    = fluid_infile("n_timesteps", 1);
     Real sol_norm = 0.,
     terminate_tolerance = fluid_infile("pseudo_time_terminate_tolerance", 1.0e-5);
-    
+
     while (continue_iterations) {
         
-        fluid_system.evaluate_recalculate_dc_flag();
-        
-        fluid_system.solve();
-        
-        sol_norm = timesolver->_x_dot_norm_old;
+        if (!if_linearized_solver) {
+            fluid_system.evaluate_recalculate_dc_flag();
+            fluid_system.solve();
+            sol_norm = dynamic_cast<ResidualBaseAdaptiveTimeSolver*>
+            (fluid_system.time_solver.get())->_x_dot_norm_old;
+        }
+        else {
+            fluid_system_lin.evaluate_recalculate_dc_flag();
+            fluid_system_lin.solve();
+            sol_norm = dynamic_cast<ResidualBaseAdaptiveTimeSolver*>
+            (fluid_system_lin.time_solver.get())->_x_dot_norm_old;
+        }
         
         if ((t_step >= n_timesteps) ||
             (sol_norm < terminate_tolerance)) {
@@ -254,6 +280,12 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
         }
     }
 
+    // add the linearized solution to the base solution before post-processing
+    if (if_linearized_solver) {
+        fluid_system.solution->add(1., *fluid_system_lin.solution);
+        fluid_system.solution->close();
+    }
+    
     fluid_system.assemble_qoi(); // calculate the quantities of interest
     fluid_system.postprocess(); // set the qois to the post-process variables
     fluid_post.postprocess();
@@ -315,6 +347,7 @@ main(int argc, char* const argv[]) {
                                    n_panel_divs*(i+1),//pow(2,i),
                                    n_farfield_divs*(i+1),//pow(2,i),
                                    oss.str(),
+                                   false,
                                    n_dofs,
                                    entropy_error);
             

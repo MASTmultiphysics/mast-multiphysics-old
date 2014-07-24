@@ -1731,7 +1731,9 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
 
 
 
-Real get_complex_var_val(const std::string& var_name, const SmallPerturbationPrimitiveSolution<Complex>& delta_p_sol, Real q0)
+Real get_complex_var_val(const std::string& var_name,
+                         const SmallPerturbationPrimitiveSolution<Complex>& delta_p_sol,
+                         Real q0)
 {
     if (var_name == "du_re")
         return std::real(delta_p_sol.du1);

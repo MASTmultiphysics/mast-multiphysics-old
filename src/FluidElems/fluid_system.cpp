@@ -113,7 +113,7 @@ void FluidSystem::init_data ()
     // set parameter values
     libMesh::Parameters& params = this->get_equation_systems().parameters;
     
-    unsigned int o = params.get<unsigned int>("p_order");//_infile("fe_order", 1);
+    unsigned int o = _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
@@ -1263,7 +1263,7 @@ void FluidSystem::evaluate_recalculate_dc_flag()
     relative_change1 = fabs(norm - _rho_norm_curr)/norm;
     
     libMesh::out
-    << "Rho libMesh::L2-norm delta: " << relative_change0
+    << "Rho L2-norm delta: " << relative_change0
     << " , " << relative_change1 << std::endl;
     
     // if the relative change in the density norm is less than the threshold, then hold
