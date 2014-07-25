@@ -64,7 +64,7 @@ void LinearizedFluidSystem::init_data ()
     // set parameter values
     libMesh::Parameters& params = this->get_equation_systems().parameters;
 
-    unsigned int o = _infile("fe_order", 1);
+    unsigned int o = params.get<unsigned int>("p_order");//_infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
@@ -1183,6 +1183,222 @@ void LinearizedFluidSystem::evaluate_recalculate_dc_flag()
     _rho_norm_old = _rho_norm_curr;
     _rho_norm_curr = norm;
 }
+
+
+
+
+Real get_small_disturbance_var_val(const std::string& var_name,
+                                   const SmallPerturbationPrimitiveSolution<Real>& delta_p_sol,
+                                   Real q0)
+{
+    if (var_name == "du")
+        return delta_p_sol.du1;
+    else if (var_name == "dv")
+        return delta_p_sol.du2;
+    else if (var_name == "dw")
+        return delta_p_sol.du3;
+    else if (var_name == "dT")
+        return delta_p_sol.dT;
+    else if (var_name == "ds")
+        return delta_p_sol.dentropy;
+    else if (var_name == "dp")
+        return delta_p_sol.dp;
+    else if (var_name == "dcp")
+        return delta_p_sol.c_pressure(q0);
+    else if (var_name == "da")
+        return delta_p_sol.da;
+    else if (var_name == "dM")
+        return delta_p_sol.dmach;
+    else
+        libmesh_assert(false);
+}
+
+
+
+class LinearizedPrimitiveFEMFunction : public libMesh::FEMFunctionBase<Real>
+{
+public:
+    // Constructor
+    LinearizedPrimitiveFEMFunction(libMesh::AutoPtr<libMesh::FunctionBase<Real> > fluid_func,
+                                   libMesh::AutoPtr<libMesh::FunctionBase<Real> > sd_fluid_func,
+                                   std::vector<std::string>& vars,
+                                   Real cp, Real cv, Real q0):
+    libMesh::FEMFunctionBase<Real>(),
+    _fluid_function(fluid_func.release()),
+    _sd_fluid_function(sd_fluid_func.release()),
+    _vars(vars), _cp(cp), _cv(cv), _q0(q0)
+    {
+        _fluid_function->init();
+        _sd_fluid_function->init();
+    }
+    
+    // Destructor
+    virtual ~LinearizedPrimitiveFEMFunction () {}
+    
+    virtual libMesh::AutoPtr<libMesh::FEMFunctionBase<Real> > clone () const
+    {return libMesh::AutoPtr<libMesh::FEMFunctionBase<Real> >( new LinearizedPrimitiveFEMFunction
+                                                              (_fluid_function->clone(),
+                                                               _sd_fluid_function->clone(),
+                                                               _vars, _cp, _cv,
+                                                               _q0) ); }
+    
+    virtual void operator() (const libMesh::FEMContext& c, const libMesh::Point& p,
+                             const Real t, DenseRealVector& val)
+    {
+        DenseRealVector sd_fluid_sol, fluid_sol;
+        
+        // get the solution values at the point
+        (*_fluid_function)(p, t, fluid_sol);
+        (*_sd_fluid_function)(p, t, sd_fluid_sol);
+        
+        sd_fluid_sol.resize(fluid_sol.size());
+        
+        PrimitiveSolution p_sol;
+        SmallPerturbationPrimitiveSolution<Real> delta_p_sol;
+        
+        // now initialize the primitive variable contexts
+        p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
+        delta_p_sol.init(p_sol, sd_fluid_sol);
+        
+        for (unsigned int i=0; i<_vars.size(); i++)
+            val(i) = get_small_disturbance_var_val(_vars[i], delta_p_sol, _q0);
+    }
+    
+    
+    virtual Real component(const libMesh::FEMContext& c, unsigned int i_comp,
+                           const libMesh::Point& p, Real t=0.)
+    {
+        DenseRealVector fluid_sol, sd_fluid_sol;
+        
+        // get the solution values at the point
+        (*_fluid_function)(p, t, fluid_sol);
+        (*_sd_fluid_function)(p, t, sd_fluid_sol);
+        
+        sd_fluid_sol.resize(fluid_sol.size());
+        
+        PrimitiveSolution p_sol;
+        SmallPerturbationPrimitiveSolution<Real> delta_p_sol;
+        
+        // now initialize the primitive variable contexts
+        p_sol.init(c.get_dim(), fluid_sol, _cp, _cv, false);
+        delta_p_sol.init(p_sol, sd_fluid_sol);
+        
+        return get_small_disturbance_var_val(_vars[i_comp], delta_p_sol, _q0);
+    }
+    
+    
+    virtual Real operator() (const libMesh::FEMContext&, const libMesh::Point& p,
+                             const Real time = 0.)
+    {libmesh_error();}
+    
+private:
+    
+    libMesh::AutoPtr<libMesh::FunctionBase<Real> > _fluid_function;
+    libMesh::AutoPtr<libMesh::FunctionBase<Real> > _sd_fluid_function;
+    std::vector<std::string>& _vars;
+    Real _cp, _cv, _q0;
+};
+
+
+
+
+
+void LinearizedFluidPostProcessSystem::init_data()
+{
+    const unsigned int dim = this->get_mesh().mesh_dimension();
+    
+    const libMesh::FEFamily fefamily = libMesh::LAGRANGE;
+    const libMesh::Order order = libMesh::FIRST;
+    
+    u = this->add_variable("du", order, fefamily);
+    if (dim > 1)
+        v = this->add_variable("dv", order, fefamily);
+    if (dim > 2)
+        w = this->add_variable("dw", order, fefamily);
+    T = this->add_variable("dT", order, fefamily);
+    s = this->add_variable("ds", order, fefamily);
+    p = this->add_variable("dp", order, fefamily);
+    cp = this->add_variable("dcp", order, fefamily);
+    a = this->add_variable("da", order, fefamily);
+    M = this->add_variable("dM", order, fefamily);
+    
+    libMesh::System::init_data();
+}
+
+
+
+
+
+void LinearizedFluidPostProcessSystem::postprocess()
+{
+    
+    // initialize the mesh function for the fluid solution,
+    // this will be used for calculation of the element solution
+    const libMesh::System& fluid =
+    this->get_equation_systems().get_system<libMesh::System>("FluidSystem");
+    const LinearizedFluidSystem& sd_fluid =
+    this->get_equation_systems().get_system<LinearizedFluidSystem>("LinearizedFluidSystem");
+    fluid.get_mesh().sub_point_locator();
+    sd_fluid.get_mesh().sub_point_locator();
+    std::vector<unsigned int> fluid_vars(sd_fluid.dim+2);
+    fluid_vars[0] = fluid.variable_number("rho");
+    fluid_vars[1] = fluid.variable_number("rhoux");
+    if (sd_fluid.dim > 1)
+        fluid_vars[2] = fluid.variable_number("rhouy");
+    if (sd_fluid.dim > 2)
+        fluid_vars[3] = fluid.variable_number("rhouz");
+    fluid_vars[sd_fluid.dim+2-1] = fluid.variable_number("rhoe");
+    
+    
+    std::vector<std::string> post_process_var_names(this->n_vars());
+    for (unsigned int i=0; i<this->n_vars(); i++)
+        post_process_var_names[i] = this->variable_name(i);
+    
+    
+    libMesh::AutoPtr<libMesh::NumericVector<Real> >
+    fluid_sol =
+    libMesh::NumericVector<Real>::build(this->get_equation_systems().comm()),  // for the nonlinear system
+    sd_fluid_sol =
+    libMesh::NumericVector<Real>::build(this->get_equation_systems().comm());  // for the small-disturbance system
+    
+    // ask systems to localize their solutions
+    fluid_sol->init(fluid.solution->size(), true, libMesh::SERIAL);
+    fluid.solution->localize(*fluid_sol,
+                             fluid.get_dof_map().get_send_list());
+    
+    // now the small-disturbance solution
+    sd_fluid_sol->init(sd_fluid.solution->size(), true, libMesh::SERIAL);
+    sd_fluid.solution->localize(*sd_fluid_sol,
+                                sd_fluid.get_dof_map().get_send_list());
+    
+    // create the mesh functions to interpolate solutions
+    libMesh::AutoPtr<libMesh::MeshFunction>
+    fluid_mesh_function
+    (new libMesh::MeshFunction(this->get_equation_systems(), *fluid_sol,
+                               fluid.get_dof_map(), fluid_vars)),
+    sd_fluid_mesh_function
+    (new libMesh::MeshFunction(this->get_equation_systems(), *sd_fluid_sol,
+                               sd_fluid.get_dof_map(), sd_fluid.vars));
+    
+    fluid_mesh_function->init();
+    sd_fluid_mesh_function->init();
+    
+    
+    libMesh::AutoPtr<libMesh::FEMFunctionBase<Real> > post_process_function
+    (new LinearizedPrimitiveFEMFunction
+     (fluid_mesh_function->clone(),
+      sd_fluid_mesh_function->clone(),
+      post_process_var_names,
+      flight_condition->gas_property.cp,
+      flight_condition->gas_property.cv,
+      flight_condition->q0()));
+    
+    this->project_solution(post_process_function.get());
+    
+    this->update();
+}
+
+
 
 
 

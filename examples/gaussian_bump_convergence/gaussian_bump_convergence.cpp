@@ -218,6 +218,10 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     fluid_eq_systems.add_system<FluidPostProcessSystem> ("FluidPostProcessSystem");
     fluid_post.flight_condition = &flight_cond;
 
+    LinearizedFluidPostProcessSystem& fluid_post_lin =
+    fluid_eq_systems.add_system<LinearizedFluidPostProcessSystem> ("LinearizedFluidPostProcessSystem");
+    fluid_post_lin.flight_condition = &flight_cond;
+
     // now initilaize the nonlinear solution
     fluid_eq_systems.parameters.set<bool>("if_reduced_freq") =
     fluid_infile("if_reduced_freq", false);
@@ -284,6 +288,7 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     if (if_linearized_solver) {
         fluid_system.solution->add(1., *fluid_system_lin.solution);
         fluid_system.solution->close();
+        fluid_post_lin.postprocess();
     }
     
     fluid_system.assemble_qoi(); // calculate the quantities of interest

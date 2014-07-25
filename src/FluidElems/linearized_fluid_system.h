@@ -105,4 +105,28 @@ protected:
 
 
 
+
+class LinearizedFluidPostProcessSystem : public libMesh::System
+{
+public:
+    // Constructor
+    LinearizedFluidPostProcessSystem(libMesh::EquationSystems& es,
+                                     const std::string& name_in,
+                                     const unsigned int number_in)
+    : libMesh::System(es, name_in, number_in)
+    {}
+    
+    virtual void init_data();
+    
+    virtual void postprocess();
+    
+    unsigned int u, v, w, T, s, p, cp, a, M;
+    
+    FlightCondition* flight_condition;
+};
+
+
+
+
+
 #endif // __MAST_linearized_fluid_system_h__
