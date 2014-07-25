@@ -784,17 +784,27 @@ MAST::StructuralSystemAssembly::assemble_jacobian(libMesh::SparseMatrix<Real>&  
                 for (unsigned int i=0; i<dof_indices.size(); i++)
                     sol(i) = (*localized_solution_sens)(dof_indices[i]);
                 
-                structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
+                structural_elem->transform_to_local_system(sol,
+                                                           structural_elem->local_solution_sens);
             }
             structural_elem->sensitivity_param = param;
             
+            // sensitivity of the internal force with respect to the
+            // sensitivity parameter
             structural_elem->internal_force_sensitivity(true, vec, mat, false);
+            
+            // if the Jacobian is obtained by linearizatio about a static solution,
+            // then the sensitivity of the static solution influences the
+            // sensitivity of the Jacobian
+            if (static_sol)
+                structural_elem->internal_force_jac_dot_state_sensitivity(mat);
+
             structural_elem->prestress_force_sensitivity(true, vec, mat);
             structural_elem->side_external_force_sensitivity<Real>(true, vec, mat,
                                                                    _side_bc_map);
             structural_elem->volume_external_force_sensitivity<Real>(true, vec, mat,
                                                                      _vol_bc_map);
-            
+
             mat.scale(-1.);
         }
         
@@ -803,101 +813,6 @@ MAST::StructuralSystemAssembly::assemble_jacobian(libMesh::SparseMatrix<Real>&  
         
         // add to the global matrices
         matrix.add_matrix (mat, dof_indices); // stiffness
-    }
-    
-}
-
-
-
-
-void
-MAST::StructuralSystemAssembly::
-assemble_jacobian_dot_state_sensitivity(libMesh::SparseMatrix<Real>&  matrix,
-                                        const libMesh::NumericVector<Real>* static_sol,
-                                        const libMesh::NumericVector<Real>* static_sol_sens) {
-    
-    // make sure that the sensitivity was also provided
-    libmesh_assert(static_sol);
-    libmesh_assert(static_sol_sens);
-    
-    // iterate over each element, initialize it and get the relevant
-    // analysis quantities
-    DenseRealVector vec, sol;
-    DenseRealMatrix mat;
-    std::vector<libMesh::dof_id_type> dof_indices;
-    const libMesh::DofMap& dof_map = _system.get_dof_map();
-    std::auto_ptr<MAST::StructuralElementBase> structural_elem;
-    
-    libMesh::AutoPtr<libMesh::NumericVector<Real> > localized_solution, localized_solution_sens;
-    localized_solution.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
-    localized_solution->init(_system.n_dofs(), _system.n_local_dofs(),
-                             _system.get_dof_map().get_send_list(),
-                             false, libMesh::GHOSTED);
-    static_sol->localize(*localized_solution, _system.get_dof_map().get_send_list());
-    // do the same for sensitivity if the parameters were provided
-    
-    localized_solution_sens.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
-    localized_solution_sens->init(_system.n_dofs(), _system.n_local_dofs(),
-                                  _system.get_dof_map().get_send_list(),
-                                  false, libMesh::GHOSTED);
-    static_sol_sens->localize(*localized_solution_sens, _system.get_dof_map().get_send_list());
-    
-    libMesh::MeshBase::const_element_iterator       el     = _system.get_mesh().active_local_elements_begin();
-    const libMesh::MeshBase::const_element_iterator end_el = _system.get_mesh().active_local_elements_end();
-    
-    for ( ; el != end_el; ++el) {
-        
-        const libMesh::Elem* elem = *el;
-        
-        dof_map.dof_indices (elem, dof_indices);
-        
-        const MAST::ElementPropertyCardBase& p_card = this->get_property_card(*elem);
-        
-        // create the structural element for analysis
-        structural_elem.reset(MAST::build_structural_element
-                              (_system, *elem, p_card).release());
-        
-        // get the solution
-        unsigned int ndofs = (unsigned int)dof_indices.size();
-        sol.resize(ndofs);
-        vec.resize(ndofs);
-        mat.resize(ndofs, ndofs);
-        
-        // resize the solution to the correct size
-        structural_elem->local_solution.resize(sol.size());
-        structural_elem->local_velocity.resize(sol.size());
-        structural_elem->local_acceleration.resize(sol.size());
-        
-        // if the static solution is provided, initialize the element solution
-        if (static_sol) {
-            for (unsigned int i=0; i<dof_indices.size(); i++)
-                sol(i) = (*localized_solution)(dof_indices[i]);
-            
-            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
-        }
-        
-        
-        // get the solution sensitivity if the static solution was provided
-        structural_elem->local_solution_sens.resize(sol.size());
-        structural_elem->local_velocity_sens.resize(sol.size());
-        structural_elem->local_acceleration_sens.resize(sol.size());
-        
-        if (static_sol) {
-            for (unsigned int i=0; i<dof_indices.size(); i++)
-                sol(i) = (*localized_solution_sens)(dof_indices[i]);
-            
-            structural_elem->transform_to_local_system(sol, structural_elem->local_solution_sens);
-        }
-        
-        structural_elem->internal_force_jac_dot_state_sensitivity(mat);
-        
-        mat.scale(-1.);
-        
-        // constrain the element matrices.
-        _system.get_dof_map().constrain_element_matrix(mat, dof_indices);
-        
-        // add to the global matrices
-        matrix.add_matrix (mat, dof_indices); // mass
     }
     
 }
@@ -1009,6 +924,13 @@ MAST::StructuralSystemAssembly::_assemble_matrices_for_modal_analysis(libMesh::S
             structural_elem->sensitivity_param = param;
 
             structural_elem->internal_force_sensitivity(true, vec, mat1, false);
+
+            // if the Jacobian is obtained by linearization about a static solution,
+            // then the sensitivity of the static solution influences the
+            // sensitivity of the Jacobian
+            if (static_sol)
+                structural_elem->internal_force_jac_dot_state_sensitivity(mat1);
+
             structural_elem->prestress_force_sensitivity(true, vec, mat1);
             structural_elem->side_external_force_sensitivity<Real>(true, vec, mat1,
                                                                             _side_bc_map);
@@ -1157,6 +1079,13 @@ _assemble_matrices_for_buckling_analysis(libMesh::SparseMatrix<Real>&  matrix_A,
             // if displacement is zero, mat1 = mat2
             structural_elem->internal_force_sensitivity(true, vec, mat2, true);
             mat2.add(1., mat1); // subtract to get the purely load dependent part
+            
+            // if the Jacobian is obtained by linearization about a static solution,
+            // then the sensitivity of the static solution influences the
+            // sensitivity of the Jacobian
+            if (static_sol)
+                structural_elem->internal_force_jac_dot_state_sensitivity(mat1);
+
             structural_elem->side_external_force_sensitivity<Real>(true, vec, mat2,
                                                                             _side_bc_map);
             structural_elem->volume_external_force_sensitivity<Real>(true, vec, mat2,

@@ -30,6 +30,7 @@
 // MAST includes
 #include "FluidElems/fluid_elem_base.h"
 #include "Numerics/function_base.h"
+#include "FluidElems/linearized_fluid_system.h"
 
 
 
@@ -139,7 +140,10 @@ public:
                 FluidSystem& sys):
     MAST::FieldFunction<Real>(nm),
     _system(sys),
-    _primitive(new PrimitiveSolution) {
+    _sys_lin(NULL),
+    _sens_param(NULL),
+    _primitive(new PrimitiveSolution),
+    _primitive_sens(new SmallPerturbationPrimitiveSolution<Real>) {
         
         libMesh::MeshBase& mesh = sys.get_mesh();
         _mesh_serializer.reset(new libMesh::MeshSerializer(mesh, true));
@@ -172,35 +176,65 @@ public:
     
     void init(libMesh::NumericVector<Real>& sol) {
         // first initialize the solution to the given vector
-        if (!_sol.get())
-        {
-            _sol.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
-            _sol->init(sol.size(), true, libMesh::SERIAL);
-        }
+        _sol.reset(libMesh::NumericVector<Real>::build(_system.comm()).release());
+        _sol->init(sol.size(), true, libMesh::SERIAL);
         
         // now localize the give solution to this objects's vector
         sol.localize(*_sol);
         
-        // if the mesh function has not been created so far, initialize it
-        if (!_function.get()) {
-            
-            const unsigned int n_vars = _system.n_vars();
-            std::vector<unsigned int> vars(n_vars);
-            vars[0] = _system.variable_number("rho");
-            vars[1] = _system.variable_number("rhoux");
-            if (n_vars > 3) // > 1D
-                vars[2] = _system.variable_number("rhouy");
-            if (n_vars > 4) // > 2D
-                vars[3] = _system.variable_number("rhouz");
-            vars[n_vars-1] = _system.variable_number("rhoe");
-            _function.reset(new libMesh::MeshFunction(_system.get_equation_systems(),
-                                                      *_sol,
-                                                      _system.get_dof_map(),
-                                                      vars));
-            _function->init();
-        }
+        // initialize the function
+        const unsigned int n_vars = _system.n_vars();
+        std::vector<unsigned int> vars(n_vars);
+        vars[0] = _system.variable_number("rho");
+        vars[1] = _system.variable_number("rhoux");
+        if (n_vars > 3) // > 1D
+            vars[2] = _system.variable_number("rhouy");
+        if (n_vars > 4) // > 2D
+            vars[3] = _system.variable_number("rhouz");
+        vars[n_vars-1] = _system.variable_number("rhoe");
+        _function.reset(new libMesh::MeshFunction(_system.get_equation_systems(),
+                                                  *_sol,
+                                                  _system.get_dof_map(),
+                                                  vars));
+        _function->init();
     }
+
     
+    
+    void init_sensitivity(const LinearizedFluidSystem& sys_lin,
+                          const MAST::FieldFunctionBase& f,
+                          libMesh::NumericVector<Real>& sol_sens) {
+        // make sure that the base solution is already available
+        libmesh_assert(_sol.get());
+
+        // copy the pointer to the system and field function
+        _sys_lin = &sys_lin;
+        _sens_param = &f;
+        
+        // now initialize the solution to the given vector
+        _sol_sens.reset(libMesh::NumericVector<Real>::build(_sys_lin->comm()).release());
+        _sol_sens->init(sol_sens.size(), true, libMesh::SERIAL);
+        
+        // now localize the give solution to this objects's vector
+        sol_sens.localize(*_sol_sens);
+        
+        // if the mesh function has not been created so far, initialize it
+        const unsigned int n_vars = _sys_lin->n_vars();
+        std::vector<unsigned int> vars(n_vars);
+        vars[0] = _sys_lin->variable_number("drho");
+        vars[1] = _sys_lin->variable_number("drhoux");
+        if (n_vars > 3) // > 1D
+            vars[2] = _sys_lin->variable_number("drhouy");
+        if (n_vars > 4) // > 2D
+            vars[3] = _sys_lin->variable_number("drhouz");
+        vars[n_vars-1] = _sys_lin->variable_number("drhoe");
+        _function_sens.reset(new libMesh::MeshFunction(_sys_lin->get_equation_systems(),
+                                                       *_sol_sens,
+                                                       _sys_lin->get_dof_map(),
+                                                       vars));
+        _function_sens->init();
+    }
+
     
     /*!
      *   returns the value of this function
@@ -209,19 +243,24 @@ public:
                              const Real t,
                              Real& v) const {
         
+        // make sure the function has been initialized
+        libmesh_assert(_sol.get());
+        
         // zero the data structures
         _primitive->zero();
         
         // get the solution value from the fluid system
         DenseRealVector fluid_sol;
         (*_function)(p, t, fluid_sol);
-        
+
+        // initialize the primitive solution
         _primitive->init(_system.dim,
                          fluid_sol,
                          _system.flight_condition->gas_property.cp,
                          _system.flight_condition->gas_property.cv,
                          _system.if_viscous());
         
+        // return the pressure
         v = _primitive->p - _system.flight_condition->gas_property.pressure;
     }
     
@@ -245,7 +284,32 @@ public:
                         const libMesh::Point& p,
                         const Real t,
                         Real& v) const {
-        libmesh_error(); // to be implemented
+
+        // make sure that the function base is the same as what this
+        // object has been initialized for
+        libmesh_assert(&f == _sens_param);
+        
+        // zero the data structures
+        _primitive->zero();
+        
+        // get the solution value from the fluid system
+        DenseRealVector fluid_sol, fluid_sol_sens;
+        (*_function)(p, t, fluid_sol);
+        (*_function_sens)(p, t, fluid_sol_sens);
+       
+        // initialize the base primitive solution
+        _primitive->init(_system.dim,
+                         fluid_sol,
+                         _system.flight_condition->gas_property.cp,
+                         _system.flight_condition->gas_property.cv,
+                         _system.if_viscous());
+
+        // initialize the small disturbance object
+        _primitive_sens->init(*_primitive,
+                              fluid_sol_sens);
+
+        // return the pressure perturbation
+        v = _primitive_sens->dp;
     }
     
     
@@ -257,15 +321,37 @@ protected:
     FluidSystem& _system;
     
     /*!
+     *    linearized solution that provides the sensitivity
+     */
+    const LinearizedFluidSystem* _sys_lin;
+    
+    /*!
+     *   FieldFunctionBase object for which this object has been
+     *   initialized
+     */
+    const MAST::FieldFunctionBase* _sens_param;
+    
+    /*!
      *   mesh function that interpolates the solution
      */
     std::auto_ptr<libMesh::MeshFunction> _function;
-    
+
+    /*!
+     *   mesh function that interpolates the solution sensitivity
+     */
+    std::auto_ptr<libMesh::MeshFunction> _function_sens;
+
     /*!
      *    numeric vector that stores the solution
      */
     std::auto_ptr<libMesh::NumericVector<Real> > _sol;
+
     
+    /*!
+     *    numeric vector that stores the solution sensitivity
+     */
+    std::auto_ptr<libMesh::NumericVector<Real> > _sol_sens;
+
     
     /*!
      *   this serializes the mesh for use in interpolation
@@ -277,7 +363,12 @@ protected:
      *  variables
      */
     std::auto_ptr<PrimitiveSolution> _primitive;
-    
+
+    /*!
+     *  object to calculate the small-disturbance primite variable values
+     *  given conservative variables
+     */
+    std::auto_ptr<SmallPerturbationPrimitiveSolution<Real> > _primitive_sens;
 };
 
 

@@ -214,10 +214,6 @@ namespace MAST
                                        const libMesh::NumericVector<Real>* static_sol,
                                        const libMesh::NumericVector<Real>* static_sol_sens);
         
-        virtual void assemble_jacobian_dot_state_sensitivity(libMesh::SparseMatrix<Real>&  matrix,
-                                                             const libMesh::NumericVector<Real>* static_sol,
-                                                             const libMesh::NumericVector<Real>* static_sol_sens);
-
         
         /*!
          *    function to assemble the external forces of type specified in the

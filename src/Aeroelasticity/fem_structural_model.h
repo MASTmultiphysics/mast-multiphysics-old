@@ -176,26 +176,6 @@ public:
             m.col(j_basis) = projected_force;
         }
         
-        // do the same for the nonlinear term
-        // calculate the stiffness matrix sensitivity times static state
-        // sensitivity
-        mat.zero();
-        if (assembly.static_solution_system()) {
-            assembly.assemble_jacobian_dot_state_sensitivity(mat, sol, sol_sens);
-            
-            // now calculate the projection
-            for (unsigned int j_basis=0; j_basis<basis_matrix->n(); j_basis++)
-            {
-                projected_force.setZero(basis_matrix->n());
-                
-                mat.vector_mult(*vec, basis_matrix->basis(j_basis));
-                // Phi^T A_FS X_F
-                basis_matrix->vector_mult_transpose(projected_force, *vec);
-                
-                m.col(j_basis) += projected_force;
-            }
-        }
-        
         return true;
     }
 

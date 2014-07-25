@@ -37,6 +37,7 @@
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Flight/flight_condition.h"
 #include "FluidElems/fluid_system.h"
+#include "FluidElems/linearized_fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Aeroelasticity/ug_flutter_solver.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
@@ -383,6 +384,39 @@ namespace MAST {
         }
     };
     
+
+    /*!
+     *   reads the options for the NewtonSolver from input and set
+     *   it for the provided solver object
+     */
+    void
+    set_newton_solver_options(libMesh::NewtonSolver& solver,
+                              GetPot& input) {
+        solver.quiet = input("solver_quiet", true);
+        solver.verbose = !solver.quiet;
+        solver.brent_line_search = false;
+        solver.max_nonlinear_iterations =
+        input("max_nonlinear_iterations", 15);
+        solver.relative_step_tolerance =
+        input("relative_step_tolerance", 1.e-3);
+        solver.relative_residual_tolerance =
+        input("relative_residual_tolerance", 0.0);
+        solver.absolute_residual_tolerance =
+        input("absolute_residual_tolerance", 0.0);
+        solver.continue_after_backtrack_failure =
+        input("continue_after_backtrack_failure", false);
+        solver.continue_after_max_iterations =
+        input("continue_after_max_iterations", false);
+        solver.require_residual_reduction =
+        input("require_residual_reduction", true);
+        
+        // And the linear solver options
+        solver.max_linear_iterations =
+        input("max_linear_iterations", 50000);
+        solver.initial_linear_tolerance =
+        input("initial_linear_tolerance", 1.e-3);
+    }
+    
     
     class SizingOptimization:
     public MAST::FunctionEvaluation {
@@ -494,6 +528,8 @@ namespace MAST {
         
         FluidSystem *_fluid_system_nonlin;
         
+        LinearizedFluidSystem *_fluid_system_lin;
+        
         FrequencyDomainLinearizedFluidSystem *_fluid_system_freq;
         
         MAST::StructuralSystemAssembly *_static_structural_assembly,
@@ -563,6 +599,8 @@ namespace MAST {
         
         std::auto_ptr<MAST::FlexibleSurfaceMotion> _surface_motion;
         
+        std::auto_ptr<MAST::FlexibleSurfaceMotion> _surface_motion_sens;
+        
         std::auto_ptr<MAST::ConstantFunction<Real> > _pressure;
         
         std::auto_ptr<CFDPressure> _cfd_pressure;
@@ -629,7 +667,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     init_euler_variables(*_fluid_eq_systems, "FluidSystem");
     
     // increase the load over several load steps
-    const unsigned int n_load_steps = 000;
+    const unsigned int n_load_steps = 00;
     Real temp_val, ref_temp;
     (*_temperature)(pt, 0., temp_val);
     (*_ref_temperature)(pt, 0., ref_temp);
@@ -710,7 +748,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     }
     
     // eigen analysis is performed with von-Karman strain
-    _eigen_system->solve();
+    //_eigen_system->solve();
     
     // the number of converged eigenpairs could be different from the number asked
     unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
@@ -727,7 +765,6 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             val = _eigen_system->get_eigenpair(i);
             eigval = std::complex<Real>(val.first, val.second);
             eigval = 1./eigval;
-            //fvals[i] = 1.-eigval.real(); // g <= 0.
             
             // copy modal data into the structural model for flutter analysis
             _structural_model->eigen_vals(i) = eigval.real();
@@ -775,7 +812,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     
     // flutter solution
     _flutter_solver->clear_solutions();
-    _flutter_solver->scan_for_roots();
+    //_flutter_solver->scan_for_roots();
     if (!_libmesh_init.comm().rank())
         _flutter_solver->print_crossover_points();
     std::pair<bool, const MAST::FlutterRootBase*> root =
@@ -796,23 +833,74 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     // vf > v0 => vf/v0 > 1 => 1-vf/v0 < 0
     //
     obj = wt;
-    fvals[0] = -wt;// disp/disp_0-1.;
-    fvals[1] =   1.-vf/_vf_0;
+    fvals[0] = disp/_disp_0-1.;
+    fvals[1] =     1.-vf/_vf_0;
     Real w_sens = 0.;
     
     // evaluate sensitivity if any of the function sensitivity is required
     bool if_sens = (false || eval_obj_grad);
-    libMesh::out << eval_obj_grad << "  ";
-    for (unsigned int i=0; i<eval_grads.size(); i++) {
-        libMesh::out << eval_grads[i] << "  ";
+    for (unsigned int i=0; i<eval_grads.size(); i++)
         if_sens = (if_sens || eval_grads[i]);
-    }
-    libMesh::out << std::endl;
     
     if (false) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
-        /*// static analysis is performed without von-Karman strain
-        _static_system->sensitivity_solve(_parameters);
+        
+        // to calculate the coupled fluid structure sensitivity, iterate while
+        // lagging the off-diagonal terms
+        continue_fsi_iterations = true;
+        
+        // each design variable requires its own set of iterations to converge
+        // the sensitivity
+        // the design variables are iterated upon in the reverse order since
+        // we are doing this one DV at a time, and if libMesh::ParameterVector
+        // has size one, libMesh will put the design sensitivity vector in
+        // System::get_sensitivity_solution(0).
+        // add the sensitivity solution for param num 0
+        _fluid_system_lin->add_sensitivity_solution(0);
+        _static_system->add_sensitivity_solution(0);
+        
+        for (int i=_n_vars-1; i>=0; i--) {
+            while (continue_fsi_iterations) {
+                // the sensitivity solutions from fluid and structures
+                libMesh::NumericVector<Real>
+                &fluid_sens = _fluid_system_lin->add_sensitivity_solution(i),
+                &str_sens   = _static_system->add_sensitivity_solution(i);
+                
+                // this uses the pressure sensitivity from linearized fluid solution
+                libMesh::ParameterVector params; params.resize(1);
+                params[0] = _parameters[i];
+                _static_system->get_sensitivity_solution(0).zero();
+                _static_system->sensitivity_solve(_parameters);
+                
+                // copy the sensitivity solution to that of the ith design variable
+                if (i > 0) {
+                    str_sens = _static_system->get_sensitivity_solution(0);
+                    str_sens.close();
+                }
+
+                // initialize the displacement sensitivity for fluid boundary
+                // condition
+                _surface_motion_sens->init(0., 0., str_sens);
+                
+                // this uses the displacement sensitivity from structural solution
+                _fluid_system_lin->solve();
+                
+                // now copy the sensitivity solution to the respective vector
+                if (i > 0) {
+                    fluid_sens = *(_fluid_system_lin->solution);
+                    fluid_sens.close();
+                }
+                
+                // initialize the pressure sensitivity for structural
+                // boundary condition
+                _cfd_pressure->init_sensitivity(*_fluid_system_lin,
+                                                *_parameter_functions[i],
+                                                fluid_sens);
+                
+                // check to see if the iterations can be termninated
+            }
+        }
+        /*
         // eigen analysis is performed with von-Karman strain
         _eigen_system->sensitivity_solve(_parameters, grad_vals);
         // now correct this for the fact that the matrices were exchanged
@@ -820,27 +908,28 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             for (unsigned int j=0; j<_n_vars; j++)
                 for (unsigned int i=0; i<n_required; i++) {
                     val = _eigen_system->get_eigenpair(i);
-                    grads[j*_n_ineq+i]  = grad_vals[j*_eigen_system->get_n_converged()+i];
-                    grads[j*_n_ineq+i] /= -1. * -pow(val.first, 2); // sens = - d eig / dp
+                    std::cout
+                    << -grad_vals[j*_eigen_system->get_n_converged()+i]/pow(val.first, 2)
+                    << std::endl;
                 }
         else
             libmesh_error(); // should not get here
+        */
         
         // get the displacement gradient
         pt(0) = 3.0;
         for (unsigned int j=0; j<_n_vars; j++) {
             disp_vec.zero();
             (*_disp_function_sens[j])(pt, 0., disp_vec);
-            grads[(j+1)*_n_ineq-1] = disp_vec(0);
+            grads[j*_n_ineq] = disp_vec(0)/_disp_0*_dv_scaling[j];
         }
-         */
+         
         // ask flutter solver for the sensitivity
         
         // set gradient of weight
         for (unsigned int i=0; i<_n_vars; i++) {
             _weight->total(*_parameter_functions[i], pt, 0., w_sens);
             obj_grad[i] = w_sens*_dv_scaling[i];
-            grads[i*_n_ineq] = -w_sens*_dv_scaling[i];
         }
         
         // now get the flutter sensitivity
@@ -1000,14 +1089,14 @@ MAST::SizingOptimization::_init() {
     _temperature_bc.reset(new MAST::Temperature);
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
-    //_static_structural_assembly->add_volume_load(0, *_temperature_bc);
-    //_eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
+    _static_structural_assembly->add_volume_load(0, *_temperature_bc);
+    _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     // pressure boundary condition
     //_pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
     _pressure_bc.reset(new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE));
-    //_static_structural_assembly->add_volume_load(0, *_pressure_bc);
-    //_eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
+    _static_structural_assembly->add_volume_load(0, *_pressure_bc);
+    _eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
     
     
     // apply the boundary conditions
@@ -1052,7 +1141,7 @@ MAST::SizingOptimization::_init() {
     
     _eigen_system->set_eigenproblem_type(libMesh::GHEP);
     _eigen_system->eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
-    //_eigen_structural_assembly->set_static_solution_system(_static_system);
+    _eigen_structural_assembly->set_static_solution_system(_static_system);
     
     
     // initialize the fluid data structures
@@ -1148,17 +1237,22 @@ MAST::SizingOptimization::_init() {
     // Declare the system
     _fluid_system_nonlin =
     &(_fluid_eq_systems->add_system<FluidSystem>("FluidSystem"));
+    _fluid_system_lin =
+    &(_fluid_eq_systems->add_system<LinearizedFluidSystem>("LinearizedFluidSystem"));
     _fluid_system_freq =
     &(_fluid_eq_systems->add_system<FrequencyDomainLinearizedFluidSystem>
     ("FrequencyDomainLinearizedFluidSystem"));
     
     _fluid_system_nonlin->flight_condition = _flight_cond.get();
+    _fluid_system_lin->flight_condition = _flight_cond.get();
     _fluid_system_freq->flight_condition = _flight_cond.get();
     
     _fluid_system_nonlin->attach_init_function(init_euler_variables);
     
     _fluid_system_nonlin->time_solver =
     libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::Euler2Solver(*_fluid_system_nonlin));
+    _fluid_system_lin->time_solver =
+    libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(*_fluid_system_lin));
     _fluid_system_freq->time_solver =
     libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(*_fluid_system_freq));
     _fluid_system_freq->time_solver->quiet = false;
@@ -1174,38 +1268,40 @@ MAST::SizingOptimization::_init() {
     _fluid_eq_systems->init();
     
     _surface_motion.reset(new MAST::FlexibleSurfaceMotion(*_static_system));
+    _surface_motion_sens.reset(new MAST::FlexibleSurfaceMotion(*_static_system));
     _fluid_system_nonlin->surface_motion = _surface_motion.get();
+    _fluid_system_lin->surface_motion = _surface_motion.get();
+    _fluid_system_lin->perturbed_surface_motion = _surface_motion_sens.get();
 
-    libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
-    (*(_fluid_system_freq->time_solver->diff_solver()));
-    solver.quiet = _fluid_input("solver_quiet", true);
-    solver.verbose = !solver.quiet;
-    solver.brent_line_search = false;
-    solver.max_nonlinear_iterations =
-    _fluid_input("max_nonlinear_iterations", 15);
-    solver.relative_step_tolerance =
-    _fluid_input("relative_step_tolerance", 1.e-3);
-    solver.relative_residual_tolerance =
-    _fluid_input("relative_residual_tolerance", 0.0);
-    solver.absolute_residual_tolerance =
-    _fluid_input("absolute_residual_tolerance", 0.0);
-    solver.continue_after_backtrack_failure =
-    _fluid_input("continue_after_backtrack_failure", false);
-    solver.continue_after_max_iterations =
-    _fluid_input("continue_after_max_iterations", false);
-    solver.require_residual_reduction =
-    _fluid_input("require_residual_reduction", true);
-    
-    // And the linear solver options
-    solver.max_linear_iterations =
-    _fluid_input("max_linear_iterations", 50000);
-    solver.initial_linear_tolerance =
-    _fluid_input("initial_linear_tolerance", 1.e-3);
+    // set parameters for the Newton solver used by the nonlinear
+    // fluid system
+    {
+        libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
+        (*(_fluid_system_nonlin->time_solver->diff_solver()));
+        set_newton_solver_options(solver, _fluid_input);
+    }
+
+    // set parameters for the Newton solver used by the linearized
+    // fluid system
+    {
+        libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
+        (*(_fluid_system_lin->time_solver->diff_solver()));
+        set_newton_solver_options(solver, _fluid_input);
+    }
 
     
+    // set parameters for the Newton solver used by the frequency domain
+    // fluid system
+    {
+        libMesh::NewtonSolver &solver = dynamic_cast<libMesh::NewtonSolver&>
+        (*(_fluid_system_freq->time_solver->diff_solver()));
+        set_newton_solver_options(solver, _fluid_input);
+    }
+
     
     
-    // the frequency domain
+    // localize the base solution for linearized and frequency domain systems
+    _fluid_system_lin->localize_fluid_solution();
     _fluid_system_freq->localize_fluid_solution();
 
     
