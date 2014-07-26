@@ -225,7 +225,7 @@
 					"$(inherited)",
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-cuxhtrzwvvlxltffqqlqhntejrjk/Build/Products/Debug",
 					"/opt/local/lib/openmpi-mp",
-					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+					"$(SRCROOT)/../../../../libmesh/real/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../../../../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";
@@ -246,7 +246,7 @@
 					"$(inherited)",
 					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/MAST-cuxhtrzwvvlxltffqqlqhntejrjk/Build/Products/Debug",
 					"/opt/local/lib/openmpi-mp",
-					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+					"$(SRCROOT)/../../../../libmesh/real/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../../src\" \"$(SRCROOT)/../../../../libmesh/real/include\" \"$(SRCROOT)/../../../examples\"";

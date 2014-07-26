@@ -784,8 +784,8 @@
 					/opt/local/lib,
 					/opt/local/lib/gcc48,
 					"/opt/local/lib/openmpi-mp",
-					/Users/bhatiam/Documents/Projects/MAST/build/dbg,
-					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+					"$(SRCROOT)/../../dbg",
+					"$(SRCROOT)/../../../../libmesh/real/lib",
 					/opt/local/lib/libgcc,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";
@@ -813,8 +813,8 @@
 					/opt/local/lib,
 					/opt/local/lib/gcc48,
 					"/opt/local/lib/openmpi-mp",
-					/Users/bhatiam/Documents/Projects/MAST/build/dbg,
-					/Users/bhatiam/Documents/Projects/libmesh/real/lib,
+					"$(SRCROOT)/../../dbg",
+					"$(SRCROOT)/../../../../libmesh/real/lib",
 					/opt/local/lib/libgcc,
 				);
 				MACOSX_DEPLOYMENT_TARGET = "";

@@ -191,7 +191,7 @@ gaussian_bump_analysis(libMesh::LibMeshInit& init,
     const Real t_by_c =  fluid_infile("t_by_c", 0.0);
 
     // create the mesh
-    GaussianBumpMesh2D().init(t_by_c*0,
+    GaussianBumpMesh2D().init(t_by_c,
                               divs,
                               fluid_mesh,
                               fluid_elem_type);
@@ -352,7 +352,7 @@ main(int argc, char* const argv[]) {
                                    n_panel_divs*(i+1),//pow(2,i),
                                    n_farfield_divs*(i+1),//pow(2,i),
                                    oss.str(),
-                                   false,
+                                   true,
                                    n_dofs,
                                    entropy_error);
             
