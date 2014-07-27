@@ -62,14 +62,14 @@ namespace MAST {
          *   sort the roots based on the provided solution pointer. If the
          *   pointer is NULL, then no sorting is performed
          */
-        virtual MAST::FlutterSolutionBase*
+        virtual std::auto_ptr<MAST::FlutterSolutionBase>
         analyze(const Real ref_val,
                 const MAST::FlutterSolutionBase* prev_sol=NULL);
         
         /*!
          *    initializes the matrices for the specified velocity.
          */
-        void initialize_matrices(Real ref_val,
+        void initialize_matrices(Real v_ref,
                                  RealMatrixX& a,  // LHS matrix operator
                                  RealMatrixX& b); // RHS matrix operator
     };

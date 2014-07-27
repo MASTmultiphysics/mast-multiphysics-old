@@ -178,58 +178,6 @@ MAST::FlutterSolverBase::find_critical_root(const Real g_tol,
 
 
 
-
-std::pair<bool, MAST::FlutterSolutionBase*>
-MAST::FlutterSolverBase::bisection_search(const std::pair<MAST::FlutterSolutionBase*,
-                                          MAST::FlutterSolutionBase*>& ref_sol_range,
-                                          const unsigned int root_num,
-                                          const Real g_tol,
-                                          const unsigned int max_iters)
-{
-    // assumes that the upper k_val has +ve g val and lower k_val has -ve
-    // k_val
-    Real lower_ref_val = ref_sol_range.first->ref_val(),
-    lower_g = ref_sol_range.first->get_root(root_num).g,
-    upper_ref_val = ref_sol_range.second->ref_val(),
-    upper_g = ref_sol_range.second->get_root(root_num).g,
-    new_k = 0.;
-    unsigned int n_iters = 0;
-    
-    MAST::FlutterSolutionBase* new_sol = NULL;
-    
-    while (n_iters < max_iters) {
-        
-        new_k = lower_ref_val +
-        (upper_ref_val-lower_ref_val)/(upper_g-lower_g)*(0.-lower_g); // linear interpolation
-        new_sol = analyze(new_k,
-                          flight_condition->velocity_magnitude,
-                          ref_sol_range.first);
-        const MAST::FlutterRootBase& root = new_sol->get_root(root_num);
-        
-        // check if the new damping value
-        if (fabs(root.g) <= g_tol)
-            return std::pair<bool, MAST::FlutterSolutionBase*>
-            (true, new_sol);
-        
-        // update the k_val
-        if (root.g < 0.) {
-            lower_ref_val = new_k;
-            lower_g = root.g;
-        }
-        else {
-            upper_ref_val = new_k;
-            upper_g = root.g;
-        }
-        
-        n_iters++;
-    }
-    
-    return std::pair<bool, MAST::FlutterSolutionBase*>
-    (false, new_sol); // return false, along with the latest sol
-}
-
-
-
 void
 MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
 {

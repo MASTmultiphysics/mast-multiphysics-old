@@ -80,7 +80,7 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
             return;
         
         // check if k=0 exists, and identify
-        if (fabs(sol_it->second->ref_val()) < tol) { // k = 0
+        if (fabs(sol_it->second->ref_val("v_ref")) < tol) { // k = 0
             
             // k=0 makes sense only for divergence roots. Do not use them
             // for crossover points if a finite damping was seen. Hence,
@@ -117,8 +117,8 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
             // do not use k_red = 0, or if the root is invalid
             if (sol_rit->second->get_root(i).if_nonphysical_root ||
                 sol_ritp1->second->get_root(i).if_nonphysical_root ||
-                fabs(sol_rit->second->ref_val()) < tol ||
-                fabs(sol_ritp1->second->ref_val()) < tol ||
+                fabs(sol_rit->second->ref_val("v_ref")) < tol ||
+                fabs(sol_ritp1->second->ref_val("v_ref")) < tol ||
                 fabs(sol_rit->second->get_root(i).g) > max_allowable_g ||
                 fabs(sol_ritp1->second->get_root(i).g) > max_allowable_g) {
                 // do nothing
@@ -160,39 +160,36 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
 
 
 
-MAST::FlutterSolutionBase*
-MAST::TimeDomainFlutterSolver::analyze(const Real ref_val,
+std::auto_ptr<MAST::FlutterSolutionBase>
+MAST::TimeDomainFlutterSolver::analyze(const Real v_ref,
                                        const MAST::FlutterSolutionBase* prev_sol) {
     RealMatrixX a, b;
     
     libMesh::out
     << " ====================================================" << std::endl
     << "Eigensolution for V = "
-    << std::setw(10) << ref_val << std::endl;
+    << std::setw(10) << v_ref << std::endl;
     
-    initialize_matrices(ref_val, a, b);
+    initialize_matrices(v_ref, a, b);
     LAPACK_DGGEV ges;
     ges.compute(a, b);
     ges.scale_eigenvectors_to_identity_innerproduct();
+
     
-    // now insert the root
-    std::pair<Real, MAST::FlutterSolutionBase*>
-    val(ref_val, new MAST::TimeDomainFlutterSolution(*this));
-    bool success = _flutter_solutions.insert(val).second;
-    libmesh_assert (success); // make sure that it was successfully added
-    dynamic_cast<MAST::TimeDomainFlutterSolution*>(val.second)->init
-    (ref_val, flight_condition->ref_chord, ges);
-    val.second->print(_output, _mode_output);
+    MAST::TimeDomainFlutterSolution* root =
+    new MAST::TimeDomainFlutterSolution;
+    root->init(*this, v_ref, flight_condition->ref_chord, ges);
+    root->print(_output, _mode_output);
     
     if (prev_sol)
-        val.second->sort(*prev_sol);
-    
+        root->sort(*prev_sol);
+
     libMesh::out
     << "Finished Eigensolution" << std::endl
     << " ====================================================" << std::endl;
     
     
-    return val.second;
+    return std::auto_ptr<MAST::FlutterSolutionBase> (root);
 }
 
 

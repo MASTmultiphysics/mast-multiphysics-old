@@ -74,7 +74,7 @@ namespace MAST {
         /*!
          *    creates a new flutter root and returns pointer to it.
          */
-        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root();
+        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root() const;
 
         /*!
          *   Calculate the sensitivity of the flutter root with respect to the
@@ -92,12 +92,22 @@ namespace MAST {
          */
         virtual void _identify_crossover_points();
         
+
+        virtual std::pair<bool, MAST::FlutterSolutionBase*>
+        bisection_search(const std::pair<MAST::FlutterSolutionBase*,
+                         MAST::FlutterSolutionBase*>& ref_sol_range,
+                         const unsigned int root_num,
+                         const Real g_tol,
+                         const unsigned int max_iters);
+        
+        
+
         /*!
          *   performs an eigensolution at the specified reduced frequency, and
          *   sort the roots based on the provided solution pointer. If the
          *   pointer is NULL, then no sorting is performed
          */
-        virtual MAST::FlutterSolutionBase*
+        virtual std::auto_ptr<MAST::FlutterSolutionBase>
         analyze(const Real k_red,
                 const Real v_ref,
                 const MAST::FlutterSolutionBase* prev_sol=NULL);

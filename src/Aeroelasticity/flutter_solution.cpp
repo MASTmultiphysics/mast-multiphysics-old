@@ -98,13 +98,18 @@ MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
 
 
 void
-MAST::FrequencyDomainFlutterSolution::init (const Real ref_val, const Real bref,
+MAST::FrequencyDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
+                                            const Real k_red,
+                                            const Real v_ref,
+                                            const Real bref,
                                             const LAPACK_ZGGEV& eig_sol)
 {
     // make sure that it hasn't already been initialized
     libmesh_assert(!_roots.size());
     
-    _ref_val = ref_val;
+    _ref_vals["k_red"] = k_red;
+    _ref_vals["v_ref"] = v_ref;
+    
     // iterate over the roots and initialize the vector
     const ComplexMatrixX &B = eig_sol.B(),
     &VR = eig_sol.right_eigenvectors(),
@@ -114,12 +119,13 @@ MAST::FrequencyDomainFlutterSolution::init (const Real ref_val, const Real bref,
 
     _roots.resize(nvals);
     for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] =  _solver.build_flutter_root().release();
-        dynamic_cast<MAST::FrequencyDomainFlutterRoot*>
-        (_roots[i])->init(ref_val, bref,
-                          num(i), den(i),
-                          B,
-                          VR.col(i), VL.col(i));
+        _roots[i] = solver.build_flutter_root().release();
+        MAST::FrequencyDomainFlutterRoot* root =
+        dynamic_cast<MAST::FrequencyDomainFlutterRoot*>(_roots[i]);
+        root->init(k_red, bref,
+                   num(i), den(i),
+                   B,
+                   VR.col(i), VL.col(i));
     }
 }
 
@@ -127,13 +133,15 @@ MAST::FrequencyDomainFlutterSolution::init (const Real ref_val, const Real bref,
 
 
 void
-MAST::TimeDomainFlutterSolution::init (const Real ref_val, const Real bref,
+MAST::TimeDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
+                                       const Real v_ref,
+                                       const Real bref,
                                        const LAPACK_DGGEV& eig_sol)
 {
     // make sure that it hasn't already been initialized
     libmesh_assert(!_roots.size());
     
-    _ref_val = ref_val;
+    _ref_vals["v_ref"] = v_ref;
     // iterate over the roots and initialize the vector
     const RealMatrixX &B = eig_sol.B();
     const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
@@ -143,12 +151,13 @@ MAST::TimeDomainFlutterSolution::init (const Real ref_val, const Real bref,
     
     _roots.resize(nvals);
     for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] =  _solver.build_flutter_root().release();
-        dynamic_cast<MAST::TimeDomainFlutterRoot*>
-        (_roots[i])->init(ref_val, bref,
-                          num(i), den(i),
-                          B,
-                          VR.col(i), VL.col(i));
+        _roots[i] = solver.build_flutter_root().release();
+        MAST::TimeDomainFlutterRoot* root =
+        dynamic_cast<MAST::TimeDomainFlutterRoot*>(_roots[i]);
+        root->init(v_ref, bref,
+                   num(i), den(i),
+                   B,
+                   VR.col(i), VL.col(i));
     }
 }
 
@@ -161,8 +170,16 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
 {
     const unsigned int nvals = this->n_roots();
     libmesh_assert(nvals);
-    
-    output << "k = " << _ref_val << std::endl
+
+    // first write the reference values of the root
+    std::map<std::string, Real>::const_iterator it = _ref_vals.begin();
+    for ( ; it != _ref_vals.end(); it++) {
+        output << it->first << " = " << it->second << std::endl;
+        mode_output << it->first << " = " << it->second << std::endl;
+    }
+
+    // now write the root
+    output
     << std::setw(5) << "#"
     << std::setw(15) << "Re"
     << std::setw(15) << "Im"
@@ -180,7 +197,7 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
     output << std::endl;
     
     // output the headers for flutter mode
-    mode_output << "k = " << _ref_val << "  (Right Eigenvectors)  " << std::endl;
+    mode_output << "  (Right Eigenvectors)  " << std::endl;
     mode_output << std::setw(5) << "#";
     for (unsigned int i=0; i<nvals; i++)
         mode_output

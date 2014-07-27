@@ -75,7 +75,7 @@ MAST::UGFlutterSolver::~UGFlutterSolver()
 
 
 std::auto_ptr<MAST::FlutterRootBase>
-MAST::UGFlutterSolver::build_flutter_root() {
+MAST::UGFlutterSolver::build_flutter_root() const {
     return std::auto_ptr<MAST::FlutterRootBase>(new MAST::UGFlutterRoot);
 }
 
@@ -100,14 +100,92 @@ MAST::UGFlutterSolver::scan_for_roots() {
         MAST::FlutterSolutionBase* prev_sol = NULL;
         for (unsigned int i=0; i<n_k_red_divs+1; i++) {
             current_k_red = k_vals[i];
-            prev_sol = analyze(current_k_red,
-                               flight_condition->velocity_magnitude,
-                               prev_sol);
+            std::auto_ptr<MAST::FlutterSolutionBase> sol =
+            analyze(current_k_red,
+                    flight_condition->velocity_magnitude,
+                    prev_sol);
+            
+            prev_sol = sol.get();
+
+            // add the solution to this solver
+            bool if_success =
+            _flutter_solutions.insert(std::pair<Real, MAST::FlutterSolutionBase*>
+                                      (current_k_red, sol.release())).second;
+            
+            libmesh_assert(if_success);
         }
         
         _identify_crossover_points();
     }
 }
+
+
+
+std::pair<bool, MAST::FlutterSolutionBase*>
+MAST::UGFlutterSolver::bisection_search(const std::pair<MAST::FlutterSolutionBase*,
+                                        MAST::FlutterSolutionBase*>& ref_sol_range,
+                                        const unsigned int root_num,
+                                        const Real g_tol,
+                                        const unsigned int max_iters) {
+    
+    // assumes that the upper k_val has +ve g val and lower k_val has -ve
+    // k_val
+    Real lower_ref_val = ref_sol_range.first->ref_val("k_red"),
+    lower_g = ref_sol_range.first->get_root(root_num).g,
+    upper_ref_val = ref_sol_range.second->ref_val("k_red"),
+    upper_g = ref_sol_range.second->get_root(root_num).g,
+    new_k = 0.;
+    unsigned int n_iters = 0;
+    
+    MAST::FlutterSolutionBase* new_sol = NULL;
+    std::pair<bool, MAST::FlutterSolutionBase*> rval(false, NULL);
+    
+    while (n_iters < max_iters) {
+        
+        new_k = lower_ref_val +
+        (upper_ref_val-lower_ref_val)/(upper_g-lower_g)*(0.-lower_g); // linear interpolation
+        
+        new_sol = analyze(new_k,
+                          flight_condition->velocity_magnitude,
+                          ref_sol_range.first).release();
+
+        // add the solution to this solver
+        bool if_success =
+        _flutter_solutions.insert(std::pair<Real, MAST::FlutterSolutionBase*>
+                                  (new_k, new_sol)).second;
+        
+        libmesh_assert(if_success);
+
+        const MAST::FlutterRootBase& root = new_sol->get_root(root_num);
+        
+        // check if the new damping value
+        if (fabs(root.g) <= g_tol) {
+            rval.first = true;
+            rval.second = new_sol;
+            return  rval;
+        }
+        
+        // update the k_val
+        if (root.g < 0.) {
+            lower_ref_val = new_k;
+            lower_g = root.g;
+        }
+        else {
+            upper_ref_val = new_k;
+            upper_g = root.g;
+        }
+        
+        n_iters++;
+    }
+    
+    // return false, along with the latest sol
+    rval.first = false;
+    rval.second = new_sol;
+
+    return rval;
+}
+
+
 
 
 
@@ -159,7 +237,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
             return;
         
         // check if k=0 exists, and identify
-        if (fabs(sol_it->second->ref_val()) < tol) { // k = 0
+        if (fabs(sol_it->second->ref_val("k_red")) < tol) { // k = 0
             
             // k=0 makes sense only for divergence roots. Do not use them
             // for crossover points if a finite damping was seen. Hence,
@@ -196,8 +274,8 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
             // do not use k_red = 0, or if the root is invalid
             if (sol_rit->second->get_root(i).if_nonphysical_root ||
                 sol_ritp1->second->get_root(i).if_nonphysical_root ||
-                fabs(sol_rit->second->ref_val()) < tol ||
-                fabs(sol_ritp1->second->ref_val()) < tol ||
+                fabs(sol_rit->second->ref_val("k_red")) < tol ||
+                fabs(sol_ritp1->second->ref_val("k_red")) < tol ||
                 fabs(sol_rit->second->get_root(i).g) > max_allowable_g ||
                 fabs(sol_ritp1->second->get_root(i).g) > max_allowable_g) {
                 // do nothing
@@ -239,7 +317,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
 
 
 
-MAST::FlutterSolutionBase*
+std::auto_ptr<MAST::FlutterSolutionBase>
 MAST::UGFlutterSolver::analyze(const Real k_red,
                                const Real v_ref,
                                const MAST::FlutterSolutionBase* prev_sol) {
@@ -247,32 +325,29 @@ MAST::UGFlutterSolver::analyze(const Real k_red,
     
     libMesh::out
     << " ====================================================" << std::endl
-    << "UG Solution for k_red = "
-    << std::setw(10) << k_red << std::endl;
+    << "UG Solution" << std::endl
+    << "   k_red = " << std::setw(10) << k_red << std::endl
+    << "   V_ref = " << std::setw(10) << v_ref << std::endl;
     
     initialize_matrices(k_red, v_ref, m, k);
     LAPACK_ZGGEV ges;
     ges.compute(m, k);
     ges.scale_eigenvectors_to_identity_innerproduct();
 
-    // now insert the root
-    std::pair<Real, MAST::FlutterSolutionBase*>
-    val(k_red, new MAST::FrequencyDomainFlutterSolution(*this));
-    bool success = _flutter_solutions.insert(val).second;
-    libmesh_assert (success); // make sure that it was successfully added
-    dynamic_cast<MAST::FrequencyDomainFlutterSolution*>(val.second)->init
-    (k_red, flight_condition->ref_chord, ges);
-    val.second->print(_output, _mode_output);
-    
+    MAST::FrequencyDomainFlutterSolution* root =
+    new MAST::FrequencyDomainFlutterSolution;
+    root->init(*this, k_red, v_ref, flight_condition->ref_chord, ges);
+    root->print(_output, _mode_output);
+
     if (prev_sol)
-        val.second->sort(*prev_sol);
+        root->sort(*prev_sol);
     
     libMesh::out
     << "Finished UG Solution" << std::endl
     << " ====================================================" << std::endl;
     
     
-    return val.second;
+    return std::auto_ptr<MAST::FlutterSolutionBase> (root);
 }
 
 
@@ -285,6 +360,12 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     // make sure that the aero_structural_model is a valid pointer
     libmesh_assert(aero_structural_model);
     
+    libMesh::out
+    << " ====================================================" << std::endl
+    << "UG Sensitivity Solution" << std::endl
+    << "   k_red = " << std::setw(10) << root.k_red << std::endl
+    << "   V_ref = " << std::setw(10) << root.V << std::endl;
+
     Complex eig = root.root, sens = 0., k_sens = 0., den = 0.;
     Real par_g_par_alpha = 0., par_g_par_kref = 0., par_k_par_alpha = 0.,
     V_sens=0.;
@@ -356,6 +437,11 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     root.root_sens  = sens;
     root.k_red_sens = k_sens;
     root.V_sens     = V_sens;
+
+    libMesh::out
+    << "Finished UG Sensitivity Solution" << std::endl
+    << " ====================================================" << std::endl;
+
 }
 
 

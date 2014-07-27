@@ -131,9 +131,7 @@ namespace MAST {
     class FlutterSolutionBase
     {
     public:
-        FlutterSolutionBase(MAST::FlutterSolverBase& solver):
-        _ref_val(0.),
-        _solver(solver)
+        FlutterSolutionBase()
         {}
         
         /*!
@@ -150,8 +148,13 @@ namespace MAST {
         /*!
          *   the reduced frequency for this solution
          */
-        Real ref_val() const {
-            return _ref_val;
+        Real ref_val(const std::string& nm) const {
+            std::map<std::string, Real>::const_iterator it =
+            _ref_vals.find(nm);
+            
+            libmesh_assert(it != _ref_vals.end());
+            
+            return it->second;
         }
         
         /*!
@@ -191,12 +194,7 @@ namespace MAST {
          *    solver this could be velocity. PK solver will need additional 
          *    reference values, provided in the inherited class.
          */
-        Real _ref_val;
-        
-        /*!
-         *   solver for which this is initialized
-         */
-        MAST::FlutterSolverBase& _solver;
+        std::map<std::string, Real> _ref_vals;
         
         std::vector<MAST::FlutterRootBase*> _roots;
     };
@@ -207,8 +205,8 @@ namespace MAST {
     class FrequencyDomainFlutterSolution: public MAST::FlutterSolutionBase {
     public:
         
-        FrequencyDomainFlutterSolution(MAST::FlutterSolverBase& solver):
-        MAST::FlutterSolutionBase(solver)
+        FrequencyDomainFlutterSolution():
+        MAST::FlutterSolutionBase()
         { }
         
         
@@ -217,7 +215,10 @@ namespace MAST {
         /*!
          *   initializes the flutter solution from an eigensolution
          */
-        virtual void init (const Real ref_val, const Real bref,
+        virtual void init (const MAST::FlutterSolverBase& solver,
+                           const Real k_red,
+                           const Real v_ref,
+                           const Real bref,
                            const LAPACK_ZGGEV& eig_sol);
         
     };
@@ -228,8 +229,8 @@ namespace MAST {
     class TimeDomainFlutterSolution: public MAST::FlutterSolutionBase {
     public:
         
-        TimeDomainFlutterSolution(MAST::FlutterSolverBase& solver):
-        MAST::FlutterSolutionBase(solver)
+        TimeDomainFlutterSolution():
+        MAST::FlutterSolutionBase()
         { }
         
         virtual ~TimeDomainFlutterSolution() {}
@@ -237,7 +238,9 @@ namespace MAST {
         /*!
          *   initializes the flutter solution from an eigensolution
          */
-        virtual void init (const Real ref_val, const Real bref,
+        virtual void init (const MAST::FlutterSolverBase& solver,
+                           const Real v_ref,
+                           const Real bref,
                            const LAPACK_DGGEV& eig_sol);
     };
 
