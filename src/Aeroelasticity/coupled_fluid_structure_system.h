@@ -51,7 +51,9 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix(Real k_red, ComplexMatrixX& a);
+    virtual bool get_aero_operator_matrix(const Real k_red,
+                                          const Real v_ref,
+                                          ComplexMatrixX& a);
 
     
     /*!
@@ -63,7 +65,9 @@ public:
     virtual bool
     get_aero_operator_matrix_sensitivity(const libMesh::ParameterVector& params,
                                          unsigned int p,
-                                         Real k_red, ComplexMatrixX& a) {
+                                         const Real k_red,
+                                         const Real v_ref,
+                                         ComplexMatrixX& a) {
         // get the structural basis
         BasisMatrix<Real>& structural_basis =
         dynamic_cast<FEMStructuralModel&>(structural_model).get_basis_matrix();
@@ -83,7 +87,8 @@ public:
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
     virtual bool
-    get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
+    get_aero_operator_matrix_sensitivity_for_reduced_freq(const Real k_red,
+                                                          const Real v_ref,
                                                           ComplexMatrixX& a);
     
 
@@ -112,7 +117,8 @@ protected:
 
 inline
 bool
-CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_red,
+CoupledFluidStructureSystem::get_aero_operator_matrix(const Real k_red,
+                                                      const Real v_ref,
                                                       ComplexMatrixX& a)
 {
     // get references to the structural and fluid models
@@ -139,7 +145,7 @@ CoupledFluidStructureSystem::get_aero_operator_matrix(Real k_red,
     for (unsigned int j_basis=0; j_basis<structural_basis.n(); j_basis++)
     {
         projected_force.setZero(structural_basis.n());
-        surface_motion->init(k_red, 0., structural_basis.basis(j_basis));
+        surface_motion->init(k_red, v_ref, 0., structural_basis.basis(j_basis));
         aero.linearized_fluid_system.perturbed_surface_motion = surface_motion.get();
         aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
         
@@ -208,6 +214,7 @@ inline
 bool
 CoupledFluidStructureSystem::
 get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
+                                                      Real v_ref,
                                                       ComplexMatrixX& a) {
     
     // get references to the structural and fluid models
@@ -234,7 +241,7 @@ get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
     for (unsigned int j_basis=0; j_basis<structural_basis.n(); j_basis++)
     {
         projected_force.setZero(structural_basis.n());
-        surface_motion->init(k_red, 0., structural_basis.basis(j_basis));
+        surface_motion->init(k_red, v_ref, 0., structural_basis.basis(j_basis));
         aero.linearized_fluid_system.perturbed_surface_motion = surface_motion.get();
         
         // first solve the basic solution

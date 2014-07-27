@@ -47,7 +47,7 @@ namespace MAST {
         
         virtual void zero();
         
-        virtual void init(Real freq, Real phase);
+        virtual void init(const Real freq, const Real vel, const Real phase);
         
         /*!
          *   calculation of surface velocity in frequency domain. 

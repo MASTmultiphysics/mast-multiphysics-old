@@ -84,7 +84,8 @@ namespace MAST {
          *   pointer is NULL, then no sorting is performed
          */
         virtual MAST::FlutterSolutionBase*
-        analyze(const Real ref_val,
+        analyze(const Real k_red,
+                const Real v_ref,
                 const MAST::FlutterSolutionBase* prev_sol=NULL);
 
         
@@ -93,7 +94,8 @@ namespace MAST {
          *    initializes the matrices for the specified k_red. UG does not account
          *    for structural damping.
          */
-        void initialize_matrices(Real k_red,
+        void initialize_matrices(const Real k_red,
+                                 const Real v_ref,
                                  ComplexMatrixX& m, // mass & aero
                                  ComplexMatrixX& k); // aero operator
 
@@ -101,20 +103,24 @@ namespace MAST {
          *    initializes the matrices for the specified k_red. UG does not account
          *    for structural damping.
          */
-        void initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
-                                                     unsigned int p,
-                                                     Real k_red,
-                                                     ComplexMatrixX& m, // mass & aero
-                                                     ComplexMatrixX& k); // aero operator
+        void
+        initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
+                                                unsigned int p,
+                                                const Real k_red,
+                                                const Real v_ref,
+                                                ComplexMatrixX& m, // mass & aero
+                                                ComplexMatrixX& k); // aero operator
         
         /*!
          *    initializes the matrices for the specified k_red. UG does not account
          *    for structural damping.
          */
-        void initialize_matrix_sensitivity_for_reduced_freq(Real k_red,
-                                                            ComplexMatrixX& m, // mass & aero
-                                                            ComplexMatrixX& k); // aero operator
-
+        void
+        initialize_matrix_sensitivity_for_reduced_freq(const Real k_red,
+                                                       const Real v_ref,
+                                                       ComplexMatrixX& m, // mass & aero
+                                                       ComplexMatrixX& k); // aero operator
+        
     };
 }
 

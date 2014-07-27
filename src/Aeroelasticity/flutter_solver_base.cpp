@@ -113,7 +113,9 @@ void MAST::FlutterSolverBase::scan_for_roots()
         MAST::FlutterSolutionBase* prev_sol = NULL;
         for (unsigned int i=0; i<n_ref_val_divs+1; i++) {
             current_k_red = k_vals[i];
-            prev_sol = analyze(current_k_red, prev_sol);
+            prev_sol = analyze(current_k_red,
+                               flight_condition->velocity_magnitude,
+                               prev_sol);
         }
         
         _identify_crossover_points();
@@ -228,7 +230,9 @@ MAST::FlutterSolverBase::bisection_search(const std::pair<MAST::FlutterSolutionB
         
         new_k = lower_ref_val +
         (upper_ref_val-lower_ref_val)/(upper_g-lower_g)*(0.-lower_g); // linear interpolation
-        new_sol = analyze(new_k, ref_sol_range.first);
+        new_sol = analyze(new_k,
+                          flight_condition->velocity_magnitude,
+                          ref_sol_range.first);
         const MAST::FlutterRootBase& root = new_sol->get_root(root_num);
         
         // check if the new damping value

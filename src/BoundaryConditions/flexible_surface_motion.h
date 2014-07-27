@@ -53,7 +53,9 @@ namespace MAST {
         
         virtual void zero();
         
-        virtual void init(Real freq, Real phase,
+        virtual void init(const Real freq,
+                          const Real vel,
+                          const Real phase,
                           libMesh::NumericVector<Real>& sol);
         
         /*!
@@ -124,7 +126,9 @@ MAST::FlexibleSurfaceMotion::zero()
 
 inline
 void
-MAST::FlexibleSurfaceMotion::init(Real freq, Real phase,
+MAST::FlexibleSurfaceMotion::init(const Real freq,
+                                  const Real vel,
+                                  const Real phase,
                                   libMesh::NumericVector<Real>& sol)
 {
     // first initialize the solution to the given vector
@@ -149,7 +153,7 @@ MAST::FlexibleSurfaceMotion::init(Real freq, Real phase,
         _function->init();
     }
     
-    MAST::SurfaceMotionBase::init(freq, phase);
+    MAST::SurfaceMotionBase::init(freq, vel, phase);
     
     //sol.print();
 }

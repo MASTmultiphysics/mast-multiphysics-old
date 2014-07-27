@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __MAST__surface_motion_base__
-#define __MAST__surface_motion_base__
+#ifndef __MAST_surface_motion_base_h__
+#define __MAST_surface_motion_base_h__
 
 // libmesh includes
 #include "libmesh/mesh.h"
@@ -40,6 +40,7 @@ namespace MAST {
         SurfaceMotionBase():
         MAST::BoundaryCondition(MAST::SMALL_DISTURBANCE_DISPLACEMENT),
         frequency(0.),
+        velocity(0.),
         phase_offset(0.)
         { }
         
@@ -60,6 +61,11 @@ namespace MAST {
          */
         Real frequency;
         
+        
+        /*!
+         *    Velocity corresponding to the reduced frequency
+         */
+        Real velocity;
         
         /*!
          *    All transient motion data is based on a sine function that
@@ -111,13 +117,16 @@ namespace MAST {
         /*!
          *   initialization function for this object
          */
-        virtual void init(Real freq, Real phase)
+        virtual void init(const Real freq,
+                          const Real vel,
+                          const Real phase)
         {
-            frequency = freq;
+            frequency    = freq;
+            velocity     = vel;
             phase_offset = phase;
         }
         
     };
 }
 
-#endif /* defined(__MAST__surface_motion__) */
+#endif // __MAST_surface_motion_h__

@@ -52,7 +52,9 @@ MAST::RigidSurfaceMotion::zero()
 
 
 void
-MAST::RigidSurfaceMotion::init(Real freq, Real phase)
+MAST::RigidSurfaceMotion::init(const Real freq,
+                               const Real vel,
+                               const Real phase)
 {
     // make unit vectors
     if (pitch_axis.size() > 0.)
@@ -60,7 +62,7 @@ MAST::RigidSurfaceMotion::init(Real freq, Real phase)
     if (plunge_vector.size() > 0.)
         plunge_vector /= plunge_vector.size();
     
-    SurfaceMotionBase::init(freq, phase);
+    SurfaceMotionBase::init(freq, vel, phase);
 }
 
 

@@ -490,11 +490,13 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
 }
 
 int
-flutter_convergence_driver( libMesh::LibMeshInit& init, GetPot& str_infile,
-                           int argc, char* const argv[]) {
+main(int argc, char* const argv[]) {
     
+    libMesh::LibMeshInit init(argc, argv);
     
-    GetPot fluid_infile("system_input.in");
+    GetPot str_infile("structural.in"),
+    fluid_infile("system_input.in");
+    
     unsigned int
     n_panel_divs = 3,
     n_farfield_divs = 4,

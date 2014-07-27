@@ -108,7 +108,9 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix(Real k_red, ComplexMatrixX& a)
+    virtual bool get_aero_operator_matrix(const Real k_red,
+                                          const Real v_ref,
+                                          ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class
         libmesh_assert(false);
@@ -122,7 +124,9 @@ public:
      */
     virtual bool get_aero_operator_matrix_sensitivity(const libMesh::ParameterVector& params,
                                                       unsigned int p,
-                                                      Real k_red, ComplexMatrixX& a)
+                                                      const Real k_red,
+                                                      const Real v_ref,
+                                                      ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class
         libmesh_assert(false);
@@ -135,8 +139,10 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
-                                                                       ComplexMatrixX& a)
+    virtual bool
+    get_aero_operator_matrix_sensitivity_for_reduced_freq(const Real k_red,
+                                                          const Real v_ref,
+                                                          ComplexMatrixX& a)
     {
         // needs to be implemented by the inherited class
         libmesh_assert(false);

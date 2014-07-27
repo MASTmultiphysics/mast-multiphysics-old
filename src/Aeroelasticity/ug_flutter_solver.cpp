@@ -210,6 +210,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
 
 MAST::FlutterSolutionBase*
 MAST::UGFlutterSolver::analyze(const Real k_red,
+                               const Real v_ref,
                                const MAST::FlutterSolutionBase* prev_sol) {
     ComplexMatrixX m, k;
     
@@ -218,7 +219,7 @@ MAST::UGFlutterSolver::analyze(const Real k_red,
     << "UG Solution for k_red = "
     << std::setw(10) << k_red << std::endl;
     
-    initialize_matrices(k_red, m, k);
+    initialize_matrices(k_red, v_ref, m, k);
     LAPACK_ZGGEV ges;
     ges.compute(m, k);
     ges.scale_eigenvectors_to_identity_innerproduct();
@@ -262,11 +263,14 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     ComplexVectorX v;
 
     // initialize the baseline matrices
-    initialize_matrices(root.k_red, mat_A, mat_B);
+    initialize_matrices(root.k_red, root.V, mat_A, mat_B);
 
     // calculate the eigenproblem sensitivity
-    initialize_matrix_sensitivity_for_param(params, i, root.k_red,
-                                            mat_A_sens, mat_B_sens);
+    initialize_matrix_sensitivity_for_param(params, i,
+                                            root.k_red,
+                                            root.V,
+                                            mat_A_sens,
+                                            mat_B_sens);
 
     // the eigenproblem is     A x - lambda B x = 0
     // therefore, the denominator is obtained from the inner product of
@@ -292,7 +296,9 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     // next we need the sensitivity of k_red before we can calculate
     // the sensitivity of flutter eigenvalue
     initialize_matrix_sensitivity_for_reduced_freq(root.k_red,
-                                                   mat_A_sens, mat_B_sens);
+                                                   root.V,
+                                                   mat_A_sens,
+                                                   mat_B_sens);
     
     // now calculate the quotient for sensitivity wrt k_red
     // calculate numerator
@@ -324,9 +330,11 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
 
 
 
-void MAST::UGFlutterSolver::initialize_matrices(Real k_red,
-                                                ComplexMatrixX& m, // mass & aero
-                                                ComplexMatrixX& k) // stiffness
+void
+MAST::UGFlutterSolver::initialize_matrices(const Real k_red,
+                                           const Real v_ref,
+                                           ComplexMatrixX& m, // mass & aero
+                                           ComplexMatrixX& k) // stiffness
 {
     bool has_matrix = false;
     RealMatrixX mat_r;
@@ -341,7 +349,8 @@ void MAST::UGFlutterSolver::initialize_matrices(Real k_red,
     libmesh_assert(has_matrix);
     
     
-    has_matrix = aero_structural_model->get_aero_operator_matrix(k_red, m);
+    has_matrix =
+    aero_structural_model->get_aero_operator_matrix(k_red, v_ref, m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
@@ -351,11 +360,13 @@ void MAST::UGFlutterSolver::initialize_matrices(Real k_red,
 
 
 void
-MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
-                                                               unsigned int p,
-                                                               Real k_red,
-                                                               ComplexMatrixX& m, // mass & aero
-                                                               ComplexMatrixX& k) { // stiffness
+MAST::UGFlutterSolver::
+initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
+                                        unsigned int p,
+                                        const Real k_red,
+                                        const Real v_ref,
+                                        ComplexMatrixX& m, // mass & aero
+                                        ComplexMatrixX& k) { // stiffness
     bool has_matrix = false;
     RealMatrixX mat_r;
     
@@ -378,7 +389,9 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::Pa
     has_matrix =
     aero_structural_model->get_aero_operator_matrix_sensitivity(params,
                                                                 p,
-                                                                k_red, m);
+                                                                k_red,
+                                                                v_ref,
+                                                                m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;
@@ -389,9 +402,11 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_param(const libMesh::Pa
 
 
 void
-MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_red,
-                                                                      ComplexMatrixX& m, // mass & aero
-                                                                      ComplexMatrixX& k) { // stiffness
+MAST::UGFlutterSolver::
+initialize_matrix_sensitivity_for_reduced_freq(const Real k_red,
+                                               const Real v_ref,
+                                               ComplexMatrixX& m, // mass & aero
+                                               ComplexMatrixX& k) { // stiffness
     bool has_matrix = false;
     RealMatrixX mat_r;
 
@@ -402,7 +417,9 @@ MAST::UGFlutterSolver::initialize_matrix_sensitivity_for_reduced_freq(Real k_red
     
     
     has_matrix =
-    aero_structural_model->get_aero_operator_matrix_sensitivity_for_reduced_freq(k_red, m);
+    aero_structural_model->get_aero_operator_matrix_sensitivity_for_reduced_freq(k_red,
+                                                                                 v_ref,
+                                                                                 m);
     libmesh_assert(has_matrix);
     
     m *= 0.5 * flight_condition->gas_property.rho;

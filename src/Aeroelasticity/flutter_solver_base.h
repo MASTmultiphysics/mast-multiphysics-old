@@ -174,7 +174,8 @@ namespace MAST {
          *   pointer is NULL, then no sorting is performed
          */
         virtual MAST::FlutterSolutionBase*
-        analyze(const Real ref_val,
+        analyze(const Real k_red,
+                const Real v_ref,
                 const MAST::FlutterSolutionBase* prev_sol=NULL) = 0;
 
 

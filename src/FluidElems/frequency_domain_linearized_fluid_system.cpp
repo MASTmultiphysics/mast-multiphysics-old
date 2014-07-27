@@ -250,7 +250,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
     stiffness_scaling = 1.0;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
-        flight_condition->velocity_magnitude;
+        perturbed_surface_motion->velocity;
     
     // assuming that all variables have the same interpolation
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi();
@@ -659,7 +659,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     Real stiffness_scaling = 1.0;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
-        flight_condition->velocity_magnitude;
+        perturbed_surface_motion->velocity;
 
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Complex> delta_p_sol;
@@ -1081,7 +1081,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_k_sens
     
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
-        flight_condition->velocity_magnitude;
+        perturbed_surface_motion->velocity;
     
     // assuming that all variables have the same interpolation
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi();
@@ -1440,7 +1440,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
     stiffness_scaling_sens = 0.;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
-        flight_condition->velocity_magnitude;
+        perturbed_surface_motion->velocity;
     
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Complex> delta_p_sol;
