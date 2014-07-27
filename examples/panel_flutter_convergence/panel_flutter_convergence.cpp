@@ -356,9 +356,9 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
         flutter_solver.set_output_file(flutter_output_nm);
     flutter_solver.aero_structural_model   = &coupled_system;
     flutter_solver.flight_condition        = &flight_cond;
-    flutter_solver.ref_val_range.first     = fluid_infile("ug_lower_k", 0.0);
-    flutter_solver.ref_val_range.second    = fluid_infile("ug_upper_k", 0.35);
-    flutter_solver.n_ref_val_divs          = fluid_infile("ug_k_divs", 10);
+    flutter_solver.k_red_range.first     = fluid_infile("ug_lower_k", 0.0);
+    flutter_solver.k_red_range.second    = fluid_infile("ug_upper_k", 0.35);
+    flutter_solver.n_k_red_divs          = fluid_infile("ug_k_divs", 10);
     
     
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem

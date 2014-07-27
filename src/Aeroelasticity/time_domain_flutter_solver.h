@@ -29,14 +29,25 @@ namespace MAST {
     {
     public:
         TimeDomainFlutterSolver():
-        MAST::FlutterSolverBase() {
-            this->ref_val_range = std::pair<Real, Real>(0., 0.);
-            this->n_ref_val_divs = 1;
-        }
+        MAST::FlutterSolverBase(),
+        vel_range(std::pair<Real, Real>(0., 0.)),
+        n_vel_divs(1)
+        {}
         
         
         virtual ~TimeDomainFlutterSolver();
         
+        /*!
+         *   range of reference values within which to find flutter roots
+         */
+        std::pair<Real, Real> vel_range;
+        
+        /*!
+         *    number of division in the reference value range for initial
+         *    scanning
+         */
+        unsigned int n_vel_divs;
+
         
     protected:
         

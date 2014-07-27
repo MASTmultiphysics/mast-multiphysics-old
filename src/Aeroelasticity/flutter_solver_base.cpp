@@ -95,35 +95,6 @@ MAST::FlutterSolverBase::get_root(const unsigned int n) const {
 
 
 
-void MAST::FlutterSolverBase::scan_for_roots()
-{
-    // if the initial scanning has not been done, then do it now
-    if (!_flutter_solutions.size()) {
-        // march from the upper limit to the lower to find the roots
-        Real current_k_red = ref_val_range.second,
-        delta_k_red = (ref_val_range.second-ref_val_range.first)/n_ref_val_divs;
-        
-        std::vector<Real> k_vals(n_ref_val_divs+1);
-        for (unsigned int i=0; i<n_ref_val_divs+1; i++) {
-            k_vals[i] = current_k_red;
-            current_k_red -= delta_k_red;
-        }
-        k_vals[n_ref_val_divs] = ref_val_range.first; // to get around finite-precision arithmetic
-        
-        MAST::FlutterSolutionBase* prev_sol = NULL;
-        for (unsigned int i=0; i<n_ref_val_divs+1; i++) {
-            current_k_red = k_vals[i];
-            prev_sol = analyze(current_k_red,
-                               flight_condition->velocity_magnitude,
-                               prev_sol);
-        }
-        
-        _identify_crossover_points();
-    }
-}
-
-
-
 
 std::pair<bool, const MAST::FlutterRootBase*>
 MAST::FlutterSolverBase::find_next_root(const Real g_tol,

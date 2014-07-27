@@ -48,15 +48,29 @@ namespace MAST {
     {
     public:
         UGFlutterSolver():
-        MAST::FlutterSolverBase() {
-            this->ref_val_range = std::pair<Real, Real>(0., 0.35);
-            this->n_ref_val_divs = 10;
-        }
+        MAST::FlutterSolverBase(),
+        k_red_range(std::pair<Real, Real>(0., 0.)),
+        n_k_red_divs(1)
+        { }
         
         
         virtual ~UGFlutterSolver();
         
+
+        /*!
+         *   range of reference values within which to find flutter roots
+         */
+        std::pair<Real, Real> k_red_range;
         
+        /*!
+         *    number of division in the reference value range for initial
+         *    scanning
+         */
+        unsigned int n_k_red_divs;
+        
+        
+        virtual void scan_for_roots();
+    
         /*!
          *    creates a new flutter root and returns pointer to it.
          */

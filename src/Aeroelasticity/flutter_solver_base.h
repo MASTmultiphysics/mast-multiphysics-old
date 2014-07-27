@@ -52,23 +52,9 @@ namespace MAST {
         std::ofstream _output, _mode_output;
         
         /*!
-         *   range of reference values within which to find flutter roots
-         */
-        std::pair<Real, Real> ref_val_range;
-        
-        /*!
-         *    number of division in the reference value range for initial 
-         *    scanning
-         */
-        unsigned int n_ref_val_divs;
-        
-        
-        /*!
          *    constructor for the flutter solver base object
          */
-        FlutterSolverBase():
-        ref_val_range(std::pair<Real, Real>(0., 0.)),
-        n_ref_val_divs(10)
+        FlutterSolverBase()
         {}
         
         virtual ~FlutterSolverBase();
@@ -147,7 +133,7 @@ namespace MAST {
          *   divergence (if k_red = 0. is specified) and flutter crossover points.
          *   The roots are organized in terms of increasing velocity.
          */
-        virtual void scan_for_roots();
+        virtual void scan_for_roots() = 0;
 
         
         /*!
