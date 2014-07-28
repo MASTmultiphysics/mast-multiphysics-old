@@ -17,10 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __MAST_sizing_optimization_h__
-#define __MAST_sizing_optimization_h__
-
-
 
 // MAST includes
 #include "Optimization/optimization_interface.h"
@@ -31,6 +27,11 @@
 #include "PropertyCards/multilayer_1d_section_element_property_card.h"
 #include "PropertyCards/multilayer_2d_section_element_property_card.h"
 #include "BoundaryConditions/temperature.h"
+#include "BoundaryConditions/displacement_boundary_condition.h"
+#include "Mesh/mesh_initializer.h"
+#include "PropertyCards/isotropic_material_property_card.h"
+#include "Mesh/stiffened_panel.h"
+#include "Optimization/gcmma_optimization_interface.h"
 
 // libmesh includes
 #include "libmesh/getpot.h"
@@ -51,6 +52,11 @@
 #include "libmesh/sensitivity_data.h"
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/nonlinear_implicit_system.h"
+#include "libmesh/mesh_function.h"
+#include "libmesh/steady_solver.h"
+#include "libmesh/newton_solver.h"
+#include "libmesh/euler2_solver.h"
+#include "libmesh/system_norm.h"
 
 
 namespace MAST {
@@ -659,7 +665,7 @@ void
 MAST::SizingOptimization::_init() {
     
 
-    _mesh = new SerialMesh(_libmesh_init.comm());
+    _mesh = new libMesh::SerialMesh(_libmesh_init.comm());
     
     const unsigned int
     dim     = _infile("dimension",0),
@@ -841,8 +847,8 @@ MAST::SizingOptimization::_init() {
         counter++;
     }
     
-    _eigen_system->set_eigenproblem_type(GHEP);
-    _eigen_system->eigen_solver->set_position_of_spectrum(LARGEST_MAGNITUDE);
+    _eigen_system->set_eigenproblem_type(libMesh::GHEP);
+    _eigen_system->eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
     _eigen_structural_assembly->set_static_solution_system(_static_system);
     
     _eq_systems->init ();
@@ -1222,4 +1228,27 @@ MAST::SizingOptimization::output(unsigned int iter,
 }
 
 
-#endif // __MAST_sizing_optimization_h__
+int
+main(int argc, char* const argv[]) {
+    
+    libMesh::LibMeshInit init(argc, argv);
+    
+    GetPot infile("input.in");
+    
+    std::ofstream output;
+    output.open("optimization_output.txt", std::ofstream::out);
+    
+    MAST::GCMMAOptimizationInterface gcmma;
+    
+    // create and attach sizing optimization object
+    MAST::SizingOptimization func_eval(init, infile, output);
+    
+    // attach and optimize
+    gcmma.attach_function_evaluation_object(func_eval);
+    gcmma.optimize();
+    
+    output.close();
+    
+    return 0;
+}
+

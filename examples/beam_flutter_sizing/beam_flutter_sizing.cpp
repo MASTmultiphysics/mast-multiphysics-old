@@ -712,7 +712,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
 
             // init with zero frequency, since we are working with steady solver
-            _surface_motion->init(0., 0., *(_static_system->solution));
+            _surface_motion->init(0., 0., 0., *(_static_system->solution));
 
             // check if the DC operator needs to be reevaluated
             _fluid_system_nonlin->evaluate_recalculate_dc_flag();
@@ -880,7 +880,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
 
                 // initialize the displacement sensitivity for fluid boundary
                 // condition
-                _surface_motion_sens->init(0., 0., str_sens);
+                _surface_motion_sens->init(0., 0., 0., str_sens);
                 
                 // this uses the displacement sensitivity from structural solution
                 _fluid_system_lin->solve();
@@ -1325,9 +1325,9 @@ MAST::SizingOptimization::_init() {
         _flutter_solver->set_output_file(nm);
     _flutter_solver->aero_structural_model   = _coupled_system.get();
     _flutter_solver->flight_condition        = _flight_cond.get();
-    _flutter_solver->ref_val_range.first     = _fluid_input("ug_lower_k", 0.0);
-    _flutter_solver->ref_val_range.second    = _fluid_input("ug_upper_k", 0.35);
-    _flutter_solver->n_ref_val_divs          = _fluid_input("ug_k_divs", 10);
+    _flutter_solver->k_red_range.first       = _fluid_input("ug_lower_k", 0.0);
+    _flutter_solver->k_red_range.second      = _fluid_input("ug_upper_k", 0.35);
+    _flutter_solver->n_k_red_divs            = _fluid_input("ug_k_divs", 10);
 
     
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
@@ -1537,9 +1537,6 @@ main(int argc, char* const argv[]) {
     output.open("optimization_output.txt", std::ofstream::out);
     
     MAST::GCMMAOptimizationInterface gcmma;
-    
-    // create and attach topology optimization object
-    // MAST::TopologyOptimization func_eval(init, infile, output);
     
     // create and attach sizing optimization object
     MAST::SizingOptimization func_eval(init, infile, output);

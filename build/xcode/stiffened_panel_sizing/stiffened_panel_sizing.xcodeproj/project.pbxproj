@@ -7,16 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EB28724C198160CA00264599 /* beam_flutter_sizing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EB28724B198160CA00264599 /* beam_flutter_sizing.cpp */; };
-		EB2872521981622C00264599 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28724D1981622C00264599 /* libmesh_dbg.0.dylib */; };
-		EB2872531981622C00264599 /* libmesh_dbg.la in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28724E1981622C00264599 /* libmesh_dbg.la */; };
-		EB2872541981622C00264599 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB28724F1981622C00264599 /* libmpi_cxx.1.dylib */; };
-		EB2872551981622C00264599 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2872501981622C00264599 /* libmpi.1.dylib */; };
-		EB2872561981622C00264599 /* libmast.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2872511981622C00264599 /* libmast.dylib */; };
+		699951BF1986B69000D61EE8 /* stiffened_panel_sizing_optimization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 699951BE1986B69000D61EE8 /* stiffened_panel_sizing_optimization.cpp */; };
+		699951C41986B6DA00D61EE8 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 699951C01986B6DA00D61EE8 /* libmesh_dbg.0.dylib */; };
+		699951C51986B6DA00D61EE8 /* libmesh_dbg.la in Frameworks */ = {isa = PBXBuildFile; fileRef = 699951C11986B6DA00D61EE8 /* libmesh_dbg.la */; };
+		699951C61986B6DA00D61EE8 /* libmpi_cxx.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 699951C21986B6DA00D61EE8 /* libmpi_cxx.1.dylib */; };
+		699951C71986B6DA00D61EE8 /* libmpi.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 699951C31986B6DA00D61EE8 /* libmpi.1.dylib */; };
+		699951C91986B6DF00D61EE8 /* libmast.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 699951C81986B6DF00D61EE8 /* libmast.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		EB28723B1981609100264599 /* CopyFiles */ = {
+		699951AF1986B67C00D61EE8 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -28,120 +28,120 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		EB28723D1981609100264599 /* beam_flutter_sizing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = beam_flutter_sizing; sourceTree = BUILT_PRODUCTS_DIR; };
-		EB28724B198160CA00264599 /* beam_flutter_sizing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = beam_flutter_sizing.cpp; sourceTree = "<group>"; };
-		EB28724D1981622C00264599 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../../../../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
-		EB28724E1981622C00264599 /* libmesh_dbg.la */ = {isa = PBXFileReference; lastKnownFileType = text; name = libmesh_dbg.la; path = ../../../../libmesh/real/lib/libmesh_dbg.la; sourceTree = "<group>"; };
-		EB28724F1981622C00264599 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi_cxx.1.dylib"; sourceTree = "<group>"; };
-		EB2872501981622C00264599 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi.1.dylib"; sourceTree = "<group>"; };
-		EB2872511981622C00264599 /* libmast.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmast.dylib; path = "../../../../../../Library/Developer/Xcode/DerivedData/MAST-cuxhtrzwvvlxltffqqlqhntejrjk/Build/Products/Debug/libmast.dylib"; sourceTree = "<group>"; };
+		699951B11986B67C00D61EE8 /* stiffened_panel_sizing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = stiffened_panel_sizing; sourceTree = BUILT_PRODUCTS_DIR; };
+		699951BE1986B69000D61EE8 /* stiffened_panel_sizing_optimization.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stiffened_panel_sizing_optimization.cpp; sourceTree = "<group>"; };
+		699951C01986B6DA00D61EE8 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../../../../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
+		699951C11986B6DA00D61EE8 /* libmesh_dbg.la */ = {isa = PBXFileReference; lastKnownFileType = text; name = libmesh_dbg.la; path = ../../../../libmesh/real/lib/libmesh_dbg.la; sourceTree = "<group>"; };
+		699951C21986B6DA00D61EE8 /* libmpi_cxx.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi_cxx.1.dylib"; sourceTree = "<group>"; };
+		699951C31986B6DA00D61EE8 /* libmpi.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.1.dylib; path = "../../../../../../../../opt/local/lib/openmpi-mp/libmpi.1.dylib"; sourceTree = "<group>"; };
+		699951C81986B6DF00D61EE8 /* libmast.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmast.dylib; path = "../../../../../../Library/Developer/Xcode/DerivedData/MAST-aiowxpzybpmbaacfxrmskgtnshcw/Build/Products/Debug/libmast.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		EB28723A1981609100264599 /* Frameworks */ = {
+		699951AE1986B67C00D61EE8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB2872521981622C00264599 /* libmesh_dbg.0.dylib in Frameworks */,
-				EB2872531981622C00264599 /* libmesh_dbg.la in Frameworks */,
-				EB2872541981622C00264599 /* libmpi_cxx.1.dylib in Frameworks */,
-				EB2872551981622C00264599 /* libmpi.1.dylib in Frameworks */,
-				EB2872561981622C00264599 /* libmast.dylib in Frameworks */,
+				699951C91986B6DF00D61EE8 /* libmast.dylib in Frameworks */,
+				699951C41986B6DA00D61EE8 /* libmesh_dbg.0.dylib in Frameworks */,
+				699951C51986B6DA00D61EE8 /* libmesh_dbg.la in Frameworks */,
+				699951C61986B6DA00D61EE8 /* libmpi_cxx.1.dylib in Frameworks */,
+				699951C71986B6DA00D61EE8 /* libmpi.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		EB2872341981609100264599 = {
+		699951A81986B67C00D61EE8 = {
 			isa = PBXGroup;
 			children = (
-				EB28724D1981622C00264599 /* libmesh_dbg.0.dylib */,
-				EB28724E1981622C00264599 /* libmesh_dbg.la */,
-				EB28724F1981622C00264599 /* libmpi_cxx.1.dylib */,
-				EB2872501981622C00264599 /* libmpi.1.dylib */,
-				EB2872511981622C00264599 /* libmast.dylib */,
-				EB287249198160AC00264599 /* beam_flutter_sizing */,
-				EB28723E1981609100264599 /* Products */,
+				699951C81986B6DF00D61EE8 /* libmast.dylib */,
+				699951C01986B6DA00D61EE8 /* libmesh_dbg.0.dylib */,
+				699951C11986B6DA00D61EE8 /* libmesh_dbg.la */,
+				699951C21986B6DA00D61EE8 /* libmpi_cxx.1.dylib */,
+				699951C31986B6DA00D61EE8 /* libmpi.1.dylib */,
+				699951BD1986B69000D61EE8 /* stiffened_panel_sizing_optimization */,
+				699951B21986B67C00D61EE8 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		EB28723E1981609100264599 /* Products */ = {
+		699951B21986B67C00D61EE8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				EB28723D1981609100264599 /* beam_flutter_sizing */,
+				699951B11986B67C00D61EE8 /* stiffened_panel_sizing */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		EB287249198160AC00264599 /* beam_flutter_sizing */ = {
+		699951BD1986B69000D61EE8 /* stiffened_panel_sizing_optimization */ = {
 			isa = PBXGroup;
 			children = (
-				EB28724B198160CA00264599 /* beam_flutter_sizing.cpp */,
+				699951BE1986B69000D61EE8 /* stiffened_panel_sizing_optimization.cpp */,
 			);
-			name = beam_flutter_sizing;
-			path = ../../../examples/beam_flutter_sizing;
+			name = stiffened_panel_sizing_optimization;
+			path = ../../../examples/stiffened_panel_sizing_optimization;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		EB28723C1981609100264599 /* beam_flutter_sizing */ = {
+		699951B01986B67C00D61EE8 /* stiffened_panel_sizing */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EB2872461981609100264599 /* Build configuration list for PBXNativeTarget "beam_flutter_sizing" */;
+			buildConfigurationList = 699951BA1986B67C00D61EE8 /* Build configuration list for PBXNativeTarget "stiffened_panel_sizing" */;
 			buildPhases = (
-				EB2872391981609100264599 /* Sources */,
-				EB28723A1981609100264599 /* Frameworks */,
-				EB28723B1981609100264599 /* CopyFiles */,
+				699951AD1986B67C00D61EE8 /* Sources */,
+				699951AE1986B67C00D61EE8 /* Frameworks */,
+				699951AF1986B67C00D61EE8 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = beam_flutter_sizing;
-			productName = beam_flutter_sizing;
-			productReference = EB28723D1981609100264599 /* beam_flutter_sizing */;
+			name = stiffened_panel_sizing;
+			productName = stiffened_panel_sizing;
+			productReference = 699951B11986B67C00D61EE8 /* stiffened_panel_sizing */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		EB2872351981609100264599 /* Project object */ = {
+		699951A91986B67C00D61EE8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Manav Bhatia";
 			};
-			buildConfigurationList = EB2872381981609100264599 /* Build configuration list for PBXProject "beam_flutter_sizing" */;
+			buildConfigurationList = 699951AC1986B67C00D61EE8 /* Build configuration list for PBXProject "stiffened_panel_sizing" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 			);
-			mainGroup = EB2872341981609100264599;
-			productRefGroup = EB28723E1981609100264599 /* Products */;
+			mainGroup = 699951A81986B67C00D61EE8;
+			productRefGroup = 699951B21986B67C00D61EE8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				EB28723C1981609100264599 /* beam_flutter_sizing */,
+				699951B01986B67C00D61EE8 /* stiffened_panel_sizing */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		EB2872391981609100264599 /* Sources */ = {
+		699951AD1986B67C00D61EE8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB28724C198160CA00264599 /* beam_flutter_sizing.cpp in Sources */,
+				699951BF1986B69000D61EE8 /* stiffened_panel_sizing_optimization.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		EB2872441981609100264599 /* Debug */ = {
+		699951B81986B67C00D61EE8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -179,7 +179,7 @@
 			};
 			name = Debug;
 		};
-		EB2872451981609100264599 /* Release */ = {
+		699951B91986B67C00D61EE8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -211,7 +211,7 @@
 			};
 			name = Release;
 		};
-		EB2872471981609100264599 /* Debug */ = {
+		699951BB1986B67C00D61EE8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -234,7 +234,7 @@
 			};
 			name = Debug;
 		};
-		EB2872481981609100264599 /* Release */ = {
+		699951BC1986B67C00D61EE8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -260,25 +260,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		EB2872381981609100264599 /* Build configuration list for PBXProject "beam_flutter_sizing" */ = {
+		699951AC1986B67C00D61EE8 /* Build configuration list for PBXProject "stiffened_panel_sizing" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				EB2872441981609100264599 /* Debug */,
-				EB2872451981609100264599 /* Release */,
+				699951B81986B67C00D61EE8 /* Debug */,
+				699951B91986B67C00D61EE8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EB2872461981609100264599 /* Build configuration list for PBXNativeTarget "beam_flutter_sizing" */ = {
+		699951BA1986B67C00D61EE8 /* Build configuration list for PBXNativeTarget "stiffened_panel_sizing" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				EB2872471981609100264599 /* Debug */,
-				EB2872481981609100264599 /* Release */,
+				699951BB1986B67C00D61EE8 /* Debug */,
+				699951BC1986B67C00D61EE8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = EB2872351981609100264599 /* Project object */;
+	rootObject = 699951A91986B67C00D61EE8 /* Project object */;
 }
