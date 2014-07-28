@@ -101,6 +101,14 @@ file (GLOB_RECURSE beam_flutter_sizing_source_files
 add_executable (beam_flutter_sizing ${beam_flutter_sizing_source_files})
 
 #
+#  add files for executables in the examples and add it to cmake's build list
+#
+file (GLOB_RECURSE stiffened_panel_sizing_source_files 
+	../examples/stiffened_panel_sizing_optimization/*.cpp 
+	../examples/stiffened_panel_sizing_optimization/*.h)
+add_executable (stiffened_panel_sizing ${stiffened_panel_sizing_source_files})
+
+#
 #  tell cmake to link mast library against these libraries
 #
 target_link_libraries (mast  
@@ -162,6 +170,21 @@ target_link_libraries (beam_flutter_sizing
 #   add the include paths for the example
 #
 set_property (TARGET beam_flutter_sizing APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
+
+#
+#  tell cmake to link stiffened_panel_sizing example with mast library
+#
+target_link_libraries (stiffened_panel_sizing
+			mast)
+
+
+#
+#   add the include paths for the example
+#
+set_property (TARGET stiffened_panel_sizing APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
 

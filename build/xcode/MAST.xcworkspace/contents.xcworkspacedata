@@ -10,4 +10,10 @@
    <FileRef
       location = "group:panel_flutter_convergence/panel_flutter_convergence.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:beam_flutter_sizing/beam_flutter_sizing.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:stiffened_panel_sizing/stiffened_panel_sizing.xcodeproj">
+   </FileRef>
 </Workspace>
