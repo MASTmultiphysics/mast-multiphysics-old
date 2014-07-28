@@ -109,6 +109,14 @@ file (GLOB_RECURSE stiffened_panel_sizing_source_files
 add_executable (stiffened_panel_sizing ${stiffened_panel_sizing_source_files})
 
 #
+#  add files for executables in the examples and add it to cmake's build list
+#
+file (GLOB_RECURSE structural_eigensolution_source_files 
+	../examples/structural_eigensolution/*.cpp 
+	../examples/structural_eigensolution/*.h)
+add_executable (structural_eigensolution ${structural_eigensolution_source_files})
+
+#
 #  tell cmake to link mast library against these libraries
 #
 target_link_libraries (mast  
@@ -121,10 +129,6 @@ target_link_libraries (mast
 		      ${tbb_lib}
 		      ${mpicxx_lib}
 		      ${mpi_lib})
-
-#
-#   add the include paths for mast
-#
 set_property (TARGET mast APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
@@ -135,11 +139,6 @@ set_property (TARGET mast APPEND
 #
 target_link_libraries (gaussian_bump_convergence
 			mast)
-
-
-#
-#   add the include paths for the example
-#
 set_property (TARGET gaussian_bump_convergence APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
@@ -150,11 +149,6 @@ set_property (TARGET gaussian_bump_convergence APPEND
 #
 target_link_libraries (panel_flutter_convergence
 			mast)
-
-
-#
-#   add the include paths for the example
-#
 set_property (TARGET panel_flutter_convergence APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
@@ -164,11 +158,6 @@ set_property (TARGET panel_flutter_convergence APPEND
 #
 target_link_libraries (beam_flutter_sizing
 			mast)
-
-
-#
-#   add the include paths for the example
-#
 set_property (TARGET beam_flutter_sizing APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
@@ -179,12 +168,17 @@ set_property (TARGET beam_flutter_sizing APPEND
 #
 target_link_libraries (stiffened_panel_sizing
 			mast)
-
-
-#
-#   add the include paths for the example
-#
 set_property (TARGET stiffened_panel_sizing APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
+
+#
+#  tell cmake to link stiffened_panel_sizing example with mast library
+#
+target_link_libraries (structural_eigensolution
+			mast)
+set_property (TARGET structural_eigensolution APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
 

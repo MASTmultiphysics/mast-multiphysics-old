@@ -16,4 +16,7 @@
    <FileRef
       location = "group:stiffened_panel_sizing/stiffened_panel_sizing.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:structural_eigensolution/structural_eigensolution.xcodeproj">
+   </FileRef>
 </Workspace>

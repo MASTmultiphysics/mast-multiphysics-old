@@ -1,0 +1,129 @@
+analysis_type = structures
+#analysis_type = compressible_potential_fluid
+deltat = 1.0e-3
+n_timesteps = 1000
+pseudo_time_terminate_tolerance = 1.0e-7
+dc_recalculate_tolerance = 1.0e-4
+write_interval = 1
+
+timesolver_solver_quiet = false
+timesolver_min_deltat = 1.0e-10
+timesolver_maxgrowth = 2.0
+timesolver_mingrowth = 0.5
+timesolver_growth_exponent = 0.5
+timesolver_update_n_iters = 4
+amr_time_shrink_factor = 1.0
+timesolver_max_deltat = 10.0
+
+if_use_amr = false
+amr_threshold = 10.0
+n_uniform_refine = 0
+max_adaptivesteps = 4
+global_tolerance = 0.0
+n_elements = 10000
+max_h_level = 4
+refine_fraction = 0.60
+coarsen_fraction = 0.80
+coarsen_threshold = 0.8
+refine_strategy = 'mean_stddev' # error_fraction, error_tolerance, nelem_target, elem_fraction, mean_stddev
+error_norm = 'kelly' # uniform, kelly, patch
+
+max_nonlinear_iterations = 1
+relative_step_tolerance = 1.e-11
+relative_residual_tolerance = 1.0e-11
+absolute_residual_tolerance = 1.0e-11
+max_linear_iterations = 1000
+initial_linear_tolerance = 1.e-9
+
+continue_after_backtrack_failure = true
+continue_after_max_iterations = true
+require_residual_reduction = false
+
+
+solver_quiet = false
+print_residual_norms = true
+print_residuals = false
+print_jacobian_norms = false
+print_jacobians = false
+
+use_panel_mesh = true
+mesh_input = 'naca0012_mesh2.msh'
+
+ 
+dimension = 2
+elem_type = 'QUAD4'
+if_panel_mesh = true
+mesh_type = 'panel'
+if_cos_bump = false
+n_max_bumps_x = 1
+t_by_c = 0.05
+
+panel_bc_id = 10
+symmetry_bc_id = 11 
+
+nx_divs = 3
+x_div_loc = '0. .25 .75  1.'
+x_rel_dx  = '1. 1. 1. 1.'
+x_div_nelem = '1 2 1'
+
+ny_divs = 1
+y_div_loc = '0. 1.'
+y_rel_dx  = '1. 1.'
+y_div_nelem = '4'
+
+nz_divs = 0
+z_div_loc = ''
+z_rel_dx  = ''
+z_div_nelem = ''
+
+
+ug_k_divs = 1
+ug_lower_k = 0.
+ug_upper_k = 0.
+flutter_output = 'flutter_output.txt'
+
+rho    = 1.05
+mach   = 0.90
+temp   = 300.0
+cp     = 1003.0
+cv     = 716.0
+ref_c  = 1.0
+alt    =  0.
+
+youngs_modulus = 72.0e9
+poisson_ratio = 0.33
+material_density = 2700.
+shear_corr_factor = 0.83333
+thickness = .02
+
+
+extra_quadrature_order = 1
+fe_order = 1
+fe_family = 'LAGRANGE'
+
+body_roll_axis     = '1. 0. 0.'
+body_pitch_axis    = '0. 0. 1.'
+body_yaw_axis      = '0. 1. 0.'
+body_euler_angles  = '0. 0. 0.'
+body_angular_rates = '0. 0. 0.'
+
+
+if_reduced_freq = true
+frequency = 0.3
+
+
+n_ux_bc = 4
+ux_bc = '0 1 2 3'
+n_uy_bc = 4
+uy_bc = '0 1 2 3'
+n_uz_bc = 4
+uz_bc = '0 1 2 3'
+n_tx_bc =  0
+tx_bc = ''
+n_ty_bc = 0 
+ty_bc = ''
+n_tz_bc = 0
+tz_bc = ''
+
+modal_data = 'modal_data.in'
+
