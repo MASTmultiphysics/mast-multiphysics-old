@@ -38,6 +38,7 @@
 #include "FluidElems/fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
 #include "Aeroelasticity/ug_flutter_solver.h"
+#include "Aeroelasticity/noniterative_ug_flutter_solver.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
 #include "Mesh/panel_mesh.h"
 
@@ -350,7 +351,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     coupled_system.nm = nm;
     
     // create the solvers
-    MAST::UGFlutterSolver flutter_solver;
+    MAST::NoniterativeUGFlutterSolver flutter_solver;
     std::string flutter_output_nm = nm + "_flutter_output.txt";
     if (!init.comm().rank())
         flutter_solver.set_output_file(flutter_output_nm);
@@ -359,7 +360,9 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     flutter_solver.k_red_range.first     = fluid_infile("ug_lower_k", 0.0);
     flutter_solver.k_red_range.second    = fluid_infile("ug_upper_k", 0.35);
     flutter_solver.n_k_red_divs          = fluid_infile("ug_k_divs", 10);
-    
+    flutter_solver.v_ref_range.first     = fluid_infile("ug_lower_V", 10.0);
+    flutter_solver.v_ref_range.second    = fluid_infile("ug_upper_V", 1.e4);
+    flutter_solver.n_v_ref_divs          = fluid_infile("ug_V_divs", 5);
     
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
     std::set<unsigned int> dirichlet_dof_ids;
@@ -463,8 +466,12 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     
     // flutter solution
     flutter_solver.scan_for_roots();
-    if (!init.comm().rank())
+    
+    if (!init.comm().rank()) {
+        flutter_solver.print_sorted_roots();
         flutter_solver.print_crossover_points();
+    }
+    
     std::pair<bool, const MAST::FlutterRootBase*> root =
     flutter_solver.find_critical_root(1.e-8,10);
     
@@ -517,8 +524,8 @@ main(int argc, char* const argv[]) {
     << std::setw(35) << "time" << std::endl;
     
     
-    for (unsigned int p_order=1; p_order<5; p_order++) {
-        for (unsigned int i=0; i<n_increments; i++) {
+    for (unsigned int p_order=2; p_order<3; p_order++) {
+        for (unsigned int i=2; i<3; i++) {
             libMesh::out
             << "**************************************************************************" << std::endl
             << "             Analysis for p = " << p_order << "  mesh = " << i << std::endl

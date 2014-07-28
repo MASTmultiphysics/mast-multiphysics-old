@@ -26,14 +26,18 @@
 
 
 void
-MAST::UGFlutterRoot::init(const Real k, const Real b_ref,
+MAST::UGFlutterRoot::init(const Real k_red_val,
+                          const Real v_ref_val,
+                          const Real b_ref,
                           const Complex num,
                           const Complex den,
                           const ComplexMatrixX& Bmat,
                           const ComplexVectorX& evec_right,
                           const ComplexVectorX& evec_left)
 {
-    k_red = k;
+    k_red_ref = k_red_val;
+    V_ref     = v_ref_val;
+    k_red     = k_red_val;
     
     if (std::abs(den) > 0.)
     {
@@ -107,6 +111,8 @@ MAST::UGFlutterSolver::scan_for_roots() {
             
             prev_sol = sol.get();
 
+            sol->print(_output, _mode_output);
+
             // add the solution to this solver
             bool if_success =
             _flutter_solutions.insert(std::pair<Real, MAST::FlutterSolutionBase*>
@@ -130,9 +136,9 @@ MAST::UGFlutterSolver::bisection_search(const std::pair<MAST::FlutterSolutionBas
     
     // assumes that the upper k_val has +ve g val and lower k_val has -ve
     // k_val
-    Real lower_ref_val = ref_sol_range.first->ref_val("k_red"),
+    Real lower_ref_val = ref_sol_range.first->ref_val(),
     lower_g = ref_sol_range.first->get_root(root_num).g,
-    upper_ref_val = ref_sol_range.second->ref_val("k_red"),
+    upper_ref_val = ref_sol_range.second->ref_val(),
     upper_g = ref_sol_range.second->get_root(root_num).g,
     new_k = 0.;
     unsigned int n_iters = 0;
@@ -148,6 +154,8 @@ MAST::UGFlutterSolver::bisection_search(const std::pair<MAST::FlutterSolutionBas
         new_sol = analyze(new_k,
                           flight_condition->velocity_magnitude,
                           ref_sol_range.first).release();
+
+        new_sol->print(_output, _mode_output);
 
         // add the solution to this solver
         bool if_success =
@@ -237,7 +245,7 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
             return;
         
         // check if k=0 exists, and identify
-        if (fabs(sol_it->second->ref_val("k_red")) < tol) { // k = 0
+        if (fabs(sol_it->second->ref_val()) < tol) { // k = 0
             
             // k=0 makes sense only for divergence roots. Do not use them
             // for crossover points if a finite damping was seen. Hence,
@@ -274,8 +282,8 @@ void MAST::UGFlutterSolver::_identify_crossover_points()
             // do not use k_red = 0, or if the root is invalid
             if (sol_rit->second->get_root(i).if_nonphysical_root ||
                 sol_ritp1->second->get_root(i).if_nonphysical_root ||
-                fabs(sol_rit->second->ref_val("k_red")) < tol ||
-                fabs(sol_ritp1->second->ref_val("k_red")) < tol ||
+                fabs(sol_rit->second->ref_val()) < tol ||
+                fabs(sol_ritp1->second->ref_val()) < tol ||
                 fabs(sol_rit->second->get_root(i).g) > max_allowable_g ||
                 fabs(sol_ritp1->second->get_root(i).g) > max_allowable_g) {
                 // do nothing
@@ -337,8 +345,6 @@ MAST::UGFlutterSolver::analyze(const Real k_red,
     MAST::FrequencyDomainFlutterSolution* root =
     new MAST::FrequencyDomainFlutterSolution;
     root->init(*this, k_red, v_ref, flight_condition->ref_chord, ges);
-    root->print(_output, _mode_output);
-
     if (prev_sol)
         root->sort(*prev_sol);
     

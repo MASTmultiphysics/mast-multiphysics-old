@@ -59,7 +59,7 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     // set parameter values
     libMesh::Parameters& params = this->get_equation_systems().parameters;
     
-    unsigned int o = _infile("fe_order", 1);
+    unsigned int o = params.get<unsigned int>("p_order");// _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
@@ -486,19 +486,19 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
         }
     } // end of the quadrature point qp-loop
     
-//    libMesh::out << "inside element time derivative " << std::endl;
-//    c.get_elem().print_info();
-//    libMesh::out << "sol: " << std::endl; c.get_elem_solution().print(libMesh::out);
-//    libMesh::out << "res: " << std::endl; {
-//        DenseComplexVector vv; vv.resize(Fvec.size()/2);
-//        MAST::transform_to_elem_vector(vv, Fvec);
-//        vv.print(libMesh::out);
-//    }
-//    if (request_jacobian && c.elem_solution_derivative) {
-//        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
-//        MAST::transform_to_elem_matrix(mm, Kmat);
-//        mm.print(libMesh::out);
-//    }
+    /*libMesh::out << "inside element time derivative " << std::endl;
+    c.get_elem().print_info();
+    libMesh::out << "sol: " << std::endl; c.get_elem_solution().print(libMesh::out);
+    libMesh::out << "res: " << std::endl; {
+        DenseComplexVector vv; vv.resize(Fvec.size()/2);
+        MAST::transform_to_elem_vector(vv, Fvec);
+        vv.print(libMesh::out);
+    }
+    if (request_jacobian && c.elem_solution_derivative) {
+        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
+        MAST::transform_to_elem_matrix(mm, Kmat);
+        mm.print(libMesh::out);
+    }*/
     
     return request_jacobian;
 }
@@ -962,20 +962,20 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     }
 
     
-//    libMesh::out << "inside side constraint " << std::endl;
-//    libMesh::out << "elem solution" << std::endl; c.get_elem_solution().print(libMesh::out);
-//    libMesh::out << mechanical_bc_type << std::endl;
-//    libMesh::out << "bc vec: " << std::endl;
-//    {
-//        DenseComplexVector vv; vv.resize(Fvec.size()/2);
-//        MAST::transform_to_elem_vector(vv, Fvec);
-//        vv.print(libMesh::out);
-//    }
-//    if (request_jacobian && c.elem_solution_derivative) {
-//        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
-//        MAST::transform_to_elem_matrix(mm, Kmat);
-//        mm.print(libMesh::out);
-//    }
+    /*libMesh::out << "inside side constraint " << std::endl;
+    libMesh::out << "elem solution" << std::endl; c.get_elem_solution().print(libMesh::out);
+    libMesh::out << mechanical_bc_type << std::endl;
+    libMesh::out << "bc vec: " << std::endl;
+    {
+        DenseComplexVector vv; vv.resize(Fvec.size()/2);
+        MAST::transform_to_elem_vector(vv, Fvec);
+        vv.print(libMesh::out);
+    }
+    if (request_jacobian && c.elem_solution_derivative) {
+        DenseComplexMatrix mm; mm.resize(Kmat.m()/2, Kmat.n()/2);
+        MAST::transform_to_elem_matrix(mm, Kmat);
+        mm.print(libMesh::out);
+    }*/
     
     return request_jacobian;
 }

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		699D128A1985488D006B1320 /* noniterative_ug_flutter_solver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 699D12881985488D006B1320 /* noniterative_ug_flutter_solver.cpp */; };
+		699D128B1985488D006B1320 /* noniterative_ug_flutter_solver.h in Headers */ = {isa = PBXBuildFile; fileRef = 699D12891985488D006B1320 /* noniterative_ug_flutter_solver.h */; };
 		EB2871A419802F0000264599 /* aerodynamic_model.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28711F19802F0000264599 /* aerodynamic_model.h */; };
 		EB2871A519802F0000264599 /* cfd_aerodynamic_model.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28712019802F0000264599 /* cfd_aerodynamic_model.h */; };
 		EB2871A619802F0000264599 /* coupled_aero_structural_model.h in Headers */ = {isa = PBXBuildFile; fileRef = EB28712119802F0000264599 /* coupled_aero_structural_model.h */; };
@@ -127,6 +129,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		699D12881985488D006B1320 /* noniterative_ug_flutter_solver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = noniterative_ug_flutter_solver.cpp; sourceTree = "<group>"; };
+		699D12891985488D006B1320 /* noniterative_ug_flutter_solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noniterative_ug_flutter_solver.h; sourceTree = "<group>"; };
 		EB28710119802EB200264599 /* libmast.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmast.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB28711F19802F0000264599 /* aerodynamic_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aerodynamic_model.h; sourceTree = "<group>"; };
 		EB28712019802F0000264599 /* cfd_aerodynamic_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cfd_aerodynamic_model.h; sourceTree = "<group>"; };
@@ -326,6 +330,8 @@
 				EB28712C19802F0000264599 /* time_domain_flutter_solver.h */,
 				EB28712D19802F0000264599 /* ug_flutter_solver.cpp */,
 				EB28712E19802F0000264599 /* ug_flutter_solver.h */,
+				699D12881985488D006B1320 /* noniterative_ug_flutter_solver.cpp */,
+				699D12891985488D006B1320 /* noniterative_ug_flutter_solver.h */,
 			);
 			path = Aeroelasticity;
 			sourceTree = "<group>";
@@ -525,6 +531,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EB28720919802F0000264599 /* bending_structural_elem.h in Headers */,
+				699D128B1985488D006B1320 /* noniterative_ug_flutter_solver.h in Headers */,
 				EB2871BE19802F0000264599 /* boundary_surface_motion.h in Headers */,
 				EB2871FB19802F0000264599 /* multilayer_1d_section_element_property_card.h in Headers */,
 				EB28720719802F0000264599 /* bending_operator.h in Headers */,
@@ -673,6 +680,7 @@
 				EB2871E719802F0000264599 /* ksgcsu07.f in Sources */,
 				EB2871D319802F0000264599 /* linearized_fluid_system.cpp in Sources */,
 				EB28720F19802F0000264599 /* structural_element_1D.cpp in Sources */,
+				699D128A1985488D006B1320 /* noniterative_ug_flutter_solver.cpp in Sources */,
 				EB28720D19802F0000264599 /* structural_elem_base.cpp in Sources */,
 				EB2871FA19802F0000264599 /* multilayer_1d_section_element_property_card.cpp in Sources */,
 				EB28720819802F0000264599 /* bending_structural_elem.cpp in Sources */,

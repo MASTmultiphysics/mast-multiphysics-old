@@ -34,7 +34,9 @@ namespace MAST {
         
         virtual ~UGFlutterRoot() {}
         
-        virtual void init(const Real ref_val, const Real b_ref,
+        virtual void init(const Real k_red_ref,
+                          const Real V_ref,
+                          const Real b_ref,
                           const Complex num, const Complex den,
                           const ComplexMatrixX& Bmat,
                           const ComplexVectorX& evec_right,

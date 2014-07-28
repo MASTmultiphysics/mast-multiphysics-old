@@ -200,6 +200,8 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
         << "** Root # "
         << std::setw(5) << i << " **" << std::endl
         << std::setw(15) << "k"
+        << std::setw(15) << "k_ref"
+        << std::setw(15) << "V_ref"
         << std::setw(15) << "Re"
         << std::setw(15) << "Im"
         << std::setw(15) << "g"
@@ -217,6 +219,8 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
             
             *output
             << std::setw(15) << root.k_red
+            << std::setw(15) << root.k_red_ref
+            << std::setw(15) << root.V_ref
             << std::setw(15) << std::real(root.root)
             << std::setw(15) << std::imag(root.root)
             << std::setw(15) << root.g;

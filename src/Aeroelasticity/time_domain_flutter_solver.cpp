@@ -80,7 +80,7 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
             return;
         
         // check if k=0 exists, and identify
-        if (fabs(sol_it->second->ref_val("v_ref")) < tol) { // k = 0
+        if (fabs(sol_it->second->ref_val()) < tol) { // k = 0
             
             // k=0 makes sense only for divergence roots. Do not use them
             // for crossover points if a finite damping was seen. Hence,
@@ -117,8 +117,8 @@ MAST::TimeDomainFlutterSolver::_identify_crossover_points()
             // do not use k_red = 0, or if the root is invalid
             if (sol_rit->second->get_root(i).if_nonphysical_root ||
                 sol_ritp1->second->get_root(i).if_nonphysical_root ||
-                fabs(sol_rit->second->ref_val("v_ref")) < tol ||
-                fabs(sol_ritp1->second->ref_val("v_ref")) < tol ||
+                fabs(sol_rit->second->ref_val()) < tol ||
+                fabs(sol_ritp1->second->ref_val()) < tol ||
                 fabs(sol_rit->second->get_root(i).g) > max_allowable_g ||
                 fabs(sol_ritp1->second->get_root(i).g) > max_allowable_g) {
                 // do nothing
@@ -179,7 +179,6 @@ MAST::TimeDomainFlutterSolver::analyze(const Real v_ref,
     MAST::TimeDomainFlutterSolution* root =
     new MAST::TimeDomainFlutterSolution;
     root->init(*this, v_ref, flight_condition->ref_chord, ges);
-    root->print(_output, _mode_output);
     
     if (prev_sol)
         root->sort(*prev_sol);

@@ -40,6 +40,8 @@ namespace MAST {
         FlutterRootBase():
         if_nonphysical_root(false),
         has_sensitivity_data(false),
+        k_red_ref(0.),
+        V_ref(0.),
         V(0.),
         g(0.),
         omega(0.),
@@ -56,6 +58,8 @@ namespace MAST {
         FlutterRootBase(const FlutterRootBase& f):
         if_nonphysical_root(f.if_nonphysical_root),
         has_sensitivity_data(f.has_sensitivity_data),
+        k_red_ref(f.k_red_ref),
+        V_ref(f.V_ref),
         V(f.V),
         g(f.g),
         omega(f.omega),
@@ -77,7 +81,7 @@ namespace MAST {
         
         bool has_sensitivity_data;
         
-        Real V, g, omega, k_red, V_sens;
+        Real k_red_ref, V_ref, V, g, omega, k_red, V_sens;
         
         Complex root, root_sens, k_red_sens;
         
@@ -99,7 +103,9 @@ namespace MAST {
         
         virtual ~FrequencyDomainFlutterRoot() {}
 
-        virtual void init(const Real ref_val, const Real b_ref,
+        virtual void init(const Real k_red_ref,
+                          const Real v_ref,
+                          const Real b_ref,
                           const Complex num,
                           const Complex den,
                           const ComplexMatrixX& Bmat,
@@ -131,7 +137,8 @@ namespace MAST {
     class FlutterSolutionBase
     {
     public:
-        FlutterSolutionBase()
+        FlutterSolutionBase():
+        _ref_val(0.)
         {}
         
         /*!
@@ -148,13 +155,8 @@ namespace MAST {
         /*!
          *   the reduced frequency for this solution
          */
-        Real ref_val(const std::string& nm) const {
-            std::map<std::string, Real>::const_iterator it =
-            _ref_vals.find(nm);
-            
-            libmesh_assert(it != _ref_vals.end());
-            
-            return it->second;
+        Real ref_val() const {
+            return _ref_val;
         }
         
         /*!
@@ -182,6 +184,18 @@ namespace MAST {
         void sort(const MAST::FlutterSolutionBase& sol);
         
         /*!
+         *
+         */
+        void mark_inconsistent_roots_as_nonphysical(const Real ref_val,
+                                                    const Real tol);
+
+        /*!
+         *
+         */
+        void swap_root(MAST::FlutterSolutionBase& sol,
+                       unsigned int root_num);
+        
+        /*!
          *    prints the data and modes from this solution
          */
         void print(std::ostream& output, std::ostream& mode_output);
@@ -194,7 +208,7 @@ namespace MAST {
          *    solver this could be velocity. PK solver will need additional 
          *    reference values, provided in the inherited class.
          */
-        std::map<std::string, Real> _ref_vals;
+        Real _ref_val;
         
         std::vector<MAST::FlutterRootBase*> _roots;
     };

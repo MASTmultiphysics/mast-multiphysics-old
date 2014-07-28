@@ -95,6 +95,29 @@ MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
 
 
 
+void
+MAST::FlutterSolutionBase::swap_root(MAST::FlutterSolutionBase& sol,
+                                     unsigned int root_num) {
+    libmesh_assert(root_num < _roots.size());
+    libmesh_assert(root_num < sol._roots.size());
+    
+    std::swap(_roots[root_num], sol._roots[root_num]);
+}
+
+
+
+void
+MAST::FlutterSolutionBase::mark_inconsistent_roots_as_nonphysical(const Real ref_val,
+                                                                  const Real tol) {
+    // iterate over the roots and identify the roots where the reference value
+    // differs from the calculated value by more than the tolerance
+    
+    for (unsigned int i=0; i<_roots.size(); i++)
+        if (!_roots[i]->if_nonphysical_root &&
+            fabs(_roots[i]->V - ref_val) > tol)
+            _roots[i]->if_nonphysical_root = true;
+}
+
 
 
 void
@@ -107,8 +130,7 @@ MAST::FrequencyDomainFlutterSolution::init (const MAST::FlutterSolverBase& solve
     // make sure that it hasn't already been initialized
     libmesh_assert(!_roots.size());
     
-    _ref_vals["k_red"] = k_red;
-    _ref_vals["v_ref"] = v_ref;
+    _ref_val = k_red;
     
     // iterate over the roots and initialize the vector
     const ComplexMatrixX &B = eig_sol.B(),
@@ -122,7 +144,7 @@ MAST::FrequencyDomainFlutterSolution::init (const MAST::FlutterSolverBase& solve
         _roots[i] = solver.build_flutter_root().release();
         MAST::FrequencyDomainFlutterRoot* root =
         dynamic_cast<MAST::FrequencyDomainFlutterRoot*>(_roots[i]);
-        root->init(k_red, bref,
+        root->init(k_red, v_ref, bref,
                    num(i), den(i),
                    B,
                    VR.col(i), VL.col(i));
@@ -141,7 +163,7 @@ MAST::TimeDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
     // make sure that it hasn't already been initialized
     libmesh_assert(!_roots.size());
     
-    _ref_vals["v_ref"] = v_ref;
+    _ref_val = v_ref;
     // iterate over the roots and initialize the vector
     const RealMatrixX &B = eig_sol.B();
     const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
@@ -172,15 +194,13 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
     libmesh_assert(nvals);
 
     // first write the reference values of the root
-    std::map<std::string, Real>::const_iterator it = _ref_vals.begin();
-    for ( ; it != _ref_vals.end(); it++) {
-        output << it->first << " = " << it->second << std::endl;
-        mode_output << it->first << " = " << it->second << std::endl;
-    }
+    output << " val = " << _ref_val << std::endl;
 
     // now write the root
     output
     << std::setw(5) << "#"
+    << std::setw(15) << "k_ref"
+    << std::setw(15) << "V_ref"
     << std::setw(15) << "Re"
     << std::setw(15) << "Im"
     << std::setw(15) << "g"
@@ -226,6 +246,8 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
         
         // flutter root details
         output
+        << std::setw(15) << root.k_red_ref
+        << std::setw(15) << root.V_ref
         << std::setw(15) << std::real(root.root)
         << std::setw(15) << std::imag(root.root)
         << std::setw(15) << root.g
