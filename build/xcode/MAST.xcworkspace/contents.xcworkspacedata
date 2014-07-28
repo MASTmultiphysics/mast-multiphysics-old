@@ -7,4 +7,7 @@
    <FileRef
       location = "group:gaussian_bump_convergence/gaussian_bump_convergence.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:panel_flutter_convergence/panel_flutter_convergence.xcodeproj">
+   </FileRef>
 </Workspace>

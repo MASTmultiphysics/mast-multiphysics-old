@@ -76,7 +76,6 @@ add_library (gcmma ${gcmma_source_files})
 file (GLOB_RECURSE mast_source_files ../src/*.cpp ../src/*.h)
 add_library (mast ${mast_source_files})
 
-
 #
 #  add files for executables in the examples and add it to cmake's build list
 #
@@ -85,6 +84,13 @@ file (GLOB_RECURSE gaussian_bump_convergence_source_files
 	../examples/gaussian_bump_convergence/*.h)
 add_executable (gaussian_bump_convergence ${gaussian_bump_convergence_source_files})
 
+#
+#  add files for executables in the examples and add it to cmake's build list
+#
+file (GLOB_RECURSE panel_flutter_convergence_source_files 
+	../examples/panel_flutter_convergence/*.cpp 
+	../examples/panel_flutter_convergence/*.h)
+add_executable (panel_flutter_convergence ${panel_flutter_convergence_source_files})
 
 #
 #  add files for executables in the examples and add it to cmake's build list
@@ -115,6 +121,7 @@ set_property (TARGET mast APPEND
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
 
+
 #
 #  tell cmake to link gaussian_bump_convergence example with mast library
 #
@@ -131,7 +138,21 @@ set_property (TARGET gaussian_bump_convergence APPEND
 
 
 #
-#  tell cmake to link gaussian_bump_convergence example with mast library
+#  tell cmake to link panel_flutter_convergence example with mast library
+#
+target_link_libraries (panel_flutter_convergence
+			mast)
+
+
+#
+#   add the include paths for the example
+#
+set_property (TARGET panel_flutter_convergence APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
+#
+#  tell cmake to link beam_flutter_sizing example with mast library
 #
 target_link_libraries (beam_flutter_sizing
 			mast)
@@ -143,3 +164,5 @@ target_link_libraries (beam_flutter_sizing
 set_property (TARGET beam_flutter_sizing APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
+
+
