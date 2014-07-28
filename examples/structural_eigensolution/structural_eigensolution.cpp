@@ -69,9 +69,12 @@
 
 
 // The main program.
-int structural_driver (libMesh::LibMeshInit& init, GetPot& infile,
-                       int argc, char* const argv[])
+int main (int argc, char* const argv[])
 {
+    
+    libMesh::LibMeshInit init(argc, argv);
+    
+    GetPot infile("input.in");
     
     // Read in parameters from the input file
     const Real global_tolerance          = infile("global_tolerance", 0.);
