@@ -22,4 +22,7 @@
    <FileRef
       location = "group:fluid_analysis/fluid_analysis.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:stiffened_panel_flutter_sizing/stiffened_panel_flutter_sizing.xcodeproj">
+   </FileRef>
 </Workspace>
