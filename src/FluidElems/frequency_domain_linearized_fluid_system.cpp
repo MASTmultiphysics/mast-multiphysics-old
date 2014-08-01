@@ -164,9 +164,9 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative
 {
     libmesh_assert(_if_localized_sol);
     
-    if (if_k_red_sensitivity)
-        return element_time_derivative_k_sens(request_jacobian, context);
-        
+    if (if_k_red_sensitivity || if_Vref_sensitivity)
+        return element_time_derivative_sens(request_jacobian, context);
+    
     libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
     libMesh::FEBase* elem_fe;
@@ -510,8 +510,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 {
     libmesh_assert(_if_localized_sol);
 
-    if (if_k_red_sensitivity)
-        return side_time_derivative_k_sens(request_jacobian, context);
+    if (if_k_red_sensitivity || if_Vref_sensitivity)
+        return side_time_derivative_sens(request_jacobian, context);
 
     libMesh::FEMContext &c = libMesh::libmesh_cast_ref<libMesh::FEMContext&>(context);
     
@@ -984,7 +984,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
 
 
 
-bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_k_sens
+bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_sens
 (bool request_jacobian, libMesh::DiffContext &context)
 {
     libmesh_assert(_if_localized_sol);
@@ -1074,14 +1074,27 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_k_sens
     sol_magnitude.add(1., ref_sol);
     
     Complex iota(0, 1.),
-    mass_scaling = iota*perturbed_surface_motion->frequency,
-    mass_scaling_sens = iota,
-    stiffness_scaling = 1.0,
-    stiffness_scaling_sens = 0.;
-    
+    mass_scaling = 0., mass_scaling_sens = 0.,
+    stiffness_scaling = 0., stiffness_scaling_sens = 0.;
+
+    mass_scaling = iota*perturbed_surface_motion->frequency;
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
         perturbed_surface_motion->velocity;
+    else
+        stiffness_scaling = 1.;
+
+    if (if_k_red_sensitivity) {
+        mass_scaling_sens = iota;
+        stiffness_scaling_sens = 0.;
+    }
+    else if (if_Vref_sensitivity &&
+             this->get_equation_systems().parameters.get<bool>("if_reduced_freq")) {
+        mass_scaling_sens = 0.;
+        stiffness_scaling_sens = -flight_condition->ref_chord /
+        pow(perturbed_surface_motion->velocity, 2);
+    }
+    
     
     // assuming that all variables have the same interpolation
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi();
@@ -1146,31 +1159,112 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_k_sens
                 
         // this is the sensitivity of the Jacobian times the base solution
         Kmat_local.zero();
+
+        //
+        // contribution from unsteady term
+        //
+        // Galerkin contribution of velocity
+        B_mat.right_multiply_transpose(mat_n2n2, B_mat); // B^T B
+        mat_n2n2_complex = mat_n2n2;
+        mat_n2n2_complex *= JxW[qp]*mass_scaling_sens; // mass term
+        MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+        
+        // LS contribution of velocity
+        LS_mat.get_transpose(mat_n2n1);
+        B_mat.left_multiply(mat_n2n2, mat_n2n1); // LS^T tau Bmat
+        mat_n2n2_complex = mat_n2n2;
+        mat_n2n2_complex *= JxW[qp]*mass_scaling_sens; // mass term
+        MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+        
+        //
+        // contribution from stiffness term
+        //
+        A_sens.zero();
+        
+        for (unsigned int i_dim=0; i_dim<dim; i_dim++)
         {
-            // contribution from unsteady term
-            // Galerkin contribution of velocity
-            B_mat.right_multiply_transpose(mat_n2n2, B_mat); // B^T B
+            // Galerkin contribution from the advection flux terms
+            B_mat.left_multiply(mat_n1n2, Ai_advection[i_dim]);
+            dB_mat[i_dim].right_multiply_transpose
+            (mat_n2n2, mat_n1n2); // dBw/dx_i^T  d dF^adv_i/ dU
             mat_n2n2_complex = mat_n2n2;
-            mat_n2n2_complex *= JxW[qp]*mass_scaling_sens; // mass term
+            mat_n2n2_complex *= -JxW[qp]*stiffness_scaling_sens;
             MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
             
-            // LS contribution of velocity
+            
+            // discontinuity capturing term
+            dB_mat[i_dim].right_multiply_transpose(mat_n2n2,
+                                                   dB_mat[i_dim]);
+            mat_n2n2_complex = mat_n2n2;
+            mat_n2n2_complex *= JxW[qp]*diff_val(i_dim)*stiffness_scaling_sens;
+            MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+            
+            
+            if (_if_full_linearization)
+            {
+                // contribution from sensitivity of A matrix
+                dB_mat[i_dim].vector_mult(vec2_n1, ref_sol);
+                for (unsigned int i_cvar=0; i_cvar<n1; i_cvar++)
+                {
+                    flux_jacobian_sens[i_dim][i_cvar].vector_mult
+                    (vec1_n1, vec2_n1);
+                    for (unsigned int i_phi=0; i_phi<n_phi; i_phi++)
+                        A_sens.add_column((n_phi*i_cvar)+i_phi,
+                                          phi[i_phi][qp], vec1_n1); // assuming that all variables have same n_phi
+                }
+            }
+            
+            if (_if_viscous)
+            {
+                for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
+                {
+                    this->calculate_diffusion_flux_jacobian
+                    (i_dim, deriv_dim, primitive_sol, mat_n1n1); // Kij
+                    dB_mat[deriv_dim].left_multiply(mat_n1n2,
+                                                    mat_n1n1); // Kij dB/dx_j
+                    dB_mat[i_dim].right_multiply_transpose
+                    (mat_n2n2, mat_n1n2); // dB/dx_i^T Kij dB/dx_j
+                    mat_n2n2_complex = mat_n2n2;
+                    mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
+                    MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+                }
+            }
+        }
+        
+        // Lease square contribution of flux gradient
+        LS_mat.get_transpose(mat_n2n1);
+        mat_n2n1.right_multiply(Ai_Bi_advection); // LS^T tau d^2 dF^adv_i / dx dU
+        mat_n2n2_complex = mat_n2n1;
+        mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
+        MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+        
+        if (_if_full_linearization)
+        {
             LS_mat.get_transpose(mat_n2n1);
-            B_mat.left_multiply(mat_n2n2, mat_n2n1); // LS^T tau Bmat
-            mat_n2n2_complex = mat_n2n2;
-            mat_n2n2_complex *= JxW[qp]*mass_scaling_sens; // mass term
+            mat_n2n1.right_multiply(A_sens); // LS^T tau d^2F^adv_i / dx dU  (Ai sensitivity)
+            mat_n2n2_complex = mat_n2n1;
+            mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
             MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
             
-            Kmat_local.vector_mult(vec6, base_sol);
-            Fvec.add(1., vec6);
+            // contribution from sensitivity of the LS.tau matrix
+            mat_n2n2_complex = LS_sens;
+            mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
+            MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
         }
 
+        
+        // Jacobian sensitivity times the solution vector gives the force vector
+        Kmat_local.vector_mult(vec6, base_sol);
+        Fvec.add(1., vec6);
+
+        
         
         // the Jacobian is always calculated, but added only if
         // request_jacobian is true
         // contribution from unsteady term
         // Galerkin contribution of velocity
         Kmat_local.zero();
+        
         B_mat.right_multiply_transpose(mat_n2n2, B_mat); // B^T B
         mat_n2n2_complex = mat_n2n2;
         mat_n2n2_complex *= JxW[qp]*mass_scaling; // mass term
@@ -1287,7 +1381,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_k_sens
 
 
 
-bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
+bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
 (bool request_jacobian, libMesh::DiffContext &context)
 {
     libmesh_assert(_if_localized_sol);
@@ -1395,7 +1489,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
     DenseComplexMatrix mat_n2n2_complex;
     DenseRealVector  normal, normal_local, vec1, vec2_n1, vec6,
     vec3_n1, U_vec_interpolated, conservative_sol, ref_sol, temp_grad, uvec,
-    dnormal_steady_real, surface_steady_disp, surface_steady_vel;
+    dnormal_steady_real, surface_steady_disp, surface_steady_vel, base_sol;
     DenseComplexVector flux, vec1_n2,
     surface_unsteady_vel, dnormal_unsteady, duvec, surface_unsteady_disp,
     conservative_deltasol, complex_elem_sol, dnormal_steady;
@@ -1404,7 +1498,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
     normal.resize(spatial_dim); normal_local.resize(dim); vec1.resize(n_dofs);
     flux.resize(n1); vec1_n2.resize(n_dofs); vec2_n1.resize(dim+2);
     vec3_n1.resize(dim+2); conservative_deltasol.resize(dim+2);
-    U_vec_interpolated.resize(n1); temp_grad.resize(dim);
+    U_vec_interpolated.resize(n1); temp_grad.resize(dim); base_sol.resize(2*n_dofs);
     ref_sol.resize(n_dofs); complex_elem_sol.resize(n_dofs);
     dnormal_steady.resize(spatial_dim); dnormal_steady_real.resize(spatial_dim);
     surface_unsteady_disp.resize(spatial_dim);  surface_steady_vel.resize(spatial_dim);
@@ -1421,26 +1515,42 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
     Kmat_viscous.resize(n1, n_dofs);
     A_mat.resize(dim+2, dim+2); stress_tensor.resize(dim, dim);
     
-    
+
+    MAST::transform_to_elem_vector(complex_elem_sol, c.get_elem_solution());
     
     // element dofs from steady solution to calculate the linearized quantities
     libMesh::System& fluid =
     this->get_equation_systems().get_system<libMesh::System>("FluidSystem");
-    
-    std::vector<libMesh::dof_id_type> fluid_dof_indices;
+
+    std::vector<libMesh::dof_id_type> fluid_dof_indices, base_sol_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
+    base_sol_dof_indices = context.get_dof_indices();
     
     for (unsigned int i=0; i<n_dofs; i++)
         ref_sol(i) = (*_local_fluid_solution)(fluid_dof_indices[i]);
     
+    for (unsigned int i=0; i<n_dofs*2; i++)
+        base_sol(i) =  (*base_solution)(base_sol_dof_indices[i]);
+
     MAST::transform_to_elem_vector(complex_elem_sol, c.get_elem_solution());
     
-    Complex iota(0, 1.);
-    Real stiffness_scaling = 1.0,
-    stiffness_scaling_sens = 0.;
+    Complex iota(0, 1.),
+    stiffness_scaling = 0., stiffness_scaling_sens = 0.;
+    
     if (this->get_equation_systems().parameters.get<bool>("if_reduced_freq"))
         stiffness_scaling = flight_condition->ref_chord /
         perturbed_surface_motion->velocity;
+    else
+        stiffness_scaling = 1.;
+    
+    if (if_k_red_sensitivity) {
+        stiffness_scaling_sens = 0.;
+    }
+    else if (if_Vref_sensitivity &&
+             this->get_equation_systems().parameters.get<bool>("if_reduced_freq")) {
+        stiffness_scaling_sens = -flight_condition->ref_chord /
+        pow(perturbed_surface_motion->velocity, 2);
+    }
     
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Complex> delta_p_sol;
@@ -1485,9 +1595,24 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
                 delta_p_sol.zero();
                 delta_p_sol.init(p_sol, conservative_deltasol);
                 
-                // this term is independent of the frequency, hence the
-                // sensitivity is zero
+                // calculate the sensitivity of this term
+                Kmat_local.zero();
+                this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+                (p_sol, 0., face_normals[qp], dnormal_steady_real, A_mat);
                 
+                B_mat.left_multiply(mat_n1n2, A_mat); // A B
+                B_mat.right_multiply_transpose(mat_n2n2,
+                                               mat_n1n2); // B^T A B
+                mat_n2n2_complex = mat_n2n2;
+                mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
+                MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+                
+                // calculate the residual contribution from this
+                Kmat_local.vector_mult(vec6, base_sol);
+                Fvec.add(1., vec6);
+                
+                
+                // now calculate the Jacobian
                 Kmat_local.zero();
                 
                 this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
@@ -1549,6 +1674,14 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
                                                                   surface_unsteady_vel,
                                                                   dnormal_unsteady);
                 
+                // the sensitivity of the forcing wrt Vref is zero
+                if (if_Vref_sensitivity) {
+                    surface_unsteady_disp.zero();
+                    surface_unsteady_vel.zero();
+                    dnormal_unsteady.zero();
+                }
+                    
+                
                 // scale just the unsteady velocity term by 1/stiffness_scaling
                 // since this is the only frequency related term
                 surface_unsteady_vel *= (1./stiffness_scaling);
@@ -1593,25 +1726,39 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
                     dui_ni_unsteady += // delta_wi_dot * ni
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
-                // the sensitivity term will not include this
-                //dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
                 
                 // now prepare the flux vector
                 flux.zero();
                 flux.add(dui_ni_unsteady, conservative_sol);
-                //flux.add(ui_ni_steady, conservative_deltasol);
                 flux(n1-1) += dui_ni_unsteady*p_sol.p;// + ui_ni_steady*delta_p_sol.dp;
-                
-                //for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                //    flux(i_dim+1) += delta_p_sol.dp * face_normals[qp](i_dim);
                 
                 B_mat.vector_mult_transpose(vec1_n2, flux);
                 vec1_n2.scale(JxW[qp]*stiffness_scaling);
                 MAST::add_to_assembled_vector(Fvec, vec1_n2);
 
-                // the Jacobian sensitivity wrt k_red is zero. So, nothing is
-                // done for that.
-
+                //
+                // sensitivity of Jacobian times the state vector
+                //
+                Kmat_local.zero();
+                this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
+                (p_sol, std::real(ui_ni_steady), face_normals[qp],
+                 dnormal_steady_real, A_mat);
+                
+                B_mat.left_multiply(mat_n1n2, A_mat); // A B
+                B_mat.right_multiply_transpose(mat_n2n2,
+                                               mat_n1n2); // B^T A B
+                mat_n2n2_complex = mat_n2n2;
+                mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
+                MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+                
+                // add the residual contribution
+                Kmat_local.vector_mult(vec6, base_sol);
+                Fvec.add(1., vec6);
+                
+                
+                //
+                // now calculate the Jacobian
+                //
                 Kmat_local.zero();
                 
                 this->calculate_advection_flux_jacobian_for_moving_solid_wall_boundary
@@ -1654,16 +1801,58 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_k_sens
                 this->calculate_advection_left_eigenvector_and_inverse_for_normal
                 (p_sol, face_normals[qp], eig_val, l_eig_vec, l_eig_vec_inv_tr);
                 
-                // the sensitivity of this boundary condition wrt k is zero.
-                // Hence, it does not contribute the force vector and only
-                // the Jacobian is included.
-                
+                //
+                // sensitivity of Jacobian times the base solution
+                //
                 Kmat_local.zero();
                 
                 // terms with negative eigenvalues do not contribute to the Jacobian
                 
                 // now calculate the Jacobian for eigenvalues greater than 0, the characteristics
                 // go out of the domain, so that the flux is evaluated using the local solution
+                mat_n1n1 = l_eig_vec_inv_tr;
+                for (unsigned int j=0; j<n1; j++)
+                    if (eig_val(j, j) > 0)
+                        mat_n1n1.scale_column(j, eig_val(j, j)); // L^-T [omaga]_{+}
+                    else
+                        mat_n1n1.scale_column(j, 0.0);
+                mat_n1n1.right_multiply_transpose(l_eig_vec); // A_{+} = L^-T [omaga]_{+} L^T
+                B_mat.left_multiply(mat_n1n2, mat_n1n1);
+                B_mat.right_multiply_transpose(mat_n2n2, mat_n1n2); // B^T A_{+} B   (this is flux going out of the solution domain)
+                
+                mat_n2n2_complex = mat_n2n2;
+                mat_n2n2_complex *= JxW[qp]*stiffness_scaling_sens;
+                MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+                
+                if (_if_viscous)
+                {
+                    // contribution from diffusion flux
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                        for (unsigned int deriv_dim=0; deriv_dim<dim; deriv_dim++)
+                        {
+                            this->calculate_diffusion_flux_jacobian
+                            (i_dim, deriv_dim, p_sol, mat_n1n1); // Kij
+                            dB_mat[deriv_dim].left_multiply
+                            (mat_n1n2, mat_n1n1); // Kij dB/dx_j
+                            B_mat.right_multiply_transpose
+                            (mat_n2n2, mat_n1n2); // B^T Kij dB/dx_j
+                            mat_n2n2_complex = mat_n2n2;
+                            mat_n2n2_complex *= -JxW[qp]*stiffness_scaling_sens;
+                            MAST::add_to_assembled_matrix(Kmat_local, mat_n2n2_complex);
+                        }
+                }
+                
+                // calculate the residual contribution
+                Kmat_local.vector_mult(vec6, base_sol);
+                Fvec.add(1., vec6);
+                
+                
+                // terms with negative eigenvalues do not contribute to the Jacobian
+                
+                // now calculate the Jacobian for eigenvalues greater than 0, the characteristics
+                // go out of the domain, so that the flux is evaluated using the local solution
+                Kmat_local.zero();
+
                 mat_n1n1 = l_eig_vec_inv_tr;
                 for (unsigned int j=0; j<n1; j++)
                     if (eig_val(j, j) > 0)

@@ -105,6 +105,17 @@ namespace MAST {
         
 
         /*!
+         *    Newton method to look for cross-over point method search
+         */
+        virtual std::pair<bool, MAST::FlutterSolutionBase*>
+        newton_search(const MAST::FlutterSolutionBase& init_sol,
+                      const unsigned int root_num,
+                      const Real tol,
+                      const unsigned int max_iters) {
+            libmesh_error();
+        }
+
+        /*!
          *   performs an eigensolution at the specified reduced frequency, and
          *   sort the roots based on the provided solution pointer. If the
          *   pointer is NULL, then no sorting is performed
@@ -146,7 +157,17 @@ namespace MAST {
                                                        const Real v_ref,
                                                        ComplexMatrixX& m, // mass & aero
                                                        ComplexMatrixX& k); // aero operator
-        
+
+        /*!
+         *    initializes the matrices for the specified k_red. UG does not account
+         *    for structural damping.
+         */
+        void
+        initialize_matrix_sensitivity_for_V_ref(const Real k_red,
+                                                const Real v_ref,
+                                                ComplexMatrixX& m, // mass & aero
+                                                ComplexMatrixX& k); // aero operator
+
     };
 }
 

@@ -148,6 +148,23 @@ public:
         libmesh_assert(false);
     }
 
+    
+    /*!
+     *    updates the aerodynamic matrix operator sensitivity wrt reduced
+     *    frequency in \par a for the
+     *    reduced frequency \par k_red. This method projects the aero
+     *    matrices onto the structural degrees of freedom, so needs the
+     *    coupling matrices from Structures->Fluid and Fluid->Structures.
+     */
+    virtual bool
+    get_aero_operator_matrix_sensitivity_for_V_ref(const Real k_red,
+                                                   const Real v_ref,
+                                                   ComplexMatrixX& a)
+    {
+        // needs to be implemented by the inherited class
+        libmesh_assert(false);
+    }
+
     /*!
      *    updates the aerodynamic damping matrix operator in \par a. This is
      *    applicable for only the time-domain methods. Returns \par false if

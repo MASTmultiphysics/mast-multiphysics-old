@@ -186,80 +186,130 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
                                                  const unsigned int max_iters) {
     
     std::pair<bool, MAST::FlutterSolutionBase*> rval(false, NULL);
-/*    // assumes that the upper k_val has +ve g val and lower k_val has -ve
+    // assumes that the upper k_val has +ve g val and lower k_val has -ve
     // k_val
-    Real
-    k_red      = init_sol.get_root(root_num).k_red_ref,
-    g          = init_sol.get_root(root_num).g,
-    v_ref      = init_sol.get_root(root_num).V,
-    new_k_red = k_red,
-    new_v_ref = v_ref;
+    Real k_red, g, v_ref;
     unsigned int n_iters = 0;
     
     std::auto_ptr<MAST::FlutterSolutionBase> new_sol;
 
-    DenseRealVector res, sol, dsol;
-    DenseRealMatrix jac;
-    
+    RealVectorX res, sol, dsol;
+    RealMatrixX jac;
+    ComplexMatrixX mat_A, mat_B, mat_A_sens, mat_B_sens;
+    ComplexVectorX v;
+
     res.resize(2); sol.resize(2); dsol.resize(2);
     jac.resize(2,2);
     
+    // initialize the solution to the values of init_sol
+    k_red  = init_sol.get_root(root_num).k_red_ref;
+    v_ref  = init_sol.get_root(root_num).V_ref;
+    sol(0) = k_red;
+    sol(1) = v_ref;
+
+    const MAST::FlutterSolutionBase* prev_sol = &init_sol;
+    
     while (n_iters < max_iters) {
-        
-        new_k = lower_ref_val +
-        (upper_ref_val-lower_ref_val)/(upper_g-lower_g)*(0.-lower_g); // linear interpolation
-        
-        new_sol.reset(analyze(new_k,
-                              new_v_ref,
-                              ref_sol_range.first).release());
-        
-        new_sol->print(_output, _mode_output);
-        
+
+        // evaluate the residual and Jacobians
+        std::auto_ptr<MAST::FlutterSolutionBase> ug_sol =
+        this->analyze(k_red, v_ref, prev_sol);
+
+        ug_sol->print(_output, _mode_output);
+
         // add the solution to this solver
-        bool if_delete = _insert_new_solution(new_v_ref, *new_sol);
+        bool if_delete = _insert_new_solution(v_ref, *ug_sol);
         
-        // if this was not a new reduced frequency, then this sol contains
-        // the lower quality approximations with respect to v_ref, so delete
-        // it
+        // if this was not a new reduced frequency, then this sol
+        // contains the lower quality approximations with respect to
+        // v_ref, so delete it
         if (if_delete)
-            new_sol.reset();
+            ug_sol.reset();
         else
-            new_sol.release();
+            ug_sol.release();
         
+        // now get a pointer to the previous solution
         // get the solution from the database for this reduced frequency
         std::map<Real, MAST::FlutterSolutionBase*>::iterator it =
-        _flutter_solutions.find(new_k);
+        _flutter_solutions.find(k_red);
         
         libmesh_assert(it != _flutter_solutions.end());
-        rval.second = it->second;
-        const MAST::FlutterRootBase& root = rval.second->get_root(root_num);
+        prev_sol = it->second;
+
+        // solve the Newton update problem
+        const MAST::FlutterRootBase& root = prev_sol->get_root(root_num);
+        Complex eig = root.root, eig_k_red_sens = 0., den = 0., eig_V_ref_sens = 0.;
         
-        // use the estimated flutter velocity to get the next
-        // V_ref value for aerodynamic matrices.
-        new_v_ref = root.V;
+        // initialize the baseline matrices
+        initialize_matrices(k_red, v_ref, mat_A, mat_B);
         
-        // check if the new damping value
-        if (fabs(root.g) <= g_tol) {
-            rval.first = true;
-            return  rval;
-        }
+        // solve the sensitivity problem
+        // first with respect to k_red
+        // next we need the sensitivity of k_red before we can calculate
+        // the sensitivity of flutter eigenvalue
+        initialize_matrix_sensitivity_for_reduced_freq(k_red,
+                                                       v_ref,
+                                                       mat_A_sens,
+                                                       mat_B_sens);
         
-        // update the k_val
-        if (root.g < 0.) {
-            lower_ref_val = new_k;
-            lower_g = root.g;
-        }
-        else {
-            upper_ref_val = new_k;
-            upper_g = root.g;
-        }
+        // now calculate the quotient for sensitivity wrt k_red
+        // calculate numerator
+        mat_B_sens *= -eig;
+        mat_B_sens += mat_A_sens;
+        v = mat_B_sens*root.eig_vec_right;
+        den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
+        eig_k_red_sens = root.eig_vec_left.dot(v) / den;
         
+        // next, sensitivity wrt V_ref
+        initialize_matrix_sensitivity_for_V_ref(k_red,
+                                                v_ref,
+                                                mat_A_sens,
+                                                mat_B_sens);
+
+        // now calculate the quotient for sensitivity wrt V_ref
+        // calculate numerator
+        mat_B_sens *= -eig;
+        mat_B_sens += mat_A_sens;
+        v = mat_B_sens*root.eig_vec_right;
+        den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
+        eig_V_ref_sens = root.eig_vec_left.dot(v) / den;
+
+        // residual
+        res(0) = root.root.imag();
+        res(1) = root.V*std::sqrt(root.root.real()) - 1.;
+        
+        // Jacobian
+        jac(0,0) = eig_k_red_sens.imag();
+        jac(0,1) = eig_V_ref_sens.imag();
+        jac(1,0) = 0.5*pow(eig.real(), -1.5)*eig_k_red_sens.real();
+        jac(1,1) = 0.5*pow(eig.real(), -1.5)*eig_V_ref_sens.real();
+
+        // now calculate the updates
+        //     r0 + J *dx = 0
+        // =>  dx = - inv(J) * r0
+        // =>  x1 = x0 + dx
+        
+        dsol = -jac.inverse()*res;
+        sol += dsol;
+        
+        libMesh::out
+        << "\nres: " << res
+        << "\nJac: " << jac
+        << "\nds : " << dsol
+        << "\nsol: " << dsol << std::endl;
+        
+        
+        // get the updated parameter values
+        k_red = sol(0);
+        v_ref = sol(1);
+        
+        // increment the iteration counter
         n_iters++;
     }
     
     // return false, along with the latest sol
     rval.first = false;
-    */
+    
     return rval;
 }
 

@@ -60,14 +60,14 @@ public:
     virtual bool element_time_derivative (bool request_jacobian,
                                           libMesh::DiffContext &context);
 
-    virtual bool element_time_derivative_k_sens (bool request_jacobian,
-                                                 libMesh::DiffContext &context);
+    virtual bool element_time_derivative_sens (bool request_jacobian,
+                                               libMesh::DiffContext &context);
 
     virtual bool side_time_derivative (bool request_jacobian,
                                        libMesh::DiffContext &context);
 
-    virtual bool side_time_derivative_k_sens (bool request_jacobian,
-                                              libMesh::DiffContext &context);
+    virtual bool side_time_derivative_sens (bool request_jacobian,
+                                            libMesh::DiffContext &context);
 
     std::vector<unsigned int> vars;
 
@@ -83,6 +83,14 @@ public:
      */
     bool if_k_red_sensitivity;
 
+    
+    /*!
+     *   flag to tell the system if the quantity being solved for is sensitivity
+     *    wrt reference velocity.
+     */
+    bool if_Vref_sensitivity;
+    
+    
     /*!
      *   this is the base solution about which sensitivity is to be calculated
      */

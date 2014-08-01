@@ -126,6 +126,7 @@
 		EB287225198034F800264599 /* libmesh_dbg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB287224198034F800264599 /* libmesh_dbg.0.dylib */; };
 		EB2872271980351300264599 /* libgfortran.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2872261980351300264599 /* libgfortran.3.dylib */; };
 		EB2872291980352500264599 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB2872281980352500264599 /* Accelerate.framework */; };
+		EBE224A7198C20A80064FCC7 /* coupled_fluid_structure_system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EBE224A6198C20A80064FCC7 /* coupled_fluid_structure_system.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -249,6 +250,7 @@
 		EB287224198034F800264599 /* libmesh_dbg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmesh_dbg.0.dylib; path = ../../../../libmesh/real/lib/libmesh_dbg.0.dylib; sourceTree = "<group>"; };
 		EB2872261980351300264599 /* libgfortran.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgfortran.3.dylib; path = ../../../../../../../../opt/local/lib/libgcc/libgfortran.3.dylib; sourceTree = "<group>"; };
 		EB2872281980352500264599 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		EBE224A6198C20A80064FCC7 /* coupled_fluid_structure_system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = coupled_fluid_structure_system.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,12 +319,15 @@
 				EB28711F19802F0000264599 /* aerodynamic_model.h */,
 				EB28712019802F0000264599 /* cfd_aerodynamic_model.h */,
 				EB28712119802F0000264599 /* coupled_aero_structural_model.h */,
+				EBE224A6198C20A80064FCC7 /* coupled_fluid_structure_system.cpp */,
 				EB28712219802F0000264599 /* coupled_fluid_structure_system.h */,
 				EB28712319802F0000264599 /* fem_structural_model.h */,
 				EB28712419802F0000264599 /* flutter_solution.cpp */,
 				EB28712519802F0000264599 /* flutter_solution.h */,
 				EB28712619802F0000264599 /* flutter_solver_base.cpp */,
 				EB28712719802F0000264599 /* flutter_solver_base.h */,
+				699D12881985488D006B1320 /* noniterative_ug_flutter_solver.cpp */,
+				699D12891985488D006B1320 /* noniterative_ug_flutter_solver.h */,
 				EB28712819802F0000264599 /* pk_flutter_solver.cpp */,
 				EB28712919802F0000264599 /* pk_flutter_solver.h */,
 				EB28712A19802F0000264599 /* structural_model.h */,
@@ -330,8 +335,6 @@
 				EB28712C19802F0000264599 /* time_domain_flutter_solver.h */,
 				EB28712D19802F0000264599 /* ug_flutter_solver.cpp */,
 				EB28712E19802F0000264599 /* ug_flutter_solver.h */,
-				699D12881985488D006B1320 /* noniterative_ug_flutter_solver.cpp */,
-				699D12891985488D006B1320 /* noniterative_ug_flutter_solver.h */,
 			);
 			path = Aeroelasticity;
 			sourceTree = "<group>";
@@ -659,6 +662,7 @@
 			files = (
 				EB28720419802F0000264599 /* residual_based_adaptive_time_solver.cpp in Sources */,
 				EB2871CD19802F0000264599 /* fluid_newton_solver.cpp in Sources */,
+				EBE224A7198C20A80064FCC7 /* coupled_fluid_structure_system.cpp in Sources */,
 				EB28721319802F0000264599 /* structural_element_3D.cpp in Sources */,
 				EB2871EA19802F0000264599 /* gcmma_optimization_interface.cpp in Sources */,
 				EB2871E319802F0000264599 /* function_base.cpp in Sources */,

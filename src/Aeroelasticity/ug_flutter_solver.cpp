@@ -552,3 +552,25 @@ initialize_matrix_sensitivity_for_reduced_freq(const Real k_red,
     k.setZero(m.rows(), m.cols());
 }
 
+
+
+void
+MAST::UGFlutterSolver::
+initialize_matrix_sensitivity_for_V_ref(const Real k_red,
+                                        const Real v_ref,
+                                        ComplexMatrixX& m, // mass & aero
+                                        ComplexMatrixX& k) { // stiffness
+    bool has_matrix = false;
+    
+    has_matrix =
+    aero_structural_model->get_aero_operator_matrix_sensitivity_for_V_ref(k_red,
+                                                                          v_ref,
+                                                                          m);
+    libmesh_assert(has_matrix);
+    
+    m *= 0.5 * flight_condition->gas_property.rho;
+    
+    k.setZero(m.rows(), m.cols());
+}
+
+

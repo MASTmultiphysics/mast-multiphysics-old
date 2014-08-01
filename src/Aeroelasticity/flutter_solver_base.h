@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __MAST__flutter_solver_base__
-#define __MAST__flutter_solver_base__
+#ifndef __MAST_flutter_solver_base_h__
+#define __MAST_flutter_solver_base_h__
 
 // C++ includes
 #include <vector>
@@ -155,6 +155,15 @@ namespace MAST {
                          const unsigned int max_iters) = 0;
         
         /*!
+         *    Newton method to look for cross-over point method search
+         */
+        virtual std::pair<bool, MAST::FlutterSolutionBase*>
+        newton_search(const MAST::FlutterSolutionBase& init_sol,
+                      const unsigned int root_num,
+                      const Real tol,
+                      const unsigned int max_iters) = 0;
+
+        /*!
          *   performs an eigensolution at the specified reference value, and
          *   sort the roots based on the provided solution pointer. If the
          *   pointer is NULL, then no sorting is performed
@@ -186,4 +195,5 @@ namespace MAST {
     
 }
 
-#endif /* defined(__MAST__flutter_solver_base__) */
+#endif // __MAST_flutter_solver_base_h__
+

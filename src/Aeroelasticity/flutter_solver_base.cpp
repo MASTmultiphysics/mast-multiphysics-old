@@ -111,8 +111,12 @@ MAST::FlutterSolverBase::find_next_root(const Real g_tol,
         if (!cross->root) {
             const unsigned int root_num = cross->root_num;
             std::pair<bool, MAST::FlutterSolutionBase*> bisection_sol =
-            bisection_search(cross->crossover_solutions,
-                             root_num, g_tol, n_bisection_iters);
+            //bisection_search(cross->crossover_solutions,
+            //                 root_num, g_tol, n_bisection_iters);
+            newton_search(*cross->crossover_solutions.first,
+                          root_num,
+                          g_tol,
+                          n_bisection_iters);
             cross->root = &(bisection_sol.second->get_root(root_num));
             
             // now, remove this entry from the _flutter_crossover points and
@@ -155,8 +159,12 @@ MAST::FlutterSolverBase::find_critical_root(const Real g_tol,
         if (!cross->root) {
             const unsigned int root_num = cross->root_num;
             std::pair<bool, MAST::FlutterSolutionBase*> bisection_sol =
-            bisection_search(cross->crossover_solutions,
-                             root_num, g_tol, n_bisection_iters);
+            //bisection_search(cross->crossover_solutions,
+            //                 root_num, g_tol, n_bisection_iters);
+            newton_search(*cross->crossover_solutions.first,
+                          root_num,
+                          g_tol,
+                          n_bisection_iters);
             cross->root = &(bisection_sol.second->get_root(root_num));
             
             // now, remove this entry from the _flutter_crossover points and
@@ -281,7 +289,7 @@ MAST::FlutterSolverBase::print_crossover_points(std::ostream* output)
     unsigned int i=0;
     
     for ( ; it != end; it++) {
-        *output << "** libMesh::Point : " << std::setw(5) << i << " **" << std::endl;
+        *output << "** Point : " << std::setw(5) << i << " **" << std::endl;
         it->second->print(*output);
         *output << std::endl;
         i++;

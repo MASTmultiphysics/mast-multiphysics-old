@@ -58,7 +58,7 @@
 #include "libmesh/const_function.h"
 #include "libmesh/zero_function.h"
 #include "libmesh/nonlinear_solver.h"
-#include "libmesh/nemesis_io.h"
+#include "libmesh/exodusII_io.h"
 #include "libmesh/sensitivity_data.h"
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/nonlinear_implicit_system.h"
@@ -360,9 +360,9 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     flutter_solver.k_red_range.first     = fluid_infile("ug_lower_k", 0.0);
     flutter_solver.k_red_range.second    = fluid_infile("ug_upper_k", 0.35);
     flutter_solver.n_k_red_divs          = fluid_infile("ug_k_divs", 10);
-    flutter_solver.v_ref_range.first     = fluid_infile("ug_lower_V", 10.0);
-    flutter_solver.v_ref_range.second    = fluid_infile("ug_upper_V", 1.e4);
-    flutter_solver.n_v_ref_divs          = fluid_infile("ug_V_divs", 5);
+    flutter_solver.v_ref_range.first     = fluid_infile("ug_lower_V", 1.e2);
+    flutter_solver.v_ref_range.second    = fluid_infile("ug_upper_V", 3.e2);
+    flutter_solver.n_v_ref_divs          = fluid_infile("ug_V_divs", 1);
     
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem
     std::set<unsigned int> dirichlet_dof_ids;
@@ -524,8 +524,8 @@ main(int argc, char* const argv[]) {
     << std::setw(35) << "time" << std::endl;
     
     
-    for (unsigned int p_order=2; p_order<3; p_order++) {
-        for (unsigned int i=2; i<3; i++) {
+    for (unsigned int p_order=1; p_order<3; p_order++) {
+        for (unsigned int i=1; i<3; i++) {
             libMesh::out
             << "**************************************************************************" << std::endl
             << "             Analysis for p = " << p_order << "  mesh = " << i << std::endl

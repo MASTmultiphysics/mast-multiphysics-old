@@ -782,12 +782,12 @@ MAST::SizingOptimization::_init() {
     var_id["ty"] = _static_system->add_variable ( "sty", static_cast<libMesh::Order>(o), fefamily);
     var_id["tz"] = _static_system->add_variable ( "stz", static_cast<libMesh::Order>(o), fefamily);
     
-    _eigen_system->add_variable ( "eux", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "euy", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "euz", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "etx", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "ety", static_cast<libMesh::Order>(o), fefamily);
-    _eigen_system->add_variable ( "etz", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "ux", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "uy", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "uz", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "tx", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "ty", static_cast<libMesh::Order>(o), fefamily);
+    _eigen_system->add_variable ( "tz", static_cast<libMesh::Order>(o), fefamily);
     
     _static_structural_assembly = new MAST::StructuralSystemAssembly(*_static_system,
                                                                      MAST::STATIC,
