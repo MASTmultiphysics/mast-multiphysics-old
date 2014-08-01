@@ -276,13 +276,13 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
 
         // residual
         res(0) = root.root.imag();
-        res(1) = root.V*std::sqrt(root.root.real()) - 1.;
+        res(1) = v_ref*std::sqrt(root.root.real()) - 1.;
         
         // Jacobian
         jac(0,0) = eig_k_red_sens.imag();
         jac(0,1) = eig_V_ref_sens.imag();
-        jac(1,0) = 0.5*pow(eig.real(), -1.5)*eig_k_red_sens.real();
-        jac(1,1) = 0.5*pow(eig.real(), -1.5)*eig_V_ref_sens.real();
+        jac(1,0) = 0.5*v_ref*pow(eig.real(), -1.5)*eig_k_red_sens.real();
+        jac(1,1) = std::sqrt(eig.real()) + 0.5*v_ref*pow(eig.real(), -1.5)*eig_V_ref_sens.real();
 
         // now calculate the updates
         //     r0 + J *dx = 0
@@ -296,7 +296,7 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         << "\nres: " << res
         << "\nJac: " << jac
         << "\nds : " << dsol
-        << "\nsol: " << dsol << std::endl;
+        << "\nsol: " << sol << std::endl;
         
         
         // get the updated parameter values
