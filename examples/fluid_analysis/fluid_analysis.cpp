@@ -171,9 +171,12 @@ int main_fem_operator (int argc, char* const argv[])
 #include <unistd.h>
 
 // The main program.
-int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
-                  int argc, char* const argv[])
-{
+int main (int argc, char* const argv[]) {
+    
+    libMesh::LibMeshInit init(argc, argv);
+    
+    GetPot infile("input.in");
+    
     // Read in parameters from the input file
     const Real global_tolerance          = infile("global_tolerance", 0.);
     const unsigned int nelem_target      = infile("n_elements", 400);
@@ -510,7 +513,7 @@ int fluid_driver (libMesh::LibMeshInit& init, GetPot& infile,
             rigid_surface_motion->plunge_vector(i) = infile("plunge_vec", 0., i);
         
         Real frequency = infile("frequency",0.);
-        rigid_surface_motion->init(frequency, 0.);
+        rigid_surface_motion->init(frequency, flight_cond.velocity_magnitude, 0.);
         equation_systems.parameters.set<bool>("if_reduced_freq") =
         infile("if_reduced_freq", false);
     }

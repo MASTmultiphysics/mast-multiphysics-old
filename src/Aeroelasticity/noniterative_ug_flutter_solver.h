@@ -60,7 +60,13 @@ namespace MAST {
                          const unsigned int root_num,
                          const Real g_tol,
                          const unsigned int max_iters);
-        
+
+        std::pair<bool, MAST::FlutterSolutionBase*>
+        newton_search(const MAST::FlutterSolutionBase& init_sol,
+                      const unsigned int root_num,
+                      const Real tol,
+                      const unsigned int max_iters);
+
     protected:
         
         bool _insert_new_solution(const Real v_ref,

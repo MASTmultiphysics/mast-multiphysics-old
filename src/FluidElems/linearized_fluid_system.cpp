@@ -678,7 +678,7 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
                 
-                /*// add the contribution from divergence of ui_ni
+                /*// add the contribution from gradient of ui_ni
                  for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
                  dB_mat[i_dim].vector_mult(vec2_n1, ref_sol); // dU/dx_i
                  dprim_dcons.vector_mult(vec3_n1, vec2_n1);  // dU_primitive / dx_i
@@ -862,7 +862,7 @@ bool LinearizedFluidSystem::side_time_derivative (bool request_jacobian,
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
                 
-                /*// add the contribution from divergence of ui_ni
+                /*// add the contribution from gradient of ui_ni
                  for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
                  dB_mat[i_dim].vector_mult(vec2_n1, ref_sol); // dU/dx_i
                  dprim_dcons.vector_mult(vec3_n1, vec2_n1);  // dU_primitive / dx_i

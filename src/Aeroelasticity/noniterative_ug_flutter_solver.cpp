@@ -178,6 +178,93 @@ MAST::NoniterativeUGFlutterSolver::bisection_search(const std::pair<MAST::Flutte
 }
 
 
+
+std::pair<bool, MAST::FlutterSolutionBase*>
+MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase& init_sol,
+                                                 const unsigned int root_num,
+                                                 const Real tol,
+                                                 const unsigned int max_iters) {
+    
+    std::pair<bool, MAST::FlutterSolutionBase*> rval(false, NULL);
+/*    // assumes that the upper k_val has +ve g val and lower k_val has -ve
+    // k_val
+    Real
+    k_red      = init_sol.get_root(root_num).k_red_ref,
+    g          = init_sol.get_root(root_num).g,
+    v_ref      = init_sol.get_root(root_num).V,
+    new_k_red = k_red,
+    new_v_ref = v_ref;
+    unsigned int n_iters = 0;
+    
+    std::auto_ptr<MAST::FlutterSolutionBase> new_sol;
+
+    DenseRealVector res, sol, dsol;
+    DenseRealMatrix jac;
+    
+    res.resize(2); sol.resize(2); dsol.resize(2);
+    jac.resize(2,2);
+    
+    while (n_iters < max_iters) {
+        
+        new_k = lower_ref_val +
+        (upper_ref_val-lower_ref_val)/(upper_g-lower_g)*(0.-lower_g); // linear interpolation
+        
+        new_sol.reset(analyze(new_k,
+                              new_v_ref,
+                              ref_sol_range.first).release());
+        
+        new_sol->print(_output, _mode_output);
+        
+        // add the solution to this solver
+        bool if_delete = _insert_new_solution(new_v_ref, *new_sol);
+        
+        // if this was not a new reduced frequency, then this sol contains
+        // the lower quality approximations with respect to v_ref, so delete
+        // it
+        if (if_delete)
+            new_sol.reset();
+        else
+            new_sol.release();
+        
+        // get the solution from the database for this reduced frequency
+        std::map<Real, MAST::FlutterSolutionBase*>::iterator it =
+        _flutter_solutions.find(new_k);
+        
+        libmesh_assert(it != _flutter_solutions.end());
+        rval.second = it->second;
+        const MAST::FlutterRootBase& root = rval.second->get_root(root_num);
+        
+        // use the estimated flutter velocity to get the next
+        // V_ref value for aerodynamic matrices.
+        new_v_ref = root.V;
+        
+        // check if the new damping value
+        if (fabs(root.g) <= g_tol) {
+            rval.first = true;
+            return  rval;
+        }
+        
+        // update the k_val
+        if (root.g < 0.) {
+            lower_ref_val = new_k;
+            lower_g = root.g;
+        }
+        else {
+            upper_ref_val = new_k;
+            upper_g = root.g;
+        }
+        
+        n_iters++;
+    }
+    
+    // return false, along with the latest sol
+    rval.first = false;
+    */
+    return rval;
+}
+
+
+
 bool
 MAST::NoniterativeUGFlutterSolver::_insert_new_solution(const Real v_ref,
                                                         MAST::FlutterSolutionBase& sol) {

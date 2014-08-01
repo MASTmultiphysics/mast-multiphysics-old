@@ -59,7 +59,7 @@ void FrequencyDomainLinearizedFluidSystem::init_data()
     // set parameter values
     libMesh::Parameters& params = this->get_equation_systems().parameters;
     
-    unsigned int o = params.get<unsigned int>("p_order");// _infile("fe_order", 1);
+    unsigned int o = _infile("fe_order", 1);
     std::string fe_family = _infile("fe_family", std::string("LAGRANGE"));
     libMesh::FEFamily fefamily = libMesh::Utility::string_to_enum<libMesh::FEFamily>(fe_family);
     
@@ -814,13 +814,13 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
                     dui_ni_unsteady += // delta_wi_dot * ni
                     surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
                 dui_ni_unsteady -= uvec.dot(dnormal_unsteady); // ui delta_ni
-
-                /*// add the contribution from divergence of ui_ni
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
+                
+                // add the contribution from gradient of ui_ni
+                /*for (unsigned int i_dim=0; i_dim<dim; i_dim++) {
                     dB_mat[i_dim].vector_mult(vec2_n1, ref_sol); // dU/dx_i
-                    dprim_dcons.vector_mult(vec3_n1, vec2_n1);  // dU_primitive / dx_i
                     for (unsigned int j_dim=0; j_dim<dim; j_dim++)
-                        dui_ni_unsteady -= vec3_n1(j_dim+1) * surface_unsteady_disp(i_dim) *
+                        dui_ni_unsteady -= vec2_n1(j_dim+1)/ref_sol(0) *
+                        surface_unsteady_disp(i_dim) *
                         (face_normals[qp](j_dim) + std::real(dnormal_steady(j_dim)));
                 }*/
                 
