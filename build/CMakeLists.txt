@@ -76,49 +76,6 @@ add_library (gcmma ${gcmma_source_files})
 file (GLOB_RECURSE mast_source_files ../src/*.cpp ../src/*.h)
 add_library (mast ${mast_source_files})
 
-#
-#  add files for executables in the examples and add it to cmake's build list
-#
-file (GLOB_RECURSE gaussian_bump_convergence_source_files 
-	../examples/gaussian_bump_convergence/*.cpp 
-	../examples/gaussian_bump_convergence/*.h)
-add_executable (gaussian_bump_convergence ${gaussian_bump_convergence_source_files})
-
-#
-#  add files for executables in the examples and add it to cmake's build list
-#
-file (GLOB_RECURSE panel_flutter_convergence_source_files 
-	../examples/panel_flutter_convergence/*.cpp 
-	../examples/panel_flutter_convergence/*.h)
-add_executable (panel_flutter_convergence ${panel_flutter_convergence_source_files})
-
-#
-#  add files for executables in the examples and add it to cmake's build list
-#
-file (GLOB_RECURSE beam_flutter_sizing_source_files 
-	../examples/beam_flutter_sizing/*.cpp 
-	../examples/beam_flutter_sizing/*.h)
-add_executable (beam_flutter_sizing ${beam_flutter_sizing_source_files})
-
-#
-#  add files for executables in the examples and add it to cmake's build list
-#
-file (GLOB_RECURSE stiffened_panel_sizing_source_files 
-	../examples/stiffened_panel_sizing_optimization/*.cpp 
-	../examples/stiffened_panel_sizing_optimization/*.h)
-add_executable (stiffened_panel_sizing ${stiffened_panel_sizing_source_files})
-
-#
-#  add files for executables in the examples and add it to cmake's build list
-#
-file (GLOB_RECURSE structural_eigensolution_source_files 
-	../examples/structural_eigensolution/*.cpp 
-	../examples/structural_eigensolution/*.h)
-add_executable (structural_eigensolution ${structural_eigensolution_source_files})
-
-#
-#  tell cmake to link mast library against these libraries
-#
 target_link_libraries (mast  
 		      debug ${mesh_dbg}
 		      optimized ${mesh_opt}
@@ -137,6 +94,11 @@ set_property (TARGET mast APPEND
 #
 #  tell cmake to link gaussian_bump_convergence example with mast library
 #
+file (GLOB_RECURSE gaussian_bump_convergence_source_files 
+	../examples/gaussian_bump_convergence/*.cpp 
+	../examples/gaussian_bump_convergence/*.h)
+add_executable (gaussian_bump_convergence ${gaussian_bump_convergence_source_files})
+
 target_link_libraries (gaussian_bump_convergence
 			mast)
 set_property (TARGET gaussian_bump_convergence APPEND 
@@ -147,6 +109,11 @@ set_property (TARGET gaussian_bump_convergence APPEND
 #
 #  tell cmake to link panel_flutter_convergence example with mast library
 #
+file (GLOB_RECURSE panel_flutter_convergence_source_files 
+	../examples/panel_flutter_convergence/*.cpp 
+	../examples/panel_flutter_convergence/*.h)
+add_executable (panel_flutter_convergence ${panel_flutter_convergence_source_files})
+
 target_link_libraries (panel_flutter_convergence
 			mast)
 set_property (TARGET panel_flutter_convergence APPEND 
@@ -156,6 +123,11 @@ set_property (TARGET panel_flutter_convergence APPEND
 #
 #  tell cmake to link beam_flutter_sizing example with mast library
 #
+file (GLOB_RECURSE beam_flutter_sizing_source_files 
+	../examples/beam_flutter_sizing/*.cpp 
+	../examples/beam_flutter_sizing/*.h)
+add_executable (beam_flutter_sizing ${beam_flutter_sizing_source_files})
+
 target_link_libraries (beam_flutter_sizing
 			mast)
 set_property (TARGET beam_flutter_sizing APPEND 
@@ -166,6 +138,11 @@ set_property (TARGET beam_flutter_sizing APPEND
 #
 #  tell cmake to link stiffened_panel_sizing example with mast library
 #
+file (GLOB_RECURSE stiffened_panel_sizing_source_files 
+	../examples/stiffened_panel_sizing_optimization/*.cpp 
+	../examples/stiffened_panel_sizing_optimization/*.h)
+add_executable (stiffened_panel_sizing ${stiffened_panel_sizing_source_files})
+
 target_link_libraries (stiffened_panel_sizing
 			mast)
 set_property (TARGET stiffened_panel_sizing APPEND 
@@ -176,10 +153,31 @@ set_property (TARGET stiffened_panel_sizing APPEND
 #
 #  tell cmake to link stiffened_panel_sizing example with mast library
 #
+file (GLOB_RECURSE structural_eigensolution_source_files 
+	../examples/structural_eigensolution/*.cpp 
+	../examples/structural_eigensolution/*.h)
+add_executable (structural_eigensolution ${structural_eigensolution_source_files})
+
 target_link_libraries (structural_eigensolution
 			mast)
 set_property (TARGET structural_eigensolution APPEND 
 	     PROPERTY INCLUDE_DIRECTORIES 
 	     ${libmesh_dir}/include) 
+
+
+#
+#  tell cmake to link fluid_analysis example with mast library
+#
+file (GLOB_RECURSE fluid_analysis_source_files 
+	../examples/fluid_analysis/*.cpp 
+	../examples/fluid_analysis/*.h)
+add_executable (fluid_analysis ${fluid_analysis_source_files})
+
+target_link_libraries (fluid_analysis
+			mast)
+set_property (TARGET fluid_analysis APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
 
 

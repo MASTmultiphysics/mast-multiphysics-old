@@ -19,4 +19,7 @@
    <FileRef
       location = "group:structural_eigensolution/structural_eigensolution.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:fluid_analysis/fluid_analysis.xcodeproj">
+   </FileRef>
 </Workspace>
