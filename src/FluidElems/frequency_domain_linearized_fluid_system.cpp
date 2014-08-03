@@ -1641,7 +1641,8 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
                         // tau_ij nj = 0   (because velocity gradient at wall = 0)
                         // qi ni = 0       (since heat flux occurs only on no-slip wall and far-field bc)
         {
-            Complex dui_ni_unsteady = 0., ui_ni_steady = 0.;
+            Complex dui_ni_unsteady_freq_dep = 0., dui_ni_unsteady_freq_indep = 0.,
+            ui_ni_steady = 0.;
             
             for (unsigned int qp=0; qp<qpoint.size(); qp++)
             {
@@ -1662,29 +1663,28 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
                 delta_p_sol.zero();
                 delta_p_sol.init(p_sol, conservative_deltasol);
                 
-                dui_ni_unsteady = 0.; ui_ni_steady = 0.;
+                dui_ni_unsteady_freq_dep = 0.;
+                dui_ni_unsteady_freq_indep = 0.;
+                ui_ni_steady = 0.;
                 p_sol.get_uvec(uvec);
                 delta_p_sol.get_duvec(duvec);
                 
                 // calculate the surface velocity perturbations
-                perturbed_surface_motion->surface_velocity_k_sens(this->time,
-                                                                  qpoint[qp],
-                                                                  face_normals[qp],
-                                                                  surface_unsteady_disp,
-                                                                  surface_unsteady_vel,
-                                                                  dnormal_unsteady);
+                if (if_k_red_sensitivity)
+                    perturbed_surface_motion->surface_velocity_k_sens(this->time,
+                                                                      qpoint[qp],
+                                                                      face_normals[qp],
+                                                                      surface_unsteady_disp,
+                                                                      surface_unsteady_vel,
+                                                                      dnormal_unsteady);
+                else if (if_Vref_sensitivity)
+                    perturbed_surface_motion->surface_velocity(this->time,
+                                                               qpoint[qp],
+                                                               face_normals[qp],
+                                                               surface_unsteady_disp,
+                                                               surface_unsteady_vel,
+                                                               dnormal_unsteady);
                 
-                // the sensitivity of the forcing wrt Vref is zero
-                if (if_Vref_sensitivity) {
-                    surface_unsteady_disp.zero();
-                    surface_unsteady_vel.zero();
-                    dnormal_unsteady.zero();
-                }
-                    
-                
-                // scale just the unsteady velocity term by 1/stiffness_scaling
-                // since this is the only frequency related term
-                surface_unsteady_vel *= (1./stiffness_scaling);
                 
                 // now check if the surface deformation is defined and
                 // needs to be applied through transpiration boundary
@@ -1706,11 +1706,11 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
                     // has undergone a static deformation, even though the
                     // surface_vel might be identically zero for a static
                     // body.
-                    dui_ni_unsteady  =
+                    dui_ni_unsteady_freq_indep  =
                     surface_steady_vel.dot(dnormal_unsteady); // wi_dot * delta_ni
-                    dui_ni_unsteady +=
+                    dui_ni_unsteady_freq_dep +=
                     surface_unsteady_vel.dot(dnormal_steady); // delta_wi_dot * dni
-                    dui_ni_unsteady -= duvec.dot(dnormal_steady);
+                    dui_ni_unsteady_freq_indep -= duvec.dot(dnormal_steady);
                     
                     // also the steady part
                     ui_ni_steady  = surface_steady_vel.dot(dnormal_steady);
@@ -1723,18 +1723,34 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
                 
                 
                 // now add the contribution from unsteady normal perturbation
-                for (unsigned int i_dim=0; i_dim<dim; i_dim++)
-                    dui_ni_unsteady += // delta_wi_dot * ni
-                    surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
-                
-                // now prepare the flux vector
-                flux.zero();
-                flux.add(dui_ni_unsteady, conservative_sol);
-                flux(n1-1) += dui_ni_unsteady*p_sol.p;// + ui_ni_steady*delta_p_sol.dp;
-                
-                B_mat.vector_mult_transpose(vec1_n2, flux);
-                vec1_n2.scale(JxW[qp]*stiffness_scaling);
-                MAST::add_to_assembled_vector(Fvec, vec1_n2);
+                if (if_k_red_sensitivity) {
+                    // the k_red dependent term, only if k_sens is requested.
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                        dui_ni_unsteady_freq_dep += // delta_wi_dot * ni
+                        surface_unsteady_vel(i_dim) * face_normals[qp](i_dim);
+
+                    flux.zero();
+                    flux.add(dui_ni_unsteady_freq_dep, conservative_sol);
+                    flux(n1-1) += dui_ni_unsteady_freq_dep*p_sol.p;
+                    
+                    B_mat.vector_mult_transpose(vec1_n2, flux);
+                    vec1_n2.scale(JxW[qp]);
+                    MAST::add_to_assembled_vector(Fvec, vec1_n2);
+                }
+                else if (if_Vref_sensitivity) {
+                    for (unsigned int i_dim=0; i_dim<dim; i_dim++)
+                        dui_ni_unsteady_freq_indep -= // delta_wi_dot * ni
+                        uvec(i_dim) * dnormal_unsteady(i_dim);
+
+                    // for terms independent of k_red, this term is nonzero
+                    flux.zero();
+                    flux.add(dui_ni_unsteady_freq_indep, conservative_sol);
+                    flux(n1-1) += dui_ni_unsteady_freq_indep*p_sol.p;
+                    
+                    B_mat.vector_mult_transpose(vec1_n2, flux);
+                    vec1_n2.scale(JxW[qp]*stiffness_scaling_sens);
+                    MAST::add_to_assembled_vector(Fvec, vec1_n2);
+                }
 
                 //
                 // sensitivity of Jacobian times the state vector

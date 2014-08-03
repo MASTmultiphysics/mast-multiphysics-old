@@ -270,6 +270,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		69F57956198EEED6009783E4 /* tests */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = tests;
+        .path = ../../../tests;
+			sourceTree = "<group>";
+		};
 		EB2870F819802EB200264599 = {
 			isa = PBXGroup;
 			children = (
@@ -280,6 +288,7 @@
 				EB28721E198034D500264599 /* libmpi_cxx.1.dylib */,
 				EB28721F198034D500264599 /* libmpi.1.dylib */,
 				EB28711D19802F0000264599 /* src */,
+				69F57956198EEED6009783E4 /* tests */,
 				EB28710219802EB200264599 /* Products */,
 			);
 			sourceTree = "<group>";

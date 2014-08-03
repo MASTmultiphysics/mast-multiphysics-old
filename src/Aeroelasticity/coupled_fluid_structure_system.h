@@ -62,7 +62,8 @@ public:
      *    matrices onto the structural degrees of freedom, so needs the
      *    coupling matrices from Structures->Fluid and Fluid->Structures.
      */
-    virtual bool
+    virtual
+    inline bool
     get_aero_operator_matrix_sensitivity(const libMesh::ParameterVector& params,
                                          unsigned int p,
                                          const Real k_red,

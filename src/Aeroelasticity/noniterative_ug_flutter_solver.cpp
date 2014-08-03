@@ -188,7 +188,7 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
     std::pair<bool, MAST::FlutterSolutionBase*> rval(false, NULL);
     // assumes that the upper k_val has +ve g val and lower k_val has -ve
     // k_val
-    Real k_red, g, v_ref;
+    Real k_red, v_ref;
     unsigned int n_iters = 0;
     
     std::auto_ptr<MAST::FlutterSolutionBase> new_sol;
@@ -209,7 +209,9 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
 
     const MAST::FlutterSolutionBase* prev_sol = &init_sol;
     
-    while (n_iters < max_iters) {
+    bool if_continue = true;
+    
+    while (if_continue) {
 
         // evaluate the residual and Jacobians
         std::auto_ptr<MAST::FlutterSolutionBase> ug_sol =
@@ -234,6 +236,7 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         _flutter_solutions.find(k_red);
         
         libmesh_assert(it != _flutter_solutions.end());
+        rval.second = it->second;
         prev_sol = it->second;
 
         // solve the Newton update problem
@@ -260,6 +263,14 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
         eig_k_red_sens = root.eig_vec_left.dot(v) / den;
         
+        /*std::auto_ptr<MAST::FlutterSolutionBase> ug_dsol =
+        this->analyze(k_red+.001, v_ref, prev_sol);
+        eig -= ug_dsol->get_root(root_num).root;
+        eig /= -.001;
+        
+        std::cout << eig << std::endl;
+        std::cout << eig_k_red_sens << std::endl;*/
+
         // next, sensitivity wrt V_ref
         initialize_matrix_sensitivity_for_V_ref(k_red,
                                                 v_ref,
@@ -274,6 +285,14 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
         eig_V_ref_sens = root.eig_vec_left.dot(v) / den;
 
+        /*std::auto_ptr<MAST::FlutterSolutionBase> ug_dsol =
+        this->analyze(k_red, v_ref+.001, prev_sol);
+        eig -= ug_dsol->get_root(root_num).root;
+        eig /= -.001;
+        
+        std::cout << eig << std::endl;
+        std::cout << eig_V_ref_sens << std::endl;*/
+        
         // residual
         res(0) = root.root.imag();
         res(1) = v_ref*std::sqrt(root.root.real()) - 1.;
@@ -292,19 +311,21 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         dsol = -jac.inverse()*res;
         sol += dsol;
         
-        libMesh::out
-        << "\nres: " << res
-        << "\nJac: " << jac
-        << "\nds : " << dsol
-        << "\nsol: " << sol << std::endl;
-        
-        
         // get the updated parameter values
         k_red = sol(0);
         v_ref = sol(1);
         
         // increment the iteration counter
         n_iters++;
+        
+        // set the flag
+        if (fabs(root.g) < tol) {
+            rval.first = true;
+            return rval;
+        }
+        
+        if (n_iters >= max_iters)
+            if_continue = false;
     }
     
     // return false, along with the latest sol
