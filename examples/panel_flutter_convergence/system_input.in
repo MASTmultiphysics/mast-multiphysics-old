@@ -84,6 +84,10 @@ z_div_nelem = ' '
 ug_k_divs = 3
 ug_lower_k = 0.45
 ug_upper_k = 1.0
+ug_V_divs = 1
+ug_lower_V = 100.
+ug_upper_V = 300.
+
 flutter_output = 'flutter_output.txt'
 
 rho    = 1.35

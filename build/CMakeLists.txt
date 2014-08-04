@@ -17,6 +17,8 @@ set (tbb_lib_dir       "tbb-lib-dir" CACHE STRING "Directory containing TBB libr
 set (tbb_lib_file      "tbb tbbmalloc" CACHE STRING "TBB library files")
 separate_arguments (tbb_lib_file)
 set (boost_include_dir "boost-include-dir" CACHE STRING "Directory containing boost header files")
+set (boost_test_lib    "boost-unit-test-lib" CACHE STRING "BOOST unit test library")
+set (boost_lib_dir     "boost-lib-dir" CACHE STRING "Directory containing boost unit test library files")
 set (mpi_include_dir   "mpi-include-dir" CACHE STRING "Directory containing MPI header files")
 set (mpi_lib_dir       "mpi-lib-dir" CACHE STRING "Directory containing MPI library files")
 set (lapack_lib_file   "lapack" CACHE STRING "LAPACK library")
@@ -45,6 +47,8 @@ find_library (mesh_opt mesh_opt ${libmesh_dir}/lib)
 
 find_library (mpicxx_lib    mpi_cxx              ${mpi_lib_dir})
 find_library (mpi_lib       mpi                  ${mpi_lib_dir})
+
+find_library (boost_unit_test_lib   ${boost_test_lib}    ${boost_lib_dir})
 
 foreach (f ${tbb_lib_file})
    find_library (tbb_lib    ${f}   ${tbb_lib_dir})
@@ -180,4 +184,25 @@ set_property (TARGET fluid_analysis APPEND
 	     ${libmesh_dir}/include) 
 
 
+#
+#  tell cmake to link the tests
+#
+file (GLOB_RECURSE mast_test_source_files 
+	../tests/*.cpp 
+	../tests/*.h)
+add_executable (mast_tests ${mast_test_source_files})
+
+target_link_libraries (mast_tests
+			mast 
+			${boost_unit_test_lib})
+set_property (TARGET mast_tests APPEND 
+	     PROPERTY INCLUDE_DIRECTORIES 
+	     ${libmesh_dir}/include) 
+
+
+ENABLE_TESTING()
+
+ADD_TEST(NAME mast_tests
+	 COMMAND mast_tests) 
+	 #WORKING_DIRECTORY ../tests)
 
