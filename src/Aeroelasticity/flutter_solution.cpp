@@ -78,12 +78,14 @@ MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
     for (unsigned int i=0; i<nvals-1; i++)
     {
         const MAST::FlutterRootBase& r = sol.get_root(i);
-        Real max_val = 0., val = 0.;
+        Real max_val = 0.;
+        Complex val = 0.;
         unsigned int max_val_root = nvals+1;
         for (unsigned int j=i; j<nvals; j++) {
-            val = _roots[j]->modal_participation.dot(r.modal_participation);
-            if (val > max_val) {
-                max_val = val;
+            val = r.eig_vec_left.dot(_Bmat*_roots[j]->eig_vec_right);
+            //_roots[j]->modal_participation.dot(r.modal_participation);
+            if (abs(val) > max_val) {
+                max_val = abs(val);
                 max_val_root = j;
             }
         }
@@ -133,11 +135,11 @@ MAST::FrequencyDomainFlutterSolution::init (const MAST::FlutterSolverBase& solve
     _ref_val = k_red;
     
     // iterate over the roots and initialize the vector
-    const ComplexMatrixX &B = eig_sol.B(),
-    &VR = eig_sol.right_eigenvectors(),
+    _Bmat = eig_sol.B();
+    const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
     &VL = eig_sol.left_eigenvectors();
     const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
-    unsigned int nvals = (int)B.rows();
+    unsigned int nvals = (int)_Bmat.rows();
 
     _roots.resize(nvals);
     for (unsigned int i=0; i<nvals; i++) {
@@ -146,7 +148,7 @@ MAST::FrequencyDomainFlutterSolution::init (const MAST::FlutterSolverBase& solve
         dynamic_cast<MAST::FrequencyDomainFlutterRoot*>(_roots[i]);
         root->init(k_red, v_ref, bref,
                    num(i), den(i),
-                   B,
+                   _Bmat,
                    VR.col(i), VL.col(i));
     }
 }

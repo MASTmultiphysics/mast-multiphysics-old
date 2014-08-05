@@ -210,6 +210,11 @@ namespace MAST {
          */
         Real _ref_val;
         
+        /*!
+         *    Matrix used for scaling of eigenvectors, and sorting of roots
+         */
+        ComplexMatrixX _Bmat;
+        
         std::vector<MAST::FlutterRootBase*> _roots;
     };
     

@@ -594,7 +594,7 @@ MAST::StructuralSystemAssembly::assemble_mass(libMesh::SparseMatrix<Real>&  matr
                                               const MAST::FieldFunctionBase* param,
                                               const libMesh::NumericVector<Real>* static_sol,
                                               const libMesh::NumericVector<Real>* static_sol_sens) {
-    
+    matrix.zero();
     
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
@@ -686,7 +686,7 @@ MAST::StructuralSystemAssembly::assemble_mass(libMesh::SparseMatrix<Real>&  matr
         
         matrix.add_matrix (mat, dof_indices); // mass
     }
-    
+    matrix.close();
 }
 
 
@@ -696,7 +696,7 @@ MAST::StructuralSystemAssembly::assemble_jacobian(libMesh::SparseMatrix<Real>&  
                                                   const MAST::FieldFunctionBase* param,
                                                   const libMesh::NumericVector<Real>* static_sol,
                                                   const libMesh::NumericVector<Real>* static_sol_sens) {
-    
+    matrix.zero();
     // iterate over each element, initialize it and get the relevant
     // analysis quantities
     DenseRealVector vec, sol;
@@ -814,7 +814,7 @@ MAST::StructuralSystemAssembly::assemble_jacobian(libMesh::SparseMatrix<Real>&  
         // add to the global matrices
         matrix.add_matrix (mat, dof_indices); // stiffness
     }
-    
+    matrix.close();
 }
 
 

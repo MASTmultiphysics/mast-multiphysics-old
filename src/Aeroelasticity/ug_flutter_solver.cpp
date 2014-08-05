@@ -381,12 +381,12 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     ComplexVectorX v;
 
     // initialize the baseline matrices
-    initialize_matrices(root.k_red, root.V, mat_A, mat_B);
+    initialize_matrices(root.k_red_ref, root.V_ref, mat_A, mat_B);
 
     // calculate the eigenproblem sensitivity
     initialize_matrix_sensitivity_for_param(params, i,
-                                            root.k_red,
-                                            root.V,
+                                            root.k_red_ref,
+                                            root.V_ref,
                                             mat_A_sens,
                                             mat_B_sens);
 
@@ -413,8 +413,8 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     
     // next we need the sensitivity of k_red before we can calculate
     // the sensitivity of flutter eigenvalue
-    initialize_matrix_sensitivity_for_reduced_freq(root.k_red,
-                                                   root.V,
+    initialize_matrix_sensitivity_for_reduced_freq(root.k_red_ref,
+                                                   root.V_ref,
                                                    mat_A_sens,
                                                    mat_B_sens);
     
