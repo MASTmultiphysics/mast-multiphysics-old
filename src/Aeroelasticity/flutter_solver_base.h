@@ -49,7 +49,7 @@ namespace MAST {
         /*!
          *    file to which the result will be written
          */
-        std::ofstream _output, _mode_output;
+        std::ofstream _output;
         
         /*!
          *    constructor for the flutter solver base object
@@ -81,9 +81,6 @@ namespace MAST {
         {
             _output.close();
             _output.open(nm.c_str(), std::ofstream::out);
-            std::ostringstream oss;
-            oss << "modes_" << nm;
-            _mode_output.open(oss.str().c_str(), std::ofstream::out);
         }
         
         

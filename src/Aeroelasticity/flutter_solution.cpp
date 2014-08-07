@@ -84,6 +84,12 @@ MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
         for (unsigned int j=i; j<nvals; j++) {
             val = r.eig_vec_left.dot(_Bmat*_roots[j]->eig_vec_right);
             //_roots[j]->modal_participation.dot(r.modal_participation);
+            // scale by the eigenvalue separation with the assumption that
+            // the roots will be closer to each other than any other
+            // root at two consecutive eigenvalues. In other words,
+            // we are penalizing the dot product with the eigenvalue
+            // distance
+            val /= abs(r.root-_roots[j]->root);
             if (abs(val) > max_val) {
                 max_val = abs(val);
                 max_val_root = j;
@@ -189,8 +195,7 @@ MAST::TimeDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
 
 
 void
-MAST::FlutterSolutionBase::print(std::ostream &output,
-                                 std::ostream &mode_output)
+MAST::FlutterSolutionBase::print(std::ostream &output)
 {
     const unsigned int nvals = this->n_roots();
     libmesh_assert(nvals);
@@ -203,11 +208,11 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
     << std::setw(5) << "#"
     << std::setw(15) << "k_ref"
     << std::setw(15) << "V_ref"
-    << std::setw(15) << "Re"
-    << std::setw(15) << "Im"
     << std::setw(15) << "g"
     << std::setw(15) << "V"
-    << std::setw(15) << "omega";
+    << std::setw(15) << "omega"
+    << std::setw(15) << "Re"
+    << std::setw(15) << "Im";
     
     // output the headers for flutter mode participation
     for (unsigned int i=0; i<nvals; i++)
@@ -216,18 +221,16 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
         << std::setw(5) << "Mode "
         << std::setw(5) << i
         << std::setw(3) << " ";
-    output << std::endl;
     
     // output the headers for flutter mode
-    mode_output << "  (Right Eigenvectors)  " << std::endl;
-    mode_output << std::setw(5) << "#";
+    output << std::setw(5) << "#";
     for (unsigned int i=0; i<nvals; i++)
-        mode_output
-        << std::setw(10) << " "
+        output
+        << std::setw(10) << "|         "
         << std::setw(5) << "Mode "
         << std::setw(5) << i
-        << std::setw(10) << " ";
-    mode_output << std::endl;
+        << std::setw(10) << "         |";
+    output << std::endl;
     
     for (unsigned int i=0; i<nvals; i++)
     {
@@ -238,38 +241,36 @@ MAST::FlutterSolutionBase::print(std::ostream &output,
             std::stringstream oss;
             oss << "**" << i;
             output << std::setw(5) << oss.str();
-            mode_output << std::setw(5) << oss.str();
         }
         else
-        {
             output << std::setw(5) << i;
-            mode_output << std::setw(5) << i;
-        }
         
         // flutter root details
         output
         << std::setw(15) << root.k_red_ref
         << std::setw(15) << root.V_ref
-        << std::setw(15) << std::real(root.root)
-        << std::setw(15) << std::imag(root.root)
         << std::setw(15) << root.g
         << std::setw(15) << root.V
-        << std::setw(15) << root.omega;
+        << std::setw(15) << root.omega
+        << std::setw(15) << std::real(root.root)
+        << std::setw(15) << std::imag(root.root);
         
         // now write the modal participation
         for (unsigned int j=0; j<nvals; j++)
-            output << std::setw(15) << root.modal_participation(j);
-        output << std::endl;
+            output << std::setw(12) << root.modal_participation(j);
+        output << std::setw(2) << " ";
         
         // now write the flutter mode
         for (unsigned int j=0; j<nvals; j++)
         {
-            mode_output
-            << std::setw(13) << std::real(root.eig_vec_right(j))
-            << std::setw(4) << " "
-            << std::setw(13) << std::imag(root.eig_vec_right(j));
+            output
+            << std::setw(2) << "| "
+            << std::setw(12) << std::real(root.eig_vec_right(j))
+            << std::setw(2) << " "
+            << std::setw(12) << std::imag(root.eig_vec_right(j))
+            << std::setw(2) << " |";
         }
-        mode_output << std::endl;
+        output << std::endl;
     }
 }
 

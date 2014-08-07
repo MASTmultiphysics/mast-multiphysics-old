@@ -111,7 +111,7 @@ MAST::UGFlutterSolver::scan_for_roots() {
             
             prev_sol = sol.get();
 
-            sol->print(_output, _mode_output);
+            sol->print(_output);
 
             // add the solution to this solver
             bool if_success =
@@ -155,7 +155,7 @@ MAST::UGFlutterSolver::bisection_search(const std::pair<MAST::FlutterSolutionBas
                           flight_condition->velocity_magnitude,
                           ref_sol_range.first).release();
 
-        new_sol->print(_output, _mode_output);
+        new_sol->print(_output);
 
         // add the solution to this solver
         bool if_success =

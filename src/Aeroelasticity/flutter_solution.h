@@ -198,7 +198,7 @@ namespace MAST {
         /*!
          *    prints the data and modes from this solution
          */
-        void print(std::ostream& output, std::ostream& mode_output);
+        void print(std::ostream& output);
         
     protected:
                 

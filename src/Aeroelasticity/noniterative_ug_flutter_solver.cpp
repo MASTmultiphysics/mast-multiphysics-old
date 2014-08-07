@@ -65,7 +65,7 @@ MAST::NoniterativeUGFlutterSolver::scan_for_roots() {
                         prev_sol);
                 
                 
-                sol->print(_output, _mode_output);
+                sol->print(_output);
 
                 // add the solution to this solver
                 bool if_delete = _insert_new_solution(current_v_ref, *sol);
@@ -127,7 +127,7 @@ MAST::NoniterativeUGFlutterSolver::bisection_search(const std::pair<MAST::Flutte
                           new_v_ref,
                           ref_sol_range.first).release());
         
-        new_sol->print(_output, _mode_output);
+        new_sol->print(_output);
 
         // add the solution to this solver
         bool if_delete = _insert_new_solution(new_v_ref, *new_sol);
@@ -217,7 +217,7 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         std::auto_ptr<MAST::FlutterSolutionBase> ug_sol =
         this->analyze(k_red, v_ref, prev_sol);
 
-        ug_sol->print(_output, _mode_output);
+        ug_sol->print(_output);
 
         // add the solution to this solver
         bool if_delete = _insert_new_solution(v_ref, *ug_sol);
