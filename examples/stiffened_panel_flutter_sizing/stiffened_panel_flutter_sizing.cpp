@@ -17,10 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __MAST_beam_postbuckling_sizing_optimization_h__
-#define __MAST_beam_postbuckling_sizing_optimization_h__
-
-
 
 // MAST includes
 #include "Optimization/optimization_interface.h"
@@ -42,6 +38,7 @@
 #include "Aeroelasticity/ug_flutter_solver.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
 #include "BoundaryConditions/flexible_surface_motion.h"
+#include "Mesh/stiffened_panel.h"
 #include "Mesh/panel_mesh.h"
 #include "Optimization/gcmma_optimization_interface.h"
 
@@ -87,7 +84,7 @@ namespace MAST {
             
             std::map<Real, MAST::FieldFunction<Real>*>::iterator
             it = values.begin(), end = values.end();
-
+            
             // tell the function that it is dependent on the provided functions
             for ( ; it != end; it++)
                 _functions.insert(it->second->master());
@@ -318,7 +315,7 @@ namespace MAST {
                 prop.get_material();
                 const MAST::FieldFunction<Real> &rhof =
                 mat.get<MAST::FieldFunction<Real> >("rho");
-
+                
                 // for each element iterate over the length and calculate the
                 // weight from the section area and section density
                 // use three point trapezoidal rule to calculate the integral
@@ -384,7 +381,7 @@ namespace MAST {
         }
     };
     
-
+    
     /*!
      *   reads the options for the NewtonSolver from input and set
      *   it for the provided solver object
@@ -546,26 +543,26 @@ namespace MAST {
         /*!
          *    map of density functions at discrete stations
          */
-        std::map<Real, MAST::FieldFunction<Real>*> _rho_station_vals;
+        std::vector<MAST::FieldFunction<Real>*> _rho_station_vals;
         
         /*!
          *    multilinear density function
          */
-        std::auto_ptr<MAST::MultilinearInterpolation> _rho;
+        std::vector<MAST::MultilinearInterpolation*> _rho;
         
         /*!
          *    map of thickness functions at discrete stations
          */
-        std::map<Real, MAST::FieldFunction<Real>*> _h_y_station_vals;
+        std::vector<MAST::FieldFunction<Real>*> _h_y_station_vals;
         
         /*!
          *    multilinear thickness function
          */
-        std::auto_ptr<MAST::MultilinearInterpolation> _h_y;
-
+        std::vector<MAST::MultilinearInterpolation*> _h_y;
+        
         std::auto_ptr<MAST::ConstantFunction<Real> >  _h_z, _offset_h_z;
         
-        std::auto_ptr<MAST::BeamOffset> _offset_h_y;
+        std::vector<MAST::BeamOffset*> _offset_h_y;
         
         std::auto_ptr<MAST::ConstantFunction<DenseRealMatrix> > _prestress;
         
@@ -579,12 +576,12 @@ namespace MAST {
         
         std::vector<MAST::DisplacementDirichletBoundaryCondition*> _bc;
         
-        std::auto_ptr<MAST::MaterialPropertyCardBase> _materials;
+        std::vector<MAST::MaterialPropertyCardBase*> _materials;
         
-        std::auto_ptr<MAST::ElementPropertyCardBase> _elem_properties;
+        std::vector<MAST::ElementPropertyCardBase*> _elem_properties;
         
         std::auto_ptr<libMesh::MeshFunction> _disp_function;
-
+        
         std::vector<libMesh::MeshFunction*> _disp_function_sens;
         
         std::auto_ptr<FlightCondition> _flight_cond;
@@ -604,7 +601,7 @@ namespace MAST {
         std::auto_ptr<MAST::ConstantFunction<Real> > _pressure;
         
         std::auto_ptr<CFDPressure> _cfd_pressure;
-
+        
         std::auto_ptr<MAST::BoundaryCondition> _pressure_bc;
         
         std::vector<Real> _dv_scaling, _dv_low, _dv_init;
@@ -624,7 +621,6 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     xmin    = _dv_low;
     xmax.resize(_n_vars);
     std::fill(xmax.begin(), xmax.end(), 1.);
-    x[0] *= (1.0+1e-1);
 }
 
 
@@ -654,7 +650,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     libMesh::Point pt; // dummy point object
     
     libMesh::out << "New Eval" << std::endl;
-
+    
     // the optimization problem is defined as
     // max Vf subject to constraint on weight
     Real wt = 0., vf = 0., disp = 0.;
@@ -671,23 +667,23 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     Real temp_val, ref_temp;
     (*_temperature)(pt, 0., temp_val);
     (*_ref_temperature)(pt, 0., ref_temp);
-
+    
     bool continue_fsi_iterations = true;
-
+    
     for (unsigned int i=0; i<n_load_steps; i++) {
         
         libMesh::out
         << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl
         << "Solving load step: " << i << std::endl
         << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-
+        
         // use this displacement to converge the fluid solver
-        continue_fsi_iterations = true;
+        continue_fsi_iterations = false;
         
         while (continue_fsi_iterations) {
             // initialize the fluid solution
             _fluid_system_nonlin->time = 0.;
-
+            
             _fluid_system_nonlin->print_residual_norms = true;
             _fluid_system_nonlin->print_residuals = false;
             _fluid_system_nonlin->print_jacobian_norms = false;
@@ -709,11 +705,11 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             // And the linear solver options
             solver.max_linear_iterations = 1000;
             solver.initial_linear_tolerance = 1.0e-8;
-
-
+            
+            
             // init with zero frequency, since we are working with steady solver
             _surface_motion->init(0., 0., 0., *(_static_system->solution));
-
+            
             // check if the DC operator needs to be reevaluated
             _fluid_system_nonlin->evaluate_recalculate_dc_flag();
             
@@ -748,7 +744,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     }
     
     // eigen analysis is performed with von-Karman strain
-    //_eigen_system->solve();
+    _eigen_system->solve();
     
     // the number of converged eigenpairs could be different from the number asked
     unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
@@ -758,7 +754,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     std::fill(fvals.begin(), fvals.end(), 0.);
     
     _structural_model->eigen_vals.resize(_n_eig);
-
+    
     if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
         // the total number of eigenvalues is _n_eig, but only n_required are usable
         for (unsigned int i=0; i<n_required; i++) {
@@ -778,7 +774,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             _eigen_system->solution->scale(sqrt(eigval.real()));
             vec = *(_eigen_system->solution);
             vec.close();
-                        
+            
             // rescale so that the inner product with the mass matrix is identity
             
             
@@ -812,11 +808,11 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     
     // flutter solution
     _flutter_solver->clear_solutions();
-    //_flutter_solver->scan_for_roots();
+    _flutter_solver->scan_for_roots();
     if (!_libmesh_init.comm().rank())
         _flutter_solver->print_crossover_points();
     std::pair<bool, const MAST::FlutterRootBase*> root =
-    _flutter_solver->find_critical_root(1.e-9, 15);
+    _flutter_solver->find_critical_root(1.e-3, 5);
     if (root.first) {
         if (!_libmesh_init.comm().rank())
             _flutter_solver->print_sorted_roots();
@@ -842,12 +838,12 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     for (unsigned int i=0; i<eval_grads.size(); i++)
         if_sens = (if_sens || eval_grads[i]);
     
-    if (false) {
+    if (if_sens) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
         
         // to calculate the coupled fluid structure sensitivity, iterate while
         // lagging the off-diagonal terms
-        continue_fsi_iterations = true;
+        continue_fsi_iterations = false;
         
         // each design variable requires its own set of iterations to converge
         // the sensitivity
@@ -877,7 +873,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                     str_sens = _static_system->get_sensitivity_solution(0);
                     str_sens.close();
                 }
-
+                
                 // initialize the displacement sensitivity for fluid boundary
                 // condition
                 _surface_motion_sens->init(0., 0., 0., str_sens);
@@ -901,20 +897,20 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             }
         }
         /*
-        // eigen analysis is performed with von-Karman strain
-        _eigen_system->sensitivity_solve(_parameters, grad_vals);
-        // now correct this for the fact that the matrices were exchanged
-        if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
-            for (unsigned int j=0; j<_n_vars; j++)
-                for (unsigned int i=0; i<n_required; i++) {
-                    val = _eigen_system->get_eigenpair(i);
-                    std::cout
-                    << -grad_vals[j*_eigen_system->get_n_converged()+i]/pow(val.first, 2)
-                    << std::endl;
-                }
-        else
-            libmesh_error(); // should not get here
-        */
+         // eigen analysis is performed with von-Karman strain
+         _eigen_system->sensitivity_solve(_parameters, grad_vals);
+         // now correct this for the fact that the matrices were exchanged
+         if (_eq_systems->parameters.get<bool>("if_exchange_AB_matrices"))
+         for (unsigned int j=0; j<_n_vars; j++)
+         for (unsigned int i=0; i<n_required; i++) {
+         val = _eigen_system->get_eigenpair(i);
+         std::cout
+         << -grad_vals[j*_eigen_system->get_n_converged()+i]/pow(val.first, 2)
+         << std::endl;
+         }
+         else
+         libmesh_error(); // should not get here
+         */
         
         // get the displacement gradient
         pt(0) = 3.0;
@@ -923,7 +919,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             (*_disp_function_sens[j])(pt, 0., disp_vec);
             grads[j*_n_ineq] = disp_vec(0)/_disp_0*_dv_scaling[j];
         }
-         
+        
         // ask flutter solver for the sensitivity
         
         // set gradient of weight
@@ -950,7 +946,6 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             << std::setw(35) << std::setprecision(15)
             << grads[i] << std::endl;
     }
-    libmesh_error();
 }
 
 
@@ -979,35 +974,38 @@ MAST::SizingOptimization::_init() {
     z_coord_divs (new MeshInitializer::CoordinateDivisions);
     std::vector<MeshInitializer::CoordinateDivisions*> divs(dim);
     
-    // now read in the values: x-coord
-    if (nx_divs > 0) {
-        for (unsigned int i_div=0; i_div<nx_divs+1; i_div++)
-        {
-            x_div_loc[i_div]     = _infile("x_div_loc", 0., i_div);
-            x_relative_dx[i_div] = _infile( "x_rel_dx", 0., i_div);
-            if (i_div < nx_divs) //  this is only till nx_divs
-                x_divs[i_div] = _infile( "x_div_nelem", 0, i_div);
-        }
-        divs[0] = x_coord_divs.get();
-        x_coord_divs->init(nx_divs, x_div_loc, x_relative_dx, x_divs);
-    }
-
-    if (ny_divs > 0) {
+    // now read in the values: y-coord
+    if ((dim > 1) && (ny_divs > 0))
+    {
         for (unsigned int i_div=0; i_div<ny_divs+1; i_div++)
         {
-            x_div_loc[i_div]     = _infile("y_div_loc", 0., i_div);
-            x_relative_dx[i_div] = _infile( "y_rel_dx", 0., i_div);
-            if (i_div < nx_divs) //  this is only till nx_divs
-                x_divs[i_div] = _infile( "y_div_nelem", 0, i_div);
+            y_div_loc[i_div]     = _infile("y_div_loc", 0., i_div);
+            y_relative_dx[i_div] = _infile( "y_rel_dx", 0., i_div);
+            if (i_div < ny_divs) //  this is only till ny_divs
+                y_divs[i_div] = _infile( "y_div_nelem", 0, i_div);
         }
-        divs[1] = x_coord_divs.get();
+        divs[1] = y_coord_divs.get();
         y_coord_divs->init(ny_divs, y_div_loc, y_relative_dx, y_divs);
     }
-
+    
+    // now read in the values: z-coord
+    if ((dim == 3) && (nz_divs > 0))
+    {
+        for (unsigned int i_div=0; i_div<nz_divs+1; i_div++)
+        {
+            z_div_loc[i_div]     = _infile("z_div_loc", 0., i_div);
+            z_relative_dx[i_div] = _infile( "z_rel_dx", 0., i_div);
+            if (i_div < nz_divs) //  this is only till nz_divs
+                z_divs[i_div] = _infile( "z_div_nelem", 0, i_div);
+        }
+        divs[2] = z_coord_divs.get();
+        z_coord_divs->init(nz_divs, z_div_loc, z_relative_dx, z_divs);
+    }
     
     // design data
     _n_eig = 6;
-    _n_vars = n_stations*2;
+    _n_stiff = divs[0]->n_divs() + divs[1]->n_divs() - 2;
+    _n_vars = (n_stations*2)*_n_stiff+1;
     
     _n_eq = 0;
     _n_ineq = (1 +   // +1 for the displacement
@@ -1041,11 +1039,11 @@ MAST::SizingOptimization::_init() {
         _dv_low[i+_n_vars/2]     =  rho_l/rho_u;
         _dv_scaling[i+_n_vars/2] =  rho_u;
     }
-
+    
     
     
     // now initialize the mesh
-    MeshInitializer().init(divs, *_mesh, elem_type);
+    MAST::StiffenedPanel().init(divs, *_mesh, elem_type, true);
     
     // Print information about the mesh to the screen.
     _mesh->print_info();
@@ -1101,14 +1099,14 @@ MAST::SizingOptimization::_init() {
     _temperature_bc.reset(new MAST::Temperature);
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
-    _static_structural_assembly->add_volume_load(0, *_temperature_bc);
-    _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_static_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     // pressure boundary condition
     //_pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
     _pressure_bc.reset(new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE));
-    _static_structural_assembly->add_volume_load(0, *_pressure_bc);
-    _eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
+    //_static_structural_assembly->add_volume_load(0, *_pressure_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
     
     
     // apply the boundary conditions
@@ -1153,7 +1151,7 @@ MAST::SizingOptimization::_init() {
     
     _eigen_system->set_eigenproblem_type(libMesh::GHEP);
     _eigen_system->eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
-    _eigen_structural_assembly->set_static_solution_system(_static_system);
+    //_eigen_structural_assembly->set_static_solution_system(_static_system);
     
     
     // initialize the fluid data structures
@@ -1177,10 +1175,10 @@ MAST::SizingOptimization::_init() {
     _flight_cond->gas_property.rho= _fluid_input( "rho",  1.05);
     
     _flight_cond->init();
-
+    
     // next the fluid mesh
     _fluid_mesh = new libMesh::SerialMesh(_libmesh_init.comm());
-
+    
     const unsigned int fluid_dim     = _fluid_input("dimension",0),
     fluid_nx_divs = _fluid_input("nx_divs",0),
     fluid_ny_divs = _fluid_input("ny_divs",0),
@@ -1226,32 +1224,19 @@ MAST::SizingOptimization::_init() {
         divs[1] = y_coord_divs.get();
         y_coord_divs->init(fluid_ny_divs, y_div_loc, y_relative_dx, y_divs);
     }
-
-    if (fluid_nz_divs > 0)
-    {
-        for (unsigned int i_div=0; i_div<fluid_nz_divs+1; i_div++)
-        {
-            z_div_loc[i_div]     = _fluid_input("z_div_loc", 0., i_div);
-            z_relative_dx[i_div] = _fluid_input( "z_rel_dx", 0., i_div);
-            if (i_div < fluid_nz_divs) //  this is only till nz_divs
-                z_divs[i_div] = _fluid_input( "z_div_nelem", 0, i_div);
-        }
-        divs[2] = z_coord_divs.get();
-        z_coord_divs->init(fluid_nz_divs, z_div_loc, z_relative_dx, z_divs);
-    }
-
-
+    
+    
     const bool if_cos_bump = _fluid_input("if_cos_bump", false);
     const unsigned int n_max_bumps_x = _fluid_input("n_max_bumps_x", 1),
-    n_max_bumps_y = _fluid_input("n_max_bumps_y", 1),
+    n_max_bumps_y = _fluid_input("n_max_bumps_x", 1),
     panel_bc_id = _fluid_input("panel_bc_id", 10),
     symmetry_bc_id = _fluid_input("symmetry_bc_id", 11);
     const Real t_by_c =  _fluid_input("t_by_c", 0.0);
     
-    PanelMesh3D().init(t_by_c, if_cos_bump, n_max_bumps_x, n_max_bumps_y,
+    PanelMesh2D().init(t_by_c, if_cos_bump, n_max_bumps_x,
                        panel_bc_id, symmetry_bc_id,
                        divs, *_fluid_mesh, fluid_elem_type);
-
+    
     // Print information about the mesh to the screen.
     _fluid_mesh->print_info();
     
@@ -1266,7 +1251,7 @@ MAST::SizingOptimization::_init() {
     &(_fluid_eq_systems->add_system<LinearizedFluidSystem>("LinearizedFluidSystem"));
     _fluid_system_freq =
     &(_fluid_eq_systems->add_system<FrequencyDomainLinearizedFluidSystem>
-    ("FrequencyDomainLinearizedFluidSystem"));
+      ("FrequencyDomainLinearizedFluidSystem"));
     
     _fluid_system_nonlin->flight_condition = _flight_cond.get();
     _fluid_system_lin->flight_condition = _flight_cond.get();
@@ -1281,7 +1266,7 @@ MAST::SizingOptimization::_init() {
     _fluid_system_freq->time_solver =
     libMesh::AutoPtr<libMesh::TimeSolver>(new libMesh::SteadySolver(*_fluid_system_freq));
     _fluid_system_freq->time_solver->quiet = false;
-
+    
     // now initilaize the nonlinear solution
     _fluid_system_freq->extra_quadrature_order =
     _fluid_input("extra_quadrature_order", 0);
@@ -1297,7 +1282,7 @@ MAST::SizingOptimization::_init() {
     _fluid_system_nonlin->surface_motion = _surface_motion.get();
     _fluid_system_lin->surface_motion = _surface_motion.get();
     _fluid_system_lin->perturbed_surface_motion = _surface_motion_sens.get();
-
+    
     // set parameters for the Newton solver used by the nonlinear
     // fluid system
     {
@@ -1305,7 +1290,7 @@ MAST::SizingOptimization::_init() {
         (*(_fluid_system_nonlin->time_solver->diff_solver()));
         set_newton_solver_options(solver, _fluid_input);
     }
-
+    
     // set parameters for the Newton solver used by the linearized
     // fluid system
     {
@@ -1313,7 +1298,7 @@ MAST::SizingOptimization::_init() {
         (*(_fluid_system_lin->time_solver->diff_solver()));
         set_newton_solver_options(solver, _fluid_input);
     }
-
+    
     
     // set parameters for the Newton solver used by the frequency domain
     // fluid system
@@ -1322,13 +1307,13 @@ MAST::SizingOptimization::_init() {
         (*(_fluid_system_freq->time_solver->diff_solver()));
         set_newton_solver_options(solver, _fluid_input);
     }
-
+    
     
     
     // localize the base solution for linearized and frequency domain systems
     _fluid_system_lin->localize_fluid_solution();
     _fluid_system_freq->localize_fluid_solution();
-
+    
     
     // Print information about the system to the screen.
     _eq_systems->print_info();
@@ -1341,7 +1326,7 @@ MAST::SizingOptimization::_init() {
                                               *_fluid_system_freq));
     _coupled_system.reset(new CoupledFluidStructureSystem
                           (*_aero_model, *_structural_model));
-
+    
     
     // create the solvers
     _flutter_solver.reset(new MAST::UGFlutterSolver);
@@ -1384,12 +1369,20 @@ MAST::SizingOptimization::_init() {
                  ("alpha", _infile("expansion_coefficient", 2.31e-5))),
     _prestress.reset(new MAST::ConstantFunction<DenseRealMatrix >
                      ("prestress", prestress));
-    _materials.reset(new MAST::IsotropicMaterialPropertyCard(0));
+    
+    // resize the material and section property data-structures
+    _materials.resize(_n_stiff+1);
+    _rho_station_vals.resize(_n_stiff*n_stations+1);
+    _rho.resize(_n_stiff+1);
+    
+    _materials[0] = new MAST::IsotropicMaterialPropertyCard(0);
     
     const Real
     x0 = _infile("x_div_loc", 0., 0),  // panel LE
     x1 = _infile("x_div_loc", 0., 1);  // panel TE
     Real dx = (x1-x0)/(n_stations-1);
+    
+    // iterate over each station and create the 
     
     // create the density variables
     for (unsigned int i=0; i<n_stations; i++) {
@@ -1414,7 +1407,7 @@ MAST::SizingOptimization::_init() {
     
     // now create the density and give it to the property card
     _rho.reset(new MAST::MultilinearInterpolation("rho", _rho_station_vals));
-
+    
     MAST::MaterialPropertyCardBase& mat = *_materials;
     // add the properties to the cards
     mat.add(*_E);
@@ -1451,7 +1444,7 @@ MAST::SizingOptimization::_init() {
     _h_z.reset(new MAST::ConstantFunction<Real>("hz", _infile("width", 0.002))),
     _offset_h_y.reset(new MAST::BeamOffset("hy_offset", _h_y->clone().release())),
     _offset_h_z.reset(new MAST::ConstantFunction<Real>("hz_offset", 0.));
-
+    
     MAST::Solid1DSectionElementPropertyCard *p = new MAST::Solid1DSectionElementPropertyCard(2);
     p->add(*_h_y); // thickness
     p->add(*_h_z); // width
@@ -1543,7 +1536,7 @@ MAST::SizingOptimization::output(unsigned int iter,
         
         // We write the file in the ExodusII format.
         libMesh::Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
-                                                  *_eq_systems);
+                                                           *_eq_systems);
     }
     
     MAST::FunctionEvaluation::output(iter, x, obj, fval);
@@ -1576,6 +1569,3 @@ main(int argc, char* const argv[]) {
 }
 
 
-
-
-#endif // __MAST_beam_postbuckling_sizing_optimization_h__

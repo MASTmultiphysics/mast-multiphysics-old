@@ -17,10 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __MAST_beam_postbuckling_sizing_optimization_h__
-#define __MAST_beam_postbuckling_sizing_optimization_h__
-
-
 
 // MAST includes
 #include "Optimization/optimization_interface.h"
@@ -50,7 +46,7 @@
 #include "libmesh/getpot.h"
 #include "libmesh/serial_mesh.h"
 #include "libmesh/mesh_generation.h"
-#include "libmesh/nemesis_io.h"
+#include "libmesh/exodusII_io.h"
 #include "libmesh/equation_systems.h"
 #include "libmesh/eigen_solver.h"
 #include "libmesh/string_to_enum.h"
@@ -61,7 +57,7 @@
 #include "libmesh/const_function.h"
 #include "libmesh/zero_function.h"
 #include "libmesh/nonlinear_solver.h"
-#include "libmesh/nemesis_io.h"
+#include "libmesh/exodusII_io.h"
 #include "libmesh/sensitivity_data.h"
 #include "libmesh/condensed_eigen_system.h"
 #include "libmesh/nonlinear_implicit_system.h"
@@ -245,7 +241,7 @@ namespace MAST {
         
         virtual void operator() (const libMesh::Point& p, Real t, Real& v) const {
             (*_dim)(p, t, v);
-            v *= 0.5;
+            v *= 0.5*0;
         }
         
         virtual void partial(const MAST::FieldFunctionBase& f,
@@ -256,7 +252,7 @@ namespace MAST {
         virtual void total(const MAST::FieldFunctionBase& f,
                            const libMesh::Point& p, Real t, Real& v) const {
             _dim->total(f, p, t, v);
-            v *= 0.5;
+            v *= 0.5*0;
         }
         
     };
@@ -624,7 +620,6 @@ MAST::SizingOptimization::init_dvar(std::vector<Real>& x,
     xmin    = _dv_low;
     xmax.resize(_n_vars);
     std::fill(xmax.begin(), xmax.end(), 1.);
-    x[0] *= (1.0+1e-1);
 }
 
 
@@ -682,7 +677,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         << "+++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
         // use this displacement to converge the fluid solver
-        continue_fsi_iterations = true;
+        continue_fsi_iterations = false;
         
         while (continue_fsi_iterations) {
             // initialize the fluid solution
@@ -748,7 +743,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     }
     
     // eigen analysis is performed with von-Karman strain
-    //_eigen_system->solve();
+    _eigen_system->solve();
     
     // the number of converged eigenpairs could be different from the number asked
     unsigned int n_required = std::min(_n_eig, _eigen_system->get_n_converged());
@@ -794,7 +789,7 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
                 << ".exo";
                 
                 // We write the file in the ExodusII format.
-                libMesh::Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
+                libMesh::ExodusII_IO(*_mesh).write_equation_systems(file_name.str(),
                                                                    *_eq_systems);
             }
         }
@@ -805,18 +800,18 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     // now get the displacement constraint
     pt(0) = 3.;
     DenseRealVector disp_vec;
-    (*_disp_function)(pt, 0., disp_vec);
+    //(*_disp_function)(pt, 0., disp_vec);
     // reference displacement value
     // w < w0 => w/w0 < 1. => w/w0 - 1. < 0
-    disp = disp_vec(0);
+    //disp = disp_vec(0);
     
     // flutter solution
     _flutter_solver->clear_solutions();
-    //_flutter_solver->scan_for_roots();
+    _flutter_solver->scan_for_roots();
     if (!_libmesh_init.comm().rank())
         _flutter_solver->print_crossover_points();
     std::pair<bool, const MAST::FlutterRootBase*> root =
-    _flutter_solver->find_critical_root(1.e-9, 15);
+    _flutter_solver->find_critical_root(1.e-3, 5);
     if (root.first) {
         if (!_libmesh_init.comm().rank())
             _flutter_solver->print_sorted_roots();
@@ -842,12 +837,12 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
     for (unsigned int i=0; i<eval_grads.size(); i++)
         if_sens = (if_sens || eval_grads[i]);
     
-    if (false) {
+    if (if_sens) {
         // grad_k = dfi/dxj  ,  where k = j*NFunc + i
         
         // to calculate the coupled fluid structure sensitivity, iterate while
         // lagging the off-diagonal terms
-        continue_fsi_iterations = true;
+        continue_fsi_iterations = false;
         
         // each design variable requires its own set of iterations to converge
         // the sensitivity
@@ -920,8 +915,8 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
         pt(0) = 3.0;
         for (unsigned int j=0; j<_n_vars; j++) {
             disp_vec.zero();
-            (*_disp_function_sens[j])(pt, 0., disp_vec);
-            grads[j*_n_ineq] = disp_vec(0)/_disp_0*_dv_scaling[j];
+            //(*_disp_function_sens[j])(pt, 0., disp_vec);
+            //grads[j*_n_ineq] = disp_vec(0)/_disp_0*_dv_scaling[j];
         }
          
         // ask flutter solver for the sensitivity
@@ -950,7 +945,6 @@ MAST::SizingOptimization::evaluate(const std::vector<Real>& dvars,
             << std::setw(35) << std::setprecision(15)
             << grads[i] << std::endl;
     }
-    libmesh_error();
 }
 
 
@@ -1089,14 +1083,14 @@ MAST::SizingOptimization::_init() {
     _temperature_bc.reset(new MAST::Temperature);
     _temperature_bc->set_function(*_temperature);
     _temperature_bc->set_reference_temperature_function(*_ref_temperature);
-    _static_structural_assembly->add_volume_load(0, *_temperature_bc);
-    _eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_static_structural_assembly->add_volume_load(0, *_temperature_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_temperature_bc);
     
     // pressure boundary condition
     //_pressure.reset(new MAST::ConstantFunction<Real>("pressure", -0.));
     _pressure_bc.reset(new MAST::BoundaryCondition(MAST::SURFACE_PRESSURE));
-    _static_structural_assembly->add_volume_load(0, *_pressure_bc);
-    _eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
+    //_static_structural_assembly->add_volume_load(0, *_pressure_bc);
+    //_eigen_structural_assembly->add_volume_load(0, *_pressure_bc);
     
     
     // apply the boundary conditions
@@ -1141,7 +1135,7 @@ MAST::SizingOptimization::_init() {
     
     _eigen_system->set_eigenproblem_type(libMesh::GHEP);
     _eigen_system->eigen_solver->set_position_of_spectrum(libMesh::LARGEST_MAGNITUDE);
-    _eigen_structural_assembly->set_static_solution_system(_static_system);
+    //_eigen_structural_assembly->set_static_solution_system(_static_system);
     
     
     // initialize the fluid data structures
@@ -1517,7 +1511,7 @@ MAST::SizingOptimization::output(unsigned int iter,
         _eigen_system->get_eigenpair(i);
         
         // We write the file in the ExodusII format.
-        libMesh::Nemesis_IO(*_mesh).write_equation_systems(file_name.str(),
+        libMesh::ExodusII_IO(*_mesh).write_equation_systems(file_name.str(),
                                                   *_eq_systems);
     }
     
@@ -1525,6 +1519,7 @@ MAST::SizingOptimization::output(unsigned int iter,
 }
 
 
+#include <unistd.h>
 
 int
 main(int argc, char* const argv[]) {
@@ -1552,5 +1547,3 @@ main(int argc, char* const argv[]) {
 
 
 
-
-#endif // __MAST_beam_postbuckling_sizing_optimization_h__
