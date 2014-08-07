@@ -69,8 +69,8 @@ namespace MAST {
 
     protected:
         
-        bool _insert_new_solution(const Real v_ref,
-                                  MAST::FlutterSolutionBase& sol);
+        void _insert_new_solution(const Real v_ref,
+                                  MAST::FlutterSolutionBase* sol);
         
     };
 }

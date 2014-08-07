@@ -690,8 +690,6 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Complex> delta_p_sol;
     
-    const DenseRealVector& elem_sol = c.get_elem_solution();
-    
     switch (mechanical_bc_type)
     // adiabatic and isothermal are handled in the no-slip wall BC
     {
@@ -1084,8 +1082,9 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_sens
     libMesh::System& fluid =
     this->get_equation_systems().get_system<libMesh::System>("FluidSystem");
     
-    std::vector<libMesh::dof_id_type> fluid_dof_indices, base_sol_dof_indices;
+    std::vector<libMesh::dof_id_type> fluid_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
+    const std::vector<libMesh::dof_id_type>&
     base_sol_dof_indices = context.get_dof_indices();
     
     MAST::transform_to_elem_vector(complex_elem_sol, c.get_elem_solution());
@@ -1548,8 +1547,9 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
     libMesh::System& fluid =
     this->get_equation_systems().get_system<libMesh::System>("FluidSystem");
 
-    std::vector<libMesh::dof_id_type> fluid_dof_indices, base_sol_dof_indices;
+    std::vector<libMesh::dof_id_type> fluid_dof_indices;
     fluid.get_dof_map().dof_indices(&c.get_elem(), fluid_dof_indices);
+    const std::vector<libMesh::dof_id_type>&
     base_sol_dof_indices = context.get_dof_indices();
     
     for (unsigned int i=0; i<n_dofs; i++)
@@ -1580,9 +1580,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
     
     PrimitiveSolution p_sol;
     SmallPerturbationPrimitiveSolution<Complex> delta_p_sol;
-    
-    const DenseRealVector& elem_sol = c.get_elem_solution();
-    
+        
     switch (mechanical_bc_type)
     // adiabatic and isothermal are handled in the no-slip wall BC
     {

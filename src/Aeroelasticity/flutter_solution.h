@@ -65,13 +65,33 @@ namespace MAST {
         omega(f.omega),
         k_red(f.k_red),
         V_sens(f.V_sens),
-        k_red_sens(f.k_red_sens),
         root(f.root),
         root_sens(f.root_sens),
+        k_red_sens(f.k_red_sens),
         eig_vec_right(f.eig_vec_right),
         eig_vec_left(f.eig_vec_left),
         modal_participation(f.modal_participation)
         {}
+        
+
+        void copy_root(const MAST::FlutterRootBase& f) {
+            
+            if_nonphysical_root    = f.if_nonphysical_root;
+            has_sensitivity_data   = f.has_sensitivity_data;
+            k_red_ref              = f.k_red_ref;
+            V_ref                  = f.V_ref;
+            V                      = f.V;
+            g                      = f.g;
+            omega                  = f.omega;
+            k_red                  = f.k_red;
+            V_sens                 = f.V_sens;
+            root                   = f.root;
+            root_sens              = f.root_sens;
+            k_red_sens             = f.k_red_sens;
+            eig_vec_right          = f.eig_vec_right;
+            eig_vec_left           = f.eig_vec_left;
+            modal_participation    = f.modal_participation;
+        }
         
         
         
@@ -174,6 +194,14 @@ namespace MAST {
             return *_roots[i];
         }
         
+        /*!
+         *    returns a non-const reference to the root
+         */
+        MAST::FlutterRootBase& get_root(const unsigned int i) {
+            libmesh_assert_less(i, _roots.size());
+            return *_roots[i];
+        }
+
         /*!
          *    sort this root with respect to the given solution from a previous
          *    eigen solution. This method relies on the modal participation.

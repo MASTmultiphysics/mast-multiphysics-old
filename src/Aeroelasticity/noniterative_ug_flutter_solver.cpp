@@ -68,16 +68,8 @@ MAST::NoniterativeUGFlutterSolver::scan_for_roots() {
                 sol->print(_output, _mode_output);
 
                 // add the solution to this solver
-                bool if_delete = _insert_new_solution(current_v_ref, *sol);
+                _insert_new_solution(current_v_ref, sol.release());
                 
-                // if this was not a new reduced frequency, then this sol
-                // contains the lower quality approximations with respect to
-                // v_ref, so delete it
-                if (if_delete)
-                    sol.reset();
-                else
-                    sol.release();
-
                 // now get a pointer to the previous solution
                 // get the solution from the database for this reduced frequency
                 std::map<Real, MAST::FlutterSolutionBase*>::iterator it =
@@ -130,16 +122,8 @@ MAST::NoniterativeUGFlutterSolver::bisection_search(const std::pair<MAST::Flutte
         new_sol->print(_output, _mode_output);
 
         // add the solution to this solver
-        bool if_delete = _insert_new_solution(new_v_ref, *new_sol);
+        _insert_new_solution(new_v_ref, new_sol.release());
 
-        // if this was not a new reduced frequency, then this sol contains
-        // the lower quality approximations with respect to v_ref, so delete
-        // it
-        if (if_delete)
-            new_sol.reset();
-        else
-            new_sol.release();
-        
         // get the solution from the database for this reduced frequency
         std::map<Real, MAST::FlutterSolutionBase*>::iterator it =
         _flutter_solutions.find(new_k);
@@ -220,15 +204,7 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         ug_sol->print(_output, _mode_output);
 
         // add the solution to this solver
-        bool if_delete = _insert_new_solution(v_ref, *ug_sol);
-        
-        // if this was not a new reduced frequency, then this sol
-        // contains the lower quality approximations with respect to
-        // v_ref, so delete it
-        if (if_delete)
-            ug_sol.reset();
-        else
-            ug_sol.release();
+        _insert_new_solution(v_ref, ug_sol.release());
         
         // now get a pointer to the previous solution
         // get the solution from the database for this reduced frequency
@@ -336,11 +312,11 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
 
 
 
-bool
+void
 MAST::NoniterativeUGFlutterSolver::_insert_new_solution(const Real v_ref,
-                                                        MAST::FlutterSolutionBase& sol) {
+                                                        MAST::FlutterSolutionBase* sol) {
     
-    const Real k_red = sol.ref_val();
+    const Real k_red = sol->ref_val();
     
     // if the value does not already exist, then insert it in the map
     std::map<Real, MAST::FlutterSolutionBase*>::iterator it =
@@ -349,37 +325,36 @@ MAST::NoniterativeUGFlutterSolver::_insert_new_solution(const Real v_ref,
     if ( it == _flutter_solutions.end()) {
         bool if_success =
         _flutter_solutions.insert(std::pair<Real, MAST::FlutterSolutionBase*>
-                                  (k_red, &sol)).second;
+                                  (k_red, sol)).second;
         
         libmesh_assert(if_success);
         
-        // return false so that the calling function knows not to delete it
-        return false;
+        // do not delete the solution since it is stored in the solver
     }
     else {
         // assuming that the roots are sorted, compare them with the existing
         // root and swap the ones that are closer to v_ref
 
         // first make sure that the two have the same number of roots
-        libmesh_assert_equal_to(it->second->n_roots(), sol.n_roots());
+        libmesh_assert_equal_to(it->second->n_roots(), sol->n_roots());
 
         Real dV_old = 0., v_ref_old = 0., dV_new = 0.;
-        const MAST::FlutterRootBase *old_root, *new_root;
+        MAST::FlutterRootBase *old_root, *new_root;
         
-        for (unsigned int i=0; i<sol.n_roots(); i++) {
+        for (unsigned int i=0; i<sol->n_roots(); i++) {
             old_root  = &(it->second->get_root(i));
-            new_root  = &(sol.get_root(i));
+            new_root  = &(sol->get_root(i));
             v_ref_old = old_root->V_ref;
-            dV_old    = fabs(it->second->get_root(i).V - v_ref_old);
-            dV_new    = fabs(sol.get_root(i).V - v_ref);
+            dV_old    = fabs(old_root->V - v_ref_old);
+            dV_new    = fabs(new_root->V - v_ref);
             
             if (dV_new < dV_old)
-                it->second->swap_root(sol, i);
+                old_root->copy_root(*new_root);
         }
         
-        // tell the calling function to delete the sol since it is no longer
-        // of use
-        return true;
+        // delete the solution since its relevants roots have been swapped
+        // out
+        delete sol;
     }
 }
 
