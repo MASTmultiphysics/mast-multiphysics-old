@@ -59,7 +59,8 @@ MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
     const unsigned int nvals = (int)Bmat.rows();
     eig_vec_right = evec_right;
     eig_vec_left  = evec_left;
-    ComplexVectorX k_q = Bmat * evec_right;
+    ComplexVectorX k_q;
+    k_q = Bmat * evec_right;
     modal_participation.resize(nvals, 1);
     for (unsigned int i=0; i<nvals; i++)
         modal_participation(i) =  std::abs(std::conj(evec_right(i)) * k_q(i));

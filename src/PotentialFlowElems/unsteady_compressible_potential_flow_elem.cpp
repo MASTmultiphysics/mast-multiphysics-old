@@ -203,7 +203,6 @@ bool UnsteadyCompressiblePotentialFlow::element_time_derivative (bool request_ja
     rhoinf = flight_condition->gas_property.rho;
     
     const std::vector<std::vector<Real> >& phi = elem_fe->get_phi(); // assuming that all variables have the same interpolation
-    const unsigned int n_phi = (unsigned int)phi.size();
     
     for (unsigned int qp=0; qp != n_qpoints; qp++) {
         // first update the variables at the current quadrature point
@@ -502,7 +501,6 @@ bool UnsteadyCompressiblePotentialFlow::side_time_derivative (bool request_jacob
                                                            vec1_n1, uvec,
                                                            B_mat, dB_mat,
                                                            LS_mat);
-                rho = vec1_n1(1); // get value from the interpolated sol
                 
                 ui_ni = 0.;
                 for (unsigned int i_dim=0; i_dim<dim; i_dim++)
@@ -581,8 +579,6 @@ bool UnsteadyCompressiblePotentialFlow::mass_residual (bool request_jacobian,
                                                    vec1_n1, uvec,
                                                    B_mat, dB_mat,
                                                    LS_mat);
-        rho = vec1_n1(1); // get value from the interpolated sol
-        
         
         // Galerkin contribution to velocity
         B_mat.vector_mult( vec1_n1, c.get_elem_solution() );
