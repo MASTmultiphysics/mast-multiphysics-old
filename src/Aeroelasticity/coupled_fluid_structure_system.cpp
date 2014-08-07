@@ -158,7 +158,7 @@ get_aero_operator_matrix_sensitivity_for_reduced_freq(Real k_red,
         aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
         std::auto_ptr<libMesh::NumericVector<Real> >
         base_sol(aero.linearized_fluid_system.solution->clone().release());
-        aero.linearized_fluid_system.base_solution = base_sol.get();
+        aero.linearized_fluid_system.set_base_solution(*base_sol);
         
         // now solve the sensitivity problem
         aero.linearized_fluid_system.solution->zero();
@@ -265,7 +265,7 @@ get_aero_operator_matrix_sensitivity_for_V_ref(Real k_red,
         aero.linearized_fluid_system.solve(); //  X_F = J_FF^{-1} A_SF Phi
         std::auto_ptr<libMesh::NumericVector<Real> >
         base_sol(aero.linearized_fluid_system.solution->clone().release());
-        aero.linearized_fluid_system.base_solution = base_sol.get();
+        aero.linearized_fluid_system.set_base_solution(*base_sol);
         
         // now solve the sensitivity problem
         aero.linearized_fluid_system.solution->zero();

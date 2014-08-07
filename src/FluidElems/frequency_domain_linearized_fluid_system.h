@@ -90,17 +90,21 @@ public:
      */
     bool if_Vref_sensitivity;
     
-    
     /*!
-     *   this is the base solution about which sensitivity is to be calculated
+     *   sets the base solution for sensitivity analysis
      */
-    libMesh::NumericVector<Real>* base_solution;
+    void set_base_solution(libMesh::NumericVector<Real>& vec);
     
 protected:
     
     bool _if_localized_sol;
     
-    libMesh::AutoPtr<libMesh::NumericVector<Real> > _local_fluid_solution;
+    std::auto_ptr<libMesh::NumericVector<Real> > _local_fluid_solution;
+    
+    /*!
+     *   this is the base solution about which sensitivity is to be calculated
+     */
+    std::auto_ptr<libMesh::NumericVector<Real> > _base_fluid_solution;
     
 };
 

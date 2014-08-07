@@ -142,20 +142,46 @@ void FrequencyDomainLinearizedFluidSystem::localize_fluid_solution()
 {
     libmesh_assert(!_if_localized_sol);
     
-    _local_fluid_solution =
-    libMesh::NumericVector<Real>::build(this->get_equation_systems().comm());
+    _local_fluid_solution.reset(libMesh::NumericVector<Real>::build
+                                (this->get_equation_systems().comm()).release());
     
     
     libMesh::System& fluid =
     this->get_equation_systems().get_system<libMesh::System>("FluidSystem");
 
-    _local_fluid_solution->init(fluid.solution->size(), true, libMesh::SERIAL);
+    const std::vector<libMesh::dof_id_type>& send_list =
+    fluid.get_dof_map().get_send_list();
+
+    
+    _local_fluid_solution->init(fluid.n_dofs(),
+                                fluid.n_local_dofs(),
+                                send_list,
+                                false,
+                                libMesh::GHOSTED);
     fluid.solution->localize(*_local_fluid_solution,
                              fluid.get_dof_map().get_send_list());
     
     _if_localized_sol = true;
 }
 
+
+void FrequencyDomainLinearizedFluidSystem::set_base_solution(libMesh::NumericVector<Real>& vec) {
+  
+    _base_fluid_solution.reset(libMesh::NumericVector<Real>::build
+                               (this->get_equation_systems().comm()).release());
+    
+    
+    const std::vector<libMesh::dof_id_type>& send_list =
+    this->get_dof_map().get_send_list();
+    
+    _base_fluid_solution->init(this->n_dofs(),
+                               this->n_local_dofs(),
+                               send_list,
+                               false,
+                               libMesh::GHOSTED);
+    
+    vec.localize(*_base_fluid_solution, send_list);
+}
 
 
 
@@ -1069,7 +1095,7 @@ bool FrequencyDomainLinearizedFluidSystem::element_time_derivative_sens
         ref_sol(i) = (*_local_fluid_solution)(fluid_dof_indices[i]);
     }
     for (unsigned int i=0; i<n_dofs*2; i++)
-        base_sol(i) =  (*base_solution)(base_sol_dof_indices[i]);
+        base_sol(i) =  (*_base_fluid_solution)(base_sol_dof_indices[i]);
     
     sol_magnitude.add(1., ref_sol);
     
@@ -1530,7 +1556,7 @@ bool FrequencyDomainLinearizedFluidSystem::side_time_derivative_sens
         ref_sol(i) = (*_local_fluid_solution)(fluid_dof_indices[i]);
     
     for (unsigned int i=0; i<n_dofs*2; i++)
-        base_sol(i) =  (*base_solution)(base_sol_dof_indices[i]);
+        base_sol(i) =  (*_base_fluid_solution)(base_sol_dof_indices[i]);
 
     MAST::transform_to_elem_vector(complex_elem_sol, c.get_elem_solution());
     
