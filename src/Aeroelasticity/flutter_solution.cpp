@@ -129,38 +129,6 @@ MAST::FlutterSolutionBase::mark_inconsistent_roots_as_nonphysical(const Real ref
 
 
 
-void
-MAST::FrequencyDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
-                                            const Real k_red,
-                                            const Real v_ref,
-                                            const Real bref,
-                                            const LAPACK_ZGGEV& eig_sol)
-{
-    // make sure that it hasn't already been initialized
-    libmesh_assert(!_roots.size());
-    
-    _ref_val = k_red;
-    
-    // iterate over the roots and initialize the vector
-    _Bmat = eig_sol.B();
-    const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
-    &VL = eig_sol.left_eigenvectors();
-    const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
-    unsigned int nvals = (int)_Bmat.rows();
-
-    _roots.resize(nvals);
-    for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] = solver.build_flutter_root().release();
-        MAST::FrequencyDomainFlutterRoot* root =
-        dynamic_cast<MAST::FrequencyDomainFlutterRoot*>(_roots[i]);
-        root->init(k_red, v_ref, bref,
-                   num(i), den(i),
-                   _Bmat,
-                   VR.col(i), VL.col(i));
-    }
-}
-
-
 
 
 void

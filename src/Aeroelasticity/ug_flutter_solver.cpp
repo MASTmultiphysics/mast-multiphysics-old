@@ -24,6 +24,38 @@
 #include "Aeroelasticity/ug_flutter_solver.h"
 
 
+void
+MAST::UGFlutterSolution::init (const MAST::FlutterSolverBase& solver,
+                               const Real k_red,
+                               const Real v_ref,
+                               const Real bref,
+                               const LAPACK_ZGGEV& eig_sol)
+{
+    // make sure that it hasn't already been initialized
+    libmesh_assert(!_roots.size());
+    
+    _ref_val = k_red;
+    
+    // iterate over the roots and initialize the vector
+    _Bmat = eig_sol.B();
+    const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
+    &VL = eig_sol.left_eigenvectors();
+    const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
+    unsigned int nvals = (int)_Bmat.rows();
+    
+    _roots.resize(nvals);
+    for (unsigned int i=0; i<nvals; i++) {
+        _roots[i] = solver.build_flutter_root().release();
+        MAST::FrequencyDomainFlutterRoot* root =
+        dynamic_cast<MAST::FrequencyDomainFlutterRoot*>(_roots[i]);
+        root->init(k_red, v_ref, bref,
+                   num(i), den(i),
+                   _Bmat,
+                   VR.col(i), VL.col(i));
+    }
+}
+
+
 
 void
 MAST::UGFlutterRoot::init(const Real k_red_val,
@@ -343,7 +375,7 @@ MAST::UGFlutterSolver::analyze(const Real k_red,
     ges.scale_eigenvectors_to_identity_innerproduct();
 
     MAST::FrequencyDomainFlutterSolution* root =
-    new MAST::FrequencyDomainFlutterSolution;
+    new MAST::UGFlutterSolution;
     root->init(*this, k_red, v_ref, flight_condition->ref_chord, ges);
     if (prev_sol)
         root->sort(*prev_sol);

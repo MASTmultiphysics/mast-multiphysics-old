@@ -1,10 +1,21 @@
-//
-//  pk_flutter_solver.h
-//  MAST
-//
-//  Created by Manav Bhatia on 9/18/13.
-//  Copyright (c) 2013 Manav Bhatia. All rights reserved.
-//
+/*
+ * MAST: Multidisciplinary-design Adaptation and Sensitivity Toolkit
+ * Copyright (C) 2013-2014  Manav Bhatia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef __MAST__pk_flutter_solver__
 #define __MAST__pk_flutter_solver__
@@ -17,207 +28,191 @@
 
 // MAST includes
 #include "Aeroelasticity/flutter_solver_base.h"
-#include "Solvers/lapack_interface.h"
 
-class PKFlutterSolver: public FlutterSolverBase
-{
-public:
-    PKFlutterSolver():
-    FlutterSolverBase(),
-    k_ref_range(std::pair<Real, Real>(0., 0.35)),
-    n_k_divs(10),
-    _previous_k_ref(0.)
-    {}
+
+namespace MAST {
     
-    
-    virtual ~PKFlutterSolver();
-    
-    /*!
-     *   range of reduced frequencies within which to find flutter roots
-     *   Default range is 0.1 to 1.0
-     */
-    std::pair<Real, Real> k_ref_range;
-    
-    /*!
-     *    number of division in the reduced frequency range for initial scanning
-     */
-    unsigned int n_k_divs;
-    
-    /*!
-     *   Scans for flutter roots in the range specified, and identified the
-     *   divergence (if k_ref = 0. is specified) and flutter crossover points.
-     *   The roots are organized in terms of increasing velocity.
-     */
-    virtual void scan_for_roots();
-    
-    
-    /*!
-     *    finds the number of critical points already identified in the
-     *    procedure.
-     */
-    virtual unsigned int n_roots_found() const;
-    
-    
-    /*!
-     *   returns the \par n th root in terms of ascending velocity that is
-     *   found by the solver
-     */
-    const FlutterRoot& get_root(const unsigned int n) const;
-    
-    
-    /*!
-     *   Looks through the list of flutter cross-over points and iteratively
-     *   zooms in to find the cross-over point. This should be called only
-     *   after scan_for_roots() has been called. Potential cross-over points
-     *   are sorted with increasing velocity, and this method will attempt to
-     *   identify the next critical root in the order.
-     */
-    virtual std::pair<bool, const FlutterRoot*> find_next_root();
-    
-    /*!
-     *   Prints the sorted roots to the \par output
-     */
-    void print_sorted_roots(std::ostream* output = NULL);
-    
-    
-    class PKFlutterRoot: public FlutterRoot
-    {
+    class PKFlutterSolution: public MAST::FrequencyDomainFlutterSolution {
     public:
-        PKFlutterRoot(): FlutterRoot(), if_nonphysical_root(false) { }
-        void init(const Real k, const Real b_ref,
-                  const Complex num, const Complex den,
-                  const ComplexMatrixX& Bmat,
-                  const ComplexVectorX& eig_vec);
-        bool if_nonphysical_root;
-    };
-    
-    
-    class PKFlutterSolution
-    {
-    public:
-        PKFlutterSolution(unsigned int n):
-        _k_ref(0.) {
-            _roots.resize(n);
-            for (unsigned int i=0; i<n; i++)
-                _roots[i] = new PKFlutterSolver::PKFlutterRoot();
-        }
         
-        /*!
-         *    delete the flutter root objects
-         */
-        ~PKFlutterSolution() {
-            std::vector<PKFlutterSolver::PKFlutterRoot*>::iterator
-            it = _roots.begin();
-            for ( ; it != _roots.end(); it++)
-                delete *it;
-        }
-        
-        /*!
-         *   the reduced frequency for this solution
-         */
-        Real k_ref() const {
-            return _k_ref;
-        }
-        
-        /*!
-         *   number of roots in this solution
-         */
-        unsigned int n_roots() const{
-            return _roots.size();
-        }
-        
-        /*!
-         *    returns the root
-         */
-        const PKFlutterRoot& get_root(const unsigned int i) const {
-            libmesh_assert_less(i, _roots.size());
-            return *_roots[i];
-        }
-        
-        /*!
-         *   initializes the UG flutter solution for an eigensolution
-         */
-        void init (const Real kref, const Real bref,
-                   const LAPACK_ZGGEV& eig_sol);
-        
-        /*!
-         *    sort this root with respect to the given solution from a previous
-         *    eigen solution. This method relies on the modal participation.
-         *    Flutter roots from previous and current solutions with highest
-         *    dot product of modal participation vector are considered to be
-         *    similar.
-         */
-        void sort(const PKFlutterSolver::PKFlutterSolution& sol);
-        
-        /*!
-         *    prints the data and modes from this solution
-         */
-        void print(std::ostream& output, std::ostream& mode_output);
-        
-    protected:
-        Real _k_ref;
-        std::vector<PKFlutterSolver::PKFlutterRoot*> _roots;
-    };
-    
-    
-    class PKFlutterRootCrossover
-    {
-    public:
-        PKFlutterRootCrossover():
-        crossover_solutions(NULL, NULL),
-        root_num(0),
-        root(NULL)
+        PKFlutterSolution():
+        MAST::FrequencyDomainFlutterSolution()
         { }
         
-        std::pair<PKFlutterSolver::PKFlutterSolution*, PKFlutterSolver::PKFlutterSolution*>
-        crossover_solutions;
         
-        unsigned int root_num;
+        virtual ~PKFlutterSolution() {}
         
-        const PKFlutterSolver::PKFlutterRoot* root;
+        /*!
+         *   initializes the flutter solution from an eigensolution
+         */
+        virtual void init (const MAST::FlutterSolverBase& solver,
+                           const Real k_red,
+                           const Real v_ref,
+                           const Real bref,
+                           const LAPACK_ZGGEV& eig_sol);
+        
+    };
+
+    
+    class PKFlutterRoot: public MAST::FrequencyDomainFlutterRoot {
+    public:
+        PKFlutterRoot():
+        MAST::FrequencyDomainFlutterRoot()
+        { }
+        
+        virtual ~PKFlutterRoot() {}
+        
+        virtual void init(const Real k_red_ref,
+                          const Real V_ref,
+                          const Real b_ref,
+                          const Complex num, const Complex den,
+                          const ComplexMatrixX& Kmat,
+                          const ComplexVectorX& evec_right,
+                          const ComplexVectorX& evec_left);
     };
     
-protected:
     
-    /*!
-     *   map of reduced frequency vs flutter solutions
-     */
-    std::map<Real, PKFlutterSolver::PKFlutterSolution*> _flutter_solutions;
     
-    /*!
-     *   the map of flutter crossover points versus average velocity of the
-     *   two bounding roots
-     */
-    std::multimap<Real, PKFlutterSolver::PKFlutterRootCrossover*> _flutter_crossovers;
     
-    /*!
-     *   performs an eigensolution at the specified reduced frequency, and
-     *   sort the roots based on the provided solution pointer. If the
-     *   pointer is NULL, then no sorting is performed
-     */
-    PKFlutterSolver::PKFlutterSolution*
-    analyze(const Real k_ref,
-            const PKFlutterSolver::PKFlutterSolution* prev_sol=NULL);
-    
-    /*!
-     *    bisection method search
-     */
-    std::pair<bool, PKFlutterSolver::PKFlutterSolution*>
-    bisection_search(const std::pair<PKFlutterSolver::PKFlutterSolution*,
-                     PKFlutterSolver::PKFlutterSolution*>& k_ref_sol_range,
-                     const unsigned int root_num,
-                     const Real g_tol,
-                     const unsigned int max_iters);
-    
-    /*!
-     *    initializes the matrices for the specified k_ref. UG does not account
-     *    for structural damping.
-     */
-    void initialize_matrices(Real k_ref,
-                             ComplexMatrixX& m, // mass & aero
-                             ComplexMatrixX& k); // aero operator
-};
+    class PKFlutterSolver: public MAST::FlutterSolverBase
+    {
+    public:
+        PKFlutterSolver():
+        MAST::FlutterSolverBase(),
+        v_ref_range(std::pair<Real, Real>(0., 0.)),
+        n_v_ref_divs(1),
+        k_red_range(std::pair<Real, Real>(0., 0.)),
+        n_k_red_divs(1)
+        { }
+        
+        
+        virtual ~PKFlutterSolver();
+        
+        
+        /*!
+         *   range of reference values within which to find flutter roots
+         */
+        std::pair<Real, Real> v_ref_range;
+        
+        /*!
+         *    number of division in the reference value range for initial
+         *    scanning
+         */
+        unsigned int n_v_ref_divs;
 
+        /*!
+         *   range of reference values within which to find flutter roots
+         */
+        std::pair<Real, Real> k_red_range;
+        
+        /*!
+         *    number of division in the reference value range for initial
+         *    scanning
+         */
+        unsigned int n_k_red_divs;
+        
+        
+        virtual void scan_for_roots();
+        
+        /*!
+         *    creates a new flutter root and returns pointer to it.
+         */
+        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root() const;
+        
+        /*!
+         *   Calculate the sensitivity of the flutter root with respect to the
+         *   \par i^th parameter in params
+         */
+        virtual void calculate_sensitivity(MAST::FlutterRootBase& root,
+                                           const libMesh::ParameterVector& params,
+                                           const unsigned int i);
+        
+    protected:
+        
+        /*!
+         *   identifies all cross-over and divergence points from analyzed
+         *   roots
+         */
+        virtual void _identify_crossover_points();
+        
+        
+        void _insert_new_solution(const Real k_red_ref,
+                                  MAST::FlutterSolutionBase* sol);
+
+        
+        virtual std::pair<bool, MAST::FlutterSolutionBase*>
+        bisection_search(const std::pair<MAST::FlutterSolutionBase*,
+                         MAST::FlutterSolutionBase*>& ref_sol_range,
+                         const unsigned int root_num,
+                         const Real g_tol,
+                         const unsigned int max_iters);
+        
+        
+        
+        /*!
+         *    Newton method to look for cross-over point method search
+         */
+        virtual std::pair<bool, MAST::FlutterSolutionBase*>
+        newton_search(const MAST::FlutterSolutionBase& init_sol,
+                      const unsigned int root_num,
+                      const Real tol,
+                      const unsigned int max_iters);
+        
+        /*!
+         *   performs an eigensolution at the specified reduced frequency, and
+         *   sort the roots based on the provided solution pointer. If the
+         *   pointer is NULL, then no sorting is performed
+         */
+        virtual std::auto_ptr<MAST::FlutterSolutionBase>
+        analyze(const Real k_red,
+                const Real v_ref,
+                const MAST::FlutterSolutionBase* prev_sol=NULL);
+        
+        
+        
+        /*!
+         *    initializes the matrices for the specified k_red. UG does not account
+         *    for structural damping.
+         */
+        void initialize_matrices(const Real k_red,
+                                 const Real v_ref,
+                                 ComplexMatrixX& m, // mass & aero
+                                 ComplexMatrixX& k); // aero operator
+        
+        /*!
+         *    initializes the matrices for the specified k_red. UG does not account
+         *    for structural damping.
+         */
+        void
+        initialize_matrix_sensitivity_for_param(const libMesh::ParameterVector& params,
+                                                unsigned int p,
+                                                const Real k_red,
+                                                const Real v_ref,
+                                                ComplexMatrixX& m, // mass & aero
+                                                ComplexMatrixX& k); // aero operator
+        
+        /*!
+         *    initializes the matrices for the specified k_red. UG does not account
+         *    for structural damping.
+         */
+        void
+        initialize_matrix_sensitivity_for_reduced_freq(const Real k_red,
+                                                       const Real v_ref,
+                                                       ComplexMatrixX& m, // mass & aero
+                                                       ComplexMatrixX& k); // aero operator
+        
+        /*!
+         *    initializes the matrices for the specified k_red. UG does not account
+         *    for structural damping.
+         */
+        void
+        initialize_matrix_sensitivity_for_V_ref(const Real k_red,
+                                                const Real v_ref,
+                                                ComplexMatrixX& m, // mass & aero
+                                                ComplexMatrixX& k); // aero operator
+        
+    };
+}
 
 
 #endif /* defined(__MAST__pk_flutter_solver__) */

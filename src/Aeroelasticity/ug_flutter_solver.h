@@ -26,6 +26,29 @@
 namespace MAST {
     
     
+    class UGFlutterSolution: public MAST::FrequencyDomainFlutterSolution {
+    public:
+        
+        UGFlutterSolution():
+        MAST::FrequencyDomainFlutterSolution()
+        { }
+        
+        
+        virtual ~UGFlutterSolution() {}
+        
+        /*!
+         *   initializes the flutter solution from an eigensolution
+         */
+        virtual void init (const MAST::FlutterSolverBase& solver,
+                           const Real k_red,
+                           const Real v_ref,
+                           const Real bref,
+                           const LAPACK_ZGGEV& eig_sol);
+        
+    };
+
+
+    
     class UGFlutterRoot: public MAST::FrequencyDomainFlutterRoot {
     public:
         UGFlutterRoot():

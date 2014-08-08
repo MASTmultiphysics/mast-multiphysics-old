@@ -266,7 +266,7 @@ namespace MAST {
                            const Real k_red,
                            const Real v_ref,
                            const Real bref,
-                           const LAPACK_ZGGEV& eig_sol);
+                           const LAPACK_ZGGEV& eig_sol) = 0;
         
     };
 
