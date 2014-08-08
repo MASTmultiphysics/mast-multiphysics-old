@@ -221,10 +221,9 @@ MAST::FlutterSolutionBase::print(std::ostream &output)
         << std::setw(2) << " "
         << std::setw(5) << "Mode "
         << std::setw(5) << i
-        << std::setw(3) << " ";
+        << std::setw(2) << " ";
     
     // output the headers for flutter mode
-    output << std::setw(5) << "#";
     for (unsigned int i=0; i<nvals; i++)
         output
         << std::setw(10) << "|         "
@@ -258,8 +257,9 @@ MAST::FlutterSolutionBase::print(std::ostream &output)
         
         // now write the modal participation
         for (unsigned int j=0; j<nvals; j++)
-            output << std::setw(12) << root.modal_participation(j);
-        output << std::setw(2) << " ";
+            output
+            << std::setw(12) << root.modal_participation(j)
+            << std::setw(2) << " ";
         
         // now write the flutter mode
         for (unsigned int j=0; j<nvals; j++)
