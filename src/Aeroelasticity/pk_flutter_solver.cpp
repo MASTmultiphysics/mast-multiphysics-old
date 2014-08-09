@@ -369,8 +369,8 @@ MAST::PKFlutterSolver::newton_search(const MAST::FlutterSolutionBase& init_sol,
         // Jacobian
         jac(0,0) = eig_k_red_sens.imag();
         jac(0,1) = eig_V_ref_sens.imag();
-        jac(1,0) = 0.5*v_ref*pow(eig.real(), -1.5)*eig_k_red_sens.real();
-        jac(1,1) = std::sqrt(eig.real()) + 0.5*v_ref*pow(eig.real(), -1.5)*eig_V_ref_sens.real();
+        jac(1,0) = 0.5*v_ref*pow(eig.real(), -0.5)*eig_k_red_sens.real();
+        jac(1,1) = std::sqrt(eig.real()) + 0.5*v_ref*pow(eig.real(), -0.5)*eig_V_ref_sens.real();
         
         // now calculate the updates
         //     r0 + J *dx = 0
@@ -704,7 +704,6 @@ MAST::PKFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     // set value in the return root
     root.has_sensitivity_data = true;
     root.root_sens  = sens;
-    root.k_red_sens = k_sens;
     root.V_sens     = V_sens;
     
     libMesh::out

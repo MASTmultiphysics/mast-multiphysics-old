@@ -47,7 +47,6 @@ namespace MAST {
         omega(0.),
         k_red(0.),
         V_sens(0.),
-        k_red_sens(0.),
         root(0.),
         root_sens(0.)
         {}
@@ -67,7 +66,6 @@ namespace MAST {
         V_sens(f.V_sens),
         root(f.root),
         root_sens(f.root_sens),
-        k_red_sens(f.k_red_sens),
         eig_vec_right(f.eig_vec_right),
         eig_vec_left(f.eig_vec_left),
         modal_participation(f.modal_participation)
@@ -87,7 +85,6 @@ namespace MAST {
             V_sens                 = f.V_sens;
             root                   = f.root;
             root_sens              = f.root_sens;
-            k_red_sens             = f.k_red_sens;
             eig_vec_right          = f.eig_vec_right;
             eig_vec_left           = f.eig_vec_left;
             modal_participation    = f.modal_participation;
@@ -103,7 +100,7 @@ namespace MAST {
         
         Real k_red_ref, V_ref, V, g, omega, k_red, V_sens;
         
-        Complex root, root_sens, k_red_sens;
+        Complex root, root_sens;
         
         /*!
          *    right and left eigenvevtors

@@ -473,7 +473,6 @@ MAST::UGFlutterSolver::calculate_sensitivity(MAST::FlutterRootBase& root,
     // set value in the return root
     root.has_sensitivity_data = true;
     root.root_sens  = sens;
-    root.k_red_sens = k_sens;
     root.V_sens     = V_sens;
 
     libMesh::out

@@ -35,7 +35,7 @@
 #include "FluidElems/fluid_system.h"
 #include "FluidElems/linearized_fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
-#include "Aeroelasticity/ug_flutter_solver.h"
+#include "Aeroelasticity/noniterative_ug_flutter_solver.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
 #include "BoundaryConditions/flexible_surface_motion.h"
 #include "Mesh/panel_mesh.h"
@@ -1313,15 +1313,20 @@ MAST::SizingOptimization::_init() {
 
     
     // create the solvers
-    _flutter_solver.reset(new MAST::UGFlutterSolver);
+    MAST::NoniterativeUGFlutterSolver* flutter_solver =
+    new MAST::NoniterativeUGFlutterSolver;
+    _flutter_solver.reset(flutter_solver);
     std::string nm = "flutter_output.txt";
     if (!_libmesh_init.comm().rank())
-        _flutter_solver->set_output_file(nm);
-    _flutter_solver->aero_structural_model   = _coupled_system.get();
-    _flutter_solver->flight_condition        = _flight_cond.get();
-    _flutter_solver->k_red_range.first       = _fluid_input("ug_lower_k", 0.0);
-    _flutter_solver->k_red_range.second      = _fluid_input("ug_upper_k", 0.35);
-    _flutter_solver->n_k_red_divs            = _fluid_input("ug_k_divs", 10);
+        flutter_solver->set_output_file(nm);
+    flutter_solver->aero_structural_model   = _coupled_system.get();
+    flutter_solver->flight_condition        = _flight_cond.get();
+    flutter_solver->k_red_range.first       = _fluid_input("ug_lower_k", 0.0);
+    flutter_solver->k_red_range.second      = _fluid_input("ug_upper_k", 0.35);
+    flutter_solver->n_k_red_divs            = _fluid_input("ug_k_divs", 10);
+    flutter_solver->v_ref_range.first       = _fluid_input("ug_lower_V", 100.0);
+    flutter_solver->v_ref_range.second      = _fluid_input("ug_upper_V", 1000.0);
+    flutter_solver->n_v_ref_divs            = _fluid_input("ug_V_divs", 4);
 
     
     // Pass the Dirichlet dof IDs to the libMesh::CondensedEigenSystem

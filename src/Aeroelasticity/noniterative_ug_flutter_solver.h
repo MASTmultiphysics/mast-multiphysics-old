@@ -67,6 +67,15 @@ namespace MAST {
                       const Real tol,
                       const unsigned int max_iters);
 
+
+        /*!
+         *   Calculate the sensitivity of the flutter root with respect to the
+         *   \par i^th parameter in params
+         */
+        virtual void calculate_sensitivity(MAST::FlutterRootBase& root,
+                                           const libMesh::ParameterVector& params,
+                                           const unsigned int i);
+    
     protected:
         
         void _insert_new_solution(const Real v_ref,
