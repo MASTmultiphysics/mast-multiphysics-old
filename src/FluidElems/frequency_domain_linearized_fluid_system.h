@@ -46,6 +46,7 @@ public:
     FluidElemBase(*es.parameters.get<GetPot*>("input_file")),
     perturbed_surface_motion(NULL),
     if_k_red_sensitivity(false),
+    if_Vref_sensitivity(false),
     _if_localized_sol(false)
     { }
     
