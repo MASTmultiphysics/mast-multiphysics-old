@@ -45,9 +45,8 @@ MAST::UGFlutterSolution::init (const MAST::FlutterSolverBase& solver,
     
     _roots.resize(nvals);
     for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] = solver.build_flutter_root().release();
-        MAST::FrequencyDomainFlutterRoot* root =
-        dynamic_cast<MAST::FrequencyDomainFlutterRoot*>(_roots[i]);
+        MAST::UGFlutterRoot* root = new MAST::UGFlutterRoot;
+        _roots[i] = root;
         root->init(k_red, v_ref, bref,
                    num(i), den(i),
                    _Bmat,
@@ -108,12 +107,6 @@ MAST::UGFlutterRoot::init(const Real k_red_val,
 MAST::UGFlutterSolver::~UGFlutterSolver()
 { }
 
-
-
-std::auto_ptr<MAST::FlutterRootBase>
-MAST::UGFlutterSolver::build_flutter_root() const {
-    return std::auto_ptr<MAST::FlutterRootBase>(new MAST::UGFlutterRoot);
-}
 
 
 
@@ -374,8 +367,7 @@ MAST::UGFlutterSolver::analyze(const Real k_red,
     ges.compute(m, k);
     ges.scale_eigenvectors_to_identity_innerproduct();
 
-    MAST::FrequencyDomainFlutterSolution* root =
-    new MAST::UGFlutterSolution;
+    MAST::UGFlutterSolution* root = new MAST::UGFlutterSolution;
     root->init(*this, k_red, v_ref, flight_condition->ref_chord, ges);
     if (prev_sol)
         root->sort(*prev_sol);

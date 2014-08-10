@@ -26,47 +26,6 @@
 
 
 
-void
-MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
-                                  const Complex num,
-                                  const Complex den,
-                                  const RealMatrixX& Bmat,
-                                  const ComplexVectorX& evec_right,
-                                  const ComplexVectorX& evec_left)
-{
-    V = ref_val;
-    
-    if (std::abs(den) > 0.)
-    {
-        root = num/den;
-        if (std::real(root) > 0.)
-        {
-            V     = sqrt(1./std::real(root));
-            g     = std::imag(root)/std::real(root);
-            omega = k_red*V/b_ref;
-            if_nonphysical_root = false;
-        }
-        else
-        {
-            V     = 0.;
-            g     = 0.;
-            omega = 0.;
-            if_nonphysical_root = true;
-        }
-    }
-    
-    // calculate the modal participation vector
-    const unsigned int nvals = (int)Bmat.rows();
-    eig_vec_right = evec_right;
-    eig_vec_left  = evec_left;
-    ComplexVectorX k_q;
-    k_q = Bmat * evec_right;
-    modal_participation.resize(nvals, 1);
-    for (unsigned int i=0; i<nvals; i++)
-        modal_participation(i) =  std::abs(std::conj(evec_right(i)) * k_q(i));
-    modal_participation *= (1./modal_participation.sum());
-}
-
 
 void
 MAST::FlutterSolutionBase::sort(const MAST::FlutterSolutionBase& sol)
@@ -131,46 +90,21 @@ MAST::FlutterSolutionBase::mark_inconsistent_roots_as_nonphysical(const Real ref
 
 
 
-void
-MAST::TimeDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
-                                       const Real v_ref,
-                                       const Real bref,
-                                       const LAPACK_DGGEV& eig_sol)
-{
-    // make sure that it hasn't already been initialized
-    libmesh_assert(!_roots.size());
-    
-    _ref_val = v_ref;
-    // iterate over the roots and initialize the vector
-    const RealMatrixX &B = eig_sol.B();
-    const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
-    &VL = eig_sol.left_eigenvectors();
-    const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
-    unsigned int nvals = (int)B.rows();
-    
-    _roots.resize(nvals);
-    for (unsigned int i=0; i<nvals; i++) {
-        _roots[i] = solver.build_flutter_root().release();
-        MAST::TimeDomainFlutterRoot* root =
-        dynamic_cast<MAST::TimeDomainFlutterRoot*>(_roots[i]);
-        root->init(v_ref, bref,
-                   num(i), den(i),
-                   B,
-                   VR.col(i), VL.col(i));
-    }
-}
-
-
 
 
 void
 MAST::FlutterSolutionBase::print(std::ostream &output)
 {
+    // make sure that some roots exist for this solution
+    libmesh_assert(this->n_roots() > 0);
+    
     const unsigned int nvals = this->n_roots();
+    unsigned int n_participation_vals =
+    (unsigned int)this->get_root(0).modal_participation.size();
     libmesh_assert(nvals);
 
     // first write the reference values of the root
-    output << " val = " << _ref_val << std::endl;
+    output << " Flutter Root " << std::endl;
 
     // now write the root
     output
@@ -179,12 +113,14 @@ MAST::FlutterSolutionBase::print(std::ostream &output)
     << std::setw(15) << "V_ref"
     << std::setw(15) << "g"
     << std::setw(15) << "V"
+    << std::setw(15) << "k"
     << std::setw(15) << "omega"
     << std::setw(15) << "Re"
-    << std::setw(15) << "Im";
+    << std::setw(15) << "Im"
+    << std::setw(3)  << " | ";
     
     // output the headers for flutter mode participation
-    for (unsigned int i=0; i<nvals; i++)
+    for (unsigned int i=0; i<n_participation_vals; i++)
         output
         << std::setw(2) << " "
         << std::setw(5) << "Mode "
@@ -219,12 +155,14 @@ MAST::FlutterSolutionBase::print(std::ostream &output)
         << std::setw(15) << root.V_ref
         << std::setw(15) << root.g
         << std::setw(15) << root.V
+        << std::setw(15) << root.k_red
         << std::setw(15) << root.omega
         << std::setw(15) << std::real(root.root)
-        << std::setw(15) << std::imag(root.root);
+        << std::setw(15) << std::imag(root.root)
+        << std::setw(3)  << " | ";
         
         // now write the modal participation
-        for (unsigned int j=0; j<nvals; j++)
+        for (unsigned int j=0; j<n_participation_vals; j++)
             output
             << std::setw(12) << root.modal_participation(j)
             << std::setw(2) << " ";

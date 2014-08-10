@@ -32,11 +32,11 @@
 
 namespace MAST {
     
-    class PKFlutterSolution: public MAST::FrequencyDomainFlutterSolution {
+    class PKFlutterSolution: public MAST::FlutterSolutionBase {
     public:
         
         PKFlutterSolution():
-        MAST::FrequencyDomainFlutterSolution()
+        MAST::FlutterSolutionBase()
         { }
         
         
@@ -49,15 +49,21 @@ namespace MAST {
                            const Real k_red,
                            const Real v_ref,
                            const Real bref,
+                           const RealMatrixX& kmat,
                            const LAPACK_ZGGEV& eig_sol);
+        
+        /*!
+         *   structural stiffness matrix
+         */
+        RealMatrixX _stiff_mat;
         
     };
 
     
-    class PKFlutterRoot: public MAST::FrequencyDomainFlutterRoot {
+    class PKFlutterRoot: public MAST::FlutterRootBase {
     public:
         PKFlutterRoot():
-        MAST::FrequencyDomainFlutterRoot()
+        MAST::FlutterRootBase()
         { }
         
         virtual ~PKFlutterRoot() {}
@@ -66,9 +72,17 @@ namespace MAST {
                           const Real V_ref,
                           const Real b_ref,
                           const Complex num, const Complex den,
-                          const ComplexMatrixX& Kmat,
+                          const RealMatrixX& Kmat,
                           const ComplexVectorX& evec_right,
                           const ComplexVectorX& evec_left);
+        
+        /*!
+         *    @returns true if the \par r is the conjugate of \par this
+         */
+        bool is_similar(MAST::FlutterRootBase& r) const;
+
+    protected:
+
     };
     
     
@@ -115,11 +129,6 @@ namespace MAST {
         virtual void scan_for_roots();
         
         /*!
-         *    creates a new flutter root and returns pointer to it.
-         */
-        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root() const;
-        
-        /*!
          *   Calculate the sensitivity of the flutter root with respect to the
          *   \par i^th parameter in params
          */
@@ -162,6 +171,7 @@ namespace MAST {
          *   performs an eigensolution at the specified reduced frequency, and
          *   sort the roots based on the provided solution pointer. If the
          *   pointer is NULL, then no sorting is performed
+         *   solve the eigenproblem  \f\[ L x = lambda R x \f\]
          */
         virtual std::auto_ptr<MAST::FlutterSolutionBase>
         analyze(const Real k_red,
@@ -176,8 +186,9 @@ namespace MAST {
          */
         void initialize_matrices(const Real k_red,
                                  const Real v_ref,
-                                 ComplexMatrixX& m, // mass & aero
-                                 ComplexMatrixX& k); // aero operator
+                                 ComplexMatrixX& L,   // stiff, aero, damp
+                                 ComplexMatrixX& R,   // mass
+                                 RealMatrixX& stiff); // stiffness
         
         /*!
          *    initializes the matrices for the specified k_red. UG does not account
@@ -188,8 +199,8 @@ namespace MAST {
                                                 unsigned int p,
                                                 const Real k_red,
                                                 const Real v_ref,
-                                                ComplexMatrixX& m, // mass & aero
-                                                ComplexMatrixX& k); // aero operator
+                                                ComplexMatrixX& L,  // stiff, aero, damp
+                                                ComplexMatrixX& R); // mass
         
         /*!
          *    initializes the matrices for the specified k_red. UG does not account
@@ -198,8 +209,8 @@ namespace MAST {
         void
         initialize_matrix_sensitivity_for_reduced_freq(const Real k_red,
                                                        const Real v_ref,
-                                                       ComplexMatrixX& m, // mass & aero
-                                                       ComplexMatrixX& k); // aero operator
+                                                       ComplexMatrixX& L,  // stiff, aero, damp
+                                                       ComplexMatrixX& R); // mass
         
         /*!
          *    initializes the matrices for the specified k_red. UG does not account
@@ -208,8 +219,8 @@ namespace MAST {
         void
         initialize_matrix_sensitivity_for_V_ref(const Real k_red,
                                                 const Real v_ref,
-                                                ComplexMatrixX& m, // mass & aero
-                                                ComplexMatrixX& k); // aero operator
+                                                ComplexMatrixX& L,  // stiff, aero, damp
+                                                ComplexMatrixX& R); // mass
         
     };
 }

@@ -37,6 +37,7 @@
 #include "Flight/flight_condition.h"
 #include "FluidElems/fluid_system.h"
 #include "FluidElems/frequency_domain_linearized_fluid_system.h"
+#include "Aeroelasticity/pk_flutter_solver.h"
 #include "Aeroelasticity/ug_flutter_solver.h"
 #include "Aeroelasticity/noniterative_ug_flutter_solver.h"
 #include "Aeroelasticity/coupled_fluid_structure_system.h"
@@ -351,7 +352,7 @@ panel_flutter_analysis(libMesh::LibMeshInit& init,
     coupled_system.nm = nm;
     
     // create the solvers
-    MAST::NoniterativeUGFlutterSolver flutter_solver;
+    MAST::PKFlutterSolver flutter_solver;
     std::string flutter_output_nm = nm + "_flutter_output.txt";
     if (!init.comm().rank())
         flutter_solver.set_output_file(flutter_output_nm);

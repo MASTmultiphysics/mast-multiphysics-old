@@ -41,6 +41,13 @@ public:
     aerodynamic_model(aero),
     structural_model(structure)
     { }
+
+    /*!
+     *   @returns the number of degrees of freedom in the structural model
+     */
+    unsigned int n_dofs() const {
+        return structural_model.n_dofs();
+    }
     
     /*!
      *    updates the structural mass operator in \par mat.

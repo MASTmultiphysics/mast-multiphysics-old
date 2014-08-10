@@ -242,13 +242,6 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
         eig_k_red_sens = root.eig_vec_left.dot(v) / den;
         
-        /*std::auto_ptr<MAST::FlutterSolutionBase> ug_dsol =
-        this->analyze(k_red+.001, v_ref, prev_sol);
-        eig -= ug_dsol->get_root(root_num).root;
-        eig /= -.001;
-        
-        std::cout << eig << std::endl;
-        std::cout << eig_k_red_sens << std::endl;*/
         
         // next, sensitivity wrt V_ref
         initialize_matrix_sensitivity_for_V_ref(k_red,
@@ -264,26 +257,34 @@ MAST::NoniterativeUGFlutterSolver::newton_search(const MAST::FlutterSolutionBase
         den = root.eig_vec_left.dot(mat_B*root.eig_vec_right);
         eig_V_ref_sens = root.eig_vec_left.dot(v) / den;
 
-        /*std::auto_ptr<MAST::FlutterSolutionBase> ug_dsol =
-         this->analyze(k_red, v_ref+.001, prev_sol);
-         eig -= ug_dsol->get_root(root_num).root;
-         eig /= -.001;
-         
-         std::cout << eig << std::endl;
-         std::cout << eig_V_ref_sens << std::endl;*/
-
         // residual
         res(0) = eig.imag()/eig.real();
-        res(1) = v_ref*std::sqrt(eig.real()) - 1.;
+        res(1) = v_ref*sqrt(eig.real()) - 1.;
         
         // Jacobian
-        jac(0,0) =
-        eig_k_red_sens.imag()/eig.real() -
+        jac(0,0) = eig_k_red_sens.imag()/eig.real() -
         eig.imag()*pow(eig.real(),-2)*eig_k_red_sens.real();
         jac(0,1) = eig_V_ref_sens.imag()/eig.real() -
         eig.imag()*pow(eig.real(),-2)*eig_V_ref_sens.real();
-        jac(1,0) = 0.5*v_ref*pow(eig.real(), -0.5)*eig_k_red_sens.real();
-        jac(1,1) = std::sqrt(eig.real()) + 0.5*v_ref*pow(eig.real(), -0.5)*eig_V_ref_sens.real();
+        jac(1,0) = 0.5*v_ref*pow(eig.real(),-0.5)*eig_k_red_sens.real();
+        jac(1,1) = sqrt(eig.real()) + 0.5*v_ref*pow(eig.real(),-0.5)*eig_V_ref_sens.real();
+
+        /*std::auto_ptr<MAST::FlutterSolutionBase> ug_dsol =
+        this->analyze(k_red+.001, v_ref, prev_sol);
+        Complex deig = ug_dsol->get_root(root_num).root;
+        deig -= eig;
+        deig /= .001;
+        
+        std::cout << "fd deig/dk:  " << deig << std::endl;
+        std::cout << "analytical: " << eig_k_red_sens << std::endl;
+        
+        ug_dsol.reset(this->analyze(k_red, v_ref+.001, prev_sol).release());
+        deig = ug_dsol->get_root(root_num).root;
+        deig -= eig;
+        deig /= .001;
+        
+        std::cout << "fd deig/dV:  " << deig << std::endl;
+        std::cout << "analytical: " << eig_V_ref_sens << std::endl;*/
 
         // now calculate the updates
         //     r0 + J *dx = 0

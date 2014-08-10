@@ -26,11 +26,11 @@
 namespace MAST {
     
     
-    class UGFlutterSolution: public MAST::FrequencyDomainFlutterSolution {
+    class UGFlutterSolution: public MAST::FlutterSolutionBase {
     public:
         
         UGFlutterSolution():
-        MAST::FrequencyDomainFlutterSolution()
+        MAST::FlutterSolutionBase()
         { }
         
         
@@ -49,10 +49,10 @@ namespace MAST {
 
 
     
-    class UGFlutterRoot: public MAST::FrequencyDomainFlutterRoot {
+    class UGFlutterRoot: public MAST::FlutterRootBase {
     public:
         UGFlutterRoot():
-        MAST::FrequencyDomainFlutterRoot()
+        MAST::FlutterRootBase()
         { }
         
         virtual ~UGFlutterRoot() {}
@@ -96,11 +96,6 @@ namespace MAST {
         
         virtual void scan_for_roots();
     
-        /*!
-         *    creates a new flutter root and returns pointer to it.
-         */
-        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root() const;
-
         /*!
          *   Calculate the sensitivity of the flutter root with respect to the
          *   \par i^th parameter in params

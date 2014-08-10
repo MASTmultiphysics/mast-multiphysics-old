@@ -25,6 +25,47 @@
 
 namespace MAST {
     
+    
+    
+    class TimeDomainFlutterRoot: public MAST::FlutterRootBase {
+    public:
+        TimeDomainFlutterRoot():
+        MAST::FlutterRootBase()
+        { }
+        
+        virtual ~TimeDomainFlutterRoot() {}
+        
+        virtual void init(const Real ref_val, const Real b_ref,
+                          const Complex num,
+                          const Complex den,
+                          const RealMatrixX& Bmat,
+                          const ComplexVectorX& evec_right,
+                          const ComplexVectorX& evec_left);
+    };
+    
+
+    
+    class TimeDomainFlutterSolution: public MAST::FlutterSolutionBase {
+    public:
+        
+        TimeDomainFlutterSolution():
+        MAST::FlutterSolutionBase()
+        { }
+        
+        virtual ~TimeDomainFlutterSolution() {}
+        
+        /*!
+         *   initializes the flutter solution from an eigensolution
+         */
+        virtual void init (const MAST::FlutterSolverBase& solver,
+                           const Real v_ref,
+                           const Real bref,
+                           const LAPACK_DGGEV& eig_sol);
+    };
+    
+    
+    
+
     class TimeDomainFlutterSolver: public MAST::FlutterSolverBase
     {
     public:

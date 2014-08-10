@@ -207,14 +207,14 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
         *output
         << "** Root # "
         << std::setw(5) << i << " **" << std::endl
-        << std::setw(15) << "k"
         << std::setw(15) << "k_ref"
         << std::setw(15) << "V_ref"
-        << std::setw(15) << "Re"
-        << std::setw(15) << "Im"
         << std::setw(15) << "g"
+        << std::setw(15) << "k"
         << std::setw(15) << "V"
-        << std::setw(15) << "omega" << std::endl;
+        << std::setw(15) << "omega"
+        << std::setw(15) << "Re"
+        << std::setw(15) << "Im" << std::endl;
         
         // update the iterator for this analysis
         sol_it = _flutter_solutions.begin();
@@ -226,12 +226,10 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
             sol_it->second->get_root(i);
             
             *output
-            << std::setw(15) << root.k_red
             << std::setw(15) << root.k_red_ref
             << std::setw(15) << root.V_ref
-            << std::setw(15) << std::real(root.root)
-            << std::setw(15) << std::imag(root.root)
-            << std::setw(15) << root.g;
+            << std::setw(15) << root.g
+            << std::setw(15) << root.k_red;
             
             // check if the root might be the odd artifact of the UG method
             if (!root.if_nonphysical_root)
@@ -239,7 +237,9 @@ MAST::FlutterSolverBase::print_sorted_roots(std::ostream* output)
             else
                 *output << "** " << std::setw(12) << root.V;
             *output
-            << std::setw(15) << root.omega << std::endl;
+            << std::setw(15) << root.omega
+            << std::setw(15) << std::real(root.root)
+            << std::setw(15) << std::imag(root.root) << std::endl;
         }
         *output << std::endl << std::endl;
     }

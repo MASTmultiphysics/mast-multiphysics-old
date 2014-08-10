@@ -133,11 +133,6 @@ namespace MAST {
         virtual void scan_for_roots() = 0;
 
         
-        /*!
-         *    creates a new flutter root and returns pointer to it.
-         */
-        virtual std::auto_ptr<MAST::FlutterRootBase> build_flutter_root() const = 0;
-        
     protected:
         
 

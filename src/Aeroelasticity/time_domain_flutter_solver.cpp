@@ -25,6 +25,79 @@
 
 
 
+void
+MAST::TimeDomainFlutterRoot::init(const Real ref_val, const Real b_ref,
+                                  const Complex num,
+                                  const Complex den,
+                                  const RealMatrixX& Bmat,
+                                  const ComplexVectorX& evec_right,
+                                  const ComplexVectorX& evec_left)
+{
+    V = ref_val;
+    
+    if (std::abs(den) > 0.)
+    {
+        root = num/den;
+        if (std::real(root) > 0.)
+        {
+            V     = sqrt(1./std::real(root));
+            g     = std::imag(root)/std::real(root);
+            omega = k_red*V/b_ref;
+            if_nonphysical_root = false;
+        }
+        else
+        {
+            V     = 0.;
+            g     = 0.;
+            omega = 0.;
+            if_nonphysical_root = true;
+        }
+    }
+    
+    // calculate the modal participation vector
+    const unsigned int nvals = (int)Bmat.rows();
+    eig_vec_right = evec_right;
+    eig_vec_left  = evec_left;
+    ComplexVectorX k_q;
+    k_q = Bmat * evec_right;
+    modal_participation.resize(nvals, 1);
+    for (unsigned int i=0; i<nvals; i++)
+        modal_participation(i) =  std::abs(std::conj(evec_right(i)) * k_q(i));
+    modal_participation *= (1./modal_participation.sum());
+}
+
+
+
+
+void
+MAST::TimeDomainFlutterSolution::init (const MAST::FlutterSolverBase& solver,
+                                       const Real v_ref,
+                                       const Real bref,
+                                       const LAPACK_DGGEV& eig_sol)
+{
+    // make sure that it hasn't already been initialized
+    libmesh_assert(!_roots.size());
+    
+    _ref_val = v_ref;
+    // iterate over the roots and initialize the vector
+    const RealMatrixX &B = eig_sol.B();
+    const ComplexMatrixX &VR = eig_sol.right_eigenvectors(),
+    &VL = eig_sol.left_eigenvectors();
+    const ComplexVectorX &num = eig_sol.alphas(), &den = eig_sol.betas();
+    unsigned int nvals = (int)B.rows();
+    
+    _roots.resize(nvals);
+    for (unsigned int i=0; i<nvals; i++) {
+        MAST::TimeDomainFlutterRoot* root = new MAST::TimeDomainFlutterRoot;
+        _roots[i] = root;
+        root->init(v_ref, bref,
+                   num(i), den(i),
+                   B,
+                   VR.col(i), VL.col(i));
+    }
+}
+
+
 MAST::TimeDomainFlutterSolver::~TimeDomainFlutterSolver()
 { }
 

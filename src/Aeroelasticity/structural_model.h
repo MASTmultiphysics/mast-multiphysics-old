@@ -26,6 +26,11 @@ public:
     { }
     
     /*!
+     *   @returns the number of degrees of freedom in the structural model
+     */
+    virtual unsigned int n_dofs() const = 0;
+    
+    /*!
      *    updates the matrix to the mass matrix for the structural model.
      *    Returns false if the matrix does not exist for this model
      */

@@ -47,6 +47,14 @@ public:
     { }
     
     /*!
+     *   @returns the number of degrees of freedom in the structural model
+     */
+    virtual unsigned int n_dofs() const {
+        return (unsigned int)eigen_vals.size();
+    }
+
+    
+    /*!
      *    initializes the data strucutres. The eigen values must be available
      *    in both the eigen_vals vector and the modes in structural_system
      */
@@ -58,7 +66,7 @@ public:
      */
     virtual bool get_mass_matrix(RealMatrixX& m)
     {
-        unsigned int n_eig = eigen_vals.size();
+        unsigned int n_eig = (unsigned int) eigen_vals.size();
         m.setZero(n_eig, n_eig);
         for (unsigned i=0; i<n_eig; i++)
             m(i,i) = 1.;
@@ -121,7 +129,7 @@ public:
      */
     virtual bool get_stiffness_matrix(RealMatrixX& k)
     {
-        unsigned int n_eig = eigen_vals.size();
+        unsigned int n_eig = (unsigned int) eigen_vals.size();
         k.setZero(n_eig, n_eig);
         for (unsigned i=0; i<n_eig; i++)
             k(i,i) = eigen_vals(i);
@@ -184,18 +192,20 @@ public:
      *    updates the matrix to the damping matrix for this structural model
      *    Returns false if the matrix does not exist for this model
      */
-    virtual bool get_damping_matrix(RealMatrixX& c)
-    { libmesh_assert(false); }
+    virtual bool get_damping_matrix(RealMatrixX& c) {
+        return false;
+    }
     
     /*!
      *    updates the matrix to the sensitivity of damping matrix for
      *    the structural model.
      *    Returns false if the matrix does not exist for this model
      */
-    virtual bool get_damping_matrix_sensitivity(const libMesh::ParameterVector& params,
-                                                unsigned int p,
-                                                RealMatrixX& m) {
-        libmesh_error(); // to be implemented
+    virtual bool
+    get_damping_matrix_sensitivity(const libMesh::ParameterVector& params,
+                                   unsigned int p,
+                                   RealMatrixX& m) {
+        return false;
     }
     
     /*!

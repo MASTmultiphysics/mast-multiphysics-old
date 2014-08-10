@@ -112,43 +112,6 @@ namespace MAST {
     };
 
     
-    class FrequencyDomainFlutterRoot: public MAST::FlutterRootBase {
-    public:
-        FrequencyDomainFlutterRoot():
-        MAST::FlutterRootBase()
-        { }
-        
-        virtual ~FrequencyDomainFlutterRoot() {}
-
-        virtual void init(const Real k_red_ref,
-                          const Real v_ref,
-                          const Real b_ref,
-                          const Complex num,
-                          const Complex den,
-                          const ComplexMatrixX& Bmat,
-                          const ComplexVectorX& evec_right,
-                          const ComplexVectorX& evec_left) = 0;
-    };
-
-    
-
-
-    class TimeDomainFlutterRoot: public MAST::FlutterRootBase {
-    public:
-        TimeDomainFlutterRoot():
-        MAST::FlutterRootBase()
-        { }
-        
-        virtual ~TimeDomainFlutterRoot() {}
-        
-        virtual void init(const Real ref_val, const Real b_ref,
-                          const Complex num,
-                          const Complex den,
-                          const RealMatrixX& Bmat,
-                          const ComplexVectorX& evec_right,
-                          const ComplexVectorX& evec_left);
-    };
-    
     
     
     class FlutterSolutionBase
@@ -243,51 +206,6 @@ namespace MAST {
         std::vector<MAST::FlutterRootBase*> _roots;
     };
     
-    
-    
-    
-    class FrequencyDomainFlutterSolution: public MAST::FlutterSolutionBase {
-    public:
-        
-        FrequencyDomainFlutterSolution():
-        MAST::FlutterSolutionBase()
-        { }
-        
-        
-        virtual ~FrequencyDomainFlutterSolution() {}
-        
-        /*!
-         *   initializes the flutter solution from an eigensolution
-         */
-        virtual void init (const MAST::FlutterSolverBase& solver,
-                           const Real k_red,
-                           const Real v_ref,
-                           const Real bref,
-                           const LAPACK_ZGGEV& eig_sol) = 0;
-        
-    };
-
-    
-    
-    
-    class TimeDomainFlutterSolution: public MAST::FlutterSolutionBase {
-    public:
-        
-        TimeDomainFlutterSolution():
-        MAST::FlutterSolutionBase()
-        { }
-        
-        virtual ~TimeDomainFlutterSolution() {}
-
-        /*!
-         *   initializes the flutter solution from an eigensolution
-         */
-        virtual void init (const MAST::FlutterSolverBase& solver,
-                           const Real v_ref,
-                           const Real bref,
-                           const LAPACK_DGGEV& eig_sol);
-    };
-
     
     
     
