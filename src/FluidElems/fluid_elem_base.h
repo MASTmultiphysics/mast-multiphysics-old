@@ -148,9 +148,6 @@ public:
         return _if_viscous;
     }
 
-protected:
-    
-    
     void calculate_dxidX (const std::vector<unsigned int>& vars,
                           const unsigned int qp, libMesh::FEMContext& c,
                           DenseRealMatrix& dxi_dX,
@@ -194,6 +191,27 @@ protected:
                                            const PrimitiveSolution& sol,
                                            DenseRealMatrix& mat);
 
+    void calculate_advection_flux_jacobian_rho_derivative(const unsigned int calculate_dim,
+                                                          const PrimitiveSolution& sol,
+                                                          DenseRealMatrix& mat);
+
+    void calculate_advection_flux_jacobian_u1_derivative(const unsigned int calculate_dim,
+                                                         const PrimitiveSolution& sol,
+                                                         DenseRealMatrix& mat);
+
+    void calculate_advection_flux_jacobian_u2_derivative(const unsigned int calculate_dim,
+                                                         const PrimitiveSolution& sol,
+                                                         DenseRealMatrix& mat);
+
+    void calculate_advection_flux_jacobian_u3_derivative(const unsigned int calculate_dim,
+                                                         const PrimitiveSolution& sol,
+                                                         DenseRealMatrix& mat);
+
+    void calculate_advection_flux_jacobian_T_derivative(const unsigned int calculate_dim,
+                                                        const PrimitiveSolution& sol,
+                                                        DenseRealMatrix& mat);
+
+    
     void calculate_diffusion_flux_jacobian(const unsigned int flux_dim,
                                            const unsigned int deriv_dim,
                                            const PrimitiveSolution& sol,
@@ -209,11 +227,42 @@ protected:
     (const unsigned int calculate_dim, const unsigned int primitive_var,
      const PrimitiveSolution& sol, DenseRealMatrix& mat);
     
-
+    
     void calculate_advection_left_eigenvector_and_inverse_for_normal
     (const PrimitiveSolution& sol, const libMesh::Point& normal,
      DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
      DenseRealMatrix& l_eig_mat_inv_tr);
+
+    
+    void calculate_advection_left_eigenvector_and_inverse_rho_derivative_for_normal
+    (const PrimitiveSolution& sol, const libMesh::Point& normal,
+     DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
+     DenseRealMatrix& l_eig_mat_inv_tr);
+
+    
+    void calculate_advection_left_eigenvector_and_inverse_u1_derivative_for_normal
+    (const PrimitiveSolution& sol, const libMesh::Point& normal,
+     DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
+     DenseRealMatrix& l_eig_mat_inv_tr);
+
+    
+    void calculate_advection_left_eigenvector_and_inverse_u2_derivative_for_normal
+    (const PrimitiveSolution& sol, const libMesh::Point& normal,
+     DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
+     DenseRealMatrix& l_eig_mat_inv_tr);
+
+    
+    void calculate_advection_left_eigenvector_and_inverse_u3_derivative_for_normal
+    (const PrimitiveSolution& sol, const libMesh::Point& normal,
+     DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
+     DenseRealMatrix& l_eig_mat_inv_tr);
+
+    
+    void calculate_advection_left_eigenvector_and_inverse_T_derivative_for_normal
+    (const PrimitiveSolution& sol, const libMesh::Point& normal,
+     DenseRealMatrix& eig_vals, DenseRealMatrix& l_eig_mat,
+     DenseRealMatrix& l_eig_mat_inv_tr);
+
     
     void calculate_entropy_variable_jacobian(const PrimitiveSolution& sol,
                                              DenseRealMatrix& dUdV,
@@ -293,6 +342,8 @@ protected:
      const DenseRealMatrix& Ai_Bi_advection,
      const std::vector<std::vector<DenseRealMatrix > >& Ai_sens,
      DenseRealMatrix& LS_operator, DenseRealMatrix& LS_sens);
+    
+protected:
     
     std::vector<FluidPrimitiveVars> _active_primitive_vars;
 

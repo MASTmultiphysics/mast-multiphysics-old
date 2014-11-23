@@ -18,7 +18,8 @@
  */
 
 
-#define BOOST_TEST_DYN_LINK
+/*
+ #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Fixtures
 #include <boost/test/unit_test.hpp>
 
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(newton2)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
+*/
 
 /*#include "Numerics/fem_operator_matrix.h"
 
