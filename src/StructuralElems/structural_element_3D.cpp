@@ -30,34 +30,49 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
                                            DenseRealMatrix& jac,
                                            bool if_ignore_ho_jac)
 {
-    FEMOperatorMatrix Bmat;
+    FEMOperatorMatrix Bmat, Bincmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)JxW.size();
-    const unsigned int n1=6, n2=6*n_phi;
-    DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2;
-    DenseRealVector vec1_n1, vec2_n2;
+    const unsigned int n_phi = (unsigned int)_fe->n_shape_functions();
+    const unsigned int n1=6, n2=3*n_phi;
+    DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2,
+    m_n13(n1,3), m_33(3,3), m_3n2(3,n2), m_n23(n2,3),
+    Kda(n2,3), Kad(3,n2), Kaa(3,3); // a is the incompatible modes adn d are the deformation modes
+    DenseRealVector vec1_n1, vec2_n2, v1_3(3), v2_3(3);
     
     mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
     vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     
-    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+    Bmat.reinit(n1, 3, _elem.n_nodes()); // six stress-strain components
+    Bincmat.reinit(n1, 3, 1);            // six stress-strain components
     
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_stiff
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
                             *this).release());
-    
+        
     for (unsigned int qp=0; qp<JxW.size(); qp++) {
         this->initialize_strain_operator(qp, Bmat);
+        this->initialize_incompatible_strain_operator(qp, Bincmat);
         
         // get the material matrix
         (*mat_stiff)(xyz[qp], _system.time, material_mat);
         
         // calculate the stress
-        Bmat.left_multiply(mat1_n1n2, material_mat);
+        Bmat.left_multiply(mat1_n1n2, material_mat); // D B
         mat1_n1n2.vector_mult(vec1_n1, local_solution); // this is stress
+        
+        // calculate the contribution to incompatible mode matrix
+        Bincmat.right_multiply_transpose(m_3n2, mat1_n1n2);  // Ba^T D Bd
+        Kad.add(JxW[qp], m_3n2);
+        
+        Bincmat.left_multiply(m_n13, material_mat);
+        Bmat.right_multiply_transpose(m_n23, m_n13);
+        Kda.add(JxW[qp], m_n23);
+        
+        Bincmat.right_multiply_transpose(m_33, m_n13);
+        Kaa.add(JxW[qp], m_33);
         
         // now calculate the internal force vector
         Bmat.vector_mult_transpose(vec2_n2, vec1_n1);
@@ -68,6 +83,31 @@ MAST::StructuralElement3D::internal_force (bool request_jacobian,
             Bmat.right_multiply_transpose(mat2_n2n2, mat1_n1n2);
             jac.add(-JxW[qp], mat2_n2n2);
         }
+    }
+    
+    // add the force and Jacobian contributions from the static condensation
+    // of the Kaa matrix
+    // calculate inv(Kaa)
+    for (unsigned int i=0; i<3; i++) {
+        v1_3.zero(); v1_3(i) = 1.;
+        Kaa.lu_solve(v1_3, v2_3);
+        m_33.set_column(i, v2_3);
+    }
+
+    Kad.left_multiply(m_33);
+    Kad.left_multiply(Kda);
+
+    // contribution to residual vector
+    Kad.vector_mult(vec2_n2, local_solution);
+    f.add(1., vec2_n2);
+    
+    // contribution to Jacobian
+    if (request_jacobian) jac.add(1., Kad);
+    
+    // place small values at diagonal of the rotational terms
+    if (request_jacobian) {
+        for (unsigned int i=n2/2; i<n2; i++)
+            jac(i,i) += 1.0e-12;
     }
     
     return request_jacobian;
@@ -100,7 +140,7 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)JxW.size();
+    const unsigned int n_phi = (unsigned int)_fe->n_shape_functions();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix material_mat, mat1_n1n2, mat2_n2n2;
     DenseRealVector vec1_n1, vec2_n2;
@@ -109,7 +149,7 @@ MAST::StructuralElement3D::internal_force_sensitivity (bool request_jacobian,
     vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     
-    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+    Bmat.reinit(n1, 3, _elem.n_nodes()); // six stress-strain components
 
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat_stiff
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX,
@@ -148,11 +188,14 @@ MAST::StructuralElement3D::prestress_force (bool request_jacobian,
                                            DenseRealVector& f,
                                            DenseRealMatrix& jac)
 {
+    if (!_property.if_prestressed())
+        return false;
+
     FEMOperatorMatrix Bmat;
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)JxW.size();
+    const unsigned int n_phi = (unsigned int)_fe->n_shape_functions();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix prestress_mat_A, mat1_n1n2, mat2_n2n2;
     DenseRealVector  vec1_n1, vec2_n2, prestress_vec_A;
@@ -160,7 +203,7 @@ MAST::StructuralElement3D::prestress_force (bool request_jacobian,
     mat1_n1n2.resize(n1, n2); mat2_n2n2.resize(n2, n2);
     vec1_n1.resize(n1); vec2_n2.resize(n2);
     
-    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+    Bmat.reinit(n1, 3, _elem.n_nodes()); // six stress-strain components
     
     std::auto_ptr<MAST::SectionIntegratedPrestressMatrixBase>
     prestress_A
@@ -213,7 +256,7 @@ MAST::StructuralElement3D::prestress_force_sensitivity (bool request_jacobian,
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)JxW.size();
+    const unsigned int n_phi = (unsigned int)_fe->n_shape_functions();
     const unsigned int n1=6, n2=6*n_phi;
     DenseRealMatrix prestress_mat_A, mat1_n1n2, mat2_n2n2;
     DenseRealVector prestress_vec_A, vec1_n1, vec2_n2;
@@ -222,7 +265,7 @@ MAST::StructuralElement3D::prestress_force_sensitivity (bool request_jacobian,
     vec1_n1.resize(n1); vec2_n2.resize(n2);
     
     
-    Bmat.reinit(6, _system.n_vars(), _elem.n_nodes()); // six stress-strain components
+    Bmat.reinit(n1, 3, _elem.n_nodes()); // six stress-strain components
     
     std::auto_ptr<MAST::SectionIntegratedPrestressMatrixBase>
     prestress_A
@@ -264,8 +307,8 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
-    const unsigned int n1= 6, n2=6*n_phi;
+    const unsigned int n_phi = (unsigned int)_fe->n_shape_functions();
+    const unsigned int n1=6, n2=3*n_phi;
     DenseRealMatrix material_exp_A_mat, mat1_n1n2, mat2_n2n2, stress;
     DenseRealVector  vec1_n1, vec2_n1, vec3_n2, delta_t;
     
@@ -275,7 +318,7 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
     
     
     
-    Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat.reinit(n1, 3, n_phi); // three stress-strain components
     
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
@@ -300,6 +343,7 @@ MAST::StructuralElement3D::thermal_force (bool request_jacobian,
         this->initialize_strain_operator(qp, Bmat);
         
         Bmat.vector_mult_transpose(vec3_n2, vec1_n1);
+        
         f.add(JxW[qp], vec3_n2);
     }
     
@@ -320,7 +364,7 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
     
     const std::vector<Real>& JxW = _fe->get_JxW();
     const std::vector<libMesh::Point>& xyz = _fe->get_xyz();
-    const unsigned int n_phi = (unsigned int)_fe->get_phi().size();
+    const unsigned int n_phi = (unsigned int)_fe->n_shape_functions();
     const unsigned int n1= 6, n2=6*n_phi;
     DenseRealMatrix material_exp_A_mat, material_exp_A_mat_sens,
     mat1_n1n2, mat2_n2n2, stress;
@@ -333,7 +377,7 @@ MAST::StructuralElement3D::thermal_force_sensitivity (bool request_jacobian,
     
     
     
-    Bmat.reinit(n1, _system.n_vars(), n_phi); // three stress-strain components
+    Bmat.reinit(n1, 3, n_phi); // three stress-strain components
     
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > mat
     (_property.get_property(MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX,
@@ -411,3 +455,90 @@ MAST::StructuralElement3D::initialize_strain_operator(const unsigned int qp,
 }
 
 
+
+
+void
+MAST::StructuralElement3D::initialize_incompatible_strain_operator(const unsigned int qp,
+                                                                   FEMOperatorMatrix& Bmat) {
+    
+    DenseRealVector phi_vec; phi_vec.resize(3);
+
+    // get the location of element coordinates
+    const std::vector<libMesh::Point>& q_point = _qrule->get_points();
+    const Real
+    xi  = q_point[qp](0),
+    eta = q_point[qp](1),
+    phi = q_point[qp](2);
+    
+    // now set the shape function values
+    // dN/dx
+    phi_vec(0) = -xi  * dxidx(0,0);
+    phi_vec(1) = -eta * dxidx(1,0);
+    phi_vec(2) = -phi * dxidx(2,0);
+    Bmat.set_shape_function(0, 0, phi_vec); //  epsilon_xx = du/dx
+    Bmat.set_shape_function(3, 1, phi_vec); //  gamma_xy = dv/dx + ...
+    Bmat.set_shape_function(5, 2, phi_vec); //  gamma_zx = dw/dx + ...
+    
+    // dN/dy
+    phi_vec(0) = -xi  * dxidx(0,1);
+    phi_vec(1) = -eta * dxidx(1,1);
+    phi_vec(2) = -phi * dxidx(2,1);
+    Bmat.set_shape_function(1, 1, phi_vec); //  epsilon_yy = dv/dy
+    Bmat.set_shape_function(3, 0, phi_vec); //  gamma_xy = du/dy + ...
+    Bmat.set_shape_function(4, 2, phi_vec); //  gamma_yz = dw/dy + ...
+    
+    // dN/dz
+    phi_vec(0) = -xi  * dxidx(0,2);
+    phi_vec(1) = -eta * dxidx(1,2);
+    phi_vec(2) = -phi * dxidx(2,2);
+    Bmat.set_shape_function(2, 2, phi_vec); //  epsilon_xx = dw/dz
+    Bmat.set_shape_function(4, 1, phi_vec); //  gamma_xy = dv/dz + ...
+    Bmat.set_shape_function(5, 0, phi_vec); //  gamma_zx = du/dz + ...
+    
+}
+
+
+
+
+void
+MAST::StructuralElement3D::_init_incompatible_fe_mapping( const libMesh::Elem& e) {
+    
+    unsigned int nv = _system.n_vars();
+    
+    libmesh_assert (nv);
+    libMesh::FEType fe_type = _system.variable_type(0); // all variables are assumed to be of same type
+    
+    
+    for (unsigned int i=1; i != nv; ++i)
+        libmesh_assert(fe_type == _system.variable_type(i));
+    
+    // Create an adequate quadrature rule
+    std::auto_ptr<libMesh::FEBase> fe(libMesh::FEBase::build(e.dim(), fe_type).release());
+    const std::vector<libMesh::Point> pts(1);
+    
+    fe->get_dxyzdxi();
+    fe->get_dxyzdeta();
+    fe->get_dxyzdzeta();
+    
+    fe->reinit(&e, &pts);
+    
+    dxidx.resize(3,3);
+    
+    const std::vector<libMesh::RealGradient>&
+    dxyzdxi  = fe->get_dxyzdxi(),
+    dxyzdeta = fe->get_dxyzdeta(),
+    dxyzdphi = fe->get_dxyzdzeta();
+    
+    dxidx(0,0) =  (dxyzdeta[0](1)*dxyzdphi[0](2)-dxyzdeta[0](2)*dxyzdphi[0](1));
+    dxidx(0,1) = -(dxyzdeta[0](0)*dxyzdphi[0](2)-dxyzdeta[0](2)*dxyzdphi[0](0));
+    dxidx(0,2) =  (dxyzdeta[0](0)*dxyzdphi[0](1)-dxyzdeta[0](1)*dxyzdphi[0](0));
+    
+    dxidx(1,0) = -(dxyzdxi[0](1)*dxyzdphi[0](2)-dxyzdxi[0](2)*dxyzdphi[0](1));
+    dxidx(1,1) =  (dxyzdxi[0](0)*dxyzdphi[0](2)-dxyzdxi[0](2)*dxyzdphi[0](0));
+    dxidx(1,2) = -(dxyzdxi[0](0)*dxyzdphi[0](1)-dxyzdxi[0](1)*dxyzdphi[0](0));
+    
+    dxidx(2,0) =  (dxyzdxi[0](1)*dxyzdeta[0](2)-dxyzdxi[0](2)*dxyzdeta[0](1));
+    dxidx(2,1) = -(dxyzdxi[0](0)*dxyzdeta[0](2)-dxyzdxi[0](2)*dxyzdeta[0](0));
+    dxidx(2,2) =  (dxyzdxi[0](0)*dxyzdeta[0](1)-dxyzdxi[0](1)*dxyzdeta[0](0));
+
+}

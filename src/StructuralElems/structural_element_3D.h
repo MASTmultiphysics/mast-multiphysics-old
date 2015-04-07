@@ -42,6 +42,7 @@ namespace MAST {
         StructuralElementBase(sys, elem, p)
         {
             _init_fe_and_qrule(elem);
+            _init_incompatible_fe_mapping(elem);
         }
 
         /*!
@@ -165,6 +166,17 @@ namespace MAST {
         virtual const DenseRealMatrix& _transformation_matrix() const {
             libmesh_error(); // should not be called for a 3D elem
         }
+        
+        /*!
+         *   initialize incompatible strain operator
+         */
+        void initialize_incompatible_strain_operator(const unsigned int qp,
+                                                     FEMOperatorMatrix& Bmat);
+
+        
+        void _init_incompatible_fe_mapping( const libMesh::Elem& e);
+        
+        DenseRealMatrix dxidx;
     };
 }
 
