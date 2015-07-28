@@ -255,7 +255,7 @@ namespace MAST {
                         break;
                         
                     case 3:
-                        m.resize(3,1);
+                        m.resize(6,1);
                         break;
                 }
                 
@@ -277,7 +277,7 @@ namespace MAST {
                         break;
                         
                     case 3:
-                        m.resize(3,1);
+                        m.resize(6,1);
                         break;
                 }
                 
@@ -300,7 +300,7 @@ namespace MAST {
                         break;
                         
                     case 3:
-                        m.resize(3,1);
+                        m.resize(6,1);
                         break;
                 }
                 

@@ -363,7 +363,7 @@ MAST::IsotropicMaterialPropertyCard::
 StiffnessMatrix3D::operator() (const libMesh::Point& p,
                                const Real t,
                                DenseRealMatrix& m) const {
-    m.resize(3,3);
+    m.resize(6,6);
     Real E, nu;
     (*_E)(p, t, E); (*_nu)(p, t, nu);
     for (unsigned int i=0; i<3; i++) {
@@ -385,7 +385,7 @@ StiffnessMatrix3D::partial (const MAST::FieldFunctionBase& f,
                             const Real t,
                             DenseRealMatrix& m) const {
     DenseRealMatrix dm;
-    m.resize(3,3); dm.resize(3, 3);
+    m.resize(6,6); dm.resize(6, 6);
     Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->partial(f, p, t, dEdf);
     (*_nu)(p, t, nu); _nu->partial(f, p, t, dnudf);
@@ -424,7 +424,7 @@ StiffnessMatrix3D::total (const MAST::FieldFunctionBase& f,
                           const Real t,
                           DenseRealMatrix& m) const {
     DenseRealMatrix dm;
-    m.resize(3,3); dm.resize(3, 3);
+    m.resize(6,6); dm.resize(6, 6);
     Real E, nu, dEdf, dnudf;
     (*_E)(p, t, E); _E->total(f, p, t, dEdf);
     (*_nu)(p, t, nu); _nu->total(f, p, t, dnudf);

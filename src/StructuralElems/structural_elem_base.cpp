@@ -1053,6 +1053,9 @@ MAST::StructuralElementBase::_init_fe_and_qrule( const libMesh::Elem& e) {
     _fe->get_phi();
     _fe->get_JxW();
     _fe->get_dphi();
+    _fe->get_dxyzdxi();
+    _fe->get_dxyzdeta();
+    _fe->get_dxyzdzeta();
     
     _fe->reinit(&e);
 }

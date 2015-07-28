@@ -233,18 +233,38 @@ MAST::ElementPropertyCard3D::get_property(MAST::ElemenetPropertyMatrixType t,
                                           const MAST::StructuralElementBase& e) const {
     
     std::auto_ptr<MAST::FieldFunction<DenseRealMatrix > > rval;
-    
+
     switch (t) {
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_A_MATRIX:
+            rval.reset(new MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 3).release()));
+            break;
+            
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_B_MATRIX:
+            rval.reset(new MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 3).release()));
+            break;
+            
         case MAST::SECTION_INTEGRATED_MATERIAL_STIFFNESS_D_MATRIX:
-        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
+            rval.reset(new MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 3).release()));
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
+            rval.reset(new MAST::ElementPropertyCard3D::SectionIntegratedStiffnessMatrix
+                       (_material->get_property(MAST::MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX, *this, 3).release()));
+            break;
+            
         case MAST::SECTION_INTEGRATED_MATERIAL_INERTIA_MATRIX:
+        case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_A_MATRIX:
         case MAST::SECTION_INTEGRATED_MATERIAL_THERMAL_EXPANSION_B_MATRIX:
-        case MAST::SECTION_INTEGRATED_MATERIAL_TRANSVERSE_SHEAR_STIFFNESS_MATRIX:
-        case MAST::SECTION_INTEGRATED_PRESTRESS_A_MATRIX:
-        case MAST::SECTION_INTEGRATED_PRESTRESS_B_MATRIX:
+            rval.reset(new MAST::ElementPropertyCard3D::SectionIntegratedThermalExpansionMatrix
+                       (_material->get_property(MAST::MATERIAL_STIFFNESS_MATRIX, *this, 3).release(),
+                        _material->get_property(MAST::MATERIAL_THERMAL_EXPANSION_MATRIX, *this, 3).release()));
+            break;
+            
+        case MAST::SECTION_INTEGRATED_MATERIAL_DAMPING_MATRIX:
         default:
             libmesh_error();
             break;

@@ -435,7 +435,10 @@ MAST::StructuralSystemAssembly::_assemble_residual_and_jacobian (const libMesh::
         for (unsigned int i=0; i<dof_indices.size(); i++)
             sol(i) = (*localized_solution)(dof_indices[i]);
         structural_elem->local_solution.resize(sol.size());
-        structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+        if (elem->dim() < 3)
+            structural_elem->transform_to_local_system(sol, structural_elem->local_solution);
+        else
+            structural_elem->local_solution = sol;
         
         // now get the vector values
         if (!param) {
