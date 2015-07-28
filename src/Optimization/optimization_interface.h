@@ -99,7 +99,8 @@ namespace MAST {
         virtual void output(unsigned int iter,
                             const std::vector<Real>& x,
                             Real obj,
-                            const std::vector<Real>& fval) const;
+                            const std::vector<Real>& fval,
+                            bool if_write_to_optim_file) const;
 
     protected:
         
@@ -149,7 +150,8 @@ namespace MAST {
 
 inline void
 MAST::FunctionEvaluation::output(unsigned int iter, const std::vector<Real> &x,
-                                 Real obj, const std::vector<Real> &fval) const {
+                                 Real obj, const std::vector<Real> &fval,
+                                 bool if_write_to_optim_file) const {
 
     libmesh_assert_equal_to(x.size(), _n_vars);
     libmesh_assert_equal_to(fval.size(), _n_eq + _n_ineq);
@@ -196,6 +198,11 @@ MAST::FunctionEvaluation::output(unsigned int iter, const std::vector<Real> &x,
     
     libMesh::out << std::endl
     << " *************************** " << std::endl;
+    
+    
+    // the next section writes to the optimization file.
+    if (!if_write_to_optim_file)
+        return;
     
     {
         // write header for the first iteration

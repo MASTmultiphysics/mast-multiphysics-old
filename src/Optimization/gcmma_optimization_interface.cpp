@@ -139,7 +139,7 @@ MAST::GCMMAOptimizationInterface::optimize() {
                          FVAL, eval_grads, DFDX);
         if (ITER == 1)
             // output the very first iteration
-            _feval->output(0, XVAL, F0VAL, FVAL);
+            _feval->output(0, XVAL, F0VAL, FVAL, true);
         
         /*C
          C  RAA0,RAA,XLOW,XUPP,ALFA and BETA are calculated.
@@ -208,7 +208,7 @@ MAST::GCMMAOptimizationInterface::optimize() {
         /*C
          C  The USER may now write the current solution.
          C*/
-        _feval->output(ITER, XVAL, F0VAL, FVAL);
+        _feval->output(ITER, XVAL, F0VAL, FVAL, true);
         f0_iters[(ITE-1)%n_rel_change_iters] = F0VAL;
         
         /*C
