@@ -8,14 +8,14 @@ set (MAST_VERSION_MAJOR 0)
 set (MAST_VERSION_MINOR 9)
 
 set (libmesh_dir       "libmesh-dir" CACHE STRING "Directory containing libMesh header and library")
-set (vtk_include_dir   "vtk-include-dir" CACHE STRING "Directory containing VTK header files")
-set (vtk_lib_dir       "vtk-lib-dir" CACHE STRING "Directory containing  VTK library files" )
-set (vtk_lib_file      "vtkIO vtkCommon vtkFiltering" CACHE STRING "VTK library files" )
-separate_arguments (vtk_lib_file)
-set (tbb_include_dir   "tbb-include-dir" CACHE STRING "Directory containing TBB header files")
-set (tbb_lib_dir       "tbb-lib-dir" CACHE STRING "Directory containing TBB library files")
-set (tbb_lib_file      "tbb tbbmalloc" CACHE STRING "TBB library files")
-separate_arguments (tbb_lib_file)
+#set (vtk_include_dir   "vtk-include-dir" CACHE STRING "Directory containing VTK header files")
+#set (vtk_lib_dir       "vtk-lib-dir" CACHE STRING "Directory containing  VTK library files" )
+#set (vtk_lib_file      "vtkIO vtkCommon vtkFiltering" CACHE STRING "VTK library files" )
+#separate_arguments (vtk_lib_file)
+#set (tbb_include_dir   "tbb-include-dir" CACHE STRING "Directory containing TBB header files")
+#set (tbb_lib_dir       "tbb-lib-dir" CACHE STRING "Directory containing TBB library files")
+#set (tbb_lib_file      "tbb tbbmalloc" CACHE STRING "TBB library files")
+#separate_arguments (tbb_lib_file)
 set (boost_include_dir "boost-include-dir" CACHE STRING "Directory containing boost header files")
 set (boost_test_lib    "boost-unit-test-lib" CACHE STRING "BOOST unit test library")
 set (boost_lib_dir     "boost-lib-dir" CACHE STRING "Directory containing boost unit test library files")
@@ -35,8 +35,8 @@ set (CMAKE_Fortran_COMPILER "fortran-compiler" CACHE STRING "Fortran compiler")
 
 include_directories (../src 
                      ../examples
-		    ${vtk_include_dir}
-		    ${tbb_include_dir}
+#		    ${vtk_include_dir}
+#		    ${tbb_include_dir}
 		    ${boost_include_dir})
 
 include_directories (SYSTEM ${mpi_include_dir})
@@ -50,13 +50,13 @@ find_library (mpi_lib       mpi                  ${mpi_lib_dir})
 
 find_library (boost_unit_test_lib   ${boost_test_lib}    ${boost_lib_dir})
 
-foreach (f ${tbb_lib_file})
-   find_library (tbb_lib    ${f}   ${tbb_lib_dir})
-endforeach (f)
+#foreach (f ${tbb_lib_file})
+#   find_library (tbb_lib    ${f}   ${tbb_lib_dir})
+#endforeach (f)
 
-foreach (f ${vtk_lib_file})
-   find_library (vtk_lib    ${f}   ${vtk_lib_dir})
-endforeach (f)
+#foreach (f ${vtk_lib_file})
+#   find_library (vtk_lib    ${f}   ${vtk_lib_dir})
+#endforeach (f)
 
 foreach (f ${lapack_lib_file})
    find_library (lapack_lib    ${f}   ${lapack_lib_dir})
@@ -86,8 +86,8 @@ target_link_libraries (mast
 		      gcmma
 		      ${lapack_lib}
 		      ${blas_lib}
-		      ${vtk_lib}
-		      ${tbb_lib}
+#		      ${vtk_lib}
+#		      ${tbb_lib}
 		      ${mpicxx_lib}
 		      ${mpi_lib})
 set_property (TARGET mast APPEND 
